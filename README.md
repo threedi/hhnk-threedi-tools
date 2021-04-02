@@ -1,2 +1,2 @@
-# hhnk_toolbox_functions
-Functions for use in hhnk toolbox plugin and Jupyter notebook
+# hhnk_toolbox_universal
+Functions and variables for use in hhnk toolbox plugin and Jupyter notebook
