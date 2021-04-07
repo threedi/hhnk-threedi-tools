@@ -1,0 +1,6 @@
+t_0_col = 'T0'
+t_start_rain_col = 'T_start_rain'
+t_end_rain_min_one_col = 'T_end_rain_min_one'
+t_end_rain_col = 'T_end_rain'
+t_end_sum_col = 'T_end_sum'
+index_col = 'value'

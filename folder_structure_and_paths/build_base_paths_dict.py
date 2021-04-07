@@ -1,15 +1,18 @@
 import os
-from ...variables.universal.damo_hdb_datachecker_vars import damo_duiker_sifon_hevel, \
+from .default_paths_class import DefaultPaths
+from ..variables.damo_hdb_datachecker_variables import damo_duiker_sifon_hevel, \
     damo_waterdeel, datachecker_culvert_layer, datachecker_fixed_drainage, \
     hdb_sturing_3di, waterlevel_val_field
 
-def build_source_paths_dict(paths_object):
+def build_base_paths_dict(polder_path):
+    paths_object = DefaultPaths(base=polder_path)
     paths_dict = {}
 
     def if_exists(path):
         return path if os.path.exists(path) else None
 
     # Source data
+    paths_dict['polder_folder'] = polder_path
     paths_dict['datachecker'] = if_exists(paths_object.source_data.datachecker)
     paths_dict['damo'] = if_exists(paths_object.source_data.damo)
     paths_dict['hdb'] = if_exists(paths_object.source_data.hdb)
@@ -29,6 +32,13 @@ def build_source_paths_dict(paths_object):
     paths_dict['dem'] = if_exists(paths_object.model.rasters.dem)
 
     # Threedi
-    paths_dict['0d1d_results_dir'] = paths_object.threedi_results.zeroDoneD.base
-    paths_dict['1d2d_results_dir'] = paths_object.threedi_results.oneDtwoD.base
+    paths_dict['0d1d_results_dir'] = if_exists(paths_object.threedi_results.zeroDoneD.base)
+    paths_dict['1d2d_results_dir'] = if_exists(paths_object.threedi_results.oneDtwoD.base)
+
+    # Default output folders
+    paths_dict['base_output'] = os.path.join(polder_path, 'output')
+    paths_dict['sqlite_tests_output'] = os.path.join(paths_dict['base_output'], 'sqlite_tests')
+    paths_dict['0d1d_output'] = os.path.join(paths_dict['base_output'], '0d1d_tests')
+    paths_dict['bank_levels_output'] = os.path.join(paths_dict['base_output'], 'bank_levels')
+    paths_dict['1d2d_output'] = os.path.join(paths_dict['base_output'], '1d2d_tests')
     return paths_dict

@@ -11,6 +11,9 @@ H5 = 'h5'
 NC = 'nc'
 SQLITE = 'sqlite'
 GDB = 'gdb'
+SHX = 'shx'
+DBF = 'dbf'
+PRJ = 'prj'
 file_types_dict = {'csv': '.csv',
                    'txt': '.txt',
                    'shp': '.shp',
@@ -21,6 +24,9 @@ file_types_dict = {'csv': '.csv',
                    'gpkg': '.gpkg',
                    'qml': '.qml',
                    'h5': '.h5',
-                   'nc': '.nc'}
+                   'nc': '.nc',
+                   'shx': '.shx',
+                   'dbf': '.dbf',
+                   'prj': '.prj'}
 UTF8 = 'utf-8'
 

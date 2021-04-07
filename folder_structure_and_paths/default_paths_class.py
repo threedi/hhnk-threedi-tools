@@ -1,5 +1,5 @@
 import os
-from ..variables.universal.types import file_types_dict, GDB, SHAPE, SQLITE, TIF
+from hhnk_toolbox.toolbox_universal.variables.types import file_types_dict, GDB, SHAPE, SQLITE, TIF
 from pathlib import Path
 
 # Set names for certain input files
@@ -107,7 +107,7 @@ class ThreediResults:
         self.zeroDoneD = ZeroDOneD(self.base)
         self.oneDtwoD = OneDTwoD(self.base)
 
-class Paths:
+class DefaultPaths:
     """
     Init function expects a path to the main polder file (for example:
     C:\Poldermodellen\Heiloo
