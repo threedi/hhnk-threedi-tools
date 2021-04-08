@@ -9,6 +9,7 @@ from ....toolbox_universal.variables.database_variables import width_col, height
     reference_level_col
 from ....toolbox_universal.read_write_functions.write_to_file_functions import gdf_write_to_csv, gdf_write_to_geopackage
 
+from time import sleep
 def calc_width_at_waterlevel(row):
     """Bereken de breedte van de watergang op het streefpeil"""
     x_pos = [b / 2 for b in row[width_col]]
@@ -58,4 +59,5 @@ def get_used_profiles(test_env):
                                 path=test_env.output_vars['layer_path'],
                                 filename=test_env.output_vars['profiles_used_filename'])
     except Exception as e:
+        print("Error in get used profiles")
         raise e from None

@@ -14,7 +14,6 @@ def ensure_file_path(filepath):
 def gdf_write_to_geopackage(gdf, path, filename, driver=GPKG_DRIVER, index=False):
     ext = file_types_dict[GPKG]
     filepath = os.path.join(path, filename + ext)
-    print('gpkg filepath', filepath)
     try:
         if os.path.exists(filepath):
             os.remove(filepath)
@@ -24,15 +23,14 @@ def gdf_write_to_geopackage(gdf, path, filename, driver=GPKG_DRIVER, index=False
                         layer=filename,
                         driver=driver,
                         index=index)
-    except OSError as e:
-        pass
+    # except OSError as e:
+    #     pass
     except Exception as e:
         raise e from None
 
 def gdf_write_to_csv(gdf, path, filename, mode='w', cols=None, index=False):
     ext = file_types_dict[CSV]
     filepath = os.path.join(path, filename + ext)
-    print('csv filepath', filepath)
     try:
         ensure_file_path(filename)
         if os.path.exists(filepath):
@@ -45,7 +43,7 @@ def gdf_write_to_csv(gdf, path, filename, mode='w', cols=None, index=False):
                        columns=cols,
                        mode=mode,
                        index=index)
-    except OSError as e:
-        pass
+    # except OSError as e:
+    #     pass
     except Exception as e:
         raise e from None
