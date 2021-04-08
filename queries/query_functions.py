@@ -6,15 +6,19 @@ def construct_select_query(table, columns=None):
     Columns has to be a list. If a list item is a tuple, it will be interpreted as:
     (column, alias). In other cases, we assume the item to be a valid column name.
     """
-    base_query = "SELECT {columns} FROM {table}"
+    base_query = "SELECT {columns} \nFROM {table}"
     try:
         if columns is not None:
             selection_lst = []
-            for item in columns:
-                if type(item) == tuple:
-                    selection_lst.append(f"{item[0]} AS {item[1]}")
-                else:
-                    selection_lst.append(item)
+            if type(columns) == dict:
+                for key, value in columns.items():
+                    if value is not None:
+                        selection_lst.append(f'{key} AS {value}')
+                    else:
+                        selection_lst.append(key)
+            elif type(columns) == list:
+                selection_lst = columns
+            query = base_query.format(columns=',\n'.join(selection_lst), table=table)
         else:
             query = base_query.format(columns="*", table=table)
         return query
