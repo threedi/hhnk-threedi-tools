@@ -7,7 +7,6 @@ from ....toolbox_universal.tests.sqlite_tests.variables.dataframes_mapping impor
 from ....toolbox_universal.variables.database_aliases import a_zoom_cat
 from ....toolbox_universal.variables.database_variables import width_col, height_col, initial_waterlevel_col, \
     reference_level_col
-from ....toolbox_universal.read_write_functions.write_to_file_functions import gdf_write_to_csv, gdf_write_to_geopackage
 
 def calc_width_at_waterlevel(row):
     """Bereken de breedte van de watergang op het streefpeil"""
@@ -38,8 +37,8 @@ def get_used_profiles(test_env):
     """
     try:
         model_path = test_env.src_paths['model']
-        query = profiles_used_query
-        channels_df = execute_sql_selection(query=query, database_path=model_path)
+        channels_df = execute_sql_selection(query=profiles_used_query,
+                                            database_path=model_path)
         channels_gdf = convert_df_to_gdf(df=channels_df)
         # If zoom category is 4, channel is considered primary
         channels_gdf[primary_col] = channels_gdf[a_zoom_cat].apply(
@@ -48,14 +47,9 @@ def get_used_profiles(test_env):
         channels_gdf[height_col] = channels_gdf[height_col].apply(split_round)
         channels_gdf[water_level_width_col] = channels_gdf.apply(func=calc_width_at_waterlevel, axis=1)
         channels_gdf[max_depth_col] = channels_gdf.apply(func=get_max_depth, axis=1)
-        gdf_write_to_csv(channels_gdf,
-                         path=test_env.output_vars['log_path'],
-                         filename=test_env.output_vars['profiles_used_filename'])
         # Conversion to string because lists are not valid for storing in gpkg
         channels_gdf[width_col] = channels_gdf[width_col].astype(str)
         channels_gdf[height_col] = channels_gdf[height_col].astype(str)
-        gdf_write_to_geopackage(channels_gdf,
-                                path=test_env.output_vars['layer_path'],
-                                filename=test_env.output_vars['profiles_used_filename'])
+        return channels_gdf
     except Exception as e:
         raise e from None

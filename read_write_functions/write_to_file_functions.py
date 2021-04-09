@@ -3,6 +3,7 @@ from pathlib import Path
 from ..variables.types import file_types_dict, GPKG, CSV
 from ..variables.definitions import GPKG_DRIVER
 from ..variables.default_variables import DEF_DELIMITER, DEF_ENCODING
+from ...gui.errors.os_error import handle_os_error
 
 def ensure_file_path(filepath):
     try:
@@ -14,7 +15,6 @@ def ensure_file_path(filepath):
 def gdf_write_to_geopackage(gdf, path, filename, driver=GPKG_DRIVER, index=False):
     ext = file_types_dict[GPKG]
     filepath = os.path.join(path, filename + ext)
-    print('gpkg filepath', filepath)
     try:
         if os.path.exists(filepath):
             os.remove(filepath)
@@ -24,15 +24,19 @@ def gdf_write_to_geopackage(gdf, path, filename, driver=GPKG_DRIVER, index=False
                         layer=filename,
                         driver=driver,
                         index=index)
+            return filepath
+        return None
     except OSError as e:
-        pass
+        if handle_os_error(filepath):
+            gdf_write_to_csv(gdf, path, filename, driver, index)
+        else:
+            raise e from None
     except Exception as e:
         raise e from None
 
 def gdf_write_to_csv(gdf, path, filename, mode='w', cols=None, index=False):
     ext = file_types_dict[CSV]
     filepath = os.path.join(path, filename + ext)
-    print('csv filepath', filepath)
     try:
         ensure_file_path(filename)
         if os.path.exists(filepath):
@@ -45,7 +49,13 @@ def gdf_write_to_csv(gdf, path, filename, mode='w', cols=None, index=False):
                        columns=cols,
                        mode=mode,
                        index=index)
+            return filepath
+        else:
+            return None
     except OSError as e:
-        pass
+        if handle_os_error(filepath):
+            gdf_write_to_csv(gdf, path, filename, mode, cols, index)
+        else:
+            raise e from None
     except Exception as e:
         raise e from None
