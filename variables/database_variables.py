@@ -69,3 +69,4 @@ control_group_col = 'control_group_id'
 
 # SQLITE FUNCTIONS
 f_aswkt = 'AsWKT'
+f_makeline = 'MakeLine'
