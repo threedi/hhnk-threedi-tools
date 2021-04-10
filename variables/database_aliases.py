@@ -11,3 +11,11 @@ a_cross_sec_loc_code = 'cross_loc_code'
 a_cross_sec_loc_id = 'cross_loc_id'
 a_cross_sec_def_id = 'cross_def_id'
 a_contr_struct_contr_id = 'control_id'
+
+a_weir_code = 'weir_code'
+a_weir_conn_node_start_id = 'weir_connection_node_start_id'
+a_weir_conn_node_end_id = 'weir_connection_node_end_id'
+a_weir_chan_conn_start_id = 'channel_connection_node_start_id'
+a_weir_chan_conn_end_id = 'channel_connection_node_end_id'
+a_weir_cross_loc_id = 'cross_section_location_id'
+

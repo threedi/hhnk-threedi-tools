@@ -6,13 +6,14 @@ from ....variables.database_variables import id_col, code_col, conn_node_end_id_
     control_layer, control_id_col, control_measure_map, measure_group_id_col, object_id_col, weir_layer, \
     culvert_layer, orifice_layer
 from ....variables.database_aliases import df_geo_col, a_chan_id, a_chan_code, a_chan_node_id, \
-    a_zoom_cat, a_cross_sec_loc_code, a_cross_sec_loc_id, a_cross_sec_def_id, a_contr_struct_contr_id
+    a_zoom_cat, a_cross_sec_loc_code, a_cross_sec_loc_id, a_cross_sec_def_id, a_contr_struct_contr_id, \
+    a_weir_code, a_weir_conn_node_end_id, a_weir_conn_node_start_id, a_weir_chan_conn_start_id, \
+    a_weir_chan_conn_end_id, a_weir_cross_loc_id
 
 #--------------------------------------------------------------------------------
 # Profiles used queries
 #--------------------------------------------------------------------------------
-profiles_used_query = \
-    f"""
+profiles_used_query = f"""
     SELECT 
     {channels_layer}.{id_col} AS {a_chan_id},
     {channels_layer}.{code_col} AS {a_chan_code},
@@ -39,18 +40,18 @@ profiles_used_query = \
 #--------------------------------------------------------------------------------
 
 isolated_channels_query = f"""
-    SELECT {id_col}, \
-    {calculation_type_col}, \
-    {f_aswkt}({geo_col}) as {df_geo_col} \
+    SELECT {id_col},
+    {calculation_type_col},
+    {f_aswkt}({geo_col}) as {df_geo_col}
     FROM {channels_layer}
     """
 #--------------------------------------------------------------------------------
 # Impervious surface query
 #--------------------------------------------------------------------------------
 
-impervious_surface_query =  f"""
-    SELECT {area_col}, \
-    {id_col} \
+impervious_surface_query = f"""
+    SELECT {area_col},
+    {id_col}
     FROM {impervious_surface_layer};
     """
 #--------------------------------------------------------------------------------
@@ -81,10 +82,37 @@ def construct_controlled_structures_query_inner(structure):
     return query
 
 def construct_controlled_structures_query():
-    query = f"""SELECT * FROM (\
-    {construct_controlled_structures_query_inner(weir_layer)} \
-    UNION {construct_controlled_structures_query_inner(culvert_layer)} \
+    query = f"""SELECT * FROM (
+    {construct_controlled_structures_query_inner(weir_layer)}
+    UNION {construct_controlled_structures_query_inner(culvert_layer)}
     UNION {construct_controlled_structures_query_inner(orifice_layer)})"""
     return query
 
 controlled_structures_query = construct_controlled_structures_query()
+
+#--------------------------------------------------------------------------------
+# Weir height query
+#--------------------------------------------------------------------------------
+
+weir_height_query = f"""
+    SELECT w.{code_col} as {a_weir_code},
+    w.{conn_node_start_id_col} as {a_weir_conn_node_start_id},
+    w.{conn_node_end_id_col} as {a_weir_conn_node_end_id},
+    {control_table_layer}.{action_col},
+    {channels_layer}.{conn_node_start_id_col} as {a_weir_chan_conn_start_id},
+    {channels_layer}.{conn_node_end_id_col} as {a_weir_chan_conn_end_id},
+    {channels_layer}.{id_col} as {a_chan_id},
+    {cross_sec_loc_layer}.{reference_level_col},
+    {cross_sec_loc_layer}.{id_col} as {a_weir_cross_loc_id},
+    {f_aswkt}({cross_sec_loc_layer}.{geo_col}) as {df_geo_col}
+    FROM {weir_layer} as w
+        INNER JOIN {control_table_layer}
+        ON w.{id_col} = {control_table_layer}.{target_id_col}
+        LEFT JOIN {channels_layer}
+        ON (w.{conn_node_end_id_col} in ({channels_layer}.{conn_node_start_id_col}, {channels_layer}.{conn_node_end_id_col})
+        OR w.{conn_node_start_id_col} in ({channels_layer}.{conn_node_start_id_col}, {channels_layer}.{conn_node_end_id_col}))
+        AND {channels_layer}.{id_col}
+        LEFT JOIN {cross_sec_loc_layer}
+        ON {channels_layer}.{id_col} = {cross_sec_loc_layer}.{channel_id_col}
+    WHERE {control_table_layer}.{target_type_col} = '{weir_layer}'
+    """

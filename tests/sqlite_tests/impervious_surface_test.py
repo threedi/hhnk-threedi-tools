@@ -1,7 +1,7 @@
 import geopandas as gpd
 from ...sql_interaction.sql_functions import execute_sql_selection
 from ...variables.definitions import ESRI_DRIVER
-from ...queries.tests.sqlite_tests.quick_tests import impervious_surface_query
+from ...queries.tests.sqlite_tests.quick_tests_selection_queries import impervious_surface_query
 from ...variables.database_variables import id_col
 
 def calc_surfaces_diff(db_imp_surface, polygon_imp_surface):

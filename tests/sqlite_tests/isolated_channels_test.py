@@ -1,4 +1,4 @@
-from ....toolbox_universal.queries.tests.sqlite_tests.quick_tests import isolated_channels_query
+from ....toolbox_universal.queries.tests.sqlite_tests.quick_tests_selection_queries import isolated_channels_query
 from ....toolbox_universal.sql_interaction.sql_functions import execute_sql_selection
 from ....toolbox_universal.dataframe_functions.conversion import convert_df_to_gdf
 from ....toolbox_universal.variables.database_variables import calculation_type_col

@@ -1,5 +1,5 @@
 import numpy as np
-from ....toolbox_universal.queries.tests.sqlite_tests.quick_tests import profiles_used_query
+from ....toolbox_universal.queries.tests.sqlite_tests.quick_tests_selection_queries import profiles_used_query
 from ....toolbox_universal.sql_interaction.sql_functions import execute_sql_selection
 from ....toolbox_universal.dataframe_functions.conversion import convert_df_to_gdf
 from ....toolbox_universal.tests.sqlite_tests.variables.dataframes_mapping import primary_col, water_level_width_col, \

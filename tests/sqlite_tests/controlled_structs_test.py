@@ -1,8 +1,7 @@
 import geopandas as gpd
-import pandas as pd
 from ...sql_interaction.sql_functions import execute_sql_selection
 from ...dataframe_functions.conversion import convert_df_to_gdf
-from ...queries.tests.sqlite_tests.quick_tests import controlled_structures_query
+from ...queries.tests.sqlite_tests.quick_tests_selection_queries import controlled_structures_query
 from ...variables.database_variables import target_type_col, action_col, weir_layer, code_col
 from ...variables.definitions import OPEN_FILE_GDB_DRIVER
 
