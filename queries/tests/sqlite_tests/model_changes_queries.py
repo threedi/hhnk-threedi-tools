@@ -18,5 +18,6 @@ def create_update_reference_level_query(wrong_profiles_gdf):
     SET {reference_level_col} = CASE {id_col}
     {statement_string}
     ELSE {reference_level_col}
+    END
     """
     return query
