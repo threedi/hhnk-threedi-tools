@@ -1,6 +1,5 @@
 # Names for tables in backup
-BANK_LVLS_MODEL_TABLE = 'backup_bank_levels_model'
-BANK_LVLS_1D2D_TABLE = 'backup_bank_levels_1d2d'
+BANK_LVLS_TABLE = 'backup_bank_levels'
 GLOBAL_SETTINGS_TABLE = 'backup_global_settings'
 MANHOLES_TABLE = 'backup_manholes'
 CHANNELS_TABLE = 'backup_channels'

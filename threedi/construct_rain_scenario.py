@@ -1,7 +1,8 @@
 import numpy as np
+from threedigrid.admin.gridresultadmin import GridH5ResultAdmin
 from .variables.gridadmin import all_1d, all_2d
 
-def calculate_rain_days(rain, revision_dir):
+def calculate_rain_days(rain):
     """
     Calculates days dry before and after rain
     """
@@ -11,9 +12,9 @@ def calculate_rain_days(rain, revision_dir):
         dry_days_end = max(0, (len(rain) - detected_rain[-1] - 1) / 24)
         return detected_rain, dry_days_start, dry_days_end
     else:
-        raise Exception(f"No rain detected for results in {revision_dir}")
+        raise Exception(f"Geen regen gedetecteerd in 3di scenario")
 
-def get_rain_properties(results, revision_dir):
+def get_rain_properties(results):
     '''
     Calculates the rain scenario used for this result
     '''
@@ -44,15 +45,17 @@ def get_rain_properties(results, revision_dir):
     elif any(rain_2d):
         rain = rain_2d
     else:
-        raise Exception(f"Could not find any rain for results in {revision_dir}")
+        raise Exception(f"Geen regen gedetecteerd in 3di scenario")
     return rain, dt, timestep
 
-def construct_scenario(loaded_results, revision_dir):
+def construct_scenario(test_env):
     try:
-        rain, dt, timestep = get_rain_properties(loaded_results, revision_dir)
-        detected_rain, days_dry_start, days_dry_end = calculate_rain_days(rain, revision_dir)
-        return rain, detected_rain, timestep, days_dry_start, days_dry_end
-        # rain_scenario_df = create_results_dataframe(timestep, days_dry_start, days_dry_end)
-        # rain_scenario_plot = create_scenario_plot()
+        nc_file = test_env.src_paths['nc_file']
+        h5_file = test_env.src_paths['h5_file']
+        result = GridH5ResultAdmin(h5_file_path=h5_file,
+                                   netcdf_file_path=nc_file)
+        rain, dt, timestep = get_rain_properties(result)
+        detected_rain, days_dry_start, days_dry_end = calculate_rain_days(rain)
+        return result, rain, detected_rain, timestep, days_dry_start, days_dry_end
     except Exception as e:
         raise e from None
