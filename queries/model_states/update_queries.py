@@ -1,7 +1,7 @@
 from ...variables.database_variables import global_settings_layer, control_group_col, name_col, \
     zero_d_one_d_val
 from ...variables.backups_table_names import GLOBAL_SETTINGS_TABLE
-from ...tests.model_state.definitions import one_d_two_d_state, hydraulic_test_state
+from ...tests.model_state.variables.definitions import one_d_two_d_state, hydraulic_test_state
 #--------------------------------------------------------------------------------
 # Get global settings update query
 #--------------------------------------------------------------------------------

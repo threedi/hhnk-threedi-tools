@@ -49,7 +49,7 @@ def build_output_files_dict(type, base_folder, revision_dir_name=None):
         files_dict['flow_1d2d_cross_sections_filename'] = 'stroming_1d2d_cross_sections'
         files_dict['flow_1d2d_channels_filename'] = 'stroming_1d2d_watergangen'
         files_dict['flow_1d2d_manholes_filename'] = 'stroming_1d2d_putten'
-        files_dict['overview_changes_bank_levels_filename'] = 'overzicht_aanpassingen_bank_levels'
+        # files_dict['overview_changes_bank_levels_filename'] = 'overzicht_aanpassingen_bank_levels'
 
     if type == 4:
         add_log_layer_path(base_path=files_dict['output'])
@@ -59,8 +59,6 @@ def build_output_files_dict(type, base_folder, revision_dir_name=None):
         files_dict['water_depth_filename_template'] = 'waterdiepte_T{}_uur'
 
     return files_dict
-    
-
 
 
 

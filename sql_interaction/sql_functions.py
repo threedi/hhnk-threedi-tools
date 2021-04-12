@@ -28,10 +28,10 @@ def execute_sql_selection(query, conn=None, database_path=None, **kwargs):
     """
     kill_connection = conn is None
     try:
-        if conn is None and database_path is not None:
-            conn = create_sqlite_connection(database_path=database_path)
-        else:
+        if database_path is None and conn is None:
             raise Exception("No connection or database path provided")
+        if database_path is not None:
+            conn = create_sqlite_connection(database_path=database_path)
         db = pd.read_sql(query, conn, **kwargs)
         return db
     except Exception as e:

@@ -1,5 +1,5 @@
 from ...variables.backups_table_names import GLOBAL_SETTINGS_TABLE
-from ...tests.model_state.definitions import hydraulic_test_state, one_d_two_d_state
+from ...tests.model_state.variables.definitions import hydraulic_test_state, one_d_two_d_state
 from ...variables.database_variables import name_col, zero_d_one_d_val
 
 #--------------------------------------------------------------------------------

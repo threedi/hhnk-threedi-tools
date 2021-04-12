@@ -12,14 +12,12 @@ class testEnvironment():
     conversion variables for model state conversions
     """
     def __init__(self, source_paths_dict, output_vars_dict=None, layers=None,
-                 uses_threedi=False, conversion_vars=None, selected_tests=None):
+                 conversion_vars=None, selected_tests=None):
         self.src_paths = source_paths_dict
         self.output_vars = output_vars_dict
         # Only for use with plugin: interaction with qgis
         self.layers = layers
-        # Stores information about threedi results
-        if uses_threedi:
-            self.threedi_vars = ThreediInformation()
+        self.threedi_vars = None
         self.conversion_vars = conversion_vars
         # Only for sqlite tests
         self.selected_tests = selected_tests

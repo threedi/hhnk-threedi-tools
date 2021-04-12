@@ -1,5 +1,5 @@
 import os
-from .definitions import hydraulic_test_state, one_d_two_d_state, undefined_state, invalid_path
+from .variables.definitions import hydraulic_test_state, one_d_two_d_state, undefined_state, invalid_path
 from ...sql_interaction.sql_functions import execute_sql_selection
 from ...queries.query_functions import construct_select_query
 from ...variables.database_variables import global_settings_layer, control_group_col

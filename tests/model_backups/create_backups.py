@@ -1,5 +1,5 @@
 from ...sql_interaction.sql_functions import replace_or_add_table
-from ..model_state.definitions import undefined_state, one_d_two_d_state
+from ..model_state.variables.definitions import undefined_state, one_d_two_d_state
 from ...variables.backups_table_names import GLOBAL_SETTINGS_TABLE, BANK_LVLS_TABLE, MANHOLES_TABLE, \
     CONTR_WEIR_WIDTH_BACKUP, CHANNELS_TABLE
 from ...variables.database_variables import global_settings_layer, cross_sec_loc_layer, channels_layer, \
