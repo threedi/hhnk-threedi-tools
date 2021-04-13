@@ -1,4 +1,3 @@
-
 # 1D2D dataframe
 one_d_node_id_col = '1dnode_id'
 node_id_col = 'node_id'
@@ -30,3 +29,8 @@ node_in_wrong_fixed_area = 'node_in_wrong_fixeddrainage_area'
 init_plus_10_val = 'initial+10cm'
 ref_plus_10_val = 'reference+10cm'
 levee_height_val = 'levee_height'
+
+# Bank levels
+new_bank_level_col = 'new_bank_level'
+new_bank_level_source_col = 'bank_level_source'
+bank_level_diff_col = 'bank_level_diff'

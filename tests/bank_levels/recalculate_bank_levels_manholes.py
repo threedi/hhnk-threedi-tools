@@ -5,7 +5,7 @@ from .variables.dataframe_variables import added_calc_val, node_type_col, node_g
     levee_height_col, init_wlevel_col, one_d_two_d_crosses_fixed, levee_height_val, ref_plus_10_val, init_plus_10_val
 from ...variables.database_variables import initial_waterlevel_col, type_col, reference_level_col, bank_level_col
 from ...variables.database_aliases import df_geo_col, a_chan_id, a_man_id, a_cross_loc_id
-from .dataframe_mapping import new_bank_level_col, new_bank_level_source_col, bank_level_diff_col
+from .variables.dataframe_variables import new_bank_level_col, new_bank_level_source_col, bank_level_diff_col
 from .gather_information import gather_information
 
 def cross_sec_loc_that_need_new_bank_levels(intersect_1d2d_all, channel_line_geo, cross_loc):
