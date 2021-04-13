@@ -2,7 +2,8 @@ from shapely.geometry import Point
 from ...variables.database_aliases import df_geo_col
 
 def extract_boundary_from_polygon(polygon):
-    """Extract the boundaries from a multipolygon. This way the intersection with the boundaries can be found."""
+    """Extract the boundaries from a multipolygon.
+    This way the intersection with the boundaries can be found."""
     try:
         lines_gdf = polygon.explode()
         lines_gdf[df_geo_col] = lines_gdf[df_geo_col].boundary
