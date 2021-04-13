@@ -1,7 +1,7 @@
 import geopandas as gpd
 import numpy as np
 import pandas as pd
-from ...threedi.variables.results_mapping import added_calc_val, node_type_col, node_geometry_col, \
+from .variables.dataframe_variables import added_calc_val, node_type_col, node_geometry_col, \
     levee_height_col, init_wlevel_col, one_d_two_d_crosses_fixed, levee_height_val, ref_plus_10_val, init_plus_10_val
 from ...variables.database_variables import initial_waterlevel_col, type_col, reference_level_col, bank_level_col
 from ...variables.database_aliases import df_geo_col, a_chan_id, a_man_id, a_cross_loc_id
@@ -60,12 +60,12 @@ def get_new_bank_levels_cross_loc(cross_loc, channel_line_geo, cross_loc_levee, 
         ref_higher_than_init = cross_loc_new_all[reference_level_col] > cross_loc_new_all[init_wlevel_col]
         cross_loc_new_all.loc[ref_higher_than_init,
                               new_bank_level_col] = np.round(
-            cross_loc_new_all[reference_level_col] + 0.1, 3).astype(float) #, ref_plus_10
+            cross_loc_new_all[reference_level_col] + 0.1, 3).astype(float)
         cross_loc_new_all.loc[ref_higher_than_init,
                               new_bank_level_source_col] = ref_plus_10_val
         # The cross locations that need levee height are set here
         cross_loc_new_all.loc[cross_loc_levee.index, new_bank_level_col] = cross_loc_levee[
-            levee_height_col].astype(float) #, levee_height]
+            levee_height_col].astype(float)
         cross_loc_new_all.loc[cross_loc_levee.index, new_bank_level_source_col] = levee_height_val
 
         # Cross locations that are associated with peilgrenzen get a special label for recognition (values are already set)
@@ -89,7 +89,7 @@ def get_new_bank_levels_cross_loc(cross_loc, channel_line_geo, cross_loc_levee, 
     except Exception as e:
         raise e from None
 
-def get_all_channels(channel_line_geo, cross_loc_new_all):
+def get_updated_channels(channel_line_geo, cross_loc_new_all):
     """With the new (and old) bank levels at cross_section_locations we make a new overview of the channels here.
     In qgis this can be plotted to show how the channels interact with 1d2d (considering bank heights)"""
     cross_locs = cross_loc_new_all.drop_duplicates(a_chan_id)[
@@ -105,15 +105,13 @@ def recalculate_bank_levels(test_env):
             all_1d2d_flowlines = gather_information(test_env)
         # Finds all channels that intersect with added calculation nodes, matches those that cross
         # levees or peilgrenzen (fixeddrainage) and returns cross section locations matching those channels id's
-        cross_loc_fixeddrainage, cross_loc_levee, cross_loc_overview = cross_sec_loc_that_need_new_bank_levels(
-            calc_node_intersections,
-            channels_gdf,
-            cross_loc_gdf)
+        cross_loc_fixeddrainage, cross_loc_levee, cross_loc_overview = \
+            cross_sec_loc_that_need_new_bank_levels(calc_node_intersections, channels_gdf, cross_loc_gdf)
         cross_loc_new_all, cross_loc_new = get_new_bank_levels_cross_loc(cross_loc_gdf,
                                                                          channels_gdf,
                                                                          cross_loc_levee,
                                                                          cross_loc_fixeddrainage)
-        all_channels = get_all_channels(channels_gdf, cross_loc_new_all)
+        all_channels = get_updated_channels(channels_gdf, cross_loc_new_all)
         return cross_loc_new, new_manholes_gdf, all_1d2d_flowlines, all_channels, cross_loc_new_all, all_manholes_gdf
     except Exception as e:
         raise e from None
