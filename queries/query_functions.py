@@ -1,3 +1,31 @@
+def create_update_case_statement(df, layer, df_id_col, db_id_col, new_val_col,
+                                 excluded_ids=[], old_val_col=None, show_prev=False):
+    try:
+        query = None
+        if not show_prev:
+            vals_list = [(idx, val) for idx, val in zip(df[df_id_col], df[new_val_col])
+                         if idx not in excluded_ids]
+            statement_list = [f"WHEN {idx} THEN {val}"
+                              for idx, val in vals_list]
+        else:
+            vals_list = [(old_val, new_val, cur_id) for old_val, new_val, cur_id in
+                         zip(df[old_val_col], df[new_val_col], df[df_id_col])
+                         if cur_id not in excluded_ids]
+            statement_list = [f"WHEN {cur_id} THEN {new_val} -- Previous {old_val}"
+                              for old_val, new_val, cur_id in vals_list]
+        if statement_list:
+            statement_string = '\n'.join(statement_list)
+            query = f"""
+            UPDATE {layer}
+            SET {old_val_col} = CASE {db_id_col}
+            {statement_string}
+            ELSE {old_val_col}
+            END
+            """
+        return query
+    except Exception as e:
+        raise e from None
+
 def construct_select_query(table, columns=None):
     """
     This functions constructs sql queries that select either all

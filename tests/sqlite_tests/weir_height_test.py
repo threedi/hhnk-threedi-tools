@@ -4,6 +4,7 @@ from ...variables.database_aliases import a_weir_code, a_weir_conn_node_start_id
     a_weir_conn_node_end_id, a_weir_cross_loc_id, a_chan_id, df_geo_col
 from ...variables.database_variables import reference_level_col, action_col, id_col, cross_sec_loc_layer
 from ...queries.tests.sqlite_tests.quick_tests_selection_queries import weir_height_query
+from ...queries.query_functions import create_update_case_statement
 
 min_crest_height = 'min_crest_height'
 diff_crest_ref = 'diff_crest_reference'
@@ -12,25 +13,6 @@ new_ref_lvl = 'proposed_reference_level'
 
 output_cols = [a_weir_code, a_weir_conn_node_start_id, a_weir_conn_node_end_id, a_weir_cross_loc_id, a_chan_id,
                min_crest_height, reference_level_col, new_ref_lvl, df_geo_col]
-
-def create_update_reference_level_query(wrong_profiles_gdf):
-    """
-    Creates qsl query to update reference level where minimum weir height is below
-    ground level
-    """
-    vals_list = [(ref_lvl, nw_ref_lvl, wr_id) for ref_lvl, nw_ref_lvl, wr_id in
-                 zip(wrong_profiles_gdf[reference_level_col], wrong_profiles_gdf[new_ref_lvl],
-                     wrong_profiles_gdf[a_weir_cross_loc_id])]
-    statement_list = [f"WHEN {wr_id} THEN {round(nw_ref_lvl, 2)} -- Previous {ref_lvl}"
-                      for ref_lvl, nw_ref_lvl, wr_id in vals_list]
-    statement_string = ',\n'.join(statement_list)
-    query = f"""
-    UPDATE {cross_sec_loc_layer}
-    SET {reference_level_col} = CASE {id_col}
-    {statement_string}
-    ELSE {reference_level_col}
-    """
-    return query
 
 def check_weir_floor_level(test_env):
     """
@@ -53,7 +35,10 @@ def check_weir_floor_level(test_env):
         weirs_gdf.loc[weirs_gdf[wrong_profile] == 1, new_ref_lvl] = \
             round(weirs_gdf.loc[weirs_gdf[wrong_profile] == 1, min_crest_height] - 0.01, 2)
         wrong_profiles_gdf = weirs_gdf[weirs_gdf[wrong_profile]][output_cols]
-        update_query = create_update_reference_level_query(wrong_profiles_gdf)
+        update_query = create_update_case_statement(df=wrong_profiles_gdf, layer=cross_sec_loc_layer,
+                                                    df_id_col=a_weir_cross_loc_id, db_id_col=id_col,
+                                                    new_val_col=new_ref_lvl, old_val_col=reference_level_col)
+        print('weir heights\n', update_query)
         return wrong_profiles_gdf, update_query
     except Exception as e:
         raise e from None

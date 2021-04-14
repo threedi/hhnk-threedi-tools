@@ -1,7 +1,8 @@
 from ...variables.database_variables import global_settings_layer, control_group_col, name_col, \
-    zero_d_one_d_val
+    zero_d_one_d_val, id_col, manhole_layer, calculation_type_col
 from ...variables.backups_table_names import GLOBAL_SETTINGS_TABLE
 from ...tests.model_state.variables.definitions import one_d_two_d_state, hydraulic_test_state
+from ...queries.query_functions import create_update_case_statement
 #--------------------------------------------------------------------------------
 # Get global settings update query
 #--------------------------------------------------------------------------------
@@ -38,3 +39,15 @@ def create_global_settings_update_query(to_state, ids_to_add=[], ids_to_delete=[
                                     operator=('!=' if to_state == one_d_two_d_state else '==')))
     query = ';\n'.join(query_list)
     return query
+
+def construct_manholes_update_query(manholes_to_update_df):
+    try:
+        query = create_update_case_statement(df=manholes_to_update_df,
+                                             layer=manhole_layer,
+                                             df_id_col=id_col,
+                                             db_id_col=id_col,
+                                             old_val_col=calculation_type_col,
+                                             new_val_col=new_calc_type_col)
+        return query
+    except Exception as e:
+        raise e from None

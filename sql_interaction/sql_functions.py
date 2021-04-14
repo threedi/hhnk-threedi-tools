@@ -1,5 +1,6 @@
 import sqlite3
 import pandas as pd
+from ..queries.query_functions import construct_select_query
 
 def create_sqlite_connection(database_path):
     try:
@@ -120,6 +121,19 @@ def replace_or_add_table(db,
             query = f"REPLACE INTO {dst_table_name} " \
                     f"SELECT * from {src_table_name}"
         execute_sql_changes(query=query, conn=conn)
+    except Exception as e:
+        raise e from None
+    finally:
+        if conn:
+            conn.close()
+
+def get_table_as_df(database_path, table_name, columns=None):
+    conn = None
+    try:
+        conn = create_sqlite_connection(database_path=database_path)
+        query = construct_select_query(table_name, columns)
+        df = execute_sql_selection(query=query, conn=conn)
+        return df
     except Exception as e:
         raise e from None
     finally:
