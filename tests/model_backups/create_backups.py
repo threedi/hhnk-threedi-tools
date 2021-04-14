@@ -6,7 +6,7 @@ from ...variables.database_variables import global_settings_layer, cross_sec_loc
     cross_sec_def_layer, manhole_layer
 from ...queries.model_backup_queries import weir_width_backup_query
 
-def create_backups(model_path, state, manholes_bank_levels_only=False):
+def create_backups(model_path, state=None, manholes_bank_levels_only=False):
     """
     Creates backups based on current model state. If manholes_bank_levels_only is true,
     the function is being called after successful changes by bank_levels function.

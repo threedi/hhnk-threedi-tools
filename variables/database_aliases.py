@@ -25,3 +25,7 @@ a_man_conn_id = 'conn_node_id'
 a_conn_nodes = 'nodes'
 a_cross_loc_id = 'cross_loc_id'
 a_conn_node_id = 'conn_node_id'
+
+# model states weir_widths
+a_weir_cross_def_id = 'cross_def_id'
+a_weir_id = 'weir_id'

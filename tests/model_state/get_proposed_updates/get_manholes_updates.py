@@ -7,14 +7,15 @@ from ...model_backups.find_differences_model_backup import select_values_to_upda
 
 def get_proposed_updates_manholes(test_env):
     try:
-        manholes_to_update = None
+        model_path = test_env.src_paths['model']
         to_state = test_env.conversion_vars.to_state
         from_state = test_env.conversion_vars.from_state
-        model_path = test_env.src_paths['model']
         manholes_in_model_df = get_table_as_df(database_path=model_path, table_name=manhole_layer)
         if to_state == hydraulic_test_state:
             # We have to set all calculation types to isolated
-            manholes_in_model_df.insert(manholes_in_model_df.get_loc(calculation_type_col), manholes_new_calc_type, 1)
+            manholes_in_model_df.insert(manholes_in_model_df.columns.get_loc(calculation_type_col) + 1,
+                                        manholes_new_calc_type,
+                                        1)
             manholes_to_update = manholes_in_model_df[manholes_in_model_df[calculation_type_col]
                                                       != manholes_in_model_df[manholes_new_calc_type]]
         elif from_state == hydraulic_test_state:
