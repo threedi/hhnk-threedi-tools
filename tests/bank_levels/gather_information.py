@@ -29,10 +29,10 @@ def get_intersections(fixeddrainage_line, lines_1d2d, levee_line_gdf):
 
     # Combine intersections with levees and fixeddrainagelevelarea
     calc_node_intersections = pd.concat([calc_node_intersects_levee, calc_node_intersects_fixeddrainage],
-                                   ignore_index=False, sort=False)
+                                        ignore_index=False, sort=False)
     # Drop duplicate node id's, keeping highest levee. Levee intersection takes precedence over fixeddrainage intersection
     calc_node_intersections = calc_node_intersections.sort_values([levee_height_col, type_col],
-                                                        ascending=False).drop_duplicates(
+                                                                  ascending=False).drop_duplicates(
         one_d_node_id_col).sort_index()
     return calc_node_intersections
 
