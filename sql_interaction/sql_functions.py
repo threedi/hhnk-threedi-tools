@@ -98,6 +98,8 @@ def replace_or_add_table(db,
     of the column and it's type
     """
     try:
+        print(f"Replace or add table {src_table_name} {dst_table_name}")
+        print(select_statement)
         query_list = []
         conn = create_sqlite_connection(database_path=db)
         curr = conn.cursor()
@@ -105,12 +107,14 @@ def replace_or_add_table(db,
         exists = curr.execute(f"SELECT count() from sqlite_master "
                               f"WHERE type='table' and name='{dst_table_name}'").fetchone()[0]
         if exists == 0:
+            print("Doesn't exist yet")
             # Get the original creation statement from the table we are backing up if the new table doesn't exist
             if select_statement is None:
                 select_statement = f"SELECT * from {src_table_name}"
             creation_statement = get_creation_statement_from_table(src_table_name=src_table_name,
                                                                    dst_table_name=dst_table_name,
                                                                    cursor=curr)
+            print(f"creation statement {creation_statement}")
             query_list.append(creation_statement)
             # Create the statement that copies the columns specified in select statement or copies the entire table
             copy_statement = f"INSERT INTO {dst_table_name} {select_statement}"

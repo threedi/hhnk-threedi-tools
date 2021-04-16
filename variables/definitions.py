@@ -4,3 +4,4 @@ ESRI_DRIVER = 'ESRI Shapefile'
 OPEN_FILE_GDB_DRIVER = 'OpenFileGDB'
 
 channels_isolated_calc_type = 101
+proposed_value_col = 'proposed_value'

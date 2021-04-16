@@ -20,7 +20,7 @@ def get_rows_to_add(model_path, to_state, rows_in_model_df, id_column):
     except Exception as e:
         raise e from None
 
-def get_ids_to_delete(rows_in_model_df, to_state, selection_col, id_column):
+def get_rows_to_delete(rows_in_model_df, to_state, selection_col, id_column):
     """
     Selects ids that are currently in the model and selects which ones
     should be deleted based on the new model state
@@ -55,10 +55,10 @@ def get_proposed_adjustments_global_settings(test_env):
                                       to_state=to_state,
                                       rows_in_model_df=rows_in_model,
                                       id_column=id_col)
-        rows_to_delete = get_ids_to_delete(rows_in_model_df=rows_in_model,
-                                           to_state=to_state,
-                                           selection_col=name_col,
-                                           id_column=id_col)
+        rows_to_delete = get_rows_to_delete(rows_in_model_df=rows_in_model,
+                                            to_state=to_state,
+                                            selection_col=name_col,
+                                            id_column=id_col)
         preview_df = pd.concat([rows_in_model, rows_to_add])[[id_col, name_col, control_group_col]]
         if to_state == hydraulic_test_state:
             new_value = None

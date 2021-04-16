@@ -1,17 +1,22 @@
 def create_update_case_statement(df, layer, df_id_col, db_id_col, new_val_col,
-                                 excluded_ids=[], old_val_col=None, show_prev=False):
+                                 excluded_ids=[], old_val_col=None, show_prev=False,
+                                 show_proposed=False):
+    if show_proposed and show_prev:
+        raise Exception("create_update_case_statement: "
+                        "Only one of show_prev and show_proposed can be True")
     try:
         query = None
-        if not show_prev:
+        if not show_prev and not show_proposed:
             vals_list = [(idx, val) for idx, val in zip(df[df_id_col], df[new_val_col])
                          if idx not in excluded_ids]
-            statement_list = [f"WHEN {idx} THEN {val}"
+            statement_list = [f"WHEN {idx} THEN {val if not val is None else 'null'}"
                               for idx, val in vals_list]
         else:
+            comment = 'Previous:' if show_prev else 'Proposed'
             vals_list = [(old_val, new_val, cur_id) for old_val, new_val, cur_id in
                          zip(df[old_val_col], df[new_val_col], df[df_id_col])
                          if cur_id not in excluded_ids]
-            statement_list = [f"WHEN {cur_id} THEN {new_val} -- Previous {old_val}"
+            statement_list = [f"WHEN {cur_id} THEN {new_val if not new_val is None else 'null'} -- {comment} {old_val}"
                               for old_val, new_val, cur_id in vals_list]
         if statement_list:
             statement_string = '\n'.join(statement_list)
