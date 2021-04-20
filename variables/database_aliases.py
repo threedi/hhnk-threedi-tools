@@ -29,3 +29,26 @@ a_conn_node_id = 'conn_node_id'
 # model states weir_widths
 a_weir_cross_def_id = 'cross_def_id'
 a_weir_id = 'weir_id'
+
+# Geometry checks
+a_geo_start_coord = 'start_coord'
+a_geo_end_coord = 'end_coord'
+a_geo_start_node = 'start_node'
+a_geo_end_node = 'end_node'
+a_geo_conn_nodes_end = 'connection_nodes_end'
+a_geo_conn_nodes_start = 'connection_nodes_start'
+
+# Channel bed struct
+a_chan_bed_struct_type = 'struct_type'
+a_chan_bed_struct_id = 'struct_id'
+a_chan_bed_channel_id = 'channel_id'
+a_chan_bed_struct_code = 'struct_code'
+a_chan_bed_conn_id = 'conn_id'
+a_chan_bed_struct_ref_lvl = 'struct_reference_level'
+a_chan_bed_cross_ref_lvl = 'cross_reference_level'
+a_chan_bed_cross_id = 'cross_id'
+a_chan_bed_dist_cross_struct = 'dist_cross_to_structure'
+
+# Watersurface area
+a_watersurf_conn_id = 'conn_id'
+

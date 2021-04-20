@@ -21,4 +21,5 @@ class testEnvironment():
         self.conversion_vars = conversion_vars
         # Only for sqlite tests
         self.selected_tests = selected_tests
+        self.tasks = []
 

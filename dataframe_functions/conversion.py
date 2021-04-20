@@ -2,7 +2,7 @@ import geopandas as gpd
 from shapely import wkt
 from ..variables.definitions import WKT
 from ..variables.default_variables import DEF_GEOMETRY_COL, DEF_SRC_CRS, DEF_TRGT_CRS
-from ..sql_interaction.sql_functions import execute_sql_selection
+from ..sql_interaction.sql_functions import execute_sql_selection, create_sqlite_connection
 
 def set_geometry_by_type(db, geom_col_type, col=DEF_GEOMETRY_COL):
     if geom_col_type == WKT:
@@ -22,8 +22,13 @@ def convert_df_to_gdf(df, geom_col_type=WKT, geometry_col=DEF_GEOMETRY_COL,
     except Exception as e:
         raise e from None
 
-def gdf_from_sql(conn, query, id_col, to_gdf=True):
+def gdf_from_sql(query, id_col, to_gdf=True, conn=None, database_path=None):
+    if conn is None and database_path is None:
+        raise Exception("Provide at least one of conn or database_path")
     try:
+        kill_conn = conn is None
+        if conn is None:
+            conn = create_sqlite_connection(database_path=database_path)
         df = execute_sql_selection(query=query, conn=conn)
         if to_gdf:
             df = convert_df_to_gdf(df=df)
@@ -31,3 +36,6 @@ def gdf_from_sql(conn, query, id_col, to_gdf=True):
         return df
     except Exception as e:
         raise e from None
+    finally:
+        if kill_conn and conn is not None:
+            conn.close()

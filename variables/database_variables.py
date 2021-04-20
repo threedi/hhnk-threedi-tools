@@ -64,10 +64,15 @@ storage_area_col = 'storage_area'
 zoom_cat_col = 'zoom_category'
 name_col = 'name'
 control_group_col = 'control_group_id'
+crest_level_col = 'crest_level'
 
 # SQLITE FUNCTIONS
 f_aswkt = 'AsWKT'
 f_makeline = 'MakeLine'
+f_transform = 'ST_Transform'
+f_pointn = 'ST_PointN'
+f_numpoints = 'ST_NumPoints'
+f_distance = 'ST_distance'
 
 # Default values
 zero_d_one_d_val = '0d1d_test'

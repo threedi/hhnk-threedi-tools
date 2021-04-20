@@ -1,3 +1,5 @@
+import gdal
+
 #   Output file types: to prevent typo's and in case of remapping
 TIF = 'tif'
 CSV = 'csv'
@@ -14,6 +16,7 @@ GDB = 'gdb'
 SHX = 'shx'
 DBF = 'dbf'
 PRJ = 'prj'
+GDAL_DATATYPE = gdal.GDT_Float32
 file_types_dict = {'csv': '.csv',
                    'txt': '.txt',
                    'shp': '.shp',

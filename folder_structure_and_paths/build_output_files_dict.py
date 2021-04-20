@@ -33,9 +33,9 @@ def build_output_files_dict(type, base_folder, revision_dir_name=None):
         files_dict['structs_channel_filename'] = 'kunstwerken_op_watergangen'
         files_dict['general_checks_filename'] = 'algemene_tests'
         files_dict['isolated_channels_filename'] = 'geisoleerde_watergangen'
-        files_dict['dem_max_val_filename'] = 'maximale_waarde_dem'
+        files_dict['init_water_level_filename'] = 'initieel_water_level'
         files_dict['dewatering_filename'] = 'drooglegging'
-        files_dict['watersurface_filename'] = 'oppervlaktewater'
+        files_dict['water_surface_filename'] = 'oppervlaktewater'
 
     if type == 2:
         add_log_layer_path(base_path=files_dict['output'])
