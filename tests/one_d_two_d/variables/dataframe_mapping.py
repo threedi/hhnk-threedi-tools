@@ -1,0 +1,7 @@
+id_col = 'id'
+spatialite_id_col = 'spatialite_id'
+content_type_col = 'content_type'
+kcu_col = 'kcu'
+q_m3_s_col = 'q_m3_s'
+vel_m_s_col = 'vel_m_s'
+pump_capacity_m3_s_col = 'pump_capacity_m3_s'

@@ -5,8 +5,8 @@ from ...variables.database_aliases import a_cross_loc_id, a_weir_cross_def_id
 from ...queries.query_functions import create_update_case_statement
 from ...variables.definitions import proposed_value_col
 
-def collect_excluded(global_settings_excluded, bank_levels_excluded, new_manholes_excluded,
-                     manhole_updates_excluded, weirs_heights_excluded, channels_excluded):
+def collect_excluded(global_settings_excluded=None, bank_levels_excluded=None, new_manholes_excluded=None,
+                     manhole_updates_excluded=None, weirs_heights_excluded=None, channels_excluded=None):
     exception_format = "Id's overgeslagen:\nTabel: {}\nKolom: {}\nIds: {}"
     exceptions_list = []
     if global_settings_excluded:
@@ -42,8 +42,9 @@ def collect_excluded(global_settings_excluded, bank_levels_excluded, new_manhole
     exceptions_string = '\n\n'.join(exceptions_list)
     return exceptions_string
 
-def collect_manual_adjustments(global_settings_manual_df, bank_levels_manual_df, manhole_update_manual_df,
-                               weir_widths_manual_df, channels_manual_df):
+def collect_manual_adjustments(global_settings_manual_df=None, bank_levels_manual_df=None,
+                               manhole_update_manual_df=None, weir_widths_manual_df=None,
+                               channels_manual_df=None):
     """
     Add the possibility to make columns editable for changes that affect columns (so not the ones
     deleting or adding rows currently). We collect these manual changes and can return them to the user

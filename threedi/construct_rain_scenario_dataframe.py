@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 from .variables.rain_dataframe import t_0_col, t_start_rain_col, t_end_rain_min_one_col, t_end_sum_col, \
-    t_end_rain_col, index_col
+    t_end_rain_col, t_index_col
 
 def create_results_dataframe(timestep, days_dry_start, days_dry_end):
     """
@@ -17,5 +17,5 @@ def create_results_dataframe(timestep, days_dry_start, days_dry_end):
     timesteps_df_columns = [t_0_col, t_start_rain_col, t_end_rain_min_one_col, t_end_rain_col, t_end_sum_col]
     timesteps_df_values = [T0_values, T_rain_start_values, T_rain_end_min_one_values,
                            T_rain_end_values, T_end_sum_values]
-    timesteps_dataframe = pd.DataFrame(data=[timesteps_df_values], columns=timesteps_df_columns, index=[index_col])
+    timesteps_dataframe = pd.DataFrame(data=[timesteps_df_values], columns=timesteps_df_columns, index=[t_index_col])
     return timesteps_dataframe

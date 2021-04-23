@@ -39,3 +39,11 @@ def gdf_from_sql(query, id_col, to_gdf=True, conn=None, database_path=None):
     finally:
         if kill_conn and conn is not None:
             conn.close()
+
+def create_gdf_from_df(df, geometry_col, crs=DEF_TRGT_CRS):
+    trgt_crs = f'EPSG:{crs}'
+    try:
+        gdf = gpd.GeoDataFrame(df, geometry=geometry_col, crs=trgt_crs)
+        return gdf
+    except Exception as e:
+        raise e from None

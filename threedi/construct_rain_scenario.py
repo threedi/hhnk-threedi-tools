@@ -56,7 +56,6 @@ def construct_scenario(test_env):
                                    netcdf_file_path=nc_file)
         rain, dt, timestep = get_rain_properties(result)
         detected_rain, days_dry_start, days_dry_end = calculate_rain_days(rain)
-        print(result.levees)
         return result, rain, detected_rain, timestep, days_dry_start, days_dry_end
     except Exception as e:
         raise e from None
