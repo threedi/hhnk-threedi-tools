@@ -5,8 +5,7 @@ from shapely.geometry import LineString
 from ...wsa.conversion_functions import line_geometries_to_coords
 from ...variables.default_variables import DEF_TRGT_CRS
 from ...variables.types import UTF8
-from .variables.definitions import one_d_two_d, two_d, start_rain_sfx, end_rain_sfx, twelve_hr_after_rain_sfx, \
-    max_sfx, suffixes_list, pump_line
+from .variables.definitions import one_d_two_d, two_d, max_sfx, suffixes_list, pump_line
 from .variables.dataframe_mapping import id_col, spatialite_id_col, content_type_col, kcu_col, q_m3_s_col, \
     vel_m_s_col, pump_capacity_m3_s_col
 from ...threedi.variables.rain_dataframe import t_start_rain_col, t_end_sum_col, t_end_rain_col
