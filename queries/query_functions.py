@@ -1,6 +1,5 @@
-def create_update_case_statement(df, layer, df_id_col, db_id_col, new_val_col,
-                                 excluded_ids=[], old_val_col=None, show_prev=False,
-                                 show_proposed=False):
+def create_update_case_statement(df, layer, df_id_col, db_id_col, new_val_col, excluded_ids=[],
+                                 old_val_col=None, old_col_name=None, show_prev=False, show_proposed=False):
     if show_proposed and show_prev:
         raise Exception("create_update_case_statement: "
                         "Only one of show_prev and show_proposed can be True")
@@ -22,7 +21,7 @@ def create_update_case_statement(df, layer, df_id_col, db_id_col, new_val_col,
             statement_string = '\n'.join(statement_list)
             query = f"""
             UPDATE {layer}
-            SET {old_val_col} = CASE {db_id_col}
+            SET {old_col_name if old_col_name is not None else old_val_col} = CASE {db_id_col}
             {statement_string}
             ELSE {old_val_col}
             END
