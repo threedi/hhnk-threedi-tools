@@ -21,3 +21,5 @@ wet_area_m2_col = 'wet_area_m2'
 volume_m3_col = 'volume_m3'
 storage_mm_col = 'storage_mm'
 
+# waterlevel at timesteps
+wtrlvl_col = 'wtr_lvl'

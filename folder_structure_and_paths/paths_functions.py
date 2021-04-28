@@ -1,4 +1,5 @@
 import os
+from ..variables.types import file_types_dict, TIF
 
 def get_top_level_directories(folder, condition_test=None):
     """
@@ -7,3 +8,10 @@ def get_top_level_directories(folder, condition_test=None):
     """
     return [item for item in (os.path.join(folder, d1) for d1 in os.listdir(folder))
             if os.path.isdir(item) and (condition_test(item) if condition_test is not None else True)]
+
+def create_tif_path(folder, filename):
+    try:
+        full_path = os.path.join(folder, filename + file_types_dict[TIF])
+        return full_path
+    except Exception as e:
+        raise e from None
