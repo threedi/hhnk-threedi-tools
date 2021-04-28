@@ -12,14 +12,10 @@ from .variables.dataframe_mapping import res_orifices, res_culverts, res_channel
 def add_code(table, structure_lines, structure_name):
     # Conversion to string is because otherwise these are objects, which isn't valid for geopackage format
     # Ophalen code die in damo staat (dit werkt nog niet lekker in de grid)
-    def clean_code_string(item):
-        res = str(item).split("'")
-        return res[1]
-
     if structure_name != res_orifices:  # Voor orifices staat dit niet in de code, maar in de display_name
-        table[code_col] = [item for item in map(clean_code_string, structure_lines.code.tolist())]
+        table[code_col] = structure_lines.code.astype('U13')
     else:
-        table[code_col] = [item for item in map(clean_code_string, structure_lines.display_name.tolist())]
+        table[code_col] = structure_lines.display_name.astype('U13')
 
 def add_waterlevel_info(structure, structure_lines, wtrlvl_nodes_at_timesteps, t_end):
     # Bepalen waterstanden -----------------------------------------------------------

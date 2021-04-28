@@ -4,6 +4,8 @@ from ...variables.database_variables import global_settings_layer, id_col, manho
 from ...variables.database_aliases import a_cross_loc_id, a_weir_cross_def_id
 from ...queries.query_functions import create_update_case_statement
 from ...variables.definitions import proposed_value_col
+from ...variables.database_variables import manhole_layer, cross_sec_loc_layer, global_settings_layer,\
+    cross_sec_def_layer, channels_layer
 
 def collect_excluded(global_settings_excluded=None, bank_levels_excluded=None, new_manholes_excluded=None,
                      manhole_updates_excluded=None, weirs_heights_excluded=None, channels_excluded=None):
@@ -54,6 +56,7 @@ def collect_manual_adjustments(global_settings_manual_df=None, bank_levels_manua
         queries_list = []
         if global_settings_manual_df is not None and not global_settings_manual_df.empty:
             queries_list.append(create_update_case_statement(df=global_settings_manual_df,
+                                                             layer=global_settings_layer,
                                                              df_id_col=id_col,
                                                              db_id_col=id_col,
                                                              old_val_col=proposed_value_col,
@@ -61,6 +64,7 @@ def collect_manual_adjustments(global_settings_manual_df=None, bank_levels_manua
                                                              show_proposed=True))
         if bank_levels_manual_df is not None and not bank_levels_manual_df.empty:
             queries_list.append(create_update_case_statement(df=bank_levels_manual_df,
+                                                             layer=cross_sec_loc_layer,
                                                              df_id_col=a_cross_loc_id,
                                                              db_id_col=id_col,
                                                              old_val_col=proposed_value_col,
@@ -68,6 +72,7 @@ def collect_manual_adjustments(global_settings_manual_df=None, bank_levels_manua
                                                              show_proposed=True))
         if manhole_update_manual_df is not None and not manhole_update_manual_df.empty:
             queries_list.append(create_update_case_statement(df=manhole_update_manual_df,
+                                                             layer=manhole_layer,
                                                              df_id_col=id_col,
                                                              db_id_col=id_col,
                                                              old_val_col=proposed_value_col,
@@ -75,6 +80,7 @@ def collect_manual_adjustments(global_settings_manual_df=None, bank_levels_manua
                                                              show_proposed=True))
         if weir_widths_manual_df is not None and not weir_widths_manual_df.empty:
             queries_list.append(create_update_case_statement(df=weir_widths_manual_df,
+                                                             layer=cross_sec_def_layer,
                                                              df_id_col=a_weir_cross_def_id,
                                                              db_id_col=id_col,
                                                              old_val_col=proposed_value_col,
@@ -82,6 +88,7 @@ def collect_manual_adjustments(global_settings_manual_df=None, bank_levels_manua
                                                              show_proposed=True))
         if channels_manual_df is not None and not channels_manual_df.empty:
             queries_list.append(create_update_case_statement(df=channels_manual_df,
+                                                             layer=channels_layer,
                                                              df_id_col=id_col,
                                                              db_id_col=id_col,
                                                              old_val_col=proposed_value_col,

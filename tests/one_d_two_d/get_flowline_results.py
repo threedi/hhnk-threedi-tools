@@ -21,8 +21,6 @@ def read_flowline_results(threedi_result, timesteps_df):
         content_type_list = threedi_result.lines.content_type.astype('U13')
         flowlines_gdf[content_type_col] = content_type_list
 
-        flowlines_gdf[content_type_col] = threedi_result.lines.content_type.tolist()
-        flowlines_gdf[content_type_col] = flowlines_gdf[content_type_col].str.decode(UTF8)
         flowlines_gdf[kcu_col] = threedi_result.lines.kcu
         flowlines_gdf.loc[flowlines_gdf[kcu_col].isin([51, 52]), content_type_col] = one_d_two_d
         flowlines_gdf.loc[flowlines_gdf[kcu_col].isin([100, 101]), content_type_col] = two_d

@@ -32,8 +32,8 @@ def get_proposed_adjustments_weir_width(test_env):
             # multiply by 10
             weir_widths_in_model_df[width_col] = pd.to_numeric(weir_widths_in_model_df[width_col])
             weir_widths_in_model_df.insert(weir_widths_in_model_df.columns.get_loc(width_col) + 1,
-                                     weirs_new_width_col,
-                                     weir_widths_in_model_df[width_col].apply(lambda x: round((x * 10), 3)))
+                                           weirs_new_width_col,
+                                           weir_widths_in_model_df[width_col].apply(lambda x: round((x * 10), 3)))
             weir_widths_to_update = weir_widths_in_model_df
         return weir_widths_to_update
     except Exception as e:
