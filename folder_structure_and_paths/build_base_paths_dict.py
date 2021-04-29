@@ -30,6 +30,7 @@ def build_base_paths_dict(polder_path):
     # Model folder
     paths_dict['model'] = if_exists(paths_object.model.database)
     paths_dict['dem'] = if_exists(paths_object.model.rasters.dem)
+
     # Threedi
     paths_dict['0d1d_results_dir'] = if_exists(paths_object.threedi_results.zeroDoneD.base)
     paths_dict['1d2d_results_dir'] = if_exists(paths_object.threedi_results.oneDtwoD.base)

@@ -1,5 +1,14 @@
 def create_update_case_statement(df, layer, df_id_col, db_id_col, new_val_col, excluded_ids=[],
                                  old_val_col=None, old_col_name=None, show_prev=False, show_proposed=False):
+    """
+    Creates an sql statement with the following structure:
+    UPDATE (table_name)
+    SET (database_column_to_change) = CASE (database_id_col)
+    WHEN (id) THEN (new value associated with id) OPTIONAL -- ['Previous' or 'Proposed'] previous or proposed value
+
+    Initialization:
+
+    """
     if show_proposed and show_prev:
         raise Exception("create_update_case_statement: "
                         "Only one of show_prev and show_proposed can be True")

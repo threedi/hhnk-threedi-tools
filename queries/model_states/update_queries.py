@@ -1,8 +1,6 @@
-from ...variables.database_variables import global_settings_layer, control_group_col, name_col, \
-    zero_d_one_d_val, id_col, manhole_layer, calculation_type_col, width_col, cross_sec_def_layer, \
-    channels_layer
+from ...variables.database_variables import global_settings_layer, control_group_col, id_col, \
+    manhole_layer, calculation_type_col, width_col, cross_sec_def_layer, channels_layer
 from ...variables.backups_table_names import GLOBAL_SETTINGS_TABLE
-from ...tests.model_state.variables.definitions import one_d_two_d_state
 from ...variables.database_aliases import a_weir_cross_def_id
 from ...queries.query_functions import create_update_case_statement
 from ...tests.model_state.variables.new_columns_mapping import manholes_new_calc_type, weirs_new_width_col, \

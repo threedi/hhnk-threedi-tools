@@ -1,3 +1,5 @@
+import pandas as pd
+
 def select_values_to_update_from_backup(model_df,
                                         backup_df,
                                         left_id_col,
@@ -10,7 +12,7 @@ def select_values_to_update_from_backup(model_df,
     otherwise we drop it
     """
     try:
-        to_update = None
+        to_update = pd.DataFrame()
         in_common_df = model_df.merge(right=backup_df[[right_id_col, old_val_col]],
                                       how='inner',
                                       left_on=left_id_col,

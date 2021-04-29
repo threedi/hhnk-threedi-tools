@@ -180,8 +180,8 @@ def gather_information(test_env):
         calc_node_intersections = get_intersections(fixeddrainage_lines, one_d_two_d_lines_gdf, levee_line_gdf)
         nodes_with_divergent_initial_wtrlvl = get_divergent_nodes(conn_nodes_gdf, fixeddrainage_gdf)
         all_manholes_gdf = get_manhole_information(calc_node_intersections,
-                                                                    nodes_with_divergent_initial_wtrlvl,
-                                                                    manholes_gdf)
+                                                   nodes_with_divergent_initial_wtrlvl,
+                                                   manholes_gdf)
         all_1d2d_flowlines = add_info_intersecting_1d2d_flowlines(calc_node_intersections, one_d_two_d_lines_gdf)
         new_manholes_df = get_manholes_to_add_to_model(all_manholes_gdf)
         return all_manholes_gdf, new_manholes_df, calc_node_intersections, channels_gdf,\
