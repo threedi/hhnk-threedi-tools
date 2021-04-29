@@ -21,11 +21,13 @@ def detect_model_states(model_path):
         if not global_settings_df.empty:
             number_of_rows = global_settings_df.shape[0]
             control_group_value_unique = is_unique(global_settings_df[control_group_col])
-            if control_group_value_unique:
-                if global_settings_df[control_group_col].iloc[0] == 1 and number_of_rows == 4:
-                    return one_d_two_d_state
-                elif not global_settings_df[control_group_col].iloc[0] and number_of_rows == 1:
-                    return hydraulic_test_state
+            if control_group_value_unique and \
+                    not global_settings_df[control_group_col].iloc[0] \
+                    and number_of_rows == 1:
+                return hydraulic_test_state
+            elif global_settings_df[control_group_col].notnull().all() \
+                    and number_of_rows == 4:
+                return one_d_two_d_state
         return undefined_state
     except Exception as e:
         raise e from None
