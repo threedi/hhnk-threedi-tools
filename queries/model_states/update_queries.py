@@ -18,13 +18,6 @@ def create_global_settings_rows_update_query(excluded_ids, ids_to_add=[], ids_to
     Add rows from backup, delete rows from model
     Once the correct rows are in the model, set model control
     """
-    # update_control_query = f"""
-    # UPDATE {global_settings_layer}
-    # SET {control_group_col} = {{value}}
-    # WHERE {name_col} {{operator}} '{zero_d_one_d_val}'
-    # AND {id_col} NOT IN ({','.join(map(str, excluded_ids))})
-    # """
-
     add_rows_query = f"""
     INSERT INTO {global_settings_layer}
     SELECT *
@@ -43,9 +36,6 @@ def create_global_settings_rows_update_query(excluded_ids, ids_to_add=[], ids_to
         query_list.append(add_rows_query.format(', '.join(map(str, ids_to_add))))
     if ids_to_delete:
         query_list.append(delete_rows_query.format(', '.join(map(str, ids_to_delete))))
-    # query_list.append(
-    #     update_control_query.format(value=(1 if to_state == one_d_two_d_state else 'NULL'),
-    #                                 operator=('!=' if to_state == one_d_two_d_state else '==')))
     query = ';\n'.join(query_list)
     return query
 
