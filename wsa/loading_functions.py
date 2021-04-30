@@ -56,6 +56,10 @@ def get_gdal_metadata(gdal_file):
         raise e from None
 
 def load_gdal_raster(raster_source, window=None):
+    """
+    Loads a raster (tif) and returns an array of its values, its no_data value and
+    dict containing associated metadata
+    """
     try:
         gdal_file = gdal.Open(raster_source)
         if gdal_file:

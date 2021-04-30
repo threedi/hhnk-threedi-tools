@@ -2,6 +2,9 @@ import os
 from .build_folder_structure_dict import build_folder_structure_dict
 
 def create_new_project_folder(base_path):
+    """
+    Takes a base path as input (ex: c:/..../project_name) and creates default project structure in it.
+    """
     try:
         dict = build_folder_structure_dict(polder_path=base_path)
         for item in dict.values():

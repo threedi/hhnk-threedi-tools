@@ -11,7 +11,9 @@ channel_from_profiles = f"channel_surface_from_profiles{file_types_dict[SHAPE]}"
 
 def find_dem(base_dir):
     """
-    Look for file starting with dem_ and ending with extension .tif
+    Look for file starting with dem_ and ending with extension .tif in given directory
+
+    Returns path if found, empty string if not found
     """
     if not os.path.exists(base_dir):
         return ""
@@ -27,7 +29,10 @@ def find_dem(base_dir):
 
 def find_database(base_dir):
     """
-    Tries to find database in default path
+    Tries to find database in given path by looking for extension.
+
+    Returns path if only one file with .sqlite extension is found. Returns empty string
+    in other cases (none found or more than one found)
     """
     if not os.path.exists(base_dir):
         return ""

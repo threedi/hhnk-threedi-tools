@@ -10,6 +10,10 @@ def get_top_level_directories(folder, condition_test=None):
             if os.path.isdir(item) and (condition_test(item) if condition_test is not None else True)]
 
 def create_tif_path(folder, filename):
+    """
+    Takes a folder name (ex: C:../output/Layers) and base filename (ex: raster) as arguments
+    and returns full path (ex: C:../output/Layers/raster.tif)
+    """
     try:
         full_path = os.path.join(folder, filename + file_types_dict[TIF])
         return full_path

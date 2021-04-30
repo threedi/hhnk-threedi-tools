@@ -5,6 +5,13 @@ from ..variables.damo_hdb_datachecker_variables import damo_duiker_sifon_hevel, 
     hdb_sturing_3di, waterlevel_val_field
 
 def build_base_paths_dict(polder_path):
+    """
+    Returns dictionary containing paths to source files according to set project structure.
+
+        build_base_paths_dict(
+                polder_path (string: path to project folder (highest level))
+            )
+    """
     paths_object = DefaultPaths(base=polder_path)
     paths_dict = {}
 

@@ -44,6 +44,23 @@ msg_imp_surface_perc = "ERROR: percentage = 100 and should be 14.4 or 11.5"
 msg_control_table_too_many_chars = "ERROR: action_table has more than 1000 characters (model will crash)"
 
 def constr_in_clause(innotin, sel=False, frm=False, where=None):
+    """
+        constr_in_clause(
+            innotin (string: either 'IN' or 'NOT IN')
+            sel -> False (bool: add 'SELECT {}' line)
+            frm -> False (bool: add 'FROM {}' line)
+            where -> False (bool: add 'WHERE {}' line)
+            )
+
+    Constructs a IN or NOT IN selection clause.
+    Ex:
+        IN
+        (SELECT {}
+        FROM {}
+        WHERE {})
+
+    Which can then be formatted to insert table names and condition etc
+    """
     res = ' ' + innotin + '(\n'
     if sel:
         res += 'SELECT {}\n'
@@ -54,8 +71,21 @@ def constr_in_clause(innotin, sel=False, frm=False, where=None):
     res += ')'
     return res
 
-def construct_sel_from_where_query(sel="""{}""", frm="""{}""", where="""{}""",
-                                   left_join={}, inner_join={}): #as_err=True,
+def construct_sel_from_where_query(sel="{}", frm="{}", where="{}",
+                                   left_join={}, inner_join={}):
+    """
+    Constructs select / from / where query with possible join clauses (inner or left join)
+
+        construct_sel_from_where_query(
+                sel -> '{}' (string, whatever comes after 'SELECT ' keyword)
+                from -> '{}' (string, whatever comes after 'FROM ' keyword)
+                where -> '{}' (string, whatever comes after 'WHERE ' keyword)
+                left_join -> {} (dictionary, returned as 'LEFT JOIN {key} ON {value} for every entry in dict)
+                inner_join -> {} (dictionary, returned as 'INNER JOIN {key} ON {value} for every entry in dict)
+            )
+
+    Returns either full query or template to format later depending on input
+    """
     res = ''
     if sel:
         res += 'SELECT ' + sel + '\n'
@@ -87,8 +117,7 @@ def constr_conn_nodes_without_conn_query():
     length = len(layers)
     for i, layer in enumerate(layers):
         for node in conn_node_start_id_col, conn_node_end_id_col:
-            query += construct_sel_from_where_query(
-                sel='{}', where='{} IS NOT NULL').format(
+            query += construct_sel_from_where_query(where='{} IS NOT NULL').format(
                 node,
                 layer,
                 node
@@ -111,7 +140,7 @@ def constr_from_to_same_node_query():
         else:
             msg = msg_culvert_same_node
         query += construct_sel_from_where_query(
-            where="""{} = {}""").format(
+            where="{} = {}").format(
             construct_query_head(
                 layer,
                 msg),
@@ -125,7 +154,7 @@ def constr_from_to_same_node_query():
 model_checks = {
     ######################################################################################
     'height_not_used_for_shape':
-        construct_sel_from_where_query(where="""{} IS NOT NULL AND {} = 1""")
+        construct_sel_from_where_query(where="{} IS NOT NULL AND {} = 1")
         .format(construct_query_head(
             cross_sec_def_layer,
             msg_height_not_used_for_shape),
@@ -134,7 +163,7 @@ model_checks = {
             f"'{shape_col}'"),
     ######################################################################################
     'multiple_heights_widths_same_count':
-        construct_sel_from_where_query(where="""{} - {} <> {} - {}""")
+        construct_sel_from_where_query(where="{} - {} <> {} - {}")
         .format(construct_query_head(
             cross_sec_def_layer,
             msg_uneven_width_height),
@@ -146,7 +175,7 @@ model_checks = {
     ######################################################################################
     'impervious_surface_not_in_mapping':
         construct_sel_from_where_query(where='{} ' + constr_in_clause(
-            innotin="NOT IN", sel="{}", frm="{}"))
+            innotin="NOT IN", sel=True, frm=True))
         .format(construct_query_head(
             impervious_surface_layer,
             msg_impervious_not_in_map),
@@ -158,7 +187,7 @@ model_checks = {
     ######################################################################################
     'impervious_surface_map_refers_to_inv_conn_node':
         construct_sel_from_where_query(where='{} ' + constr_in_clause(
-            innotin="NOT IN", sel="{}", frm="{}"))
+            innotin="NOT IN", sel=True, frm=True))
         .format(construct_query_head(
             impervious_surface_map_layer,
             msg_impervious_map_refers_to_none),
@@ -170,7 +199,7 @@ model_checks = {
     ######################################################################################
     'surface_not_in_mapping_table':
         construct_sel_from_where_query(where='{} ' + constr_in_clause(
-            innotin="NOT IN", sel="{}", frm="{}"))
+            innotin="NOT IN", sel=True, frm=True))
         .format(construct_query_head(
             surface_layer,
             msg_surface_not_in_mapping),
@@ -181,7 +210,7 @@ model_checks = {
     ######################################################################################
     'impervious_surface_map_refers_to_inv_imp_surf':
         construct_sel_from_where_query(where='{} ' + constr_in_clause(
-            innotin="NOT IN", sel="{}", frm="{}"))
+            innotin="NOT IN", sel=True, frm=True))
         .format(construct_query_head(
             impervious_surface_map_layer,
             msg_impervious_surface_map_not_in_impervious),

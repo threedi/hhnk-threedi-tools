@@ -14,14 +14,14 @@ def create_new_raster_file(file_name, nodata, meta, driver=GEOTIFF,
                            datatype=GDAL_DATATYPE, compression='DEFLATE',
                            num_bands=1, tiled='YES'):
     """
-        ONLY FOR SINGLE BAND
-        Create new empty gdal raster using metadata from raster from sqlite (dem)
-        driver='GTiff'
-        driver='MEM'
-        Compression:
-        LZW - highest compression ratio, highest processing power
-        DEFLATE
-        PACKBITS - lowest compression ratio, lowest processing power
+    ONLY FOR SINGLE BAND
+    Create new empty gdal raster using metadata from raster from sqlite (dem)
+    driver='GTiff'
+    driver='MEM'
+    Compression:
+    LZW - highest compression ratio, highest processing power
+    DEFLATE
+    PACKBITS - lowest compression ratio, lowest processing power
     """
     try:
         target_ds = gdal.GetDriverByName(driver).Create(file_name,
@@ -40,6 +40,18 @@ def create_new_raster_file(file_name, nodata, meta, driver=GEOTIFF,
 
 def save_raster_array_to_tiff(output_file, raster_array, nodata, metadata, datatype=GDAL_DATATYPE,
                               compression='DEFLATE', num_bands=1):
+    """
+    ONLY FOR SINGLE BAND
+
+    input:
+    output_file (filepath)
+    raster_array (values to be converted to tif)
+    nodata (nodata value)
+    metadata (dictionary)
+    datatype -> gdal.GDT_Float32
+    compression -> 'DEFLATE'
+    num_bands -> 1
+    """
     try:
         target_ds = create_new_raster_file(output_file, nodata,
                                            metadata, datatype=datatype,

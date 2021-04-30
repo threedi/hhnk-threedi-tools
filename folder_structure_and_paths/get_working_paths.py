@@ -12,9 +12,10 @@ def get_working_paths(type, active_paths,
     2 -> 0d1d tests
     3 -> bank levels
     4 -> 1d2d tests
+
     Gathers source paths. Copies the active paths, creates input paths for 3di results (needs
     the revision directory AND the results path OR the revision path)
-    if appropriate and generates output paths and layer names
+    if appropriate and generates output paths, output file names and layer names
     """
     source_paths = active_paths.copy()
     output_dict = build_output_files_dict(type=type,

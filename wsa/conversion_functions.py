@@ -30,7 +30,7 @@ def line_geometries_to_coords(lines):
 
 def gdf_to_json(gdf, epsg=DEF_TRGT_CRS):
     try:
-        gdf_json = json.loads(gdf.to_json())  # turn into json
+        gdf_json = json.loads(gdf.to_json())
         gdf_json["crs"] = {"type": "name", "properties": {"name": "urn:ogc:def:crs:EPSG::{}".format(epsg)}}
         gdf_json_str = json.dumps(gdf_json)
         return gdf_json_str

@@ -2,7 +2,7 @@ import os
 
 def build_output_files_dict(type, base_folder, revision_dir_name=None):
     """
-    Creates a dict containing the filepaths (without extensions) we will
+    Creates a dict containing the file paths (without extensions) we will
     use to write the output to files
     types:
     1 -> sqlite tests
@@ -14,12 +14,16 @@ def build_output_files_dict(type, base_folder, revision_dir_name=None):
     """
     files_dict = {}
     if type in (2, 4) and revision_dir_name:
+        # If 3di revisions are involved, we add the revisions name to the output path
+        # ex: output/0d1d_tests/{polder name}_#{revision number}_{test type}
         output_revision_dir = revision_dir_name.replace(' ', '_')
         files_dict['output'] = os.path.join(base_folder, output_revision_dir)
     else:
         files_dict['output'] = base_folder
 
     def add_log_layer_path(base_path):
+        # Creates log and layer folders in test specific output folder
+        # ex: output/sqlite_tests/Logs and output/sqlite_tests/Layers
         files_dict['log_path'] = os.path.join(base_path, 'Logs')
         files_dict['layer_path'] = os.path.join(base_path, 'Layers')
 
@@ -49,12 +53,13 @@ def build_output_files_dict(type, base_folder, revision_dir_name=None):
         files_dict['flow_1d2d_cross_sections_filename'] = 'stroming_1d2d_cross_sections'
         files_dict['flow_1d2d_channels_filename'] = 'stroming_1d2d_watergangen'
         files_dict['flow_1d2d_manholes_filename'] = 'stroming_1d2d_putten'
-        # files_dict['overview_changes_bank_levels_filename'] = 'overzicht_aanpassingen_bank_levels'
 
     if type == 4:
         add_log_layer_path(base_path=files_dict['output'])
         files_dict['grid_nodes_2d_filename'] = 'grid_nodes_2d'
         files_dict['1d2d_all_flowlines_filename'] = '1d2d_alle_stroming'
+        # The actual filename depends on the time steps we are looking at in the test
+        # Therefore we create a template rather than a set name
         files_dict['water_level_filename_template'] = 'waterstand_T{}_uur'
         files_dict['water_depth_filename_template'] = 'waterdiepte_T{}_uur'
 
