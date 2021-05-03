@@ -173,7 +173,6 @@ def gather_information(test_env):
     """
     Accumulates all needed information for recalculating banklevels
     """
-
     try:
         manholes_gdf, fixeddrainage_gdf, fixeddrainage_lines, one_d_two_d_lines_gdf, \
         conn_nodes_gdf, channels_gdf, cross_loc_gdf, levee_line_gdf = import_information(test_env)
