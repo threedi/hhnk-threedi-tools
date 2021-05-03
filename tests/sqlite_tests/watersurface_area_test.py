@@ -68,6 +68,7 @@ def add_waterdeel(fixeddrainage, to_add):
         # merge overlapping area size into fixeddrainage
         merged = fixeddrainage.merge(overl, how='left', on=[peil_id_col, 'multipolygon_level'])
         merged['area'] = round(merged['area'], 0)
+        merged['area'] = merged['area'].fillna(0)
     except Exception as e:
         raise e from None
     return merged
