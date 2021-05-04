@@ -17,7 +17,7 @@ def calc_width_at_waterlevel(row):
 
     # Interpoleer tussen de x en y waarden (let op: de x en y zijn hier verwisseld)
     width_wl = round(np.interp(ini, xp=y, fp=x_pos), 2) * 2
-    return str(width_wl)
+    return width_wl
 
 def split_round(item):
     """

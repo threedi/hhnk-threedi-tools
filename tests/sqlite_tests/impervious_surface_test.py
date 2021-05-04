@@ -11,6 +11,10 @@ def calc_surfaces_diff(db_imp_surface, polygon_imp_surface):
     return db_surface, polygon_surface, area_diff
 
 def check_imp_surface_area(test_env):
+    """
+    Calculates the impervious surface area (in the model), the area of the polder (based on the polder shapefile) and
+    the difference between the two.
+    """
     polder_shapefile = test_env.src_paths['polder_shapefile']
     model_path = test_env.src_paths['model']
     try:
