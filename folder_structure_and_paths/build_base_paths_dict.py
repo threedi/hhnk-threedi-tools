@@ -43,7 +43,7 @@ def build_base_paths_dict(polder_path):
     paths_dict['1d2d_results_dir'] = if_exists(paths_object.threedi_results.oneDtwoD.base)
 
     # Default output folders
-    paths_dict['base_output'] = os.path.join(polder_path, 'output')
+    paths_dict['base_output'] = os.path.join(polder_path, 'Output')
     paths_dict['sqlite_tests_output'] = os.path.join(paths_dict['base_output'], 'sqlite_tests')
     paths_dict['0d1d_output'] = os.path.join(paths_dict['base_output'], '0d1d_tests')
     paths_dict['bank_levels_output'] = os.path.join(paths_dict['base_output'], 'bank_levels')
