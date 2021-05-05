@@ -41,7 +41,7 @@ def read_node_results(test_env):
         nodes_wlvl[id_col] = results.nodes.id
         nodes_wlvl[spatialite_id_col] = results.nodes.content_pk
         nodes_wlvl[node_type_col] = results.nodes.node_type
-        # Replace numbers with human readable column names
+        # Replace numbers with human readable values
         nodes_wlvl[node_type_col].replace([1, 3, 7], [two_d, one_d, one_d_boundary_col], inplace=True)
 
         # totaal oppervlak
