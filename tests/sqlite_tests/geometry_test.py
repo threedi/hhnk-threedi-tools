@@ -19,6 +19,10 @@ def add_distance_checks(gdf):
     gdf['end_dist_ok'] = round(gdf_end_node.distance(gdf_end_coor), 5) < 0.1
 
 def run_geometry_checks(test_env):
+    """
+    Deze test checkt of de geometrie van een object in het model correspondeert met de start- of end node in de
+    v2_connection_nodes tafel. Als de verkeerde ids worden gebruikt geeft dit fouten in het model.
+    """
     try:
         query = geometry_check_query
         model_path = test_env.src_paths['model']

@@ -21,7 +21,10 @@ def get_action_values(row):
 
 def check_controlled_structures(test_env):
     '''
-    Adds information about structure control to map
+    Deze test selecteert alle gestuurde kunstwerken (uit de v2_culvert, v2_orifice en v2_weir tafels van het model) op
+    basis van de v2_control_table tafel. Per kunstwerk worden actiewaarden opgevraagd. Per gevonden gestuurd kunstwerk
+    wordt ook relevante informatie uit de HDB database toegevoegd, zoals het streefpeil en minimale en maximale kruin
+    hoogtes.
     '''
     hdb_path = test_env.src_paths['hdb']
     hdb_layer = test_env.src_paths['hdb_sturing_3di_layer']

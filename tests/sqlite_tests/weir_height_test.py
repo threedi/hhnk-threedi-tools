@@ -16,8 +16,8 @@ output_cols = [a_weir_code, a_weir_conn_node_start_id, a_weir_conn_node_end_id, 
 
 def check_weir_floor_level(test_env):
     """
-    Check whether minimum height of weir is under reference level. This is not allowed, so if this is
-    the case, we have to update the reference level.
+    Check whether minimum crest height of weir is under reference level found in the v2_cross_section_location layer.
+    This is not allowed, so if this is the case, we have to update the reference level.
     """
     try:
         model_path = test_env.src_paths['model']
@@ -38,7 +38,6 @@ def check_weir_floor_level(test_env):
         update_query = create_update_case_statement(df=wrong_profiles_gdf, layer=cross_sec_loc_layer,
                                                     df_id_col=a_weir_cross_loc_id, db_id_col=id_col,
                                                     new_val_col=new_ref_lvl, old_val_col=reference_level_col)
-        print('weir heights\n', update_query)
         return wrong_profiles_gdf, update_query
     except Exception as e:
         raise e from None

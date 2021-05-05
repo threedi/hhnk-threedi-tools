@@ -18,6 +18,11 @@ def calc_len_percentage(channels_gdf):
     return isolated_channels_gdf, isolated_length, total_length, percentage
 
 def get_isolated_channels(test_env):
+    """
+    Test bepaalt welke watergangen niet zijn aangesloten op de rest van de watergangen. Deze watergangen worden niet
+    meegenomen in de uitwisseling in het watersysteem. De test berekent teven de totale lengte van watergangen en welk
+    deel daarvan geisoleerd is.
+    """
     try:
         model_path = test_env.src_paths['model']
         channels_df = execute_sql_selection(query=isolated_channels_query,

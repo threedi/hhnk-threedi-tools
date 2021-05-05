@@ -94,11 +94,21 @@ def calc_area(fixeddrainage, modelbuilder_waterdeel, damo_waterdeel, conn_nodes_
         fixeddrainage[area_diff_perc] = fixeddrainage.apply(
             lambda row: calc_perc(row[area_diff_col], row[watersurface_waterdeel_area]), axis=1)
         return fixeddrainage
-    # This may be too restrictive
     except Exception as e:
         raise e from None
 
 def calc_watersurface_area(test_env):
+    """
+    Deze test controleert per peilgebied in het model hoe groot het gebied is dat het oppervlaktewater beslaat in het
+    model. Dit totaal is opgebouwd uit de ```storage_area``` uit de ```v2_connection_nodes``` tafel opgeteld bij het
+    oppervlak van de watergangen (uitgelezen uit de ```channel_surface_from_profiles```) shapefile. Vervolgens worden de
+    totalen per peilgebied vergeleken met diezelfde totalen uit de DAMO database.
+
+    De kolom namen in het resultaat zijn als volgt:
+    From v2_connection_nodes -> area_nodes_m2
+    From channel_surface_from_profiles -> area_channels_m2
+    From DAMO -> area_waterdeel_m2
+    """
     datachecker_path = test_env.src_paths['datachecker']
     channel_from_profile = test_env.src_paths['channels_shapefile']
     datachecker_layer = test_env.src_paths['datachecker_fixed_drainage']

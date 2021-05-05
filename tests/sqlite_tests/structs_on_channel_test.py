@@ -44,7 +44,7 @@ def add_datacheck_info(datachecker_path, layer, gdf):
 
 def check_struct_channel_bed_level(test_env):
     """
-    Checks whether the reference level of any of the closest cross section locations to a structure
+    Checks whether the reference level of any of the adjacent cross section locations (channels) to a structure
     is lower than the reference level for that structure (3di crashes if it is)
     """
     damo_path = test_env.src_paths['damo']

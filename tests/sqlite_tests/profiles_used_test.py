@@ -8,7 +8,6 @@ from ....toolbox_universal.variables.database_aliases import a_zoom_cat
 from ....toolbox_universal.variables.database_variables import width_col, height_col, initial_waterlevel_col, \
     reference_level_col
 
-from time import sleep
 def calc_width_at_waterlevel(row):
     """Bereken de breedte van de watergang op het streefpeil"""
     x_pos = [b / 2 for b in row[width_col]]
@@ -33,8 +32,9 @@ def get_max_depth(row):
 
 def get_used_profiles(test_env):
     """
-    Gathers information about channel depth and width based on cross_sections and
-    connection nodes
+    Koppelt de v2_cross_section_definition laag van het model (discrete weergave van de natuurlijke geometrie van de
+    watergangen) aan de v2_channel laag (informatie over watergangen in het model). Het resultaat van deze toets is een
+    weergave van de breedtes en dieptes van watergangen in het model ter controle.
     """
     try:
         model_path = test_env.src_paths['model']
@@ -53,5 +53,4 @@ def get_used_profiles(test_env):
         channels_gdf[height_col] = channels_gdf[height_col].astype(str)
         return channels_gdf
     except Exception as e:
-        print("Error in get used profiles")
         raise e from None
