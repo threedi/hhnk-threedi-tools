@@ -9,7 +9,7 @@ from ..variables.new_columns_mapping import global_settings_new_col_name
 
 def get_rows_to_add(model_path, to_state, rows_in_model_df, id_column):
     """
-    Get's all rows that should be in the new model state from the backup, checks
+    Gets all rows that should be in the new model state from the backup, checks
     which ones are already in the model, returns list of the ones that are not
     """
     try:

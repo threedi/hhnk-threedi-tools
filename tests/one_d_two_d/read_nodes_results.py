@@ -32,6 +32,17 @@ def nodes_to_grid(nodes_wlvl, results):
         raise e from None
 
 def read_node_results(test_env):
+    """
+    Deze functie leest alle 2d nodes uit het 3di resultaat en berekent de volgende waarden:
+        * de minimale DEM waarde binnen het gebied van de betreffende node (geometrie is omgezet naar een vierkant)
+        * het totale oppervlak dat de node beslaat
+    Vervolgens wordt op drie tijdstappen (het begin van de regen het einde van de regen en het einde van de som
+    de volgende informatie berekend:
+        * de waterstand op de genoemde tijdstappen
+        * de hoeveelheid water (volume in m3) per tijdstap
+        * het natte oppervlak per tijdstap (in m2)
+        * opslag van regen in het gebied van de node (hoeveelheid water / totale oppervlak gebied)
+    """
     try:
         results = test_env.threedi_vars.result
         timesteps = test_env.threedi_vars.scenario_df

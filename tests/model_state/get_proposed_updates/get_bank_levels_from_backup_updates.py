@@ -6,6 +6,11 @@ from ...bank_levels.variables.dataframe_variables import new_bank_level_col
 from ....variables.backups_table_names import BANK_LVLS_TABLE
 
 def get_bank_levels_to_update_from_backup(test_env):
+    """
+    Collects the bank level that need to be updated by comparing the bank levels currently in the model
+    to the bank levels in the backup. Any rows where these values differ are returned in the 'bank_levels_to_update'
+    dataframe
+    """
     try:
         model_path = test_env.src_paths['model']
         model_bank_levels_df = get_table_as_df(database_path=model_path,

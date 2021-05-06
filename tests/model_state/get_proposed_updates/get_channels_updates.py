@@ -9,7 +9,7 @@ def get_proposed_adjustments_channels(test_env):
     """
     If the model is currently in hydraulic test state, we need to reset the width
     of controlled weirs to what they were before
-    If not, we need to multiply them by 10
+    If we are converting to hydraulic test state, we need to multiply them by 10
     """
     try:
         model_path = test_env.src_paths['model']

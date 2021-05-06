@@ -91,7 +91,15 @@ def read_pumpline_results(threedi_result, timesteps_df):
         raise e from None
 
 def create_flowlines_results(test_env):
-    """For all line results read discharges and velocities into table."""
+    """
+    Deze functie leest alle stroom lijnen in uit het 3di resultaat. Vervolgens wordt gekeken naar het type van de lijn
+    (1D2D of 2D). Vervolgens wordt op drie tijdstappen (het begin van de regen het einde van de regen en het einde van de
+    som) het volgende bepaald:
+        * De waterstand per tijdstap
+        * Het debiet (q) in m3/s per tijdstap
+        * De stroomsnelheid in m/s per tijdstap
+        * De stroomrichting per tijdstap
+    """
     # Define output location
     results = test_env.threedi_vars.result
     timesteps_df = test_env.threedi_vars.scenario_df

@@ -6,6 +6,12 @@ from ....variables.backups_table_names import MANHOLES_TABLE
 from ...model_backups.find_differences_model_backup import select_values_to_update_from_backup
 
 def get_proposed_updates_manholes(test_env):
+    """
+    If the model is currently in hydraulic test state, we need to reset the original values for the calculation_type
+    field from the backup.
+    If we are converting to hydraulic test state, we need to set all calculation_type values to isolated
+    (in this case: 1)
+    """
     try:
         model_path = test_env.src_paths['model']
         to_state = test_env.conversion_vars.to_state

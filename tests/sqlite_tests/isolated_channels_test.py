@@ -20,8 +20,8 @@ def calc_len_percentage(channels_gdf):
 def get_isolated_channels(test_env):
     """
     Test bepaalt welke watergangen niet zijn aangesloten op de rest van de watergangen. Deze watergangen worden niet
-    meegenomen in de uitwisseling in het watersysteem. De test berekent teven de totale lengte van watergangen en welk
-    deel daarvan geisoleerd is.
+    meegenomen in de uitwisseling in het watersysteem. De test berekent tevens de totale lengte van watergangen en welk
+    deel daarvan geïsoleerd is.
     """
     try:
         model_path = test_env.src_paths['model']
@@ -31,8 +31,8 @@ def get_isolated_channels(test_env):
         channels_gdf[length_in_meters_col] = (round(channels_gdf[df_geo_col].length, 2))
         isolated_channels_gdf, isolated_length, total_length, percentage = calc_len_percentage(channels_gdf)
         result = f"Totale lengte watergangen {total_length} km\n" \
-                 f"Totale lengte geisoleerde watergangen {isolated_length} km\n" \
-                 f"Percentage geisoleerde watergangen {percentage}%\n"
+                 f"Totale lengte geïsoleerde watergangen {isolated_length} km\n" \
+                 f"Percentage geïsoleerde watergangen {percentage}%\n"
         return isolated_channels_gdf, result
     except Exception as e:
         raise e from None

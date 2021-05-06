@@ -16,6 +16,11 @@ def get_all_update_queries(global_settings_df=None,
                            weir_width_excluded=[],
                            channels_df=None,
                            channels_excluded=[]):
+    """
+    Function collects all queries that together make up the model state conversion and combines them. We have to
+    execute them all at once because of an issue with sqlite3: its 'execute_script' function issues a commit before
+    execution. Therefore, if the third script fails, we can't roll back the changes made by the first two executions.
+    """
     try:
         query_list = []
         if global_settings_df is not None and not global_settings_df.empty:

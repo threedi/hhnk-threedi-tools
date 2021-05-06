@@ -1,7 +1,6 @@
 import numpy as np
 import geopandas as gpd
 from shapely.geometry import box
-from ...variables.types import file_types_dict, TIF
 from ...threedi.variables.gridadmin import all_2d
 from ...threedi.variables.rain_dataframe import t_start_rain_col, t_end_rain_col, t_end_sum_col
 from ...variables.database_aliases import df_geo_col
@@ -40,6 +39,10 @@ def create_depth_raster(wlvl_list, dem_list, dem_nodata, dem_meta, raster_output
         raise e from None
 
 def calc_waterlevel_depth_at_timesteps(test_env):
+    """
+    Deze functie bepaalt de waterstanden op de gegeven tijdstappen op basis van het 3di resultaat. Vervolgens wordt op
+    basis van de DEM en de waterstand per tijdstap de waterdiepte bepaald.
+    """
     results = test_env.threedi_vars.result
     timesteps = test_env.threedi_vars.scenario_df
     dem_path = test_env.src_paths['dem']
