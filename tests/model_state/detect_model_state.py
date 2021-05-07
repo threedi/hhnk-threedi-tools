@@ -1,8 +1,8 @@
 import os
 from .variables.definitions import hydraulic_test_state, one_d_two_d_state, undefined_state, \
     invalid_path, zero_d_one_d_name
-from ...sql_interaction.sql_functions import execute_sql_selection, table_exists
-from ...queries.query_functions import construct_select_query
+from hhnk_threedi_tools.sql_interaction.sql_functions import execute_sql_selection, table_exists
+from hhnk_threedi_tools.query_functions import construct_select_query
 from ...variables.database_variables import global_settings_layer, control_group_col, name_col
 from ...variables.backups_table_names import GLOBAL_SETTINGS_TABLE
 

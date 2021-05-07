@@ -2,7 +2,7 @@ from ...variables.database_variables import global_settings_layer, id_col, manho
     conn_node_id_col, cross_sec_loc_layer, cross_sec_def_layer, channels_layer, control_group_col, \
     bank_level_col, calculation_type_col, width_col
 from ...variables.database_aliases import a_cross_loc_id, a_weir_cross_def_id
-from ...queries.query_functions import create_update_case_statement
+from hhnk_threedi_tools.query_functions import create_update_case_statement
 from ...variables.definitions import proposed_value_col
 from ....toolbox_universal.tests.bank_levels.variables.dataframe_variables import new_bank_level_col
 from .variables.new_columns_mapping import global_settings_new_col_name, manholes_new_calc_type, \

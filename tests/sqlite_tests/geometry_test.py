@@ -1,5 +1,5 @@
 from shapely import wkt
-from ...dataframe_functions.conversion import gdf_from_sql
+from hhnk_threedi_tools.dataframe_functions.conversion import gdf_from_sql
 from ...variables.database_variables import id_col
 from ...variables.database_aliases import a_geo_end_coord, a_geo_end_node, a_geo_start_coord, a_geo_start_node
 from ...queries.tests.sqlite_tests.quick_tests_selection_queries import geometry_check_query

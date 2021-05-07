@@ -1,5 +1,5 @@
 import os
-from ..variables.types import file_types_dict, TIF
+from hhnk_threedi_tools.variables.types import file_types_dict, TIF
 
 def get_top_level_directories(folder, condition_test=None):
     """

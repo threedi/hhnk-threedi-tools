@@ -1,5 +1,5 @@
 import pandas as pd
-from ....sql_interaction.sql_functions import execute_sql_selection
+from hhnk_threedi_tools.sql_interaction.sql_functions import execute_sql_selection
 from ..variables.definitions import hydraulic_test_state
 from ....variables.database_variables import width_col
 from ....variables.database_aliases import a_weir_id

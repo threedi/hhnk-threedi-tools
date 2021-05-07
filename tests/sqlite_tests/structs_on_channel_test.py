@@ -1,8 +1,8 @@
 import geopandas as gpd
-from ...dataframe_functions.conversion import gdf_from_sql
+from hhnk_threedi_tools.dataframe_functions.conversion import gdf_from_sql
 from ...queries.tests.sqlite_tests.quick_tests_selection_queries import struct_channel_bed_query
 from ...variables.database_aliases import a_chan_bed_struct_id, a_chan_bed_struct_code
-from ...variables.definitions import OPEN_FILE_GDB_DRIVER
+from hhnk_threedi_tools.variables.definitions import OPEN_FILE_GDB_DRIVER
 from .variables.dataframes_mapping import down_has_assumption, up_has_assumption, \
     height_inner_lower_down, height_inner_lower_up, datachecker_assumption_alias
 

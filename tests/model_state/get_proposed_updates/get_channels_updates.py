@@ -1,4 +1,4 @@
-from ....sql_interaction.sql_functions import get_table_as_df
+from hhnk_threedi_tools.sql_interaction.sql_functions import get_table_as_df
 from ..variables.definitions import hydraulic_test_state
 from ....variables.database_variables import channels_layer, id_col, calculation_type_col
 from ....variables.backups_table_names import CHANNELS_TABLE

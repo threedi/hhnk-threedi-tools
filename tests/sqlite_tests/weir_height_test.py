@@ -1,10 +1,10 @@
-from ...sql_interaction.sql_functions import execute_sql_selection
-from ...dataframe_functions.conversion import convert_df_to_gdf
+from hhnk_threedi_tools.sql_interaction.sql_functions import execute_sql_selection
+from hhnk_threedi_tools.dataframe_functions.conversion import convert_df_to_gdf
 from ...variables.database_aliases import a_weir_code, a_weir_conn_node_start_id, \
     a_weir_conn_node_end_id, a_weir_cross_loc_id, a_chan_id, df_geo_col
 from ...variables.database_variables import reference_level_col, action_col, id_col, cross_sec_loc_layer
 from ...queries.tests.sqlite_tests.quick_tests_selection_queries import weir_height_query
-from ...queries.query_functions import create_update_case_statement
+from hhnk_threedi_tools.query_functions import create_update_case_statement
 
 min_crest_height = 'min_crest_height'
 diff_crest_ref = 'diff_crest_reference'

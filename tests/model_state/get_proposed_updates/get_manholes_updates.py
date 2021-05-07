@@ -1,4 +1,4 @@
-from ....sql_interaction.sql_functions import get_table_as_df
+from hhnk_threedi_tools.sql_interaction.sql_functions import get_table_as_df
 from ..variables.definitions import hydraulic_test_state
 from ..variables.new_columns_mapping import manholes_new_calc_type
 from ....variables.database_variables import manhole_layer, calculation_type_col, id_col

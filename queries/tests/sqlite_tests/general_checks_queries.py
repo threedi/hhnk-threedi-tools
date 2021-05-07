@@ -6,7 +6,6 @@ culvert_layer, pipe_layer, weir_layer, orifice_layer, conn_node_end_id_col, conn
     one_d_boundary_cond_layer, initial_waterlevel_col, control_table_layer, action_col, discharge_coefficient_neg_col, \
     discharge_coefficient_pos_col, invert_lvl_end_col, invert_lvl_start_col, percentage_col, start_level_col, \
     reference_level_col
-from ....variables.database_aliases import *
 
 #Error messages
 msg_height_not_used_for_shape = "WARNING: cross section definition height not used for shape type 1"

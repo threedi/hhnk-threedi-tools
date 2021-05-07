@@ -1,12 +1,12 @@
 import numpy as np
 import geopandas as gpd
 from shapely.geometry import box
-from ...threedi.variables.gridadmin import all_2d
-from ...threedi.variables.rain_dataframe import t_start_rain_col, t_end_rain_col, t_end_sum_col
+from hhnk_threedi_tools.threedi.variables.gridadmin import all_2d
+from hhnk_threedi_tools.threedi.variables.rain_dataframe import t_start_rain_col, t_end_rain_col, t_end_sum_col
 from ...variables.database_aliases import df_geo_col
-from ...wsa.saving_functions import save_raster_array_to_tiff
-from ...wsa.loading_functions import load_gdal_raster
-from ...wsa.conversion_functions import gdf_to_raster
+from hhnk_threedi_tools.data_functions.saving import save_raster_array_to_tiff
+from hhnk_threedi_tools.data_functions.loading import load_gdal_raster
+from hhnk_threedi_tools.data_functions.conversion import gdf_to_raster
 from .variables.dataframe_mapping import wtrlvl_col
 from ...folder_structure_and_paths.paths_functions import create_tif_path
 

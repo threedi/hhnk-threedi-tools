@@ -1,6 +1,5 @@
 from ...queries.tests.sqlite_tests.general_checks_queries import ModelCheck
-from ...read_write_functions.write_to_file_functions import gdf_write_to_csv
-from ...sql_interaction.sql_functions import execute_sql_selection
+from hhnk_threedi_tools.sql_interaction.sql_functions import execute_sql_selection
 from ...variables.database_variables import id_col
 
 

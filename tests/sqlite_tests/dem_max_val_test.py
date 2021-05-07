@@ -1,5 +1,5 @@
 import numpy as np
-from ...wsa.loading_functions import load_gdal_raster
+from hhnk_threedi_tools.data_functions.loading import load_gdal_raster
 from ...variables.definitions import DEM_MAX_VALUE
 
 def check_dem_max_val(test_env):

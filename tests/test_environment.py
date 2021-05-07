@@ -1,4 +1,4 @@
-from ...toolbox_universal.threedi.variables.variables_container import ThreediInformation
+from hhnk_threedi_tools.threedi.variables.variables_container import ThreediInformation
 
 class testEnvironment():
     """

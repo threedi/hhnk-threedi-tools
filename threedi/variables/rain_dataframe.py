@@ -1,6 +1,0 @@
-t_0_col = 't_0'
-t_start_rain_col = 't_start_rain'
-t_end_rain_min_one_col = 't_end_rain_min_one'
-t_end_rain_col = 't_end_rain'
-t_end_sum_col = 't_end_sum'
-t_index_col = 'value'

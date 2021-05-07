@@ -1,5 +1,5 @@
 import os
-from hhnk_toolbox.toolbox_universal.variables.types import file_types_dict, GDB, SHAPE, SQLITE, TIF
+from hhnk_threedi_tools.variables.types import file_types_dict, GDB, SHAPE, SQLITE, TIF
 from pathlib import Path
 
 # Set names for certain input files
