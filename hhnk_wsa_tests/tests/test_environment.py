@@ -1,5 +1,3 @@
-from hhnk_threedi_tools.threedi.variables.variables_container import ThreediInformation
-
 class testEnvironment():
     """
     class contains all arguments needed by test and/or conversion functions:

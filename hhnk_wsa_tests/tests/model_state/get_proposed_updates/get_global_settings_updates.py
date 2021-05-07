@@ -2,8 +2,8 @@ import pandas as pd
 from ..variables.definitions import hydraulic_test_state, one_d_two_d_state, undefined_state
 from hhnk_threedi_tools.sql_interaction.sql_functions import execute_sql_selection
 from hhnk_threedi_tools.query_functions import construct_select_query
-from hhnk_toolbox.toolbox_universal.queries.model_states.read_backups_queries import create_global_settings_from_backup_query
-from hhnk_toolbox.toolbox_universal.variables.database_variables import zero_d_one_d_val, global_settings_layer, id_col, \
+from ....queries.model_states.read_backups_queries import create_global_settings_from_backup_query
+from ....variables.database_variables import zero_d_one_d_val, global_settings_layer, id_col, \
     name_col, control_group_col
 from ..variables.new_columns_mapping import global_settings_new_col_name
 

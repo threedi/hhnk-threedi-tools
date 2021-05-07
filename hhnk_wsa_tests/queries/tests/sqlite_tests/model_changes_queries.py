@@ -1,6 +1,6 @@
-from .....toolbox_universal.variables.database_aliases import a_weir_cross_loc_id
-from .....toolbox_universal.variables.database_variables import reference_level_col, cross_sec_loc_layer, id_col
-from .....toolbox_universal.tests.sqlite_tests.weir_height_test import new_ref_lvl
+from ....variables.database_aliases import a_weir_cross_loc_id
+from ....variables.database_variables import reference_level_col, cross_sec_loc_layer, id_col
+from ....tests.sqlite_tests.weir_height_test import new_ref_lvl
 
 def create_update_reference_level_query(wrong_profiles_gdf):
     """

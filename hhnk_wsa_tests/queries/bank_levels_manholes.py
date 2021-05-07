@@ -4,7 +4,7 @@ from ..variables.database_variables import cross_sec_loc_layer, id_col, bank_lev
     connection_nodes_layer, storage_area_col, manhole_layer, display_name_col, code_col, \
     shape_col, width_col, manhole_indicator_col, calculation_type_col, drain_level_col, \
     bottom_lvl_col, surface_lvl_col, zoom_cat_col, conn_node_id_col
-from ..variables.database_aliases import a_cross_loc_id, a_man_conn_id
+from ..variables.database_aliases import a_cross_loc_id
 from ..tests.bank_levels.variables.dataframe_variables import new_bank_level_col
 
 def create_bank_levels_update_query(new_bank_levels_df, excluded_ids):

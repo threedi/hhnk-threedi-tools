@@ -1,11 +1,11 @@
 import numpy as np
-from ....toolbox_universal.queries.tests.sqlite_tests.quick_tests_selection_queries import profiles_used_query
+from ...queries.tests.sqlite_tests.quick_tests_selection_queries import profiles_used_query
 from hhnk_threedi_tools.sql_interaction.sql_functions import execute_sql_selection
 from hhnk_threedi_tools.dataframe_functions.conversion import convert_df_to_gdf
-from ....toolbox_universal.tests.sqlite_tests.variables.dataframes_mapping import primary_col, water_level_width_col, \
+from ...tests.sqlite_tests.variables.dataframes_mapping import primary_col, water_level_width_col, \
     max_depth_col
-from ....toolbox_universal.variables.database_aliases import a_zoom_cat
-from ....toolbox_universal.variables.database_variables import width_col, height_col, initial_waterlevel_col, \
+from ...variables.database_aliases import a_zoom_cat
+from ...variables.database_variables import width_col, height_col, initial_waterlevel_col, \
     reference_level_col
 
 def calc_width_at_waterlevel(row):

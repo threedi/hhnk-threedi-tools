@@ -4,7 +4,7 @@ from ...variables.database_variables import global_settings_layer, id_col, manho
 from ...variables.database_aliases import a_cross_loc_id, a_weir_cross_def_id
 from hhnk_threedi_tools.query_functions import create_update_case_statement
 from ...variables.definitions import proposed_value_col
-from ....toolbox_universal.tests.bank_levels.variables.dataframe_variables import new_bank_level_col
+from ...tests.bank_levels.variables.dataframe_variables import new_bank_level_col
 from .variables.new_columns_mapping import global_settings_new_col_name, manholes_new_calc_type, \
     weirs_new_width_col, channels_new_calc_type
 

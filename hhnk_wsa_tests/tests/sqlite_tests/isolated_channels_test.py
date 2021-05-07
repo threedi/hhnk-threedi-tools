@@ -1,10 +1,10 @@
-from ....toolbox_universal.queries.tests.sqlite_tests.quick_tests_selection_queries import isolated_channels_query
+from ...queries.tests.sqlite_tests.quick_tests_selection_queries import isolated_channels_query
 from hhnk_threedi_tools.sql_interaction.sql_functions import execute_sql_selection
 from hhnk_threedi_tools.dataframe_functions.conversion import convert_df_to_gdf
-from ....toolbox_universal.variables.database_variables import calculation_type_col
-from ....toolbox_universal.variables.definitions import channels_isolated_calc_type
-from ....toolbox_universal.variables.database_aliases import df_geo_col
-from ....toolbox_universal.tests.sqlite_tests.variables.dataframes_mapping import length_in_meters_col
+from ...variables.database_variables import calculation_type_col
+from ...variables.definitions import channels_isolated_calc_type
+from ...variables.database_aliases import df_geo_col
+from ...tests.sqlite_tests.variables.dataframes_mapping import length_in_meters_col
 
 def calc_len_percentage(channels_gdf):
     total_length = round(channels_gdf.geometry.length.sum() / 1000, 2)

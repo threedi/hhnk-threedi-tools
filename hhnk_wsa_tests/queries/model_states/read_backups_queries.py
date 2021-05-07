@@ -1,7 +1,7 @@
 from ...variables.backups_table_names import GLOBAL_SETTINGS_TABLE
 from ...tests.model_state.variables.definitions import hydraulic_test_state, one_d_two_d_state
 from ...variables.database_variables import name_col, zero_d_one_d_val, weir_layer, cross_def_id_col,\
-    code_col, id_col, width_col, control_table_layer, target_id_col, cross_sec_def_layer
+    code_col, id_col, width_col, control_table_layer, target_id_col
 from ...variables.database_aliases import a_weir_cross_def_id, a_weir_code, a_weir_id
 from ...variables.backups_table_names import CONTR_WEIR_WIDTH_BACKUP
 
