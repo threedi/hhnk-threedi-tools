@@ -49,8 +49,8 @@ def get_all_update_queries(global_settings_df=None,
             if query is not None:
                 query_list.append(query)
         if update_manholes_df is not None and not update_manholes_df.empty:
-            query =construct_manholes_update_query(manholes_to_update_df=update_manholes_df,
-                                                   excluded_ids=update_manholes_excluded)
+            query = construct_manholes_update_query(manholes_to_update_df=update_manholes_df,
+                                                    excluded_ids=update_manholes_excluded)
             if query is not None:
                 query_list.append(query)
         if weir_width_df is not None and not weir_width_df.empty:
