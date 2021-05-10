@@ -2,3 +2,7 @@ __pycache__
 build
 dist
 .idea
+hhnk_wsa_tests.egg-info/*
+venv_development_tools
+dist
+build
