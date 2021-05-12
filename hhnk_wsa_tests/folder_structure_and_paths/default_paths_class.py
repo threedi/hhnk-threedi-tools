@@ -54,7 +54,7 @@ class RasterPaths:
 class ModelPaths:
     def __init__(self, base):
         # Files
-        self.base = os.path.join(base, "02.Model")
+        self.base = os.path.join(base, "02_Model")
         self.database = find_database(self.base)
         # Folders
         self.rasters = RasterPaths(self.base)
@@ -87,7 +87,7 @@ class SourcePaths:
     """
     def __init__(self, base):
         # Files
-        self.base = os.path.join(base, "01.Source_data")
+        self.base = os.path.join(base, "01_Source_data")
         self.damo = os.path.join(self.base, damo)
         self.hdb = os.path.join(self.base, hdb)
         self.datachecker = os.path.join(self.base, datachecker)
@@ -108,7 +108,7 @@ class ThreediResults:
     Folder in which 3di results are saved
     """
     def __init__(self, base):
-        self.base = os.path.join(base, "03.3di_results")
+        self.base = os.path.join(base, "03_3di_results")
         self.zeroDoneD = ZeroDOneD(self.base)
         self.oneDtwoD = OneDTwoD(self.base)
 
