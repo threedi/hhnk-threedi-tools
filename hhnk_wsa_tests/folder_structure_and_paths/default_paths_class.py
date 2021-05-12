@@ -103,14 +103,19 @@ class OneDTwoD:
     def __init__(self, base):
         self.base = os.path.join(base, "1d2d_results")
 
+class ClimateResults:
+    def __init__(self, base):
+        self.base = os.path.join(base, "batch_results")
+
 class ThreediResults:
     """
     Folder in which 3di results are saved
     """
     def __init__(self, base):
-        self.base = os.path.join(base, "03_3di_results")
+        self.base = os.path.join(base, "03_3di_resultaten")
         self.zeroDoneD = ZeroDOneD(self.base)
         self.oneDtwoD = OneDTwoD(self.base)
+        self.climateResults = ClimateResults(self.base)
 
 class DefaultPaths:
     """
@@ -132,6 +137,7 @@ class DefaultPaths:
         ├── 03.3di_results
         │ ├── 0d1d_results
         │ └── 1d2d_results
+        | |__ batch_results
         └── Output
             ├── 0d1d_tests
             │   ├── *some revision*

@@ -41,6 +41,7 @@ def build_base_paths_dict(polder_path):
     # Threedi
     paths_dict['0d1d_results_dir'] = if_exists(paths_object.threedi_results.zeroDoneD.base)
     paths_dict['1d2d_results_dir'] = if_exists(paths_object.threedi_results.oneDtwoD.base)
+    paths_dict['climate_results_dir'] = if_exists(paths_object.threedi_results.climateResults.base)
 
     # Default output folders
     paths_dict['base_output'] = os.path.join(polder_path, 'Output')
