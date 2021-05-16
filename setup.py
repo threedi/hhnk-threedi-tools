@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='hhnk_wsa_tests',
-    version='0.1.9',
+    version='0.1.12',
     description='HHNK watersystemen analyse tests',
     url='https://github.com/LER1990/hhnk_toolbox_universal',
     author='Laure Ravier',
@@ -18,6 +18,6 @@ setup(
     packages=find_packages(),
     python_requires=">=3.7",
 	install_requires=[
-		'hhnk_threedi_tools==1.0.9'
+		'hhnk_threedi_tools==0.1.9'
 	]
 )
