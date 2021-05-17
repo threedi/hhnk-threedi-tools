@@ -3,6 +3,7 @@ build
 dist
 .idea
 hhnk_wsa_tests.egg-info
+hhnk_threedi_tests.egg-info
 venv_development_tools
 dist
 build
