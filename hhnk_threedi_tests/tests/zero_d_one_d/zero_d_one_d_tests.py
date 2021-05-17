@@ -1,9 +1,9 @@
 import pandas as pd
-from hhnk_threedi_tools.dataframe_functions.conversion import create_gdf_from_df
-from hhnk_threedi_tools.threedi.geometry_functions.node_coordinates_to_points import coordinates_to_points
-from hhnk_threedi_tools.threedi.variables.rain_dataframe import t_end_sum_col, t_end_rain_col, t_end_rain_min_one_col, \
+from hhnk_research_tools.dataframe_functions.conversion import create_gdf_from_df
+from hhnk_research_tools.threedi.geometry_functions.node_coordinates_to_points import coordinates_to_points
+from hhnk_research_tools.threedi.variables.rain_dataframe import t_end_sum_col, t_end_rain_col, t_end_rain_min_one_col, \
     t_0_col, t_start_rain_col
-from hhnk_threedi_tools.threedi.variables.gridadmin import all_1d
+from hhnk_research_tools.threedi.variables.gridadmin import all_1d
 from .variables.dataframe_mapping import lvl_start_col, lvl_end_col, lvl_end_rain_col, lvl_rain_col
 
 def run_0d1d_test(test_env):

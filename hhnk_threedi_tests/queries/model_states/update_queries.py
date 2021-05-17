@@ -2,7 +2,7 @@ from ...variables.database_variables import global_settings_layer, control_group
     manhole_layer, calculation_type_col, width_col, cross_sec_def_layer, channels_layer
 from ...variables.backups_table_names import GLOBAL_SETTINGS_TABLE
 from ...variables.database_aliases import a_weir_cross_def_id
-from hhnk_threedi_tools.query_functions import create_update_case_statement
+from hhnk_research_tools.query_functions import create_update_case_statement
 from ...tests.model_state.variables.new_columns_mapping import manholes_new_calc_type, weirs_new_width_col, \
     channels_new_calc_type, global_settings_new_col_name
 from ...queries.bank_levels_manholes import create_bank_levels_update_query, create_new_manholes_query

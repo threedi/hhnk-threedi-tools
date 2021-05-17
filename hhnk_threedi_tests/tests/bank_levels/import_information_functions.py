@@ -2,13 +2,13 @@ import geopandas as gpd
 import pandas as pd
 import shapely.wkt as wkt
 from .geometry_conversions import extract_boundary_from_polygon, point_geometries_to_wkt
-from hhnk_threedi_tools.data_functions.conversion import line_geometries_to_coords
-from hhnk_threedi_tools.threedi.variables.results_mapping import one_d_two_d
+from hhnk_research_tools.data_functions.conversion import line_geometries_to_coords
+from hhnk_research_tools.threedi.variables.results_mapping import one_d_two_d
 from ...variables.default_variables import DEF_TRGT_CRS
-from hhnk_threedi_tools.variables.types import UTF8
-from hhnk_threedi_tools.sql_interaction.sql_functions import create_sqlite_connection
-from hhnk_threedi_tools.dataframe_functions.conversion import gdf_from_sql
-from hhnk_threedi_tools.variables.definitions import GPKG_DRIVER
+from hhnk_research_tools.variables.types import UTF8
+from hhnk_research_tools.sql_interaction.sql_functions import create_sqlite_connection
+from hhnk_research_tools.dataframe_functions.conversion import gdf_from_sql
+from hhnk_research_tools.variables.definitions import GPKG_DRIVER
 from ...variables.database_aliases import a_man_id, a_chan_id, a_cross_loc_id, a_conn_node_id
 from ...queries.tests.bank_levels_test.gather_information_queries import manholes_query, \
     channels_query, cross_section_location_query, conn_nodes_query

@@ -1,5 +1,5 @@
 from ...queries.tests.sqlite_tests.general_checks_queries import ModelCheck
-from hhnk_threedi_tools.sql_interaction.sql_functions import execute_sql_selection
+from hhnk_research_tools.sql_interaction.sql_functions import execute_sql_selection
 from ...variables.database_variables import id_col
 
 

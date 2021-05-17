@@ -1,8 +1,8 @@
 import geopandas as gpd
 from ...variables.datachecker_variables import peil_id_col, streefpeil_bwn_col, code_col, geometry_col
-from hhnk_threedi_tools.variables.types import GPKG
-from hhnk_threedi_tools.variables.definitions import ESRI_DRIVER, WKT
-from hhnk_threedi_tools.dataframe_functions.conversion import gdf_from_sql
+from hhnk_research_tools.variables.types import GPKG
+from hhnk_research_tools.variables.definitions import ESRI_DRIVER, WKT
+from hhnk_research_tools.dataframe_functions.conversion import gdf_from_sql
 from ...variables.database_aliases import a_watersurf_conn_id
 from ...variables.database_variables import storage_area_col
 from ...queries.tests.sqlite_tests.quick_tests_selection_queries import watersurface_conn_node_query

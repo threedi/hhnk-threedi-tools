@@ -1,6 +1,6 @@
 import geopandas as gpd
-from hhnk_threedi_tools.sql_interaction.sql_functions import execute_sql_selection
-from hhnk_threedi_tools.variables.definitions import ESRI_DRIVER
+from hhnk_research_tools.sql_interaction.sql_functions import execute_sql_selection
+from hhnk_research_tools.variables.definitions import ESRI_DRIVER
 from ...queries.tests.sqlite_tests.quick_tests_selection_queries import impervious_surface_query
 from ...variables.database_variables import id_col
 

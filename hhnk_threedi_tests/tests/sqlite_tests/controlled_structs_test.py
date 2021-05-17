@@ -1,9 +1,9 @@
 import geopandas as gpd
-from hhnk_threedi_tools.sql_interaction.sql_functions import execute_sql_selection
-from hhnk_threedi_tools.dataframe_functions.conversion import convert_df_to_gdf
+from hhnk_research_tools.sql_interaction.sql_functions import execute_sql_selection
+from hhnk_research_tools.dataframe_functions.conversion import convert_df_to_gdf
 from ...queries.tests.sqlite_tests.quick_tests_selection_queries import controlled_structures_query
 from ...variables.database_variables import target_type_col, action_col, weir_layer, code_col
-from hhnk_threedi_tools.variables.definitions import OPEN_FILE_GDB_DRIVER
+from hhnk_research_tools.variables.definitions import OPEN_FILE_GDB_DRIVER
 
 start_action = 'start_action_value'
 min_action = 'min_action_value'

@@ -1,10 +1,10 @@
 import os
 import numpy as np
 import geopandas as gpd
-from hhnk_threedi_tools.variables.definitions import OPEN_FILE_GDB_DRIVER
-from hhnk_threedi_tools.data_functions.loading import load_gdal_raster
-from hhnk_threedi_tools.data_functions.conversion import gdf_to_raster
-from hhnk_threedi_tools.data_functions.saving import save_raster_array_to_tiff
+from hhnk_research_tools.variables.definitions import OPEN_FILE_GDB_DRIVER
+from hhnk_research_tools.data_functions.loading import load_gdal_raster
+from hhnk_research_tools.data_functions.conversion import gdf_to_raster
+from hhnk_research_tools.data_functions.saving import save_raster_array_to_tiff
 from ...folder_structure_and_paths.paths_functions import create_tif_path
 
 def calc_dewatering_depth(test_env):

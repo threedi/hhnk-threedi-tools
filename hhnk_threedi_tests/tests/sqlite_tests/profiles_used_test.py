@@ -1,7 +1,7 @@
 import numpy as np
 from ...queries.tests.sqlite_tests.quick_tests_selection_queries import profiles_used_query
-from hhnk_threedi_tools.sql_interaction.sql_functions import execute_sql_selection
-from hhnk_threedi_tools.dataframe_functions.conversion import convert_df_to_gdf
+from hhnk_research_tools.sql_interaction.sql_functions import execute_sql_selection
+from hhnk_research_tools.dataframe_functions.conversion import convert_df_to_gdf
 from ...tests.sqlite_tests.variables.dataframes_mapping import primary_col, water_level_width_col, \
     max_depth_col
 from ...variables.database_aliases import a_zoom_cat
