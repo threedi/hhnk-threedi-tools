@@ -11,7 +11,7 @@ from ...queries.bank_levels_manholes import create_bank_levels_update_query, cre
 # Get global settings update query
 #--------------------------------------------------------------------------------
 
-def create_global_settings_rows_update_query(excluded_ids, ids_to_add=[], ids_to_delete=[]):
+def create_global_settings_rows_update_query(excluded_ids=[], ids_to_add=[], ids_to_delete=[]):
     """
     Add rows from backup, delete rows from model
     Once the correct rows are in the model, set model control
