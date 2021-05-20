@@ -10,7 +10,7 @@ class testEnvironment():
     conversion variables for model state conversions
     """
     def __init__(self, source_paths_dict, output_vars_dict=None, layers=None,
-                 conversion_vars=None, selected_tests=None):
+                 conversion_vars=None, selected_tests=None, group_structure=None):
         self.src_paths = source_paths_dict
         self.output_vars = output_vars_dict
         # Only for use with plugin: interaction with qgis
@@ -20,4 +20,5 @@ class testEnvironment():
         # Only for sqlite tests
         self.selected_tests = selected_tests
         self.tasks = []
+        self.group_structure = group_structure
 
