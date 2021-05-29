@@ -1,5 +1,5 @@
 import numpy as np
-from hhnk_research_tools.query_functions import create_update_case_statement
+import hhnk_research_tools as hrt
 from ..variables.database_variables import cross_sec_loc_layer, id_col, bank_level_col, \
     connection_nodes_layer, storage_area_col, manhole_layer, display_name_col, code_col, \
     shape_col, width_col, manhole_indicator_col, calculation_type_col, drain_level_col, \
@@ -15,7 +15,7 @@ def create_bank_levels_update_query(new_bank_levels_df, excluded_ids):
     worden waarden gebruikt uit een backup of die handmatig zijn aangepast door de gebruiker
     """
     try:
-        query = create_update_case_statement(df=new_bank_levels_df,
+        query = hrt.sql_create_update_case_statement(df=new_bank_levels_df,
                                              layer=cross_sec_loc_layer,
                                              df_id_col=a_cross_loc_id,
                                              db_id_col=id_col,

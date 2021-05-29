@@ -1,8 +1,7 @@
 import geopandas as gpd
 from ...variables.datachecker_variables import peil_id_col, streefpeil_bwn_col, code_col, geometry_col
-from hhnk_research_tools.variables.types import GPKG
-from hhnk_research_tools.variables.definitions import ESRI_DRIVER, WKT
-from hhnk_research_tools.dataframe_functions.conversion import gdf_from_sql
+from hhnk_research_tools.variables import GPKG, ESRI_DRIVER
+import hhnk_research_tools as hrt
 from ...variables.database_aliases import a_watersurf_conn_id
 from ...variables.database_variables import storage_area_col
 from ...queries.tests.sqlite_tests.quick_tests_selection_queries import watersurface_conn_node_query
@@ -36,7 +35,7 @@ def read_input(database_path, datachecker_path, channel_profile_path, damo_path,
         damo_waterdeel = gpd.read_file(damo_path,
                                        layer=damo_layer,
                                        reader=GPKG)
-        conn_nodes_geo = gdf_from_sql(query=watersurface_conn_node_query,
+        conn_nodes_geo = hrt.sqlite_table_to_gdf(query=watersurface_conn_node_query,
                                       id_col=a_watersurf_conn_id,
                                       database_path=database_path)
         return fixeddrainage, modelbuilder_waterdeel, damo_waterdeel, conn_nodes_geo

@@ -1,7 +1,6 @@
 import numpy as np
 from ...queries.tests.sqlite_tests.quick_tests_selection_queries import profiles_used_query
-from hhnk_research_tools.sql_interaction.sql_functions import execute_sql_selection
-from hhnk_research_tools.dataframe_functions.conversion import convert_df_to_gdf
+import hhnk_research_tools as hrt
 from ...tests.sqlite_tests.variables.dataframes_mapping import primary_col, water_level_width_col, \
     max_depth_col
 from ...variables.database_aliases import a_zoom_cat
@@ -38,9 +37,10 @@ def get_used_profiles(test_env):
     """
     try:
         model_path = test_env.src_paths['model']
-        channels_df = execute_sql_selection(query=profiles_used_query,
+        #TODO use hrt.sqlite_table_to_gdf instead?
+        channels_df = hrt.execute_sql_selection(query=profiles_used_query,
                                             database_path=model_path)
-        channels_gdf = convert_df_to_gdf(df=channels_df)
+        channels_gdf = hrt.df_convert_to_gdf(df=channels_df)
         # If zoom category is 4, channel is considered primary
         channels_gdf[primary_col] = channels_gdf[a_zoom_cat].apply(
             lambda zoom_cat: zoom_cat == 4)

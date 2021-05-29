@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import geopandas as gpd
 from shapely.geometry import LineString
-from hhnk_research_tools.data_functions.conversion import line_geometries_to_coords
+import hhnk_research_tools as hrt
 from ...variables.default_variables import DEF_TRGT_CRS
 from .variables.definitions import one_d_two_d, two_d, max_sfx, suffixes_list, pump_line
 from .variables.dataframe_mapping import id_col, spatialite_id_col, content_type_col, kcu_col, q_m3_s_col, \
@@ -11,7 +11,7 @@ from hhnk_research_tools.threedi.variables.rain_dataframe import t_start_rain_co
 
 def read_flowline_results(threedi_result, timesteps_df):
     try:
-        coords = line_geometries_to_coords(threedi_result.lines.line_geometries)  # create gdf from node coords
+        coords = hrt.threedi.line_geometries_to_coords(threedi_result.lines.line_geometries)  # create gdf from node coords
 
         flowlines_gdf = gpd.GeoDataFrame(geometry=coords, crs=f'EPSG:{DEF_TRGT_CRS}')
         flowlines_gdf[id_col] = threedi_result.lines.id

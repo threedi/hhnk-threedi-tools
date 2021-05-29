@@ -2,7 +2,7 @@ from ...variables.database_variables import global_settings_layer, id_col, manho
     conn_node_id_col, cross_sec_loc_layer, cross_sec_def_layer, channels_layer, control_group_col, \
     bank_level_col, calculation_type_col, width_col
 from ...variables.database_aliases import a_cross_loc_id, a_weir_cross_def_id
-from hhnk_research_tools.query_functions import create_update_case_statement
+import hhnk_research_tools as hrt
 from ...variables.definitions import proposed_value_col
 from ...tests.bank_levels.variables.dataframe_variables import new_bank_level_col
 from .variables.new_columns_mapping import global_settings_new_col_name, manholes_new_calc_type, \
@@ -56,7 +56,7 @@ def collect_manual_adjustments(global_settings_manual_df=None, bank_levels_manua
     try:
         queries_list = []
         if global_settings_manual_df is not None and not global_settings_manual_df.empty:
-            queries_list.append(create_update_case_statement(df=global_settings_manual_df,
+            queries_list.append(hrt.sql_create_update_case_statement(df=global_settings_manual_df,
                                                              layer=global_settings_layer,
                                                              df_id_col=id_col,
                                                              db_id_col=id_col,
@@ -65,7 +65,7 @@ def collect_manual_adjustments(global_settings_manual_df=None, bank_levels_manua
                                                              new_val_col=global_settings_new_col_name,
                                                              show_proposed=True))
         if bank_levels_manual_df is not None and not bank_levels_manual_df.empty:
-            queries_list.append(create_update_case_statement(df=bank_levels_manual_df,
+            queries_list.append(hrt.sql_create_update_case_statement(df=bank_levels_manual_df,
                                                              layer=cross_sec_loc_layer,
                                                              df_id_col=a_cross_loc_id,
                                                              db_id_col=id_col,
@@ -74,7 +74,7 @@ def collect_manual_adjustments(global_settings_manual_df=None, bank_levels_manua
                                                              new_val_col=new_bank_level_col,
                                                              show_proposed=True))
         if manhole_update_manual_df is not None and not manhole_update_manual_df.empty:
-            queries_list.append(create_update_case_statement(df=manhole_update_manual_df,
+            queries_list.append(hrt.sql_create_update_case_statement(df=manhole_update_manual_df,
                                                              layer=manhole_layer,
                                                              df_id_col=id_col,
                                                              db_id_col=id_col,
@@ -83,7 +83,7 @@ def collect_manual_adjustments(global_settings_manual_df=None, bank_levels_manua
                                                              new_val_col=manholes_new_calc_type,
                                                              show_proposed=True))
         if weir_widths_manual_df is not None and not weir_widths_manual_df.empty:
-            queries_list.append(create_update_case_statement(df=weir_widths_manual_df,
+            queries_list.append(hrt.sql_create_update_case_statement(df=weir_widths_manual_df,
                                                              layer=cross_sec_def_layer,
                                                              df_id_col=a_weir_cross_def_id,
                                                              db_id_col=id_col,
@@ -92,7 +92,7 @@ def collect_manual_adjustments(global_settings_manual_df=None, bank_levels_manua
                                                              new_val_col=weirs_new_width_col,
                                                              show_proposed=True))
         if channels_manual_df is not None and not channels_manual_df.empty:
-            queries_list.append(create_update_case_statement(df=channels_manual_df,
+            queries_list.append(hrt.sql_create_update_case_statement(df=channels_manual_df,
                                                              layer=channels_layer,
                                                              df_id_col=id_col,
                                                              db_id_col=id_col,

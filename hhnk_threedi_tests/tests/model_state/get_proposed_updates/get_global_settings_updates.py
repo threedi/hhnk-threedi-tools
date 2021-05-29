@@ -1,7 +1,6 @@
 import pandas as pd
 from ..variables.definitions import hydraulic_test_state, one_d_two_d_state, undefined_state
-from hhnk_research_tools.sql_interaction.sql_functions import execute_sql_selection
-from hhnk_research_tools.query_functions import construct_select_query
+import hhnk_research_tools as hrt
 from ....queries.model_states.read_backups_queries import create_global_settings_from_backup_query
 from ....variables.database_variables import zero_d_one_d_val, global_settings_layer, id_col, \
     name_col, control_group_col
@@ -14,7 +13,7 @@ def get_rows_to_add(model_path, to_state, rows_in_model_df, id_column):
     """
     try:
         query = create_global_settings_from_backup_query(to_state=to_state)
-        rows_should_be_in_model = execute_sql_selection(query=query, database_path=model_path)
+        rows_should_be_in_model = hrt.execute_sql_selection(query=query, database_path=model_path)
         return rows_should_be_in_model.loc[~rows_should_be_in_model[id_column].isin(
             rows_in_model_df[id_column].tolist())]
     except Exception as e:
@@ -34,8 +33,8 @@ def get_rows_to_delete(rows_in_model_df, to_state, selection_col, id_column):
 
 def get_global_settings_model(model_path):
     try:
-        query = construct_select_query(table=global_settings_layer)
-        global_settings_model = execute_sql_selection(query=query, database_path=model_path)
+        query = hrt.sql_construct_select_query(table=global_settings_layer)
+        global_settings_model = hrt.execute_sql_selection(query=query, database_path=model_path)
         return global_settings_model
     except Exception as e:
         raise e from None

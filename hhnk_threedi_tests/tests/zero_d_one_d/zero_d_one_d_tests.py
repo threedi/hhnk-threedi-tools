@@ -1,6 +1,7 @@
 import pandas as pd
-from hhnk_research_tools.dataframe_functions.conversion import create_gdf_from_df
-from hhnk_research_tools.threedi.geometry_functions.node_coordinates_to_points import coordinates_to_points
+import hhnk_research_tools as hrt
+from hhnk_research_tools.variables import DEF_TRGT_CRS
+from hhnk_research_tools.threedi.geometry_functions import coordinates_to_points
 from hhnk_research_tools.threedi.variables.rain_dataframe import t_end_sum_col, t_end_rain_col, t_end_rain_min_one_col, \
     t_0_col, t_start_rain_col
 from hhnk_research_tools.threedi.variables.gridadmin import all_1d
@@ -46,7 +47,8 @@ def run_0d1d_test(test_env):
 
         # Get point geometry from nodes
         crds = coordinates_to_points(nodes=subset_1d)
-        results_gdf = create_gdf_from_df(df=results_df, geometry_col=crds)
+    
+        results_gdf = hrt.df_add_geometry_to_gdf(df=results_df, geometry_col=crds)
         return results_gdf
     except Exception as e:
         raise e from None

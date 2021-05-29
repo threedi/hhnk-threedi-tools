@@ -1,4 +1,4 @@
-from hhnk_research_tools.sql_interaction.sql_functions import get_table_as_df
+import hhnk_research_tools as hrt
 from ..variables.definitions import hydraulic_test_state
 from ..variables.new_columns_mapping import manholes_new_calc_type
 from ....variables.database_variables import manhole_layer, calculation_type_col, id_col
@@ -16,7 +16,7 @@ def get_proposed_updates_manholes(test_env):
         model_path = test_env.src_paths['model']
         to_state = test_env.conversion_vars.to_state
         from_state = test_env.conversion_vars.from_state
-        manholes_in_model_df = get_table_as_df(database_path=model_path, table_name=manhole_layer)
+        manholes_in_model_df = hrt.sqlite_table_to_df(database_path=model_path, table_name=manhole_layer)
         if to_state == hydraulic_test_state:
             # We have to set all calculation types to isolated
             manholes_in_model_df.insert(manholes_in_model_df.columns.get_loc(calculation_type_col) + 1,
@@ -26,7 +26,7 @@ def get_proposed_updates_manholes(test_env):
                                                       != manholes_in_model_df[manholes_new_calc_type]]
         elif from_state == hydraulic_test_state:
             # we have to restore original calculation types from backup
-            manholes_backup_df = get_table_as_df(database_path=model_path, table_name=MANHOLES_TABLE)
+            manholes_backup_df = hrt.sqlite_table_to_df(database_path=model_path, table_name=MANHOLES_TABLE)
             manholes_to_update = select_values_to_update_from_backup(model_df=manholes_in_model_df,
                                                                      backup_df=manholes_backup_df,
                                                                      left_id_col=id_col,

@@ -1,9 +1,8 @@
 import geopandas as gpd
-from hhnk_research_tools.sql_interaction.sql_functions import execute_sql_selection
-from hhnk_research_tools.dataframe_functions.conversion import convert_df_to_gdf
+import hhnk_research_tools as hrt
 from ...queries.tests.sqlite_tests.quick_tests_selection_queries import controlled_structures_query
 from ...variables.database_variables import target_type_col, action_col, weir_layer, code_col
-from hhnk_research_tools.variables.definitions import OPEN_FILE_GDB_DRIVER
+from hhnk_research_tools.variables import OPEN_FILE_GDB_DRIVER
 
 start_action = 'start_action_value'
 min_action = 'min_action_value'
@@ -30,8 +29,9 @@ def check_controlled_structures(test_env):
     hdb_layer = test_env.src_paths['hdb_sturing_3di_layer']
     model_path = test_env.src_paths['model']
     try:
-        model_control_db = execute_sql_selection(query=controlled_structures_query, database_path=model_path)
-        model_control_gdf = convert_df_to_gdf(df=model_control_db)
+        #TODO sqlite_table_to_gdf better application?
+        model_control_db = hrt.execute_sql_selection(query=controlled_structures_query, database_path=model_path)
+        model_control_gdf = hrt.df_convert_to_gdf(df=model_control_db)
         model_control_gdf[[start_action, min_action, max_action]] = model_control_gdf.apply(
             get_action_values, axis=1, result_type='expand')
         hdb_stuw_gdf = gpd.read_file(hdb_path,

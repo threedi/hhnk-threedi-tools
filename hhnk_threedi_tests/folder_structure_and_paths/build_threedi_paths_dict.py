@@ -1,5 +1,5 @@
 import os
-from hhnk_research_tools.variables.types import file_types_dict, NC, H5
+from hhnk_research_tools.variables import file_types_dict, NC, H5
 
 def build_threedi_source_paths_dict(results_path=None, revision_dir=None, revision_path=None):
     """

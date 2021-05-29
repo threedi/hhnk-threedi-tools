@@ -2,13 +2,10 @@ import geopandas as gpd
 import pandas as pd
 import shapely.wkt as wkt
 from .geometry_conversions import extract_boundary_from_polygon, point_geometries_to_wkt
-from hhnk_research_tools.data_functions.conversion import line_geometries_to_coords
+import hhnk_research_tools as hrt
 from hhnk_research_tools.threedi.variables.results_mapping import one_d_two_d
+from hhnk_research_tools.variables import UTF8, GPKG_DRIVER
 from ...variables.default_variables import DEF_TRGT_CRS
-from hhnk_research_tools.variables.types import UTF8
-from hhnk_research_tools.sql_interaction.sql_functions import create_sqlite_connection
-from hhnk_research_tools.dataframe_functions.conversion import gdf_from_sql
-from hhnk_research_tools.variables.definitions import GPKG_DRIVER
 from ...variables.database_aliases import a_man_id, a_chan_id, a_cross_loc_id, a_conn_node_id
 from ...queries.tests.bank_levels_test.gather_information_queries import manholes_query, \
     channels_query, cross_section_location_query, conn_nodes_query
@@ -21,7 +18,7 @@ def read_1d2d_lines(results):
     """
     try:
         # Creates geodataframe with geometries of 1d2d subset of nodes in 3di results
-        coords = line_geometries_to_coords(results.lines.subset(one_d_two_d).line_geometries)
+        coords = hrt.threedi.line_geometries_to_coords(results.lines.subset(one_d_two_d).line_geometries)
         one_d_two_d_lines_gdf = gpd.GeoDataFrame(geometry=coords, crs=f'EPSG:{DEF_TRGT_CRS}')
 
         # 1d nodes om te bepalen bij welk kunstwerk het hoort
@@ -93,17 +90,17 @@ def import_information(test_env):
     fixeddrainage_layer = test_env.src_paths['datachecker_fixed_drainage']
     conn = None
     try:
-        conn = create_sqlite_connection(database_path=model_path)
+        conn = hrt.create_sqlite_connection(database_path=model_path)
         fixeddrainage_gdf = gpd.read_file(datachecker_path,
                                       layer=fixeddrainage_layer,
                                       reader=GPKG_DRIVER)
         fixeddrainage_lines = extract_boundary_from_polygon(fixeddrainage_gdf)
         levee_line_gdf = import_levees(threedi_results)
         one_d_two_d_lines_gdf = read_1d2d_lines(threedi_results)
-        channels_gdf = gdf_from_sql(conn=conn, query=channels_query, id_col=a_chan_id)
-        cross_loc_gdf = gdf_from_sql(conn=conn, query=cross_section_location_query, id_col=a_cross_loc_id)
-        conn_nodes_gdf = gdf_from_sql(conn=conn, query=conn_nodes_query, id_col=a_conn_node_id)
-        manholes_gdf = gdf_from_sql(conn=conn, query=manholes_query, id_col=a_man_id)
+        channels_gdf = hrt.sqlite_table_to_gdf(conn=conn, query=channels_query, id_col=a_chan_id)
+        cross_loc_gdf = hrt.sqlite_table_to_gdf(conn=conn, query=cross_section_location_query, id_col=a_cross_loc_id)
+        conn_nodes_gdf = hrt.sqlite_table_to_gdf(conn=conn, query=conn_nodes_query, id_col=a_conn_node_id)
+        manholes_gdf = hrt.sqlite_table_to_gdf(conn=conn, query=manholes_query, id_col=a_man_id)
         return manholes_gdf, fixeddrainage_gdf, fixeddrainage_lines, one_d_two_d_lines_gdf, \
             conn_nodes_gdf, channels_gdf, cross_loc_gdf, levee_line_gdf
     except Exception as e:

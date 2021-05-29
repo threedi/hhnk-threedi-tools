@@ -1,12 +1,10 @@
 import numpy as np
 import geopandas as gpd
 from shapely.geometry import box
+import hhnk_research_tools as hrt
 from hhnk_research_tools.threedi.variables.gridadmin import all_2d
 from hhnk_research_tools.threedi.variables.rain_dataframe import t_start_rain_col, t_end_rain_col, t_end_sum_col
 from ...variables.database_aliases import df_geo_col
-from hhnk_research_tools.data_functions.saving import save_raster_array_to_tiff
-from hhnk_research_tools.data_functions.loading import load_gdal_raster
-from hhnk_research_tools.data_functions.conversion import gdf_to_raster
 from .variables.dataframe_mapping import wtrlvl_col
 from ...folder_structure_and_paths.paths_functions import create_tif_path
 
@@ -30,7 +28,7 @@ def create_depth_raster(wlvl_list, dem_list, dem_nodata, dem_meta, raster_output
         depth_list[nodatamask] = dem_nodata
 
         # write array to tiff
-        save_raster_array_to_tiff(output_file=raster_output_path,
+        hrt.save_raster_array_to_tiff(output_file=raster_output_path,
                                   raster_array=depth_list,
                                   nodata=dem_nodata,
                                   metadata=dem_meta)
@@ -55,7 +53,7 @@ def calc_waterlevel_depth_at_timesteps(test_env):
         # hours since start of calculation
         timestrings = [int(round(results.nodes.timestamps[t] / 60 / 60, 0)) for t in
                        timesteps_arr]
-        dem_list, dem_nodata, dem_meta = load_gdal_raster(dem_path)
+        dem_list, dem_nodata, dem_meta = hrt.load_gdal_raster(dem_path)
         for timestep, timestr in zip(timesteps_arr, timestrings):
             # output files
             wlvl_tif = wtrlvl_path_template.format(timestr)
@@ -66,7 +64,7 @@ def calc_waterlevel_depth_at_timesteps(test_env):
                                                 filename=depth_tif)
             # calculate waterlevel at selected timestep in nodes gdf
             nodes_2d_wlvl = read_2node_wlvl_at_timestep(results, timestep)
-            wlvl_list = gdf_to_raster(gdf=nodes_2d_wlvl,
+            wlvl_list = hrt.gdf_to_raster(gdf=nodes_2d_wlvl,
                                       value_field=wtrlvl_col,
                                       raster_out=wlvl_output_path,
                                       nodata=dem_nodata,

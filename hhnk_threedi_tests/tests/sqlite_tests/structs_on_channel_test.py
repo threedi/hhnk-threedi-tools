@@ -1,8 +1,8 @@
 import geopandas as gpd
-from hhnk_research_tools.dataframe_functions.conversion import gdf_from_sql
+import hhnk_research_tools as hrt
 from ...queries.tests.sqlite_tests.quick_tests_selection_queries import struct_channel_bed_query
 from ...variables.database_aliases import a_chan_bed_struct_id, a_chan_bed_struct_code
-from hhnk_research_tools.variables.definitions import OPEN_FILE_GDB_DRIVER
+from hhnk_research_tools.variables import OPEN_FILE_GDB_DRIVER
 from .variables.dataframes_mapping import down_has_assumption, up_has_assumption, \
     height_inner_lower_down, height_inner_lower_up, datachecker_assumption_alias
 
@@ -54,7 +54,7 @@ def check_struct_channel_bed_level(test_env):
     model_path = test_env.src_paths['model']
     try:
         below_ref_query = struct_channel_bed_query
-        gdf_below_ref = gdf_from_sql(query=below_ref_query,
+        gdf_below_ref = hrt.sqlite_table_to_gdf(query=below_ref_query,
                                      id_col=a_chan_bed_struct_id,
                                      database_path=model_path)
         # See git issue about below statements

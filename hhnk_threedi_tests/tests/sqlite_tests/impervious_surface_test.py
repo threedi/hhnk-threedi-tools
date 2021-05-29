@@ -1,6 +1,6 @@
 import geopandas as gpd
-from hhnk_research_tools.sql_interaction.sql_functions import execute_sql_selection
-from hhnk_research_tools.variables.definitions import ESRI_DRIVER
+import hhnk_research_tools as hrt
+from hhnk_research_tools.variables import ESRI_DRIVER
 from ...queries.tests.sqlite_tests.quick_tests_selection_queries import impervious_surface_query
 from ...variables.database_variables import id_col
 
@@ -18,7 +18,7 @@ def check_imp_surface_area(test_env):
     polder_shapefile = test_env.src_paths['polder_shapefile']
     model_path = test_env.src_paths['model']
     try:
-        imp_surface_db = execute_sql_selection(query=impervious_surface_query,
+        imp_surface_db = hrt.execute_sql_selection(query=impervious_surface_query,
                                                database_path=model_path,
                                                index_col=id_col) #conn=test_params.conn, index_col=DEFAULT_INDEX_COLUMN
         polygon_imp_surface = gpd.read_file(polder_shapefile, driver=ESRI_DRIVER) #read_file(polder_file, driver=ESRI_DRIVER)

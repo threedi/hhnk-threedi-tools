@@ -1,10 +1,9 @@
 import os
 import numpy as np
 import geopandas as gpd
-from hhnk_research_tools.variables.definitions import OPEN_FILE_GDB_DRIVER
-from hhnk_research_tools.data_functions.loading import load_gdal_raster
-from hhnk_research_tools.data_functions.conversion import gdf_to_raster
-from hhnk_research_tools.data_functions.saving import save_raster_array_to_tiff
+import hhnk_research_tools as hrt
+
+from hhnk_research_tools.variables import OPEN_FILE_GDB_DRIVER
 from ...folder_structure_and_paths.paths_functions import create_tif_path
 
 def calc_dewatering_depth(test_env):
@@ -27,9 +26,9 @@ def calc_dewatering_depth(test_env):
         fixeddrainage = gpd.read_file(datachecker_path,
                                       driver=OPEN_FILE_GDB_DRIVER,
                                       layer=datachecker_fixeddrainage_layer)
-        dem_array, dem_nodata, dem_metadata = load_gdal_raster(dem_path)
+        dem_array, dem_nodata, dem_metadata = hrt.load_gdal_raster(dem_path)
         # Rasterize fixeddrainage
-        initial_water_level_arr = gdf_to_raster(fixeddrainage,
+        initial_water_level_arr = hrt.gdf_to_raster(fixeddrainage,
                                                 value_field=init_waterlevel_value_field,
                                                 raster_out=init_water_level_out,
                                                 nodata=dem_nodata,
@@ -40,7 +39,7 @@ def calc_dewatering_depth(test_env):
         os.remove(init_water_level_out)
         dewatering_array[nodata_mask] = dem_nodata
         # Save array to raster
-        save_raster_array_to_tiff(output_file=dewatering_out,
+        hrt.save_raster_array_to_tiff(output_file=dewatering_out,
                                   raster_array=dewatering_array,
                                   nodata=dem_nodata,
                                   metadata=dem_metadata)

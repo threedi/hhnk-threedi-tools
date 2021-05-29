@@ -1,4 +1,4 @@
-from hhnk_research_tools.sql_interaction.sql_functions import get_table_as_df
+import hhnk_research_tools as hrt
 from ..variables.definitions import hydraulic_test_state
 from ....variables.database_variables import channels_layer, id_col, calculation_type_col
 from ....variables.backups_table_names import CHANNELS_TABLE
@@ -15,10 +15,10 @@ def get_proposed_adjustments_channels(test_env):
         model_path = test_env.src_paths['model']
         to_state = test_env.conversion_vars.to_state
         from_state = test_env.conversion_vars.from_state
-        channels_in_model_df = get_table_as_df(database_path=model_path, table_name=channels_layer)
+        channels_in_model_df = hrt.sqlite_table_to_df(database_path=model_path, table_name=channels_layer)
         if from_state == hydraulic_test_state:
             # reset backup
-            channels_backup_df = get_table_as_df(database_path=model_path, table_name=CHANNELS_TABLE)
+            channels_backup_df = hrt.sqlite_table_to_df(database_path=model_path, table_name=CHANNELS_TABLE)
             channels_to_update_df = select_values_to_update_from_backup(model_df=channels_in_model_df,
                                                                         backup_df=channels_backup_df,
                                                                         left_id_col=id_col,

@@ -1,7 +1,6 @@
 import pandas as pd
+import hhnk_research_tools as hrt
 from hhnk_research_tools.threedi.variables.rain_dataframe import t_index_col, t_0_col, t_end_rain_col
-from hhnk_research_tools.data_functions.conversion import line_geometries_to_coords
-from hhnk_research_tools.dataframe_functions.conversion import create_gdf_from_df
 from hhnk_research_tools.threedi.variables.gridadmin import all_1d
 from .variables.dataframe_mapping import res_orifices, res_culverts, res_channels, start_node_col, end_node_col, \
     code_col, flow_direction_col, slope_col, water_lvl_diff_col, q_col, u_var_col, slope_abs_cm_km_col, map_id_col, \
@@ -103,7 +102,7 @@ def create_structure_gdf(threedi_result, structure_name, wtrlvl_nodes_at_timeste
              structure_name=structure_name)
 
     # get geometry from 3di results and convert to shapely LineString
-    lines_geometry = line_geometries_to_coords(structure_lines.line_geometries)
+    lines_geometry = hrt.threedi.line_geometries_to_coords(structure_lines.line_geometries)
 
     # De 3di-id van het structure
     structure[map_id_col] = structure_lines.content_pk.tolist()
@@ -120,7 +119,7 @@ def create_structure_gdf(threedi_result, structure_name, wtrlvl_nodes_at_timeste
                   structure_name=structure_name,
                   primary_nodes=primary_nodes)
 
-    structure = create_gdf_from_df(df=structure, geometry_col=lines_geometry)
+    structure = hrt.df_add_geometry_to_gdf(df=structure, geometry_col=lines_geometry)
 
     # Add information about 'verhang'
     add_slope_info(structure, structure_name, up_waterlevel, down_waterlevel)

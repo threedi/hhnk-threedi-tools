@@ -1,5 +1,5 @@
 import numpy as np
-from hhnk_research_tools.data_functions.loading import load_gdal_raster
+import hhnk_research_tools as hrt
 from ...variables.definitions import DEM_MAX_VALUE
 
 def check_dem_max_val(test_env):
@@ -9,7 +9,7 @@ def check_dem_max_val(test_env):
     """
     dem = test_env.src_paths['dem']
     try:
-        dem_array, dem_nodata, dem_metadata = load_gdal_raster(dem)
+        dem_array, dem_nodata, dem_metadata = hrt.load_gdal_raster(dem)
         if np.max(dem_array) > DEM_MAX_VALUE:
             result = f"Maximale waarde DEM: {np.max(dem_array)} is te hoog"
         else:

@@ -1,5 +1,5 @@
 from shapely import wkt
-from hhnk_research_tools.dataframe_functions.conversion import gdf_from_sql
+import hhnk_research_tools as hrt
 from ...variables.database_variables import id_col
 from ...variables.database_aliases import a_geo_end_coord, a_geo_end_node, a_geo_start_coord, a_geo_start_node
 from ...queries.tests.sqlite_tests.quick_tests_selection_queries import geometry_check_query
@@ -26,7 +26,7 @@ def run_geometry_checks(test_env):
     try:
         query = geometry_check_query
         model_path = test_env.src_paths['model']
-        gdf = gdf_from_sql(query=query, database_path=model_path, id_col=id_col)
+        gdf = hrt.sqlite_table_to_gdf(query=query, database_path=model_path, id_col=id_col)
         gdf['start_check'] = gdf[a_geo_start_node] == gdf[a_geo_start_coord]
         gdf['end_check'] = gdf[a_geo_end_node] == gdf[a_geo_end_coord]
         add_distance_checks(gdf)

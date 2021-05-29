@@ -1,5 +1,5 @@
 import pandas as pd
-from hhnk_research_tools.sql_interaction.sql_functions import execute_sql_selection
+import hhnk_research_tools as hrt
 from ..variables.definitions import hydraulic_test_state
 from ....variables.database_variables import width_col
 from ....variables.database_aliases import a_weir_id
@@ -18,10 +18,10 @@ def get_proposed_adjustments_weir_width(test_env):
         model_path = test_env.src_paths['model']
         to_state = test_env.conversion_vars.to_state
         from_state = test_env.conversion_vars.from_state
-        weir_widths_in_model_df = execute_sql_selection(query=from_model_query, database_path=model_path)
+        weir_widths_in_model_df = hrt.execute_sql_selection(query=from_model_query, database_path=model_path)
         if from_state == hydraulic_test_state:
             # reset backup
-            weir_widths_backup_df = execute_sql_selection(query=from_backup_query, database_path=model_path)
+            weir_widths_backup_df = hrt.execute_sql_selection(query=from_backup_query, database_path=model_path)
             weir_widths_to_update = select_values_to_update_from_backup(model_df=weir_widths_in_model_df,
                                                                         backup_df=weir_widths_backup_df,
                                                                         left_id_col=a_weir_id,

@@ -1,8 +1,7 @@
 import os
 from .variables.definitions import hydraulic_test_state, one_d_two_d_state, undefined_state, \
     invalid_path, zero_d_one_d_name
-from hhnk_research_tools.sql_interaction.sql_functions import execute_sql_selection, table_exists
-from hhnk_research_tools.query_functions import construct_select_query
+import hhnk_research_tools as hrt
 from ...variables.database_variables import global_settings_layer, control_group_col, name_col
 from ...variables.backups_table_names import GLOBAL_SETTINGS_TABLE
 
@@ -26,9 +25,9 @@ def detect_model_states(model_path):
     if model_path is None or not os.path.exists(model_path):
         return invalid_path
     try:
-        global_settings_df = execute_sql_selection(query=construct_select_query(table=global_settings_layer),
+        global_settings_df = hrt.execute_sql_selection(query=hrt.sql_construct_select_query(table=global_settings_layer),
                                                    database_path=model_path)
-        global_settings_backup_exists = table_exists(database_path=model_path, table_name=GLOBAL_SETTINGS_TABLE)
+        global_settings_backup_exists = hrt.sql_table_exists(database_path=model_path, table_name=GLOBAL_SETTINGS_TABLE)
         if not global_settings_df.empty and global_settings_backup_exists:
             number_of_rows = global_settings_df.shape[0]
             control_group_value_unique = is_unique(global_settings_df[control_group_col])
