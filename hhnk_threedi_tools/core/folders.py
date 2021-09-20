@@ -28,7 +28,7 @@ from hhnk_research_tools.variables import (
 )
 
 # Local imports
-from hhnk_threedi_tests.variables.damo_hdb_datachecker_variables import (
+from hhnk_threedi_tools.variables.damo_hdb_datachecker_variables import (
     damo_duiker_sifon_hevel,
     damo_waterdeel,
     datachecker_culvert_layer,
@@ -36,14 +36,14 @@ from hhnk_threedi_tests.variables.damo_hdb_datachecker_variables import (
     hdb_sturing_3di,
     waterlevel_val_field,
 )
-from hhnk_threedi_tests.variables.model_state import (
+from hhnk_threedi_tools.variables.model_state import (
     hydraulic_test_state,
     one_d_two_d_state,
     undefined_state,
     invalid_path,
 )
 
-from hhnk_threedi_tests.core.model_state import (
+from hhnk_threedi_tools.core.model_state import (
     detect_model_states,
     get_proposed_adjustments_weir_width,
     get_proposed_updates_manholes,

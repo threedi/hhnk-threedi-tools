@@ -9,21 +9,21 @@ import pandas as pd
 import hhnk_research_tools as hrt
 
 # Local imports
-from hhnk_threedi_tests.variables.model_state import undefined_state, one_d_two_d_state
-from hhnk_threedi_tests.variables.backups_table_names import (
+from hhnk_threedi_tools.variables.model_state import undefined_state, one_d_two_d_state
+from hhnk_threedi_tools.variables.backups_table_names import (
     GLOBAL_SETTINGS_TABLE,
     MANHOLES_TABLE,
     CONTR_WEIR_WIDTH_BACKUP,
     CHANNELS_TABLE,
     BANK_LVLS_LAST_CALC,
 )
-from hhnk_threedi_tests.variables.database_variables import (
+from hhnk_threedi_tools.variables.database_variables import (
     global_settings_layer,
     channels_layer,
     cross_sec_def_layer,
     manhole_layer,
 )
-from hhnk_threedi_tests.utils.queries import (
+from hhnk_threedi_tools.utils.queries import (
     weir_width_backup_query,
     bank_lvls_source_update_query,
     bank_lvls_source_creation_query,

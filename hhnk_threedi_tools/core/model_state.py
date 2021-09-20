@@ -18,7 +18,7 @@ import hhnk_research_tools as hrt
 
 # local imports
 
-from hhnk_threedi_tests.variables.model_state import (
+from hhnk_threedi_tools.variables.model_state import (
     hydraulic_test_state,
     one_d_two_d_state,
     undefined_state,
@@ -30,7 +30,7 @@ from hhnk_threedi_tests.variables.model_state import (
     channels_new_calc_type,
 )
 
-from hhnk_threedi_tests.variables.database_variables import (
+from hhnk_threedi_tools.variables.database_variables import (
     name_col,
     manhole_layer,
     conn_node_id_col,
@@ -46,13 +46,13 @@ from hhnk_threedi_tests.variables.database_variables import (
     control_group_col,
 )
 
-from hhnk_threedi_tests.variables.backups_table_names import (
+from hhnk_threedi_tools.variables.backups_table_names import (
     GLOBAL_SETTINGS_TABLE,
     CHANNELS_TABLE,
     MANHOLES_TABLE,
 )
 
-from hhnk_threedi_tests.utils.queries import (
+from hhnk_threedi_tools.utils.queries import (
     create_global_settings_rows_update_query,
     construct_global_settings_control_group_query,
     create_bank_levels_update_query,
@@ -65,16 +65,16 @@ from hhnk_threedi_tests.utils.queries import (
     weir_widths_from_backup_query as from_backup_query,
 )
 
-from hhnk_threedi_tests.variables.database_aliases import (
+from hhnk_threedi_tools.variables.database_aliases import (
     a_cross_loc_id,
     a_weir_cross_def_id,
     a_weir_id,
 )
 
-from hhnk_threedi_tests.variables.definitions import proposed_value_col
-from hhnk_threedi_tests.variables.bank_levels import new_bank_level_col
+from hhnk_threedi_tools.variables.definitions import proposed_value_col
+from hhnk_threedi_tools.variables.bank_levels import new_bank_level_col
 
-from hhnk_threedi_tests.core.model_backup import (
+from hhnk_threedi_tools.core.model_backup import (
     select_values_to_update_from_backup,
 )
 

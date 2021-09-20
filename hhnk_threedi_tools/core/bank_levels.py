@@ -17,22 +17,22 @@ from hhnk_research_tools.threedi.grid import read_1d2d_lines, import_levees
 from hhnk_research_tools.threedi.geometry_functions import extract_boundary_from_polygon
 
 # Local imports
-from hhnk_threedi_tests.core.folders import Folders
-from hhnk_threedi_tests.variables.default_variables import DEF_TRGT_CRS
-from hhnk_threedi_tests.variables.datachecker_variables import (
+from hhnk_threedi_tools.core.folders import Folders
+from hhnk_threedi_tools.variables.default_variables import DEF_TRGT_CRS
+from hhnk_threedi_tools.variables.datachecker_variables import (
     peil_id_col,
     streefpeil_bwn_col,
 )
-from hhnk_threedi_tests.qgis.environment import testEnvironment
+from hhnk_threedi_tools.qgis.environment import testEnvironment
 
-from hhnk_threedi_tests.utils.queries import (
+from hhnk_threedi_tools.utils.queries import (
     manholes_query,
     channels_query,
     cross_section_location_query,
     conn_nodes_query,
 )
 
-from hhnk_threedi_tests.variables.database_aliases import (
+from hhnk_threedi_tools.variables.database_aliases import (
     a_man_id,
     a_conn_node_id,
     df_geo_col,
@@ -40,7 +40,7 @@ from hhnk_threedi_tests.variables.database_aliases import (
     a_cross_loc_id,
     a_chan_id,
 )
-from hhnk_threedi_tests.variables.bank_levels import (
+from hhnk_threedi_tools.variables.bank_levels import (
     one_d_node_id_col,
     node_id_col,
     node_type_col,
@@ -66,7 +66,7 @@ from hhnk_threedi_tests.variables.bank_levels import (
     bank_level_diff_col,
 )
 
-from hhnk_threedi_tests.variables.database_variables import (
+from hhnk_threedi_tools.variables.database_variables import (
     display_name_col,
     code_col,
     conn_node_id_col,

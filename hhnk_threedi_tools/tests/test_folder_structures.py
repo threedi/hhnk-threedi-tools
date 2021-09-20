@@ -15,10 +15,10 @@ import shutil
 import pathlib
 
 # Local imports
-from hhnk_threedi_tests.core.folders import Folders
+from hhnk_threedi_tools.core.folders import Folders
 
 # Globals
-# __file__ = "C:/Users/chris.kerklaan/Documents/Github/hhnk-threedi-tests/hhnk_threedi_tests/tests/test_folder_structures.py"
+# __file__ = "C:/Users/chris.kerklaan/Documents/Github/hhnk-threedi-tests/hhnk_threedi_tools/tests/test_folder_structures.py"
 TEST_DIRECTORY = str(pathlib.Path(__file__).parent.absolute()) + "/data"
 FOLDER = TEST_DIRECTORY + "/folder_structures/new_project"
 MODEL_FOLDER = TEST_DIRECTORY + "/model_test"

@@ -12,11 +12,11 @@ import os
 import pathlib
 
 # Local imports
-from hhnk_threedi_tests.core.one_d_two_d import OneDTwoDTest
-from hhnk_threedi_tests.core.folders import Folders
+from hhnk_threedi_tools.core.one_d_two_d import OneDTwoDTest
+from hhnk_threedi_tools.core.folders import Folders
 
 # Globals
-# __file__ = "C:/Users/chris.kerklaan/Documents/Github/hhnk-threedi-tests/hhnk_threedi_tests/tests/test_one_d_two_d.py"
+# __file__ = "C:/Users/chris.kerklaan/Documents/Github/hhnk-threedi-tests/hhnk_threedi_tools/tests/test_one_d_two_d.py"
 TEST_MODEL = str(pathlib.Path(__file__).parent.absolute()) + "/data/model_test/"
 
 

@@ -25,8 +25,8 @@ from hhnk_research_tools.variables import (
 )
 
 # Local imports
-from hhnk_threedi_tests.core.folders import Folders
-from hhnk_threedi_tests.variables.zero_d_one_d import (
+from hhnk_threedi_tools.core.folders import Folders
+from hhnk_threedi_tools.variables.zero_d_one_d import (
     lvl_start_col,
     lvl_end_col,
     lvl_end_rain_col,

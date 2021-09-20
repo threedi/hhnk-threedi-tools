@@ -14,17 +14,17 @@ import hhnk_research_tools as hrt
 
 # Local imports - starts
 # Note that this is not preffered due to ambiguity, however due to the large amount of queries it is practical
-from hhnk_threedi_tests.variables.database_variables import *
-from hhnk_threedi_tests.variables.database_aliases import *
+from hhnk_threedi_tools.variables.database_variables import *
+from hhnk_threedi_tools.variables.database_aliases import *
 
-from hhnk_threedi_tests.variables.bank_levels import (
+from hhnk_threedi_tools.variables.bank_levels import (
     new_bank_level_col,
 )
-from hhnk_threedi_tests.variables.weirs import new_ref_lvl
+from hhnk_threedi_tools.variables.weirs import new_ref_lvl
 
-from hhnk_threedi_tests.variables.default_variables import DEF_TRGT_CRS
+from hhnk_threedi_tools.variables.default_variables import DEF_TRGT_CRS
 
-from hhnk_threedi_tests.variables.model_state import (
+from hhnk_threedi_tools.variables.model_state import (
     hydraulic_test_state,
     one_d_two_d_state,
     manholes_new_calc_type,
@@ -33,7 +33,7 @@ from hhnk_threedi_tests.variables.model_state import (
     global_settings_new_col_name,
 )
 
-from hhnk_threedi_tests.variables.backups_table_names import (
+from hhnk_threedi_tools.variables.backups_table_names import (
     BANK_LVLS_LAST_CALC,
     GLOBAL_SETTINGS_TABLE,
     CONTR_WEIR_WIDTH_BACKUP,

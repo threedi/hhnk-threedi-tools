@@ -12,9 +12,9 @@ Note: the model needs to be in a
 import pathlib
 
 # Local imports
-from hhnk_threedi_tests.core.folders import Folders
+from hhnk_threedi_tools.core.folders import Folders
 
-from hhnk_threedi_tests.variables.model_state import (
+from hhnk_threedi_tools.variables.model_state import (
     hydraulic_test_state,
     one_d_two_d_state,
     undefined_state,
@@ -22,7 +22,7 @@ from hhnk_threedi_tests.variables.model_state import (
 )
 
 # Globals
-# __file__ = "C:/Users/chris.kerklaan/Documents/Github/hhnk-threedi-tests/hhnk_threedi_tests/tests/test_model_state.py"
+# __file__ = "C:/Users/chris.kerklaan/Documents/Github/hhnk-threedi-tests/hhnk_threedi_tools/tests/test_model_state.py"
 TEST_MODEL = str(pathlib.Path(__file__).parent.absolute()) + "/data/model_test/"
 
 

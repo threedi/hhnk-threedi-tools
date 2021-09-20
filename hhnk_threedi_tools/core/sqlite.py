@@ -17,10 +17,10 @@ import hhnk_research_tools as hrt
 from hhnk_research_tools.variables import OPEN_FILE_GDB_DRIVER, ESRI_DRIVER, GPKG
 
 # Local imports
-from hhnk_threedi_tests.core.folders import Folders, create_tif_path
+from hhnk_threedi_tools.core.folders import Folders, create_tif_path
 
 # queries
-from hhnk_threedi_tests.utils.queries import (
+from hhnk_threedi_tools.utils.queries import (
     controlled_structures_query,
     geometry_check_query,
     impervious_surface_query,
@@ -30,10 +30,10 @@ from hhnk_threedi_tests.utils.queries import (
     watersurface_conn_node_query,
     weir_height_query,
 )
-from hhnk_threedi_tests.utils.queries_general_checks import ModelCheck
+from hhnk_threedi_tools.utils.queries_general_checks import ModelCheck
 
 # variables
-from hhnk_threedi_tests.variables.sqlite import (
+from hhnk_threedi_tools.variables.sqlite import (
     watersurface_nodes_area,
     watersurface_waterdeel_area,
     watersurface_channels_area,
@@ -50,19 +50,19 @@ from hhnk_threedi_tests.variables.sqlite import (
     max_depth_col,
     length_in_meters_col,
 )
-from hhnk_threedi_tests.variables.weirs import (
+from hhnk_threedi_tools.variables.weirs import (
     min_crest_height,
     diff_crest_ref,
     wrong_profile,
     new_ref_lvl,
 )
 
-from hhnk_threedi_tests.variables.definitions import (
+from hhnk_threedi_tools.variables.definitions import (
     DEM_MAX_VALUE,
     channels_isolated_calc_type,
 )
 
-from hhnk_threedi_tests.variables.database_variables import (
+from hhnk_threedi_tools.variables.database_variables import (
     id_col,
     calculation_type_col,
     width_col,
@@ -78,7 +78,7 @@ from hhnk_threedi_tests.variables.database_variables import (
 )
 
 
-from hhnk_threedi_tests.variables.database_aliases import (
+from hhnk_threedi_tools.variables.database_aliases import (
     a_geo_end_coord,
     a_geo_end_node,
     a_geo_start_coord,
@@ -95,7 +95,7 @@ from hhnk_threedi_tests.variables.database_aliases import (
     df_geo_col,
 )
 
-from hhnk_threedi_tests.variables.datachecker_variables import (
+from hhnk_threedi_tools.variables.datachecker_variables import (
     peil_id_col,
     streefpeil_bwn_col,
     geometry_col,

@@ -1,4 +1,4 @@
-from hhnk_threedi_tests.variables.database_variables import (
+from hhnk_threedi_tools.variables.database_variables import (
     id_col,
     conn_node_start_id_col,
     pump_station_layer,

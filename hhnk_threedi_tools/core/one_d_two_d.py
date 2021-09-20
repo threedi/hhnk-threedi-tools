@@ -28,10 +28,10 @@ from hhnk_research_tools.variables import (
 )
 
 # Local imports
-from hhnk_threedi_tests.core.folders import Folders, create_tif_path
-from hhnk_threedi_tests.variables.default_variables import DEF_TRGT_CRS
-from hhnk_threedi_tests.variables.database_aliases import df_geo_col
-from hhnk_threedi_tests.variables.one_d_two_d import (
+from hhnk_threedi_tools.core.folders import Folders, create_tif_path
+from hhnk_threedi_tools.variables.default_variables import DEF_TRGT_CRS
+from hhnk_threedi_tools.variables.database_aliases import df_geo_col
+from hhnk_threedi_tools.variables.one_d_two_d import (
     wtrlvl_col,
     one_d_two_d,
     max_sfx,
