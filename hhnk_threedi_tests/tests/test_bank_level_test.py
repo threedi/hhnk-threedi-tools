@@ -14,28 +14,17 @@ import pathlib
 # Local imports
 from hhnk_threedi_tests.core.folders import Folders
 from hhnk_threedi_tests.core.bank_levels import BankLevelTest
-from hhnk_threedi_tests.qgis.environment import testEnvironment
 
 # Globals
-# __file__ = "C:/Users/chris.kerklaan/Documents/Github/hhnk-threedi-tests/hhnk_threedi_tests/tests/test_bank_level_test.py"
+__file__ = "C:/Users/chris.kerklaan/Documents/Github/hhnk-threedi-tests/hhnk_threedi_tests/tests/test_bank_level_test.py"
 TEST_MODEL = str(pathlib.Path(__file__).parent.absolute()) + "/data/model_test/"
-
-# Setup test enviroment as shown in qgis
-folder = Folders(TEST_MODEL)
-folder.qgis_working_paths(
-    test_type=3,
-    active_paths={},
-    threedi_results_path=folder.threedi_results.zero_d_one_d.base,
-    threedi_revision_name=folder.threedi_results.zero_d_one_d.revisions[0],
-)
-folder.qgis_environment()
 
 
 def test_import_information_object():
     """tests if the import of information works, if the correct amount is imported"""
 
     bl_test = BankLevelTest(Folders(TEST_MODEL))
-
+    
     bl_test.import_data()
 
     # look at counts
