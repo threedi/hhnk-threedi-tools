@@ -17,7 +17,6 @@ import pandas as pd
 import hhnk_research_tools as hrt
 
 # local imports
-
 from hhnk_threedi_tools.variables.model_state import (
     hydraulic_test_state,
     one_d_two_d_state,
@@ -74,7 +73,7 @@ from hhnk_threedi_tools.variables.database_aliases import (
 from hhnk_threedi_tools.variables.definitions import proposed_value_col
 from hhnk_threedi_tools.variables.bank_levels import new_bank_level_col
 
-from hhnk_threedi_tools.core.model_backup import (
+from hhnk_threedi_tools.core.checks.model_backup import (
     select_values_to_update_from_backup,
 )
 

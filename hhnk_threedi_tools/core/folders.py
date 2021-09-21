@@ -43,7 +43,7 @@ from hhnk_threedi_tools.variables.model_state import (
     invalid_path,
 )
 
-from hhnk_threedi_tools.core.model_state import (
+from hhnk_threedi_tools.core.checks.model_state import (
     detect_model_states,
     get_proposed_adjustments_weir_width,
     get_proposed_updates_manholes,
@@ -134,6 +134,7 @@ class Folder:
 
     def __init__(self, base):
         self.base = base
+        self.base_path = Path(base)
 
     @property
     def content(self):
@@ -142,6 +143,10 @@ class Folder:
     @property
     def path(self):
         return self.base
+
+    @property
+    def name(self):
+        return self.base_path.stem
 
     @property
     def folder(self):
@@ -351,6 +356,16 @@ class ThreediResultsPaths(Folder):
         self.zero_d_one_d = ZeroDOneD(self.base)
         self.one_d_two_d = OneDTwoD(self.base)
         self.climate_results = ClimateResults(self.base)
+
+    @property
+    def climate(self):
+        # makes more sense than climate_results
+        return self.climate_results
+
+    @property
+    def batch(self):
+        # makes more sense than climate_results
+        return self.climate_results
 
     def find_revision(self, results_path, revision_dir):
         return ThreediResults(os.path.join(results_path, revision_dir))
