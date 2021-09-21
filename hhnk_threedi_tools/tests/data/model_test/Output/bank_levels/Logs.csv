@@ -1,0 +1,11 @@
+display_name,code,connection_node_id,shape,width,manhole_indicator,calculation_type,drain_level,bottom_level,surface_level,zoom_category,storage_area,new_storage_area
+node_id_44_1d2d_crosses_levee,node_id_44_1d2d_crosses_levee,44,00,1,0,2,0.141,-10,-0.8,0,50.3976869148,-
+node_id_84_1d2d_crosses_levee,node_id_84_1d2d_crosses_levee,84,00,1,0,2,0.51,-10,-0.85,0,2.0,-
+node_id_305_1d2d_crosses_levee,node_id_305_1d2d_crosses_levee,305,00,1,0,2,0.137,-10,-0.85,0,2.0,-
+node_id_429_1d2d_crosses_levee,node_id_429_1d2d_crosses_levee,429,00,1,0,2,1.21,-10,-0.8,0,50.3976869148,-
+node_id_432_1d2d_crosses_levee,node_id_432_1d2d_crosses_levee,432,00,1,0,2,0.137,-10,-0.85,0,,2.0
+node_id_433_1d2d_crosses_levee,node_id_433_1d2d_crosses_levee,433,00,1,0,2,0.175,-10,-0.55,0,36.1655302442,-
+conn_node_id_290_node_in_wrong_fixeddrainage_area,conn_node_id_290_node_in_wrong_fixeddrainage_area,290,00,1,0,1,null,-10,-0.8,0,50.3976869147529,-
+conn_node_id_430_node_in_wrong_fixeddrainage_area,conn_node_id_430_node_in_wrong_fixeddrainage_area,430,00,1,0,1,null,-10,-0.8,0,50.3976869147529,-
+conn_node_id_482_node_in_wrong_fixeddrainage_area,conn_node_id_482_node_in_wrong_fixeddrainage_area,482,00,1,0,1,null,-10,,0,10.0,-
+conn_node_id_483_node_in_wrong_fixeddrainage_area,conn_node_id_483_node_in_wrong_fixeddrainage_area,483,00,1,0,1,null,-10,,0,10.0,-

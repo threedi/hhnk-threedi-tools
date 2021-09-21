@@ -1,0 +1,8 @@
+Maak een nieuwe omgeving:
+conda create -n hhnk python=3.7 geopandas=0.7.0 gdal=3.1.4 h5py=3.3.0 spyder
+Installeer vervolgens:
+pip install threedigrid==1.1.2 
+pip install hhnk-research-tools=0.2.2 (gedownload)
+
+
+voordat je threedigrid opent, moet je eerst from osgeo import gdal doen.
