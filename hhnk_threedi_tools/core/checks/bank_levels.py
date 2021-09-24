@@ -146,11 +146,11 @@ class BankLevelTest:
         """
         self.model_path = model_path
         if model_path == None:
-            self.model_path = self.fenv.model.database
+            self.model_path = self.fenv.model.database.path
 
         self.datachecker_path = datachecker_path
         if self.datachecker_path == None:
-            self.datachecker_path = self.fenv.source_data.datachecker
+            self.datachecker_path = self.fenv.source_data.datachecker.path
 
         self.threedi_results = threedi_grid_results
         if self.threedi_results == None:

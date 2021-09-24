@@ -9,7 +9,7 @@ import os
 import pathlib
 
 # Local imports
-from hhnk_threedi_tools.core.sqlite import SqliteTest
+from hhnk_threedi_tools.core.checks.sqlite import SqliteTest
 from hhnk_threedi_tools.core.folders import Folders
 
 # Globals

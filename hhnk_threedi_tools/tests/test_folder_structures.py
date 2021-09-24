@@ -18,7 +18,7 @@ import pathlib
 from hhnk_threedi_tools.core.folders import Folders
 
 # Globals
-# __file__ = "C:/Users/chris.kerklaan/Documents/Github/hhnk-threedi-tests/hhnk_threedi_tools/tests/test_folder_structures.py"
+# __file__ = "C:/Users/chris.kerklaan/Documents/Github/hhnk-threedi-tools/hhnk_threedi_tools/tests/test_folder_structures.py"
 TEST_DIRECTORY = str(pathlib.Path(__file__).parent.absolute()) + "/data"
 FOLDER = TEST_DIRECTORY + "/folder_structures/new_project"
 MODEL_FOLDER = TEST_DIRECTORY + "/model_test"
@@ -87,7 +87,7 @@ def test_to_test_file_dict():
 def test_find_dem():
     folder = Folders(MODEL_FOLDER)
     dem_path = TEST_DIRECTORY + "/model_test/02_model/rasters/dem_hoekje.tif"
-    assert pathlib.Path(folder.model.rasters.dem) == pathlib.Path(dem_path)
+    assert pathlib.Path(folder.model.rasters.dem.path) == pathlib.Path(dem_path)
 
 
 def test_find_threedi_sources():
@@ -100,6 +100,18 @@ def test_find_threedi_sources():
     assert pathlib.Path(results["nc_file"]) == pathlib.Path(
         results_path + "/results_3di.nc"
     )
+
+
+def test_create_revision():
+    """tests if a new revision folder can be made"""
+    folder = Folders(FOLDER)
+
+    if folder.threedi_results.zero_d_one_d["new"].exists:
+        shutil.rmtree(folder.threedi_results.zero_d_one_d["new"].path)
+
+    folder.threedi_results.zero_d_one_d["new"].create()
+
+    assert folder.threedi_results.zero_d_one_d["new"].exists
 
 
 # def test_working_paths():

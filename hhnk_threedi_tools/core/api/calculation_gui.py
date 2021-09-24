@@ -7,6 +7,7 @@ from datetime import datetime
 
 # Third-party imports
 import json
+import time
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -752,7 +753,7 @@ def start_calculation_gui(
 
     # Selection box of the folder the output should be put in. (Hyd toets or Extreme)
     # output_folder_options = [scenarios['folders_dict']['HydToets_data']['folder'].rsplit(os.sep,1)[1], scenarios['folders_dict']['05_extreme_data']['folder'].rsplit(os.sep,1)[1]]
-    output_folder_options = ["1d2d_results", "0d1d_results"]
+    output_folder_options = ["1d2d_results", "0d1d_results", "batch_results"]
     output_subfolder_label = widgets.Label(
         "Sub folder:", layout=item_layout(grid_area="output_subfolder_label")
     )
@@ -1114,6 +1115,8 @@ def start_calculation_gui(
             pass
         if (selected_folder in ["1d2d_results"]) and selected_folder != "":
             folder = "1d2d_results"
+        elif selected_folder == "batch_results":
+            folder = "batch_results"
         else:
             folder = "0d1d_results"
         scenarios["selected_folder"] = folder
@@ -1167,15 +1170,25 @@ def start_calculation_gui(
         else:
             model_revision = str.split(revision_dropdown.value)[0]
 
-        scenario_name = base_scenario_name_str + "{polder} #{revision} {groundwater_type} {rain_type} {rain_scenario} ({i}) {batch_extra_name}".format(
-            polder=polder_name_widget.value,
-            revision=model_revision,
-            groundwater_type="GLG",
-            rain_type="piek",
-            rain_scenario="T1000",
-            i="3",
-            batch_extra_name=batch_scenario_name_widget_extra.value,
+        scenario_name = (
+            base_scenario_name_str
+            + "{polder} #{revision} ({i}) {batch_extra_name}".format(
+                polder=polder_name_widget.value,
+                revision=model_revision,
+                i=len(scenarios["folder"].threedi_results.batch.revisions),
+                batch_extra_name=batch_scenario_name_widget_extra.value,
+            )
         )
+
+        # scenario_name = base_scenario_name_str + "{polder} #{revision} {groundwater_type} {rain_type} {rain_scenario} ({i}) {batch_extra_name}".format(
+        #     polder=polder_name_widget.value,
+        #     revision=model_revision,
+        #     groundwater_type="GLG",
+        #     rain_type="piek",
+        #     rain_scenario="T1000",
+        #     i="3",
+        #     batch_extra_name=batch_scenario_name_widget_extra.value,
+        # )
         scenario_name = scenario_name.strip()
         batch_scenario_name_widget.value = scenario_name
 
@@ -1471,7 +1484,7 @@ def start_calculation_gui(
                 polder_name_widget.value,
                 revision_number,
                 output_folder,
-                logger_path,
+                os.path.join(output_folder, "call_log.log"),
             )
 
     def monitor_simulation():
@@ -1525,7 +1538,8 @@ def start_calculation_gui(
         revision_number = str.split(revision_dropdown.value)[0]
 
         output_folder = os.path.join(
-            str(scenarios["folder"].threedi_results.batch), scenario_name_widget.value
+            str(scenarios["folder"].threedi_results.batch),
+            batch_scenario_name_widget.value,
         )
 
         # qgis_file = scenarios['folders_dict']['polder']['template']['qgis_klimaatsommen']
@@ -1647,7 +1661,7 @@ def start_calculation_gui(
                                             hours_dry_end,
                                             rain_intensity,
                                         )  # , days_dry_start, hours_dry_start, days_rain, hours_rain, days_dry_end, hours_dry_end, rain_intensity, organisation_uuid, model_slug, scenario_name, store_results):
-                                    except open_api_client.ApiException:
+                                    except openapi_client.ApiException:
                                         time.sleep(10)
                                         continue
                                     break
@@ -1670,7 +1684,7 @@ def start_calculation_gui(
                                         ] = threedi_sim_api.simulations_events(
                                             id=simulation.id
                                         )
-                                    except open_api_client.ApiException:
+                                    except openapi_client.ApiException:
                                         time.sleep(10)
                                         continue
                                     break
@@ -1684,6 +1698,7 @@ def start_calculation_gui(
                                 )
 
         # Create folder and write all api calls to file
+        print(output_folder)
         if not os.path.exists(output_folder) and output_folder != "":
             os.mkdir(output_folder)
             print("Created folder: " + output_folder.rsplit("/")[-1])

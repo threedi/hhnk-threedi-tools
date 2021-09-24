@@ -13,10 +13,10 @@ import pathlib
 
 # Local imports
 from hhnk_threedi_tools.core.folders import Folders
-from hhnk_threedi_tools.core.bank_levels import BankLevelTest
+from hhnk_threedi_tools.core.checks.bank_levels import BankLevelTest
 
 # Globals
-# __file__ = "C:/Users/chris.kerklaan/Documents/Github/hhnk-threedi-tests/hhnk_threedi_tools/tests/test_bank_level_test.py"
+# __file__ = "C:/Users/chris.kerklaan/Documents/Github/hhnk-threedi-tools/hhnk_threedi_tools/tests/test_bank_level_test.py"
 TEST_MODEL = str(pathlib.Path(__file__).parent.absolute()) + "/data/model_test/"
 
 

@@ -12,7 +12,7 @@ import os
 import pathlib
 
 # Local imports
-from hhnk_threedi_tools.core.one_d_two_d import OneDTwoDTest
+from hhnk_threedi_tools.core.checks.one_d_two_d import OneDTwoDTest
 from hhnk_threedi_tools.core.folders import Folders
 
 # Globals

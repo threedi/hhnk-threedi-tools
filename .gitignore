@@ -7,3 +7,4 @@ hhnk_threedi_tools.egg-info
 venv_development_tools
 dist
 build
+.pytest_chache

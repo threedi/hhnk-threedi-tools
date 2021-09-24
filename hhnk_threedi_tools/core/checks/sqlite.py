@@ -180,7 +180,7 @@ class SqliteTest:
         if channels_from_profiles_path:
             self.channels_from_profiles = channels_from_profiles_path
         else:
-            self.channels_from_profiles = (
+            self.channels_from_profiles = str(
                 self.fenv.source_data.modelbuilder.channel_from_profiles
             )
 
@@ -431,7 +431,7 @@ class SqliteTest:
         Checks whether the reference level of any of the adjacent cross section locations (channels) to a structure
         is lower than the reference level for that structure (3di crashes if it is)
         """
-        datachecker_culvert_layer = str(self.fenv.source_data.datachecker_culvert_layer)
+        datachecker_culvert_layer = str(self.fenv.source_data.datachecker_culvert)
         damo_duiker_sifon_layer = str(self.fenv.source_data.damo_duiker_sifon_layer)
 
         try:

@@ -3,29 +3,26 @@ import os
 import re
 
 # Third-party imports
-import ipywidgets as widgets
-from traitlets import Unicode
-import numpy as np
-from datetime import datetime
 import pandas as pd
+import ipywidgets as widgets
+from datetime import datetime
 from threedi_scenario_downloader import downloader as dl
 
 # local imports
 from hhnk_threedi_tools import Folders
+from .download_functions import create_download_url, start_download
 
-from functions.create_folders_dict_poldermodellen import create_folders_dict
-from functions.API_download_functions import create_download_url, start_download
-from functions_nabewerking.create_batch_folders_dict import create_batch_folders_dict
-import functions.wsa_tools as wsa  # general tools used across all scripts
-from functions.API_start_calculation_gui_settings import *
+from hhnk_threedi_tools.variables.api_settings import (
+    RAIN_TYPES,
+    GROUNDWATER,
+    RAIN_SCENARIOS,
+    RAW_DOWNLOADS,
+)
 
-# remove
-import sys
-
-sys.path.append("C:/Users/chris.kerklaan/Documents/Github/hhnk-threedi-tools")
+# from functions_nabewerking.create_batch_folders_dict import create_batch_folders_dict
 
 
-def download_gui():
+def download_gui(main_folder=None):
     dl.LIZARD_URL = "https://hhnk.lizard.net/api/v3/"
 
     def new_get_api_key():
@@ -52,10 +49,18 @@ def download_gui():
     scenarios["selected_ids"] = []  # Selected models for downloading
     scenarios["folder"] = []
 
-    def update_folders_dict(polder_name):
-        scenarios["folder"] = Folders(polder_name)
-        output_polder_dropdown.value = scenarios["folder"].name
+    if not main_folder:
+        main_folder = os.getcwd()
 
+    # Fetch the first folder
+    scenarios["folder"] = Folders(
+        os.path.join(main_folder, os.listdir(main_folder)[0]), create=False
+    )
+
+    def update_folders_dict(polder_name):
+        folder = Folders(os.path.join(main_folder, polder_name), create=False)
+        output_polder_dropdown.value = folder.name
+        scenarios["folder"] = folder
         # old
         # scenarios['folders_dict'] = Folders(polder_name)
         # output_polder_dropdown.value=scenarios['folders_dict']['polder']['full_naam']
@@ -281,16 +286,13 @@ def download_gui():
     )
 
     output_polder_dropdown = widgets.Dropdown(
-        options=scenarios["folders_dict"]["polder"]["all_names"],
+        options=os.listdir(main_folder),
         description="Output folder:",
         layout=item_layout(grid_area="output_polder_dropdown"),
     )
 
     # Selection box of the folder the output should be put in. (Hyd toets or Extreme)
-    output_folder_options = [
-        scenarios["folders_dict"]["HydToets_data"]["folder"].rsplit(os.sep, 1)[1],
-        scenarios["folders_dict"]["05_extreme_data"]["folder"].rsplit(os.sep, 1)[1],
-    ]
+    output_folder_options = ["0d1d_results", "1d2d_results", "batch_results"]
     # output_folder_label = widgets.Label('Selecteer output folder:', layout=item_layout(grid_area='output_folder_label'))
     output_folder_box = widgets.Select(
         options=output_folder_options,
@@ -362,9 +364,7 @@ def download_gui():
     def find(action):
         try:
             update_folders_dict(polder_name_widget.value)
-            output_polder_dropdown.value = scenarios["folders_dict"]["polder"][
-                "full_naam"
-            ]
+            output_polder_dropdown.value = scenarios["folder"].name
         except:
             print("Kan opgegeven naam niet koppelen aan een output folder")
 
@@ -393,17 +393,18 @@ def download_gui():
             selected_folder = selected_folder["new"]
         except:
             pass
-        if (
-            selected_folder in scenarios["folders_dict"]["05_extreme_data"]["folder"]
-        ) and selected_folder != "":
-            folder = "05_extreme_data"
+        if (selected_folder in "1d2d_results") and selected_folder != "":
+            folder = "1d2d_results"
+        elif selected_folder in "batch_results":
+            folder = "batch_results"
         else:
-            folder = "HydToets_data"
+            folder = "0d1d_results"
         scenarios["selected_folder"] = folder
 
-        output_select_box.options = os.listdir(
-            scenarios["folders_dict"][scenarios["selected_folder"]]["folder"]
+        output_select_box.options = (
+            scenarios["folder"].threedi_results[folder].revisions
         )
+
         update_output_selectbox(download_selection_box.value)
 
     # --------------------------------------------------------------------------------------------------
@@ -547,7 +548,9 @@ def download_gui():
             selected_polder = selected_polder["new"]
         except:
             pass
-        update_folders_dict(selected_polder[3:])
+        # update_folders_dict(selected_polder[3:])
+        update_folders_dict(selected_polder)
+
         update_displays()
 
     output_polder_dropdown.observe(on_select_change, names="value")
@@ -564,13 +567,13 @@ def download_gui():
 
         # Remove the previous selected records from the list
         #         output_select_box.options = [x for x in output_select_box.options if x not in selected_download_old]
-        output_select_box.options = os.listdir(
-            scenarios["folders_dict"][scenarios["selected_folder"]]["folder"]
+        output_select_box.options = (
+            scenarios["folder"].threedi_results[scenarios["selected_folder"]].revisions
         )
 
         # Batch folder gets the same options.
-        batch_folder_dropdown.options = os.listdir(
-            scenarios["folders_dict"][scenarios["selected_folder"]]["folder"]
+        batch_folder_dropdown.options = (
+            scenarios["folder"].threedi_results[scenarios["selected_folder"]].revisions
         )
 
         # Add the newly selected records to the list
@@ -639,15 +642,18 @@ def download_gui():
                 print("{}: {}".format(index + 1, url))
 
             # Print destination folder
-            if name in scenarios["folders_dict"].keys():
-                output_folder = scenarios["folders_dict"][scenarios["selected_folder"]][
-                    name
-                ]["folder"]
-            else:
-                output_folder = os.path.join(
-                    scenarios["folders_dict"][scenarios["selected_folder"]]["folder"],
-                    name,
-                )
+            output_folder = str(
+                scenarios["folder"].threedi_results[scenarios["selected_folder"]][name]
+            )
+            # if name in scenarios["folders_dict"].keys():
+            #     output_folder = scenarios["folders_dict"][scenarios["selected_folder"]][
+            #         name
+            #     ]["folder"]
+            # else:
+            #     output_folder = os.path.join(
+            #         scenarios["folders_dict"][scenarios["selected_folder"]]["folder"],
+            #         name,
+            #     )
 
             # De 3Di plugin kan geen '[' en ']' aan.
             output_folder = output_folder.replace("[", "")
@@ -691,7 +697,7 @@ def download_gui():
                 output_folder, "max_wlvl_res{}m.tif".format(time, res)
             )
             batch_path = os.path.join(
-                scenarios["folders_dict"][scenarios["selected_folder"]]["folder"],
+                output_folder,
                 "{}_download_raster_batch.csv".format(
                     datetime.now().strftime("%Y-%m-%d %Hh%M")
                 ),
@@ -805,16 +811,15 @@ def download_gui():
         resolution_list = []
         pathname_list = []
 
-        batch_folder = os.path.join(
-            scenarios["folders_dict"][scenarios["selected_folder"]]["folder"],
-            batch_folder_dropdown.value,
-        )
-        batch_fd = create_batch_folders_dict(batch_folder)
+        folder = scenarios["folder"]
+        batch_fd = folder.threedi_results.batch[batch_folder_dropdown.value]
+
+        # batch_fd = create_batch_folders_dict(batch_folder)
+        # batch_fd = Folders(batch_folder).
         # Create destination folder
-        if not os.path.exists(batch_fd["source"]["folder"]):
-            os.mkdir(batch_fd["source"]["folder"])
-        if not os.path.exists(batch_fd["01_downloads"]["folder"]):
-            os.mkdir(batch_fd["01_downloads"]["folder"])
+
+        batch_fd.create()
+        batch_fd.downloads.create()
 
         selected_file_results = [
             "raw 3Di output",
@@ -870,13 +875,14 @@ def download_gui():
                                     scenarios["names"].index(name)
                                 ]["uuid"]
         df.set_index("name", inplace=True)
-        display(df)
-        df.to_csv(batch_fd["01_downloads"]["uuid_csv"])
+        # display(df)
+        df.to_csv(str(batch_fd.downloads.download_uuid))
 
         # Get raster size of dem, max depth rasters are downloaded on this resolution.
-        _, _, dem_meta = wsa.gdal_load_raster(
-            scenarios["folders_dict"]["sqlite"]["rasters"]["DEM"]
-        )
+        print(scenarios["folder"])
+        print(folder.model.rasters.dem)
+
+        _, _, dem_meta = folder.model.rasters.dem.load()
 
         # Start download of selected files (if any are selected) ------------------------------------------------
         for name, row in df.iterrows():
@@ -890,9 +896,7 @@ def download_gui():
             )
 
             if row["dl_name"] in RAW_DOWNLOADS:
-                output_folder = batch_fd["01_downloads"][row["dl_name"]][
-                    "folder_results"
-                ]
+                output_folder = batch_fd.downloads.full_path(row["dl_name"])
 
                 # De 3Di plugin kan geen '[' en ']' aan.
                 output_folder = output_folder.replace("[", "")
@@ -912,9 +916,9 @@ def download_gui():
 
             # TODO below, make a list of uuid's, bounds, resolution and pathname
             # Donwload max depth and damage rasters
-            if not os.path.exists(
-                batch_fd["01_downloads"][row["dl_name"]]["totaal"]["max_depth"]
-            ):
+            total_max_depth = str(batch_fd.downloads.totaal_max_depth)
+
+            if not os.path.exists(total_max_depth):
                 print("Preparing download of max waterdepth raster")
                 uuid_list.append(selected_result["uuid"])
                 code_list.append("depth-max-dtri")
@@ -922,22 +926,13 @@ def download_gui():
                 bounds_list.append(dem_meta["bounds_dl"])
                 bounds_srs_list.append("EPSG:28992")
                 resolution_list.append(dem_meta["pixel_width"])
-                pathname_list.append(
-                    batch_fd["01_downloads"][row["dl_name"]]["totaal"]["max_depth"]
-                )
+                pathname_list.append(total_max_depth)
 
             else:
-                print(
-                    "{} already on system".format(
-                        batch_fd["01_downloads"][row["dl_name"]]["totaal"][
-                            "max_depth"
-                        ].split("/")[-1]
-                    )
-                )
+                print("{} already on system".format(total_max_depth.split("/")[-1]))
 
-            if not os.path.exists(
-                batch_fd["01_downloads"][row["dl_name"]]["totaal"]["total_damage"]
-            ):
+            total_damage = str(batch_fd.downloads.totaal_total_damage)
+            if not os.path.exists(total_damage):
                 print("Preparing download of total damage raster")
 
                 uuid_list.append(selected_result["uuid"])
@@ -946,18 +941,10 @@ def download_gui():
                 bounds_list.append(dem_meta["bounds_dl"])
                 bounds_srs_list.append("EPSG:28992")
                 resolution_list.append(0.5)
-                pathname_list.append(
-                    batch_fd["01_downloads"][row["dl_name"]]["totaal"]["total_damage"]
-                )
+                pathname_list.append(total_damage)
 
             else:
-                print(
-                    "{} already on system".format(
-                        batch_fd["01_downloads"][row["dl_name"]]["totaal"][
-                            "total_damage"
-                        ].split("/")[-1]
-                    )
-                )
+                print("{} already on system".format(total_damage))
 
             # TODO: call batch download function
         print("uuid_list: {}".format(uuid_list))
@@ -966,12 +953,10 @@ def download_gui():
         print("resolution_list: {}".format(resolution_list))
         print("pathname_list: {}".format(pathname_list))
 
-        batch_path = os.path.join(
-            batch_folder,
-            "{}_download_raster_batch.csv".format(
-                datetime.now().strftime("%Y-%m-%d %Hh%M")
-            ),
+        batch_path = batch_fd.full_path(
+            f"{datetime.now().strftime('%Y-%m-%d %Hh%M')}_download_raster_batch.csv"
         )
+
         dl.download_raster(
             uuid_list,
             raster_code=code_list,
