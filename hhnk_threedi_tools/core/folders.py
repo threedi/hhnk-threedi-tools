@@ -10,6 +10,7 @@ self.base is the directory in which it is located
 """
 # First-party imports
 import os
+import glob
 from pathlib import Path
 
 # Third-party imports
@@ -185,6 +186,10 @@ class Folder:
 
     def create(self):
         self.pl.mkdir(parents=True, exist_ok=True)
+    
+    def find_ext(self, ext):
+        """ finds files with a certain extension"""
+        return glob.glob(self.base +f'/*.{ext}')
 
     def full_path(self, name):
         """returns the full path of a file or a folder when only a name is known"""
@@ -316,6 +321,10 @@ class Folders(Folder):
             "threedi_climate_results_folder": str(self.threedi_results.climate_results),
             "source_data_folder": str(self.source_data),
             "output_folder": str(self.output),
+            "output_sqlite_tests_folder": str(self.output.sqlite_tests),
+            "output_bank_levels_folder": str(self.output.bank_levels),
+            "output_zero_d_one_d_folder": str(self.output.zero_d_one_d),
+            "output_one_d_two_d_folder": str(self.output.one_d_two_d),
         }
 
     def to_file_dict(self):
@@ -519,7 +528,7 @@ class ModelPaths(Folder):
         self.rasters = RasterPaths(self.base)
 
         # File
-        self.add_file("database", self.find_model())
+        self.add_file("database", self.model_path())
 
     @property
     def structure(self):
@@ -571,29 +580,33 @@ class ModelPaths(Folder):
             return get_proposed_adjustments_channels(
                 self.database_path, self.state, to_state
             )
+    
+    @property
+    def sqlite_paths(self):
+        """  returns all sqlites in folder"""
+        return self.find_ext("sqlite")
+    
+    @property
+    def sqlite_names(self):
+        """  returns all sqlites in folder"""
+        return [Path(sp).stem for sp in self.sqlite_paths]
+    
+    def model_path(self, idx=0, name=None):
+        """ finds a model using an index"""
+        if name:
+            try:
+                idx = self.sqlite_names.index(name)
+            except Exception:
+                raise ValueError('name of sqlite given, but cannot be found')
+        return self.sqlite_paths[idx]             
 
-    def find_model(self):
-        """
-        Tries to find database in given path by looking for extension.
-
-        Returns path if only one file with .sqlite extension is found. Returns empty string
-        in other cases (none found or more than one found)
-        """
-        if not self.exists:
-            return ""
+    def set_database(self, name_or_idx):
+        """  set the model database with either an index or a name"""
+        if type(name_or_idx) == str:    
+            self.add_file("database",  self.model_path(None, name_or_idx))
         else:
-            sqlite_files = [
-                item
-                for item in os.listdir(self.base)
-                if item.endswith(file_types_dict[SQLITE])
-            ]
-            # If one is found, we are going to assume that is the one we want to use
-            if len(sqlite_files) == 1:
-                return os.path.join(self.base, sqlite_files[0])
-            else:
-                # Couldn't detect automatically
-                return ""
-
+            self.add_file("database",  self.model_path(name_or_idx, None))
+            
 
 class RasterPaths(Folder):
     def __init__(self, base):
