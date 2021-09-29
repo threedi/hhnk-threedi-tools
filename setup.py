@@ -1,14 +1,14 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="hhnk-threedi-tests",
-    version="0.1.9",
-    description="HHNK watersystemen analysis tests",
-    url="https://github.com/wvangerwen/hhnk-threedi-tests",
+    name="hhnk-threedi-tools",
+    version="0.3",
+    description="HHNK watersystemen analysis tools",
+    url="https://github.com/wvangerwen/hhnk-threedi-tools",
     author="Laure Ravier",
     author_email="L.Ravier@hhnk.nl",
     project_urls={
-        "Bug Tracker": "https://github.com/wvangerwen/hhnk-threedi-tests/issues",
+        "Bug Tracker": "https://github.com/wvangerwen/hhnk-threedi-tools/issues",
     },
     classifiers=[
         "Programming Language :: Python :: 3",
@@ -17,5 +17,6 @@ setup(
     ],
     packages=find_packages(),
     python_requires=">=3.7",
-    install_requires=["hhnk-research-tools>=0.2.2"],
+    install_requires=["hhnk-research-tools==0.3"],
 )
+

@@ -18,9 +18,9 @@ from apscheduler.schedulers.blocking import BlockingScheduler
 from ipyfilechooser import FileChooser
 
 # threedi
-import openapi_client
 from threedi_scenario_downloader import downloader as dl
 from threedi_api_client import ThreediApiClient
+import openapi_client
 
 # local imports
 from hhnk_threedi_tools import Folders
@@ -398,7 +398,7 @@ def start_calculation_gui(
             fig, ax = create_plot(
                 time, rain, "Rain event", "Time [days]", "Rain intensity [mm/hour]"
             )
-            fig.show()
+            # fig.show()
 
         # Comebine plot and sliders
         style = {"description_width": "100px"}
@@ -759,7 +759,7 @@ def start_calculation_gui(
     )
     output_folder_box = widgets.Select(
         options=output_folder_options,
-        rows=2,
+        rows=3,
         disabled=False,
         layout=item_layout(grid_area="output_folder_box"),
     )
