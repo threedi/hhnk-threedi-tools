@@ -39,9 +39,7 @@ RAIN_SCENARIOS = ["T10", "T100", "T1000"]
 API_SETTINGS = {}
 API_SETTINGS["org_uuid"] = {}
 API_SETTINGS["org_uuid"]["BWN HHNK"] = "48dac75bef8a42ebbb52e8f89bbdb9f2"
-API_SETTINGS["org_uuid"][
-    "Hoogheemraadschap Hollands Noorderkwartier"
-] = "474afd212f2e4b4f82615142f1d67acb"
+API_SETTINGS["org_uuid"]["Hoogheemraadschap Hollands Noorderkwartier"] = "474afd212f2e4b4f82615142f1d67acb"
 API_SETTINGS["store_results"] = {
     "process_basic_results": True,
     "arrival_time": False,
@@ -53,27 +51,6 @@ API_SETTINGS["store_results"] = {
         "repair_time_buildings": 240,
     },
 }
-
-# Emails for api call
-USERNAME_EMAIL = {}
-USERNAME_EMAIL["wietse.vangerwen"] = "w.vangerwen@hhnk.nl"
-USERNAME_EMAIL["jeroen.hermans"] = "j.hermans@hhnk.nl"
-USERNAME_EMAIL["matthijs.hekstra"] = "m.hekstra@hhnk.nl"
-USERNAME_EMAIL["niel.dejong"] = "n.dejong@hhnk.nl"
-USERNAME_EMAIL["w.vanesse"] = "w.vanesse@hhnk.nl"
-USERNAME_EMAIL["a.grootkormelink"] = "a.grootkormelink@hhnk.nl"
-
-
-# Externen
-USERNAME_EMAIL["michael.pieterson"] = "m.pieterson@hhnk.nl"
-USERNAME_EMAIL["emiel.verstegen"] = "E.Verstegen@hhnk.nl"
-USERNAME_EMAIL["rebecca.vanweesep"] = "R.vanWesep@hhnk.nl"
-USERNAME_EMAIL["h.hagedooren"] = "H.Hagedooren@hhnk.nl"
-USERNAME_EMAIL["nils.vandervliet"] = "vliet@hkv.nl"
-USERNAME_EMAIL["ralf.linneman"] = "Ralf.Linneman@hydrologic.com"
-USERNAME_EMAIL["ruben.boelens"] = "Ruben.Boelens@hydrologic.com"
-USERNAME_EMAIL["ivar.lokhorst"] = "ivar.lokhorst@nelen-schuurmans.nl"
-USERNAME_EMAIL["j.keja"] = "j.keja@hhnk.nl"
 
 
 MODEL_TYPES = ["0d1d_test", "1d2d_test", "1d2d_glg", "1d2d_ggg", "1d2d_ghg"]

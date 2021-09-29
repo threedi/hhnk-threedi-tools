@@ -35,7 +35,7 @@ from .calculation_functions import (
 from .download_functions import create_download_url, start_download
 
 # Globals
-from .calculation_gui_settings import (
+from hhnk_threedi_tools.variables.api_settings import (
     RAIN_SETTINGS,
     RAIN_TYPES,
     RAIN_INTENSITY,

@@ -296,7 +296,7 @@ def download_gui(main_folder=None):
     # output_folder_label = widgets.Label('Selecteer output folder:', layout=item_layout(grid_area='output_folder_label'))
     output_folder_box = widgets.Select(
         options=output_folder_options,
-        rows=2,
+        rows=3,
         disabled=False,
         layout=item_layout(grid_area="output_folder_box"),
     )
@@ -836,9 +836,7 @@ def download_gui(main_folder=None):
             for rain_type in RAIN_TYPES:
                 for groundwater in GROUNDWATER:
                     for rain_scenario in RAIN_SCENARIOS:
-                        rain_scenario = rain_scenario.strip(
-                            "T"
-                        )  # strip 'T' because its not used in older versions.
+                        rain_scenario = rain_scenario.strip("T")  # strip 'T' because its not used in older versions.
                         if (
                             (rain_type in name)
                             and (groundwater in name)
@@ -852,9 +850,7 @@ def download_gui(main_folder=None):
                                 df.loc[index, "dl_name"] = "{}_{}_{}".format(
                                     rain_type, groundwater, "T{}".format(rain_scenario)
                                 )
-                                df.loc[index, "uuid"] = scenarios["results"][
-                                    scenarios["names"].index(name)
-                                ]["uuid"]
+                                df.loc[index, "uuid"] = scenarios["results"][scenarios["names"].index(name)]["uuid"]
 
                         # Sommige resultaten zijn aangeroepen met GG ipv GGG in de naam. Onderstaande elif statement om dit te voorkomen
                         elif (
@@ -871,9 +867,7 @@ def download_gui(main_folder=None):
                                 df.loc[index, "dl_name"] = "{}_{}_{}".format(
                                     rain_type, groundwater, "T{}".format(rain_scenario)
                                 )
-                                df.loc[index, "uuid"] = scenarios["results"][
-                                    scenarios["names"].index(name)
-                                ]["uuid"]
+                                df.loc[index, "uuid"] = scenarios["results"][scenarios["names"].index(name)]["uuid"]
         df.set_index("name", inplace=True)
         # display(df)
         df.to_csv(str(batch_fd.downloads.download_uuid))
@@ -882,7 +876,7 @@ def download_gui(main_folder=None):
         print(scenarios["folder"])
         print(folder.model.rasters.dem)
 
-        _, _, dem_meta = folder.model.rasters.dem.load()
+        _, _, dem_meta = folder.model.rasters.dem.load(return_array=False)
 
         # Start download of selected files (if any are selected) ------------------------------------------------
         for name, row in df.iterrows():
@@ -896,27 +890,29 @@ def download_gui(main_folder=None):
             )
 
             if row["dl_name"] in RAW_DOWNLOADS:
-                output_folder = batch_fd.downloads.full_path(row["dl_name"])
 
+                output_folder = getattr(batch_fd.downloads, row['dl_name'])
+
+                #FIXME hoort dit niet een niveau hoger te staan?
                 # De 3Di plugin kan geen '[' en ']' aan.
-                output_folder = output_folder.replace("[", "")
-                output_folder = output_folder.replace("]", "")
+                # output_folder = output_folder.replace("[", "")
+                # output_folder = output_folder.replace("]", "")
 
                 # Create destination folder
-                if not os.path.exists(output_folder) and output_folder != "":
-                    os.mkdir(output_folder)
+                output_folder.create()
 
                 # Start downloading of the files
                 start_download(
                     scenarios["download_url"][name],
-                    output_folder,
+                    output_folder.path,
                     api_key=dl.get_api_key(),
                     automatic_download=1,
                 )
 
             # TODO below, make a list of uuid's, bounds, resolution and pathname
             # Donwload max depth and damage rasters
-            total_max_depth = str(batch_fd.downloads.totaal_max_depth)
+            #TODO max_depth should be defined in folders.py?
+            total_max_depth = getattr(batch_fd.downloads, 'max_depth_{}'.format(row['dl_name'])).path
 
             if not os.path.exists(total_max_depth):
                 print("Preparing download of max waterdepth raster")
@@ -931,7 +927,9 @@ def download_gui(main_folder=None):
             else:
                 print("{} already on system".format(total_max_depth.split("/")[-1]))
 
-            total_damage = str(batch_fd.downloads.totaal_total_damage)
+            # total_damage = str(batch_fd.downloads.totaal_total_damage)
+            total_damage = getattr(batch_fd.downloads, 'total_damage_{}'.format(row['dl_name'])).path
+
             if not os.path.exists(total_damage):
                 print("Preparing download of total damage raster")
 
@@ -951,7 +949,7 @@ def download_gui(main_folder=None):
         print("code_list: {}".format(code_list))
         print("target_srs_list: {}".format(target_srs_list))
         print("resolution_list: {}".format(resolution_list))
-        print("pathname_list: {}".format(pathname_list))
+        # print("pathname_list: {}".format(pathname_list))
 
         batch_path = batch_fd.full_path(
             f"{datetime.now().strftime('%Y-%m-%d %Hh%M')}_download_raster_batch.csv"

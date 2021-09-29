@@ -135,10 +135,10 @@ class Raster(File):
     def __init__(self, raster_path):
         super().__init__(raster_path)
 
-    def load(self):
+    def load(self, return_array=True):
         if self.exists:
             self.array, self.nodata, self.metadata = hrt.load_gdal_raster(
-                self.file_path
+                raster_source=self.file_path, return_array=return_array
             )
             return self.array, self.nodata, self.metadata
         else:
@@ -754,6 +754,22 @@ class ThreediRevisions(Folder):
     def revisions(self):
         return self.content
 
+class ZeroDOneD(ThreediRevisions):
+    def __init__(self, base):
+        super().__init__(base, "0d1d_results")
+
+    @property
+    def structure(self):
+        return self.revision_structure("zero_d_one_d")
+
+
+class OneDTwoD(ThreediRevisions):
+    def __init__(self, base):
+        super().__init__(base, "1d2d_results")
+
+    @property
+    def structure(self):
+        return self.revision_structure("one_d_two_d")
 
 class ClimateResultsRevisions(Folder):
     def __init__(self, base, folder):
@@ -787,24 +803,6 @@ class ClimateResultsRevisions(Folder):
         return self.content
 
 
-class ZeroDOneD(ThreediRevisions):
-    def __init__(self, base):
-        super().__init__(base, "0d1d_results")
-
-    @property
-    def structure(self):
-        return self.revision_structure("zero_d_one_d")
-
-
-class OneDTwoD(ThreediRevisions):
-    def __init__(self, base):
-        super().__init__(base, "1d2d_results")
-
-    @property
-    def structure(self):
-        return self.revision_structure("one_d_two_d")
-
-
 class ClimateResults(ClimateResultsRevisions):
     def __init__(self, base):
         super().__init__(base, "batch_results")
@@ -815,6 +813,7 @@ class ClimateResults(ClimateResultsRevisions):
 
 
 class ClimateResult(Folder):
+    """Individual result with download and output folder"""
     def __init__(self, base):
         super().__init__(base)
 
@@ -882,7 +881,7 @@ class ClimateResultOutputRasters(Folder):
                 )
                 self.add_file(
                     f"{type_raster}_T25_{masker}",
-                    f"{type_raster_name}_T0010{masker_name}.tif",
+                    f"{type_raster_name}_T0025{masker_name}.tif",
                     "raster",
                 )
                 self.add_file(
@@ -910,17 +909,20 @@ class ClimateResultOutputRasters(Folder):
                 "raster",
             )
 
-
 class ClimateResultDownloads(Folder):
     def __init__(self, base):
-        super().__init__(base + "/01_downloads")
+        super().__init__(os.path.join(base,"01_downloads"))
 
         # Files
         self.add_file("download_uuid", "download_uuid.csv")
-        self.set_raster_files()
-        self.names = self.names()
+        self.names = self._set_names()
 
-    def names(self, groundwater_types=GROUNDWATER):
+        for name in RAW_DOWNLOADS:
+            setattr(self, name, ThreediResult(self.full_path(name)))
+
+        self._set_raster_files()
+
+    def _set_names(self, groundwater_types=GROUNDWATER):
         names = []
         for rain_type in RAIN_TYPES:
             for groundwater in groundwater_types:
@@ -928,24 +930,18 @@ class ClimateResultDownloads(Folder):
                     names.append(f"{rain_type}_{groundwater}_{rain_scenario}")
         return names
 
-    def set_raster_files(self, raster_types=["max_depth", "total_damage", "wlvl_max"]):
+    def _set_raster_files(self, raster_types=["max_depth", "total_damage", "wlvl_max"]):
 
-        for name in self.names():
+        for name in self.names:
             for rastertype in raster_types:
                 self.add_file(
-                    f"totaal_{rastertype}", f"{rastertype}_{name}.tif", "raster"
+                    f"{rastertype}_{name}", f"{rastertype}_{name}.tif", "raster"
                 )
-                self.add_file(
-                    f"plas_{rastertype}", f"{rastertype}_plas_{name}.tif", "raster"
-                )
-                self.add_file(
-                    f"overlast_{rastertype}",
-                    f"{rastertype}_overlast_{name}.tif",
-                    "raster",
-                )
+
 
     @property
     def raw_downloads(self):
+        #TODO threediresult hierin verwerken
         output = {
             "nc_files": [],
             "h5_files": [],
@@ -953,14 +949,13 @@ class ClimateResultDownloads(Folder):
         extensions = ["nc", "h5"]
 
         for name in RAW_DOWNLOADS:
-            path = str(self.base_path / name)
+            path = self.full_path(name)
             if os.path.exists(path):
                 for ext in extensions:
                     output[f"{ext}_files"] = [
                         file for file in os.listdir(path) if file.endswith(f".{ext}")
                     ]
         return output
-
 
 class OutputFolder(Folder):
     def __init__(self, base):
