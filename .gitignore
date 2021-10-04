@@ -9,3 +9,7 @@ venv_development_tools
 dist
 build
 .pytest_chache
+
+#FIXME temporary
+01_downloads_blokt100fout
+02_output_rasters

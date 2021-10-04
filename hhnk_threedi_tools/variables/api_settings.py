@@ -52,7 +52,6 @@ API_SETTINGS["store_results"] = {
     },
 }
 
-
 MODEL_TYPES = ["0d1d_test", "1d2d_test", "1d2d_glg", "1d2d_ggg", "1d2d_ghg"]
 
 # Batch calculation postprocessing settings

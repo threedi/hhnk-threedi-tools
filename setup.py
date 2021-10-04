@@ -18,5 +18,6 @@ setup(
     packages=find_packages(),
     python_requires=">=3.7",
     install_requires=["hhnk-research-tools==0.3"],
+    include_package_data=True,
 )
 

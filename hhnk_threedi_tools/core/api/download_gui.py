@@ -19,6 +19,8 @@ from hhnk_threedi_tools.variables.api_settings import (
     RAW_DOWNLOADS,
 )
 
+from hhnk_threedi_tools.variables.localsettings import LIZARD_API_KEY
+
 # from functions_nabewerking.create_batch_folders_dict import create_batch_folders_dict
 
 
@@ -912,9 +914,9 @@ def download_gui(main_folder=None):
             # TODO below, make a list of uuid's, bounds, resolution and pathname
             # Donwload max depth and damage rasters
             #TODO max_depth should be defined in folders.py?
-            total_max_depth = getattr(batch_fd.downloads, 'max_depth_{}'.format(row['dl_name'])).path
+            max_depth = getattr(batch_fd.downloads, 'max_depth_{}'.format(row['dl_name']))
 
-            if not os.path.exists(total_max_depth):
+            if not max_depth.exists:
                 print("Preparing download of max waterdepth raster")
                 uuid_list.append(selected_result["uuid"])
                 code_list.append("depth-max-dtri")
@@ -922,15 +924,15 @@ def download_gui(main_folder=None):
                 bounds_list.append(dem_meta["bounds_dl"])
                 bounds_srs_list.append("EPSG:28992")
                 resolution_list.append(dem_meta["pixel_width"])
-                pathname_list.append(total_max_depth)
+                pathname_list.append(max_depth.path)
 
             else:
-                print("{} already on system".format(total_max_depth.split("/")[-1]))
+                print("{} already on system".format(max_depth.name))
 
             # total_damage = str(batch_fd.downloads.totaal_total_damage)
-            total_damage = getattr(batch_fd.downloads, 'total_damage_{}'.format(row['dl_name'])).path
+            total_damage = getattr(batch_fd.downloads, 'total_damage_{}'.format(row['dl_name']))
 
-            if not os.path.exists(total_damage):
+            if not total_damage.exists:
                 print("Preparing download of total damage raster")
 
                 uuid_list.append(selected_result["uuid"])
@@ -939,10 +941,10 @@ def download_gui(main_folder=None):
                 bounds_list.append(dem_meta["bounds_dl"])
                 bounds_srs_list.append("EPSG:28992")
                 resolution_list.append(0.5)
-                pathname_list.append(total_damage)
+                pathname_list.append(total_damage.path)
 
             else:
-                print("{} already on system".format(total_damage))
+                print("{} already on system".format(total_damage.name))
 
             # TODO: call batch download function
         print("uuid_list: {}".format(uuid_list))
@@ -973,7 +975,7 @@ def download_gui(main_folder=None):
     on_select_change(output_polder_dropdown.value)
     update_buttons()
 
-    api_key_widget.value = "DFR4pMJq.LBnAENjQZEpgLbzLD2x4Ybsm4w4QjJYU"
+    api_key_widget.value = LIZARD_API_KEY
     api_key_widget.disabled = True
 
     ###################################################################################################

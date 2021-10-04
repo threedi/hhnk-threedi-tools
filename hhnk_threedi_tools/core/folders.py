@@ -52,11 +52,12 @@ from hhnk_threedi_tools.variables.api_settings import (
     RAW_DOWNLOADS,
 )
 
+import fiona
+import geopandas as gpd
 
 # Globals
 DAMO = f"DAMO{file_types_dict[GDB]}"
 HDB = f"HDB{file_types_dict[GDB]}"
-DATACHECKER = f"datachecker_output{file_types_dict[GDB]}"
 POLDER_POLY = f"polder_polygon{file_types_dict[SHAPE]}"
 CHANNEL_FROM_PROFILES = f"channel_surface_from_profiles{file_types_dict[SHAPE]}"
 
@@ -131,6 +132,20 @@ class File:
         return f"{self.name} @ {self.file_path} ({exists})"
 
 
+class FileGDB(File):
+    def __init__(self, file_path):
+        super().__init__(file_path)
+    
+    def load(self, layer=None):
+        if layer==None:
+            layer=input('Select layer:')
+        return gpd.read_file(self.file_path, layer=layer)
+
+    def layers(self):
+        """Return available layers in file gdb"""
+        return fiona.listlayers(self.file_path)
+
+
 class Raster(File):
     def __init__(self, raster_path):
         super().__init__(raster_path)
@@ -198,6 +213,8 @@ class Folder:
     def add_file(self, objectname, filename, ftype="file"):
         if ftype == "file":
             new_file = File(self.full_path(filename))
+        elif ftype == "filegdb":
+            new_file = FileGDB(self.full_path(filename))
         elif ftype == "raster":
             new_file = Raster(self.full_path(filename))
 
@@ -489,11 +506,12 @@ class SourcePaths(Folder):
 
         # Folders
         self.modelbuilder = ModelbuilderPaths(self.base)
+        self.peilgebieden = PeilgebiedenPaths(self.base)
 
         # Files
-        self.add_file("damo", DAMO)
-        self.add_file("hdb", HDB)
-        self.add_file("datachecker", DATACHECKER)
+        self.add_file("damo", DAMO, ftype='filegdb')
+        self.add_file("hdb", HDB, ftype='filegdb')
+        self.add_file("datachecker", 'datachecker_output.gdb', ftype='filegdb')
         self.add_file("polder_polygon", POLDER_POLY)
 
         # Layers
@@ -511,6 +529,7 @@ class SourcePaths(Folder):
         return f"""  
                {self.space}source_data
                {self.space}└── modelbuilder
+               {self.space}└── peilgebieden
                """
 
 
@@ -518,6 +537,19 @@ class ModelbuilderPaths(Folder):
     def __init__(self, base):
         super().__init__(os.path.join(base, "modelbuilder_output"))
         self.add_file("channel_from_profiles", CHANNEL_FROM_PROFILES)
+
+
+class PeilgebiedenPaths(Folder):
+    #TODO deze map moet een andere naam en plek krijgen. 
+    def __init__(self, base):
+        super().__init__(os.path.join(base, "peilgebieden"))
+
+        #Find peilgebieden shapefile in folder. 
+        shape_name =  [x for x in self.content if x.startswith('peilgebieden') and x.endswith('.shp')]
+        if len(shape_name)==1:
+            self.add_file("peilgebieden", shape_name[0])
+        else:
+            self.add_file("peilgebieden", 'peilgebieden.shp')
 
 
 class ModelPaths(Folder):
@@ -818,7 +850,7 @@ class ClimateResult(Folder):
         super().__init__(base)
 
         self.downloads = ClimateResultDownloads(self.base)
-        self.output_rasters = ClimateResultOutputRasters(self.base)
+        self.output = ClimateResultOutputRasters(self.base)
 
     @property
     def structure(self):
@@ -856,16 +888,18 @@ class ClimateResultOutputRasters(Folder):
         self.add_file("maskerkaart_diepte_tif", "maskerkaart_diepte.tif", "raster")
         self.add_file("maskerkaart_schade_tif", "maskerkaart_schade.tif", "raster")
         self.add_file("geen_schade_tif", "geen_schade.tif", "raster")
-        self.add_file("mask_plas_diepte", "mask_plas_diepte.tif", "raster")
-        self.add_file("mask_plas_schade", "mask_plas_schade.tif", "raster")
-        self.add_file("mask_overlast_schade", "mask_overlast_schade.tif", "raster")
-        self.add_file("ruimtekaart_path", "ruimtekaart")
+        self.add_file("mask_diepte_plas", "mask_diepte_plas.tif", "raster")
+        self.add_file("mask_schade_plas", "mask_schade_plas.tif", "raster")
+        self.add_file("mask_diepte_overlast", "mask_diepte_overlast.tif", "raster")
+        self.add_file("mask_schade_overlast", "mask_schade_overlast.tif", "raster")
+        self.add_file("ruimtekaart", "ruimtekaart.shp")
         self.add_file("schade_peilgebied", "schade_per_peilgebied.shp")
         self.add_file("schade_peilgebied_corr", "schade_per_peilgebied_correctie.shp")
         self.add_file("schade_polder", "schade_per_polder.csv")
         self.add_file("schade_polder_corr", "schade_per_polder_correctie.csv")
 
         self.set_scenario_files()
+
 
     def set_scenario_files(self):
         for type_raster, type_raster_name in zip(
@@ -874,39 +908,24 @@ class ClimateResultOutputRasters(Folder):
             for masker, masker_name in zip(
                 ["totaal", "plas", "overlast"], ["", "_plas", "_overlast"]
             ):
-                self.add_file(
-                    f"{type_raster}_T10_{masker}",
-                    f"{type_raster_name}_T0010{masker_name}.tif",
-                    "raster",
-                )
-                self.add_file(
-                    f"{type_raster}_T25_{masker}",
-                    f"{type_raster_name}_T0025{masker_name}.tif",
-                    "raster",
-                )
-                self.add_file(
-                    f"{type_raster}_T100_{masker}",
-                    f"{type_raster_name}_T0100{masker_name}.tif",
-                    "raster",
-                )
-                self.add_file(
-                    f"{type_raster}_T1000_{masker}",
-                    f"{type_raster_name}_T1000{masker_name}.tif",
-                    "raster",
-                )
+                for return_period in [10,25,100,1000]:
+                    self.add_file(
+                        objectname=f"{type_raster}_T{return_period}_{masker}",
+                        filename=f"{type_raster_name}_T{str(return_period).zfill(4)}{masker_name}.tif",
+                        ftype="raster",
+                    )
 
-        for masker, masker_name in zip(
-            ["totaal", "plas", "overlast"], ["", "_plas", "_overlast"]
-        ):
+        for masker, masker_name in zip(["totaal", "plas", "overlast"], ["", "_plas", "_overlast"]):
             self.add_file(
-                f"cw_schade_{masker}", f"cw_schade{masker_name}.tif", "raster"
+                objectname=f"cw_schade_{masker}", 
+                filename=f"cw_schade{masker_name}.tif", 
+                ftype="raster"
             )
 
-        for masker, masker_name in zip(["plas", "overlast"], ["_plas", "_overlast"]):
             self.add_file(
-                f"cw_schade_{masker_name}_corr",
-                f"cw_schade{masker_name}_correctie.tif",
-                "raster",
+                objectname=f"cw_schade_{masker}_corr",
+                filename=f"cw_schade{masker_name}_correctie.tif",
+                ftype="raster",
             )
 
 class ClimateResultDownloads(Folder):
@@ -937,25 +956,6 @@ class ClimateResultDownloads(Folder):
                 self.add_file(
                     f"{rastertype}_{name}", f"{rastertype}_{name}.tif", "raster"
                 )
-
-
-    @property
-    def raw_downloads(self):
-        #TODO threediresult hierin verwerken
-        output = {
-            "nc_files": [],
-            "h5_files": [],
-        }
-        extensions = ["nc", "h5"]
-
-        for name in RAW_DOWNLOADS:
-            path = self.full_path(name)
-            if os.path.exists(path):
-                for ext in extensions:
-                    output[f"{ext}_files"] = [
-                        file for file in os.listdir(path) if file.endswith(f".{ext}")
-                    ]
-        return output
 
 class OutputFolder(Folder):
     def __init__(self, base):

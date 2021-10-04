@@ -45,7 +45,7 @@ from hhnk_threedi_tools.variables.api_settings import (
     MODEL_TYPES,
     RAW_DOWNLOADS,
 )
-
+from hhnk_threedi_tools.variables.localsettings import LIZARD_API_KEY
 
 threedi_api_client = None
 threedi_repo_api = None
@@ -60,7 +60,7 @@ batch_started = False
 def start_calculation_gui(
     main_folder=None,
     base_scenario_name=None,
-    lizard_api_key="DFR4pMJq.LBnAENjQZEpgLbzLD2x4Ybsm4w4QjJYU",
+    lizard_api_key=LIZARD_API_KEY,
 ):
     dl.LIZARD_URL = "https://hhnk.lizard.net/api/v3/"
     THREEDI_API_HOST = "https://api.3di.live/v3.0"
