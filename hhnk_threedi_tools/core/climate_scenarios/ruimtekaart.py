@@ -60,9 +60,6 @@ MAX_NUM_REGIONS = 2 ** 16 - 1  # uint16 dtype + nodata value
 
 def _iter_block_row(band, offset_y, block_height, block_width, no_data_value):
 
-    if band.XSize < block_width:
-        block_width=band.XSize
-
     ncols = int(band.XSize / block_width)
 
     for i in range(ncols):
@@ -76,7 +73,7 @@ def _iter_block_row(band, offset_y, block_height, block_width, no_data_value):
     # possible leftover block
     width = band.XSize - (ncols * block_width)
     if width > 0:
-        arr = band.ReadAsArray(i * block_width, offset_y,
+        arr = band.ReadAsArray(ncols * block_width, offset_y,
                                width, block_height)
         if no_data_value is not None:
             arr[arr == no_data_value] = 0.
@@ -137,6 +134,7 @@ def rasterize(pgb_gdf, raster_path, mask_path=None):
     unique_labels = np.unique(labels_array).tolist()
     unique_labels.remove(nodata)
     return labels_array, metadata, unique_labels
+
 
 def aggregate(raster_path, labels_array, pgb_gdf, min_blocksize=1024):
     """Calculate sum of raster per region"""
@@ -264,6 +262,7 @@ def command(shapefile_path, output_path, maxdepth_prefix, damage_prefix,
 
 
     pgb_gdf.to_file(output_path)
+
 
 def get_parser():
     """

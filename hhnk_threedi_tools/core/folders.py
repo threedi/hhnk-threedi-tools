@@ -199,8 +199,14 @@ class Folder:
     def show(self):
         print(self.__repr__())
 
-    def create(self):
-        self.pl.mkdir(parents=True, exist_ok=True)
+    def create(self, parents=True):
+        """Create folder, if parents==False path wont be 
+        created if parent doesnt exist."""
+        if parents==False:
+            if not self.pl.parent.exists():
+                print(f'{self.path} not created, parent doesnt exist.')
+                return
+        self.pl.mkdir(parents=parents, exist_ok=True)
     
     def find_ext(self, ext):
         """ finds files with a certain extension"""
@@ -850,14 +856,14 @@ class ClimateResult(Folder):
         super().__init__(base)
 
         self.downloads = ClimateResultDownloads(self.base)
-        self.output = ClimateResultOutputRasters(self.base)
+        self.output = ClimateResultOutput(self.base)
 
     @property
     def structure(self):
         return f"""  
                {self.space}{self.name}
                {self.space}├── downloads
-               {self.space}└── output_rasters
+               {self.space}└── output
                 """
 
 
@@ -878,7 +884,7 @@ class ThreediResult(Folder):
         return GridH5Admin(self.admin_path.file_path)
 
 
-class ClimateResultOutputRasters(Folder):
+class ClimateResultOutput(Folder):
     def __init__(self, base):
         super().__init__(base + "/02_output_rasters")
 
@@ -892,13 +898,17 @@ class ClimateResultOutputRasters(Folder):
         self.add_file("mask_schade_plas", "mask_schade_plas.tif", "raster")
         self.add_file("mask_diepte_overlast", "mask_diepte_overlast.tif", "raster")
         self.add_file("mask_schade_overlast", "mask_schade_overlast.tif", "raster")
+        self.add_file("peilgebieden_diepte", "peilgebieden_diepte.tif", "raster")
+        self.add_file("peilgebieden_schade", "peilgebieden_schade.tif", "raster")
         self.add_file("ruimtekaart", "ruimtekaart.shp")
         self.add_file("schade_peilgebied", "schade_per_peilgebied.shp")
         self.add_file("schade_peilgebied_corr", "schade_per_peilgebied_correctie.shp")
         self.add_file("schade_polder", "schade_per_polder.csv")
         self.add_file("schade_polder_corr", "schade_per_polder_correctie.csv")
 
+
         self.set_scenario_files()
+        self.create(parents=False) #create outputfolder if parent exists
 
 
     def set_scenario_files(self):
@@ -934,28 +944,64 @@ class ClimateResultDownloads(Folder):
 
         # Files
         self.add_file("download_uuid", "download_uuid.csv")
-        self.names = self._set_names()
+        self.names = GROUNDWATER #Initializes names.setter
 
-        for name in RAW_DOWNLOADS:
-            setattr(self, name, ThreediResult(self.full_path(name)))
+        # for name in RAW_DOWNLOADS:
+        #     setattr(self, name, ThreediResult(self.full_path(name)))
 
-        self._set_raster_files()
+        for name in self.names:
+            setattr(self,name, ClimateResultScenario(self.base, name))
 
-    def _set_names(self, groundwater_types=GROUNDWATER):
+
+    @property
+    def names(self):
+        return self._names
+
+    @names.setter
+    def names(self, groundwater_types=GROUNDWATER):
         names = []
         for rain_type in RAIN_TYPES:
             for groundwater in groundwater_types:
                 for rain_scenario in RAIN_SCENARIOS:
                     names.append(f"{rain_type}_{groundwater}_{rain_scenario}")
-        return names
+        self._names = names
+        
+    def __repr__(self):
+        return f"""{self.name} @ {self.path}
+                    Folders:\t{self.structure}
+                    Files:\t{list(self.files.keys())}
+                    Layers:\t{list(self.olayers.keys())}
+                    Groups:\t{list(self.names)}
+                """
 
-    def _set_raster_files(self, raster_types=["max_depth", "total_damage", "wlvl_max"]):
+    # def _set_raster_files(self):
+            # for rastertype in raster_types:
+            #     self.add_file(
+            #         f"{rastertype}_{name}", f"{rastertype}_{name}.tif", "raster"
+            #     )
 
-        for name in self.names:
-            for rastertype in raster_types:
-                self.add_file(
-                    f"{rastertype}_{name}", f"{rastertype}_{name}.tif", "raster"
-                )
+
+#TODO dit komt nu niet netjes in de print van de class.
+class ClimateResultScenario(Folder):
+    """Single scenario with multiple results"""
+    def __init__(self, base, name):
+        super().__init__(base)
+
+        raster_types=["max_depth", "total_damage", "wlvl_max"]
+        for rastertype in raster_types:
+            self.add_file(rastertype, f"{rastertype}_{name}.tif", ftype='raster')
+        self.structure_extra=[]
+        #Netcdf for piek_ghg_t1000 and blok_ghg_t1000 for use in ruimtekaart.
+        if name in RAW_DOWNLOADS:
+            setattr(self, 'netcdf', ThreediResult(self.full_path(name)))
+            self.structure_extra = ['netcdf']
+    def __repr__(self):
+        return f"""{self.name} @ {self.path}
+                    Folders:\t{self.structure_extra}
+                    Files:\t{list(self.files.keys())}
+                    Layers:\t{list(self.olayers.keys())}
+                """
+
 
 class OutputFolder(Folder):
     def __init__(self, base):
