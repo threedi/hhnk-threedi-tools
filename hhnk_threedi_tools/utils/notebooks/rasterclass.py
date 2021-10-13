@@ -27,8 +27,9 @@ class Raster():
             return self._array
 
     @array.setter
-    def array(self, raster_array):
+    def array(self, raster_array, window=None, band_nr=1):
         self._array = raster_array
+        # self.source.GetRasterBand(band_nr).WriteArray(window[0],window[1],raster_array)
 
     def _read_array(self, band=None, window=None):
         """window=[x0, y0, x1, y1]"""
@@ -122,123 +123,59 @@ class Raster():
     def shape(self):
         return self.metadata['shape']
 
-    def _iter_block_row(self, band, ncols, offset_y, block_height, block_width, no_data_value, return_array=True):
-        """For given row in a raster, iterate over columns"""
-        for i in range(ncols):
-            print(f"i={i}")
-            window = [i * block_width, offset_y,
-                                (i + 1) * block_width, offset_y + block_height]
-            if return_array:
-                arr=self._read_array(band=band, window=window)
 
-                if no_data_value is not None:
-                    arr[arr == no_data_value] = 0.
-            else: 
-                arr=None
-            yield window, arr
-
-        # possible leftover block
-        width = band.XSize - (ncols * block_width)
-        if width > 0:
-            window=[ncols * block_width, offset_y,
-                ncols * block_width + width, offset_y + block_height]
-            if return_array:
-                arr=self._read_array(band=band, window=window)
-
-                if no_data_value is not None:
-                    arr[arr == no_data_value] = 0.
-            else:
-                arr=None
-
-            yield window, arr
+    @property
+    def pixelarea(self):
+        return abs(self.metadata['georef'][1] * self.metadata['georef'][5])
 
 
-    def iter_blocks(self, band_nr=1, min_blocksize=0, return_array=True):
-        """ Iterate over native blocks in a GDal raster data band.
-        Optionally, provide a minimum block dimension.
-        Returns a tuple of bbox (x1, y1, x2, y2) and the data as ndarray. """
-
-        band = self.source.GetRasterBand(band_nr)
-
-        block_height, block_width = band.GetBlockSize()
-        block_height = max(min_blocksize, block_height)
-        block_width = max(min_blocksize, block_width)
-
-
-        nrows = int(band.YSize / block_height)
-        ncols = int(band.XSize / block_width)
-        no_data_value = band.GetNoDataValue()
-
-        #Iterate over a whole row. Call function to iterate within that row
-        for j in range(nrows):
-            #Iterate within row over columns to yield block
-            for bbox, block in self._iter_block_row(band=band, 
-                                            ncols=ncols,
-                                            offset_y=j * block_height, 
-                                            block_height=block_height,
-                                            block_width=block_width, 
-                                            no_data_value=no_data_value,
-                                            return_array=return_array):
-                yield bbox, block
-
-        # possible leftover row
-        height = band.YSize - (nrows * block_height)
-        if height > 0:
-            for bbox, block in self._iter_block_row(band=band, 
-                                            ncols=ncols,
-                                            offset_y=nrows * block_height, 
-                                            block_height=height,
-                                            block_width=block_width, 
-                                            no_data_value=no_data_value,
-                                            return_array=return_array):
-                yield bbox, block
-        band.FlushCache()  # close file after writing
-        band = None
-        print('Done')
-
-
-    def generate_blocks(self, min_blocksize=0):
-        #TODO blocksize
+    def generate_blocks(self):
+        """Generate blocks with the blocksize of the band. 
+        These blocks can be used as window to load the raster iteratively."""
         band = self.source.GetRasterBand(1)
 
         block_height, block_width = band.GetBlockSize()
-        block_height = max(min_blocksize, block_height)
-        block_width = max(min_blocksize, block_width)
 
+        ncols = int(np.floor(band.XSize / block_width))
+        nrows = int(np.floor(band.YSize / block_height))
 
-        ncols = int(max(1, np.floor(band.XSize / block_width)))
-        nrows = int(max(1, np.floor(band.YSize / block_height)))
+        #Create arrays with index of where windows end. These are square blocks. 
+        xparts = np.linspace(0, block_width*ncols, ncols+1).astype(int)
+        yparts = np.linspace(0, block_height*nrows, nrows+1).astype(int)
 
-        xparts = np.linspace(0, band.XSize, ncols+1).astype(int)
-        yparts = np.linspace(0, band.YSize, nrows+1).astype(int)
+        #If raster has some extra data that didnt fall within a block it is added to the parts here.
+        #These blocks are not square.
+        if block_width*ncols != self.shape[1]:
+            xparts=np.append(xparts, self.shape[1])
+            ncols+=1
+        if block_height*nrows != self.shape[0]:
+            yparts=np.append(yparts, self.shape[0])
+            nrows+=1
 
-        parts = pd.DataFrame(index=np.arange(nrows*ncols)+1, columns=['ix', 'iy', 'window'])
+        blocks_df = pd.DataFrame(index=np.arange(nrows*ncols)+1, columns=['ix', 'iy', 'window'])
         i = 0
         for ix in range(ncols):
             for iy in range(nrows):
                 i += 1
-                parts.loc[i, :] = np.array((ix, iy, [xparts[ix], yparts[iy], xparts[ix+1], yparts[iy+1]]), dtype=object)
-
+                blocks_df.loc[i, :] = np.array((ix, iy, [xparts[ix], yparts[iy], xparts[ix+1], yparts[iy+1]]), dtype=object)
 
         band.FlushCache()  # close file after writing
         band = None
-        return parts
+
+        self.blocks=blocks_df
+        return blocks_df
 
 
-
-
-    def sum_labels(self, labels_raster, labels_index, min_blocksize):
-        parts = self.generate_blocks(min_blocksize=min_blocksize)
-        accum = None
-
+    def sum_labels(self, labels_raster, labels_index):
+        """Calculate the sum of the rastervalues per label."""
         if labels_raster.shape != self.shape:
             raise Exception(f'label raster shape {labels_raster.shape} does not match the raster shape {self.shape}')
 
-        for idx, part in parts.iterrows():
-            window=part['window']
-            block = self._read_array(window=window)
-            block_label = labels_raster._read_array(window=window)
+        accum = None
 
+        for window, block in self:
+            block[block==self.nodata] = 0
+            block_label = labels_raster._read_array(window=window)
 
             #Calculate sum per label (region)
             result = ndimage.sum_labels(input=block,
@@ -255,9 +192,9 @@ class Raster():
         pass
 
     def __iter__(self):
-        blocks = self.generate_blocks()
-        for idx, part in blocks.iterrows():
-            window=part['window']
+        blocks_df = self.generate_blocks()
+        for idx, block_row in blocks_df.iterrows():
+            window=block_row['window']
             block = self._read_array(window=window)
             yield window, block
             

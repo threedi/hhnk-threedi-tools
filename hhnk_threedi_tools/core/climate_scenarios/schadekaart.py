@@ -22,14 +22,11 @@ def stack_raster_arrays(raster_classes, window):
     return stacked_array
 
 
-def bereken_contante_schade_window(idx, part, raster_classes, damage_raster, frequencies, cw_factor, output_nodata):
+def bereken_contante_schade_window(idx, window, raster_classes, frequencies, cw_factor):
     """Om de jaarlijkse schade te berekenen openen we alle rasters en sommeren de schadewaarden. 
 
     De jaarlijkse schade wordt berekend door de schade voor een scenario te vermenigvuldigen met 
     de jaarlijkse frequentie van dat scenario."""
-    # Retrieve window
-    window=part['window']
-
     # Load raster
     stacked_raster_array = stack_raster_arrays(raster_classes, window=window) #laad 18 resultaten en zet in een array
 
@@ -43,7 +40,7 @@ def bereken_contante_schade_window(idx, part, raster_classes, damage_raster, fre
     #Maak de jaarlijkse schade contant door gebruik te maken van een discontovoet en investeringstermijn
     stacked_raster_array = stacked_raster_array * cw_factor
 
-    return (part, stacked_raster_array)   
+    return (window, stacked_raster_array)   
 
 
 def main_maak_schadekaart(output_raster, schade_rasters, frequencies, output_nodata, dv, n, min_blocksize=1000):
@@ -62,15 +59,15 @@ def main_maak_schadekaart(output_raster, schade_rasters, frequencies, output_nod
 
     # #Loop over windows and calculate results
     for idx, part in parts.iterrows():
-        part, schade_window_array = bereken_contante_schade_window(idx=idx,
-                                                                    part=part,
-                                                                    raster_classes=raster_classes,
-                                                                    damage_raster=damage_raster,
-                                                                    frequencies=frequencies,
-                                                                    cw_factor=cw_factor,
-                                                                    output_nodata=output_nodata)
+        window=part['window']
 
-        array_out[part.window[1]:part.window[3], part.window[0]:part.window[2]] = schade_window_array
+        window, schade_window_array = bereken_contante_schade_window(idx=idx,
+                                                                    window=window,
+                                                                    raster_classes=raster_classes,
+                                                                    frequencies=frequencies,
+                                                                    cw_factor=cw_factor)
+
+        array_out[window[1]:window[3], window[0]:window[2]] = schade_window_array
 
 
     hrt.save_raster_array_to_tiff(output_file=output_raster.path,

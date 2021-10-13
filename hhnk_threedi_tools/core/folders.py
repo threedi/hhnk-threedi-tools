@@ -792,6 +792,7 @@ class ThreediRevisions(Folder):
     def revisions(self):
         return self.content
 
+
 class ZeroDOneD(ThreediRevisions):
     def __init__(self, base):
         super().__init__(base, "0d1d_results")
@@ -808,6 +809,7 @@ class OneDTwoD(ThreediRevisions):
     @property
     def structure(self):
         return self.revision_structure("one_d_two_d")
+
 
 class ClimateResultsRevisions(Folder):
     def __init__(self, base, folder):
@@ -888,9 +890,11 @@ class ClimateResultOutput(Folder):
     def __init__(self, base):
         super().__init__(base + "/02_output_rasters")
 
+        # Folders
+        self.temp = ClimateResultOutputTemp(self.base)
+
         # Files
         self.add_file("maskerkaart", "maskerkaart.shp")
-
         self.add_file("maskerkaart_diepte_tif", "maskerkaart_diepte.tif", "raster")
         self.add_file("maskerkaart_schade_tif", "maskerkaart_schade.tif", "raster")
         self.add_file("geen_schade_tif", "geen_schade.tif", "raster")
@@ -898,8 +902,6 @@ class ClimateResultOutput(Folder):
         self.add_file("mask_schade_plas", "mask_schade_plas.tif", "raster")
         self.add_file("mask_diepte_overlast", "mask_diepte_overlast.tif", "raster")
         self.add_file("mask_schade_overlast", "mask_schade_overlast.tif", "raster")
-        self.add_file("peilgebieden_diepte", "peilgebieden_diepte.tif", "raster")
-        self.add_file("peilgebieden_schade", "peilgebieden_schade.tif", "raster")
         self.add_file("ruimtekaart", "ruimtekaart.shp")
         self.add_file("schade_peilgebied", "schade_per_peilgebied.shp")
         self.add_file("schade_peilgebied_corr", "schade_per_peilgebied_correctie.shp")
@@ -937,6 +939,23 @@ class ClimateResultOutput(Folder):
                 filename=f"cw_schade{masker_name}_correctie.tif",
                 ftype="raster",
             )
+
+    @property
+    def structure(self):
+        return f"""  
+               {self.space}{self.name}
+               {self.space}├── temp
+                """
+
+
+class ClimateResultOutputTemp(Folder):
+    def __init__(self, base):
+        super().__init__(os.path.join(base,"temp"))
+
+        self.add_file("peilgebieden_diepte", "peilgebieden_diepte.tif", "raster")
+        self.add_file("peilgebieden_schade", "peilgebieden_schade.tif", "raster")
+        self.add_file("peilgebieden", "peilgebieden_clipped.shp")
+
 
 class ClimateResultDownloads(Folder):
     def __init__(self, base):
