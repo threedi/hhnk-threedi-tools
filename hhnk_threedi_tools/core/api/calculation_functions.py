@@ -14,6 +14,8 @@ from threedi_api_client import ThreediApiClient
 import openapi_client
 from openapi_client import ApiException
 
+from hhnk_threedi_tools.variables.api_settings import API_SETTINGS
+
 # local imports
 from .download_functions import create_download_url, start_download
 
@@ -22,7 +24,6 @@ def add_laterals_from_sqlite(threedi_sim_api, db_file, simulation):
     """
     Read 1D laterals from the Sqlite and use them in the initialisation of the simulation
     """
-
     conn = sqlite3.connect(db_file)
     c = conn.cursor()
 
@@ -215,7 +216,6 @@ def add_control_from_sqlite(threedi_sim_api, db_file, simulation):
                     raise
             break
 
-
 def create_threedi_simulation(
     threedi_api_client,
     sqlite_file,
@@ -229,6 +229,9 @@ def create_threedi_simulation(
     days_dry_end,
     hours_dry_end,
     rain_intensity,
+    basic_processing,
+    damage_processing,
+    arrival_processing
 ):  # , days_dry_start, hours_dry_start, days_rain, hours_rain, days_dry_end, hours_dry_end, rain_intensity, organisation_uuid, model_slug, scenario_name, store_results):
     """
     Creates and returns a Simulation (doesn't start yet) and initializes it with
@@ -326,51 +329,46 @@ def create_threedi_simulation(
         break
 
     # Add postprocessing
-    basic_processing_data = {
-        "scenario_name": scenario_name,
-        "process_basic_results": True,
-    }
+    if basic_processing:
+        basic_processing_data = {
+            "scenario_name": scenario_name,
+            "process_basic_results": True,
+        }
+        while True:
+            try:
+                threedi_sim_api.simulations_results_post_processing_lizard_basic_create(
+                    simulation.id, data=basic_processing_data
+                )
+            except ApiException:
+                time.sleep(10)
+                continue
+            break
 
-    while True:
-        try:
-            threedi_sim_api.simulations_results_post_processing_lizard_basic_create(
-                simulation.id, data=basic_processing_data
-            )
-        except ApiException:
-            time.sleep(10)
-            continue
-        break
+    #Damage posprocessing
+    if damage_processing:
+        damage_processing_data = API_SETTINGS['damage_processing']
+        while True:
+            try:
+                threedi_sim_api.simulations_results_post_processing_lizard_damage_create(
+                    simulation.id, data=damage_processing_data
+                )
+            except ApiException:
+                time.sleep(10)
+                continue
+            break
 
-    damage_processing_data = {
-        "basic_post_processing": True,
-        "cost_type": "avg",
-        "flood_month": "sep",
-        "inundation_period": 1,
-        "repair_time_infrastructure": 6,
-        "repair_time_buildings": 24,
-    }
-
-    while True:
-        try:
-            threedi_sim_api.simulations_results_post_processing_lizard_damage_create(
-                simulation.id, data=damage_processing_data
-            )
-        except ApiException:
-            time.sleep(10)
-            continue
-        break
-
-    arrival_processing_data = {"basic_post_processing": True}
-
-    while True:
-        try:
-            threedi_sim_api.simulations_results_post_processing_lizard_arrival_create(
-                simulation.id, data=arrival_processing_data
-            )
-        except ApiException:
-            time.sleep(10)
-            continue
-        break
+    if arrival_processing:
+        arrival_processing_data = {"basic_post_processing": True}
+        #Arrival time 
+        while True:
+            try:
+                threedi_sim_api.simulations_results_post_processing_lizard_arrival_create(
+                    simulation.id, data=arrival_processing_data
+                )
+            except ApiException:
+                time.sleep(10)
+                continue
+            break
 
     # return simulation object
     return simulation

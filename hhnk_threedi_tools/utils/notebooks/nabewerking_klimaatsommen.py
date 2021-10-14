@@ -42,12 +42,12 @@ import importlib.resources as pkg_resources #Load resource from package
 import ipywidgets as widgets
 
 import sys, importlib
-import rasterclass
+import hhnk_threedi_tools.utils.notebooks.rasterclass as rasterclass
 importlib.reload(rasterclass)
 
 #User input
-
-
+# %%
+ 
 # --------------------------------------------------
 polders_folder = "C:/Users/wvangerwen/Github/hhnk-threedi-tools/hhnk_threedi_tools/tests/data/multiple_polders"
 polder = 'poldera' 

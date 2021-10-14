@@ -30,7 +30,6 @@ def bereken_contante_schade_window(idx, window, raster_classes, frequencies, cw_
     # Load raster
     stacked_raster_array = stack_raster_arrays(raster_classes, window=window) #laad 18 resultaten en zet in een array
 
-
     #Bereken jaarlijkse schade
     stacked_raster_array = stacked_raster_array * frequencies[:,None, None]
 
