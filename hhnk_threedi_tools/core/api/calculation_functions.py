@@ -346,7 +346,7 @@ def create_threedi_simulation(
 
     #Damage posprocessing
     if damage_processing:
-        damage_processing_data = API_SETTINGS['damage_processing']
+        damage_processing_data = API_SETTINGS["damage_processing"]
         while True:
             try:
                 threedi_sim_api.simulations_results_post_processing_lizard_damage_create(

@@ -551,11 +551,12 @@ class PeilgebiedenPaths(Folder):
         super().__init__(os.path.join(base, "peilgebieden"))
 
         #Find peilgebieden shapefile in folder. 
-        shape_name =  [x for x in self.content if x.startswith('peilgebieden') and x.endswith('.shp')]
-        if len(shape_name)==1:
-            self.add_file("peilgebieden", shape_name[0])
-        else:
-            self.add_file("peilgebieden", 'peilgebieden.shp')
+        if self.exists:
+            shape_name =  [x for x in self.content if x.startswith('peilgebieden') and x.endswith('.shp')]
+            if len(shape_name)==1:
+                self.add_file("peilgebieden", shape_name[0])
+            else:
+                self.add_file("peilgebieden", 'peilgebieden.shp')
 
 
 class ModelPaths(Folder):
@@ -566,7 +567,8 @@ class ModelPaths(Folder):
         self.rasters = RasterPaths(self.base)
 
         # File
-        self.add_file("database", self.model_path())
+        if self.model_path() is not None:
+            self.add_file("database", self.model_path())
 
     @property
     def structure(self):
@@ -636,7 +638,11 @@ class ModelPaths(Folder):
                 idx = self.sqlite_names.index(name)
             except Exception:
                 raise ValueError('name of sqlite given, but cannot be found')
-        return self.sqlite_paths[idx]             
+        if len(self.sqlite_paths) >= 1:
+            return self.sqlite_paths[idx]
+        else:
+            return None
+
 
     def set_database(self, name_or_idx):
         """  set the model database with either an index or a name"""
@@ -846,6 +852,7 @@ class ClimateResultsRevisions(Folder):
 class ClimateResults(ClimateResultsRevisions):
     def __init__(self, base):
         super().__init__(base, "batch_results")
+        self.create(parents=False) #create outputfolder if parent exists
 
     @property
     def structure(self):
@@ -955,6 +962,9 @@ class ClimateResultOutputTemp(Folder):
         self.add_file("peilgebieden_diepte", "peilgebieden_diepte.tif", "raster")
         self.add_file("peilgebieden_schade", "peilgebieden_schade.tif", "raster")
         self.add_file("peilgebieden", "peilgebieden_clipped.shp")
+
+        self.create(parents=False) #create outputfolder if parent exists
+
 
 
 class ClimateResultDownloads(Folder):

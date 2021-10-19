@@ -4,7 +4,7 @@ import geopandas as gpd
 import functions.wsa_tools as wsa #general tools used across all scripts
 from tqdm import tqdm
 import multiprocessing as mp
-import gdal
+from osgeo import gdal
 
 def maak_schadekaart(schade_rasters, frequenties, output_file, dv, n, output_nodata, pixel_factor, damage_meta, damage_nodata):
     """Maak de jaarlijkse schade contant door gebruik te maken van een discontovoet (dv) en investeringstermijn (n)

@@ -103,7 +103,7 @@ def interpoleer_raster_window(idx, part, raster_classes, dem_raster, int_frequen
     return (part, int_raster_array)   
 
 
-def main_interpolate_rasters(T, output_file, rasters, frequenties, output_nodata, dem_path, min_blocksize=0, extra_nodata_value=None):
+def main_interpolate_rasters(T, output_file, rasters, frequenties, output_nodata, dem_path, extra_nodata_value=None):
     """Interpoleer 18 rasters samen met de frequentietabel tot 3 rasters met de T10, T100 en T1000 kans.
     Dit wordt gedaan voor de waterdiepterasters en de schaderasters"""
     
@@ -114,7 +114,7 @@ def main_interpolate_rasters(T, output_file, rasters, frequenties, output_nodata
         raster_classes = [rasterclass.Raster(r) for r in rasters]
 
         depth_raster =  raster_classes[0]
-        parts = depth_raster.generate_blocks(min_blocksize=min_blocksize)
+        parts = depth_raster.generate_blocks()
         array_out = np.ones([depth_raster.shape[0],depth_raster.shape[1]])*output_nodata
 
         # #Loop over windows and calculate results

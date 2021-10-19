@@ -2,6 +2,9 @@
 import os
 import re
 
+import hhnk_threedi_tools.utils.notebooks.rasterclass as rasterclass #TODO to hrt.
+
+
 # Third-party imports
 import pandas as pd
 import ipywidgets as widgets
@@ -356,6 +359,19 @@ def download_gui(main_folder=None):
         layout=item_layout(grid_area="batch_folder_dropdown"),
     )
 
+    #Select DEM file to use to determine which resolution to download depth rasters on
+    dem_path_label = widgets.Label(
+        "Locatie DEM (voor batch):", layout=item_layout(grid_area="dem_path_label")
+    )
+    dem_path_dropdown = widgets.Dropdown(
+        options="",
+        disabled=False,
+        layout=item_layout(grid_area="dem_path_dropdown"),
+    )
+
+
+
+
     ###################################################################################################
     # Updating and interaction of the widgets
     ###################################################################################################
@@ -585,6 +601,12 @@ def download_gui(main_folder=None):
 
         # Select these new records.
         output_select_box.value = selected_download_new
+
+        #Set Dem path for batch
+        if scenarios['folder'].model.rasters.find_dem()=='':
+            dem_path_dropdown.options = [i.split(os.sep)[-1] for i in scenarios['folder'].model.rasters.find_ext('tif')]
+        else:
+            dem_path_dropdown.options = [scenarios['folder'].model.rasters.dem.name]
 
     # If a new value is selected in the download selection folder, update the output folder
     download_selection_box.observe(update_output_selectbox, names="value")
@@ -876,9 +898,8 @@ def download_gui(main_folder=None):
 
         # Get raster size of dem, max depth rasters are downloaded on this resolution.
         print(scenarios["folder"])
-        print(folder.model.rasters.dem)
 
-        _, _, dem_meta = folder.model.rasters.dem.load(return_array=False)
+        dem = rasterclass.Raster(folder.model.rasters.full_path(dem_path_dropdown.value))
 
         # Start download of selected files (if any are selected) ------------------------------------------------
         for name, row in df.iterrows():
@@ -893,7 +914,7 @@ def download_gui(main_folder=None):
 
             if row["dl_name"] in RAW_DOWNLOADS:
 
-                output_folder = getattr(batch_fd.downloads, row['dl_name'])
+                output_folder = getattr(batch_fd.downloads, row['dl_name']).netcdf
 
                 #FIXME hoort dit niet een niveau hoger te staan?
                 # De 3Di plugin kan geen '[' en ']' aan.
@@ -914,23 +935,23 @@ def download_gui(main_folder=None):
             # TODO below, make a list of uuid's, bounds, resolution and pathname
             # Donwload max depth and damage rasters
             #TODO max_depth should be defined in folders.py?
-            max_depth = getattr(batch_fd.downloads, 'max_depth_{}'.format(row['dl_name']))
+            max_depth = getattr(batch_fd.downloads, row['dl_name']).max_depth
 
             if not max_depth.exists:
                 print("Preparing download of max waterdepth raster")
                 uuid_list.append(selected_result["uuid"])
                 code_list.append("depth-max-dtri")
                 target_srs_list.append("EPSG:28992")
-                bounds_list.append(dem_meta["bounds_dl"])
+                bounds_list.append(dem.metadata["bounds_dl"])
                 bounds_srs_list.append("EPSG:28992")
-                resolution_list.append(dem_meta["pixel_width"])
+                resolution_list.append(dem.metadata["pixel_width"])
                 pathname_list.append(max_depth.path)
 
             else:
                 print("{} already on system".format(max_depth.name))
 
             # total_damage = str(batch_fd.downloads.totaal_total_damage)
-            total_damage = getattr(batch_fd.downloads, 'total_damage_{}'.format(row['dl_name']))
+            total_damage = getattr(batch_fd.downloads, row['dl_name']).total_damage
 
             if not total_damage.exists:
                 print("Preparing download of total damage raster")
@@ -938,7 +959,7 @@ def download_gui(main_folder=None):
                 uuid_list.append(selected_result["uuid"])
                 code_list.append("total-damage")
                 target_srs_list.append("EPSG:28992")
-                bounds_list.append(dem_meta["bounds_dl"])
+                bounds_list.append(dem.metadata["bounds_dl"])
                 bounds_srs_list.append("EPSG:28992")
                 resolution_list.append(0.5)
                 pathname_list.append(total_damage.path)
@@ -1011,6 +1032,8 @@ def download_gui(main_folder=None):
             download_button,  # 6 download
             batch_folder_label,
             batch_folder_dropdown,
+            dem_path_label,
+            dem_path_dropdown,
             download_batch_button_label,
             download_batch_button,  # 7 download batch
         ],
@@ -1033,8 +1056,8 @@ def download_gui(main_folder=None):
                 '. . . time_resolution_box time_resolution_box time_resolution_box download_button_label download_button_label'
                 '. . . time_resolution_box time_resolution_box time_resolution_box download_button download_button'
                 '. . . . . . download_batch_button_label download_batch_button_label'
-                '. . . . batch_folder_label batch_folder_label download_batch_button download_batch_button'
-                '. . . . batch_folder_dropdown batch_folder_dropdown download_batch_button download_batch_button'
+                '. . dem_path_label dem_path_label batch_folder_label batch_folder_label download_batch_button download_batch_button'
+                '. . dem_path_dropdown dem_path_dropdown batch_folder_dropdown batch_folder_dropdown download_batch_button download_batch_button'
                 """,
         ),
     )

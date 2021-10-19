@@ -27,6 +27,7 @@ import hhnk_threedi_tools.core.climate_scenarios.peilgebieden as peilgebieden
 
 
 
+
 from hhnk_threedi_tools.core.climate_scenarios.masker_filter_rasters import rasterize_maskerkaart, apply_mask_to_raster, remove_mask_from_raster
 
 import os
@@ -35,6 +36,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 from osgeo import gdal
+
 
 # %matplotlib inline
 
@@ -47,10 +49,9 @@ importlib.reload(rasterclass)
 
 #User input
 # %%
- 
 # --------------------------------------------------
 polders_folder = "C:/Users/wvangerwen/Github/hhnk-threedi-tools/hhnk_threedi_tools/tests/data/multiple_polders"
-polder = 'poldera' 
+polder = 'egmond' 
 # --------------------------------------------------
 
 folder = Folders(os.path.join(polders_folder, polder))
@@ -62,6 +63,7 @@ def item_layout(width="95%", grid_area="", **kwargs):
     )  # override the default width of the button to 'auto' to let the button grow
     
 output_folder_options = folder.threedi_results.batch.content
+
 # output_folder_label = widgets.Label('Selecteer output folder:', layout=item_layout(grid_area='output_folder_label'))
 output_folder_box = widgets.Select(
     options=output_folder_options,
@@ -70,7 +72,19 @@ output_folder_box = widgets.Select(
     layout=item_layout(grid_area="output_folder_box"),
 )
 
-## %%
+
+#Set Dem path if its not found
+dem_path_dropdown = widgets.Dropdown(
+    options="",
+    disabled=False,
+    layout=item_layout(grid_area="dem_path_dropdown"),
+)
+
+
+if folder.model.rasters.find_dem()=='':
+    dem_path_dropdown.options = [i.split(os.sep)[-1] for i in folder.model.rasters.find_ext('tif')]
+else:
+    dem_path_dropdown.options = [folder.model.rasters.dem.name]
 #Batch folder selection
 
 
@@ -85,6 +99,7 @@ with pkg_resources.path(htt.resources, 'precipitation_frequency.xlsx') as p:
 # ax.imshow(neerslag_list, extent=neerslag_meta['bounds'])
 # polder_shape.plot(ax=ax, color='red')
 
+
 precipitation_zone_box = widgets.Select(
     options=['hevig', 'debilt'],
     rows=2,
@@ -97,10 +112,10 @@ print("Selecteer map met batch resultaten")
 display(output_folder_box)
 print("Selecteer neerslagzone")
 display(precipitation_zone_box)
+print("Selecteer DEM bestand")
+display(dem_path_dropdown)
 
-
-
-## %%
+# %%
 batch_fd = folder.threedi_results.batch[output_folder_box.value]
 
 df = pd.DataFrame(batch_fd.downloads.names, columns=['dl_name'])
@@ -113,69 +128,70 @@ for dl_name in batch_fd.downloads.names:
 
 #Selectie neerslag scenario
 precipitation_zone_box.value='debilt' #FIXME remove line after testing.
+if polder=='egmond':
+    precipitation_zone_box.value='hevig' #FIXME remove line after testing.
 
 freqs = freqs[['dl_name', 'freq_{}_jaar'.format(precipitation_zone_box.value)]]
-freqs.rename({'freq_debilt_jaar':'freq_jaar'}, axis=1, inplace=True)
+freqs.rename({'freq_{}_jaar'.format(precipitation_zone_box.value):'freq_jaar'}, axis=1, inplace=True)
 
 df_freqs = df.merge(freqs, on='dl_name')
 
 ## %% Aanmaken of laden peilgebieden polygon
-fixeddrainage = folder.source_data.datachecker.load('fixeddrainagelevelarea')
 if not folder.source_data.peilgebieden.peilgebieden.exists:
+    fixeddrainage = folder.source_data.datachecker.load('fixeddrainagelevelarea')
     fixeddrainage.to_file(folder.source_data.peilgebieden.peilgebieden.path)
     print(f'Peilgebieden shapefile aangemaakt: {folder.source_data.peilgebieden.peilgebieden.name}.shp')
 else:
     print(f'Peilgebieden shapefile gevonden: {folder.source_data.peilgebieden.peilgebieden.name}.shp')
 
 
+# %%
 
 
 
+## %% Maak masker en ruimtekaart
 
-# ## %% Maak masker en ruimtekaart
+## Maskerkaart
 
-# ## Maskerkaart
+#Aanmaken polygon van maskerkaart
+maskerkaart.command(path_piek=batch_fd.downloads.piek_GHG_T1000.netcdf.path, 
+                    path_blok=batch_fd.downloads.blok_GHG_T1000.netcdf.path,
+                    path_out=batch_fd.output.maskerkaart.path)
 
-# #Aanmaken polygon van maskerkaart
-# maskerkaart.command(path_piek=batch_fd.downloads.piek_GHG_T1000.netcdf.path, 
-#                     path_blok=batch_fd.downloads.blok_GHG_T1000.netcdf.path,
-#                     path_out=batch_fd.output.maskerkaart.path)
+#Omzetten polygon in raster voor diepteraster
+_, _, depth_meta = hrt.load_gdal_raster(batch_fd.downloads.piek_GLG_T10.max_depth.path, 
+                                            return_array=False)
+mask_depth = rasterize_maskerkaart(input_file=batch_fd.output.maskerkaart.path, 
+                      mask_plas_path=batch_fd.output.mask_diepte_plas.path, 
+                      mask_overlast_path=batch_fd.output.mask_diepte_overlast.path, 
+                      meta=depth_meta)
 
-# #Omzetten polygon in raster voor diepteraster
-# _, _, depth_meta = hrt.load_gdal_raster(batch_fd.downloads.piek_GLG_T10.max_depth.path, 
-#                                             return_array=False)
-# mask_depth = rasterize_maskerkaart(input_file=batch_fd.output.maskerkaart.path, 
-#                       mask_plas_path=batch_fd.output.mask_diepte_plas.path, 
-#                       mask_overlast_path=batch_fd.output.mask_diepte_overlast.path, 
-#                       meta=depth_meta)
-
-# #Omzetten polygon in raster voor schaderaster (kan verschillen van diepte met andere resolutie)
-# _, _, damage_meta = hrt.load_gdal_raster(batch_fd.downloads.piek_GLG_T10.total_damage.path, 
-#                                             return_array=False)
-# mask_damage = rasterize_maskerkaart(input_file=batch_fd.output.maskerkaart.path, 
-#                       mask_plas_path=batch_fd.output.mask_schade_plas.path, 
-#                       mask_overlast_path=batch_fd.output.mask_schade_overlast.path, 
-#                       meta=damage_meta)
+#Omzetten polygon in raster voor schaderaster (kan verschillen van diepte met andere resolutie)
+_, _, damage_meta = hrt.load_gdal_raster(batch_fd.downloads.piek_GLG_T10.total_damage.path, 
+                                            return_array=False)
+mask_damage = rasterize_maskerkaart(input_file=batch_fd.output.maskerkaart.path, 
+                      mask_plas_path=batch_fd.output.mask_schade_plas.path, 
+                      mask_overlast_path=batch_fd.output.mask_schade_overlast.path, 
+                      meta=damage_meta)
 
 
-# # %% rasterize peilgebieden
+# %% rasterize peilgebieden
 
-# for raster_type, raster_name in zip(['max_depth', 'total_damage'], ['diepte', 'schade']):
-#     peilgebieden.rasterize_peilgebieden(input_raster = rasterclass.Raster(df.iloc[0][raster_type]),
-#                                                     output_file = getattr(batch_fd.output.temp, f'peilgebieden_{raster_name}'),
-#                                                     input_peilgebieden= folder.source_data.peilgebieden.peilgebieden,
-#                                                     output_peilgebieden = batch_fd.output.temp.peilgebieden,
-#                                                     mask_path=batch_fd.output.maskerkaart.path,
-#                                                     overwrite=True)
-
+for raster_type, raster_name in zip(['max_depth', 'total_damage'], ['diepte', 'schade']):
+    peilgebieden.rasterize_peilgebieden(input_raster = rasterclass.Raster(df.iloc[0][raster_type]),
+                                                    output_file = getattr(batch_fd.output.temp, f'peilgebieden_{raster_name}'),
+                                                    input_peilgebieden= folder.source_data.peilgebieden.peilgebieden,
+                                                    output_peilgebieden = batch_fd.output.temp.peilgebieden,
+                                                    mask_path=batch_fd.output.maskerkaart.path,
+                                                    overwrite=False)
 
 # %%
 # Ruimtekaart
 import sys, importlib
 importlib.reload(ruimtekaart)
 
-# if not batch_fd.output.ruimtekaart.exists:
-if True:
+if not batch_fd.output.ruimtekaart.exists:
+# if True:
     ruimtekaart.create_ruimtekaart(pgb_path=batch_fd.output.temp.peilgebieden.path, 
                         output_path=batch_fd.output.ruimtekaart.path, 
                         batch_fd=batch_fd)
@@ -184,6 +200,7 @@ if True:
 # %% Inundatiediepte rasters
 diepte_rasters = df_freqs['max_depth'].values
 frequenties = df_freqs['freq_jaar'].values
+
 
 for T in [10, 100, 1000]:
 
@@ -195,8 +212,7 @@ for T in [10, 100, 1000]:
                                 rasters =  diepte_rasters,
                                 frequenties =  frequenties,
                                 output_nodata =  -9999.00,
-                                dem_path = folder.model.rasters.dem.path,
-                                min_blocksize =  1000,
+                                dem_path = folder.model.rasters.full_path(dem_path_dropdown.value),
                                 extra_nodata_value= 0)
 
 
@@ -244,8 +260,7 @@ if not output_raster.exists:
                     frequencies=frequencies,
                     output_nodata=0,
                     dv=dv,
-                    n=n,
-                    min_blocksize=1000)
+                    n=n)
     
     print(f'{output_raster.name} created')
 else: 
@@ -282,13 +297,7 @@ mask_array=None
 
 
 # %% Schade per peilgebied
-import sys, importlib
-import rasterclass
-importlib.reload(rasterclass)
-source_path = 'C:\\Users\\wvangerwen\\Github\\hhnk-threedi-tools\\hhnk_threedi_tools\\tests\\data\\multiple_polders\\poldera\\03_3di_resultaten\\batch_results\\bwn_test #5 (1) klimaatsommen\\01_downloads\\max_depth_piek_GLG_T1000.tif'
 
-
-# %%
 schade_gdf = gpd.read_file(batch_fd.output.temp.peilgebieden.path)
 labels_raster = rasterclass.Raster(batch_fd.output.temp.peilgebieden_schade.path)
 labels_index = schade_gdf['index'].values
@@ -318,6 +327,12 @@ schade_gdf.to_file(output_file)
 schade_per_polder.to_csv(batch_fd.output.schade_polder.path)
 
 # %%
+import sys, importlib
+import rasterclass
+importlib.reload(rasterclass)
+source_path = 'C:\\Users\\wvangerwen\\Github\\hhnk-threedi-tools\\hhnk_threedi_tools\\tests\\data\\multiple_polders\\poldera\\03_3di_resultaten\\batch_results\\bwn_test #5 (1) klimaatsommen\\01_downloads\\max_depth_piek_GLG_T1000.tif'
 
+
+# %%
 
 # %%

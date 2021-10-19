@@ -1,6 +1,6 @@
 import geopandas as gpd
 import pandas as pd
-import gdal
+from osgeo import gdal
 import numpy as np
 from shapely.geometry import MultiPolygon, Polygon
 import os

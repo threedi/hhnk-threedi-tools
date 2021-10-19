@@ -42,7 +42,7 @@ def bereken_contante_schade_window(idx, window, raster_classes, frequencies, cw_
     return (window, stacked_raster_array)   
 
 
-def main_maak_schadekaart(output_raster, schade_rasters, frequencies, output_nodata, dv, n, min_blocksize=1000):
+def main_maak_schadekaart(output_raster, schade_rasters, frequencies, output_nodata, dv, n):
     """Maak de jaarlijkse schade contant door gebruik te maken van een discontovoet (dv) en investeringstermijn (n)
     Schades kleiner dan 1e-5 per pixel worden op 0 gezet. Dit heeft geen significant effect op de totale schade (tot enkele tientallen euros per peilgebied). Wel een aanzienlijk effect op de bestandsgrootte.
     """
@@ -50,7 +50,7 @@ def main_maak_schadekaart(output_raster, schade_rasters, frequencies, output_nod
     raster_classes = [rasterclass.Raster(r) for r in schade_rasters]
 
     damage_raster =  raster_classes[0]
-    parts = damage_raster.generate_blocks(min_blocksize=min_blocksize)
+    parts = damage_raster.generate_blocks()
     array_out = np.ones([damage_raster.shape[0],damage_raster.shape[1]])*output_nodata
 
     cw_factor = (1 - (1 - dv) ** n) / dv

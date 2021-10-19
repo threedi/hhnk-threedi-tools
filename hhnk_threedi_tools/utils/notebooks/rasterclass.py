@@ -1,6 +1,6 @@
 
 import hhnk_research_tools as hrt
-import gdal
+from osgeo import gdal
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd

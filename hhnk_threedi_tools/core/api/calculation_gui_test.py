@@ -60,13 +60,13 @@ simulation = None
 batch_started = False
 
 
-# #  %% TESTNNG %% ##
+##  %% TESTNNG %% ##
 # main_folder = "C:/Users/wvangerwen/Github/hhnk-threedi-tools/hhnk_threedi_tools/tests/data/multiple_polders"
 # # main_folder=None
 # base_scenario_name=None
 # lizard_api_key=LIZARD_API_KEY
 # if True:
-# #  %% TESTNNG %% ##
+##  %% TESTNNG %% ##
 def start_calculation_gui(
     main_folder=None,
     base_scenario_name=None,
@@ -423,7 +423,6 @@ def start_calculation_gui(
             fig, ax = create_plot(
                 time, rain, "Rain event", "Time [days]", "Rain intensity [mm/hour]"
             )
-            # fig.show()
 
 
         # Comebine plot and sliders
@@ -990,6 +989,7 @@ def start_calculation_gui(
         ).results
         models = []
 
+        print(model_list)
         for model in model_list:
             models.append(model.name)
 
@@ -1144,7 +1144,7 @@ def start_calculation_gui(
             selected_polder = selected_polder["new"]
         except:
             pass
-        update_folders(selected_polder) #[3:]) #TODO iets doen met nummering polders.
+        update_folders(selected_polder[3:])
         sqlite_selection.default_path = scenarios["folder"].model.path
 
     output_polder_dropdown.observe(on_select_change, names="value")
@@ -1214,7 +1214,7 @@ def start_calculation_gui(
 
         scenario_name = (
             base_scenario_name_str
-            + "{polder} #{revision} {batch_extra_name}".format(
+            + "batch {polder} #{revision} {batch_extra_name}".format(
                 polder=polder_name_widget.value,
                 revision=model_revision,
                 # i=len(scenarios["folder"].threedi_results.batch.revisions),
@@ -1431,9 +1431,7 @@ def start_calculation_gui(
         organisation_uuid = organisation_uuid = API_SETTINGS["org_uuid"][
             organisation_box.value
         ]
-        basic_processing = True
-        damage_processing = True
-        arrival_processing = False
+        damage_processing_data = API_SETTINGS["damage_processing"]
 
         models = get_models()
         model_id = None
@@ -1445,21 +1443,19 @@ def start_calculation_gui(
 
         sqlite = sqlite_selection.selected
         simulation = create_threedi_simulation(
-                threedi_api_client = threedi_api_client,
-                sqlite_file = sqlite,
-                scenario_name = scenario_name,
-                model_id = model_id,
-                organisation_uuid = organisation_uuid,
-                days_dry_start = days_dry_start,
-                hours_dry_start = hours_dry_start,
-                days_rain = days_rain,
-                hours_rain = hours_rain,
-                days_dry_end = days_dry_end,
-                hours_dry_end = hours_dry_end,
-                rain_intensity = rain_intensity,
-                basic_processing = basic_processing,
-                damage_processing = damage_processing,
-                arrival_processing = arrival_processing
+            threedi_api_client,
+            sqlite,
+            scenario_name,
+            model_id,
+            organisation_uuid,
+            days_dry_start,
+            hours_dry_start,
+            days_rain,
+            hours_rain,
+            days_dry_end,
+            hours_dry_end,
+            rain_intensity,
+            damage_processing_data,
         )
         update_API_call_widget_v3(simulation)
         update_available_results()
@@ -1991,6 +1987,7 @@ def start_calculation_gui(
     tab = widgets.Tab(children=[start_calculation_tab, start_batch_calculation_tab])
     tab.set_title(0, "single calculation")
     tab.set_title(1, "batch calculation")
+    display(tab)
 
     return tab
 
