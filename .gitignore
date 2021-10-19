@@ -9,6 +9,7 @@ venv_development_tools
 dist
 build
 .pytest_chache
+hhnk_threedi_tools/variables/localsettings.py
 
 #FIXME temporary
 01_downloads_blokt100fout
