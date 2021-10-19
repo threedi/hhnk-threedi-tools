@@ -11,7 +11,7 @@ Functional testing for zeroDoneD object
 import pathlib
 
 # Local imports
-from hhnk_threedi_tools.core.zero_d_one_d import ZeroDOneDTest
+from hhnk_threedi_tools.core.checks.zero_d_one_d import ZeroDOneDTest
 
 # Globals
 # __file__ = "C:/Users/chris.kerklaan/Documents/Github/hhnk-threedi-tests/hhnk_threedi_tests/tests/test_zero_d_one_d.py"

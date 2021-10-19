@@ -2,8 +2,16 @@ __pycache__
 build
 dist
 .idea
+.ipynb_checkpoints
 hhnk_wsa_tools.egg-info
 hhnk_threedi_tools.egg-info
 venv_development_tools
 dist
 build
+.pytest_chache
+hhnk_threedi_tools/variables/localsettings.py
+
+#FIXME temporary
+01_downloads_blokt100fout
+02_output_rasters
+egmond
