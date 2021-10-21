@@ -230,7 +230,7 @@ class BankLevelTest:
         if write:
             self.new_channels.to_file("new_channels.gpkg", driver="GPKG")
 
-    def run(self, revision=0):
+    def run(self):
         self.line_intersections()
         self.flowlines_1d2d()
 
@@ -272,7 +272,12 @@ class BankLevelTest:
         hrt.gdf_write_to_csv(
             self.results["new_manholes_df"], FLOW_1D2D_MANHOLES_NAME, csv_path
         )
-
+        
+    def write_output(self, name):
+        """ writes to output folder"""
+        new_folder = self.fenv.output.bank_levels.pl / name
+        new_folder.mkdir(parents=True, exist_ok=True)
+        self.write(str(new_folder), str(new_folder))
 
 def import_information(test_env: testEnvironment = None, **kwargs):
     """

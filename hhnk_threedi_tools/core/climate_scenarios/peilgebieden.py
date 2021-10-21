@@ -1,6 +1,5 @@
 
 
-import hhnk_threedi_tools.utils.notebooks.rasterclass as rasterclass #TODO to hrt.
 import hhnk_research_tools as hrt
 import geopandas as gpd
 from osgeo import gdal

@@ -8,7 +8,7 @@ the "ruimte-indicator". Optionally, a mask shapefile can be provided.
 import logging
 import numpy as np
 
-import hhnk_threedi_tools.utils.notebooks.rasterclass as rasterclass #TODO to hrt.
+import hhnk_research_tools as hrt
 import geopandas as gpd
 
 
@@ -68,11 +68,11 @@ def create_ruimtekaart(pgb_path, output_path, batch_fd):
     #Aggregate sum per region for each result for both the depth and damage rasters
 
     #DEPTH
-    labels_raster = rasterclass.Raster(batch_fd.output.temp.peilgebieden_diepte.path)
+    labels_raster = hrt.Raster(batch_fd.output.temp.peilgebieden_diepte.path)
     labels_index = pgb_gdf['index'].values
     for i, fn in enumerate(SCENARIOS):
         raster_path = getattr(batch_fd.downloads,fn).max_depth.path
-        input_raster = rasterclass.Raster(raster_path)
+        input_raster = hrt.Raster(raster_path)
 
         logger.info("Aggregating '{}'".format(raster_path))
 
@@ -82,11 +82,11 @@ def create_ruimtekaart(pgb_path, output_path, batch_fd):
         volumes_m3[:, i] *= input_raster.pixelarea #take pixelsize into account. 
 
     #DAMAGE
-    labels_raster = rasterclass.Raster(batch_fd.output.temp.peilgebieden_schade.path)
+    labels_raster = hrt.Raster(batch_fd.output.temp.peilgebieden_schade.path)
     labels_index = pgb_gdf['index'].values
     for i, fn in enumerate(SCENARIOS):
         raster_path = getattr(batch_fd.downloads,fn).total_damage.path
-        input_raster = rasterclass.Raster(raster_path)
+        input_raster = hrt.Raster(raster_path)
 
         logger.info("Aggregating '{}'".format(raster_path))
 

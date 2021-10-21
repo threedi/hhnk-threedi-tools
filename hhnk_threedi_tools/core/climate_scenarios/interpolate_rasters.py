@@ -1,8 +1,8 @@
 
 import numpy as np
 
-import hhnk_threedi_tools.utils.notebooks.rasterclass as rasterclass #TODO to hrt.
 import hhnk_research_tools as hrt
+
   
 """Functies die de 18 water depth rasters inladen van een klimaatscenario en daarmee """
 def stack_raster_arrays(raster_classes, window):
@@ -108,10 +108,10 @@ def main_interpolate_rasters(T, output_file, rasters, frequenties, output_nodata
     Dit wordt gedaan voor de waterdiepterasters en de schaderasters"""
     
     if not output_file.exists:
-        dem_raster = rasterclass.Raster(dem_path)
+        dem_raster = hrt.Raster(dem_path)
 
         #Inladen rasters als class
-        raster_classes = [rasterclass.Raster(r) for r in rasters]
+        raster_classes = [hrt.Raster(r) for r in rasters]
 
         depth_raster =  raster_classes[0]
         parts = depth_raster.generate_blocks()

@@ -2,7 +2,6 @@
 
 import numpy as np
 
-import hhnk_threedi_tools.utils.notebooks.rasterclass as rasterclass #TODO to hrt.
 import hhnk_research_tools as hrt
 
 def stack_raster_arrays(raster_classes, window):
@@ -47,7 +46,7 @@ def main_maak_schadekaart(output_raster, schade_rasters, frequencies, output_nod
     Schades kleiner dan 1e-5 per pixel worden op 0 gezet. Dit heeft geen significant effect op de totale schade (tot enkele tientallen euros per peilgebied). Wel een aanzienlijk effect op de bestandsgrootte.
     """
     #Inladen rasters als class
-    raster_classes = [rasterclass.Raster(r) for r in schade_rasters]
+    raster_classes = [hrt.Raster(r) for r in schade_rasters]
 
     damage_raster =  raster_classes[0]
     parts = damage_raster.generate_blocks()
