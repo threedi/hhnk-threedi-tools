@@ -48,7 +48,6 @@ from hhnk_threedi_tools.variables.api_settings import (
     API_SETTINGS,
     MODEL_TYPES,
 )
-from hhnk_threedi_tools.variables.localsettings import LIZARD_API_KEY
 
 threedi_api_client = None
 threedi_repo_api = None
@@ -70,8 +69,13 @@ batch_started = False
 def start_calculation_gui(
     main_folder=None,
     base_scenario_name=None,
-    lizard_api_key=LIZARD_API_KEY,
+    lizard_api_key=None,
 ):
+    
+    if not lizard_api_key:
+        raise ValueError("""Please fill in the lizard api key.\n
+                         Log in and create your own at: https://hhnk.lizard.net/management/personal_api_keys
+                         """)
     dl.LIZARD_URL = "https://hhnk.lizard.net/api/v3/"
     THREEDI_API_HOST = "https://api.3di.live/v3.0"
     RESULT_LIMIT = 20
@@ -127,6 +131,20 @@ def start_calculation_gui(
         folder = Folders(os.path.join(main_folder, polder_name), create=False)
         output_polder_dropdown.value = folder.name
         scenarios["folder"] = folder
+    
+    # # --------------------------------------------------------------------------------------------------
+    # # 0. Select polder folder
+    # # --------------------------------------------------------------------------------------------------
+
+    # polders_folder_selection = FileChooser(os.getcwd())
+    # polders_folder_selection.layout.grid_area = "polders_folder"
+
+    # polders_folder_label = widgets.Label(
+    #     "Select the folder where multiple polders are situated",
+    #     layout=item_layout(grid_area="polders_folder_label"),
+    # )
+
+
 
     # --------------------------------------------------------------------------------------------------
     # 1. Login with 3Di account
