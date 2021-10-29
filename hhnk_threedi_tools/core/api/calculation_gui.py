@@ -1369,7 +1369,7 @@ def start_calculation_gui(
                 repository_dropdown.value is not None
                 and revision_dropdown.value is not None
                 and model_name_dropdown.value is not None
-                and sqlite_selection.selected is not None
+                #and sqlite_selection.selected is not None
             ):
                 create_simulation_button.disabled = False
                 create_simulation_button.style.button_color = "lightgreen"

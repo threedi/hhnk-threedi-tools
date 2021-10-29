@@ -76,6 +76,23 @@ def _run_notebook(notebook_path):
     )
     
     
+def open_server():
+    system, python_interpreter = _get_python_interpreter()
+    if system == "qgis":
+        command = [python_interpreter, "-m", "notebook"]
+    else:
+        command = [python_interpreter, "-m", "jupyter", "notebook"]
+    
+    process = subprocess.Popen(
+        command,
+        universal_newlines=True,
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    
+    
+    
     # i, o, e = (process.stdin, process.stdout, process.stderr)
     # i.close()
     # result = o.read() + e.read()
