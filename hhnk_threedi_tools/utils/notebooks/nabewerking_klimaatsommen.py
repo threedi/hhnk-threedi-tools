@@ -44,8 +44,8 @@ import importlib.resources as pkg_resources #Load resource from package
 import ipywidgets as widgets
 
 import sys, importlib
-import hhnk_threedi_tools.utils.notebooks.rasterclass as rasterclass
-importlib.reload(rasterclass)
+# import hhnk_threedi_tools.utils.notebooks.rasterclass as rasterclass
+# importlib.reload(rasterclass)
 
 #User input
 # %%
@@ -55,7 +55,7 @@ polder = 'egmond'
 # --------------------------------------------------
 
 folder = Folders(os.path.join(polders_folder, polder))
-
+# %%
 
 def item_layout(width="95%", grid_area="", **kwargs):
     return widgets.Layout(
@@ -178,7 +178,7 @@ mask_damage = rasterize_maskerkaart(input_file=batch_fd.output.maskerkaart.path,
 # %% rasterize peilgebieden
 
 for raster_type, raster_name in zip(['max_depth', 'total_damage'], ['diepte', 'schade']):
-    peilgebieden.rasterize_peilgebieden(input_raster = rasterclass.Raster(df.iloc[0][raster_type]),
+    peilgebieden.rasterize_peilgebieden(input_raster = hrt.Raster(df.iloc[0][raster_type]),
                                                     output_file = getattr(batch_fd.output.temp, f'peilgebieden_{raster_name}'),
                                                     input_peilgebieden= folder.source_data.peilgebieden.peilgebieden,
                                                     output_peilgebieden = batch_fd.output.temp.peilgebieden,
@@ -218,11 +218,11 @@ for T in [10, 100, 1000]:
 
 # %% Filter inundatiediepte
 for T in [10, 100, 1000]:
-    input_raster = rasterclass.Raster(getattr(batch_fd.output, f'depth_T{T}_totaal').path)
+    input_raster = hrt.Raster(getattr(batch_fd.output, f'depth_T{T}_totaal').path)
 
     # Creeer masker voor plas en overlast
     for mask_type in ['plas','overlast']:
-        mask = rasterclass.Raster(getattr(batch_fd.output, f'mask_diepte_{mask_type}').path)
+        mask = hrt.Raster(getattr(batch_fd.output, f'mask_diepte_{mask_type}').path)
 
         output_raster = getattr(batch_fd.output, f'depth_T{T}_{mask_type}')
 
@@ -242,7 +242,6 @@ for T in [10, 100, 1000]:
             print(f'{output_raster.name} already exists')
 raster_array=None
 mask_array=None
-
 
 
 # %% Schadekaart
@@ -268,11 +267,11 @@ else:
 
 
 # %% Filter schadekaart
-input_raster = rasterclass.Raster(batch_fd.output.cw_schade_totaal.path)
+input_raster = hrt.Raster(batch_fd.output.cw_schade_totaal.path)
 
 # Creeer masker voor plas en overlast
 for mask_type in ['plas','overlast']:
-    mask = rasterclass.Raster(getattr(batch_fd.output, f'mask_schade_{mask_type}').path)
+    mask = hrt.Raster(getattr(batch_fd.output, f'mask_schade_{mask_type}').path)
 
     output_raster = getattr(batch_fd.output, f'cw_schade_{mask_type}')
 
@@ -299,7 +298,7 @@ mask_array=None
 # %% Schade per peilgebied
 
 schade_gdf = gpd.read_file(batch_fd.output.temp.peilgebieden.path)
-labels_raster = rasterclass.Raster(batch_fd.output.temp.peilgebieden_schade.path)
+labels_raster = hrt.Raster(batch_fd.output.temp.peilgebieden_schade.path)
 labels_index = schade_gdf['index'].values
 
 output_file = batch_fd.output.schade_peilgebied.path
@@ -307,7 +306,7 @@ output_file = batch_fd.output.schade_peilgebied.path
 
 #Bereken totale schade per peilgebied voor de twee gemaskerde schaderasters.
 for mask_type, mask_name in zip(['plas','overlast'], ['mv', 'ws']):
-    schade_raster = rasterclass.Raster(getattr(batch_fd.output, f'cw_schade_{mask_type}').path)
+    schade_raster = hrt.Raster(getattr(batch_fd.output, f'cw_schade_{mask_type}').path)
 
     #Calculate sum per region
     accum  = schade_raster.sum_labels(labels_raster=labels_raster, labels_index=labels_index)
@@ -328,8 +327,7 @@ schade_per_polder.to_csv(batch_fd.output.schade_polder.path)
 
 # %%
 import sys, importlib
-import rasterclass
-importlib.reload(rasterclass)
+
 source_path = 'C:\\Users\\wvangerwen\\Github\\hhnk-threedi-tools\\hhnk_threedi_tools\\tests\\data\\multiple_polders\\poldera\\03_3di_resultaten\\batch_results\\bwn_test #5 (1) klimaatsommen\\01_downloads\\max_depth_piek_GLG_T1000.tif'
 
 
