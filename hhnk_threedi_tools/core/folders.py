@@ -295,6 +295,7 @@ class Folders(Folder):
 
     def __init__(self, base, create=True):
         super().__init__(base)
+        
 
         # source
         self.source_data = SourcePaths(self.base)
@@ -310,6 +311,8 @@ class Folders(Folder):
 
         if create and not self.exists:
             self.create_project()
+            
+        
 
     @property
     def structure(self):

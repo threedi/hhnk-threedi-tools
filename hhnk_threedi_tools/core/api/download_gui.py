@@ -2,7 +2,7 @@
 import os
 import re
 
-import hhnk_threedi_tools.utils.notebooks.rasterclass as rasterclass #TODO to hrt.
+
 
 
 # Third-party imports
@@ -23,6 +23,7 @@ from hhnk_threedi_tools.variables.api_settings import (
 )
 
 from hhnk_threedi_tools.variables.localsettings import LIZARD_API_KEY
+import hhnk_research_tools as hrt
 
 # from functions_nabewerking.create_batch_folders_dict import create_batch_folders_dict
 
@@ -899,7 +900,7 @@ def download_gui(main_folder=None):
         # Get raster size of dem, max depth rasters are downloaded on this resolution.
         print(scenarios["folder"])
 
-        dem = rasterclass.Raster(folder.model.rasters.full_path(dem_path_dropdown.value))
+        dem = hrt.Raster(folder.model.rasters.full_path(dem_path_dropdown.value))
 
         # Start download of selected files (if any are selected) ------------------------------------------------
         for name, row in df.iterrows():
