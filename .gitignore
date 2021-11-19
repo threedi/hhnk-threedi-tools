@@ -15,3 +15,6 @@ hhnk_threedi_tools/variables/localsettings.py
 01_downloads_blokt100fout
 02_output_rasters
 egmond
+notebook_data.json
+gridadmin.h5
+results_3di.nc

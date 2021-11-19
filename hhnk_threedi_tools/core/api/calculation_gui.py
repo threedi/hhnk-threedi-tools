@@ -70,7 +70,13 @@ def start_calculation_gui(
     main_folder=None,
     base_scenario_name=None,
     lizard_api_key=None,
+    data=None
 ):
+    
+    if data:
+        lizard_api_key = data['lizard_api_key']
+        main_folder = data['polder_folder']
+        
     
     if not lizard_api_key:
         raise ValueError("""Please fill in the lizard api key.\n
@@ -123,14 +129,14 @@ def start_calculation_gui(
         main_folder = os.getcwd()
 
     # Fetch the first folder
-    scenarios["folder"] = Folders(
-        os.path.join(main_folder, os.listdir(main_folder)[0]), create=False
-    )
+    scenarios["folder"] = Folders(main_folder, create=False)
+
 
     def update_folders(polder_name):
-        folder = Folders(os.path.join(main_folder, polder_name), create=False)
-        output_polder_dropdown.value = folder.name
-        scenarios["folder"] = folder
+        #folder = Folders(os.path.join(main_folder, polder_name), create=False)
+        output_polder_dropdown.value = polder_name
+        #scenarios["folder"] = folder
+        
     
     # # --------------------------------------------------------------------------------------------------
     # # 0. Select polder folder
@@ -786,7 +792,7 @@ def start_calculation_gui(
 
     # sorted([naam for naam in next(os.walk(main_folder))[1] if naam[0:3] not in ['00.','999','.ip']])
     output_polder_dropdown = widgets.Dropdown(
-        options=os.listdir(main_folder),
+        options=['03_3di_resultaten'],
         layout=item_layout(grid_area="output_polder_dropdown"),
     )
 

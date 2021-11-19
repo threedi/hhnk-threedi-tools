@@ -11,19 +11,67 @@ import os
 import sys
 import subprocess
 import pathlib
+import tempfile
+import shutil
+import json
+import multiprocessing
 
+CREATE_NEW_PROCESS_GROUP = 0x00000200
+DETACHED_PROCESS = 0x00000008
 
-def open_notebook(filename):
-    """opens a jupyter notebook using nbopen"""
+NOTEBOOK_DIRECTORY = str(pathlib.Path(__file__).parent.absolute())
+
+class TempCopy:
+
+    def __init__(self,original_path):
+        self.original_path = original_path
+
+    def __enter__(self):
+        temp_dir = tempfile.gettempdir()
+        base_path = os.path.basename(self.original_path)
+        self.path = os.path.join(temp_dir,base_path)
+        shutil.copy2(self.original_path, self.path)
+        return self.path
+
+    def __exit__(self,exc_type, exc_val, exc_tb):
+        os.remove(self.path)
+        
+        
+def copy_notebooks(new_dir, original_dir=NOTEBOOK_DIRECTORY):
+    os.makedirs(new_dir,exist_ok=True)
+    
+    for file in os.listdir(original_dir):
+        if file.endswith(".ipynb"):
+            shutil.copy2(original_dir + '/' + file, new_dir + "/" + file)
+            
+
+def write_notebook_json(directory, data):
+    with open(directory + '/notebook_data.json', 'w') as f:
+        json.dump(data, f)
+        
+def read_notebook_json(directory):
+    with open(directory+"/notebook_data.json") as f:
+        return json.load(f)
+
+def open_notebook(filename, temp=False):
+    """Creates a copy and opens a jupyter notebook using nbopen"""
     
     
     ipy_dir = pathlib.Path(__file__).parent
 
     if not  '.ipynb' in filename:
         filename = filename + '.ipynb'
+    
+    assert os.path.exists(str(ipy_dir/ filename))
+    
+    if temp:
+        with TempCopy(str(ipy_dir/ filename))  as temp_copy_path:
+            print("Opening copy", temp_copy_path)
+            _run_notebook(temp_copy_path)
+    else:
+        _run_notebook(str(ipy_dir/ filename))
         
-    _run_notebook(str(ipy_dir / filename))
-
+        
 
 def _get_python_interpreter():
     """Return the path to the python3 interpreter.
@@ -75,33 +123,38 @@ def _run_notebook(notebook_path):
         stderr=subprocess.PIPE,
     )
     
+    # with process.stdout:
+    #     for line in iter(process.stdout.readline, b''):
+    #         print(line)
+            
+    # process.wait()
     
-def open_server():
+
+def open_server(directory=None):
+    
     system, python_interpreter = _get_python_interpreter()
     if system == "qgis":
         command = [python_interpreter, "-m", "notebook"]
     else:
         command = [python_interpreter, "-m", "jupyter", "notebook"]
     
+    if directory:
+        command.append(directory)
+    
     process = subprocess.Popen(
         command,
+        shell=True, 
         universal_newlines=True,
-        stdin=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        stdin=None,
+        stdout=None,
+        stderr=None,
+        close_fds=True,
+        creationflags=DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP
     )
+    print(f"Started processing with pid: {process.pid}")
+    return process.pid
     
     
-    
-    # i, o, e = (process.stdin, process.stdout, process.stderr)
-    # i.close()
-    # result = o.read() + e.read()
-    # o.close()
-    # e.close()
-    # print(result)
-    # exit_code = process.wait()
-    # if exit_code:
-    #     raise RuntimeError("Notebook failed")
 
 
 

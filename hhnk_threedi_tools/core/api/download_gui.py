@@ -22,15 +22,18 @@ from hhnk_threedi_tools.variables.api_settings import (
     RAW_DOWNLOADS,
 )
 
-from hhnk_threedi_tools.variables.localsettings import LIZARD_API_KEY
 import hhnk_research_tools as hrt
 
 # from functions_nabewerking.create_batch_folders_dict import create_batch_folders_dict
 
 
-def download_gui(main_folder=None):
+def download_gui(main_folder=None, lizard_api_key="", data=None):
     dl.LIZARD_URL = "https://hhnk.lizard.net/api/v3/"
-
+    
+    if data:
+        main_folder = data['polder_folder']
+        lizard_api_key = data['lizard_api_key']
+        
     def new_get_api_key():
         return api_key_widget.value
 
@@ -59,14 +62,12 @@ def download_gui(main_folder=None):
         main_folder = os.getcwd()
 
     # Fetch the first folder
-    scenarios["folder"] = Folders(
-        os.path.join(main_folder, os.listdir(main_folder)[0]), create=False
-    )
+    scenarios["folder"] = Folders(main_folder, create=False)
 
     def update_folders_dict(polder_name):
-        folder = Folders(os.path.join(main_folder, polder_name), create=False)
-        output_polder_dropdown.value = folder.name
-        scenarios["folder"] = folder
+        #folder = Folders(os.path.join(main_folder, polder_name), create=False)
+        output_polder_dropdown.value = polder_name
+        #scenarios["folder"] = folder
         # old
         # scenarios['folders_dict'] = Folders(polder_name)
         # output_polder_dropdown.value=scenarios['folders_dict']['polder']['full_naam']
@@ -352,7 +353,7 @@ def download_gui(main_folder=None):
 
     # Select folder to download batch to
     batch_folder_label = widgets.Label(
-        "Naam van batch folder:", layout=item_layout(grid_area="batch_folder_label")
+        "Naam van batch folder (maak aan als niet bestaat!):", layout=item_layout(grid_area="batch_folder_label")
     )
     batch_folder_dropdown = widgets.Dropdown(
         options="",
@@ -607,7 +608,7 @@ def download_gui(main_folder=None):
         if scenarios['folder'].model.rasters.find_dem()=='':
             dem_path_dropdown.options = [i.split(os.sep)[-1] for i in scenarios['folder'].model.rasters.find_ext('tif')]
         else:
-            dem_path_dropdown.options = [scenarios['folder'].model.rasters.dem.name]
+            dem_path_dropdown.options = [scenarios['folder'].model.rasters.dem.name + '.tif']
 
     # If a new value is selected in the download selection folder, update the output folder
     download_selection_box.observe(update_output_selectbox, names="value")
@@ -900,6 +901,7 @@ def download_gui(main_folder=None):
         # Get raster size of dem, max depth rasters are downloaded on this resolution.
         print(scenarios["folder"])
 
+        print(folder.model.rasters.full_path(dem_path_dropdown.value))
         dem = hrt.Raster(folder.model.rasters.full_path(dem_path_dropdown.value))
 
         # Start download of selected files (if any are selected) ------------------------------------------------
@@ -996,9 +998,10 @@ def download_gui(main_folder=None):
     # Reload output folder so it shows correct values first time around
     on_select_change(output_polder_dropdown.value)
     update_buttons()
+    
 
-    api_key_widget.value = LIZARD_API_KEY
-    api_key_widget.disabled = True
+    api_key_widget.value = lizard_api_key
+    api_key_widget.disabled = False
 
     ###################################################################################################
     # Create GUI

@@ -18,6 +18,13 @@ from hhnk_threedi_tools.core.checks.zero_d_one_d import ZeroDOneDTest
 
 # notebooks
 from hhnk_threedi_tools.utils.notebooks.run import open_notebook
+from hhnk_threedi_tools.utils.notebooks.run import write_notebook_json
+from hhnk_threedi_tools.utils.notebooks.run import read_notebook_json
+from hhnk_threedi_tools.utils.notebooks.run import open_server
+from hhnk_threedi_tools.utils.notebooks.run import copy_notebooks
+
+# qgis
+from hhnk_threedi_tools.qgis.project import copy_projects
 
 # backup
 from hhnk_threedi_tools.core.checks.model_backup import (

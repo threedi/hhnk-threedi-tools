@@ -293,11 +293,11 @@ def create_threedi_simulation(
             continue
         break
 
-    # add control structures (from sqlite)
-    add_control_from_sqlite(threedi_sim_api, sqlite_file, simulation)
+    if sqlite_file is not None:
+        # add control structures (from sqlite)
+        add_control_from_sqlite(threedi_sim_api, sqlite_file, simulation)
+        add_laterals_from_sqlite(threedi_sim_api, sqlite_file, simulation)
 
-    # add laterals (from sqlite)
-    add_laterals_from_sqlite(threedi_sim_api, sqlite_file, simulation)
 
     # add rainfall event
     rain_intensity_mmph = float(rain_intensity)  # mm/hour
