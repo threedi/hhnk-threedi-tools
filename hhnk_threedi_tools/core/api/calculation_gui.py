@@ -1,7 +1,7 @@
 # %%
 # system imports
 import sys
-sys.path.append('C:\\Users\wvangerwen\github\hhnk-threedi-tools')
+# sys.path.append('C:\\Users\wvangerwen\github\hhnk-threedi-tools')
 
 import os
 import shutil

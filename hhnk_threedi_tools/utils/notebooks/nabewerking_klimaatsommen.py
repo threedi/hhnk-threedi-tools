@@ -11,7 +11,7 @@ import sys
 
 from numpy.lib.function_base import kaiser
 # sys.path.append(r'C:/Users/chris.kerklaan/Documents/Github/hhnk-threedi-tools')
-sys.path.append('C:\\Users\wvangerwen\github\hhnk-threedi-tools')
+# sys.path.append('C:\\Users\wvangerwen\github\hhnk-threedi-tools')
 
 from hhnk_threedi_tools import Folders
 import hhnk_threedi_tools as htt
