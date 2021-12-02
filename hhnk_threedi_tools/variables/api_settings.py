@@ -39,31 +39,33 @@ RAIN_SCENARIOS = ["T10", "T100", "T1000"]
 API_SETTINGS = {}
 API_SETTINGS["org_uuid"] = {}
 API_SETTINGS["org_uuid"]["BWN HHNK"] = "48dac75bef8a42ebbb52e8f89bbdb9f2"
-API_SETTINGS["org_uuid"]["Hoogheemraadschap Hollands Noorderkwartier"] = "474afd212f2e4b4f82615142f1d67acb"
+API_SETTINGS["org_uuid"][
+    "Hoogheemraadschap Hollands Noorderkwartier"
+] = "474afd212f2e4b4f82615142f1d67acb"
 API_SETTINGS["store_results"] = {
     "process_basic_results": True,
     "arrival_time": False,
 }
 API_SETTINGS["basic_processing"] = {
-        "process_basic_results": True,
-    }
+    "process_basic_results": True,
+}
 API_SETTINGS["damage_processing"] = {
-        "basic_post_processing": True,
-        "cost_type": "avg", # 2,
-        "flood_month": "sep", #9,
-        "inundation_period": 48,
-        "repair_time_infrastructure": 120,
-        "repair_time_buildings": 240,
-    }
-        #TODO verwijderen als oude settings werken.
-    # damage_processing_data = {
-    #     "basic_post_processing": True,
-    #     "cost_type": "avg",
-    #     "flood_month": "sep",
-    #     "inundation_period": 1,
-    #     "repair_time_infrastructure": 6,
-    #     "repair_time_buildings": 24,
-    # }
+    "basic_post_processing": True,
+    "cost_type": "avg",  # 2,
+    "flood_month": "sep",  # 9,
+    "inundation_period": 48,
+    "repair_time_infrastructure": 120,
+    "repair_time_buildings": 240,
+}
+# TODO verwijderen als oude settings werken.
+# damage_processing_data = {
+#     "basic_post_processing": True,
+#     "cost_type": "avg",
+#     "flood_month": "sep",
+#     "inundation_period": 1,
+#     "repair_time_infrastructure": 6,
+#     "repair_time_buildings": 24,
+# }
 
 MODEL_TYPES = ["0d1d_test", "1d2d_test", "1d2d_glg", "1d2d_ggg", "1d2d_ghg"]
 

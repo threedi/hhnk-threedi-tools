@@ -3,8 +3,6 @@ import os
 import re
 
 
-
-
 # Third-party imports
 import pandas as pd
 import ipywidgets as widgets
@@ -29,11 +27,11 @@ import hhnk_research_tools as hrt
 
 def download_gui(main_folder=None, lizard_api_key="", data=None):
     dl.LIZARD_URL = "https://hhnk.lizard.net/api/v3/"
-    
+
     if data:
-        main_folder = data['polder_folder']
-        lizard_api_key = data['lizard_api_key']
-        
+        main_folder = data["polder_folder"]
+        lizard_api_key = data["lizard_api_key"]
+
     def new_get_api_key():
         return api_key_widget.value
 
@@ -65,9 +63,9 @@ def download_gui(main_folder=None, lizard_api_key="", data=None):
     scenarios["folder"] = Folders(main_folder, create=False)
 
     def update_folders_dict(polder_name):
-        #folder = Folders(os.path.join(main_folder, polder_name), create=False)
+        # folder = Folders(os.path.join(main_folder, polder_name), create=False)
         output_polder_dropdown.value = polder_name
-        #scenarios["folder"] = folder
+        # scenarios["folder"] = folder
         # old
         # scenarios['folders_dict'] = Folders(polder_name)
         # output_polder_dropdown.value=scenarios['folders_dict']['polder']['full_naam']
@@ -353,7 +351,8 @@ def download_gui(main_folder=None, lizard_api_key="", data=None):
 
     # Select folder to download batch to
     batch_folder_label = widgets.Label(
-        "Naam van batch folder (maak aan als niet bestaat!):", layout=item_layout(grid_area="batch_folder_label")
+        "Naam van batch folder (maak aan als niet bestaat!):",
+        layout=item_layout(grid_area="batch_folder_label"),
     )
     batch_folder_dropdown = widgets.Dropdown(
         options="",
@@ -361,7 +360,7 @@ def download_gui(main_folder=None, lizard_api_key="", data=None):
         layout=item_layout(grid_area="batch_folder_dropdown"),
     )
 
-    #Select DEM file to use to determine which resolution to download depth rasters on
+    # Select DEM file to use to determine which resolution to download depth rasters on
     dem_path_label = widgets.Label(
         "Locatie DEM (voor batch):", layout=item_layout(grid_area="dem_path_label")
     )
@@ -370,9 +369,6 @@ def download_gui(main_folder=None, lizard_api_key="", data=None):
         disabled=False,
         layout=item_layout(grid_area="dem_path_dropdown"),
     )
-
-
-
 
     ###################################################################################################
     # Updating and interaction of the widgets
@@ -604,11 +600,16 @@ def download_gui(main_folder=None, lizard_api_key="", data=None):
         # Select these new records.
         output_select_box.value = selected_download_new
 
-        #Set Dem path for batch
-        if scenarios['folder'].model.rasters.find_dem()=='':
-            dem_path_dropdown.options = [i.split(os.sep)[-1] for i in scenarios['folder'].model.rasters.find_ext('tif')]
+        # Set Dem path for batch
+        if scenarios["folder"].model.rasters.find_dem() == "":
+            dem_path_dropdown.options = [
+                i.split(os.sep)[-1]
+                for i in scenarios["folder"].model.rasters.find_ext("tif")
+            ]
         else:
-            dem_path_dropdown.options = [scenarios['folder'].model.rasters.dem.name + '.tif']
+            dem_path_dropdown.options = [
+                scenarios["folder"].model.rasters.dem.name + ".tif"
+            ]
 
     # If a new value is selected in the download selection folder, update the output folder
     download_selection_box.observe(update_output_selectbox, names="value")
@@ -862,7 +863,9 @@ def download_gui(main_folder=None, lizard_api_key="", data=None):
             for rain_type in RAIN_TYPES:
                 for groundwater in GROUNDWATER:
                     for rain_scenario in RAIN_SCENARIOS:
-                        rain_scenario = rain_scenario.strip("T")  # strip 'T' because its not used in older versions.
+                        rain_scenario = rain_scenario.strip(
+                            "T"
+                        )  # strip 'T' because its not used in older versions.
                         if (
                             (rain_type in name)
                             and (groundwater in name)
@@ -876,7 +879,9 @@ def download_gui(main_folder=None, lizard_api_key="", data=None):
                                 df.loc[index, "dl_name"] = "{}_{}_{}".format(
                                     rain_type, groundwater, "T{}".format(rain_scenario)
                                 )
-                                df.loc[index, "uuid"] = scenarios["results"][scenarios["names"].index(name)]["uuid"]
+                                df.loc[index, "uuid"] = scenarios["results"][
+                                    scenarios["names"].index(name)
+                                ]["uuid"]
 
                         # Sommige resultaten zijn aangeroepen met GG ipv GGG in de naam. Onderstaande elif statement om dit te voorkomen
                         elif (
@@ -893,7 +898,9 @@ def download_gui(main_folder=None, lizard_api_key="", data=None):
                                 df.loc[index, "dl_name"] = "{}_{}_{}".format(
                                     rain_type, groundwater, "T{}".format(rain_scenario)
                                 )
-                                df.loc[index, "uuid"] = scenarios["results"][scenarios["names"].index(name)]["uuid"]
+                                df.loc[index, "uuid"] = scenarios["results"][
+                                    scenarios["names"].index(name)
+                                ]["uuid"]
         df.set_index("name", inplace=True)
         # display(df)
         df.to_csv(str(batch_fd.downloads.download_uuid))
@@ -917,9 +924,9 @@ def download_gui(main_folder=None, lizard_api_key="", data=None):
 
             if row["dl_name"] in RAW_DOWNLOADS:
 
-                output_folder = getattr(batch_fd.downloads, row['dl_name']).netcdf
+                output_folder = getattr(batch_fd.downloads, row["dl_name"]).netcdf
 
-                #FIXME hoort dit niet een niveau hoger te staan?
+                # FIXME hoort dit niet een niveau hoger te staan?
                 # De 3Di plugin kan geen '[' en ']' aan.
                 # output_folder = output_folder.replace("[", "")
                 # output_folder = output_folder.replace("]", "")
@@ -937,8 +944,8 @@ def download_gui(main_folder=None, lizard_api_key="", data=None):
 
             # TODO below, make a list of uuid's, bounds, resolution and pathname
             # Donwload max depth and damage rasters
-            #TODO max_depth should be defined in folders.py?
-            max_depth = getattr(batch_fd.downloads, row['dl_name']).max_depth
+            # TODO max_depth should be defined in folders.py?
+            max_depth = getattr(batch_fd.downloads, row["dl_name"]).max_depth
 
             if not max_depth.exists:
                 print("Preparing download of max waterdepth raster")
@@ -954,7 +961,7 @@ def download_gui(main_folder=None, lizard_api_key="", data=None):
                 print("{} already on system".format(max_depth.name))
 
             # total_damage = str(batch_fd.downloads.totaal_total_damage)
-            total_damage = getattr(batch_fd.downloads, row['dl_name']).total_damage
+            total_damage = getattr(batch_fd.downloads, row["dl_name"]).total_damage
 
             if not total_damage.exists:
                 print("Preparing download of total damage raster")
@@ -998,7 +1005,6 @@ def download_gui(main_folder=None, lizard_api_key="", data=None):
     # Reload output folder so it shows correct values first time around
     on_select_change(output_polder_dropdown.value)
     update_buttons()
-    
 
     api_key_widget.value = lizard_api_key
     api_key_widget.disabled = False

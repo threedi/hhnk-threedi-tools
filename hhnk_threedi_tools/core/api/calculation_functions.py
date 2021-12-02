@@ -216,6 +216,7 @@ def add_control_from_sqlite(threedi_sim_api, db_file, simulation):
                     raise
             break
 
+
 def create_threedi_simulation(
     threedi_api_client,
     sqlite_file,
@@ -231,7 +232,7 @@ def create_threedi_simulation(
     rain_intensity,
     basic_processing,
     damage_processing,
-    arrival_processing
+    arrival_processing,
 ):  # , days_dry_start, hours_dry_start, days_rain, hours_rain, days_dry_end, hours_dry_end, rain_intensity, organisation_uuid, model_slug, scenario_name, store_results):
     """
     Creates and returns a Simulation (doesn't start yet) and initializes it with
@@ -298,7 +299,6 @@ def create_threedi_simulation(
         add_control_from_sqlite(threedi_sim_api, sqlite_file, simulation)
         add_laterals_from_sqlite(threedi_sim_api, sqlite_file, simulation)
 
-
     # add rainfall event
     rain_intensity_mmph = float(rain_intensity)  # mm/hour
     rain_intensity_mps = rain_intensity_mmph / (1000 * 3600)
@@ -344,7 +344,7 @@ def create_threedi_simulation(
                 continue
             break
 
-    #Damage posprocessing
+    # Damage posprocessing
     if damage_processing:
         damage_processing_data = API_SETTINGS["damage_processing"]
         while True:
@@ -359,7 +359,7 @@ def create_threedi_simulation(
 
     if arrival_processing:
         arrival_processing_data = {"basic_post_processing": True}
-        #Arrival time 
+        # Arrival time
         while True:
             try:
                 threedi_sim_api.simulations_results_post_processing_lizard_arrival_create(

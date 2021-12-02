@@ -1,6 +1,7 @@
 # %%
 # system imports
 import sys
+
 # sys.path.append('C:\\Users\wvangerwen\github\hhnk-threedi-tools')
 
 import os
@@ -36,7 +37,10 @@ from hhnk_threedi_tools.core.api.calculation_functions import (
     create_threedi_simulation,
 )
 
-from hhnk_threedi_tools.core.api.download_functions import create_download_url, start_download
+from hhnk_threedi_tools.core.api.download_functions import (
+    create_download_url,
+    start_download,
+)
 
 # Globals
 from hhnk_threedi_tools.variables.api_settings import (
@@ -67,21 +71,19 @@ batch_started = False
 # if True:
 # #  %% TESTNNG %% ##
 def start_calculation_gui(
-    main_folder=None,
-    base_scenario_name=None,
-    lizard_api_key=None,
-    data=None
+    main_folder=None, base_scenario_name=None, lizard_api_key=None, data=None
 ):
-    
+
     if data:
-        lizard_api_key = data['lizard_api_key']
-        main_folder = data['polder_folder']
-        
-    
+        lizard_api_key = data["lizard_api_key"]
+        main_folder = data["polder_folder"]
+
     if not lizard_api_key:
-        raise ValueError("""Please fill in the lizard api key.\n
+        raise ValueError(
+            """Please fill in the lizard api key.\n
                          Log in and create your own at: https://hhnk.lizard.net/management/personal_api_keys
-                         """)
+                         """
+        )
     dl.LIZARD_URL = "https://hhnk.lizard.net/api/v3/"
     THREEDI_API_HOST = "https://api.3di.live/v3.0"
     RESULT_LIMIT = 20
@@ -104,14 +106,13 @@ def start_calculation_gui(
             "Content-Type": "application/json",
         }
         return headers_results
-    setattr(dl, "get_headers", new_get_headers)
 
+    setattr(dl, "get_headers", new_get_headers)
 
     def item_layout(width="95%", grid_area="", **kwargs):
         return widgets.Layout(
             width=width, grid_area=grid_area, **kwargs
         )  # override the default width of the button to 'auto' to let the button grow
-
 
     ###################################################################################################
     # Layout of the GUI
@@ -131,13 +132,11 @@ def start_calculation_gui(
     # Fetch the first folder
     scenarios["folder"] = Folders(main_folder, create=False)
 
-
     def update_folders(polder_name):
-        #folder = Folders(os.path.join(main_folder, polder_name), create=False)
+        # folder = Folders(os.path.join(main_folder, polder_name), create=False)
         output_polder_dropdown.value = polder_name
-        #scenarios["folder"] = folder
-        
-    
+        # scenarios["folder"] = folder
+
     # # --------------------------------------------------------------------------------------------------
     # # 0. Select polder folder
     # # --------------------------------------------------------------------------------------------------
@@ -149,8 +148,6 @@ def start_calculation_gui(
     #     "Select the folder where multiple polders are situated",
     #     layout=item_layout(grid_area="polders_folder_label"),
     # )
-
-
 
     # --------------------------------------------------------------------------------------------------
     # 1. Login with 3Di account
@@ -309,7 +306,9 @@ def start_calculation_gui(
     model_name_label = widgets.Label(
         "Model name:", layout=item_layout(grid_area="model_name_label")
     )
-    model_slug_widget = widgets.Text(layout=item_layout(grid_area="model_slug_widget")) #TODO deprecated
+    model_slug_widget = widgets.Text(
+        layout=item_layout(grid_area="model_slug_widget")
+    )  # TODO deprecated
     model_name_dropdown = widgets.Dropdown(
         layout=item_layout(grid_area="model_name_dropdown")
     )
@@ -449,7 +448,6 @@ def start_calculation_gui(
             )
             # fig.show()
 
-
         # Comebine plot and sliders
         style = {"description_width": "100px"}
         rain_event_widget = widgets.interactive(
@@ -540,7 +538,8 @@ def start_calculation_gui(
             hours_rain=0,
             days_dry_end=2,
             hours_dry_end=0,
-            rain_intensity=100 / 24, #100mm/day, using impervious surface mapping makes 14.4mm/day and 11.5mm/day
+            rain_intensity=100
+            / 24,  # 100mm/day, using impervious surface mapping makes 14.4mm/day and 11.5mm/day
         )
         activate_button_color(hyd_test_button)
         output_folder_box.value = output_folder_box.options[0]  # hyd test folder
@@ -727,8 +726,14 @@ def start_calculation_gui(
         """
         row_widget = {}
         calc_scenarios = {}
-        for row in [""] + GROUNDWATER:  # loop over groundwater conditions (first entry is for headers)
-            for col in RAIN_SCENARIOS:  # add togglebutton for every scenario (T10, T100, T1000)
+        for row in [
+            ""
+        ] + GROUNDWATER:  # loop over groundwater conditions (first entry is for headers)
+            for (
+                col
+            ) in (
+                RAIN_SCENARIOS
+            ):  # add togglebutton for every scenario (T10, T100, T1000)
 
                 if row == "":  # headers
                     row_widget[col] = widgets.HTML(
@@ -792,7 +797,7 @@ def start_calculation_gui(
 
     # sorted([naam for naam in next(os.walk(main_folder))[1] if naam[0:3] not in ['00.','999','.ip']])
     output_polder_dropdown = widgets.Dropdown(
-        options=['03_3di_resultaten'],
+        options=["03_3di_resultaten"],
         layout=item_layout(grid_area="output_polder_dropdown"),
     )
 
@@ -1010,7 +1015,9 @@ def start_calculation_gui(
 
         # Search for models within selected revision
         model_list = threedi_model_api.threedimodels_list(
-            slug__startswith=repository_dropdown.value, revision__number=revision_number, limit=100
+            slug__startswith=repository_dropdown.value,
+            revision__number=revision_number,
+            limit=100,
         ).results
         models = []
 
@@ -1022,19 +1029,25 @@ def start_calculation_gui(
         model_name_ggg_dropdown.options = models
         model_name_ghg_dropdown.options = models
 
-        #Select glg, ggg, ghg for batch download. Select None if multiple found.
+        # Select glg, ggg, ghg for batch download. Select None if multiple found.
         def analyze_options(options, search_str):
             """if more than one option, return None"""
             options = [a for a in options if search_str in a]
-            if len(options)!=1:
+            if len(options) != 1:
                 return None
             else:
                 return options[0]
 
-        model_name_glg_dropdown.value = analyze_options(options=model_name_glg_dropdown.options, search_str='glg')
-        model_name_ggg_dropdown.value = analyze_options(options=model_name_ggg_dropdown.options, search_str='ggg')
-        model_name_ghg_dropdown.value = analyze_options(options=model_name_ghg_dropdown.options, search_str='ghg')
-               
+        model_name_glg_dropdown.value = analyze_options(
+            options=model_name_glg_dropdown.options, search_str="glg"
+        )
+        model_name_ggg_dropdown.value = analyze_options(
+            options=model_name_ggg_dropdown.options, search_str="ggg"
+        )
+        model_name_ghg_dropdown.value = analyze_options(
+            options=model_name_ghg_dropdown.options, search_str="ghg"
+        )
+
         # update the scenario name
         update_scenario_name_widget()
         update_batch_scenario_name_widget()
@@ -1054,7 +1067,6 @@ def start_calculation_gui(
     model_name_ggg_dropdown.observe(on_select_model, names="value")
     model_name_ghg_dropdown.observe(on_select_model, names="value")
 
-
     def get_models():
         """
         Get a model (or list of model) based on the repository, revision and model name dropdowns. Not used for batch.
@@ -1065,10 +1077,10 @@ def start_calculation_gui(
             slug__startswith=repository_dropdown.value,
             revision__number=revision_number,
             name=model_name_dropdown.value,
-            limit=100
+            limit=100,
         ).results
 
-    #TODO deprecated?
+    # TODO deprecated?
     def update_model_repo_link():
         model_url = "https://3di.lizard.net/models/repos/?search={}".format(
             polder_name_widget.value
@@ -1168,7 +1180,7 @@ def start_calculation_gui(
             selected_polder = selected_polder["new"]
         except:
             pass
-        update_folders(selected_polder) #[3:]) #TODO iets doen met nummering polders.
+        update_folders(selected_polder)  # [3:]) #TODO iets doen met nummering polders.
         sqlite_selection.default_path = scenarios["folder"].model.path
 
     output_polder_dropdown.observe(on_select_change, names="value")
@@ -1236,14 +1248,11 @@ def start_calculation_gui(
         else:
             model_revision = str.split(revision_dropdown.value)[0]
 
-        scenario_name = (
-            base_scenario_name_str
-            + "{polder} #{revision} {batch_extra_name}".format(
-                polder=polder_name_widget.value,
-                revision=model_revision,
-                # i=len(scenarios["folder"].threedi_results.batch.revisions),
-                batch_extra_name=batch_scenario_name_widget_extra.value,
-            )
+        scenario_name = base_scenario_name_str + "{polder} #{revision} {batch_extra_name}".format(
+            polder=polder_name_widget.value,
+            revision=model_revision,
+            # i=len(scenarios["folder"].threedi_results.batch.revisions),
+            batch_extra_name=batch_scenario_name_widget_extra.value,
         )
 
         # scenario_name = base_scenario_name_str + "{polder} #{revision} {groundwater_type} {rain_type} {rain_scenario} ({i}) {batch_extra_name}".format(
@@ -1313,7 +1322,7 @@ def start_calculation_gui(
 
         API_call_widget.value = '<p style="line-height:1.4">' + html_text + "</p>"
 
-    #TODO Deprecated, ready for removal.
+    # TODO Deprecated, ready for removal.
     # def update_API_call_widget():
     #     """Make the api call text with enters in html format so it can be printed"""
     #     # Retrieve rain properties
@@ -1375,7 +1384,7 @@ def start_calculation_gui(
                 repository_dropdown.value is not None
                 and revision_dropdown.value is not None
                 and model_name_dropdown.value is not None
-                #and sqlite_selection.selected is not None
+                # and sqlite_selection.selected is not None
             ):
                 create_simulation_button.disabled = False
                 create_simulation_button.style.button_color = "lightgreen"
@@ -1469,21 +1478,21 @@ def start_calculation_gui(
 
         sqlite = sqlite_selection.selected
         simulation = create_threedi_simulation(
-                threedi_api_client = threedi_api_client,
-                sqlite_file = sqlite,
-                scenario_name = scenario_name,
-                model_id = model_id,
-                organisation_uuid = organisation_uuid,
-                days_dry_start = days_dry_start,
-                hours_dry_start = hours_dry_start,
-                days_rain = days_rain,
-                hours_rain = hours_rain,
-                days_dry_end = days_dry_end,
-                hours_dry_end = hours_dry_end,
-                rain_intensity = rain_intensity,
-                basic_processing = basic_processing,
-                damage_processing = damage_processing,
-                arrival_processing = arrival_processing
+            threedi_api_client=threedi_api_client,
+            sqlite_file=sqlite,
+            scenario_name=scenario_name,
+            model_id=model_id,
+            organisation_uuid=organisation_uuid,
+            days_dry_start=days_dry_start,
+            hours_dry_start=hours_dry_start,
+            days_rain=days_rain,
+            hours_rain=hours_rain,
+            days_dry_end=days_dry_end,
+            hours_dry_end=hours_dry_end,
+            rain_intensity=rain_intensity,
+            basic_processing=basic_processing,
+            damage_processing=damage_processing,
+            arrival_processing=arrival_processing,
         )
         update_API_call_widget_v3(simulation)
         update_available_results()
@@ -1593,32 +1602,33 @@ def start_calculation_gui(
 
         def get_all_model_idx() -> dict:
             """return threedi model ids of the selected glg, ggg and ghg model"""
+
             def get_model_idx(name):
                 revision_number = str.split(revision_dropdown.value)[0]
-                results=threedi_model_api.threedimodels_list(
-                        slug__startswith=repository_dropdown.value,
-                        revision__number=revision_number,
-                        name=name,
-                        limit=100
-                    ).results
+                results = threedi_model_api.threedimodels_list(
+                    slug__startswith=repository_dropdown.value,
+                    revision__number=revision_number,
+                    name=name,
+                    limit=100,
+                ).results
                 if len(results) != 1:
                     raise Exception(f"model '{name}' is not unique or not found.")
                 else:
                     return results[0].id
 
             model_idx = {}
-            
-            model_idx['1d2d_glg'] = get_model_idx(model_name_glg_dropdown.value)
-            model_idx['1d2d_ggg'] = get_model_idx(model_name_ggg_dropdown.value)
-            model_idx['1d2d_ghg'] = get_model_idx(model_name_ghg_dropdown.value)
 
-            gw='glg'
+            model_idx["1d2d_glg"] = get_model_idx(model_name_glg_dropdown.value)
+            model_idx["1d2d_ggg"] = get_model_idx(model_name_ggg_dropdown.value)
+            model_idx["1d2d_ghg"] = get_model_idx(model_name_ghg_dropdown.value)
+
+            gw = "glg"
             if gw not in model_name_glg_dropdown.value:
                 raise Exception(f"{gw} Model name should contain {gw}")
-            gw='ggg'
+            gw = "ggg"
             if gw not in model_name_ggg_dropdown.value:
                 raise Exception(f"{gw} Model name should contain {gw}")
-            gw='ghg'
+            gw = "ghg"
             if gw not in model_name_ghg_dropdown.value:
                 raise Exception(f"{gw} Model name should contain {gw}")
             return model_idx
@@ -1648,16 +1658,22 @@ def start_calculation_gui(
                 selected_scenarios = [
                     child.value for child in calc_scenarios[groundwater_type].children
                 ][: len(RAIN_SCENARIOS)]
-                for index, rain_scenario in enumerate(RAIN_SCENARIOS):  # (T10, T100, T1000)
+                for index, rain_scenario in enumerate(
+                    RAIN_SCENARIOS
+                ):  # (T10, T100, T1000)
 
                     i += 1
-                    if rain_type_widgets[rain_type].value == True:  # if the rain type (blok/piek) is selected, check which of the 9 scenarios are selected.
+                    if (
+                        rain_type_widgets[rain_type].value == True
+                    ):  # if the rain type (blok/piek) is selected, check which of the 9 scenarios are selected.
                         # check if button for rain_scenario(T10) and groundwater (GLG) is selected
                         if selected_scenarios[index] == True:
 
                             # Create Data JSON for API call (initialize variables here)
                             days_dry_start = RAIN_SETTINGS[rain_type]["days_dry_start"]
-                            hours_dry_start = RAIN_SETTINGS[rain_type]["hours_dry_start"]
+                            hours_dry_start = RAIN_SETTINGS[rain_type][
+                                "hours_dry_start"
+                            ]
                             days_rain = RAIN_SETTINGS[rain_type]["days_rain"]
                             hours_rain = RAIN_SETTINGS[rain_type]["hours_rain"]
                             days_dry_end = RAIN_SETTINGS[rain_type]["days_dry_end"]
@@ -1690,10 +1706,9 @@ def start_calculation_gui(
 
                             # Remove leading and trailing spaces
                             # print("Scenario name: {}".scenario_name)
-                            basic_processing = True# include rasters in results
+                            basic_processing = True  # include rasters in results
                             damage_processing = True
                             arrival_processing = False
-                            
 
                             # check if scnario is already available
                             print(
@@ -1712,7 +1727,10 @@ def start_calculation_gui(
                             # else:
                             #    print("Not yet available, starting")
                             # return
-                            scenario_names = [scenarios["results"][i]["name"] for i, _ in enumerate(scenarios["results"])]
+                            scenario_names = [
+                                scenarios["results"][i]["name"]
+                                for i, _ in enumerate(scenarios["results"])
+                            ]
                             if scenario_name not in scenario_names:
                                 #                                 print('Scenario_name {} not in the following list: {}'.format(scenario_name,[scenarios['results'][i]['name'] for i,_ in enumerate(scenarios['results'])]))
 
@@ -1731,22 +1749,22 @@ def start_calculation_gui(
                                 while True:
                                     try:
                                         simulation = create_threedi_simulation(
-                                                threedi_api_client = threedi_api_client,
-                                                sqlite_file = sqlite_file,
-                                                scenario_name = scenario_name,
-                                                model_id = model_id,
-                                                organisation_uuid = organisation_uuid,
-                                                days_dry_start = days_dry_start,
-                                                hours_dry_start = hours_dry_start,
-                                                days_rain = days_rain,
-                                                hours_rain = hours_rain,
-                                                days_dry_end = days_dry_end,
-                                                hours_dry_end = hours_dry_end,
-                                                rain_intensity = rain_intensity,
-                                                basic_processing = basic_processing,
-                                                damage_processing = damage_processing,
-                                                arrival_processing = arrival_processing,
-                                        ) 
+                                            threedi_api_client=threedi_api_client,
+                                            sqlite_file=sqlite_file,
+                                            scenario_name=scenario_name,
+                                            model_id=model_id,
+                                            organisation_uuid=organisation_uuid,
+                                            days_dry_start=days_dry_start,
+                                            hours_dry_start=hours_dry_start,
+                                            days_rain=days_rain,
+                                            hours_rain=hours_rain,
+                                            days_dry_end=days_dry_end,
+                                            hours_dry_end=hours_dry_end,
+                                            rain_intensity=rain_intensity,
+                                            basic_processing=basic_processing,
+                                            damage_processing=damage_processing,
+                                            arrival_processing=arrival_processing,
+                                        )
                                     except openapi_client.ApiException:
                                         time.sleep(10)
                                         continue
@@ -1801,7 +1819,6 @@ def start_calculation_gui(
             n += 1
         with open(apicall_txt, "w") as outfile:
             outfile.write(pprint.pformat(all_api_calls))
-
 
         # start the simulation
         for sim in simulations:
@@ -1941,13 +1958,13 @@ def start_calculation_gui(
             repository_label,
             repository_dropdown,
             revision_label,
-            revision_dropdown,  
+            revision_dropdown,
             model_name_glg_label,
             model_name_ggg_label,
             model_name_ghg_label,
-            model_name_glg_dropdown, 
-            model_name_ggg_dropdown, 
-            model_name_ghg_dropdown, # 3
+            model_name_glg_dropdown,
+            model_name_ggg_dropdown,
+            model_name_ghg_dropdown,  # 3
             scenario_label,
             rain_type_box,
             scenario_box,  # 4
@@ -2020,5 +2037,6 @@ def start_calculation_gui(
 
     # start_calculation_tab = start_calculation_gui(); start_calculation_tab
     #     start_calculation_tab
+
 
 # %%

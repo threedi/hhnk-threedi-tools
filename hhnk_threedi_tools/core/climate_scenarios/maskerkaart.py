@@ -39,13 +39,12 @@ from scipy.sparse.csgraph import connected_components
 from threedigrid.admin.gridresultadmin import GridH5ResultAdmin
 
 
-
 logger = logging.getLogger(__name__)
 
 
-GRIDADMIN_NAME = 'gridadmin.h5'
-RESULTS_NAME = 'results_3di.nc'
-POLYGON = 'POLYGON (({0} {1},{2} {1},{2} {3},{0} {3},{0} {1}))'
+GRIDADMIN_NAME = "gridadmin.h5"
+RESULTS_NAME = "results_3di.nc"
+POLYGON = "POLYGON (({0} {1},{2} {1},{2} {3},{0} {3},{0} {1}))"
 
 
 def filter_min_flow_area(lines, threshold, timestamp=None):
@@ -58,11 +57,10 @@ def filter_min_flow_area(lines, threshold, timestamp=None):
     """
     if timestamp is None:
         timestamp = lines.timestamps[-1]
-    data = lines.timeseries(
-        start_time=timestamp,
-        end_time=timestamp
-    ).only('id', 'au').data
-    return data['id'][(data['au'] >= threshold).any(axis=0)]
+    data = (
+        lines.timeseries(start_time=timestamp, end_time=timestamp).only("id", "au").data
+    )
+    return data["id"][(data["au"] >= threshold).any(axis=0)]
 
 
 def filter_max_gradient(lines, nodes, threshold, timestamp=None):
@@ -80,28 +78,28 @@ def filter_max_gradient(lines, nodes, threshold, timestamp=None):
     """
     if timestamp is None:
         timestamp = lines.timestamps[-1]
-    line_data = lines.timeseries(
-        start_time=timestamp,
-        end_time=timestamp
-    ).only('id', 'line').data
+    line_data = (
+        lines.timeseries(start_time=timestamp, end_time=timestamp)
+        .only("id", "line")
+        .data
+    )
     nodes_time = nodes.timeseries(start_time=timestamp, end_time=timestamp)
-    nodes_line = nodes_time.filter(id__in=line_data['line'].ravel()).only(
-        'id', 's1').data
-    s1_first = nodes_line['s1'][0][np.searchsorted(
-        nodes_line['id'],
-        line_data['line'][0]
-    )]
-    s1_last = nodes_line['s1'][0][np.searchsorted(
-        nodes_line['id'],
-        line_data['line'][1]
-    )]
+    nodes_line = (
+        nodes_time.filter(id__in=line_data["line"].ravel()).only("id", "s1").data
+    )
+    s1_first = nodes_line["s1"][0][
+        np.searchsorted(nodes_line["id"], line_data["line"][0])
+    ]
+    s1_last = nodes_line["s1"][0][
+        np.searchsorted(nodes_line["id"], line_data["line"][1])
+    ]
     # compute length by transforming to RD. valid only in The Netherlands
     coords = lines.reproject_to(28992).line_coords
     length = np.sqrt((coords[2] - coords[0]) ** 2 + (coords[3] - coords[1]) ** 2)
     mask = length == 0
     length[mask] = 1
     grad = (s1_last - s1_first) / length
-    return line_data['id'][np.where(~mask & (np.abs(grad) <= threshold))[0]]
+    return line_data["id"][np.where(~mask & (np.abs(grad) <= threshold))[0]]
 
 
 def filter_lines(gr, max_gradient, min_flow_area):
@@ -119,13 +117,11 @@ def filter_lines(gr, max_gradient, min_flow_area):
     lines_active = filter_min_flow_area(gr.lines, min_flow_area)
     lines_valid = filter_max_gradient(gr.lines, gr.nodes, max_gradient)
 
-    lines2d2d_valid = gr.lines.subset('2D_ALL').filter(
+    lines2d2d_valid = gr.lines.subset("2D_ALL").filter(
         id__in=np.intersect1d(lines_valid, lines_active)
     )
-    lines1d2d_active = gr.lines.subset('1D2D').filter(
-        id__in=lines_active
-    )
-    lines1d2d_valid = gr.lines.subset('1D2D').filter(
+    lines1d2d_active = gr.lines.subset("1D2D").filter(id__in=lines_active)
+    lines1d2d_valid = gr.lines.subset("1D2D").filter(
         id__in=np.intersect1d(lines_valid, lines_active)
     )
     return lines2d2d_valid, lines1d2d_active, lines1d2d_valid
@@ -136,8 +132,7 @@ def group_nodes(lines):
     :param lines: ndarray of shape (N, 2) with the ids of the connected nodes
     :returns: a list with group id per node: return_value[node_id] == group_id
     """
-    coo = coo_matrix((np.ones(lines.shape[1]), lines),
-                     shape=(lines.max() + 1,) * 2)
+    coo = coo_matrix((np.ones(lines.shape[1]), lines), shape=(lines.max() + 1,) * 2)
 
     # groups contains the ID of every group a node belongs to
     # there are many unconnected groups in there.
@@ -161,11 +156,11 @@ def classify_nodes(node_id_2d, groups, lines1d2d_active, lines1d2d_valid):
     modelfout_ids = []
 
     # that have active 1D lines
-    node_id_2d_active_1d = np.intersect1d(node_id_2d,
-                                          lines1d2d_active.line.ravel())
+    node_id_2d_active_1d = np.intersect1d(node_id_2d, lines1d2d_active.line.ravel())
     # that have valid 1D lines
-    node_id_2d_valid_1d = np.intersect1d(node_id_2d_active_1d,
-                                         lines1d2d_valid.line.ravel())
+    node_id_2d_valid_1d = np.intersect1d(
+        node_id_2d_active_1d, lines1d2d_valid.line.ravel()
+    )
     # create boolean arrays for fast lookup
     is2d = np.zeros(node_id_2d.max() + 1, dtype=np.bool)
     is2d[node_id_2d] = True
@@ -197,8 +192,7 @@ def classify_nodes(node_id_2d, groups, lines1d2d_active, lines1d2d_valid):
 
 
 def numpy_to_ogr_type(dtype):
-    """Convert a numpy dtype to an ogr dtype (one of Real, Integer, or String)
-    """
+    """Convert a numpy dtype to an ogr dtype (one of Real, Integer, or String)"""
     if np.issubdtype(dtype, np.floating):
         return ogr.OFTReal
     elif np.issubdtype(dtype, np.integer):
@@ -215,9 +209,9 @@ def to_shape(cell_data, file_name, fields, epsg_code):
     :param epsg_code: the EPSG code of the projection
     """
     if fields is None:
-        fields = ['id']
+        fields = ["id"]
     fields = [str(f) for f in fields]
-    for field in fields + ['cell_coords']:
+    for field in fields + ["cell_coords"]:
         assert field in cell_data
 
     driver = ogr.GetDriverByName(str("ESRI Shapefile"))
@@ -225,22 +219,18 @@ def to_shape(cell_data, file_name, fields, epsg_code):
 
     sr = osr.SpatialReference()
     sr.ImportFromEPSG(int(epsg_code))
-    layer = data_source.CreateLayer(
-        str(os.path.basename(file_name)),
-        sr,
-        0
-    )
+    layer = data_source.CreateLayer(str(os.path.basename(file_name)), sr, 0)
 
     for field in fields:
         ogr_dtype = numpy_to_ogr_type(cell_data[field].dtype)
         layer.CreateField(ogr.FieldDefn(field, ogr_dtype))
 
     _definition = layer.GetLayerDefn()
-    for i in range(cell_data['cell_coords'].shape[1]):
+    for i in range(cell_data["cell_coords"].shape[1]):
         feature = ogr.Feature(_definition)
 
         # get the cell coords
-        cell_coords = [cell_data['cell_coords'][j][i] for j in range(4)]
+        cell_coords = [cell_data["cell_coords"][j][i] for j in range(4)]
 
         # create polygon and set it on the feature
         poly = ogr.CreateGeometryFromWkt(POLYGON.format(*cell_coords), sr)
@@ -259,9 +249,9 @@ def to_shape(cell_data, file_name, fields, epsg_code):
 def run_single(path, min_flow_area, max_gradient):
     logger.info("Analyzing scenario at {}".format(path))
 
-    gr = GridH5ResultAdmin(os.path.join(path, GRIDADMIN_NAME),
-                           os.path.join(path, RESULTS_NAME))
-
+    gr = GridH5ResultAdmin(
+        os.path.join(path, GRIDADMIN_NAME), os.path.join(path, RESULTS_NAME)
+    )
 
     lines2d2d_valid, lines1d2d_active, lines1d2d_valid = filter_lines(
         gr,
@@ -271,41 +261,38 @@ def run_single(path, min_flow_area, max_gradient):
 
     groups = group_nodes(lines2d2d_valid.line)
 
-    cell_data = gr.cells.subset('2D_ALL').only("id", "cell_coords").data
+    cell_data = gr.cells.subset("2D_ALL").only("id", "cell_coords").data
 
     overlast_ids, plas_ids, modelfout_ids = classify_nodes(
-        node_id_2d=cell_data['id'],
+        node_id_2d=cell_data["id"],
         groups=groups,
         lines1d2d_active=lines1d2d_active,
         lines1d2d_valid=lines1d2d_valid,
     )
 
-    cell_data['case'] = np.full(cell_data['id'].size, '', dtype='S10')
-    cell_data['case'][np.isin(cell_data['id'], plas_ids)] = 'plas'
-    cell_data['case'][np.isin(cell_data['id'], overlast_ids)] = 'overlast'
-    cell_data['case'][np.isin(cell_data['id'], modelfout_ids)] = 'modelfout'
+    cell_data["case"] = np.full(cell_data["id"].size, "", dtype="S10")
+    cell_data["case"][np.isin(cell_data["id"], plas_ids)] = "plas"
+    cell_data["case"][np.isin(cell_data["id"], overlast_ids)] = "overlast"
+    cell_data["case"][np.isin(cell_data["id"], modelfout_ids)] = "modelfout"
     return cell_data, gr.epsg_code
 
 
-def command(path_piek, path_blok, path_out,
-            min_flow_area=0.001, max_gradient=0.00125):
+def command(path_piek, path_blok, path_out, min_flow_area=0.001, max_gradient=0.00125):
     # check the existence of necessary files
     for path in (path_piek, path_blok):
         if not os.path.isdir(path):
-            raise IOError('{} does not exist'.format(path))
+            raise IOError("{} does not exist".format(path))
         if not os.path.isfile(os.path.join(path, GRIDADMIN_NAME)):
-            raise IOError('{} does not exist in {}'.format(
-                GRIDADMIN_NAME, path))
+            raise IOError("{} does not exist in {}".format(GRIDADMIN_NAME, path))
         if not os.path.isfile(os.path.join(path, RESULTS_NAME)):
-            raise IOError('{} does not exist in {}'.format(
-                RESULTS_NAME, path))
+            raise IOError("{} does not exist in {}".format(RESULTS_NAME, path))
 
     # check if the output file does not exist, but its directory should exist
     if not os.path.isdir(os.path.dirname(path_out)):
-        raise IOError('{} does not exist'.format(os.path.dirname(path_out)))
+        raise IOError("{} does not exist".format(os.path.dirname(path_out)))
     if os.path.isfile(path_out):
-#         raise IOError('{} already exists'.format(path_out))
-        print('{} already exists'.format(path_out))
+        #         raise IOError('{} already exists'.format(path_out))
+        print("{} already exists".format(path_out))
         return
 
     # run the analyses
@@ -313,38 +300,37 @@ def command(path_piek, path_blok, path_out,
     cell_data_blok, epsg = run_single(path_blok, min_flow_area, max_gradient)
 
     # check if the cell coords are precisely equal
-    comp = cell_data_piek['cell_coords'] == cell_data_blok['cell_coords']
+    comp = cell_data_piek["cell_coords"] == cell_data_blok["cell_coords"]
     if not comp.all():
         raise RuntimeError("Blok and Piek scenarios have unequal cell coords")
 
     # assemble the data
     cell_data = {
-        'id': cell_data_piek['id'],
-        'cell_coords': cell_data_piek['cell_coords'],
-        'case_piek': cell_data_piek['case'],
-        'case_blok': cell_data_blok['case'],
+        "id": cell_data_piek["id"],
+        "cell_coords": cell_data_piek["cell_coords"],
+        "case_piek": cell_data_piek["case"],
+        "case_blok": cell_data_blok["case"],
     }
 
     # logical operations to generate "case_final"
-    cell_data['case_final'] = np.full(cell_data['id'].size, '', dtype='S10')
-    cell_data['case_final'][
-        (cell_data['case_blok'] == b'plas') |
-        (cell_data['case_piek'] == b'plas')
-    ] = 'plas'
-    cell_data['case_final'][
-        (cell_data['case_blok'] == b'overlast') |
-        (cell_data['case_piek'] == b'overlast')
-    ] = 'overlast'
-    cell_data['case_final'][
-        (cell_data['case_blok'] == b'modelfout') &
-        (cell_data['case_piek'] == b'modelfout')
-    ] = 'modelfout'
+    cell_data["case_final"] = np.full(cell_data["id"].size, "", dtype="S10")
+    cell_data["case_final"][
+        (cell_data["case_blok"] == b"plas") | (cell_data["case_piek"] == b"plas")
+    ] = "plas"
+    cell_data["case_final"][
+        (cell_data["case_blok"] == b"overlast")
+        | (cell_data["case_piek"] == b"overlast")
+    ] = "overlast"
+    cell_data["case_final"][
+        (cell_data["case_blok"] == b"modelfout")
+        & (cell_data["case_piek"] == b"modelfout")
+    ] = "modelfout"
 
     logger.info("Writing shapefile at {}...".format(path_out))
     to_shape(
         cell_data,
         path_out,
-        fields=['id', 'case_blok', 'case_piek', 'case_final'],
+        fields=["id", "case_blok", "case_piek", "case_final"],
         epsg_code=epsg,
     )
     logger.info("Done.")
@@ -360,43 +346,50 @@ def get_parser():
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument(
-        'path_piek',
+        "path_piek",
         help='Path to 3Di results that contain the "piek" simulation. The '
-             'files {} and {} have to be present in this directory.'.format(
-            RESULTS_NAME, GRIDADMIN_NAME),
+        "files {} and {} have to be present in this directory.".format(
+            RESULTS_NAME, GRIDADMIN_NAME
+        ),
     )
     parser.add_argument(
-        'path_blok',
+        "path_blok",
         help='Path to 3Di results that contain the "blok" simulation. The '
-             'files {} and {} have to be present in this directory.'.format(
-            RESULTS_NAME, GRIDADMIN_NAME),
+        "files {} and {} have to be present in this directory.".format(
+            RESULTS_NAME, GRIDADMIN_NAME
+        ),
     )
     parser.add_argument(
-        'path_out',
-        help='File to output the resulting shapefile. Should not exist.',
+        "path_out",
+        help="File to output the resulting shapefile. Should not exist.",
     )
     parser.add_argument(
-        '-f', '--flow_area',
+        "-f",
+        "--flow_area",
         default=0.001,
-        dest='min_flow_area',
-        help=('Minimum flow area ("doorstroomoppervlak") in square meters '
-              'for node connections to be included in this analysis.'),
+        dest="min_flow_area",
+        help=(
+            'Minimum flow area ("doorstroomoppervlak") in square meters '
+            "for node connections to be included in this analysis."
+        ),
         type=float,
     )
     parser.add_argument(
-        '-g', '--gradient',
+        "-g",
+        "--gradient",
         default=0.00125,
-        dest='max_gradient',
-        help=('Maximum gradient ("verhang") (no units, lengh per length) '
-              'for node connections to be valid in this analysis.'),
+        dest="max_gradient",
+        help=(
+            'Maximum gradient ("verhang") (no units, lengh per length) '
+            "for node connections to be valid in this analysis."
+        ),
         type=float,
     )
     return parser
 
 
 def main():
-    """ Call command with args from parser. """
-    logging.basicConfig(stream=sys.stdout, level=logging.INFO,
-                        format='%(message)s')
+    """Call command with args from parser."""
+    logging.basicConfig(stream=sys.stdout, level=logging.INFO, format="%(message)s")
 
     command(**vars(get_parser().parse_args()))

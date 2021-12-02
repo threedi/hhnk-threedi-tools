@@ -11,6 +11,7 @@ self.base is the directory in which it is located
 # First-party imports
 import os
 import glob
+import inspect
 from pathlib import Path
 
 # Third-party imports
@@ -135,10 +136,10 @@ class File:
 class FileGDB(File):
     def __init__(self, file_path):
         super().__init__(file_path)
-    
+
     def load(self, layer=None):
-        if layer==None:
-            layer=input('Select layer:')
+        if layer == None:
+            layer = input("Select layer:")
         return gpd.read_file(self.file_path, layer=layer)
 
     def layers(self):
@@ -170,6 +171,8 @@ class Folder:
         self.files = {}
         self.olayers = {}
         self.space = "\t\t\t\t"
+        self.isfolder = True
+        self.create(parents=False)
 
     @property
     def structure(self):
@@ -200,17 +203,17 @@ class Folder:
         print(self.__repr__())
 
     def create(self, parents=True):
-        """Create folder, if parents==False path wont be 
+        """Create folder, if parents==False path wont be
         created if parent doesnt exist."""
-        if parents==False:
+        if parents == False:
             if not self.pl.parent.exists():
-                print(f'{self.path} not created, parent doesnt exist.')
+                print(f"{self.path} not created, parent doesnt exist.")
                 return
         self.pl.mkdir(parents=parents, exist_ok=True)
-    
+
     def find_ext(self, ext):
-        """ finds files with a certain extension"""
-        return glob.glob(self.base +f'/*.{ext}')
+        """finds files with a certain extension"""
+        return glob.glob(self.base + f"/*.{ext}")
 
     def full_path(self, name):
         """returns the full path of a file or a folder when only a name is known"""
@@ -295,7 +298,6 @@ class Folders(Folder):
 
     def __init__(self, base, create=True):
         super().__init__(base)
-        
 
         # source
         self.source_data = SourcePaths(self.base)
@@ -311,8 +313,6 @@ class Folders(Folder):
 
         if create and not self.exists:
             self.create_project()
-            
-        
 
     @property
     def structure(self):
@@ -331,6 +331,10 @@ class Folders(Folder):
     @property
     def full_structure(self):
         return print(POLDER_STRUCTURE)
+
+    @property
+    def all_files(self):
+        return all_files_in_folders(self)
 
     def to_dict(self):
         """
@@ -518,9 +522,9 @@ class SourcePaths(Folder):
         self.peilgebieden = PeilgebiedenPaths(self.base)
 
         # Files
-        self.add_file("damo", DAMO, ftype='filegdb')
-        self.add_file("hdb", HDB, ftype='filegdb')
-        self.add_file("datachecker", 'datachecker_output.gdb', ftype='filegdb')
+        self.add_file("damo", DAMO, ftype="filegdb")
+        self.add_file("hdb", HDB, ftype="filegdb")
+        self.add_file("datachecker", "datachecker_output.gdb", ftype="filegdb")
         self.add_file("polder_polygon", POLDER_POLY)
 
         # Layers
@@ -549,17 +553,22 @@ class ModelbuilderPaths(Folder):
 
 
 class PeilgebiedenPaths(Folder):
-    #TODO deze map moet een andere naam en plek krijgen. 
+    # TODO deze map moet een andere naam en plek krijgen.
     def __init__(self, base):
         super().__init__(os.path.join(base, "peilgebieden"))
 
-        #Find peilgebieden shapefile in folder. 
+        # Find peilgebieden shapefile in folder.
         if self.exists:
-            shape_name =  [x for x in self.content if x.startswith('peilgebieden') and x.endswith('.shp')]
-            if len(shape_name)==1:
+            shape_name = [
+                x
+                for x in self.content
+                if x.startswith("peilgebieden") and x.endswith(".shp")
+            ]
+            if len(shape_name) == 1:
                 self.add_file("peilgebieden", shape_name[0])
             else:
-                self.add_file("peilgebieden", 'peilgebieden.shp')
+                self.add_file("peilgebieden", "peilgebieden.shp")
+        self.add_file("geen_schade", "geen_schade.shp")
 
 
 class ModelPaths(Folder):
@@ -623,37 +632,36 @@ class ModelPaths(Folder):
             return get_proposed_adjustments_channels(
                 self.database_path, self.state, to_state
             )
-    
+
     @property
     def sqlite_paths(self):
-        """  returns all sqlites in folder"""
+        """returns all sqlites in folder"""
         return self.find_ext("sqlite")
-    
+
     @property
     def sqlite_names(self):
-        """  returns all sqlites in folder"""
+        """returns all sqlites in folder"""
         return [Path(sp).stem for sp in self.sqlite_paths]
-    
+
     def model_path(self, idx=0, name=None):
-        """ finds a model using an index"""
+        """finds a model using an index"""
         if name:
             try:
                 idx = self.sqlite_names.index(name)
             except Exception:
-                raise ValueError('name of sqlite given, but cannot be found')
+                raise ValueError("name of sqlite given, but cannot be found")
         if len(self.sqlite_paths) >= 1:
             return self.sqlite_paths[idx]
         else:
             return None
 
-
     def set_database(self, name_or_idx):
-        """  set the model database with either an index or a name"""
-        if type(name_or_idx) == str:    
-            self.add_file("database",  self.model_path(None, name_or_idx))
+        """set the model database with either an index or a name"""
+        if type(name_or_idx) == str:
+            self.add_file("database", self.model_path(None, name_or_idx))
         else:
-            self.add_file("database",  self.model_path(name_or_idx, None))
-            
+            self.add_file("database", self.model_path(name_or_idx, None))
+
 
 class RasterPaths(Folder):
     def __init__(self, base):
@@ -773,6 +781,7 @@ class ThreediResultsPaths(Folder):
 class ThreediRevisions(Folder):
     def __init__(self, base, folder):
         super().__init__(os.path.join(base, folder))
+        self.isrevisions = True
 
     def __getitem__(self, revision):
         """revision can be a integer or a path"""
@@ -823,6 +832,7 @@ class OneDTwoD(ThreediRevisions):
 class ClimateResultsRevisions(Folder):
     def __init__(self, base, folder):
         super().__init__(os.path.join(base, folder))
+        self.isrevisions = True
 
     def __getitem__(self, revision):
         """revision can be a integer or a path"""
@@ -855,7 +865,7 @@ class ClimateResultsRevisions(Folder):
 class ClimateResults(ClimateResultsRevisions):
     def __init__(self, base):
         super().__init__(base, "batch_results")
-        self.create(parents=False) #create outputfolder if parent exists
+        self.create(parents=False)  # create outputfolder if parent exists
 
     @property
     def structure(self):
@@ -864,6 +874,7 @@ class ClimateResults(ClimateResultsRevisions):
 
 class ClimateResult(Folder):
     """Individual result with download and output folder"""
+
     def __init__(self, base):
         super().__init__(base)
 
@@ -918,10 +929,8 @@ class ClimateResultOutput(Folder):
         self.add_file("schade_polder", "schade_per_polder.csv")
         self.add_file("schade_polder_corr", "schade_per_polder_correctie.csv")
 
-
         self.set_scenario_files()
-        self.create(parents=False) #create outputfolder if parent exists
-
+        self.create(parents=False)  # create outputfolder if parent exists
 
     def set_scenario_files(self):
         for type_raster, type_raster_name in zip(
@@ -930,18 +939,20 @@ class ClimateResultOutput(Folder):
             for masker, masker_name in zip(
                 ["totaal", "plas", "overlast"], ["", "_plas", "_overlast"]
             ):
-                for return_period in [10,25,100,1000]:
+                for return_period in [10, 25, 100, 1000]:
                     self.add_file(
                         objectname=f"{type_raster}_T{return_period}_{masker}",
                         filename=f"{type_raster_name}_T{str(return_period).zfill(4)}{masker_name}.tif",
                         ftype="raster",
                     )
 
-        for masker, masker_name in zip(["totaal", "plas", "overlast"], ["", "_plas", "_overlast"]):
+        for masker, masker_name in zip(
+            ["totaal", "plas", "overlast"], ["", "_plas", "_overlast"]
+        ):
             self.add_file(
-                objectname=f"cw_schade_{masker}", 
-                filename=f"cw_schade{masker_name}.tif", 
-                ftype="raster"
+                objectname=f"cw_schade_{masker}",
+                filename=f"cw_schade{masker_name}.tif",
+                ftype="raster",
             )
 
             self.add_file(
@@ -960,30 +971,28 @@ class ClimateResultOutput(Folder):
 
 class ClimateResultOutputTemp(Folder):
     def __init__(self, base):
-        super().__init__(os.path.join(base,"temp"))
+        super().__init__(os.path.join(base, "temp"))
 
         self.add_file("peilgebieden_diepte", "peilgebieden_diepte.tif", "raster")
         self.add_file("peilgebieden_schade", "peilgebieden_schade.tif", "raster")
         self.add_file("peilgebieden", "peilgebieden_clipped.shp")
 
-        self.create(parents=False) #create outputfolder if parent exists
-
+        self.create(parents=False)  # create outputfolder if parent exists
 
 
 class ClimateResultDownloads(Folder):
     def __init__(self, base):
-        super().__init__(os.path.join(base,"01_downloads"))
+        super().__init__(os.path.join(base, "01_downloads"))
 
         # Files
         self.add_file("download_uuid", "download_uuid.csv")
-        self.names = GROUNDWATER #Initializes names.setter
+        self.names = GROUNDWATER  # Initializes names.setter
 
         # for name in RAW_DOWNLOADS:
         #     setattr(self, name, ThreediResult(self.full_path(name)))
 
         for name in self.names:
-            setattr(self,name, ClimateResultScenario(self.base, name))
-
+            setattr(self, name, ClimateResultScenario(self.base, name))
 
     @property
     def names(self):
@@ -997,7 +1006,7 @@ class ClimateResultDownloads(Folder):
                 for rain_scenario in RAIN_SCENARIOS:
                     names.append(f"{rain_type}_{groundwater}_{rain_scenario}")
         self._names = names
-        
+
     def __repr__(self):
         return f"""{self.name} @ {self.path}
                     Folders:\t{self.structure}
@@ -1007,26 +1016,28 @@ class ClimateResultDownloads(Folder):
                 """
 
     # def _set_raster_files(self):
-            # for rastertype in raster_types:
-            #     self.add_file(
-            #         f"{rastertype}_{name}", f"{rastertype}_{name}.tif", "raster"
-            #     )
+    # for rastertype in raster_types:
+    #     self.add_file(
+    #         f"{rastertype}_{name}", f"{rastertype}_{name}.tif", "raster"
+    #     )
 
 
-#TODO dit komt nu niet netjes in de print van de class.
+# TODO dit komt nu niet netjes in de print van de class.
 class ClimateResultScenario(Folder):
     """Single scenario with multiple results"""
+
     def __init__(self, base, name):
         super().__init__(base)
 
-        raster_types=["max_depth", "total_damage", "wlvl_max"]
+        raster_types = ["max_depth", "total_damage", "wlvl_max"]
         for rastertype in raster_types:
-            self.add_file(rastertype, f"{rastertype}_{name}.tif", ftype='raster')
-        self.structure_extra=[]
-        #Netcdf for piek_ghg_t1000 and blok_ghg_t1000 for use in ruimtekaart.
+            self.add_file(rastertype, f"{rastertype}_{name}.tif", ftype="raster")
+        self.structure_extra = []
+        # Netcdf for piek_ghg_t1000 and blok_ghg_t1000 for use in ruimtekaart.
         if name in RAW_DOWNLOADS:
-            setattr(self, 'netcdf', ThreediResult(self.full_path(name)))
-            self.structure_extra = ['netcdf']
+            setattr(self, "netcdf", ThreediResult(self.full_path(name)))
+            self.structure_extra = ["netcdf"]
+
     def __repr__(self):
         return f"""{self.name} @ {self.path}
                     Folders:\t{self.structure_extra}
@@ -1080,6 +1091,7 @@ class OutputPaths(Folder):
 class OutputRevisions(Folder):
     def __init__(self, base):
         super().__init__(base)
+        self.isrevisions = True
 
     def __getitem__(self, revision):
         if type(revision) == int:
@@ -1169,3 +1181,53 @@ def add_log_layer_path(files_dict, base_path):
     # Creates log and layer folders in test specific output folder
     # ex: output/sqlite_tests/Logs and output/sqlite_tests/Layers
     return files_dict
+
+
+def all_files_in_folders(_class):
+    """returns all files in folder objects"""
+
+    files = {}
+    folders, file_paths = find_files(_class)
+    has_subfolders = True
+
+    while has_subfolders:
+        _folder = folders[0]
+        found_folders, file_paths = find_files(_folder)
+        files.update(file_paths)
+        folders.extend(found_folders)
+        del folders[0]
+        has_subfolders = len(folders) > 0
+
+    return files
+
+
+def find_files(_class):
+    folders = []
+    file_paths = {}
+    for property_name in dir(_class):
+        # skip internal features
+        if "__" in property_name:
+            continue
+        # skip the structures
+        if property_name in ["show", "structure", "full_structure", "all_files"]:
+            continue
+        # skip opening grid and admin
+        if property_name in ["grid", "admin"]:
+            continue
+
+        if hasattr(_class, "isfolder"):
+            file_paths.update(_class.files)
+
+        _property = getattr(_class, property_name)
+        if hasattr(_property, "isfolder"):
+            file_paths.update(_property.files)
+            folders.append(_property)
+
+        if hasattr(_property, "isrevisions"):
+            for revision in _property.revisions:
+                _folders, revision_paths = find_files(_property[revision])
+
+                file_paths.update({revision: revision_paths})
+                folders.append(_folders)
+
+    return folders, file_paths

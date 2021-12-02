@@ -20,4 +20,3 @@ setup(
     install_requires=["hhnk-research-tools==0.4"],
     include_package_data=True,
 )
-
