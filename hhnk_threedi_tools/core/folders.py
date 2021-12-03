@@ -520,6 +520,7 @@ class SourcePaths(Folder):
         # Folders
         self.modelbuilder = ModelbuilderPaths(self.base)
         self.peilgebieden = PeilgebiedenPaths(self.base)
+        self.wsa_output_administratie = WsaOutputAdministratie(self.base)
 
         # Files
         self.add_file("damo", DAMO, ftype="filegdb")
@@ -543,8 +544,14 @@ class SourcePaths(Folder):
                {self.space}source_data
                {self.space}└── modelbuilder
                {self.space}└── peilgebieden
+               {self.space}└── wsa_output_administratie
+               
                """
-
+               
+class WsaOutputAdministratie(Folder):
+    def __init__(self, base):
+        super().__init__(os.path.join(base, "wsa_output_administratie"))
+        self.add_file("opmerkingen", "opmerkingen.shp")
 
 class ModelbuilderPaths(Folder):
     def __init__(self, base):
