@@ -547,11 +547,13 @@ class SourcePaths(Folder):
                {self.space}└── wsa_output_administratie
                
                """
-               
+
+
 class WsaOutputAdministratie(Folder):
     def __init__(self, base):
         super().__init__(os.path.join(base, "wsa_output_administratie"))
         self.add_file("opmerkingen", "opmerkingen.shp")
+
 
 class ModelbuilderPaths(Folder):
     def __init__(self, base):
@@ -1083,6 +1085,7 @@ class OutputPaths(Folder):
         self.bank_levels = OutputFolder(self.full_path("Bank_levels"))
         self.zero_d_one_d = OutputZeroDoneD(self.full_path("0d1d_tests"))
         self.one_d_two_d = OutputOneDTwoD(self.full_path("1d2d_tests"))
+        self.climate = OutputClimate(self.full_path("Climate"))
 
     @property
     def structure(self):
@@ -1091,7 +1094,9 @@ class OutputPaths(Folder):
                {self.space}├── sqlite_tests
                {self.space}├── bank_levels
                {self.space}├── zero_d_one_d
-               {self.space}└── one_d_two_d
+               {self.space}├── one_d_two_d
+               {self.space}└── climate
+
                """
 
 
@@ -1143,6 +1148,16 @@ class OutputOneDTwoD(OutputRevisions):
     @property
     def structure(self):
         return self.revision_structure("one_d_two_d")
+
+
+class OutputClimate(OutputRevisions):
+    def __init__(self, base):
+        super().__init__(base)
+        self.create()  # create outputfolder if parent exists
+
+    @property
+    def structure(self):
+        return self.revision_structure("Climate")
 
 
 class Layers(Folder):

@@ -135,6 +135,12 @@ def _run_notebook(notebook_path):
     # process.wait()
 
 
+def copy_sys_env():
+    myenv = os.environ.copy()
+    myenv["PYTHONPATH"] = ";".join([str(i) for i in sys.path])
+    return myenv
+
+
 def open_server(directory=None):
 
     system, python_interpreter = _get_python_interpreter()
@@ -154,11 +160,13 @@ def open_server(directory=None):
         stdout=None,
         stderr=None,
         close_fds=True,
+        env=copy_sys_env(),
         creationflags=DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP,
     )
-    print(f"Started processing with pid: {process.pid}")
+    print(f"Started processing with pid: {process.pid} and command {command}")
     return process.pid
 
 
 if __name__ == "__main__":
-    open_notebook("02_calculation_gui.ipynb")
+
+    open_server()
