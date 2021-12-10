@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="hhnk-threedi-tools",
-    version="0.5",
+    version="0.5.2",
     description="HHNK watersystemen analysis tools",
     url="https://github.com/wvangerwen/hhnk-threedi-tools",
     author="Laure Ravier",

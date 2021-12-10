@@ -220,7 +220,9 @@ class Folder:
         return str(self.pl / name)
 
     def add_file(self, objectname, filename, ftype="file"):
-        if ftype == "file":
+        if not os.path.exists(self.full_path(filename)) or filename in [None, ""]:
+            new_file = File("")
+        elif ftype == "file":
             new_file = File(self.full_path(filename))
         elif ftype == "filegdb":
             new_file = FileGDB(self.full_path(filename))
@@ -588,8 +590,7 @@ class ModelPaths(Folder):
         self.rasters = RasterPaths(self.base)
 
         # File
-        if self.model_path() is not None:
-            self.add_file("database", self.model_path())
+        self.add_file("database", self.model_path())
 
     @property
     def structure(self):
@@ -662,7 +663,7 @@ class ModelPaths(Folder):
         if len(self.sqlite_paths) >= 1:
             return self.sqlite_paths[idx]
         else:
-            return None
+            return ""
 
     def set_database(self, name_or_idx):
         """set the model database with either an index or a name"""
