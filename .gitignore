@@ -9,6 +9,7 @@ venv_development_tools
 dist
 build
 .pytest_chache
+.eggs
 hhnk_threedi_tools/variables/localsettings.py
 
 #FIXME temporary

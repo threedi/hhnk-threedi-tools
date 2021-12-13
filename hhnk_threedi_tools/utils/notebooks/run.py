@@ -14,6 +14,7 @@ import pathlib
 import tempfile
 import shutil
 import json
+import site
 import multiprocessing
 
 CREATE_NEW_PROCESS_GROUP = 0x00000200
@@ -141,32 +142,68 @@ def copy_sys_env():
     return myenv
 
 
-def open_server(directory=None):
-
-    system, python_interpreter = _get_python_interpreter()
-    if system == "qgis":
-        command = [python_interpreter, "-m", "notebook"]
+def user_installed_notebook_path():
+    path = site.getusersitepackages().replace("site-packages", "Scripts")
+    if os.path.exists(path + "/jupyter-notebook.exe"):
+        return path + "/jupyter-notebook.exe"
     else:
-        command = [python_interpreter, "-m", "jupyter", "notebook"]
+        return None
+
+
+def notebook_command(location="osgeo"):
+    """if jupyter is installed in osgeo, use osgeo.
+    if jupyter is installed in the user dir 'pip install jupyter --user'
+    use 'user'.
+
+    'user' uses an exectuable
+    """
+    if location == "osgeo":
+        system, python_interpreter = _get_python_interpreter()
+        if system == "qgis":
+            command = [python_interpreter, "-m", "notebook"]
+        else:
+            command = [python_interpreter, "-m", "jupyter", "notebook"]
+    else:
+        command = [user_installed_notebook_path()]
+    return command
+
+
+def open_server(directory=None, location="osgeo", use="run"):
+    """directory:
+        notebooks open in a certain directory
+    location:
+        can either be osgeo or user
+        open jupyter notebook is osgeo or per-user-installed .exe
+    use:
+        subprocess mode ('popen' or 'run')
+    """
+    command = notebook_command(location)
 
     if directory:
         command.append(directory)
 
-    process = subprocess.Popen(
-        command,
-        shell=True,
-        universal_newlines=True,
-        stdin=None,
-        stdout=None,
-        stderr=None,
-        close_fds=True,
-        env=copy_sys_env(),
-        creationflags=DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP,
-    )
-    print(f"Started processing with pid: {process.pid} and command {command}")
-    return process.pid
+    if use == "popen":
+        process = subprocess.Popen(
+            command,
+            shell=True,
+            universal_newlines=True,
+            stdin=None,
+            stdout=None,
+            stderr=None,
+            close_fds=True,
+            env=copy_sys_env(),
+            creationflags=DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP,
+        )
+        print(f"Started processing with pid: {process.pid} and command {command}")
+    elif use == "run":
+        command = ["start", "cmd", "/K"] + command
+        process = subprocess.run(command, shell=True)
+        print(f"Started processing with command {command}")
+    
 
 
-if __name__ == "__main__":
+def create_command_bat_file(path, location="osgeo"):
+    command = notebook_command(location)
 
-    open_server()
+    with open(path, "w") as bat_file:
+        bat_file.write(" ".join(command))
