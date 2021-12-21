@@ -157,14 +157,15 @@ def notebook_command(location="osgeo"):
 
     'user' uses an exectuable
     """
+    system, python_interpreter = _get_python_interpreter()
+
     if location == "osgeo":
-        system, python_interpreter = _get_python_interpreter()
         if system == "qgis":
             command = [python_interpreter, "-m", "notebook"]
         else:
             command = [python_interpreter, "-m", "jupyter", "notebook"]
     else:
-        command = [user_installed_notebook_path()]
+        command = [python_interpreter, user_installed_notebook_path()]
     return command
 
 
