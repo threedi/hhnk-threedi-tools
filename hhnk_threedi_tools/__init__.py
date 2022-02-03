@@ -5,7 +5,7 @@ import sys
 # sys.path.insert(0, 'C:\\Users\wvangerwen\github\hhnk-threedi-tools')
 
 # folder
-from hhnk_threedi_tools.core.folders import Folders
+from hhnk_threedi_tools.core.folders import Folders as folders
 
 import hhnk_threedi_tools.core
 import hhnk_threedi_tools.resources

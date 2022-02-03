@@ -56,6 +56,7 @@ from hhnk_threedi_tools.variables.api_settings import (
 import fiona
 import geopandas as gpd
 
+
 # Globals
 DAMO = f"DAMO{file_types_dict[GDB]}"
 HDB = f"HDB{file_types_dict[GDB]}"
@@ -220,9 +221,9 @@ class Folder:
         return str(self.pl / name)
 
     def add_file(self, objectname, filename, ftype="file"):
-        if not os.path.exists(self.full_path(filename)) or filename in [None, ""]:
-            new_file = File("")
-        elif ftype == "file":
+        # if not os.path.exists(self.full_path(filename)) or filename in [None, ""]:
+        #     new_file = File("")
+        if ftype == "file":
             new_file = File(self.full_path(filename))
         elif ftype == "filegdb":
             new_file = FileGDB(self.full_path(filename))
@@ -300,6 +301,8 @@ class Folders(Folder):
 
     def __init__(self, base, create=True):
         super().__init__(base)
+
+        print('v6')
 
         # source
         self.source_data = SourcePaths(self.base)
@@ -839,22 +842,56 @@ class OneDTwoD(ThreediRevisions):
         return self.revision_structure("one_d_two_d")
 
 
-class ClimateResultsRevisions(Folder):
-    def __init__(self, base, folder):
+#TODO vervangen door ResultsRevisions
+# class ClimateResultsRevisions(Folder):
+#     def __init__(self, base, folder):
+#         super().__init__(os.path.join(base, folder))
+#         self.isrevisions = True
+
+#     def __getitem__(self, revision):
+#         """revision can be a integer or a path"""
+#         if type(revision) == int:
+#             return ClimateResult(self.full_path(self.revisions[revision]))
+#         elif os.path.exists(revision):
+#             return ClimateResult(revision)
+#         elif (self.pl / revision).exists():
+#             return ClimateResult(self.full_path(revision))
+#         else:
+#             print("path not found, create with '.create()'")
+#             return ClimateResult(self.full_path(revision))
+
+#     def revision_structure(self, name):
+#         spacing = "\n\t\t\t\t\t\t\t"
+#         structure = f""" {spacing}{name} """
+#         for i, rev in enumerate(self.revisions):
+#             if i == len(self.revisions) - 1:
+#                 structure = structure + f"{spacing}└── {rev}"
+#             else:
+#                 structure = structure + f"{spacing}├── {rev}"
+
+#         return structure
+
+#     @property
+#     def revisions(self):
+#         return self.content
+
+class ResultsRevisions(Folder):
+    def __init__(self, base, folder, returnclass):
         super().__init__(os.path.join(base, folder))
         self.isrevisions = True
+        self.returnclass = returnclass #eg ClimateResult
 
     def __getitem__(self, revision):
         """revision can be a integer or a path"""
         if type(revision) == int:
-            return ClimateResult(self.full_path(self.revisions[revision]))
+            return self.returnclass(self.full_path(self.revisions[revision]))
         elif os.path.exists(revision):
-            return ClimateResult(revision)
+            return self.returnclass(revision)
         elif (self.pl / revision).exists():
-            return ClimateResult(self.full_path(revision))
+            return self.returnclass(self.full_path(revision))
         else:
             print("path not found, create with '.create()'")
-            return ClimateResult(self.full_path(revision))
+            return self.returnclass(self.full_path(revision))
 
     def revision_structure(self, name):
         spacing = "\n\t\t\t\t\t\t\t"
@@ -872,9 +909,9 @@ class ClimateResultsRevisions(Folder):
         return self.content
 
 
-class ClimateResults(ClimateResultsRevisions):
+class ClimateResults(ResultsRevisions):
     def __init__(self, base):
-        super().__init__(base, "batch_results")
+        super().__init__(base, folder="batch_results", returnclass=ClimateResult)
         self.create(parents=False)  # create outputfolder if parent exists
 
     @property
@@ -901,6 +938,7 @@ class ClimateResult(Folder):
 
 
 class ThreediResult(Folder):
+    """Use .grid to get GridH5ResultAdmin and .admin to get GridH5Admin"""
     def __init__(self, base):
         super().__init__(base)
 
@@ -915,6 +953,7 @@ class ThreediResult(Folder):
     @property
     def admin(self):
         return GridH5Admin(self.admin_path.file_path)
+
 
 
 class ClimateResultOutput(Folder):
@@ -1071,6 +1110,7 @@ class OutputFolder(Folder):
                """
 
 
+#1d2d output
 class OutputPaths(Folder):
     """
     Output paths are only defined up to the foldername
@@ -1084,9 +1124,9 @@ class OutputPaths(Folder):
 
         self.sqlite_tests = OutputFolder(self.full_path("Sqlite_tests"))
         self.bank_levels = OutputFolder(self.full_path("Bank_levels"))
-        self.zero_d_one_d = OutputZeroDoneD(self.full_path("0d1d_tests"))
-        self.one_d_two_d = OutputOneDTwoD(self.full_path("1d2d_tests"))
-        self.climate = OutputClimate(self.full_path("Climate"))
+        self.zero_d_one_d = OutputZeroDoneD(self.base, "0d1d_tests")
+        self.one_d_two_d = OutputFolder1d2d(self.base, "1d2d_tests")
+        self.climate = OutputClimate(self.base, "Climate")
 
     @property
     def structure(self):
@@ -1100,60 +1140,76 @@ class OutputPaths(Folder):
 
                """
 
+#TODO vervangen door ResultsRevisions
+# class OutputRevisions(Folder):
+#     def __init__(self, base):
+#         super().__init__(base)
+#         self.isrevisions = True
 
-class OutputRevisions(Folder):
-    def __init__(self, base):
-        super().__init__(base)
-        self.isrevisions = True
+#     def __getitem__(self, revision):
+#         if type(revision) == int:
+#             return OutputFolder(self.full_path(self.revisions[revision]))
+#         elif os.path.exists(revision):
+#             return OutputFolder(revision)
+#         elif (self.pl / revision).exists():
+#             return OutputFolder(self.full_path(revision))
+#         else:
+#             print("path not found, create with '.create()'")
+#             return OutputFolder(self.full_path(revision))
 
-    def __getitem__(self, revision):
-        if type(revision) == int:
-            return OutputFolder(self.full_path(self.revisions[revision]))
-        elif os.path.exists(revision):
-            return OutputFolder(revision)
-        elif (self.pl / revision).exists():
-            return OutputFolder(self.full_path(revision))
-        else:
-            print("path not found, create with '.create()'")
-            return OutputFolder(self.full_path(revision))
+#     def revision_structure(self, name):
+#         spacing = "\n\t\t\t\t\t\t\t"
+#         structure = f""" {spacing}{name} """
+#         for i, rev in enumerate(self.revisions):
+#             if i == len(self.revisions) - 1:
+#                 structure = structure + f"{spacing}└── {rev}"
+#             else:
+#                 structure = structure + f"{spacing}├── {rev}"
 
-    def revision_structure(self, name):
-        spacing = "\n\t\t\t\t\t\t\t"
-        structure = f""" {spacing}{name} """
-        for i, rev in enumerate(self.revisions):
-            if i == len(self.revisions) - 1:
-                structure = structure + f"{spacing}└── {rev}"
-            else:
-                structure = structure + f"{spacing}├── {rev}"
+#         return structure
 
-        return structure
-
-    @property
-    def revisions(self):
-        return os.listdir(self.base)
+#     @property
+#     def revisions(self):
+#         return os.listdir(self.base)
 
 
-class OutputZeroDoneD(OutputRevisions):
-    def __init__(self, base):
-        super().__init__(base)
+class OutputZeroDoneD(ResultsRevisions):
+    def __init__(self, base, folder):
+        super().__init__(base, folder=folder, returnclass=Outputd1d2d)
 
     @property
     def structure(self):
         return self.revision_structure("zero_d_one_d")
 
 
-class OutputOneDTwoD(OutputRevisions):
-    def __init__(self, base):
-        super().__init__(base)
+class OutputFolder1d2d(ResultsRevisions):
+    def __init__(self, base, folder):
+        super().__init__(base, folder=folder, returnclass=Outputd1d2d)
 
     @property
     def structure(self):
         return self.revision_structure("one_d_two_d")
 
 
-class OutputClimate(OutputRevisions):
+class Outputd1d2d(Folder):
     def __init__(self, base):
         super().__init__(base)
+
+        self.add_file("grid_nodes_2d", "grid_nodes_2d.gpkg", "file")
+        self.add_file("stroming_1d2d_test", "stroming_1d2d_test.gpkg", "file")
+        for T in [1,3,15]:
+            self.add_file(f"waterstand_T{T}", f"waterstand_T{T}.tif", "raster")
+            self.add_file(f"waterdiepte_T{T}", f"waterdiepte_T{T}.tif", "raster")
+
+
+    # @property
+    # def structure(self):
+    #     return self.("one_d_two_d")
+
+
+class OutputClimate(ResultsRevisions):
+    def __init__(self, base, folder):
+        super().__init__(base, folder=folder, returnclass=Outputd1d2d)
         self.create()  # create outputfolder if parent exists
 
     @property
