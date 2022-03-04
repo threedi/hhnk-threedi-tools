@@ -217,7 +217,10 @@ class Folder:
 
     def full_path(self, name):
         """returns the full path of a file or a folder when only a name is known"""
-        return str(self.pl / name)
+        if "/" in name:
+            return str(self.pl) + name
+        else:
+            return str(self.pl / name)
 
     def add_file(self, objectname, filename, ftype="file"):
         if not os.path.exists(self.full_path(filename)) or filename in [None, ""]:
@@ -890,7 +893,30 @@ class ClimateResult(Folder):
 
         self.downloads = ClimateResultDownloads(self.base)
         self.output = ClimateResultOutput(self.base)
+        
+        # Files
+        self.add_file("blok_grid_path", "/01_downloads/blok_GHG_T1000/results_3di.nc")
+        self.add_file("blok_admin_path", "/01_downloads/blok_GHG_T1000/gridadmin.h5")
+        self.add_file("piek_grid_path", "/01_downloads/piek_GHG_T1000/results_3di.nc")
+        self.add_file("piek_admin_path", "/01_downloads/piek_GHG_T1000/gridadmin.h5")
+    
+    @property
+    def grid_path(self):
+        return self.blok_grid_path
 
+    @property
+    def admin_path(self):
+        return self.blok_admin_path        
+
+    def grid(self, _type):
+        if _type == "blok":
+            return  GridH5ResultAdmin(self.blok_admin_path.file_path, self.blok_grid_path.file_path)
+        return GridH5ResultAdmin(self.piek_admin_path.file_path, self.piek_grid_path.file_path)
+
+    def admin(self):
+        return GridH5Admin(self.blok_admin_path.file_path)
+    
+    
     @property
     def structure(self):
         return f"""  
@@ -1000,6 +1026,13 @@ class ClimateResultDownloads(Folder):
 
         # for name in RAW_DOWNLOADS:
         #     setattr(self, name, ThreediResult(self.full_path(name)))
+        
+        # Files
+        self.add_file("blok_grid_path", "/blok_GHG_T1000/results_3di.nc")
+        self.add_file("blok_admin_path", "/blok_GHG_T1000/gridadmin.h5")
+        self.add_file("piek_grid_path", "/piek_GHG_T1000/results_3di.nc")
+        self.add_file("piek_admin_path", "/piek_GHG_T1000/gridadmin.h5")
+
 
         for name in self.names:
             setattr(self, name, ClimateResultScenario(self.base, name))
@@ -1016,6 +1049,25 @@ class ClimateResultDownloads(Folder):
                 for rain_scenario in RAIN_SCENARIOS:
                     names.append(f"{rain_type}_{groundwater}_{rain_scenario}")
         self._names = names
+    
+    @property
+    def grid_path(self):
+        return self.blok_grid_path
+
+    @property
+    def admin_path(self):
+        return self.blok_admin_path        
+
+    def grid(self, _type):
+        if _type == "blok":
+            return  GridH5ResultAdmin(self.blok_admin_path.file_path, self.blok_grid_path.file_path)
+        return GridH5ResultAdmin(self.piek_admin_path.file_path, self.piek_grid_path.file_path)
+
+    def admin(self):
+        return GridH5Admin(self.blok_admin_path.file_path)
+    
+
+
 
     def __repr__(self):
         return f"""{self.name} @ {self.path}
@@ -1088,6 +1140,19 @@ class OutputPaths(Folder):
         self.one_d_two_d = OutputOneDTwoD(self.full_path("1d2d_tests"))
         self.climate = OutputClimate(self.full_path("Climate"))
 
+
+    def __getitem__(self, name):
+        if name == "0d1d_results":
+            return self.zero_d_one_d
+        elif name == "1d2d_results":
+            return self.one_d_two_d
+        elif name in ["batch_results", "climate_results", "climate"]:
+            return self.climate
+        elif name == "bank_levels":
+            return self.bank_levels
+        elif name =="sqlite_tests":
+            return self.sqlite_tests
+        
     @property
     def structure(self):
         return f"""  

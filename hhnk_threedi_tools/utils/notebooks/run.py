@@ -15,8 +15,6 @@ import tempfile
 import shutil
 import json
 import site
-import multiprocessing
-
 CREATE_NEW_PROCESS_GROUP = 0x00000200
 DETACHED_PROCESS = 0x00000008
 
@@ -54,25 +52,6 @@ def write_notebook_json(directory, data):
 def read_notebook_json(directory):
     with open(directory + "/notebook_data.json") as f:
         return json.load(f)
-
-
-def open_notebook(filename, temp=False):
-    """Creates a copy and opens a jupyter notebook using nbopen"""
-
-    ipy_dir = pathlib.Path(__file__).parent
-
-    if not ".ipynb" in filename:
-        filename = filename + ".ipynb"
-
-    assert os.path.exists(str(ipy_dir / filename))
-
-    if temp:
-        with TempCopy(str(ipy_dir / filename)) as temp_copy_path:
-            print("Opening copy", temp_copy_path)
-            _run_notebook(temp_copy_path)
-    else:
-        _run_notebook(str(ipy_dir / filename))
-
 
 def _get_python_interpreter():
     """Return the path to the python3 interpreter.
@@ -113,35 +92,6 @@ def _get_python_interpreter():
 
         return "qgis", interpreter
 
-
-def _run_notebook(notebook_path):
-    system, python_interpreter = _get_python_interpreter()
-    if system == "qgis":
-        command = [python_interpreter, "-m", "notebook", notebook_path]
-    else:
-        command = [python_interpreter, "-m", "jupyter", "notebook", notebook_path]
-
-    process = subprocess.Popen(
-        command,
-        universal_newlines=True,
-        stdin=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    )
-
-    # with process.stdout:
-    #     for line in iter(process.stdout.readline, b''):
-    #         print(line)
-
-    # process.wait()
-
-
-def copy_sys_env():
-    myenv = os.environ.copy()
-    myenv["PYTHONPATH"] = ";".join([str(i) for i in sys.path])
-    return myenv
-
-
 def user_installed_notebook_path():
     path = site.getusersitepackages().replace("site-packages", "Scripts")
     if os.path.exists(path + "/jupyter-notebook.exe"):
@@ -149,8 +99,15 @@ def user_installed_notebook_path():
     else:
         return None
 
+def user_installed_ipython_path():
+    path = site.getusersitepackages().replace("site-packages", "Scripts")
+    if os.path.exists(path + "/ipython.exe"):
+        return path + "/ipython.exe"
+    else:
+        return None
 
-def notebook_command(location="osgeo"):
+
+def notebook_command(location="osgeo", ipython=False):
     """if jupyter is installed in osgeo, use osgeo.
     if jupyter is installed in the user dir 'pip install jupyter --user'
     use 'user'.
@@ -165,9 +122,11 @@ def notebook_command(location="osgeo"):
         else:
             command = [python_interpreter, "-m", "jupyter", "notebook"]
     else:
-        command = [python_interpreter, user_installed_notebook_path()]
-    return command
-
+        if ipython:
+            return [python_interpreter, user_installed_ipython_path()]
+        else:
+            return [python_interpreter, user_installed_notebook_path()]
+        
 
 def open_server(directory=None, location="osgeo", use="run"):
     """directory:
@@ -192,7 +151,6 @@ def open_server(directory=None, location="osgeo", use="run"):
             stdout=None,
             stderr=None,
             close_fds=True,
-            env=copy_sys_env(),
             creationflags=DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP,
         )
         print(f"Started processing with pid: {process.pid} and command {command}")
@@ -200,11 +158,50 @@ def open_server(directory=None, location="osgeo", use="run"):
         command = ["start", "cmd", "/K"] + command
         process = subprocess.run(command, shell=True)
         print(f"Started processing with command {command}")
-    
-
 
 def create_command_bat_file(path, location="osgeo"):
     command = notebook_command(location)
 
     with open(path, "w") as bat_file:
         bat_file.write(" ".join(command))
+
+
+def add_notebook_paths(extra_notebook_paths):
+    """ adds extra notebook paths, which is used in the plugin"""
+    
+    # user profile paths
+    user_profile_path = os.environ['USERPROFILE']
+    ipython_profile_path = user_profile_path +"/.ipython/profile_default/ipython_config.py"
+    
+    nb_path_command = "import sys"
+    for path in extra_notebook_paths:
+        path = path.replace("\\", "/")
+        nb_path_command  = nb_path_command  + f'; sys.path.append("{path}")'
+    nb_string = f"c.InteractiveShellApp.exec_lines = ['{nb_path_command}']"
+
+    if not os.path.exists(ipython_profile_path):
+        # create a profile
+        command = notebook_command("user", ipython=True)
+        command = command[1] + " profile create"
+        
+        subprocess.run(command, shell=True)
+        print("Creating profile with: ", command)
+        # print(["start", "cmd", "/K"] + command)
+        # output, error = process.communicate()
+        # exit_code = process.wait()
+        # if exit_code:
+        #     print(f"Creating ipython profile failed: {error} {output}")
+    
+    # check if paths are already available
+    exists = False
+    with open(ipython_profile_path, "r") as profile_code:
+        for i in profile_code:
+            if nb_string in profile_code:
+                exists=True
+                break
+    
+    if not exists:
+        print("Adding:", nb_string)
+        with open(ipython_profile_path, "a") as profile_code:
+            profile_code.write("\n"  + nb_string)
+    
