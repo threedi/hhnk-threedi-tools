@@ -1122,9 +1122,9 @@ class OutputPaths(Folder):
     def __init__(self, base):
         super().__init__(os.path.join(base, "Output"))
 
-        self.sqlite_tests = OutputFolder(self.full_path("Sqlite_tests"))
+        self.sqlite_tests = OutputFolderSqlite(self.full_path("Sqlite_tests"))
         self.bank_levels = OutputFolder(self.full_path("Bank_levels"))
-        self.zero_d_one_d = OutputZeroDoneD(self.base, "0d1d_tests")
+        self.zero_d_one_d = OutputFolder0d1d(self.base, "0d1d_tests")
         self.one_d_two_d = OutputFolder1d2d(self.base, "1d2d_tests")
         self.climate = OutputClimate(self.base, "Climate")
 
@@ -1173,25 +1173,50 @@ class OutputPaths(Folder):
 #         return os.listdir(self.base)
 
 
-class OutputZeroDoneD(ResultsRevisions):
+
+class OutputFolderSqlite(Folder):
+    def __init__(self, base):
+        super().__init__(base)
+
+        self.add_file("bodemhoogte_kunstwerken", "bodemhoogte_kunstwerken.gpkg", "file")
+        self.add_file("bodemhoogte_stuw", "bodemhoogte_stuw.gpkg", "file")
+        self.add_file("gebruikte_profielen", "gebruikte_profielen.gpkg", "file")
+        self.add_file("geisoleerde_watergangen", "geisoleerde_watergangen.gpkg", "file")
+        self.add_file("gestuurde_kunstwerken", "gestuurde_kunstwerken.gpkg", "file")
+        self.add_file("drooglegging", "drooglegging.tif", "raster")
+        self.add_file("geometry_check", "geometry_check.csv", "file")
+        self.add_file("general_sqlite_checks", "general_sqlite_checks.csv", "file")
+
+class OutputFolder0d1d(ResultsRevisions):
     def __init__(self, base, folder):
-        super().__init__(base, folder=folder, returnclass=Outputd1d2d)
+        super().__init__(base, folder=folder, returnclass=Outputd0d1d_revision)
 
     @property
     def structure(self):
         return self.revision_structure("zero_d_one_d")
 
 
+class Outputd0d1d_revision(Folder):
+    """Outputfolder 0d1d for a specific revision."""
+    def __init__(self, base):
+        super().__init__(base)
+
+        self.add_file("nodes_0d1d_test", "nodes_0d1d_test.gpkg", "file")
+        self.add_file("hydraulische_toets_kunstwerken", "hydraulische_toets_kunstwerken.gpkg", "file")
+        self.add_file("hydraulische_toets_watergangen", "hydraulische_toets_watergangen.gpkg", "file")
+
+
 class OutputFolder1d2d(ResultsRevisions):
     def __init__(self, base, folder):
-        super().__init__(base, folder=folder, returnclass=Outputd1d2d)
+        super().__init__(base, folder=folder, returnclass=Outputd1d2d_revision)
 
     @property
     def structure(self):
         return self.revision_structure("one_d_two_d")
 
 
-class Outputd1d2d(Folder):
+class Outputd1d2d_revision(Folder):
+    """Outputfolder 1d2d for a specific revision."""
     def __init__(self, base):
         super().__init__(base)
 
@@ -1207,9 +1232,10 @@ class Outputd1d2d(Folder):
     #     return self.("one_d_two_d")
 
 
+#TODO hoort deze class hier nog? resultaten staan op een andere plek
 class OutputClimate(ResultsRevisions):
     def __init__(self, base, folder):
-        super().__init__(base, folder=folder, returnclass=Outputd1d2d)
+        super().__init__(base, folder=folder, returnclass=Outputd1d2d_revision)
         self.create()  # create outputfolder if parent exists
 
     @property

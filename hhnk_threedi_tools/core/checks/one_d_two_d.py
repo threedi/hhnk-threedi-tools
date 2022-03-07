@@ -60,13 +60,10 @@ from hhnk_threedi_tools.variables.one_d_two_d import (
 )
 
 
-# Globals
-LEVEL_TEMPLATE = "waterstand_T{}_uur"
-DEPTH_TEMPLATE = "waterdiepte_T{}_uur"
 
 
 
-
+#TODO functies weer in class onderbrengen
 class OneDTwoDTest:
     def __init__(self, folder: Folders, revision=0, dem_path=None, output_path=None):
         self.fenv = folder
@@ -76,8 +73,8 @@ class OneDTwoDTest:
         self.timestep_df = df
         self.threedi_results = threedi_result
 
-        self.level_template = LEVEL_TEMPLATE
-        self.depth_template = DEPTH_TEMPLATE
+        # self.level_template = LEVEL_TEMPLATE
+        # self.depth_template = DEPTH_TEMPLATE
 
         if output_path:
             self.output_path = output_path

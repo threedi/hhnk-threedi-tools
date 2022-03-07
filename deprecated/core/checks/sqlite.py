@@ -137,24 +137,56 @@ class SqliteTest:
     def __init__(
         self,
         folder: Folders,
-        # model_path=None,
-        # dem_path=None,
-        # datachecker_path=None,
-        # damo_path=None,
-        # hdb_path=None,
-        # polder_polygon_path=None,
-        # channels_from_profiles_path=None,
+        model_path=None,
+        dem_path=None,
+        datachecker_path=None,
+        damo_path=None,
+        hdb_path=None,
+        polder_polygon_path=None,
+        channels_from_profiles_path=None,
     ):
         self.fenv = folder
 
-        self.model = self.fenv.model.database.path
-        self.dem = self.fenv.model.rasters.dem.path
-        self.datachecker = self.fenv.source_data.datachecker.path
-        self.damo = self.fenv.source_data.damo.path
-        self.hdb_path = self.fenv.source_data.hdb.path
-        self.polder_polygon = self.fenv.source_data.polder_polygon.path
-        self.channels_from_profiles = self.fenv.source_data.modelbuilder.channel_from_profiles.path
-        self.datachecker_fixeddrainage = self.fenv.source_data.datachecker_fixed_drainage
+        if model_path:
+            self.model = model_path
+        else:
+            self.model = str(self.fenv.model.database)
+
+        if dem_path:
+            self.dem = dem_path
+        else:
+            self.dem = str(self.fenv.model.rasters.dem)
+
+        if datachecker_path:
+            self.datachecker = datachecker_path
+        else:
+            self.datachecker = str(self.fenv.source_data.datachecker)
+
+        if damo_path:
+            self.damo = damo_path
+        else:
+            self.damo = str(self.fenv.source_data.damo)
+
+        if hdb_path:
+            self.hdb = hdb_path
+        else:
+            self.hdb = str(self.fenv.source_data.hdb)
+
+        if polder_polygon_path:
+            self.polder_polygon = polder_polygon_path
+        else:
+            self.polder_polygon = str(self.fenv.source_data.polder_polygon)
+
+        if channels_from_profiles_path:
+            self.channels_from_profiles = channels_from_profiles_path
+        else:
+            self.channels_from_profiles = str(
+                self.fenv.source_data.modelbuilder.channel_from_profiles
+            )
+
+        self.datachecker_fixeddrainage = str(
+            self.fenv.source_data.datachecker_fixed_drainage
+        )
 
         self.results = {}
 
@@ -169,6 +201,7 @@ class SqliteTest:
         wordt ook relevante informatie uit de HDB database toegevoegd, zoals het streefpeil en minimale en maximale kruin
         hoogtes.
         """
+        hdb_path = self.hdb
         hdb_layer = str(self.fenv.source_data.hdb_sturing_3di_layer)
 
         try:
@@ -180,8 +213,9 @@ class SqliteTest:
             model_control_gdf[
                 [START_ACTION, MIN_ACTION, MAX_ACTION]
             ] = model_control_gdf.apply(get_action_values, axis=1, result_type="expand")
-            hdb_stuw_gdf = gpd.read_file(self.hdb_path, driver=OPEN_FILE_GDB_DRIVER, layer=hdb_layer
-                )[["CODE", "STREEFPEIL", "MIN_KRUINHOOGTE", "MAX_KRUINHOOGTE"]]
+            hdb_stuw_gdf = gpd.read_file(
+                hdb_path, driver=OPEN_FILE_GDB_DRIVER, layer=hdb_layer
+            )[["CODE", "STREEFPEIL", "MIN_KRUINHOOGTE", "MAX_KRUINHOOGTE"]]
             hdb_stuw_gdf.rename(
                 columns={
                     "CODE": code_col,
@@ -211,7 +245,7 @@ class SqliteTest:
         except Exception as e:
             raise e from None
 
-    def run_dewatering_depth(self, output_file):
+    def run_dewatering_depth(self):
         """
         Compares initial water level from fixed drainage level areas with
         surface level in DEM of model. Initial water level should be below
@@ -219,7 +253,15 @@ class SqliteTest:
         """
         # This add .tif extension to output file name, is needed for save_raster_array_to_tif function
 
-        init_waterlevel_value_field = self.fenv.source_data.init_waterlevel_val_field
+        layer_path = str(self.fenv.output.sqlite_tests.layers)
+        init_wl_file = str(self.fenv.source_data.init_water_level_filename)
+        dewatering_file = str(self.fenv.source_data.dewatering_filename)
+        init_waterlevel_value_field = str(
+            self.fenv.source_data.init_waterlevel_val_field
+        )
+
+        init_water_level_out = create_tif_path(folder=layer_path, filename=init_wl_file)
+        dewatering_out = create_tif_path(folder=layer_path, filename=dewatering_file)
 
         try:
             # Load layers
@@ -231,27 +273,26 @@ class SqliteTest:
             dem_array, dem_nodata, dem_metadata = hrt.load_gdal_raster(self.dem)
             # Rasterize fixeddrainage
             initial_water_level_arr = hrt.gdf_to_raster(
-                gdf=fixeddrainage,
+                fixeddrainage,
                 value_field=init_waterlevel_value_field,
-                raster_out='',
+                raster_out=init_water_level_out,
                 nodata=dem_nodata,
                 metadata=dem_metadata,
-                driver='MEM'
             )
             dewatering_array = np.subtract(dem_array, initial_water_level_arr)
             # restore nodata pixels using mask
             nodata_mask = dem_array == dem_nodata
-
+            os.remove(init_water_level_out)
             dewatering_array[nodata_mask] = dem_nodata
             # Save array to raster
             hrt.save_raster_array_to_tiff(
-                output_file=output_file,
+                output_file=dewatering_out,
                 raster_array=dewatering_array,
                 nodata=dem_nodata,
                 metadata=dem_metadata,
             )
-            self.results["dewatering_depth"] = output_file
-            return output_file
+            self.results["dewatering_depth"] = dewatering_out
+            return dewatering_out
         except Exception as e:
             raise e from None
 
