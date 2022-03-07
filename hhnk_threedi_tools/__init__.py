@@ -17,7 +17,7 @@ from hhnk_threedi_tools.core.checks.sqlite import SqliteTest
 from hhnk_threedi_tools.core.checks.zero_d_one_d import ZeroDOneDTest
 
 # notebooks
-from hhnk_threedi_tools.utils.notebooks.run import open_notebook
+from hhnk_threedi_tools.utils.notebooks.run import add_notebook_paths
 from hhnk_threedi_tools.utils.notebooks.run import write_notebook_json
 from hhnk_threedi_tools.utils.notebooks.run import read_notebook_json
 from hhnk_threedi_tools.utils.notebooks.run import open_server
