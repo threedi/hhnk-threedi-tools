@@ -6,6 +6,8 @@ import sys
 
 # folder
 from hhnk_threedi_tools.core.folders import Folders as folders
+from hhnk_threedi_tools.core.folders import Folders as Folders
+
 
 import hhnk_threedi_tools.core
 import hhnk_threedi_tools.resources

@@ -263,9 +263,8 @@ class SqliteTest:
         try:
             queries_lst = [item for item in vars(ModelCheck()).values()]
             query = "UNION ALL\n".join(queries_lst)
-            db = hrt.execute_sql_selection(
-                query=query, database_path=self.model, index_col=id_col
-            )
+            db = hrt.execute_sql_selection(query=query, database_path=self.model)# , index_col=id_col #door index_col mee te geven verwdijnt deze.
+            
             self.results["model_checks"] = db
             return db
         except Exception as e:
