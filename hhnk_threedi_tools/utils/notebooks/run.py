@@ -176,7 +176,7 @@ def add_notebook_paths(extra_notebook_paths):
     nb_path_command = "import sys"
     for path in extra_notebook_paths:
         path = path.replace("\\", "/")
-        nb_path_command  = nb_path_command  + f'; sys.path.append("{path}")'
+        nb_path_command  = nb_path_command  + f'; sys.path.insert(0,"{path}")'
     nb_string = f"c.InteractiveShellApp.exec_lines = ['{nb_path_command}']"
 
     if not os.path.exists(ipython_profile_path):
