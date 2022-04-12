@@ -10,6 +10,7 @@ import os
 # Third-party imports
 import numpy as np
 import geopandas as gpd
+import pandas as pd
 from shapely import wkt
 
 # research-tools
@@ -18,6 +19,8 @@ from hhnk_research_tools.variables import OPEN_FILE_GDB_DRIVER, ESRI_DRIVER, GPK
 
 # Local imports
 from hhnk_threedi_tools.core.folders import Folders, create_tif_path
+from threedigrid_builder import make_gridadmin
+
 
 # queries
 from hhnk_threedi_tools.utils.queries import (
@@ -504,6 +507,14 @@ class SqliteTest:
             raise e from None
 
 
+    def create_grid_from_sqlite(self, sqlite_path, dem_path, output_folder):
+        """Create grid from sqlite, this includes cells, lines and nodes."""
+        grid=make_gridadmin(sqlite_path, dem_path) #using output here results in error, so we use the returned dict
+
+        for i in ['cells', 'lines', 'nodes']:
+            _write_grid_to_file(grid=grid, grid_type=i, output_path=os.path.join(output_folder, f"{i}.gpkg"))
+
+
 ## helper functions
 def get_action_values(row):
     if row[target_type_col] is weir_layer:
@@ -747,3 +758,9 @@ def calc_area(fixeddrainage, modelbuilder_waterdeel, damo_waterdeel, conn_nodes_
         return fixeddrainage
     except Exception as e:
         raise e from None
+
+
+def _write_grid_to_file(grid, grid_type, output_path):
+    df = pd.DataFrame(grid[grid_type])
+    gdf = hrt.df_convert_to_gdf(df, geom_col_type='wkb', src_crs='28992')
+    hrt.gdf_write_to_geopackage(gdf, filepath=output_path)
