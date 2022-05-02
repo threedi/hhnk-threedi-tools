@@ -305,8 +305,6 @@ class Folders(Folder):
     def __init__(self, base, create=True):
         super().__init__(base)
 
-        print('v6')
-
         # source
         self.source_data = SourcePaths(self.base)
 
