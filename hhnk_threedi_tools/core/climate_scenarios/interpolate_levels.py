@@ -318,6 +318,7 @@ def threedi_result_volume(folder:Folders, results_type:str, revision:str, calcul
     
 
 if __name__ == "__main__":
+    pass
     import os
     os.chdir(r"C:\Users\chris.kerklaan\Documents\Projecten\hhnk_detachering\hhnk_scripting\bwn_beemster")
     
@@ -338,7 +339,7 @@ if __name__ == "__main__":
     method = "interpolated"
     
     output_folder = r"C:\Users\chris.kerklaan\Documents\Projecten\hhnk_detachering\hhnk_scripting\bwn_beemster/03_3di_resultaten\1d2d_results/test_interpolated"
-    data = edit_nodes_in_grid(folder_path,"nieuw","interpolated",output_path)
+    data = edit_nodes_in_grid(folder_path,"nieuw","interpolated",output_folder)
     
     calculate_depth(folder_path, "1d2d_results", "test_interpolated", 576)
     
