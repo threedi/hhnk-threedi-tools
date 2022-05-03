@@ -703,7 +703,7 @@ class RasterPaths(Folder):
                 for item in p.iterdir()
                 if item.suffix == file_types_dict[TIF] and item.stem.startswith("dem_")
             ]
-            if len(dir_list) == 1:
+            if len(dir_list) > 0 :
                 return os.path.join(self.base, dir_list[0].name)
             else:
                 return ""

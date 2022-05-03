@@ -13,7 +13,7 @@ import pandas as pd
 import numpy as np
 import hhnk_research_tools as hrt
 from hhnk_research_tools.variables import GPKG_DRIVER
-from hhnk_research_tools.threedi.grid import read_1d2d_lines, import_levees
+from hhnk_research_tools.threedi.grid import Grid
 from hhnk_research_tools.threedi.geometry_functions import extract_boundary_from_polygon
 
 # Local imports
@@ -136,7 +136,6 @@ class BankLevelTest:
         self,
         model_path=None,
         datachecker_path=None,
-        threedi_grid_results=None,
         revision: int = 0,
     ):
         """imports data from the folder environment
@@ -152,9 +151,11 @@ class BankLevelTest:
         if self.datachecker_path == None:
             self.datachecker_path = self.fenv.source_data.datachecker.path
 
-        self.threedi_results = threedi_grid_results
-        if self.threedi_results == None:
-            self.threedi_results = self.fenv.threedi_results.one_d_two_d[revision].grid
+
+        self.grid = Grid(sqlite_path=self.fenv.model.sqlite_paths[0],
+                        dem_path = self.fenv.model.rasters.dem.path              
+                        )
+        
 
         self.fixeddrainage_layer = self.fenv.source_data.datachecker_fixed_drainage
 
@@ -162,7 +163,7 @@ class BankLevelTest:
             model_path=self.model_path,
             datachecker_path=self.datachecker_path,
             fixeddrainage_layer=self.fixeddrainage_layer,
-            threedi_results=self.threedi_results,
+            grid=self.grid,
         )
 
     def line_intersections(self, write=False):
@@ -293,7 +294,7 @@ def import_information(test_env: testEnvironment = None, **kwargs):
         datachecker_path = test_env.src_paths["datachecker"]
         fixeddrainage_layer = test_env.src_paths["datachecker_fixed_drainage"]
     else:
-        threedi_results = kwargs["threedi_results"]
+        grid = kwargs["grid"]
         model_path = kwargs["model_path"]
         datachecker_path = kwargs["datachecker_path"]
         fixeddrainage_layer = kwargs["fixeddrainage_layer"]
@@ -309,8 +310,8 @@ def import_information(test_env: testEnvironment = None, **kwargs):
             "fixeddrainage_lines": extract_boundary_from_polygon(
                 fixeddrainage, df_geo_col
             ),
-            "levee_lines": import_levees(threedi_results),
-            "lines_1d2d": read_1d2d_lines(threedi_results),
+            "levee_lines": grid.import_levees(),
+            "lines_1d2d": grid.read_1d2d_lines(),
             "channels": hrt.sqlite_table_to_gdf(
                 conn=conn, query=channels_query, id_col=a_chan_id
             ),
@@ -647,6 +648,7 @@ def new_cross_loc_bank_levels(intersect_1d2d_all, channel_line_geo, cross_loc):
             columns={node_geometry_col: df_geo_col}
         )
         # Buffer point to find intersections with the channels (buffering returns point within given distance of geometry)
+        print(nodes_on_channel)
         nodes_on_channel[df_geo_col] = nodes_on_channel.buffer(0.1)
         # join channels on these nodes (meaning added calculation nodes) to get the channels that need higher bank levels.
         channels_bank_level = gpd.sjoin(nodes_on_channel, channel_line_geo).drop(
