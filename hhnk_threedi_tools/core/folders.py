@@ -162,6 +162,19 @@ class Raster(File):
             print("Doesn't exist")
 
 
+class Sqlite(File):
+    def __init__(self, file_path):
+        super().__init__(file_path)
+
+    def connect(self):
+        if os.path.exists(self.path):
+            return hrt.create_sqlite_connection(self.path)
+        else:
+            return None
+
+        
+
+
 class Folder:
     """Base folder class for creating, deleting and see if folder exists"""
 
@@ -224,14 +237,20 @@ class Folder:
             return str(self.pl / name)
 
     def add_file(self, objectname, filename, ftype="file"):
-        # if not os.path.exists(self.full_path(filename)) or filename in [None, ""]:
-        #     new_file = File("")
+        # if not os.path.exists(self.full_path(filename)) or 
+        if filename in [None, ""]:
+            filepath = ''
+        else:
+            filepath = self.full_path(filename)
+
         if ftype == "file":
-            new_file = File(self.full_path(filename))
+            new_file = File(filepath)
         elif ftype == "filegdb":
-            new_file = FileGDB(self.full_path(filename))
+            new_file = FileGDB(filepath)
         elif ftype == "raster":
-            new_file = Raster(self.full_path(filename))
+            new_file = Raster(filepath)
+        elif ftype == "sqlite":
+            new_file = Sqlite(filepath)
 
         self.files[objectname] = new_file
         setattr(self, objectname, new_file)
@@ -305,13 +324,13 @@ class Folders(Folder):
     def __init__(self, base, create=True):
         super().__init__(base)
 
-        print('v6')
+        print('v7')
 
         # source
         self.source_data = SourcePaths(self.base)
 
         # model files
-        self.model = ModelPaths(self.base)
+        self.model = ModelPathsParent(self.base)
 
         # Threedi results
         self.threedi_results = ThreediResultsPaths(self.base)
@@ -466,7 +485,6 @@ class Folders(Folder):
         return files_dict
 
     def create_project(self):
-
         """
         Takes a base path as input (ex: c:/..../project_name) and creates default project structure in it.
         """
@@ -588,15 +606,57 @@ class PeilgebiedenPaths(Folder):
         self.add_file("geen_schade", "geen_schade.shp")
 
 
-class ModelPaths(Folder):
+class ModelPathsParent(Folder):
+    """Parent folder with all model (schematisations) in it. These
+    all share the same base schematisation, with only differences in 
+    global settings or other things specific for that model"""
     def __init__(self, base):
         super().__init__(os.path.join(base, "02_Model"))
+
+        self.schema_base = ModelPaths(base=self.base, name='00_basis')
+        self.schema_list = ['schema_base']
+        self.add_file('settings', 'model_settings.xlsx', ftype = 'file')
+        self.add_file('settings_default', 'model_settings_default.xlsx', ftype = 'file')
+
+
+    def add_modelpath(self, name):
+        setattr(self, f"schema_{name}", ModelPaths(base=self.base, name=name))
+        self.schema_list.append(f"schema_{name}")
+        return f"schema_{name}"
+
+    def __repr__(self):
+        return f"""{self.name} @ {self.path}
+                    Folders:\t{self.structure}
+                    Files:\t{list(self.files.keys())}
+                    Layers:\t{list(self.olayers.keys())}
+                    Model schemas:\t{self.schema_list}
+                """
+
+class ModelPaths(Folder):
+    """Inidividual model."""
+    def __init__(self, base, name):
+        super().__init__(os.path.join(base, name))
 
         # Folders
         self.rasters = RasterPaths(self.base)
 
         # File
-        self.add_file("database", self.model_path())
+        # self.add_file("database", self.model_path(), ftype='sqlite')
+
+    @property
+    def database(self):
+        name=self.model_path()
+        if name in [None, ""]:
+            filepath = ''
+        else:
+            filepath = self.full_path(name)
+        sqlite_cls = Sqlite(filepath)
+        if os.path.exists(sqlite_cls.path):
+            return sqlite_cls
+        else: 
+            return None
+
+
 
     @property
     def structure(self):
@@ -635,7 +695,6 @@ class ModelPaths(Folder):
             return get_proposed_adjustments_global_settings(
                 self.database_path, to_state
             )
-
         if table == "weirs":
             return get_proposed_adjustments_weir_width(
                 self.database_path, self.state, to_state
