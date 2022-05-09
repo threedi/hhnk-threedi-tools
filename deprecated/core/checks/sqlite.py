@@ -150,12 +150,12 @@ class SqliteTest:
         if model_path:
             self.model = model_path
         else:
-            self.model = str(self.fenv.model.database)
+            self.model = str(self.fenv.model.schema_base.database)
 
         if dem_path:
             self.dem = dem_path
         else:
-            self.dem = str(self.fenv.model.rasters.dem)
+            self.dem = str(self.fenv.model.schema_base.rasters.dem)
 
         if datachecker_path:
             self.datachecker = datachecker_path

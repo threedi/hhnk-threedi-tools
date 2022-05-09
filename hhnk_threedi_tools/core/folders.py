@@ -420,8 +420,8 @@ class Folders(Folder):
             "hdb_sturing_3di_layer": HDB_STURING_3DI,
             "init_waterlevel_val_field": WATERLEVEL_VAL_FIELD,
             # model folder
-            "model": if_exists(self.model.database.path),
-            "dem": if_exists(self.model.rasters.dem.path),
+            "model": if_exists(self.model.schema_base.database.path),
+            "dem": if_exists(self.model.schema_base.rasters.dem.path),
             # Threedi
             "0d1d_results_dir": if_exists(str(self.threedi_results.zero_d_one_d)),
             "1d2d_results_dir": if_exists(str(self.threedi_results.one_d_two_d)),

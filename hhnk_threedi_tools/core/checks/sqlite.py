@@ -150,8 +150,8 @@ class SqliteTest:
     ):
         self.fenv = folder
 
-        self.model = self.fenv.model.database.path
-        self.dem = self.fenv.model.rasters.dem.path
+        self.model = self.fenv.model.schema_base.database.path
+        self.dem = self.fenv.model.schema_base.rasters.dem.path
         self.datachecker = self.fenv.source_data.datachecker.path
         self.damo = self.fenv.source_data.damo.path
         self.hdb_path = self.fenv.source_data.hdb.path
