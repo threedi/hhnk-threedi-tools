@@ -110,9 +110,21 @@ class File:
         self.file_path = file_path
         self.pl = Path(file_path)
 
+
     @property
     def exists(self):
-        return self.pl.exists()
+        if self.file_path=='':
+            return False
+        else:
+            return self.pl.exists()
+    
+    @property
+    def path_if_exists(self):
+        """return filepath if the file exists otherwise return None"""
+        if self.exists:
+            return self.pl
+        else:
+            return None
 
     @property
     def name(self):
@@ -637,11 +649,13 @@ class ModelPaths(Folder):
     def __init__(self, base, name):
         super().__init__(os.path.join(base, name))
 
-        # Folders
-        self.rasters = RasterPaths(self.base)
-
         # File
         # self.add_file("database", self.model_path(), ftype='sqlite')
+
+    @property
+    def rasters(self):
+        return ThreediRasters(base=self.base, caller=self)
+
 
     @property
     def database(self):
@@ -738,37 +752,75 @@ class ModelPaths(Folder):
             self.add_file("database", self.model_path(name_or_idx, None))
 
 
-class RasterPaths(Folder):
-    def __init__(self, base):
-        super().__init__(os.path.join(base, "rasters"))
+# TODO Deprecated and replaced by ThreediRasters, ready to remove.
+# class RasterPaths(Folder):
+#     def __init__(self, base):
+#         super().__init__(os.path.join(base, "rasters"))
 
-        # Files
-        self.add_file("dem", self.find_dem(), "raster")
+#         # Files
+#         self.add_file("dem", self.find_dem(), "raster")
 
-    @property
-    def structure(self):
-        return None
+#     @property
+#     def structure(self):
+#         return None
 
-    def find_dem(self):
-        """
-        Look for file starting with dem_ and ending with extension .tif in given directory
+#     def find_dem(self):
+#         """
+#         Look for file starting with dem_ and ending with extension .tif in given directory
 
-        Returns path if found, empty string if not found
-        """
-        if not self.exists:
-            return ""
+#         Returns path if found, empty string if not found
+#         """
+#         if not self.exists:
+#             return ""
+#         else:
+#             p = Path(self.base)
+#             dir_list = [
+#                 item
+#                 for item in p.iterdir()
+#                 if item.suffix == file_types_dict[TIF] and item.stem.startswith("dem_")
+#             ]
+#             if len(dir_list) == 1:
+#                 return os.path.join(self.base, dir_list[0].name)
+#             else:
+#                 return ""
+
+
+class ThreediRasters(Folder):
+    def __init__(self, base, caller):
+        super().__init__(os.path.join(base, 'rasters'))
+        self.caller = caller
+
+        self.dem = self.get_raster_path(table_name='v2_global_settings', col_name = 'dem_file')
+        self.storage = self.get_raster_path(table_name='v2_simple_infiltration', col_name = 'max_infiltration_capacity_file')
+        self.friction = self.get_raster_path(table_name='v2_global_settings', col_name = 'frict_coef_file')
+        self.infiltration = self.get_raster_path(table_name='v2_simple_infiltration', col_name = 'infiltration_rate_file')
+
+    def get_raster_path(self, table_name, col_name):
+        """Read the sqlite to check which rasters are used in the model.
+        This only works for models from Klondike release onwards, where we only have
+        one global settings row."""
+        df = hrt.sqlite_table_to_df(database_path=self.caller.database.path, table_name=table_name)
+        if len(df)>1:
+            print(f'{table_name} has more than 1 row. Choosing the first row for the rasters.')
+        if len(df) == 0:
+            raster_name = None
         else:
-            p = Path(self.base)
-            dir_list = [
-                item
-                for item in p.iterdir()
-                if item.suffix == file_types_dict[TIF] and item.stem.startswith("dem_")
-            ]
-            if len(dir_list) == 1:
-                return os.path.join(self.base, dir_list[0].name)
-            else:
-                return ""
+            raster_name = df.iloc[0][col_name]
 
+
+        if raster_name==None:
+            raster_path=''
+        else:
+            raster_path=os.path.join(self.caller.base, raster_name)
+        return Raster(raster_path)
+
+    def __repr__(self):
+        return f"""  
+dem - {self.dem.name}
+storage - {self.storage.name}
+friction - {self.friction.name}
+infiltration - {self.infiltration.name}
+    """
 
 class ThreediResultsPaths(Folder):
     """
