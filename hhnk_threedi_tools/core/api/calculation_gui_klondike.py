@@ -1,10 +1,5 @@
-""" Note Chris Kerklaan: Deprecated since 02-05-2022 """
 # %%
 # system imports
-import sys
-
-# sys.path.append('C:\\Users\wvangerwen\github\hhnk-threedi-tools')
-
 import os
 import shutil
 import pprint
@@ -31,7 +26,7 @@ import openapi_client
 # local imports
 from hhnk_threedi_tools import Folders
 
-from hhnk_threedi_tools.core.api.calculation_functions import (
+from hhnk_threedi_tools.core.api.calculation_functions_klondike import (
     create_3Di_start_API_call_data,
     start_3di_calculation,
     wait_to_download_results,
@@ -43,6 +38,8 @@ from hhnk_threedi_tools.core.api.download_functions import (
     start_download,
 )
 
+from hhnk_threedi_tools.core.api.calculation import Simulation
+
 # Globals
 from hhnk_threedi_tools.variables.api_settings import (
     RAIN_SETTINGS,
@@ -53,12 +50,6 @@ from hhnk_threedi_tools.variables.api_settings import (
     API_SETTINGS,
     MODEL_TYPES,
 )
-
-threedi_api_client = None
-threedi_repo_api = None
-threedi_rev_api = None
-threedi_model_api = None
-threedi_sim_api = None
 
 simulation = None
 batch_started = False
@@ -177,26 +168,12 @@ def start_calculation_gui(
 
     @login_button.on_click
     def login(action):
-        global threedi_api_client
-        global threedi_repo_api
-        global threedi_rev_api
-        global threedi_model_api
-        global threedi_sim_api
+        global sim
 
-        config = {
-            "API_HOST": THREEDI_API_HOST,
-            "API_USERNAME": username_widget.value,
-            "API_PASSWORD": password_widget.value,
-        }
-
-        threedi_api_client = ThreediApiClient(config=config)
-        threedi_repo_api = openapi_client.api.RepositoriesApi(threedi_api_client)
-        threedi_rev_api = openapi_client.api.RevisionsApi(threedi_api_client)
-        threedi_model_api = openapi_client.api.ThreedimodelsApi(threedi_api_client)
-        threedi_sim_api = openapi_client.api.SimulationsApi(threedi_api_client)
-
+        sim = Simulation(username_widget.value, password_widget.value)
+        
         try:
-            auth_settings = threedi_api_client.configuration.auth_settings()
+            sim.logged_in
             # Login success
             login_button.style.button_color = "lightgreen"
             login_button.description = "Logged in"
@@ -215,21 +192,11 @@ def start_calculation_gui(
 
     @logout_button.on_click
     def logout(action):
-        global threedi_api_client
-        global threedi_repo_api
-        global threedi_rev_api
-        global threedi_model_api
-        global threedi_sim_api
+        global sim
 
         username_widget.value = ""
         password_widget.value = ""
-
-        config = None
-        threedi_api_client = None
-        threedi_repo_api = None
-        threedi_rev_api = None
-        threedi_model_api = None
-        threedi_sim_api = None
+        sim = None
 
         login_button.style.button_color = None
         login_button.description = "Login"
@@ -257,10 +224,10 @@ def start_calculation_gui(
 
     @polder_name_search_button.on_click
     def search_models(action):
-        global threedi_repo_api
-        repo_list = threedi_repo_api.repositories_list(
-            slug__icontains=polder_name_widget.value, limit=RESULT_LIMIT
-        ).results
+        global sim
+        repo_list = sim.threedi_api.repositories_list(
+                    slug__icontains=polder_name_widget.value, limit=RESULT_LIMIT
+                ).results
 
         slug_list = []
         for result in repo_list:
@@ -964,14 +931,15 @@ def start_calculation_gui(
 
     # Observe dropdown box, when the value changes, update other stuff as well
     def on_select_repository(selected_repository):
-        global threedi_rev_api
+        #global threedi_rev_api
+        global sim
         try:
             selected_repository = selected_repository["new"]
         except:
             pass
 
         # Find all models in the specified repository which are not disabled (due to maximum available revisions)
-        model_list = threedi_model_api.threedimodels_list(
+        model_list = sim.threedi_api.threedimodels_list(
             slug__startswith=selected_repository, disabled=False, limit=1000
         ).results
         revision_numbers = []
@@ -988,7 +956,7 @@ def start_calculation_gui(
 
         # For all available revisions find the date and add to the dropdown
         for revision_number in revision_numbers:
-            revision = threedi_rev_api.revisions_list(
+            revision = sim.threedi_api.revisions_list(
                 repository__slug=selected_repository, number=revision_number, limit=1000
             ).results[0]
             number = revision.number
@@ -1006,7 +974,7 @@ def start_calculation_gui(
     repository_dropdown.observe(on_select_repository, names="value")
 
     def on_select_revision(selected_revision):
-        global threedi_model_api
+        global sim
         try:
             selected_revision = selected_revision["new"]
         except:
@@ -1015,7 +983,7 @@ def start_calculation_gui(
         revision_number = str.split(selected_revision)[0]
 
         # Search for models within selected revision
-        model_list = threedi_model_api.threedimodels_list(
+        model_list = sim.threedi_api.threedimodels_list(
             slug__startswith=repository_dropdown.value,
             revision__number=revision_number,
             limit=100,
@@ -1072,9 +1040,9 @@ def start_calculation_gui(
         """
         Get a model (or list of model) based on the repository, revision and model name dropdowns. Not used for batch.
         """
-        global threedi_model_api
+        global sim
         revision_number = str.split(revision_dropdown.value)[0]
-        return threedi_model_api.threedimodels_list(
+        return sim.threedi_api.threedimodels_list(
             slug__startswith=repository_dropdown.value,
             revision__number=revision_number,
             name=model_name_dropdown.value,
@@ -1285,9 +1253,9 @@ def start_calculation_gui(
     # --------------------------------------------------------------------------------------------------
 
     def update_API_call_widget_v3(simulation):
-        global threedi_sim_api
+        global sim
 
-        events = threedi_sim_api.simulations_events(id=simulation.id)
+        events = sim.threedi_api.simulations_events(id=simulation.id)
 
         rain = events.timeseriesrain[0]
         rain_offset = rain.offset / 3600
@@ -1322,49 +1290,6 @@ def start_calculation_gui(
         )
 
         API_call_widget.value = '<p style="line-height:1.4">' + html_text + "</p>"
-
-    # TODO Deprecated, ready for removal.
-    # def update_API_call_widget():
-    #     """Make the api call text with enters in html format so it can be printed"""
-    #     # Retrieve rain properties
-    #     days_dry_start = rain_event_widget.children[0].value
-    #     hours_dry_start = int(rain_event_widget.children[1].value)
-    #     days_rain = rain_event_widget.children[2].value
-    #     hours_rain = int(rain_event_widget.children[3].value)
-    #     days_dry_end = rain_event_widget.children[4].value
-    #     hours_dry_end = int(rain_event_widget.children[5].value)
-    #     rain_intensity = rain_event_widget.children[6].value
-    #     organisation_uuid = API_SETTINGS["org_uuid"][organisation_box.value]
-    #     model_slug = model_slug_widget.value
-    #     scenario_name = scenario_name_widget.value
-    #     store_results = API_SETTINGS["store_results"]
-
-    #     data = create_3Di_start_API_call_data(
-    #         days_dry_start,
-    #         hours_dry_start,
-    #         days_rain,
-    #         hours_rain,
-    #         days_dry_end,
-    #         hours_dry_end,
-    #         rain_intensity,
-    #         organisation_uuid,
-    #         model_slug,
-    #         scenario_name,
-    #         store_results,
-    #     )
-
-    #     html_text = ""
-    #     for index, key in enumerate(data.keys()):
-    #         if index != 0:
-    #             html_text = html_text + "<br>"
-    #         html_text = html_text + key + ": " + str(data[key])
-
-    #     # Update the widget that displays the result.
-    #     API_call_widget.value = '<p style="line-height:1.4">' + html_text + "</p>"
-
-    #     # Save the results in dictionary so it can be used in other functions.
-    #     scenarios["api_data"] = data
-    #     scenarios["api_data_json"] = json.dumps(data)  # save to json
 
     # --------------------------------------------------------------------------------------------------
     # 7. Start calculation
@@ -1406,7 +1331,7 @@ def start_calculation_gui(
             start_button.disabled = True
             start_button.style.button_color = "red"
         elif (
-            threedi_sim_api.simulations_status_list(simulation_pk=simulation.id).name
+            sim.threedi_api.simulations_status_list(simulation_pk=simulation.id).name
             == "created"
         ):
             start_button.disabled = False
@@ -1414,7 +1339,7 @@ def start_calculation_gui(
         else:
             start_button.disabled = True
             start_button.style.button_color = "lightgreen"
-            start_button.description = threedi_sim_api.simulations_status_list(
+            start_button.description = sim.threedi_api.simulations_status_list(
                 simulation_pk=simulation.id
             ).name
 
@@ -1444,7 +1369,8 @@ def start_calculation_gui(
         """
         Creates (but does not initialize or start) a simulation
         """
-        global threedi_api_client
+        global sim
+        #global threedi_api_client
         global simulation
 
         days_dry_start = rain_event_widget.children[0].value
@@ -1479,7 +1405,7 @@ def start_calculation_gui(
 
         sqlite = sqlite_selection.selected
         simulation = create_threedi_simulation(
-            threedi_api_client=threedi_api_client,
+            sim=sim,
             sqlite_file=sqlite,
             scenario_name=scenario_name,
             model_id=model_id,
@@ -1554,7 +1480,7 @@ def start_calculation_gui(
             scenario_name_widget.value,
         )
 
-        threedi_sim_api.simulations_actions_create(
+        sim.threedi_api.simulations_actions_create(
             simulation_pk=simulation.id, data={"name": "queue"}
         )
         update_start_simulation_button()
@@ -1578,12 +1504,12 @@ def start_calculation_gui(
         """
 
         def update_start_button():
-            status_name = threedi_sim_api.simulations_status_list(
+            status_name = sim.threedi_api.simulations_status_list(
                 simulation_pk=simulation.id
             ).name
 
             try:
-                progress = threedi_sim_api.simulations_progress_list(
+                progress = sim.threedi_api.simulations_progress_list(
                     simulation.id, async_req=False
                 ).percentage
             except:
@@ -1600,13 +1526,14 @@ def start_calculation_gui(
 
     def start_batch_simulation():
         """start batch calculation for all climate scenarios using api v3"""
-
+        global sim
+        
         def get_all_model_idx() -> dict:
             """return threedi model ids of the selected glg, ggg and ghg model"""
 
             def get_model_idx(name):
                 revision_number = str.split(revision_dropdown.value)[0]
-                results = threedi_model_api.threedimodels_list(
+                results = sim.threedi_api.threedimodels_list(
                     slug__startswith=repository_dropdown.value,
                     revision__number=revision_number,
                     name=name,
@@ -1750,7 +1677,7 @@ def start_calculation_gui(
                                 while True:
                                     try:
                                         simulation = create_threedi_simulation(
-                                            threedi_api_client=threedi_api_client,
+                                            sim=sim,
                                             sqlite_file=sqlite_file,
                                             scenario_name=scenario_name,
                                             model_id=model_id,
@@ -1786,7 +1713,7 @@ def start_calculation_gui(
                                     try:
                                         all_api_calls[
                                             "{} Events".format(scenario_name)
-                                        ] = threedi_sim_api.simulations_events(
+                                        ] = sim.threedi_api.simulations_events(
                                             id=simulation.id
                                         )
                                     except openapi_client.ApiException:
@@ -1824,7 +1751,7 @@ def start_calculation_gui(
         # start the simulation
         for sim in simulations:
             print("Starting all the created simulations")
-            threedi_sim_api.simulations_actions_create(
+            sim.threedi_api.simulations_actions_create(
                 simulation_pk=sim.id, data={"name": "queue"}
             )
 

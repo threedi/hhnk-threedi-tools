@@ -1,5 +1,3 @@
-""" Note Chris Kerklaan: Deprecated since 02-05-2022 """
-
 # First-party imports
 import os
 import time
@@ -22,7 +20,7 @@ from hhnk_threedi_tools.variables.api_settings import API_SETTINGS
 from .download_functions import create_download_url, start_download
 
 
-def add_laterals_from_sqlite(threedi_sim_api, db_file, simulation):
+def add_laterals_from_sqlite(sim, db_file, simulation):
     """
     Read 1D laterals from the Sqlite and use them in the initialisation of the simulation
     """
@@ -55,7 +53,7 @@ def add_laterals_from_sqlite(threedi_sim_api, db_file, simulation):
             while True:
                 try:
                     if data is not None:
-                        threedi_sim_api.simulations_events_lateral_timeseries_create(
+                        sim.threedi_api.simulations_events_lateral_timeseries_create(
                             simulation_pk=simulation.id, data=data, async_req=False
                         )
                 except ApiException:
@@ -70,7 +68,7 @@ def add_laterals_from_sqlite(threedi_sim_api, db_file, simulation):
     conn.close()
 
 
-def add_control_from_sqlite(threedi_sim_api, db_file, simulation):
+def add_control_from_sqlite(sim, db_file, simulation):
     """
     Read table control structures from the Sqlite and use them in the initialisation of the simulation
     """
@@ -206,7 +204,7 @@ def add_control_from_sqlite(threedi_sim_api, db_file, simulation):
 
         while True:
             try:
-                threedi_sim_api.simulations_events_structure_control_table_create(
+                sim.threedi_api.simulations_events_structure_control_table_create(
                     simulation_pk=simulation.id, data=data
                 )
             except ApiException as e:
@@ -220,7 +218,7 @@ def add_control_from_sqlite(threedi_sim_api, db_file, simulation):
 
 
 def create_threedi_simulation(
-    threedi_api_client,
+    sim,
     sqlite_file,
     scenario_name,
     model_id,
@@ -271,10 +269,10 @@ def create_threedi_simulation(
     )  # TODO
 
     # create simulation api
-    threedi_sim_api = openapi_client.api.SimulationsApi(threedi_api_client)
+    #threedi_sim_api = openapi_client.api.SimulationsApi(threedi_api_client)
 
     # set up simulation
-    simulation = threedi_sim_api.simulations_create(
+    simulation = sim.threedi_api.simulations_create(
         openapi_client.models.simulation.Simulation(
             name=scenario_name,
             threedimodel=model_id,
@@ -288,7 +286,7 @@ def create_threedi_simulation(
 
     while True:
         try:
-            threedi_sim_api.simulations_initial1d_water_level_predefined_create(
+            sim.threedi_api.simulations_initial1d_water_level_predefined_create(
                 simulation_pk=simulation.id, data={}, async_req=False
             )
         except ApiException:
@@ -298,8 +296,8 @@ def create_threedi_simulation(
 
     if sqlite_file is not None:
         # add control structures (from sqlite)
-        add_control_from_sqlite(threedi_sim_api, sqlite_file, simulation)
-        add_laterals_from_sqlite(threedi_sim_api, sqlite_file, simulation)
+        add_control_from_sqlite(sim, sqlite_file, simulation)
+        add_laterals_from_sqlite(sim, sqlite_file, simulation)
 
     # add rainfall event
     rain_intensity_mmph = float(rain_intensity)  # mm/hour
@@ -322,7 +320,7 @@ def create_threedi_simulation(
 
     while True:
         try:
-            threedi_sim_api.simulations_events_rain_constant_create(
+            sim.threedi_api.simulations_events_rain_constant_create(
                 simulation.id, rain_data
             )
         except ApiException:
@@ -338,7 +336,7 @@ def create_threedi_simulation(
         }
         while True:
             try:
-                threedi_sim_api.simulations_results_post_processing_lizard_basic_create(
+                sim.threedi_api.simulations_results_post_processing_lizard_basic_create(
                     simulation.id, data=basic_processing_data
                 )
             except ApiException:
@@ -351,7 +349,7 @@ def create_threedi_simulation(
         damage_processing_data = API_SETTINGS["damage_processing"]
         while True:
             try:
-                threedi_sim_api.simulations_results_post_processing_lizard_damage_create(
+                sim.threedi_api.simulations_results_post_processing_lizard_damage_create(
                     simulation.id, data=damage_processing_data
                 )
             except ApiException:
@@ -364,7 +362,7 @@ def create_threedi_simulation(
         # Arrival time
         while True:
             try:
-                threedi_sim_api.simulations_results_post_processing_lizard_arrival_create(
+                sim.threedi_api.simulations_results_post_processing_lizard_arrival_create(
                     simulation.id, data=arrival_processing_data
                 )
             except ApiException:

@@ -22,13 +22,16 @@ Structuur:
 # system appends
 import sys
 sys.path.append(r"C:\Users\chris.kerklaan\Documents\Github\hhnk-threedi-tools")
-sys.path.append(r"C:\Users\chris.kerklaan\Documents\Github\hhnk-research-tools")
+#sys.path.append(r"C:\Users\chris.kerklaan\Documents\Github\hhnk-research-tools")
 
 # First-party imports
+import shutil
 import numpy as np
 from osgeo import ogr
 
 # Third-party imports
+import xarray as xr
+
 import rasterio
 from shapely.geometry import mapping
 from rasterio.mask import mask
@@ -42,9 +45,23 @@ from threedigrid.admin.gridresultadmin import GridH5ResultAdmin
 
 # Local imports
 from hhnk_threedi_tools import Folders
-from hhnk_research_tools.threedi.gridedit import GridEdit
+#from hhnk_research_tools.threedi.gridedit import GridEdit
 from hhnk_research_tools.gis.raster import Raster
-from hhnk_research_tools.gis.vector import rasterize
+
+class GridEdit:
+    def __init__(self, netcdf_path):
+        self.ds = xr.open_dataset(netcdf_path)
+        self.edit = self.ds.load()
+    
+    def set_wl_timeseries(self, node_id, levels):
+        assert len(levels) == len(self.edit['Mesh2D_s1'])
+        
+        for timestep in range(len(self.edit['Mesh2D_s1'])):
+            self.edit['Mesh2D_s1'][timestep][node_id-1] = levels[timestep]
+    
+    def write(self, output_path):
+        self.edit.to_netcdf(output_path)
+        
 
 
 # Helper functions
@@ -150,11 +167,10 @@ def replacement_1d2d(grid:GridH5ResultAdmin, node_2d_id:int, timesteps:list):
     return list(levels.flatten())
     
 
-def edit_nodes_in_grid(edit:GridEdit,
-                       vector:gpd.geodataframe.GeoDataFrame,
-                       grid:GridH5ResultAdmin,
+def edit_nodes_in_grid(folder_path:str,
+                       scenario:str,
                        method:str,
-                       output_path:str
+                       output_folder:str
                            ):
     """  
         writes a new netcdf with an edited version based on the chosen methodology
@@ -175,6 +191,13 @@ def edit_nodes_in_grid(edit:GridEdit,
     
     
     """
+    
+    # 0. Open variables
+    folder = Folders(folder_path)
+    vector = gpd.read_file(str(folder.source_data.damo), driver="FileGDB", layer="Waterdeel")
+    grid = folder.threedi_results.one_d_two_d[scenario].grid
+    netcdf_path= str(folder.threedi_results.one_d_two_d[scenario].grid_path)
+    edit = GridEdit(netcdf_path)
     
     # 1. retrieve the nodes where the cells are fully wthing the geometry
     node_ids = threedi_nodes_within_vector(vector, grid)
@@ -201,11 +224,16 @@ def edit_nodes_in_grid(edit:GridEdit,
     
     # 4. edit the data
     for node_id, levels in levels_per_node.items():
-        edit.set_timeseries("waterlevel_2d",node_id-1, levels)
+        edit.set_wl_timeseries(node_id, levels)
     
     # write
-    edit.write(output_path)
-        
+    if not os.path.exists(output_folder):
+        os.mkdir(output_folder)
+    edit.write(output_folder + "/results_3di.nc")
+    shutil.copy(str(folder.threedi_results.one_d_two_d[scenario].admin_path),
+                output_folder + "/gridadmin.h5"
+                )
+    return levels_per_node
     
 def calculate_depth(folder_path: str, results_type:str, revision:str, calculation_step:int):
     """ Calculates the waterdepth based on a threedi results
@@ -222,7 +250,7 @@ def calculate_depth(folder_path: str, results_type:str, revision:str, calculatio
     dem_path = str(folder.model.rasters.dem)
     
     folder.output[results_type][revision].create()
-    output_path = str(folder.output[results_type][revision].layers) + f"/depth_{calculation_step}.tif"
+    output_path = str(folder.output[results_type][revision]) + f"/depth_{calculation_step}.tif"
     calculate_waterdepth(
                         str(result.admin_path),
                         str(result.grid_path),
@@ -230,6 +258,7 @@ def calculate_depth(folder_path: str, results_type:str, revision:str, calculatio
                         output_path,
                         calculation_steps=[int(calculation_step)],
                     )
+    print("Output at", output_path)
 
 def volume_difference(grid, raster_path, _type="max"):
     cells = get_geometry_grid_cells(grid, use_ogr=False)
@@ -240,7 +269,6 @@ def volume_difference(grid, raster_path, _type="max"):
     source = rasterio.open(raster_path)
     out_image, out_transform = mask(source,geoms[0],crop=True)
 
-     out_image, out_transform = mask(src, geoms[0], crop=True)
     # derive the sum of all cells
     cells['sum'] = pd.DataFrame(
                 zonal_stats(
@@ -290,6 +318,7 @@ def threedi_result_volume(folder:Folders, results_type:str, revision:str, calcul
     
 
 if __name__ == "__main__":
+    pass
     import os
     os.chdir(r"C:\Users\chris.kerklaan\Documents\Projecten\hhnk_detachering\hhnk_scripting\bwn_beemster")
     
@@ -303,23 +332,22 @@ if __name__ == "__main__":
     layer_name = "Waterdeel"
     netcdf_path = r"C:\Users\chris.kerklaan\Documents\Projecten\hhnk_detachering\hhnk_scripting\bwn_beemster/03_3di_resultaten\1d2d_results\nieuw/results_3di.nc" 
     depth_path = r"C:\Users\chris.kerklaan\Documents\Projecten\hhnk_detachering\hhnk_scripting\bwn_beemster\Output\1d2d_tests\nieuw\Layers\depth_576.tif"
-    
-    edit = GridEdit(netcdf_path)
-    vector = gpd.read_file(vector_path, driver="FileGDB", layer=layer_name)
-    grid = Folders(folder_path).threedi_results.one_d_two_d['nieuw'].grid
-    netcdf_path = str(Folders(folder_path).threedi_results.one_d_two_d[0].grid_path)
-    raster = Raster(depth_path)
-    
+
     # original
     #calculate_depth(folder_path, "1d2d_results", "nieuw", 576)
+    scenario = "nieuw"
+    method = "interpolated"
     
-    output_path = r"C:\Users\chris.kerklaan\Documents\Projecten\hhnk_detachering\hhnk_scripting\bwn_beemster/03_3di_resultaten\1d2d_results/interpolated/results_3di.nc"
-    edit_nodes_in_grid(edit,vector,grid,"interpolated",output_path)
-    calculate_depth(folder_path, "1d2d_results", "interpolated", 576)
+    output_folder = r"C:\Users\chris.kerklaan\Documents\Projecten\hhnk_detachering\hhnk_scripting\bwn_beemster/03_3di_resultaten\1d2d_results/test_interpolated"
+    data = edit_nodes_in_grid(folder_path,"nieuw","interpolated",output_folder)
+    
+    calculate_depth(folder_path, "1d2d_results", "test_interpolated", 576)
+    
+    
     
     edit = GridEdit(netcdf_path)
     output_path = r"C:\Users\chris.kerklaan\Documents\Projecten\hhnk_detachering\hhnk_scripting\bwn_beemster/03_3di_resultaten\1d2d_results/replacement/results_3di.nc"
-    edit_nodes_in_grid(edit,vector,grid,"1d_replacement",output_path)
-    calculate_depth(folder_path, "1d2d_results", "replacement", 576)
+    edit_nodes_in_grid(folder_path,"nieuw","1d_replacement", output_path)
+    calculate_depth(folder_path, "1d2d_results", "test", 576)
     
     
