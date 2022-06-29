@@ -659,17 +659,15 @@ class ModelPaths(Folder):
 
     @property
     def database(self):
-        name=self.model_path()
-        if name in [None, ""]:
+        filepath=self.model_path()
+        if filepath in [None, ""]:
             filepath = ''
-        else:
-            filepath = self.full_path(name)
+
         sqlite_cls = Sqlite(filepath)
         if os.path.exists(sqlite_cls.path):
             return sqlite_cls
         else: 
             return None
-
 
 
     @property
