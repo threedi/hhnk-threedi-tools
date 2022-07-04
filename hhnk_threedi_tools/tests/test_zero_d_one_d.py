@@ -10,6 +10,11 @@ Functional testing for zeroDoneD object
 # First-party imports
 import pathlib
 
+import sys
+sys.path.insert(0,r'E:\github\wvangerwen\hhnk-threedi-tools')
+sys.path.insert(0,r'E:\github\wvangerwen\hhnk-research-tools')
+
+
 # Local imports
 from hhnk_threedi_tools.core.checks.zero_d_one_d import ZeroDOneDTest
 

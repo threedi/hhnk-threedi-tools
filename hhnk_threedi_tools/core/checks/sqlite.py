@@ -22,6 +22,7 @@ from hhnk_threedi_tools.core.folders import Folders, create_tif_path
 from threedigrid_builder import make_gridadmin
 
 
+# %%
 # queries
 from hhnk_threedi_tools.utils.queries import (
     controlled_structures_query,

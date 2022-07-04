@@ -32,9 +32,9 @@ from osgeo import ogr
 # Third-party imports
 import xarray as xr
 
-import rasterio
+# import rasterio
 from shapely.geometry import mapping
-from rasterio.mask import mask
+# from rasterio.mask import mask
 
 import pandas as pd
 from shapely import wkt
@@ -261,13 +261,14 @@ def calculate_depth(folder_path: str, results_type:str, revision:str, calculatio
     print("Output at", output_path)
 
 def volume_difference(grid, raster_path, _type="max"):
+    #FIXME not used?
     cells = get_geometry_grid_cells(grid, use_ogr=False)
     
     geoms = cells.geometry.values # list of shapely geometries
     geoms = [mapping(geoms[0])]
     
-    source = rasterio.open(raster_path)
-    out_image, out_transform = mask(source,geoms[0],crop=True)
+    # source = rasterio.open(raster_path)
+    # out_image, out_transform = mask(source,geoms[0],crop=True)
 
     # derive the sum of all cells
     cells['sum'] = pd.DataFrame(

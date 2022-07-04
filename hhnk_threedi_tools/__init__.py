@@ -13,7 +13,7 @@ import hhnk_threedi_tools.resources
 
 # tests
 from hhnk_threedi_tools.core.checks.bank_levels import BankLevelTest
-from hhnk_threedi_tools.core.checks.one_d_two_d import OneDTwoDTest
+# from hhnk_threedi_tools.core.checks.one_d_two_d import OneDTwoDTest
 from hhnk_threedi_tools.core.checks.sqlite import SqliteTest
 from hhnk_threedi_tools.core.checks.zero_d_one_d import ZeroDOneDTest
 
