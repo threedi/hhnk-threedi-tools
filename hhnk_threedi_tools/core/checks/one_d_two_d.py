@@ -66,7 +66,7 @@ from hhnk_threedi_tools.variables.one_d_two_d import (
 
 #TODO functies weer in class onderbrengen, class nu buiten gebruik.
 class OneDTwoDTest:
-    def __init__(self, folder: Folders, revision=0, dem_path=None, output_path=None):
+    def __init__(self, folder: Folders, revision=0, dem_path=None):
         self.fenv = folder
         self.revision=revision
 

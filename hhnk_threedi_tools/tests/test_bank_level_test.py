@@ -1,3 +1,4 @@
+# %%
 # -*- coding: utf-8 -*-
 """
 Created on Tue Aug 17 10:01:23 2021
@@ -8,6 +9,11 @@ Note: the curent tests are only ran to check if the functions work.
 They still must be checked qualitatively
 
 """
+if __name__ == '__main__':
+    import sys
+    sys.path.insert(0,r'E:\github\wvangerwen\hhnk-threedi-tools')
+    sys.path.insert(0,r'E:\github\wvangerwen\hhnk-research-tools')
+
 # First-party imports
 import pathlib
 
@@ -135,3 +141,22 @@ def test_results():
     results = bl_test.results
 
     assert results["line_intersects"].count()["node_id"] == 9
+
+
+# %%
+if __name__ == '__main__':
+    test_import_information_object()
+    test_levee_intersections()
+    test_divergent_waterlevel_nodes()
+    test_manhole_information()
+    test_flowlines_1d2d()
+    test_manholes_to_add_to_model()
+    test_generate_cross_section_locations()
+    test_generate_channels()
+    test_run()
+    test_results()
+
+# %%
+
+self = BankLevelTest(Folders(TEST_MODEL))
+from hhnk_research_tools.threedi.grid import Grid

@@ -1,9 +1,15 @@
+# %%
 # -*- coding: utf-8 -*-
 """
 Created on Tue Aug 24 16:17:00 2021
 
 @author: chris.kerklaan
 """
+if __name__ == '__main__':
+    import sys
+    sys.path.insert(0,r'E:\github\wvangerwen\hhnk-threedi-tools')
+    sys.path.insert(0,r'E:\github\wvangerwen\hhnk-research-tools')
+
 # First-party imports
 import os
 import pathlib
@@ -34,7 +40,7 @@ def test_run_dem_max_value():
 def test_run_dewatering_depth():
     folder = Folders(TEST_MODEL)
     sqlite_test = SqliteTest(folder=folder)
-    output = sqlite_test.run_dewatering_depth()
+    output = sqlite_test.run_dewatering_depth(output_file=folder.output.sqlite_tests.drooglegging.path)
     assert os.path.exists(output)
 
 
@@ -42,15 +48,15 @@ def test_run_model_checks():
     folder = Folders(TEST_MODEL)
     sqlite_test = SqliteTest(folder=folder)
     output = sqlite_test.run_model_checks()
-    assert "node without initial waterlevel" in output["error"][482]
+    assert "node without initial waterlevel" in output.set_index('id').loc[482, "error"]
 
 
 def test_run_geometry():
-    """still incorrect"""
+    """#TODO empty check"""
     folder = Folders(TEST_MODEL)
     sqlite_test = SqliteTest(folder=folder)
     output = sqlite_test.run_geometry_checks()
-    assert False
+    assert output.empty
 
 
 def test_run_imp_surface_area():
@@ -76,11 +82,11 @@ def test_run_used_profiles():
 
 
 def test_run_struct_channel_bed_level():
-    """empty"""
+    """#TODO empty check"""
     folder = Folders(TEST_MODEL)
     sqlite_test = SqliteTest(folder=folder)
     output = sqlite_test.run_struct_channel_bed_level()
-    assert False
+    assert output.empty
 
 
 def test_run_watersurface_area():
@@ -95,3 +101,21 @@ def test_run_weir_flood_level():
     sqlite_test = SqliteTest(folder=folder)
     output = sqlite_test.run_weir_floor_level()
     assert output[0]["proposed_reference_level"][1] == -1.26
+
+
+# %%
+if __name__ == '__main__':
+    test_run_dem_max_value()
+    test_run_dewatering_depth()
+    test_run_model_checks()
+    test_run_geometry() 
+    test_run_imp_surface_area()
+    test_run_isolated_channels()
+    test_run_used_profiles()
+    test_run_struct_channel_bed_level()
+    test_run_watersurface_area()
+    test_run_weir_flood_level()
+
+
+
+# %%

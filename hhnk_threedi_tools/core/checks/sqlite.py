@@ -686,7 +686,7 @@ def add_nodes_area(fixeddrainage, conn_nodes_geo):
             fixeddrainage,
             conn_nodes_geo,
             how="left",
-            op="intersects",
+            predicate="intersects",
             lsuffix="fd",
             rsuffix="conn",
         )

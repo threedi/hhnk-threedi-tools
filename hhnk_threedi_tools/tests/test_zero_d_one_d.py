@@ -1,3 +1,4 @@
+# %%
 # -*- coding: utf-8 -*-
 """
 Created on Mon Aug 23 10:46:05 2021
@@ -5,15 +6,15 @@ Created on Mon Aug 23 10:46:05 2021
 @author: chris.kerklaan
 
 Functional testing for zeroDoneD object
-
 """
+if __name__ == '__main__':
+    import sys
+    sys.path.insert(0,r'E:\github\wvangerwen\hhnk-threedi-tools')
+    sys.path.insert(0,r'E:\github\wvangerwen\hhnk-research-tools')
+
+
 # First-party imports
 import pathlib
-
-import sys
-sys.path.insert(0,r'E:\github\wvangerwen\hhnk-threedi-tools')
-sys.path.insert(0,r'E:\github\wvangerwen\hhnk-research-tools')
-
 
 # Local imports
 from hhnk_threedi_tools.core.checks.zero_d_one_d import ZeroDOneDTest
@@ -25,14 +26,20 @@ TEST_MODEL = str(pathlib.Path(__file__).parent.absolute()) + "/data/model_test/"
 
 def test_run_zero_d_one_d_test():
     """test of de 0d1d test werkt"""
-    zdod_test = ZeroDOneDTest.from_path(TEST_MODEL)
-    zdod_test.run()
+    test_0d1d = ZeroDOneDTest.from_path(TEST_MODEL)
+    test_0d1d.run()
 
-    assert zdod_test.results["lvl_end"].count() == 157
+    assert test_0d1d.results["lvl_end"].count() == 157
 
 
 def test_run_hydraulic_test():
     """test of de hydraulische testen werken"""
-    zdod_test = ZeroDOneDTest.from_path(TEST_MODEL)
-    zdod_test.run_hydraulic()
-    assert zdod_test.hydraulic_results["channels"]["code"].count() == 134
+    test_0d1d = ZeroDOneDTest.from_path(TEST_MODEL)
+    test_0d1d.run_hydraulic()
+    assert test_0d1d.hydraulic_results["channels"]["code"].count() == 134
+
+
+# %%
+if __name__ == '__main__':
+    test_run_zero_d_one_d_test()
+    test_run_hydraulic_test()
