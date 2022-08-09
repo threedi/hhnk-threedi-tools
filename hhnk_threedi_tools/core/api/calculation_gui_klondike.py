@@ -171,7 +171,7 @@ def start_calculation_gui(
         global sim
 
         sim = Simulation(username_widget.value, password_widget.value)
-        
+
         try:
             sim.logged_in
             # Login success
@@ -226,8 +226,8 @@ def start_calculation_gui(
     def search_models(action):
         global sim
         repo_list = sim.threedi_api.repositories_list(
-                    slug__icontains=polder_name_widget.value, limit=RESULT_LIMIT
-                ).results
+            slug__icontains=polder_name_widget.value, limit=RESULT_LIMIT
+        ).results
 
         slug_list = []
         for result in repo_list:
@@ -931,7 +931,7 @@ def start_calculation_gui(
 
     # Observe dropdown box, when the value changes, update other stuff as well
     def on_select_repository(selected_repository):
-        #global threedi_rev_api
+        # global threedi_rev_api
         global sim
         try:
             selected_repository = selected_repository["new"]
@@ -1370,7 +1370,7 @@ def start_calculation_gui(
         Creates (but does not initialize or start) a simulation
         """
         global sim
-        #global threedi_api_client
+        # global threedi_api_client
         global simulation
 
         days_dry_start = rain_event_widget.children[0].value
@@ -1527,7 +1527,7 @@ def start_calculation_gui(
     def start_batch_simulation():
         """start batch calculation for all climate scenarios using api v3"""
         global sim
-        
+
         def get_all_model_idx() -> dict:
             """return threedi model ids of the selected glg, ggg and ghg model"""
 
@@ -1621,14 +1621,17 @@ def start_calculation_gui(
                                 model_id = None
                             # model_slug = model_slugs[[a for a in MODEL_TYPES if groundwater_type.lower() in a][0]] #e.g.: select '1d2d_ggg' for 'GGG'
 
-                            scenario_name = base_scenario_name_str + "{polder} #{revision} {groundwater_type} {rain_type} {rain_scenario} ({i}) {batch_extra_name}".format(
-                                polder=polder_name_widget.value,
-                                revision=revision_number,
-                                groundwater_type=groundwater_type,
-                                rain_type=rain_type,
-                                rain_scenario=rain_scenario,
-                                i=i,
-                                batch_extra_name=batch_scenario_name_widget_extra.value,
+                            scenario_name = (
+                                base_scenario_name_str
+                                + "{polder} #{revision} {groundwater_type} {rain_type} {rain_scenario} ({i}) {batch_extra_name}".format(
+                                    polder=polder_name_widget.value,
+                                    revision=revision_number,
+                                    groundwater_type=groundwater_type,
+                                    rain_type=rain_type,
+                                    rain_scenario=rain_scenario,
+                                    i=i,
+                                    batch_extra_name=batch_scenario_name_widget_extra.value,
+                                )
                             )
                             scenario_name = scenario_name.strip()
 

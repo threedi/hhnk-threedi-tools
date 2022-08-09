@@ -149,11 +149,10 @@ class BankLevelTest:
         if self.datachecker_path == None:
             self.datachecker_path = self.fenv.source_data.datachecker.path
 
-
-        self.grid = Grid(sqlite_path=self.fenv.model.schema_base.sqlite_paths[0],
-                        dem_path = self.fenv.model.schema_base.rasters.dem.path              
-                        )
-        
+        self.grid = Grid(
+            sqlite_path=self.fenv.model.schema_base.sqlite_paths[0],
+            dem_path=self.fenv.model.schema_base.rasters.dem.path,
+        )
 
         self.fixeddrainage_layer = self.fenv.source_data.datachecker_fixed_drainage
 
@@ -623,80 +622,120 @@ def new_cross_loc_bank_levels(intersect_1d2d_all, channel_line_geo, cross_loc):
 
         """
         # filter nodes that need to have channels with bank levels equal to levee height
-        nodes_on_channel = intersect_1d2d_all[intersect_1d2d_all['node_type'] == 'added_calculation'].copy()
-        #nodes_on_channel = nodes_on_channel.rename(columns={'node_geometry': 'geometry'})
+        nodes_on_channel = intersect_1d2d_all[
+            intersect_1d2d_all["node_type"] == "added_calculation"
+        ].copy()
+        # nodes_on_channel = nodes_on_channel.rename(columns={'node_geometry': 'geometry'})
 
-        nodes_on_channel.drop(['initial_waterlevel'], axis=1, inplace=True)
-        #nodes_on_channel = nodes_on_channel.rename(columns={'node_geometry': 'geometry'})
+        nodes_on_channel.drop(["initial_waterlevel"], axis=1, inplace=True)
+        # nodes_on_channel = nodes_on_channel.rename(columns={'node_geometry': 'geometry'})
 
         # Buffer point to find intersections with the channels (buffering returns point within given distance of geometry)
-        nodes_on_channel['geometry'] = nodes_on_channel.buffer(0.1)
-        
+        nodes_on_channel["geometry"] = nodes_on_channel.buffer(0.1)
+
         # join channels on these nodes (meaning added calculation nodes) to get the channels that need higher bank levels.
         if not nodes_on_channel.empty:
-            channels_bank_level = gpd.sjoin(nodes_on_channel, channel_line_geo).drop(["index_right"], axis=1)
+            channels_bank_level = gpd.sjoin(nodes_on_channel, channel_line_geo).drop(
+                ["index_right"], axis=1
+            )
         else:
             # Create emtpy df with same columns as the sjoin when there are no nodes_on_channels
-            channels_bank_level = nodes_on_channel.reindex(columns=set(nodes_on_channel.columns.tolist() + channel_line_geo.columns.tolist()))
+            channels_bank_level = nodes_on_channel.reindex(
+                columns=set(
+                    nodes_on_channel.columns.tolist()
+                    + channel_line_geo.columns.tolist()
+                )
+            )
 
         # sort so duplicate channel id's are removed, crossings with levees take priority over crossings
         # with peilgrenzen (fixeddrainage)
-        channels_bank_level.sort_values(by=['channel_id', 'type'], ascending=[True, False], inplace=True)
-        channels_bank_level.drop_duplicates('channel_id', inplace=True)
-        channels_bank_level.set_index(['channel_id'], inplace=True, drop=True)
+        channels_bank_level.sort_values(
+            by=["channel_id", "type"], ascending=[True, False], inplace=True
+        )
+        channels_bank_level.drop_duplicates("channel_id", inplace=True)
+        channels_bank_level.set_index(["channel_id"], inplace=True, drop=True)
 
         # join cross_section_location on these channels
         # get cross section locations where corresponding channel id matches channel id's that need
         # higher bank levels (aka channels that intersect with added calculation nodes)
-        cross_loc_levee = cross_loc[cross_loc['channel_id'].isin(channels_bank_level.index.tolist())]
+        cross_loc_levee = cross_loc[
+            cross_loc["channel_id"].isin(channels_bank_level.index.tolist())
+        ]
 
         # Add initial water levels and levee heights to the previously obtained info about channels
         # that need higher bank levels
-        cross_loc_levee = cross_loc_levee.join(channels_bank_level[['levee_height', 'initial_waterlevel']], on='channel_id')
+        cross_loc_levee = cross_loc_levee.join(
+            channels_bank_level[["levee_height", "initial_waterlevel"]], on="channel_id"
+        )
 
         # If a row doesn't have a levee height, the 1d2d line crosses with a fixeddrainagelevelarea (peilgrens).
-        cross_loc_fixeddrainage = cross_loc_levee[cross_loc_levee['levee_height'].isna()]
+        cross_loc_fixeddrainage = cross_loc_levee[
+            cross_loc_levee["levee_height"].isna()
+        ]
 
         # If there is a levee height, the 1d2d line crosses with a levee
-        cross_loc_levee = cross_loc_levee[cross_loc_levee['levee_height'].notna()]
+        cross_loc_levee = cross_loc_levee[cross_loc_levee["levee_height"].notna()]
 
         # Find initial waterlevels for cross section locations by matching them to corresponding id of channels
-        cross_loc_new_all = cross_loc.join(channel_line_geo[['initial_waterlevel']], on='channel_id')
+        cross_loc_new_all = cross_loc.join(
+            channel_line_geo[["initial_waterlevel"]], on="channel_id"
+        )
 
         # All bank levels are set to initial waterlevel +10cm
-        cross_loc_new_all['new_bank_level'] = np.round(cross_loc_new_all['initial_waterlevel'] + 0.1, 3).astype(float)
-        cross_loc_new_all['bank_level_source'] = "initial+10cm"
+        cross_loc_new_all["new_bank_level"] = np.round(
+            cross_loc_new_all["initial_waterlevel"] + 0.1, 3
+        ).astype(float)
+        cross_loc_new_all["bank_level_source"] = "initial+10cm"
 
         # We start by setting the bank level of all cross location to either initial waterlevel or reference level
         # If the reference level is higher than the initial waterlevel,
         # use this for the banks. (dry bedding in e.g. wieringermeer)
-        ref_higher_than_init = (cross_loc_new_all['reference_level'] > cross_loc_new_all['initial_waterlevel'])
-        cross_loc_new_all.loc[ref_higher_than_init, 'new_bank_level'] = np.round(cross_loc_new_all['reference_level'] + 0.1, 3).astype(float)
-        cross_loc_new_all.loc[ref_higher_than_init, 'bank_level_source'] = "reference+10cm"
-        
+        ref_higher_than_init = (
+            cross_loc_new_all["reference_level"]
+            > cross_loc_new_all["initial_waterlevel"]
+        )
+        cross_loc_new_all.loc[ref_higher_than_init, "new_bank_level"] = np.round(
+            cross_loc_new_all["reference_level"] + 0.1, 3
+        ).astype(float)
+        cross_loc_new_all.loc[
+            ref_higher_than_init, "bank_level_source"
+        ] = "reference+10cm"
+
         # The cross locations that need levee height are set here
-        cross_loc_new_all.loc[cross_loc_levee.index, 'new_bank_level'] = cross_loc_levee['levee_height'].astype(float)
-        cross_loc_new_all.loc[cross_loc_levee.index, 'bank_level_source'] = "levee_height"
+        cross_loc_new_all.loc[
+            cross_loc_levee.index, "new_bank_level"
+        ] = cross_loc_levee["levee_height"].astype(float)
+        cross_loc_new_all.loc[
+            cross_loc_levee.index, "bank_level_source"
+        ] = "levee_height"
 
         # Cross locations that are associated with peilgrenzen get a special label for recognition (values are already set)
-        cross_loc_new_all.loc[(cross_loc_new_all.index.isin(cross_loc_fixeddrainage.index)), 'bank_level_source'] = (
-                cross_loc_new_all['bank_level_source'] + "_fixeddrainage")
+        cross_loc_new_all.loc[
+            (cross_loc_new_all.index.isin(cross_loc_fixeddrainage.index)),
+            "bank_level_source",
+        ] = (
+            cross_loc_new_all["bank_level_source"] + "_fixeddrainage"
+        )
 
-        #Calculate difference between new and old bank level
-        cross_loc_new_all['bank_level_diff'] = np.round(cross_loc_new_all['new_bank_level'] - cross_loc_new_all['bank_level'], 2)
+        # Calculate difference between new and old bank level
+        cross_loc_new_all["bank_level_diff"] = np.round(
+            cross_loc_new_all["new_bank_level"] - cross_loc_new_all["bank_level"], 2
+        )
 
         # reorder columns
-        cross_loc_new_all_filtered = cross_loc_new_all[[
-                'cross_loc_id',
-                'channel_id',
-                'reference_level',
-                'initial_waterlevel',
-                'bank_level',
-                'new_bank_level',
-                'bank_level_diff',
-                'bank_level_source',
-                'geometry',
-            ]]
+        cross_loc_new_all_filtered = cross_loc_new_all[
+            [
+                "cross_loc_id",
+                "channel_id",
+                "reference_level",
+                "initial_waterlevel",
+                "bank_level",
+                "new_bank_level",
+                "bank_level_diff",
+                "bank_level_source",
+                "geometry",
+            ]
+        ]
 
         cross_loc_new_all_filtered.reset_index(drop=True, inplace=True)
 
@@ -704,8 +743,8 @@ def new_cross_loc_bank_levels(intersect_1d2d_all, channel_line_geo, cross_loc):
         # If the new banklevel is a NaN value, remove it from the list as this implicates that the cross section
         # is on a channel with connection nodes that do not have an initial water level
         cross_loc_new = cross_loc_new_all_filtered.loc[
-            (cross_loc_new_all_filtered['bank_level_diff'] != 0)
-            & (cross_loc_new_all_filtered['bank_level'].notna())
+            (cross_loc_new_all_filtered["bank_level_diff"] != 0)
+            & (cross_loc_new_all_filtered["bank_level"].notna())
         ]
         return cross_loc_new_all_filtered, cross_loc_new
     except Exception as e:
@@ -729,6 +768,10 @@ def get_updated_channels(channel_line_geo, cross_loc_new_all):
 
 
 if __name__ == "__main__":
-    bl_test = BankLevelTest(Folders(r"C:\Users\chris.kerklaan\Documents\Github\hhnk-threedi-tools/test_polder"))
+    bl_test = BankLevelTest(
+        Folders(
+            r"C:\Users\chris.kerklaan\Documents\Github\hhnk-threedi-tools/test_polder"
+        )
+    )
     bl_test.import_data()
     bl_test.run()

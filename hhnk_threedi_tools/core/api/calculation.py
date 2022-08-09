@@ -27,7 +27,6 @@ from hhnk_threedi_tools.variables.api_settings import API_SETTINGS
 TIMEZONE = "Europe/Amsterdam"
 
 
-
 class Simulation:
     """
     Usage:
@@ -58,12 +57,12 @@ class Simulation:
         self._start_rain = None
         self._end_rain = None
 
-        config=  {
-                "THREEDI_API_HOST": host,
-                "THREEDI_API_USERNAME": username,
-                "THREEDI_API_PASSWORD": password,
-            }
-        
+        config = {
+            "THREEDI_API_HOST": host,
+            "THREEDI_API_USERNAME": username,
+            "THREEDI_API_PASSWORD": password,
+        }
+
         self.threedi_api = ThreediApi(config=config)
         self.threedi_api_beta = ThreediApi(config=config, version="v3-beta")
 
@@ -72,7 +71,6 @@ class Simulation:
         call = self.threedi_api.auth_users_list()
         result = api_result(call, "Cannot login")
         return result
-        
 
     @property
     def id(self):
@@ -88,11 +86,11 @@ class Simulation:
             name=model_name, inp_success=True, disabled=False
         )
         self._model = api_result(call, "Model does not exist.")
-    
+
     @model.setter
-    def model_id(self, model_id:int):
+    def model_id(self, model_id: int):
         self._model = self.threedi_api.threedimodels_read(model_id)
-    
+
     @property
     def template(self):
         return self._template
@@ -120,7 +118,7 @@ class Simulation:
     def organisation_id(self, organisation_id):
         call = self.threedi_api.organisations_read(organisation_id)
         self._organisation = api_result(call, "Organisation does not exist.")
-        
+
     @property
     def start_rain(self):
         return self._start_rain
@@ -167,21 +165,24 @@ class Simulation:
         }
 
         self.threedi_api.simulations_results_post_processing_lizard_basic_create(
-        self.id, data=basic_processing_data
-            )
+            self.id, data=basic_processing_data
+        )
+
     def add_damage_post_processing(self, data):
         self.threedi_api.simulations_results_post_processing_lizard_damage_create(
-                            self.id, data=data
-                        )
+            self.id, data=data
+        )
+
     def add_arrival_post_processing(self, data):
         self.threedi_api.simulations_results_post_processing_lizard_arrival_create(
-                    self.id, data=data
-                )
-        
+            self.id, data=data
+        )
+
+
 class HHNK(Simulation):
     def __init__(
         self,
-        username, 
+        username,
         password,
         sqlite_file,
         scenario_name,
@@ -217,16 +218,16 @@ class HHNK(Simulation):
 
         self.create(scenario_name)
         self.add_constant_rain(rain_data)
-        
+
         if basic_processing:
             self.add_basic_post_processing(scenario_name)
-            
+
         if damage_processing:
             self.add_damage_post_processing(API_SETTINGS["damage_processing"])
-        
+
         if arrival_processing:
             self.add_arrival_post_processing({"basic_post_processing": True})
-            
+
     def date_and_rain_magic(
         self,
         days_dry_start,
@@ -283,6 +284,7 @@ class HHNK(Simulation):
             "units": "m/s",
         }
         return start_datetime, end_datetime, rain_data
+
 
 def api_result(
     result: tac.openapi.models.inline_response20062.InlineResponse20062, message: str
