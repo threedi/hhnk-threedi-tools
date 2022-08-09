@@ -23,8 +23,6 @@ from hhnk_threedi_tools.variables.datachecker_variables import (
     peil_id_col,
     streefpeil_bwn_col,
 )
-from hhnk_threedi_tools.qgis.environment import testEnvironment
-
 from hhnk_threedi_tools.utils.queries import (
     manholes_query,
     channels_query,
@@ -626,8 +624,10 @@ def new_cross_loc_bank_levels(intersect_1d2d_all, channel_line_geo, cross_loc):
         """
         # filter nodes that need to have channels with bank levels equal to levee height
         nodes_on_channel = intersect_1d2d_all[intersect_1d2d_all['node_type'] == 'added_calculation'].copy()
-        nodes_on_channel.drop(['initial_waterlevel', 'geometry'], axis=1, inplace=True)
-        nodes_on_channel = nodes_on_channel.rename(columns={'node_geometry': 'geometry'})
+        #nodes_on_channel = nodes_on_channel.rename(columns={'node_geometry': 'geometry'})
+
+        nodes_on_channel.drop(['initial_waterlevel'], axis=1, inplace=True)
+        #nodes_on_channel = nodes_on_channel.rename(columns={'node_geometry': 'geometry'})
 
         # Buffer point to find intersections with the channels (buffering returns point within given distance of geometry)
         nodes_on_channel['geometry'] = nodes_on_channel.buffer(0.1)
@@ -726,3 +726,9 @@ def get_updated_channels(channel_line_geo, cross_loc_new_all):
         right_on=a_chan_id,
     )
     return all_channels
+
+
+if __name__ == "__main__":
+    bl_test = BankLevelTest(Folders(r"C:\Users\chris.kerklaan\Documents\Github\hhnk-threedi-tools/test_polder"))
+    bl_test.import_data()
+    bl_test.run()
