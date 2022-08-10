@@ -50,7 +50,7 @@ ATTRS = {
     "indicator": "indicator",
 }
 
-MAX_NUM_REGIONS = 2 ** 16 - 1  # uint16 dtype + nodata value
+MAX_NUM_REGIONS = 2**16 - 1  # uint16 dtype + nodata value
 
 
 def create_ruimtekaart(pgb_path, output_path, batch_fd):

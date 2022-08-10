@@ -171,6 +171,8 @@ class OneDTwoDTest:
         except Exception as e:
             raise e from None
 
+            content_type_list = threedi_result.lines.content_type.astype("U13")
+            flowlines_gdf[content_type_col] = content_type_list
 
     def run_node_stats(self):
         """

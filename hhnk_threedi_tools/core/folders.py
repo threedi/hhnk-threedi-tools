@@ -110,14 +110,13 @@ class File:
         self.file_path = file_path
         self.pl = Path(file_path)
 
-
     @property
     def exists(self):
-        if self.file_path=='':
+        if self.file_path == "":
             return False
         else:
             return self.pl.exists()
-    
+
     @property
     def path_if_exists(self):
         """return filepath if the file exists otherwise return None"""
@@ -184,8 +183,6 @@ class Sqlite(File):
         else:
             return None
 
-        
-
 
 class Folder:
     """Base folder class for creating, deleting and see if folder exists"""
@@ -249,9 +246,9 @@ class Folder:
             return str(self.pl / name)
 
     def add_file(self, objectname, filename, ftype="file"):
-        # if not os.path.exists(self.full_path(filename)) or 
+        # if not os.path.exists(self.full_path(filename)) or
         if filename in [None, ""]:
-            filepath = ''
+            filepath = ""
         else:
             filepath = self.full_path(filename)
 
@@ -336,7 +333,7 @@ class Folders(Folder):
     def __init__(self, base, create=True):
         super().__init__(base)
 
-        print('v7')
+        print("v7")
 
         # source
         self.source_data = SourcePaths(self.base)
@@ -620,16 +617,16 @@ class PeilgebiedenPaths(Folder):
 
 class ModelPathsParent(Folder):
     """Parent folder with all model (schematisations) in it. These
-    all share the same base schematisation, with only differences in 
+    all share the same base schematisation, with only differences in
     global settings or other things specific for that model"""
+
     def __init__(self, base):
         super().__init__(os.path.join(base, "02_Model"))
 
-        self.schema_base = ModelPaths(base=self.base, name='00_basis')
-        self.schema_list = ['schema_base']
-        self.add_file('settings', 'model_settings.xlsx', ftype = 'file')
-        self.add_file('settings_default', 'model_settings_default.xlsx', ftype = 'file')
-
+        self.schema_base = ModelPaths(base=self.base, name="00_basis")
+        self.schema_list = ["schema_base"]
+        self.add_file("settings", "model_settings.xlsx", ftype="file")
+        self.add_file("settings_default", "model_settings_default.xlsx", ftype="file")
 
     def add_modelpath(self, name):
         setattr(self, f"schema_{name}", ModelPaths(base=self.base, name=name))
@@ -644,8 +641,10 @@ class ModelPathsParent(Folder):
                     Model schemas:\t{self.schema_list}
                 """
 
+
 class ModelPaths(Folder):
     """Inidividual model."""
+
     def __init__(self, base, name):
         super().__init__(os.path.join(base, name))
 
@@ -656,19 +655,17 @@ class ModelPaths(Folder):
     def rasters(self):
         return ThreediRasters(base=self.base, caller=self)
 
-
     @property
     def database(self):
-        filepath=self.model_path()
+        filepath = self.model_path()
         if filepath in [None, ""]:
-            filepath = ''
+            filepath = ""
 
         sqlite_cls = Sqlite(filepath)
         if os.path.exists(sqlite_cls.path):
             return sqlite_cls
-        else: 
+        else:
             return None
-
 
     @property
     def structure(self):
@@ -785,31 +782,43 @@ class ModelPaths(Folder):
 
 class ThreediRasters(Folder):
     def __init__(self, base, caller):
-        super().__init__(os.path.join(base, 'rasters'))
+        super().__init__(os.path.join(base, "rasters"))
         self.caller = caller
 
-        self.dem = self.get_raster_path(table_name='v2_global_settings', col_name = 'dem_file')
-        self.storage = self.get_raster_path(table_name='v2_simple_infiltration', col_name = 'max_infiltration_capacity_file')
-        self.friction = self.get_raster_path(table_name='v2_global_settings', col_name = 'frict_coef_file')
-        self.infiltration = self.get_raster_path(table_name='v2_simple_infiltration', col_name = 'infiltration_rate_file')
+        self.dem = self.get_raster_path(
+            table_name="v2_global_settings", col_name="dem_file"
+        )
+        self.storage = self.get_raster_path(
+            table_name="v2_simple_infiltration",
+            col_name="max_infiltration_capacity_file",
+        )
+        self.friction = self.get_raster_path(
+            table_name="v2_global_settings", col_name="frict_coef_file"
+        )
+        self.infiltration = self.get_raster_path(
+            table_name="v2_simple_infiltration", col_name="infiltration_rate_file"
+        )
 
     def get_raster_path(self, table_name, col_name):
         """Read the sqlite to check which rasters are used in the model.
         This only works for models from Klondike release onwards, where we only have
         one global settings row."""
-        df = hrt.sqlite_table_to_df(database_path=self.caller.database.path, table_name=table_name)
-        if len(df)>1:
-            print(f'{table_name} has more than 1 row. Choosing the first row for the rasters.')
+        df = hrt.sqlite_table_to_df(
+            database_path=self.caller.database.path, table_name=table_name
+        )
+        if len(df) > 1:
+            print(
+                f"{table_name} has more than 1 row. Choosing the first row for the rasters."
+            )
         if len(df) == 0:
             raster_name = None
         else:
             raster_name = df.iloc[0][col_name]
 
-
-        if raster_name==None:
-            raster_path=''
+        if raster_name == None:
+            raster_path = ""
         else:
-            raster_path=os.path.join(self.caller.base, raster_name)
+            raster_path = os.path.join(self.caller.base, raster_name)
         return Raster(raster_path)
 
     def __repr__(self):
@@ -819,6 +828,7 @@ storage - {self.storage.name}
 friction - {self.friction.name}
 infiltration - {self.infiltration.name}
     """
+
 
 class ThreediResultsPaths(Folder):
     """
@@ -954,7 +964,7 @@ class OneDTwoD(ThreediRevisions):
         return self.revision_structure("one_d_two_d")
 
 
-#TODO vervangen door ResultsRevisions
+# TODO vervangen door ResultsRevisions
 # class ClimateResultsRevisions(Folder):
 #     def __init__(self, base, folder):
 #         super().__init__(os.path.join(base, folder))
@@ -987,11 +997,12 @@ class OneDTwoD(ThreediRevisions):
 #     def revisions(self):
 #         return self.content
 
+
 class ResultsRevisions(Folder):
     def __init__(self, base, folder, returnclass):
         super().__init__(os.path.join(base, folder))
         self.isrevisions = True
-        self.returnclass = returnclass #eg ClimateResult
+        self.returnclass = returnclass  # eg ClimateResult
 
     def __getitem__(self, revision):
         """revision can be a integer or a path"""
@@ -1039,30 +1050,33 @@ class ClimateResult(Folder):
 
         self.downloads = ClimateResultDownloads(self.base)
         self.output = ClimateResultOutput(self.base)
-        
+
         # Files
         self.add_file("blok_grid_path", "/01_downloads/blok_GHG_T1000/results_3di.nc")
         self.add_file("blok_admin_path", "/01_downloads/blok_GHG_T1000/gridadmin.h5")
         self.add_file("piek_grid_path", "/01_downloads/piek_GHG_T1000/results_3di.nc")
         self.add_file("piek_admin_path", "/01_downloads/piek_GHG_T1000/gridadmin.h5")
-    
+
     @property
     def grid_path(self):
         return self.blok_grid_path
 
     @property
     def admin_path(self):
-        return self.blok_admin_path        
+        return self.blok_admin_path
 
     def grid(self, _type):
         if _type == "blok":
-            return  GridH5ResultAdmin(self.blok_admin_path.file_path, self.blok_grid_path.file_path)
-        return GridH5ResultAdmin(self.piek_admin_path.file_path, self.piek_grid_path.file_path)
+            return GridH5ResultAdmin(
+                self.blok_admin_path.file_path, self.blok_grid_path.file_path
+            )
+        return GridH5ResultAdmin(
+            self.piek_admin_path.file_path, self.piek_grid_path.file_path
+        )
 
     def admin(self):
         return GridH5Admin(self.blok_admin_path.file_path)
-    
-    
+
     @property
     def structure(self):
         return f"""  
@@ -1074,6 +1088,7 @@ class ClimateResult(Folder):
 
 class ThreediResult(Folder):
     """Use .grid to get GridH5ResultAdmin and .admin to get GridH5Admin"""
+
     def __init__(self, base):
         super().__init__(base)
 
@@ -1088,7 +1103,6 @@ class ThreediResult(Folder):
     @property
     def admin(self):
         return GridH5Admin(self.admin_path.file_path)
-
 
 
 class ClimateResultOutput(Folder):
@@ -1174,13 +1188,12 @@ class ClimateResultDownloads(Folder):
 
         # for name in RAW_DOWNLOADS:
         #     setattr(self, name, ThreediResult(self.full_path(name)))
-        
+
         # Files
         self.add_file("blok_grid_path", "/blok_GHG_T1000/results_3di.nc")
         self.add_file("blok_admin_path", "/blok_GHG_T1000/gridadmin.h5")
         self.add_file("piek_grid_path", "/piek_GHG_T1000/results_3di.nc")
         self.add_file("piek_admin_path", "/piek_GHG_T1000/gridadmin.h5")
-
 
         for name in self.names:
             setattr(self, name, ClimateResultScenario(self.base, name))
@@ -1197,25 +1210,26 @@ class ClimateResultDownloads(Folder):
                 for rain_scenario in RAIN_SCENARIOS:
                     names.append(f"{rain_type}_{groundwater}_{rain_scenario}")
         self._names = names
-    
+
     @property
     def grid_path(self):
         return self.blok_grid_path
 
     @property
     def admin_path(self):
-        return self.blok_admin_path        
+        return self.blok_admin_path
 
     def grid(self, _type):
         if _type == "blok":
-            return  GridH5ResultAdmin(self.blok_admin_path.file_path, self.blok_grid_path.file_path)
-        return GridH5ResultAdmin(self.piek_admin_path.file_path, self.piek_grid_path.file_path)
+            return GridH5ResultAdmin(
+                self.blok_admin_path.file_path, self.blok_grid_path.file_path
+            )
+        return GridH5ResultAdmin(
+            self.piek_admin_path.file_path, self.piek_grid_path.file_path
+        )
 
     def admin(self):
         return GridH5Admin(self.blok_admin_path.file_path)
-    
-
-
 
     def __repr__(self):
         return f"""{self.name} @ {self.path}
@@ -1271,7 +1285,7 @@ class OutputFolder(Folder):
                """
 
 
-#1d2d output
+# 1d2d output
 class OutputPaths(Folder):
     """
     Output paths are only defined up to the foldername
@@ -1289,7 +1303,6 @@ class OutputPaths(Folder):
         self.one_d_two_d = OutputFolder1d2d(self.base, "1d2d_tests")
         self.climate = OutputClimate(self.base, "Climate")
 
-
     def __getitem__(self, name):
         if name == "0d1d_results":
             return self.zero_d_one_d
@@ -1299,9 +1312,9 @@ class OutputPaths(Folder):
             return self.climate
         elif name == "bank_levels":
             return self.bank_levels
-        elif name =="sqlite_tests":
+        elif name == "sqlite_tests":
             return self.sqlite_tests
-        
+
     @property
     def structure(self):
         return f"""  
@@ -1314,7 +1327,8 @@ class OutputPaths(Folder):
 
                """
 
-#TODO vervangen door ResultsRevisions
+
+# TODO vervangen door ResultsRevisions
 # class OutputRevisions(Folder):
 #     def __init__(self, base):
 #         super().__init__(base)
@@ -1347,7 +1361,6 @@ class OutputPaths(Folder):
 #         return os.listdir(self.base)
 
 
-
 class OutputFolderSqlite(Folder):
     def __init__(self, base):
         super().__init__(base)
@@ -1361,6 +1374,7 @@ class OutputFolderSqlite(Folder):
         self.add_file("geometry_check", "geometry_check.csv", "file")
         self.add_file("general_sqlite_checks", "general_sqlite_checks.csv", "file")
 
+
 class OutputFolder0d1d(ResultsRevisions):
     def __init__(self, base, folder):
         super().__init__(base, folder=folder, returnclass=Outputd0d1d_revision)
@@ -1372,12 +1386,21 @@ class OutputFolder0d1d(ResultsRevisions):
 
 class Outputd0d1d_revision(Folder):
     """Outputfolder 0d1d for a specific revision."""
+
     def __init__(self, base):
         super().__init__(base)
 
         self.add_file("nodes_0d1d_test", "nodes_0d1d_test.gpkg", "file")
-        self.add_file("hydraulische_toets_kunstwerken", "hydraulische_toets_kunstwerken.gpkg", "file")
-        self.add_file("hydraulische_toets_watergangen", "hydraulische_toets_watergangen.gpkg", "file")
+        self.add_file(
+            "hydraulische_toets_kunstwerken",
+            "hydraulische_toets_kunstwerken.gpkg",
+            "file",
+        )
+        self.add_file(
+            "hydraulische_toets_watergangen",
+            "hydraulische_toets_watergangen.gpkg",
+            "file",
+        )
 
 
 class OutputFolder1d2d(ResultsRevisions):
@@ -1391,22 +1414,22 @@ class OutputFolder1d2d(ResultsRevisions):
 
 class Outputd1d2d_revision(Folder):
     """Outputfolder 1d2d for a specific revision."""
+
     def __init__(self, base):
         super().__init__(base)
 
         self.add_file("grid_nodes_2d", "grid_nodes_2d.gpkg", "file")
         self.add_file("stroming_1d2d_test", "stroming_1d2d_test.gpkg", "file")
-        for T in [1,3,15]:
+        for T in [1, 3, 15]:
             self.add_file(f"waterstand_T{T}", f"waterstand_T{T}.tif", "raster")
             self.add_file(f"waterdiepte_T{T}", f"waterdiepte_T{T}.tif", "raster")
-
 
     # @property
     # def structure(self):
     #     return self.("one_d_two_d")
 
 
-#TODO hoort deze class hier nog? resultaten staan op een andere plek
+# TODO hoort deze class hier nog? resultaten staan op een andere plek
 class OutputClimate(ResultsRevisions):
     def __init__(self, base, folder):
         super().__init__(base, folder=folder, returnclass=Outputd1d2d_revision)

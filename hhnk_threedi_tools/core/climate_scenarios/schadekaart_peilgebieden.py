@@ -6,11 +6,12 @@ import shapely.geometry
 import geopandas as gpd
 from osgeo import gdal
 
-# Local imports 
+# Local imports
 import hhnk_research_tools as hrt
 import hhnk_threedi_tools as htt
 from hhnk_threedi_tools.core.climate_scenarios.processes import multiprocess
 from tqdm.notebook import trange, tqdm
+
 
 def maak_schade_polygon(
     peilgebiedenbestand,
@@ -29,11 +30,10 @@ def maak_schade_polygon(
         contante_schade = {}
         for schade_type in ["overlast", "plas"]:
             raster = hrt.Raster(schade_raster_file[schade_type])
-            nodata  = raster.nodata
+            nodata = raster.nodata
             meta = raster.metadata
             contante_schade[schade_type] = raster.get_array()
             contante_schade[schade_type][contante_schade[schade_type] == nodata] = 0
-            
 
         # Importeer peilgebieden
         # gaf een fout: TopologyException: Input geom 0 is invalid: Too few points in geometry component
@@ -160,11 +160,11 @@ def maak_schade_polygon_parallel(
     contante_schade = {}
     for schade_type in ["overlast", "plas"]:
         raster = hrt.Raster(schade_raster_file[schade_type])
-        nodata  = raster.nodata
+        nodata = raster.nodata
         meta = raster.metadata
         contante_schade[schade_type] = raster.get_array()
         contante_schade[schade_type][contante_schade[schade_type] == nodata] = 0
-    
+
     # Importeer peilgebieden
     # gaf een fout: TopologyException: Input geom 0 is invalid: Too few points in geometry component
     # at or near point 103946.02710008621 502783.65950012207 at 103946.02710008621 502783.65950012207

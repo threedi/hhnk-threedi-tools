@@ -16,14 +16,12 @@ import pathlib
 import numpy as np
 
 # Third-party imports
-import sys
-
-sys.path.append(r"C:\Users\chris.kerklaan\Documents\Github\threedi-raster-edits")
 import threedi_raster_edits as tre
 import xarray as xr
 
 from threedidepth.calculate import calculate_waterdepth
 from threedigrid.admin.gridresultadmin import GridH5ResultAdmin
+
 
 class GridEdit:
     def __init__(self, netcdf_path):
@@ -156,7 +154,9 @@ def edit_nodes_in_grid(
         building_cells = fixed_cells.spatial_filter(
             buildings, method="Within", quiet=False, use_ogr=False
         )
-        for building_cell in tre.Progress(building_cells, "adding within cells of buildings"):
+        for building_cell in tre.Progress(
+            building_cells, "adding within cells of buildings"
+        ):
             filtered_water_cells.add(building_cell)
 
         cells = fixed_cells.spatial_filter(
@@ -240,7 +240,7 @@ def calculate_depth(
                 path,
                 calculation_steps=[step],
                 progress_func=progress.gdal,
-                mode='lizard'
+                mode="lizard",
             )
 
 # %%
@@ -308,7 +308,7 @@ if __name__ == "__main__":
         cluster_folder.mkdir(parents=True, exist_ok=True)
         waterdeel = tre.Vector(bgt_waterdeel_path, cluster["naam"])
         panden = tre.Vector(bag_path, cluster["naam"])
-        
+
         for event in EVENTS:
             print(f"Starting event {cluster_name} - {event}")
 
@@ -341,5 +341,3 @@ if __name__ == "__main__":
                     str(output_folder),
                     calculation_steps,
                 )
-                
-                

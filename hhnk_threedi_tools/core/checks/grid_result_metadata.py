@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 
+
 def calculate_rain_days(rain):
     """
     Calculates days dry before and after rain
@@ -79,19 +80,27 @@ def create_results_dataframe(timestep, days_dry_start, days_dry_end):
     # Index in timestep for start sum
     T0_values = np.argmax(timestep > 0)  # 0
     # Index of timestep where rain starts
-    T_rain_start_values = np.argmax(timestep > days_dry_start * 24 * 60)  # int(days_dry_start * 4 * 24)
+    T_rain_start_values = np.argmax(
+        timestep > days_dry_start * 24 * 60
+    )  # int(days_dry_start * 4 * 24)
     # Index of timestep one day before end of rain
-    T_rain_end_min_one_values = (np.argmax(timestep > timestep[-1] - days_dry_end * 24 * 60 - 24 * 60) - 1)  # int((len(timestep) - 1) - (days_dry_end + 1) * 4 * 24)
+    T_rain_end_min_one_values = (
+        np.argmax(timestep > timestep[-1] - days_dry_end * 24 * 60 - 24 * 60) - 1
+    )  # int((len(timestep) - 1) - (days_dry_end + 1) * 4 * 24)
     # Index of timestep end rain
-    T_rain_end_values = (np.argmax(timestep > timestep[-1] - days_dry_end * 24 * 60) - 1)  # int((len(timestep) - 1) - days_dry_end * 4 * 24)
+    T_rain_end_values = (
+        np.argmax(timestep > timestep[-1] - days_dry_end * 24 * 60) - 1
+    )  # int((len(timestep) - 1) - days_dry_end * 4 * 24)
     # Last index of timestep
     T_end_sum_values = np.argmax(timestep == timestep[-1])  # len(timestep) - 1
-    
-    timesteps_df_columns = ["t_0",
+
+    timesteps_df_columns = [
+        "t_0",
         "t_start_rain",
         "t_end_rain_min_one",
         "t_end_rain",
-        "t_end_sum",]
+        "t_end_sum",
+    ]
     timesteps_df_values = [
         T0_values,
         T_rain_start_values,
@@ -110,7 +119,16 @@ def construct_scenario(grid_result):
     try:
         rain, dt, timestep = get_rain_properties(grid_result)
         detected_rain, days_dry_start, days_dry_end = calculate_rain_days(rain)
-        timesteps_dataframe = create_results_dataframe(timestep, days_dry_start, days_dry_end)
-        return rain, detected_rain, timestep, days_dry_start, days_dry_end, timesteps_dataframe
+        timesteps_dataframe = create_results_dataframe(
+            timestep, days_dry_start, days_dry_end
+        )
+        return (
+            rain,
+            detected_rain,
+            timestep,
+            days_dry_start,
+            days_dry_end,
+            timesteps_dataframe,
+        )
     except Exception as e:
         raise e from None

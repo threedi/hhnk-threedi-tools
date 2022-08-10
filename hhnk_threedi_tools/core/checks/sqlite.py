@@ -157,8 +157,12 @@ class SqliteTest:
         self.damo = self.fenv.source_data.damo.path
         self.hdb_path = self.fenv.source_data.hdb.path
         self.polder_polygon = self.fenv.source_data.polder_polygon.path
-        self.channels_from_profiles = self.fenv.source_data.modelbuilder.channel_from_profiles.path
-        self.datachecker_fixeddrainage = self.fenv.source_data.datachecker_fixed_drainage
+        self.channels_from_profiles = (
+            self.fenv.source_data.modelbuilder.channel_from_profiles.path
+        )
+        self.datachecker_fixeddrainage = (
+            self.fenv.source_data.datachecker_fixed_drainage
+        )
 
         self.results = {}
 
@@ -184,8 +188,9 @@ class SqliteTest:
             model_control_gdf[
                 [START_ACTION, MIN_ACTION, MAX_ACTION]
             ] = model_control_gdf.apply(get_action_values, axis=1, result_type="expand")
-            hdb_stuw_gdf = gpd.read_file(self.hdb_path, driver=OPEN_FILE_GDB_DRIVER, layer=hdb_layer
-                )[["CODE", "STREEFPEIL", "MIN_KRUINHOOGTE", "MAX_KRUINHOOGTE"]]
+            hdb_stuw_gdf = gpd.read_file(
+                self.hdb_path, driver=OPEN_FILE_GDB_DRIVER, layer=hdb_layer
+            )[["CODE", "STREEFPEIL", "MIN_KRUINHOOGTE", "MAX_KRUINHOOGTE"]]
             hdb_stuw_gdf.rename(
                 columns={
                     "CODE": code_col,
@@ -237,10 +242,10 @@ class SqliteTest:
             initial_water_level_arr = hrt.gdf_to_raster(
                 gdf=fixeddrainage,
                 value_field=init_waterlevel_value_field,
-                raster_out='',
+                raster_out="",
                 nodata=dem_nodata,
                 metadata=dem_metadata,
-                driver='MEM'
+                driver="MEM",
             )
             dewatering_array = np.subtract(dem_array, initial_water_level_arr)
             # restore nodata pixels using mask
@@ -267,8 +272,10 @@ class SqliteTest:
         try:
             queries_lst = [item for item in vars(ModelCheck()).values()]
             query = "UNION ALL\n".join(queries_lst)
-            db = hrt.execute_sql_selection(query=query, database_path=self.model)# , index_col=id_col #door index_col mee te geven verwdijnt deze.
-            
+            db = hrt.execute_sql_selection(
+                query=query, database_path=self.model
+            )  # , index_col=id_col #door index_col mee te geven verwdijnt deze.
+
             self.results["model_checks"] = db
             return db
         except Exception as e:
@@ -507,13 +514,18 @@ class SqliteTest:
         except Exception as e:
             raise e from None
 
-
     def create_grid_from_sqlite(self, sqlite_path, dem_path, output_folder):
         """Create grid from sqlite, this includes cells, lines and nodes."""
-        grid=make_gridadmin(sqlite_path, dem_path) #using output here results in error, so we use the returned dict
+        grid = make_gridadmin(
+            sqlite_path, dem_path
+        )  # using output here results in error, so we use the returned dict
 
-        for i in ['cells', 'lines', 'nodes']:
-            _write_grid_to_file(grid=grid, grid_type=i, output_path=os.path.join(output_folder, f"{i}.gpkg"))
+        for i in ["cells", "lines", "nodes"]:
+            _write_grid_to_file(
+                grid=grid,
+                grid_type=i,
+                output_path=os.path.join(output_folder, f"{i}.gpkg"),
+            )
 
 
 ## helper functions
@@ -763,5 +775,5 @@ def calc_area(fixeddrainage, modelbuilder_waterdeel, damo_waterdeel, conn_nodes_
 
 def _write_grid_to_file(grid, grid_type, output_path):
     df = pd.DataFrame(grid[grid_type])
-    gdf = hrt.df_convert_to_gdf(df, geom_col_type='wkb', src_crs='28992')
+    gdf = hrt.df_convert_to_gdf(df, geom_col_type="wkb", src_crs="28992")
     hrt.gdf_write_to_geopackage(gdf, filepath=output_path)

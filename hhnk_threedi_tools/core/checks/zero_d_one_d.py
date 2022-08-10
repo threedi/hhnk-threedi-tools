@@ -298,7 +298,9 @@ def add_slope_info(structure, structure_name, up_waterlevel, down_waterlevel):
     )  # CM/KM structure.length.values is de lengte van het segment
 
     # Absolute waarden meenemen
-    structure[q_col] = structure[q_col].abs()  # Absoluut debiet, richting staat in structure['richting']
+    structure[q_col] = structure[
+        q_col
+    ].abs()  # Absoluut debiet, richting staat in structure['richting']
     structure[u_var_col] = structure[u_var_col].abs()  # Absolute snelheid
     structure[slope_abs_cm_km_col] = structure[
         slope_col
