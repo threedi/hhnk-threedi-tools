@@ -39,7 +39,7 @@ from shapely.geometry import mapping
 import pandas as pd
 from shapely import wkt
 import geopandas as gpd
-from rasterstats import zonal_stats
+# from rasterstats import zonal_stats
 from threedidepth.calculate import calculate_waterdepth
 from threedigrid.admin.gridresultadmin import GridH5ResultAdmin
 
@@ -260,30 +260,30 @@ def calculate_depth(folder_path: str, results_type:str, revision:str, calculatio
                     )
     print("Output at", output_path)
 
-def volume_difference(grid, raster_path, _type="max"):
-    #FIXME not used?
-    cells = get_geometry_grid_cells(grid, use_ogr=False)
+# def volume_difference(grid, raster_path, _type="max"):
+#     #FIXME not used?
+#     cells = get_geometry_grid_cells(grid, use_ogr=False)
     
-    geoms = cells.geometry.values # list of shapely geometries
-    geoms = [mapping(geoms[0])]
+#     geoms = cells.geometry.values # list of shapely geometries
+#     geoms = [mapping(geoms[0])]
     
-    # source = rasterio.open(raster_path)
-    # out_image, out_transform = mask(source,geoms[0],crop=True)
+#     # source = rasterio.open(raster_path)
+#     # out_image, out_transform = mask(source,geoms[0],crop=True)
 
-    # derive the sum of all cells
-    cells['sum'] = pd.DataFrame(
-                zonal_stats(
-                    vectors=cells['geometry'], 
-                    raster=raster_path, 
-                stats='sum'
-                )   
-            )['sum']
+#     # derive the sum of all cells
+#     cells['sum'] = pd.DataFrame(
+#                 zonal_stats(
+#                     vectors=cells['geometry'], 
+#                     raster=raster_path, 
+#                 stats='sum'
+#                 )   
+#             )['sum']
     
-    for cell in cells:
-        cell.id
-        vol = grid.nodes.filter(cell.id)
+#     for cell in cells:
+#         cell.id
+#         vol = grid.nodes.filter(cell.id)
         
-        # get aster 
+#         # get aster 
 
 def raster_volume(waterdepth_raster_path:str):
     """ returns the volume of the waterdepth raster"""
