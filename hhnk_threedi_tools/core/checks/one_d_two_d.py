@@ -91,9 +91,9 @@ class OneDTwoDTest:
     def results(self):
         return self.iresults
 
-    def read_flowline_results(self, threedi_result, timesteps_df):
+    def read_flowline_results(self):
         try:
-            threedi_result = self.threedi_result
+            threedi_result = self.threedi_results
             timesteps_df = self.timestep_df
 
             coords = hrt.threedi.line_geometries_to_coords(
@@ -188,10 +188,10 @@ class OneDTwoDTest:
         """
         try:
 
-            grid_result = self.threedi_result
+            grid_result = self.threedi_results
             timestep_df = self.timestep_df
             dem_path = self.dem_path
-            folder = self.folder
+            folder = self.fenv
             revision = self.revision
 
             timesteps_arr = [
@@ -248,7 +248,7 @@ class OneDTwoDTest:
         """
         try:
 
-            grid_result = self.threedi_result
+            grid_result = self.threedi_results
             timestep_df = self.timestep_df
 
             nodes_wlvl = get_nodes_as_gdf(grid_result)
