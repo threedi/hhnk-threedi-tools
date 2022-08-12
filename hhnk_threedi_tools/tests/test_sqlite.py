@@ -7,8 +7,11 @@ Created on Tue Aug 24 16:17:00 2021
 """
 if __name__ == '__main__':
     import sys
-    sys.path.insert(0,r'E:\github\wvangerwen\hhnk-threedi-tools')
-    sys.path.insert(0,r'E:\github\wvangerwen\hhnk-research-tools')
+    sys_paths = [r'E:\github\wvangerwen\hhnk-threedi-tools', r'E:\github\wvangerwen\hhnk-research-tools']
+    for sys_path in sys_paths:
+        if sys_path not in sys.path:
+            sys.path.insert(0,sys_path)
+
 
 # First-party imports
 import os
@@ -18,6 +21,8 @@ import pathlib
 from hhnk_threedi_tools.core.checks.sqlite import SqliteTest
 from hhnk_threedi_tools.core.folders import Folders
 
+
+# %%
 # Globals
 # __file__ = "C:/Users/chris.kerklaan/Documents/Github/hhnk-threedi-tests/hhnk_threedi_tools/tests/test_sqlite.py"
 TEST_MODEL = str(pathlib.Path(__file__).parent.absolute()) + "/data/model_test/"
