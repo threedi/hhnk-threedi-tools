@@ -118,10 +118,18 @@ class File:
             return self.pl.exists()
 
     @property
-    def path_if_exists(self):
+    def pl_if_exists(self):
         """return filepath if the file exists otherwise return None"""
         if self.exists:
             return self.pl
+        else:
+            return None
+
+    @property
+    def path_if_exists(self):
+        """return filepath if the file exists otherwise return None"""
+        if self.exists:
+            return str(self.pl)
         else:
             return None
 
@@ -222,10 +230,18 @@ class Folder:
         return self.pl.exists()
 
     @property
-    def path_if_exists(self):
+    def pl_if_exists(self):
         """return filepath if the file exists otherwise return None"""
         if self.exists:
             return self.pl
+        else:
+            return None
+
+    @property
+    def path_if_exists(self):
+        """return filepath if the file exists otherwise return None"""
+        if self.exists:
+            return str(self.pl)
         else:
             return None
 
@@ -341,7 +357,7 @@ class Folders(Folder):
     def __init__(self, base, create=True):
         super().__init__(base)
 
-        print("v7")
+        print("v9")
 
         # source
         self.source_data = SourcePaths(self.base)
@@ -426,7 +442,7 @@ class Folders(Folder):
             "init_waterlevel_val_field": WATERLEVEL_VAL_FIELD,
 
             # model folder
-            "model": self.model.schema_base.database,
+            "model": self.model.schema_base.database.path_if_exists,
             "dem": self.model.schema_base.rasters.dem.path_if_exists,
 
             # Threedi
