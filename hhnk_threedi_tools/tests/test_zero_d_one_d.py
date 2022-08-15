@@ -7,11 +7,8 @@ Created on Mon Aug 23 10:46:05 2021
 
 Functional testing for zeroDoneD object
 """
-if __name__ == '__main__':
-    import sys
-    sys.path.insert(0,r'E:\github\wvangerwen\hhnk-threedi-tools')
-    sys.path.insert(0,r'E:\github\wvangerwen\hhnk-research-tools')
-
+if __name__=='__main__':
+    import set_local_paths #add local git repos.
 
 # First-party imports
 import pathlib

@@ -20,7 +20,6 @@ from ipyfilechooser import FileChooser
 
 # threedi
 from threedi_scenario_downloader import downloader as dl
-from threedi_api_client import ThreediApiClient
 import openapi_client
 
 # local imports

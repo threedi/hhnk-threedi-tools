@@ -1,4 +1,5 @@
-# -*- coding: utf-8 -*-
+# %%
+# # -*- coding: utf-8 -*-
 """
 Created on Fri Aug 13 14:55:32 2021
 
@@ -8,11 +9,15 @@ Created on Fri Aug 13 14:55:32 2021
 TODO tests
     test_working_paths
     
+
 """
 # First-party imports
 import os
 import shutil
 import pathlib
+
+if __name__=='__main__':
+    import set_local_paths #add local git repos.
 
 # Local imports
 from hhnk_threedi_tools.core.folders import Folders
@@ -20,7 +25,7 @@ from hhnk_threedi_tools.core.folders import Folders
 # Globals
 # __file__ = "C:/Users/chris.kerklaan/Documents/Github/hhnk-threedi-tools/hhnk_threedi_tools/tests/test_folder_structures.py"
 TEST_DIRECTORY = str(pathlib.Path(__file__).parent.absolute()) + "/data"
-FOLDER = TEST_DIRECTORY + "/folder_structures/new_project"
+FOLDER = TEST_DIRECTORY + "/new_project"
 MODEL_FOLDER = TEST_DIRECTORY + "/model_test"
 
 
@@ -29,8 +34,10 @@ def test_create_project():
     if os.path.exists(FOLDER):
         shutil.rmtree(FOLDER)
     folder = Folders(FOLDER)
+    folder.create_project()
     assert os.path.exists(FOLDER + "/01_Source_data")
     assert os.path.exists(FOLDER + "/02_Model")
+    assert os.path.exists(FOLDER + "/02_Model/00_basis")
     assert os.path.exists(FOLDER + "/03_3di_resultaten")
     assert os.path.exists(FOLDER + "/Output")
 
@@ -86,8 +93,8 @@ def test_to_test_file_dict():
 
 def test_find_dem():
     folder = Folders(MODEL_FOLDER)
-    dem_path = TEST_DIRECTORY + "/model_test/02_model/rasters/dem_hoekje.tif"
-    assert pathlib.Path(folder.model.rasters.dem.path) == pathlib.Path(dem_path)
+    dem_path = TEST_DIRECTORY + "/model_test/02_model/00_basis/rasters/dem_hoekje.tif"
+    assert pathlib.Path(folder.model.schema_base.rasters.dem.path) == pathlib.Path(dem_path)
 
 
 def test_find_threedi_sources():
@@ -111,7 +118,7 @@ def test_create_revision():
 
     folder.threedi_results.zero_d_one_d["new"].create()
 
-    assert folder.threedi_results.zero_d_one_d["new"].exists
+    assert folder.threedi_results.zero_d_one_d["new"].exists is True
 
 
 # def test_working_paths():
@@ -122,3 +129,21 @@ def test_create_revision():
 #                          threedi_results_path=results_path
 
 #                          )
+
+# %%
+if __name__ == '__main__':
+    test_create_project()
+    test_to_dict()
+    test_to_file_dict()
+    test_to_test_file_dict()
+    test_find_dem()
+    test_find_threedi_sources()
+    test_create_revision()
+
+
+
+
+
+
+
+# %%

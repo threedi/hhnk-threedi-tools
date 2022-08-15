@@ -5,13 +5,8 @@ Created on Tue Aug 24 16:17:00 2021
 
 @author: chris.kerklaan
 """
-if __name__ == '__main__':
-    import sys
-    sys_paths = [r'E:\github\wvangerwen\hhnk-threedi-tools', r'E:\github\wvangerwen\hhnk-research-tools']
-    for sys_path in sys_paths:
-        if sys_path not in sys.path:
-            sys.path.insert(0,sys_path)
-
+if __name__=='__main__':
+    import set_local_paths #add local git repos.
 
 # First-party imports
 import os
@@ -20,6 +15,8 @@ import pathlib
 # Local imports
 from hhnk_threedi_tools.core.checks.sqlite import SqliteTest
 from hhnk_threedi_tools.core.folders import Folders
+
+
 
 
 # %%

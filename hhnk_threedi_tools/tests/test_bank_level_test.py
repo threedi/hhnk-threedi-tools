@@ -10,9 +10,7 @@ They still must be checked qualitatively
 
 """
 if __name__ == '__main__':
-    import sys
-    sys.path.insert(0,r'E:\github\wvangerwen\hhnk-threedi-tools')
-    sys.path.insert(0,r'E:\github\wvangerwen\hhnk-research-tools')
+    import set_local_paths #add local git repos.
 
 # First-party imports
 import pathlib

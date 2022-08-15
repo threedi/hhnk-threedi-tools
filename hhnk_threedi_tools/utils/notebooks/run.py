@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# %%
 """
 Created on Fri Sep 24 13:55:39 2021
 
@@ -20,7 +21,6 @@ CREATE_NEW_PROCESS_GROUP = 0x00000200
 DETACHED_PROCESS = 0x00000008
 
 NOTEBOOK_DIRECTORY = str(pathlib.Path(__file__).parent.absolute())
-
 
 class TempCopy:
     def __init__(self, original_path):
@@ -211,3 +211,4 @@ def add_notebook_paths(extra_notebook_paths):
         print("Adding:", nb_string)
         with open(ipython_profile_path, "a") as profile_code:
             profile_code.write("\n" + nb_string)
+
