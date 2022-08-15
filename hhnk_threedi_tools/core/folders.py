@@ -1,3 +1,4 @@
+# %%
 # -*- coding: utf-8 -*-
 """
 Created on Fri Aug 13 13:18:54 2021
@@ -689,10 +690,11 @@ class ModelPaths(Folder):
             filepath = ""
 
         sqlite_cls = Sqlite(filepath)
-        if os.path.exists(sqlite_cls.path):
-            return sqlite_cls
-        else:
-            return None
+        # if os.path.exists(sqlite_cls.path):
+        #     return sqlite_cls
+        # else:
+        #     return None
+        return sqlite_cls
 
     @property
     def structure(self):
@@ -831,7 +833,7 @@ class ThreediRasters(Folder):
         This only works for models from Klondike release onwards, where we only have
         one global settings row."""
 
-        if self.caller.database is not None:
+        if self.caller.database.exists:
             df = hrt.sqlite_table_to_df(
                 database_path=self.caller.database.path, table_name=table_name
             )

@@ -26,7 +26,6 @@ TEST_MODEL = str(pathlib.Path(__file__).parent.absolute()) + "/data/model_test/"
 
 def test_import_information_object():
     """tests if the import of information works, if the correct amount is imported"""
-
     bl_test = BankLevelTest(Folders(TEST_MODEL))
 
     bl_test.import_data()
@@ -46,7 +45,7 @@ def test_import_information_object():
     assert (
         bl_test.imports["fixeddrainage_lines"]["streefpeil_bwn2"][1].values[0] == -0.85
     )
-    assert bl_test.imports["lines_1d2d"]["storage_area"][417] == 20.5620565089
+    assert bl_test.imports["lines_1d2d"]["storage_area"][423] == 20.5620565088836
     assert bl_test.imports["conn_nodes"]["conn_node_id"][15] == 15
     assert bl_test.imports["channels"]["initial_waterlevel"][487] == -0.55
     assert bl_test.imports["cross_loc"]["reference_level"][282] == -0.94
@@ -55,15 +54,13 @@ def test_import_information_object():
 
 def test_levee_intersections():
     """tests if levee intersections can be done"""
-
     bl_test = BankLevelTest(Folders(TEST_MODEL))
     bl_test.import_data()
     bl_test.line_intersections()
-    assert bl_test.line_intersects["levee_id"][419] == 1154.0
+    assert bl_test.line_intersects["levee_id"][425] == 1154.0
 
 
 def test_divergent_waterlevel_nodes():
-
     bl_test = BankLevelTest(Folders(TEST_MODEL))
     bl_test.import_data()
     bl_test.divergent_waterlevel_nodes()
