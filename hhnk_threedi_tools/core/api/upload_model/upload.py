@@ -20,7 +20,7 @@ from hhnk_threedi_tools.core.api.upload_model.login import get_login_details
 
 # %% 
 
-class ThreediApi:
+class ThreediApiLocal:
     def __init__(self):
         self.CONFIG = {
                 "THREEDI_API_HOST": THREEDI_API_HOST,
@@ -29,15 +29,26 @@ class ThreediApi:
                 "THREEDI_API_PERSONAL_API_TOKEN": '',
             }
 
+        self.api = None
 
-    def update_api_key(self, api_key):
+    def set_api_key(self, api_key):
         self.CONFIG["THREEDI_API_PERSONAL_API_TOKEN"] = api_key
+
+        self._api = ThreediApi(config=self.CONFIG, version='v3-beta')
 
     @property
     def api(self):
-        return ThreediApi(config=self.CONFIG, version='v3-beta')
+        if self._api is None:
+            raise Exception("Call .set_api_key first.")
+        return self._api
 
-threedi = ThreediApi()
+    @api.setter
+    def api(self, dummy):
+        self._api = dummy
+
+
+
+threedi = ThreediApiLocal()
 
 
 def md5(fname):
@@ -161,7 +172,7 @@ def create_threedimodel(
     threedimodel = None
     for i in range(max_retries_creation):
         try:
-            threedimodel = threedi.api.schematisations_revisions_create_threedimodel(revision.id, schematisation.id, {})
+            threedimodel = threedi.api.schematisations_revisions_create_threedimodel(revision.id, schematisation.id)
             print(f"Creating threedimodel with id {threedimodel.id}...")
             break
         except ApiException:

@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import os
 
 import hhnk_research_tools as hrt
-import core.api.upload_model.temp_upload_model.upload as upload
+import hhnk_threedi_tools.core.api.upload_model.upload as upload
 
 INFILTRATION_COLS = ["infiltration_rate",
 "infiltration_rate_file",
@@ -53,7 +53,7 @@ class ModelSchematisations():
         """Create a schematisation based on the modelsettings.
         Some schematisations (0d1d_test) have some extra changed that are not
         only the globalsettings"""
-        row = self.settings_df.loc[name]
+        row = self.settings_df.loc[name].copy()
 
         schema_name = self.folder.model.add_modelpath(name)
 
@@ -186,7 +186,7 @@ class ModelSchematisations():
         row = self.settings_df.loc[name]
         schema_new = getattr(self.folder.model, f"schema_{name}")
         
-        upload.threedi.update_api_key(api_key)
+        upload.threedi.set_api_key(api_key)
 
         raster_names = {'dem_file':schema_new.rasters.dem.path_if_exists, 
                         'frict_coef_file':schema_new.rasters.friction.path_if_exists, 
@@ -194,8 +194,8 @@ class ModelSchematisations():
                         'max_infiltration_capacity_file':schema_new.rasters.storage.path_if_exists}
 
         sqlite_path = schema_new.database.path
-        tags = ["modeltest_" + row + "_" + self.folder.name]
-        schematisation_name = schema_new
+        schematisation_name=row['schematisation_name']
+        tags = [schematisation_name, self.folder.name]
         # organisation_uuid="48dac75bef8a42ebbb52e8f89bbdb9f2"
 
         upload.upload_and_process(schematisation_name=schematisation_name,
@@ -206,3 +206,15 @@ class ModelSchematisations():
 
 
 # %%
+if __name__ == '__main__':
+    from hhnk_threedi_tools.core.folders import Folders
+    path = r'E:\02.modellen\model_test_v2'
+    folder = Folders(path)
+    name = '0d1d_test'
+
+    self = ModelSchematisations(folder=folder, modelsettings_path=folder.model.settings.path)
+    self.create_schematisation(name='0d1d_test')
+    self.upload_schematisation(name='0d1d_test', commit_message='blabla_v2', api_key='aDFMXSfR.XdXc1MaWXYtA3DIXxrgzXzH1u4Lnfe7N')
+# %%
+    upload.threedi.set_api_key('')
+    upload.threedi.api.schematisations_revisions_create_threedimodel(41870, 5746, {})

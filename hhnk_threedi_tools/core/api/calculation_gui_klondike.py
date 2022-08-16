@@ -67,10 +67,14 @@ def start_calculation_gui(
 ):
 
     if data:
-        lizard_api_key = read_api_file(data["lizard_api_key_path"])
+        api_keys = read_api_file(data["api_keys_path"])
         main_folder = data["polder_folder"]
+    else:
+        api_keys={}
+        api_keys['lizard'] = lizard_api_key
+        api_keys['threedi'] = ''
 
-    if not lizard_api_key:
+    if not api_keys['lizard']:
         raise ValueError(
             """Please fill in the lizard api key.\n
                          Log in and create your own at: https://hhnk.lizard.net/management/personal_api_keys
@@ -79,7 +83,7 @@ def start_calculation_gui(
     dl.LIZARD_URL = "https://hhnk.lizard.net/api/v3/"
     THREEDI_API_HOST = "https://api.3di.live/v3"
     RESULT_LIMIT = 20
-    dl.set_api_key(lizard_api_key)
+    dl.set_api_key(api_keys['lizard'])
 
     if base_scenario_name is None:
         base_scenario_name_str = ""
@@ -170,7 +174,7 @@ def start_calculation_gui(
     def login(action):
         global sim
 
-        sim = Simulation(username=username_widget.value, password=password_widget.value, api_key=lizard_api_key)
+        sim = Simulation(api_key=api_keys['threedi']) #username=username_widget.value, password=password_widget.value, 
 
         try:
             sim.logged_in

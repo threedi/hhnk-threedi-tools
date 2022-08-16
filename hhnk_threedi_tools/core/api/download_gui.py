@@ -1,3 +1,4 @@
+# %%
 # System imports
 import os
 import re
@@ -11,8 +12,8 @@ from threedi_scenario_downloader import downloader as dl
 
 # local imports
 from hhnk_threedi_tools import Folders
-from .download_functions import create_download_url, start_download
-from .read_api_file import read_api_file
+from hhnk_threedi_tools.core.api.download_functions import create_download_url, start_download
+from hhnk_threedi_tools.core.api.read_api_file import read_api_file
 
 from hhnk_threedi_tools.variables.api_settings import (
     RAIN_TYPES,
@@ -26,12 +27,17 @@ import hhnk_research_tools as hrt
 # from functions_nabewerking.create_batch_folders_dict import create_batch_folders_dict
 
 
+# %%
+
 def download_gui(main_folder=None, lizard_api_key="", data=None):
     dl.LIZARD_URL = "https://hhnk.lizard.net/api/v3/"
 
     if data:
         main_folder = data["polder_folder"]
-        lizard_api_key = read_api_file(data["lizard_api_key_path"])
+        api_keys = read_api_file(data["api_keys_path"])
+    else:
+        api_keys={}
+        api_keys['lizard'] = lizard_api_key
 
     def new_get_api_key():
         return api_key_widget.value
@@ -1007,7 +1013,7 @@ def download_gui(main_folder=None, lizard_api_key="", data=None):
     on_select_change(output_polder_dropdown.value)
     update_buttons()
 
-    api_key_widget.value = lizard_api_key
+    api_key_widget.value = api_keys['lizard']
     api_key_widget.disabled = False
 
     ###################################################################################################

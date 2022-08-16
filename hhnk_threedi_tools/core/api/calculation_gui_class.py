@@ -114,7 +114,7 @@ class StartCalculationGui():
 
 
         if data:
-            self.lizard_api_key = read_api_file(data["lizard_api_key_path"])
+            self.api_keys = read_api_file(data["api_keys_path"])
             self.main_folder = data["polder_folder"]
         else:
             self.lizard_api_key = lizard_api_key
