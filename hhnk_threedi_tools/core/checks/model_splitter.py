@@ -5,8 +5,7 @@ import matplotlib.pyplot as plt
 import os
 
 import hhnk_research_tools as hrt
-
-
+import core.api.upload_model.temp_upload_model.upload as upload_version
 
 INFILTRATION_COLS = ["infiltration_rate",
 "infiltration_rate_file",
@@ -174,17 +173,45 @@ class ModelSchematisations():
             hrt.execute_sql_changes(query=query, database=database_path_new)
 
 
-    def upload_schematisation(self, name, api_key, commit_message):
-        """TODO jelle."""
+    def upload_schematisation(self, name, commit_message, api_key):
+        """
+        *** possible raster_names ****
+        [ dem_file, equilibrium_infiltration_rate_file, frict_coef_file,
+        initial_groundwater_level_file, initial_waterlevel_file, groundwater_hydro_connectivity_file,
+        groundwater_impervious_layer_level_file, infiltration_decay_period_file, initial_infiltration_rate_file,
+        leakage_file, phreatic_storage_capacity_file, hydraulic_conductivity_file, porosity_file, infiltration_rate_file,
+        max_infiltration_capacity_file, interception_file ]
+        ********************************"""
+
         row = self.settings_df.loc[name]
         schema_new = getattr(self.folder.model, f"schema_{name}")
         
+        upload_version.CONFIG['THREEDI_API_PERSONAL_API_TOKEN'] = api_key
+
+        raster_names = {'dem_file':schema_new.rasters.dem.path_if_exists, 
+                        'frict_coef_file':schema_new.rasters.friction.path_if_exists, 
+                        'infiltration_rate_file':schema_new.rasters.infiltration.path_if_exists,
+                        'max_infiltration_capacity_file':schema_new.rasters.storage.path_if_exists}
+
+
+        sqlite_path = schema_new.database.path
+        tags = ["modeltest_" + row + "_" + self.folder.name]
+        schematisation_name = schema_new
+        # organisation_uuid="48dac75bef8a42ebbb52e8f89bbdb9f2"
+
+        upload_version.upload_and_process(schematisation_name=schematisation_name,
+            sqlite_path=sqlite_path,
+            raster_paths=raster_names,
+            schematisation_create_tags=tags,
+            commit_message=commit_message)
+
+
+
+        
         # # %%
+        #commit_message = 
         # import temp_upload_model.upload as upload
         # importlib.reload(upload)
-
-
-
 
         raster_names = {'dem_file':schema_new.rasters.dem.path_if_exists, 
                         'frict_coef_file':schema_new.rasters.friction.path_if_exists, 
