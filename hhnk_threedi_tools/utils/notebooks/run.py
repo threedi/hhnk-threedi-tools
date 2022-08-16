@@ -136,7 +136,7 @@ def open_server(directory=None, location="osgeo", use="run"):
     """directory:
         notebooks open in a certain directory
     location:
-        can either be osgeo or user
+        can either be 'osgeo' or 'user'
         open jupyter notebook is osgeo or per-user-installed .exe
     use:
         subprocess mode ('popen' or 'run')

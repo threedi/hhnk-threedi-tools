@@ -12,6 +12,7 @@ from threedi_scenario_downloader import downloader as dl
 # local imports
 from hhnk_threedi_tools import Folders
 from .download_functions import create_download_url, start_download
+from .read_api_file import read_api_file
 
 from hhnk_threedi_tools.variables.api_settings import (
     RAIN_TYPES,
@@ -30,7 +31,7 @@ def download_gui(main_folder=None, lizard_api_key="", data=None):
 
     if data:
         main_folder = data["polder_folder"]
-        lizard_api_key = data["lizard_api_key"]
+        lizard_api_key = read_api_file(data["lizard_api_key_path"])
 
     def new_get_api_key():
         return api_key_widget.value
@@ -601,15 +602,15 @@ def download_gui(main_folder=None, lizard_api_key="", data=None):
         output_select_box.value = selected_download_new
 
         # Set Dem path for batch
-        if scenarios["folder"].model.rasters.find_dem() == "":
-            dem_path_dropdown.options = [
-                i.split(os.sep)[-1]
-                for i in scenarios["folder"].model.rasters.find_ext("tif")
-            ]
-        else:
-            dem_path_dropdown.options = [
-                scenarios["folder"].model.rasters.dem.name + ".tif"
-            ]
+        # if scenarios["folder"].model.rasters.find_dem() == "":
+        #     dem_path_dropdown.options = [
+        #         i.split(os.sep)[-1]
+        #         for i in scenarios["folder"].model.rasters.find_ext("tif")
+        #     ]
+        # else:
+        dem_path_dropdown.options = [
+            scenarios["folder"].model.schema_base.rasters.dem.path
+        ]
 
     # If a new value is selected in the download selection folder, update the output folder
     download_selection_box.observe(update_output_selectbox, names="value")
