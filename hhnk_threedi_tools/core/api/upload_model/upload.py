@@ -15,15 +15,29 @@ from threedi_api_client.openapi import Schematisation
 from threedi_api_client.files import upload_file
 from threedi_api_client.openapi import ApiException
 
-from .constants import *
-from .login import get_login_details
+from hhnk_threedi_tools.core.api.upload_model.constants import THREEDI_API_HOST, ORGANISATION_UUID, BUIEN, RADAR_ID, SCHEMATISATIONS, UPLOAD_TIMEOUT
+from hhnk_threedi_tools.core.api.upload_model.login import get_login_details
 
-CONFIG = {
-    "THREEDI_API_HOST": THREEDI_API_HOST,
-    "THREEDI_API_USERNAME": get_login_details(option='username'),
-    "THREEDI_API_PASSWORD": get_login_details(option='password')
-}
-THREEDI_API = ThreediApi(config=CONFIG, version='v3-beta')
+# %% 
+
+class ThreediApi:
+    def __init__(self):
+        self.CONFIG = {
+                "THREEDI_API_HOST": THREEDI_API_HOST,
+                # "THREEDI_API_USERNAME": get_login_details(option='username'),
+                # "THREEDI_API_PASSWORD": get_login_details(option='password'),
+                "THREEDI_API_PERSONAL_API_TOKEN": '',
+            }
+
+
+    def update_api_key(self, api_key):
+        self.CONFIG["THREEDI_API_PERSONAL_API_TOKEN"] = api_key
+
+    @property
+    def api(self):
+        return ThreediApi(config=self.CONFIG, version='v3-beta')
+
+threedi = ThreediApi()
 
 
 def md5(fname):
@@ -41,7 +55,7 @@ def get_or_create_schematisation(
         tags: List = None
 ) -> Schematisation:
     tags = [] if not tags else tags
-    resp = THREEDI_API.schematisations_list(
+    resp = threedi.api.schematisations_list(
         name=schematisation_name, owner__unique_id=organisation_uuid
     )
     if resp.count == 1:
@@ -53,7 +67,7 @@ def get_or_create_schematisation(
     # if not found -> create
     cont= input(f"Create new schematisation? [y/n] - {schematisation_name}")
     if cont=='y':
-        schematisation = THREEDI_API.schematisations_create(data={
+        schematisation = threedi.api.schematisations_create(data={
             "owner": organisation_uuid,
             "name": schematisation_name,
             "tags": tags,
@@ -67,7 +81,7 @@ def upload_sqlite(schematisation, revision, sqlite_path: Union[str, Path]):
     sqlite_zip_path = sqlite_path.with_suffix('.zip')
     print(f'sqlite_zip_path = {sqlite_zip_path}')
     ZipFile(sqlite_zip_path, mode='w').write(str(sqlite_path), arcname=str(sqlite_path.name))
-    upload = THREEDI_API.schematisations_revisions_sqlite_upload(
+    upload = threedi.api.schematisations_revisions_sqlite_upload(
         id=revision.id,
         schematisation_pk=schematisation.id,
         data={"filename": str(sqlite_zip_path.name)}
@@ -86,7 +100,7 @@ def upload_raster(
     raster_path = Path(raster_path)
     md5sum = md5(str(raster_path)) #TODO check if raster changed, download from API, then upload.
     data = {"name": raster_path.name, "type": raster_type, "md5sum": md5sum}
-    raster_create = THREEDI_API.schematisations_revisions_rasters_create(rev_id, schema_id, data)
+    raster_create = threedi.api.schematisations_revisions_rasters_create(rev_id, schema_id, data)
     if raster_create.file:
         if raster_create.file.state == "uploaded":
             print(f"Raster '{raster_path}' already exists, skipping upload.")
@@ -94,7 +108,7 @@ def upload_raster(
 
     print(f"Uploading '{raster_path}'...")
     data={"filename": raster_path.name}
-    upload = THREEDI_API.schematisations_revisions_rasters_upload(
+    upload = threedi.api.schematisations_revisions_rasters_upload(
         raster_create.id, rev_id, schema_id, data
     )
 
@@ -113,7 +127,7 @@ def commit_revision(
 ):
     # First wait for all files to have turned to 'uploaded'
     for wait_time in [0.5, 1.0, 2.0, 10.0, 30.0, 60.0, 120.0, 300.0]:
-        revision = THREEDI_API.schematisations_revisions_read(rev_id, schema_id)
+        revision = threedi.api.schematisations_revisions_read(rev_id, schema_id)
         states = [revision.sqlite.file.state]
         states.extend([raster.file.state for raster in revision.rasters])
 
@@ -130,7 +144,7 @@ def commit_revision(
     else:
         raise RuntimeError("Some files are still in 'created' state")
 
-    schematisation_revision = THREEDI_API.schematisations_revisions_commit(rev_id, schema_id, {"commit_message": commit_message})
+    schematisation_revision = threedi.api.schematisations_revisions_commit(rev_id, schema_id, {"commit_message": commit_message})
 
     print(f"Committed revision {revision.number}.")
     return schematisation_revision
@@ -147,7 +161,7 @@ def create_threedimodel(
     threedimodel = None
     for i in range(max_retries_creation):
         try:
-            threedimodel = THREEDI_API.schematisations_revisions_create_threedimodel(revision.id, schematisation.id, {})
+            threedimodel = threedi.api.schematisations_revisions_create_threedimodel(revision.id, schematisation.id, {})
             print(f"Creating threedimodel with id {threedimodel.id}...")
             break
         except ApiException:
@@ -155,7 +169,7 @@ def create_threedimodel(
             continue
     if threedimodel:
         for i in range(max_retries_processing):
-            threedimodel = THREEDI_API.threedimodels_read(threedimodel.id)
+            threedimodel = threedi.api.threedimodels_read(threedimodel.id)
             if threedimodel.is_valid:
                 print(f"Succesfully created threedimodel with id {threedimodel.id}")
                 break
@@ -180,7 +194,7 @@ def upload_and_process(
     schematisation = get_or_create_schematisation(schematisation_name, tags=schematisation_create_tags)
 
     # Nieuwe (lege) revisie aanmaken
-    revision = THREEDI_API.schematisations_revisions_create(schematisation.id, data={"empty": True})
+    revision = threedi.api.schematisations_revisions_create(schematisation.id, data={"empty": True})
 
     # Data uploaden
     # # Spatialite
