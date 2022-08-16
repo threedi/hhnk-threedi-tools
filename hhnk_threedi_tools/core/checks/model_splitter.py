@@ -174,7 +174,7 @@ class ModelSchematisations():
             hrt.execute_sql_changes(query=query, database=database_path_new)
 
 
-    def upload_schematisation(self, name):
+    def upload_schematisation(self, name, api_key, commit_message):
         """TODO jelle."""
         row = self.settings_df.loc[name]
         schema_new = getattr(self.folder.model, f"schema_{name}")
@@ -186,10 +186,10 @@ class ModelSchematisations():
 
 
 
-        # raster_names = {'dem_file':schema_new.rasters.dem.path_if_exists, 
-        #                 'frict_coef_file':schema_new.rasters.friction.path_if_exists, 
-        #                 'infiltration_rate_file':schema_new.rasters.infiltration.path_if_exists,
-        #                 'max_infiltration_capacity_file':schema_new.rasters.storage.path_if_exists}
+        raster_names = {'dem_file':schema_new.rasters.dem.path_if_exists, 
+                        'frict_coef_file':schema_new.rasters.friction.path_if_exists, 
+                        'infiltration_rate_file':schema_new.rasters.infiltration.path_if_exists,
+                        'max_infiltration_capacity_file':schema_new.rasters.storage.path_if_exists}
         # # **** possible raster_names ****
         # # [ dem_file, equilibrium_infiltration_rate_file, frict_coef_file,
         # # initial_groundwater_level_file, initial_waterlevel_file, groundwater_hydro_connectivity_file,
@@ -199,7 +199,7 @@ class ModelSchematisations():
         # # ********************************
 
         # tags = ["modeltest_1d2dtest_hoekje"]
-        # sqlite_path = schema_new.database.path
+        sqlite_path = schema_new.database.path
         # schematisation_name = "modeltest_1d2d_test_hoekje"
         # organisation_uuid="48dac75bef8a42ebbb52e8f89bbdb9f2"
         # # upload.upload_and_process(schematisation_name=schematisation_name,

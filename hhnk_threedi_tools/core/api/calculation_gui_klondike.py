@@ -20,6 +20,7 @@ from ipyfilechooser import FileChooser
 
 # threedi
 from threedi_scenario_downloader import downloader as dl
+from .read_api_file import read_api_file
 import openapi_client
 
 # local imports
@@ -66,7 +67,7 @@ def start_calculation_gui(
 ):
 
     if data:
-        lizard_api_key = data["lizard_api_key"]
+        lizard_api_key = read_api_file(data["lizard_api_key_path"])
         main_folder = data["polder_folder"]
 
     if not lizard_api_key:
@@ -76,7 +77,7 @@ def start_calculation_gui(
                          """
         )
     dl.LIZARD_URL = "https://hhnk.lizard.net/api/v3/"
-    THREEDI_API_HOST = "https://api.3di.live/v3.0"
+    THREEDI_API_HOST = "https://api.3di.live/v3"
     RESULT_LIMIT = 20
     dl.set_api_key(lizard_api_key)
 
@@ -169,7 +170,7 @@ def start_calculation_gui(
     def login(action):
         global sim
 
-        sim = Simulation(username_widget.value, password_widget.value)
+        sim = Simulation(username=username_widget.value, password=password_widget.value, api_key=lizard_api_key)
 
         try:
             sim.logged_in
@@ -205,16 +206,16 @@ def start_calculation_gui(
     # 2. Select polder (and show revision)
     # --------------------------------------------------------------------------------------------------
     select_polder_label = widgets.HTML(
-        "<b>2. Select polder and revision</b>",
+        "<b>2. Search model</b>",
         layout=item_layout(grid_area="select_polder_label"),
     )
 
     # Polder name widget
     polder_name_label = widgets.Label(
-        "Polder name:", layout=item_layout(grid_area="polder_name_label")
+        "Model name:", layout=item_layout(grid_area="polder_name_label")
     )
     polder_name_widget = widgets.Text(
-        layout=item_layout(width="80%", grid_area="polder_name_widget")
+        layout=item_layout(grid_area="polder_name_widget")
     )
     polder_name_search_button = widgets.Button(
         description="Search models",
@@ -224,7 +225,7 @@ def start_calculation_gui(
     @polder_name_search_button.on_click
     def search_models(action):
         global sim
-        repo_list = sim.threedi_api.repositories_list(
+        repo_list = sim.threedi_api.schematisations_list(
             slug__icontains=polder_name_widget.value, limit=RESULT_LIMIT
         ).results
 
@@ -251,7 +252,7 @@ def start_calculation_gui(
     )
 
     repository_label = widgets.Label(
-        "Repository: ", layout=item_layout(grid_area="repository_label")
+        "Schematisation: ", layout=item_layout(grid_area="repository_label")
     )
     repository_dropdown = widgets.Dropdown(
         layout=item_layout(grid_area="repository_dropdown")
@@ -263,7 +264,7 @@ def start_calculation_gui(
     )
 
     revision_label = widgets.Label(
-        "Revision: ", layout=item_layout(grid_area="revision_label")
+        "3Di model: ", layout=item_layout(grid_area="revision_label")
     )
     revision_dropdown = widgets.Dropdown(
         layout=item_layout(grid_area="revision_dropdown")
@@ -929,48 +930,32 @@ def start_calculation_gui(
     # --------------------------------------------------------------------------------------------------
 
     # Observe dropdown box, when the value changes, update other stuff as well
-    def on_select_repository(selected_repository):
+    def on_select_schematisation(selected_repository):
         # global threedi_rev_api
         global sim
-        try:
-            selected_repository = selected_repository["new"]
-        except:
-            pass
 
         # Find all models in the specified repository which are not disabled (due to maximum available revisions)
         model_list = sim.threedi_api.threedimodels_list(
-            slug__startswith=selected_repository, disabled=False, limit=1000
+            slug__icontains=selected_repository['new'], disabled=False, limit=1000
         ).results
         revision_numbers = []
+        revisions = []
 
         # Add revision numbers of available models to the revision number list
         for model in model_list:
             if model.revision_number not in revision_numbers:
-                revision_numbers.append(model.revision_number)
+                revision_string = f"{model.revision_number} - {model.revision_commit_date[:19]} - {model.user}".format()
+                revisions.insert(0, revision_string)
 
-        revision_numbers.sort()
-
-        # Search for revisions within selected repository
-        revisions = []
-
-        # For all available revisions find the date and add to the dropdown
-        for revision_number in revision_numbers:
-            revision = sim.threedi_api.revisions_list(
-                repository__slug=selected_repository, number=revision_number, limit=1000
-            ).results[0]
-            number = revision.number
-            # commit_date = datetime.strptime(revision.commit_date,'%Y-%m-%dT%H:%M:%SZ').strftime('%d %b %Y')
-            commit_date = revision.commit_date.strftime("%d %b %Y")
-
-            revision_string = "{} ({})".format(number, commit_date)
-
-            revisions.insert(0, revision_string)
+        #TODO sorting by revision number removed, may need to be checked
+        # revision_numbers.sort()
 
         revision_dropdown.options = revisions
         update_create_simulation_button()
         update_start_batch_button()
 
-    repository_dropdown.observe(on_select_repository, names="value")
+
+    repository_dropdown.observe(on_select_schematisation, names="value")
 
     def on_select_revision(selected_revision):
         global sim
@@ -1610,11 +1595,11 @@ def start_calculation_gui(
                                 organisation_box.value
                             ]
 
-                            if groundwater_type is "GLG":
+                            if groundwater_type == "GLG":
                                 model_id = model_idx["1d2d_glg"]
-                            elif groundwater_type is "GGG":
+                            elif groundwater_type == "GGG":
                                 model_id = model_idx["1d2d_ggg"]
-                            elif groundwater_type is "GHG":
+                            elif groundwater_type == "GHG":
                                 model_id = model_idx["1d2d_ghg"]
                             else:
                                 model_id = None
@@ -1952,8 +1937,7 @@ def start_calculation_gui(
 
     # username_widget.value = 'wietse.vangerwen'
     # password_widget.value = ''
-    # polder_name_widget.value= 'Egmond'
-    #     model_slug_widget.value = 'bwn-assendelft-bwn_assendelft_1d2d_glg-5-e5e6f7f7ed668bed2c896c5d4afc62700ac0e805'
+    # polder_name_widget.value= 'Katvoed'
 
     update_create_simulation_button()
     update_start_simulation_button()
