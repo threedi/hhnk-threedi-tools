@@ -29,28 +29,28 @@ TEST_MODEL = str(pathlib.Path(__file__).parent.absolute()) + "/data/model_test/"
 def test_get_state():
     """test of de 0d1d test werkt"""
     folder = Folders(TEST_MODEL)
-    assert folder.model.state == "Hydraulische toets"
+    assert folder.model.schema_base.state == "Hydraulische toets"
 
 
 def test_adjustments_global_settings():
     folder = Folders(TEST_MODEL)
-    output = folder.model.proposed_adjustments("global_settings", one_d_two_d_state)[0]
+    output = folder.model.schema_base.proposed_adjustments("global_settings", one_d_two_d_state)[0]
     assert output["new_control_group_id"][0].values[0] == 1
 
 
 def test_adjustments_channels():
     folder = Folders(TEST_MODEL)
-    output = folder.model.proposed_adjustments("channels", one_d_two_d_state)
+    output = folder.model.schema_base.proposed_adjustments("channels", one_d_two_d_state)
     assert output["code"][46] == "162_1"
 
 
 def test_adjustments_weirs():
     folder = Folders(TEST_MODEL)
-    output = folder.model.proposed_adjustments("weirs", one_d_two_d_state)
+    output = folder.model.schema_base.proposed_adjustments("weirs", one_d_two_d_state)
     assert output["weir_code"][0] == "KST-J-2349"
 
 
 def test_adjustments_manholes():
     folder = Folders(TEST_MODEL)
-    output = folder.model.proposed_adjustments("manholes", one_d_two_d_state)
+    output = folder.model.schema_base.proposed_adjustments("manholes", one_d_two_d_state)
     assert output.empty == True

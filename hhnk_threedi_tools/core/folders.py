@@ -1,3 +1,4 @@
+# %%
 # -*- coding: utf-8 -*-
 """
 Created on Fri Aug 13 13:18:54 2021
@@ -118,10 +119,18 @@ class File:
             return self.pl.exists()
 
     @property
-    def path_if_exists(self):
+    def pl_if_exists(self):
         """return filepath if the file exists otherwise return None"""
         if self.exists:
             return self.pl
+        else:
+            return None
+
+    @property
+    def path_if_exists(self):
+        """return filepath if the file exists otherwise return None"""
+        if self.exists:
+            return str(self.pl)
         else:
             return None
 
@@ -220,6 +229,22 @@ class Folder:
     @property
     def exists(self):
         return self.pl.exists()
+
+    @property
+    def pl_if_exists(self):
+        """return filepath if the file exists otherwise return None"""
+        if self.exists:
+            return self.pl
+        else:
+            return None
+
+    @property
+    def path_if_exists(self):
+        """return filepath if the file exists otherwise return None"""
+        if self.exists:
+            return str(self.pl)
+        else:
+            return None
 
     @property
     def show(self):
@@ -333,7 +358,7 @@ class Folders(Folder):
     def __init__(self, base, create=True):
         super().__init__(base)
 
-        print("v7")
+        print("v9")
 
         # source
         self.source_data = SourcePaths(self.base)
@@ -348,6 +373,7 @@ class Folders(Folder):
         self.output = OutputPaths(self.base)
 
         if create and not self.exists:
+            print('CREATING')
             self.create_project()
 
     @property
@@ -402,13 +428,12 @@ class Folders(Folder):
                 )
         """
         return {
-            "datachecker": if_exists(self.source_data.datachecker.path),
-            "damo": if_exists(self.source_data.damo.path),
-            "hdb": if_exists(self.source_data.hdb.path),
-            "polder_shapefile": if_exists(self.source_data.polder_polygon.path),
-            "channels_shapefile": if_exists(
-                self.source_data.modelbuilder.channel_from_profiles.path
-            ),
+            "datachecker": self.source_data.datachecker.path_if_exists,
+            "damo": self.source_data.damo.path_if_exists,
+            "hdb": self.source_data.hdb.path_if_exists,
+            "polder_shapefile": self.source_data.polder_polygon.path_if_exists,
+            "channels_shapefile": self.source_data.modelbuilder.channel_from_profiles.path_if_exists,
+
             # Layer names source data
             "damo_duiker_sifon_layer": DAMO_DUIKER_SIFON_HEVEL,
             "damo_waterdeel_layer": DAMO_WATERDEEL,
@@ -416,20 +441,23 @@ class Folders(Folder):
             "datachecker_fixed_drainage": DATACHECKER_FIXED_DRAINAGE,
             "hdb_sturing_3di_layer": HDB_STURING_3DI,
             "init_waterlevel_val_field": WATERLEVEL_VAL_FIELD,
+
             # model folder
-            "model": if_exists(self.model.schema_base.database.path),
-            "dem": if_exists(self.model.schema_base.rasters.dem.path),
+            "model": self.model.schema_base.database.path_if_exists,
+            "dem": self.model.schema_base.rasters.dem.path_if_exists,
+
             # Threedi
-            "0d1d_results_dir": if_exists(str(self.threedi_results.zero_d_one_d)),
-            "1d2d_results_dir": if_exists(str(self.threedi_results.one_d_two_d)),
-            "climate_results_dir": if_exists(str(self.threedi_results.climate_results)),
+            "0d1d_results_dir": self.threedi_results.zero_d_one_d.path_if_exists,
+            "1d2d_results_dir": self.threedi_results.one_d_two_d.path_if_exists,
+            "climate_results_dir": self.threedi_results.climate_results.path_if_exists,
+
             # Default output folders
-            "base_output": if_exists(str(self.output)),
-            "sqlite_tests_output": if_exists(str(self.output.sqlite_tests)),
-            "0d1d_output": if_exists(str(self.output.zero_d_one_d)),
-            "bank_levels_output": if_exists(str(self.output.bank_levels)),
-            "1d2d_output": if_exists(str(self.output.one_d_two_d)),
-            "polder_folder": if_exists(str(self.base)),
+            "base_output": self.output.path_if_exists,
+            "sqlite_tests_output": self.output.sqlite_tests.path_if_exists,
+            "0d1d_output": self.output.zero_d_one_d.path_if_exists,
+            "bank_levels_output": self.output.bank_levels.path_if_exists,
+            "1d2d_output": self.output.one_d_two_d.path_if_exists,
+            "polder_folder": self.path_if_exists,
         }
 
     def to_test_file_dict(self, test_type, revision_dir_name=None):
@@ -550,7 +578,7 @@ class SourcePaths(Folder):
     """
 
     def __init__(self, base):
-        super().__init__(os.path.join(base, "01_Source_data"))
+        super().__init__(os.path.join(base, "01_source_data"))
 
         # Folders
         self.modelbuilder = ModelbuilderPaths(self.base)
@@ -621,7 +649,7 @@ class ModelPathsParent(Folder):
     global settings or other things specific for that model"""
 
     def __init__(self, base):
-        super().__init__(os.path.join(base, "02_Model"))
+        super().__init__(os.path.join(base, "02_schematisation"))
 
         self.schema_base = ModelPaths(base=self.base, name="00_basis")
         self.schema_list = ["schema_base"]
@@ -662,10 +690,11 @@ class ModelPaths(Folder):
             filepath = ""
 
         sqlite_cls = Sqlite(filepath)
-        if os.path.exists(sqlite_cls.path):
-            return sqlite_cls
-        else:
-            return None
+        # if os.path.exists(sqlite_cls.path):
+        #     return sqlite_cls
+        # else:
+        #     return None
+        return sqlite_cls
 
     @property
     def structure(self):
@@ -803,22 +832,24 @@ class ThreediRasters(Folder):
         """Read the sqlite to check which rasters are used in the model.
         This only works for models from Klondike release onwards, where we only have
         one global settings row."""
-        df = hrt.sqlite_table_to_df(
-            database_path=self.caller.database.path, table_name=table_name
-        )
-        if len(df) > 1:
-            print(
-                f"{table_name} has more than 1 row. Choosing the first row for the rasters."
-            )
-        if len(df) == 0:
-            raster_name = None
-        else:
-            raster_name = df.iloc[0][col_name]
 
-        if raster_name == None:
+        if self.caller.database.exists:
+            df = hrt.sqlite_table_to_df(
+                database_path=self.caller.database.path, table_name=table_name
+            )
+            # if len(df) > 1:
+                # print(f"{table_name} has more than 1 row. Choosing the first row for the rasters.")
+            if len(df) == 0:
+                raster_name = None
+            else:
+                raster_name = df.iloc[0][col_name]
+
+            if raster_name == None:
+                raster_path = ""
+            else:
+                raster_path = os.path.join(self.caller.base, raster_name)
+        else: 
             raster_path = ""
-        else:
-            raster_path = os.path.join(self.caller.base, raster_name)
         return Raster(raster_path)
 
     def __repr__(self):
@@ -836,7 +867,7 @@ class ThreediResultsPaths(Folder):
     """
 
     def __init__(self, base):
-        super().__init__(os.path.join(base, "03_3di_resultaten"))
+        super().__init__(os.path.join(base, "03_3di_results"))
 
         # Folders
         self.zero_d_one_d = ZeroDOneD(self.base)
@@ -1295,13 +1326,13 @@ class OutputPaths(Folder):
     """
 
     def __init__(self, base):
-        super().__init__(os.path.join(base, "Output"))
+        super().__init__(os.path.join(base, "04_test_results"))
 
-        self.sqlite_tests = OutputFolderSqlite(self.full_path("Sqlite_tests"))
-        self.bank_levels = OutputFolder(self.full_path("Bank_levels"))
+        self.sqlite_tests = OutputFolderSqlite(self.full_path("sqlite_tests"))
+        self.bank_levels = OutputFolder(self.full_path("bank_levels"))
         self.zero_d_one_d = OutputFolder0d1d(self.base, "0d1d_tests")
         self.one_d_two_d = OutputFolder1d2d(self.base, "1d2d_tests")
-        self.climate = OutputClimate(self.base, "Climate")
+        self.climate = OutputClimate(self.base, "climate")
 
     def __getitem__(self, name):
         if name == "0d1d_results":
@@ -1476,7 +1507,10 @@ def get_top_level_directories(folder, condition_test=None):
 
 
 def if_exists(path):
-    return path if os.path.exists(path) else None
+    if path is None:
+        return None
+    else:
+        return path if os.path.exists(path) else None
 
 
 def add_log_layer_path(files_dict, base_path):

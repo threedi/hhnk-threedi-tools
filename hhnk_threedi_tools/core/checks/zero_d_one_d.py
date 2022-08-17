@@ -8,10 +8,12 @@ Created on Fri Aug 20 16:09:34 2021
 import pandas as pd
 import hhnk_research_tools as hrt
 from hhnk_research_tools.threedi.construct_rain_scenario import threedi_timesteps
-from hhnk_research_tools.threedi.construct_rain_scenario_dataframe import (
-    create_results_dataframe,
-)
+# from hhnk_research_tools.threedi.construct_rain_scenario_dataframe import (
+#     create_results_dataframe,
+# )
 from hhnk_research_tools.threedi.geometry_functions import coordinates_to_points
+import hhnk_threedi_tools.core.checks.grid_result_metadata as grid_result_metadata
+
 from hhnk_research_tools.variables import (
     t_end_sum_col,
     t_end_rain_col,
@@ -64,11 +66,9 @@ from hhnk_threedi_tools.variables.zero_d_one_d import (
 class ZeroDOneDTest:
     def __init__(self, folder: Folders, revision=0):
         self.fenv = folder
-        threedi_result = folder.threedi_results.zero_d_one_d[revision].grid
-        df = create_results_dataframe(*threedi_timesteps(threedi_result))
+        self.grid_result = folder.threedi_results.zero_d_one_d[revision].grid
+        rain, detected_rain, timestep, days_dry_start, days_dry_end, self.timestep_df = grid_result_metadata.construct_scenario(self.grid_result)
 
-        self.timestep_df = df
-        self.threedi_results = threedi_result
 
     @classmethod
     def from_path(cls, path_to_polder, revision=0):
@@ -85,7 +85,7 @@ class ZeroDOneDTest:
         ]
         try:
             # Get subset of nodes (1D)
-            subset_1d = self.threedi_results.nodes.subset(all_1d)
+            subset_1d = self.grid_result.nodes.subset(all_1d)
 
             # Create waterlevels dataframe
             waterlevel_lst = subset_1d.timeseries(
@@ -153,10 +153,10 @@ class ZeroDOneDTest:
             T_0 = self.timestep_df.loc[t_index_col, t_0_col]
             T_end = self.timestep_df.loc[t_index_col, t_end_rain_col]
 
-            wtrlvl_nodes_at_timesteps = get_nodes_1d(self.threedi_results, T_0, T_end)
+            wtrlvl_nodes_at_timesteps = get_nodes_1d(self.grid_result, T_0, T_end)
 
             channels_gdf = create_structure_gdf(
-                threedi_result=self.threedi_results,
+                threedi_result=self.grid_result,
                 structure_name=res_channels,
                 wtrlvl_nodes_at_timesteps=wtrlvl_nodes_at_timesteps,
                 t_end=T_end,
@@ -169,14 +169,14 @@ class ZeroDOneDTest:
             primary_nodes = primary_nodes_series.unique().tolist()
 
             culvert_gdf = create_structure_gdf(
-                threedi_result=self.threedi_results,
+                threedi_result=self.grid_result,
                 structure_name=res_culverts,
                 wtrlvl_nodes_at_timesteps=wtrlvl_nodes_at_timesteps,
                 t_end=T_end,
                 primary_nodes=primary_nodes,
             )
             orifice_gdf = create_structure_gdf(
-                threedi_result=self.threedi_results,
+                threedi_result=self.grid_result,
                 structure_name=res_orifices,
                 wtrlvl_nodes_at_timesteps=wtrlvl_nodes_at_timesteps,
                 t_end=T_end,

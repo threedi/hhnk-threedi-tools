@@ -40,8 +40,9 @@ class Simulation:
 
     def __init__(
         self,
-        username: str,
-        password: str,
+        # username: str,
+        # password: str,
+        api_key: str,
         start_time: datetime = datetime(2000, 1, 1, 0, 0),
         end_time: datetime = datetime(2000, 1, 2, 0, 0),
         host="https://api.3di.live",
@@ -59,8 +60,9 @@ class Simulation:
 
         config = {
             "THREEDI_API_HOST": host,
-            "THREEDI_API_USERNAME": username,
-            "THREEDI_API_PASSWORD": password,
+            # "THREEDI_API_USERNAME": username,
+            # "THREEDI_API_PASSWORD": password,
+            "THREEDI_API_PERSONAL_API_TOKEN": api_key,
         }
 
         self.threedi_api = ThreediApi(config=config)

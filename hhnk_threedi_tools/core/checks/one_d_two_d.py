@@ -14,12 +14,12 @@ from shapely.geometry import LineString
 
 # research tools
 import hhnk_research_tools as hrt
-from hhnk_research_tools.threedi.geometry_functions import coordinates_to_points
-from hhnk_research_tools.variables import file_types_dict, TIF
-from hhnk_research_tools.threedi.construct_rain_scenario import threedi_timesteps
-from hhnk_research_tools.threedi.construct_rain_scenario_dataframe import (
-    create_results_dataframe,
-)
+# from hhnk_research_tools.threedi.geometry_functions import coordinates_to_points
+# from hhnk_research_tools.variables import file_types_dict, TIF
+# from hhnk_research_tools.threedi.construct_rain_scenario import threedi_timesteps
+# from hhnk_research_tools.threedi.construct_rain_scenario_dataframe import (
+#     create_results_dataframe,
+# )
 from hhnk_research_tools.variables import (
     t_start_rain_col,
     t_end_rain_col,
@@ -28,6 +28,7 @@ from hhnk_research_tools.variables import (
 )
 
 # Local imports
+import hhnk_threedi_tools.core.checks.grid_result_metadata as grid_result_metadata
 from hhnk_threedi_tools.core.folders import Folders, create_tif_path
 from hhnk_threedi_tools.variables.default_variables import DEF_TRGT_CRS
 from hhnk_threedi_tools.variables.database_aliases import df_geo_col
@@ -60,21 +61,25 @@ from hhnk_threedi_tools.variables.one_d_two_d import (
 )
 
 
+
+
+
+#TODO functies weer in class onderbrengen, class nu buiten gebruik.
 class OneDTwoDTest:
-    def __init__(self, folder: Folders, revision=0, dem_path=None, output_path=None):
+    def __init__(self, folder: Folders, revision=0, dem_path=None):
         self.fenv = folder
-        threedi_result = folder.threedi_results.one_d_two_d[revision].grid
-        df = create_results_dataframe(*threedi_timesteps(threedi_result))
+        self.revision=revision
 
-        self.timestep_df = df
-        self.threedi_results = threedi_result
+        self.grid_result = folder.threedi_results.one_d_two_d[self.revision].grid
+        rain, detected_rain, timestep, days_dry_start, days_dry_end, self.timestep_df = grid_result_metadata.construct_scenario(self.grid_result)
 
-        # self.level_template = LEVEL_TEMPLATE
-        # self.depth_template = DEPTH_TEMPLATE
-        self.revision = revision
-
-        if output_path:
-            self.output_path = output_path
+        # if output_path:
+        #     self.output_path = output_path
+        #     self.layer_path = output_path + "/Layers"
+        #     self.log_path = output_path + "/Logs"
+        # else:
+        #     self.layer_path = str(folder.output.one_d_two_d[self.revision].layers)
+        #     self.log_path = str(folder.output.one_d_two_d[self.revision].logs)
 
         if dem_path:
             self.dem_path = dem_path
@@ -187,38 +192,24 @@ class OneDTwoDTest:
         Vervolgens wordt op basis van de DEM en de waterstand per tijdstap de waterdiepte bepaald.
         """
         try:
-
-            grid_result = self.threedi_results
-            timestep_df = self.timestep_df
-            dem_path = self.dem_path
-            folder = self.fenv
-            revision = self.revision
-
             timesteps_arr = [
-                timestep_df["t_start_rain"].value,
-                timestep_df["t_end_rain"].value,
-                timestep_df["t_end_sum"].value,
+                self.timestep_df["t_start_rain"].value,
+                self.timestep_df["t_end_rain"].value,
+                self.timestep_df["t_end_sum"].value,
             ]
             # hours since start of calculation
-            timestrings = [
-                int(round(grid_result.nodes.timestamps[t] / 60 / 60, 0))
-                for t in timesteps_arr
-            ]
+            timestrings = [int(round(self.grid_result.nodes.timestamps[t] / 60 / 60, 0)) for t in timesteps_arr]
 
-            dem_list, dem_nodata, dem_meta = hrt.load_gdal_raster(dem_path)
+            dem_list, dem_nodata, dem_meta = hrt.load_gdal_raster(self.dem_path)
 
             for timestep, timestr in zip(timesteps_arr, timestrings):
                 # output files
-                wlvl_output_path = getattr(
-                    folder.output.one_d_two_d[revision], f"waterstand_T{timestr}"
-                ).path
-                depth_output_path = getattr(
-                    folder.output.one_d_two_d[revision], f"waterdiepte_T{timestr}"
-                ).path
+                wlvl_output_path = getattr(self.fenv.output.one_d_two_d[self.revision], f'waterstand_T{timestr}').path
+                depth_output_path = getattr(self.fenv.output.one_d_two_d[self.revision], f'waterdiepte_T{timestr}').path
                 print(wlvl_output_path)
                 print(depth_output_path)
                 # calculate waterlevel at selected timestep in nodes gdf
-                nodes_2d_wlvl = read_2node_wlvl_at_timestep(grid_result, timestep)
+                nodes_2d_wlvl = self._read_2node_wlvl_at_timestep(timestep)
                 wlvl_list = hrt.gdf_to_raster(
                     gdf=nodes_2d_wlvl,
                     value_field=wtrlvl_col,
@@ -227,12 +218,50 @@ class OneDTwoDTest:
                     metadata=dem_meta,
                 )
                 # calculate water depth at time steps at nodes
-                _ = create_depth_raster(
-                    wlvl_list, dem_list, dem_nodata, dem_meta, depth_output_path
-                )
+                _ = self._create_depth_raster(wlvl_list, dem_list, dem_nodata, dem_meta, depth_output_path)
             return timestrings
         except Exception as e:
             raise e from None
+
+
+    def _read_2node_wlvl_at_timestep(self, timestep):
+        """timesteps is the index of the time in the timeseries you want to use 
+        to calculate the wlvl and depth raster"""
+        nodes_2d = gpd.GeoDataFrame()
+        # * inputs every element from row as a new function argument.
+        nodes_2d[df_geo_col] = [
+            box(*row) for row in self.grid_result.cells.subset(all_2d).cell_coords.T
+        ]
+        # waterstand
+        nodes_2d[wtrlvl_col] = (
+            self.grid_result.nodes.subset(all_2d).timeseries(indexes=[timestep]).s1[0]
+        )
+        return nodes_2d
+
+
+    def _create_depth_raster(self, wlvl_list, dem_list, dem_nodata, dem_meta, raster_output_path):
+        """Calculate the depth raster by subtracting the dem from the wlvl raster."""
+        # difference between surface and initial water level
+        try:
+            depth_list = np.subtract(wlvl_list, dem_list)
+
+            # restore nodata pixels using a mask, also filter waterways (height=10) and negative depths
+            nodatamask = (dem_list == dem_nodata) | (dem_list == 10) | (depth_list < 0)
+            depth_list[nodatamask] = dem_nodata
+
+            # write array to tiff
+            hrt.save_raster_array_to_tiff(
+                output_file=raster_output_path,
+                raster_array=depth_list,
+                nodata=dem_nodata,
+                metadata=dem_meta,
+            )
+            return depth_list
+        except Exception as e:
+            raise e from None
+
+            content_type_list = threedi_result.lines.content_type.astype("U13")
+            flowlines_gdf[content_type_col] = content_type_list
 
     def run_node_stats(self):
         """
@@ -247,46 +276,42 @@ class OneDTwoDTest:
             * opslag van regen in het gebied van de node (hoeveelheid water / totale oppervlak gebied)
         """
         try:
-
-            grid_result = self.threedi_results
-            timestep_df = self.timestep_df
-
-            nodes_wlvl = get_nodes_as_gdf(grid_result)
+            nodes_wlvl = hrt.threedi.grid_nodes_to_gdf(self.grid_result)
             # We need to keep a reference to the crs to restore it later
             crs_orig = nodes_wlvl.crs
-            nodes_wlvl[id_col] = grid_result.nodes.id
-            nodes_wlvl[spatialite_id_col] = grid_result.nodes.content_pk
-            nodes_wlvl[node_type_col] = grid_result.nodes.node_type
+            nodes_wlvl[id_col] = self.grid_result.nodes.id
+            nodes_wlvl[spatialite_id_col] = self.grid_result.nodes.content_pk
+            nodes_wlvl[node_type_col] = self.grid_result.nodes.node_type
             # Replace numbers with human readable values
             nodes_wlvl[node_type_col].replace(
                 [1, 3, 7], [two_d, one_d, one_d_boundary_col], inplace=True
             )
 
             # totaal oppervlak
-            nodes_wlvl[max_area_col] = grid_result.nodes.sumax
+            nodes_wlvl[max_area_col] = self.grid_result.nodes.sumax
 
             # Load grid_result
             # waterstand
-            wlvl = grid_result.nodes.timeseries(
+            wlvl = self.grid_result.nodes.timeseries(
                 indexes=[
-                    timestep_df[t_start_rain_col].value,
-                    timestep_df[t_end_rain_col].value,
-                    timestep_df[t_end_sum_col].value,
+                    self.timestep_df[t_start_rain_col].value,
+                    self.timestep_df[t_end_rain_col].value,
+                    self.timestep_df[t_end_sum_col].value,
                 ]
             ).s1
-            volume = grid_result.nodes.timeseries(
+            volume = self.grid_result.nodes.timeseries(
                 indexes=[
-                    timestep_df[t_start_rain_col].value,
-                    timestep_df[t_end_rain_col].value,
-                    timestep_df[t_end_sum_col].value,
+                    self.timestep_df[t_start_rain_col].value,
+                    self.timestep_df[t_end_rain_col].value,
+                    self.timestep_df[t_end_sum_col].value,
                 ]
             ).vol
             # actueel nat oppervlak
-            wet_area = grid_result.nodes.timeseries(
+            wet_area = self.grid_result.nodes.timeseries(
                 indexes=[
-                    timestep_df[t_start_rain_col].value,
-                    timestep_df[t_end_rain_col].value,
-                    timestep_df[t_end_sum_col].value,
+                    self.timestep_df[t_start_rain_col].value,
+                    self.timestep_df[t_end_rain_col].value,
+                    self.timestep_df[t_end_sum_col].value,
                 ]
             ).su
 
@@ -304,7 +329,7 @@ class OneDTwoDTest:
                 )
 
             # select 2d nodes and create polygons for plotting.
-            nodes_2d = nodes_to_grid(nodes_wlvl=nodes_wlvl, results=grid_result)
+            nodes_2d = self._2d_nodes_to_grid(nodes_wlvl=nodes_wlvl)
             orig_geom = nodes_2d[df_geo_col]
             nodes_2d_gdf = gpd.GeoDataFrame(nodes_2d, geometry=orig_geom, crs=crs_orig)
 
@@ -317,43 +342,21 @@ class OneDTwoDTest:
         #     hrt.gdf_write_to_csv(result, csv_path, filename)
         #     hrt.gdf_write_to_geopackage(result, gpkg_path, filename)
 
-    def read_pumpline_results(self):
+
+    #TODO staat dit niet al in hhnk_research_tools
+    def _2d_nodes_to_grid(self, nodes_wlvl):
+        """Transfer the nodes into polygons of the grid."""
         try:
-
-            timesteps_df = self.timestep_df
-            threedi_result = self.threedi_results
-
-            coords = [
-                LineString([x[[0, 1]], x[[2, 3]]])
-                for x in threedi_result.pumps.node_coordinates.T
+            nodes_2d = nodes_wlvl[nodes_wlvl[node_type_col] == two_d].copy()
+            # replace geometry with polygons of the cells
+            nodes_2d.loc[:, df_geo_col] = [
+                box(*row) for row in self.grid_result.cells.subset(all_2d).cell_coords.T
             ]
-            pump_gdf = gpd.GeoDataFrame(geometry=coords, crs=f"EPSG:{DEF_TRGT_CRS}")
-
-            pump_gdf[id_col] = threedi_result.pumps.id
-            pump_gdf[content_type_col] = pump_line
-            pump_gdf[pump_capacity_m3_s_col] = threedi_result.pumps.capacity
-
-            q_m3 = threedi_result.pumps.timeseries(
-                indexes=[
-                    timesteps_df[t_start_rain_col].value,
-                    timesteps_df[t_end_rain_col].value,
-                    timesteps_df[t_end_sum_col].value,
-                ]
-            ).q_pump  # waterstand
-            q_all_pump = threedi_result.pumps.timeseries(indexes=slice(0, -1)).q_pump
-
-            for index, time_str in enumerate(suffixes_list):
-                if time_str == max_sfx:
-                    q_max_ind = abs(q_all_pump).argmax(axis=0)
-                    pump_gdf[q_m3_s_col + time_str] = np.round(
-                        [row[q_max_ind[enum]] for enum, row in enumerate(q_all_pump.T)],
-                        5,
-                    )
-                else:
-                    pump_gdf[q_m3_s_col + time_str] = np.round(q_m3[index], 5)
-            return pump_gdf
+            nodes_2d.loc[:, minimal_dem_col] = self.grid_result.cells.subset(all_2d).z_coordinate
+            return nodes_2d
         except Exception as e:
             raise e from None
+
 
     def run_flowline_stats(self):
         """
@@ -366,78 +369,124 @@ class OneDTwoDTest:
             * De stroomrichting per tijdstap
         """
         # Load individual line results
-        flowlines_gdf = self.read_flowline_results()
-        pumplines_gdf = self.read_pumpline_results()
+        flowlines_gdf = self._read_flowline_results()
+        pumplines_gdf = self._read_pumpline_results()
 
         # combine to one table
-        lines_gdf = pd.concat(
-            [flowlines_gdf, pumplines_gdf], ignore_index=True, sort=False
-        )
-        lines_gdf = lines_gdf[
-            lines_gdf.geometry.length != 0
-        ]  # Drop weird values with -9999 geometries
+        lines_gdf = pd.concat([flowlines_gdf, pumplines_gdf], ignore_index=True, sort=False)
+        lines_gdf = lines_gdf[lines_gdf.geometry.length != 0]  # Drop weird values with -9999 geometries
 
         return lines_gdf
 
 
-def read_2node_wlvl_at_timestep(results, timestep):
-    """timesteps is the index of the time in the timeseries you want to use to calculate the wlvl and depth raster"""
-    nodes_2d = gpd.GeoDataFrame()
-    # * inputs every element from row as a new function argument.
-    nodes_2d[df_geo_col] = [
-        box(*row) for row in results.cells.subset(all_2d).cell_coords.T
-    ]
-    # waterstand
-    nodes_2d[wtrlvl_col] = (
-        results.nodes.subset(all_2d).timeseries(indexes=[timestep]).s1[0]
-    )
-    return nodes_2d
+    def _read_flowline_results(self):
+        try:
+            coords = hrt.threedi.line_geometries_to_coords(
+                self.grid_result.lines.line_geometries
+            )  # create gdf from node coords
+
+            flowlines_gdf = gpd.GeoDataFrame(geometry=coords, crs=f"EPSG:{DEF_TRGT_CRS}")
+            flowlines_gdf[id_col] = self.grid_result.lines.id
+            flowlines_gdf[spatialite_id_col] = self.grid_result.lines.content_pk
+
+            content_type_list = self.grid_result.lines.content_type.astype("U13")
+            flowlines_gdf[content_type_col] = content_type_list
+
+            flowlines_gdf[kcu_col] = self.grid_result.lines.kcu
+            flowlines_gdf.loc[
+                flowlines_gdf[kcu_col].isin([51, 52]), content_type_col
+            ] = one_d_two_d
+            flowlines_gdf.loc[
+                flowlines_gdf[kcu_col].isin([100, 101]), content_type_col
+            ] = two_d
+
+            q = self.grid_result.lines.timeseries(
+                indexes=[
+                    self.timestep_df[t_start_rain_col].value,
+                    self.timestep_df[t_end_rain_col].value,
+                    self.timestep_df[t_end_sum_col].value,
+                ]
+            ).q  # waterstand
+            vel = self.grid_result.lines.timeseries(
+                indexes=[
+                    self.timestep_df[t_start_rain_col].value,
+                    self.timestep_df[t_end_rain_col].value,
+                    self.timestep_df[t_end_sum_col].value,
+                ]
+            ).u1
+            q_all = self.grid_result.lines.timeseries(indexes=slice(0, -1)).q
+            vel_all = self.grid_result.lines.timeseries(indexes=slice(0, -1)).u1
+
+            # Write discharge and velocity to columns in dataframe
+            for index, time_str in enumerate(suffixes_list):
+                if time_str == max_sfx:
+                    q_max_ind = abs(q_all).argmax(axis=0)
+                    flowlines_gdf[q_m3_s_col + time_str] = np.round(
+                        [row[q_max_ind[enum]] for enum, row in enumerate(q_all.T)], 5
+                    )
+                else:
+                    flowlines_gdf[q_m3_s_col + time_str] = np.round(q[index], 5)
+
+            for index, time_str in enumerate(suffixes_list):
+                if time_str == max_sfx:
+                    vel_max_ind = abs(vel_all).argmax(axis=0)
+                    flowlines_gdf[vel_m_s_col + time_str] = np.round(
+                        [row[vel_max_ind[enum]] for enum, row in enumerate(vel_all.T)], 5
+                    )
+                else:
+                    flowlines_gdf[vel_m_s_col + time_str] = np.round(vel[index], 3)
+
+            # Flowlines of 1d2d lines weirdly have flow in different direction.
+            # Therefore we invert this here so arrows are plotted correctly
+            for index, time_str in enumerate(suffixes_list):
+                flowlines_gdf.loc[
+                    flowlines_gdf[content_type_col] == one_d_two_d, q_m3_s_col + time_str
+                ] = flowlines_gdf.loc[
+                    flowlines_gdf[content_type_col] == one_d_two_d, q_m3_s_col + time_str
+                ].apply(lambda x: x * -1)
+
+            for index, time_str in enumerate(suffixes_list):
+                filt= flowlines_gdf[content_type_col] == one_d_two_d, vel_m_s_col + time_str
+
+                flowlines_gdf.loc[filt] = flowlines_gdf.loc[filt].apply(lambda x: x * -1)
+
+            return flowlines_gdf
+        except Exception as e:
+            raise e from None
 
 
-def create_depth_raster(wlvl_list, dem_list, dem_nodata, dem_meta, raster_output_path):
-    """Calculate the depth raster by subtracting the dem from the wlvl raster."""
-    # difference between surface and initial water level
-    try:
-        depth_list = np.subtract(wlvl_list, dem_list)
+    def _read_pumpline_results(self):
+        try:
+            coords = [
+                LineString([x[[0, 1]], x[[2, 3]]])
+                for x in self.grid_result.pumps.node_coordinates.T
+            ]
+            pump_gdf = gpd.GeoDataFrame(geometry=coords, crs=f"EPSG:{DEF_TRGT_CRS}")
 
-        # restore nodata pixels using a mask, also filter waterways (height=10) and negative depths
-        nodatamask = (dem_list == dem_nodata) | (dem_list == 10) | (depth_list < 0)
-        depth_list[nodatamask] = dem_nodata
+            pump_gdf[id_col] = self.grid_result.pumps.id
+            pump_gdf[content_type_col] = pump_line
+            pump_gdf[pump_capacity_m3_s_col] = self.grid_result.pumps.capacity
 
-        # write array to tiff
-        hrt.save_raster_array_to_tiff(
-            output_file=raster_output_path,
-            raster_array=depth_list,
-            nodata=dem_nodata,
-            metadata=dem_meta,
-        )
-        return depth_list
-    except Exception as e:
-        raise e from None
+            q_m3 = self.grid_result.pumps.timeseries(
+                indexes=[
+                    self.timestep_df[t_start_rain_col].value,
+                    self.timestep_df[t_end_rain_col].value,
+                    self.timestep_df[t_end_sum_col].value,
+                ]
+            ).q_pump  # waterstand
+            q_all_pump = self.grid_result.pumps.timeseries(indexes=slice(0, -1)).q_pump
 
-
-# TODO staat dit niet al in hhnk_research_tools
-def get_nodes_as_gdf(results):
-    try:
-        nodes_wlvl_crds = coordinates_to_points(results.nodes)
-        nodes_wlvl = gpd.GeoDataFrame(
-            geometry=nodes_wlvl_crds, crs=f"EPSG:{DEF_TRGT_CRS}"
-        )
-        return nodes_wlvl
-    except Exception as e:
-        raise e from None
+            for index, time_str in enumerate(suffixes_list):
+                if time_str == max_sfx:
+                    q_max_ind = abs(q_all_pump).argmax(axis=0)
+                    pump_gdf[q_m3_s_col + time_str] = np.round(
+                        [row[q_max_ind[enum]] for enum, row in enumerate(q_all_pump.T)], 5
+                    )
+                else:
+                    pump_gdf[q_m3_s_col + time_str] = np.round(q_m3[index], 5)
+            return pump_gdf
+        except Exception as e:
+            raise e from None
 
 
-# TODO staat dit niet al in hhnk_research_tools
-def nodes_to_grid(nodes_wlvl, results):
-    """Transfer the nodes into polygons of the grid."""
-    try:
-        nodes_2d = nodes_wlvl[nodes_wlvl[node_type_col] == two_d].copy()
-        # replace geometry with polygons of the cells
-        nodes_2d.loc[:, df_geo_col] = [
-            box(*row) for row in results.cells.subset(all_2d).cell_coords.T
-        ]
-        nodes_2d.loc[:, minimal_dem_col] = results.cells.subset(all_2d).z_coordinate
-        return nodes_2d
-    except Exception as e:
-        raise e from None
+

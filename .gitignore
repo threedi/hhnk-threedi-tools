@@ -11,6 +11,7 @@ build
 .pytest_chache
 .eggs
 hhnk_threedi_tools/variables/localsettings.py
+hhnk_threedi_tools/tests/data/new_project/
 
 #FIXME temporary
 01_downloads_blokt100fout

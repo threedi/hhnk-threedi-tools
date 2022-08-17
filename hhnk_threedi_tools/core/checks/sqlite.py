@@ -22,6 +22,7 @@ from hhnk_threedi_tools.core.folders import Folders, create_tif_path
 from threedigrid_builder import make_gridadmin
 
 
+# %%
 # queries
 from hhnk_threedi_tools.utils.queries import (
     controlled_structures_query,
@@ -697,7 +698,7 @@ def add_nodes_area(fixeddrainage, conn_nodes_geo):
             fixeddrainage,
             conn_nodes_geo,
             how="left",
-            op="intersects",
+            op="intersects", #FIXME future version this will be 'predicate'
             lsuffix="fd",
             rsuffix="conn",
         )
