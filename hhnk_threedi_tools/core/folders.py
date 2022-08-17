@@ -578,7 +578,7 @@ class SourcePaths(Folder):
     """
 
     def __init__(self, base):
-        super().__init__(os.path.join(base, "01_Source_data"))
+        super().__init__(os.path.join(base, "01_source_data"))
 
         # Folders
         self.modelbuilder = ModelbuilderPaths(self.base)
@@ -649,7 +649,7 @@ class ModelPathsParent(Folder):
     global settings or other things specific for that model"""
 
     def __init__(self, base):
-        super().__init__(os.path.join(base, "02_Model"))
+        super().__init__(os.path.join(base, "02_schematisation"))
 
         self.schema_base = ModelPaths(base=self.base, name="00_basis")
         self.schema_list = ["schema_base"]
@@ -867,7 +867,7 @@ class ThreediResultsPaths(Folder):
     """
 
     def __init__(self, base):
-        super().__init__(os.path.join(base, "03_3di_resultaten"))
+        super().__init__(os.path.join(base, "03_3di_results"))
 
         # Folders
         self.zero_d_one_d = ZeroDOneD(self.base)
@@ -1326,13 +1326,13 @@ class OutputPaths(Folder):
     """
 
     def __init__(self, base):
-        super().__init__(os.path.join(base, "Output"))
+        super().__init__(os.path.join(base, "04_test_results"))
 
-        self.sqlite_tests = OutputFolderSqlite(self.full_path("Sqlite_tests"))
-        self.bank_levels = OutputFolder(self.full_path("Bank_levels"))
+        self.sqlite_tests = OutputFolderSqlite(self.full_path("sqlite_tests"))
+        self.bank_levels = OutputFolder(self.full_path("bank_levels"))
         self.zero_d_one_d = OutputFolder0d1d(self.base, "0d1d_tests")
         self.one_d_two_d = OutputFolder1d2d(self.base, "1d2d_tests")
-        self.climate = OutputClimate(self.base, "Climate")
+        self.climate = OutputClimate(self.base, "climate")
 
     def __getitem__(self, name):
         if name == "0d1d_results":
