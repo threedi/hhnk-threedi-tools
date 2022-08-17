@@ -92,18 +92,19 @@ def start_calculation_gui(
 
     scheduler = BlockingScheduler(timezone="Europe/Amsterdam")
 
-    # Change threediscenario downloader header
-    def new_get_headers():
-        """Setting the headers in the original toolbox is not easy when using this GUI.
-        Therefore we change this function in the toolbox so everything else works."""
-        headers_results = {
-            "username": "{}".format(username_widget.value),
-            "password": "{}".format(password_widget.value),
-            "Content-Type": "application/json",
-        }
-        return headers_results
+    #TODO remove, replaced by API_KEY
+    # # Change threediscenario downloader header
+    # def new_get_headers():
+    #     """Setting the headers in the original toolbox is not easy when using this GUI.
+    #     Therefore we change this function in the toolbox so everything else works."""
+    #     headers_results = {
+    #         "username": "{}".format(lizard_apikey_widget.value),
+    #         "password": "{}".format(threedi_apikey_widget.value),
+    #         "Content-Type": "application/json",
+    #     }
+    #     return headers_results
 
-    setattr(dl, "get_headers", new_get_headers)
+    # setattr(dl, "get_headers", new_get_headers)
 
     def item_layout(width="95%", grid_area="", **kwargs):
         return widgets.Layout(
@@ -149,20 +150,20 @@ def start_calculation_gui(
     # 1. Login with 3Di account
     # --------------------------------------------------------------------------------------------------
     login_label = widgets.HTML(
-        "<b>1. Login with 3Di account</b>", layout=item_layout(grid_area="login_label")
+        "<b>1. Login with API keys</b>", layout=item_layout(grid_area="login_label")
     )
 
-    # Username widget
-    username_widget = widgets.Text(
-        description="Username:", layout=item_layout(width="261px", grid_area="username")
-    )
-
-    # Password widget
-    class PasswordWidget(widgets.Text):
+    class ApikeyWidget(widgets.Text):
         _view_name = Unicode("PasswordView").tag(sync=True)
 
-    password_widget = PasswordWidget(
-        description="Password:", layout=item_layout(width="261px", grid_area="password")
+
+    # Api key widgets
+    lizard_apikey_widget = ApikeyWidget(
+        description="Lizard key:", layout=item_layout(width="261px", grid_area="lizard_apikey")
+    )
+
+    threedi_apikey_widget = ApikeyWidget(
+        description="Threedi Key:", layout=item_layout(width="261px", grid_area="threedi_apikey")
     )
 
     # Login button, after login create threedi api client
@@ -174,7 +175,7 @@ def start_calculation_gui(
     def login(action):
         global sim
 
-        sim = Simulation(api_key=api_keys['threedi']) #username=username_widget.value, password=password_widget.value, 
+        sim = Simulation(api_key=api_keys['threedi']) #username=lizard_apikey_widget.value, password=threedi_apikey_widget.value, 
 
         try:
             sim.logged_in
@@ -198,8 +199,8 @@ def start_calculation_gui(
     def logout(action):
         global sim
 
-        username_widget.value = ""
-        password_widget.value = ""
+        # lizard_apikey_widget.value = ""
+        # threedi_apikey_widget.value = ""
         sim = None
 
         login_button.style.button_color = None
@@ -1420,8 +1421,8 @@ def start_calculation_gui(
     def disable_input(disable=True):
 
         widgets = [
-            username_widget,
-            password_widget,
+            lizard_apikey_widget,
+            threedi_apikey_widget,
             login_button,
             polder_name_widget,
             polder_name_search_button,
@@ -1538,15 +1539,16 @@ def start_calculation_gui(
             model_idx["1d2d_ggg"] = get_model_idx(model_name_ggg_dropdown.value)
             model_idx["1d2d_ghg"] = get_model_idx(model_name_ghg_dropdown.value)
 
-            gw = "glg"
-            if gw not in model_name_glg_dropdown.value:
-                raise Exception(f"{gw} Model name should contain {gw}")
-            gw = "ggg"
-            if gw not in model_name_ggg_dropdown.value:
-                raise Exception(f"{gw} Model name should contain {gw}")
-            gw = "ghg"
-            if gw not in model_name_ghg_dropdown.value:
-                raise Exception(f"{gw} Model name should contain {gw}")
+            #TODO batch sommen werkt nog niet met nieuwe schematisaties
+            # gw = "glg"
+            # if gw not in model_name_glg_dropdown.value:
+            #     raise Exception(f"{gw} Model name should contain {gw}")
+            # gw = "ggg"
+            # if gw not in model_name_ggg_dropdown.value:
+            #     raise Exception(f"{gw} Model name should contain {gw}")
+            # gw = "ghg"
+            # if gw not in model_name_ghg_dropdown.value:
+            #     raise Exception(f"{gw} Model name should contain {gw}")
             return model_idx
 
         model_idx = get_all_model_idx()
@@ -1711,7 +1713,7 @@ def start_calculation_gui(
                                         time.sleep(10)
                                         continue
                                     break
-                                # start_3di_calculation(data, json.dumps(data), username_widget.value, password_widget.value, output_folder, apicall_txt, batch=1)
+                                # start_3di_calculation(data, json.dumps(data), lizard_apikey_widget.value, threedi_apikey_widget.value, output_folder, apicall_txt, batch=1)
 
                             else:
                                 print(
@@ -1740,10 +1742,10 @@ def start_calculation_gui(
             outfile.write(pprint.pformat(all_api_calls))
 
         # start the simulation
-        for sim in simulations:
+        for simulation in simulations:
             print("Starting all the created simulations")
             sim.threedi_api.simulations_actions_create(
-                simulation_pk=sim.id, data={"name": "queue"}
+                simulation_pk=simulation.id, data={"name": "queue"}
             )
 
     # --------------------------------------------------------------------------------------------------
@@ -1785,8 +1787,8 @@ def start_calculation_gui(
     start_calculation_tab = widgets.GridBox(
         children=[
             login_label,
-            username_widget,
-            password_widget,
+            lizard_apikey_widget,
+            threedi_apikey_widget,
             login_button,
             logout_button,  # 1 login
             select_polder_label,
@@ -1838,8 +1840,8 @@ def start_calculation_gui(
             grid_template_columns="12% 8% 10% 10% 18% 10% 10% 10% 10%",
             grid_template_areas="""
             'login_label login_label . select_polder_label select_polder_label get_slug_label get_slug_label get_slug_label get_slug_label'
-            'username username username polder_name_label polder_name_widget  repository_label repository_dropdown repository_dropdown repository_dropdown'
-            'password password password . polder_name_search_button revision_label revision_dropdown revision_dropdown revision_dropdown'
+            'lizard_apikey lizard_apikey lizard_apikey polder_name_label polder_name_widget  repository_label repository_dropdown repository_dropdown repository_dropdown'
+            'threedi_apikey threedi_apikey threedi_apikey . polder_name_search_button revision_label revision_dropdown revision_dropdown revision_dropdown'
             'login_button logout_button . . . model_name_label model_name_dropdown model_name_dropdown model_name_dropdown'
             'rain_event_label rain_event_label . . . output_folder_label output_folder_label . .'
             '. rain_event_widget rain_event_widget rain_event_widget rain_event_widget output_polder_label output_polder_dropdown output_polder_dropdown output_polder_dropdown'
@@ -1865,8 +1867,8 @@ def start_calculation_gui(
     start_batch_calculation_tab = widgets.GridBox(
         children=[
             login_label,
-            username_widget,
-            password_widget,
+            lizard_apikey_widget,
+            threedi_apikey_widget,
             login_button,
             logout_button,  # 1 login
             select_polder_label,
@@ -1913,8 +1915,8 @@ def start_calculation_gui(
             grid_template_areas="""
 
             'login_label login_label . select_polder_label select_polder_label get_slug_label get_slug_label get_slug_label get_slug_label'
-            'username username username polder_name_label polder_name_widget repository_label repository_dropdown repository_dropdown repository_dropdown'
-            'password password password . polder_name_search_button revision_label revision_dropdown revision_dropdown revision_dropdown'
+            'lizard_apikey lizard_apikey lizard_apikey polder_name_label polder_name_widget repository_label repository_dropdown repository_dropdown repository_dropdown'
+            'threedi_apikey threedi_apikey threedi_apikey . polder_name_search_button revision_label revision_dropdown revision_dropdown revision_dropdown'
             'login_button logout_button . . . model_name_glg_label model_name_glg_dropdown model_name_glg_dropdown model_name_glg_dropdown'
             '. . . . . model_name_ggg_label model_name_ggg_dropdown model_name_ggg_dropdown model_name_ggg_dropdown'
             '. . . . . model_name_ghg_label model_name_ghg_dropdown model_name_ghg_dropdown model_name_ghg_dropdown'
@@ -1939,8 +1941,9 @@ def start_calculation_gui(
         ),
     )
 
-    # username_widget.value = 'wietse.vangerwen'
-    # password_widget.value = ''
+    lizard_apikey_widget.value = api_keys['lizard']
+    threedi_apikey_widget.value = api_keys['threedi']
+    login_button.click()
     # polder_name_widget.value= 'Katvoed'
 
     update_create_simulation_button()
