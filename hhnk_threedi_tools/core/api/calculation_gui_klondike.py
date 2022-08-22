@@ -983,7 +983,6 @@ def start_calculation_gui(
             # revision__number=revision_number,
             limit=100,
         ).results
-        print(model_list)
         model_list_rev = [
             f"{model.revision_number}@{model.name}" for model in model_list
         ]
@@ -999,7 +998,6 @@ def start_calculation_gui(
             if "ghg" in model:
                 models["ghg"].append(model)
 
-        print(models)
         model_name_dropdown.options = model_list
         model_name_glg_dropdown.options = models["glg"]
         model_name_ggg_dropdown.options = models["ggg"]
@@ -1406,7 +1404,6 @@ def start_calculation_gui(
         model_id = None
         if len(models) != 1:
             print("No, or more than 1 model found")
-            print(models)
         else:
             model_id = models[0].id
 
