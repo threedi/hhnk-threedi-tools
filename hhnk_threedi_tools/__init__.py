@@ -14,9 +14,11 @@ import hhnk_threedi_tools.resources
 
 
 # tests
-from hhnk_threedi_tools.core.checks.bank_levels import BankLevelTest #FIXME TypeError: metaclass conflict: the metaclass of a derived class must be a (non-strict) subclass of the metaclasses of all its bases
-from hhnk_threedi_tools.core.checks.one_d_two_d import OneDTwoDTest 
-from hhnk_threedi_tools.core.checks.sqlite import SqliteTest #FIXME 
+from hhnk_threedi_tools.core.checks.bank_levels import (
+    BankLevelTest,
+)  # FIXME TypeError: metaclass conflict: the metaclass of a derived class must be a (non-strict) subclass of the metaclasses of all its bases
+from hhnk_threedi_tools.core.checks.one_d_two_d import OneDTwoDTest
+from hhnk_threedi_tools.core.checks.sqlite import SqliteTest  # FIXME
 from hhnk_threedi_tools.core.checks.zero_d_one_d import ZeroDOneDTest
 
 

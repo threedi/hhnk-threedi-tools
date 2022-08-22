@@ -16,8 +16,8 @@ import os
 import shutil
 import pathlib
 
-if __name__=='__main__':
-    import set_local_paths #add local git repos.
+if __name__ == "__main__":
+    import set_local_paths  # add local git repos.
 
 # Local imports
 from hhnk_threedi_tools.core.folders import Folders
@@ -94,7 +94,9 @@ def test_to_test_file_dict():
 def test_find_dem():
     folder = Folders(MODEL_FOLDER)
     dem_path = TEST_DIRECTORY + "/model_test/02_model/00_basis/rasters/dem_hoekje.tif"
-    assert pathlib.Path(folder.model.schema_base.rasters.dem.path) == pathlib.Path(dem_path)
+    assert pathlib.Path(folder.model.schema_base.rasters.dem.path) == pathlib.Path(
+        dem_path
+    )
 
 
 def test_find_threedi_sources():
@@ -131,7 +133,7 @@ def test_create_revision():
 #                          )
 
 # %%
-if __name__ == '__main__':
+if __name__ == "__main__":
     test_create_project()
     test_to_dict()
     test_to_file_dict()
@@ -139,11 +141,6 @@ if __name__ == '__main__':
     test_find_dem()
     test_find_threedi_sources()
     test_create_revision()
-
-
-
-
-
 
 
 # %%

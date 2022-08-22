@@ -5,8 +5,8 @@ Created on Tue Aug 24 16:17:00 2021
 
 @author: chris.kerklaan
 """
-if __name__=='__main__':
-    import set_local_paths #add local git repos.
+if __name__ == "__main__":
+    import set_local_paths  # add local git repos.
 
 # First-party imports
 import os
@@ -15,8 +15,6 @@ import pathlib
 # Local imports
 from hhnk_threedi_tools.core.checks.sqlite import SqliteTest
 from hhnk_threedi_tools.core.folders import Folders
-
-
 
 
 # %%
@@ -42,7 +40,9 @@ def test_run_dem_max_value():
 def test_run_dewatering_depth():
     folder = Folders(TEST_MODEL)
     sqlite_test = SqliteTest(folder=folder)
-    output = sqlite_test.run_dewatering_depth(output_file=folder.output.sqlite_tests.drooglegging.path)
+    output = sqlite_test.run_dewatering_depth(
+        output_file=folder.output.sqlite_tests.drooglegging.path
+    )
     assert os.path.exists(output)
 
 
@@ -50,7 +50,7 @@ def test_run_model_checks():
     folder = Folders(TEST_MODEL)
     sqlite_test = SqliteTest(folder=folder)
     output = sqlite_test.run_model_checks()
-    assert "node without initial waterlevel" in output.set_index('id').loc[482, "error"]
+    assert "node without initial waterlevel" in output.set_index("id").loc[482, "error"]
 
 
 def test_run_geometry():
@@ -106,18 +106,17 @@ def test_run_weir_flood_level():
 
 
 # %%
-if __name__ == '__main__':
+if __name__ == "__main__":
     test_run_dem_max_value()
     test_run_dewatering_depth()
     test_run_model_checks()
-    test_run_geometry() 
+    test_run_geometry()
     test_run_imp_surface_area()
     test_run_isolated_channels()
     test_run_used_profiles()
     test_run_struct_channel_bed_level()
     test_run_watersurface_area()
     test_run_weir_flood_level()
-
 
 
 # %%

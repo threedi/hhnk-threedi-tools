@@ -75,19 +75,21 @@ def item_layout(width="95%", grid_area="", **kwargs):
     )  # override the default width of the button to 'auto' to let the button grow
 
 
-class StartCalculationWidgets():
+class StartCalculationWidgets:
     def __init__(self):
 
         # --------------------------------------------------------------------------------------------------
         # 1. Login with 3Di account
         # --------------------------------------------------------------------------------------------------
         self.login_label = widgets.HTML(
-            "<b>1. Login with 3Di account</b>", layout=item_layout(grid_area="login_label")
+            "<b>1. Login with 3Di account</b>",
+            layout=item_layout(grid_area="login_label"),
         )
 
         # Username widget
         self.username_widget = widgets.Text(
-            description="Username:", layout=item_layout(width="261px", grid_area="username")
+            description="Username:",
+            layout=item_layout(width="261px", grid_area="username"),
         )
 
         # Password widget
@@ -95,12 +97,14 @@ class StartCalculationWidgets():
             _view_name = Unicode("PasswordView").tag(sync=True)
 
         self.password_widget = PasswordWidget(
-            description="Password:", layout=item_layout(width="261px", grid_area="password")
+            description="Password:",
+            layout=item_layout(width="261px", grid_area="password"),
         )
 
         # Login button, after login create threedi api client
         self.login_button = widgets.Button(
-            description="Login", layout=item_layout(height="30px", grid_area="login_button")
+            description="Login",
+            layout=item_layout(height="30px", grid_area="login_button"),
         )
 
         self.logout_button = widgets.Button(
@@ -109,9 +113,11 @@ class StartCalculationWidgets():
             disabled=True,
         )
 
-class StartCalculationGui():
-    def __init__(self, main_folder=None, base_scenario_name=None, lizard_api_key=None, data=None):
 
+class StartCalculationGui:
+    def __init__(
+        self, main_folder=None, base_scenario_name=None, lizard_api_key=None, data=None
+    ):
 
         if data:
             self.api_keys = read_api_file(data["api_keys_path"])
@@ -126,7 +132,8 @@ class StartCalculationGui():
             raise ValueError(
                 """Please fill in the lizard api key.\n
                             Log in and create your own at: https://hhnk.lizard.net/management/personal_api_keys
-                            """)
+                            """
+            )
         else:
             dl.set_api_key(self.lizard_api_key)
 
@@ -143,7 +150,7 @@ class StartCalculationGui():
         self.scenarios = self._init_scenarios()
 
         self.widgets = StartCalculationWidgets()
-    
+
     @property
     def w(self):
         return self.widgets
@@ -161,11 +168,9 @@ class StartCalculationGui():
         scenarios["api_data"] = {}  # API call
         scenarios["api_data_json"] = ""
 
-
         # Fetch the first folder
         scenarios["folder"] = Folders(self.main_folder, create=False)
         return scenarios
-
 
 
 # %%
@@ -173,8 +178,6 @@ class StartCalculationGui():
 #         # folder = Folders(os.path.join(main_folder, polder_name), create=False)
 #         output_polder_dropdown.value = polder_name
 #         # scenarios["folder"] = folder
-
-
 
 
 #     @self.widgets.login_button.on_click

@@ -243,14 +243,15 @@ def calculate_depth(
                 mode="lizard",
             )
 
+
 # %%
 
 from hhnk_threedi_tools import Folders
 
-folder_path = r'E:\02.modellen\model_test_v2'
+folder_path = r"E:\02.modellen\model_test_v2"
 folder = Folders(folder_path)
 
-result = folder.threedi_results.zero_d_one_d['BWN bwn_test #7 0d1d_test1']
+result = folder.threedi_results.zero_d_one_d["BWN bwn_test #7 0d1d_test1"]
 
 
 # %%
@@ -263,21 +264,23 @@ h5 = h5py.File(results_3di_path)
 
 # %%
 from threedidepth.calculate import ResultAdmin
+
 result_admin = ResultAdmin(
-        gridadmin_path=gridadmin_path, results_3di_path=results_3di_path,
-    )
+    gridadmin_path=gridadmin_path,
+    results_3di_path=results_3di_path,
+)
 
 # %%
 if True:
-            calculate_waterdepth(
-                gridadmin_path = result.grid_path.path,
-                results_3di_path = result.admin_path.path,
-                dem_path = folder.model.schema_base.rasters.dem.path,
-                waterdepth_path = 'test.tif',
-                calculation_steps=[-1],
-                progress_func=None,
-                mode='lizard'
-            )
+    calculate_waterdepth(
+        gridadmin_path=result.grid_path.path,
+        results_3di_path=result.admin_path.path,
+        dem_path=folder.model.schema_base.rasters.dem.path,
+        waterdepth_path="test.tif",
+        calculation_steps=[-1],
+        progress_func=None,
+        mode="lizard",
+    )
 
 # %%
 if __name__ == "__main__":

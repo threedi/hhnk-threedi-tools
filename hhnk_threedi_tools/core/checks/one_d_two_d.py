@@ -14,6 +14,7 @@ from shapely.geometry import LineString
 
 # research tools
 import hhnk_research_tools as hrt
+
 # from hhnk_research_tools.threedi.geometry_functions import coordinates_to_points
 # from hhnk_research_tools.variables import file_types_dict, TIF
 # from hhnk_research_tools.threedi.construct_rain_scenario import threedi_timesteps
@@ -61,17 +62,21 @@ from hhnk_threedi_tools.variables.one_d_two_d import (
 )
 
 
-
-
-
-#TODO functies weer in class onderbrengen, class nu buiten gebruik.
+# TODO functies weer in class onderbrengen, class nu buiten gebruik.
 class OneDTwoDTest:
     def __init__(self, folder: Folders, revision=0, dem_path=None):
         self.fenv = folder
-        self.revision=revision
+        self.revision = revision
 
         self.grid_result = folder.threedi_results.one_d_two_d[self.revision].grid
-        rain, detected_rain, timestep, days_dry_start, days_dry_end, self.timestep_df = grid_result_metadata.construct_scenario(self.grid_result)
+        (
+            rain,
+            detected_rain,
+            timestep,
+            days_dry_start,
+            days_dry_end,
+            self.timestep_df,
+        ) = grid_result_metadata.construct_scenario(self.grid_result)
 
         # if output_path:
         #     self.output_path = output_path
@@ -198,14 +203,23 @@ class OneDTwoDTest:
                 self.timestep_df["t_end_sum"].value,
             ]
             # hours since start of calculation
-            timestrings = [int(round(self.grid_result.nodes.timestamps[t] / 60 / 60, 0)) for t in timesteps_arr]
+            timestrings = [
+                int(round(self.grid_result.nodes.timestamps[t] / 60 / 60, 0))
+                for t in timesteps_arr
+            ]
 
             dem_list, dem_nodata, dem_meta = hrt.load_gdal_raster(self.dem_path)
 
             for timestep, timestr in zip(timesteps_arr, timestrings):
                 # output files
-                wlvl_output_path = getattr(self.fenv.output.one_d_two_d[self.revision], f'waterstand_T{timestr}').path
-                depth_output_path = getattr(self.fenv.output.one_d_two_d[self.revision], f'waterdiepte_T{timestr}').path
+                wlvl_output_path = getattr(
+                    self.fenv.output.one_d_two_d[self.revision],
+                    f"waterstand_T{timestr}",
+                ).path
+                depth_output_path = getattr(
+                    self.fenv.output.one_d_two_d[self.revision],
+                    f"waterdiepte_T{timestr}",
+                ).path
                 print(wlvl_output_path)
                 print(depth_output_path)
                 # calculate waterlevel at selected timestep in nodes gdf
@@ -218,14 +232,15 @@ class OneDTwoDTest:
                     metadata=dem_meta,
                 )
                 # calculate water depth at time steps at nodes
-                _ = self._create_depth_raster(wlvl_list, dem_list, dem_nodata, dem_meta, depth_output_path)
+                _ = self._create_depth_raster(
+                    wlvl_list, dem_list, dem_nodata, dem_meta, depth_output_path
+                )
             return timestrings
         except Exception as e:
             raise e from None
 
-
     def _read_2node_wlvl_at_timestep(self, timestep):
-        """timesteps is the index of the time in the timeseries you want to use 
+        """timesteps is the index of the time in the timeseries you want to use
         to calculate the wlvl and depth raster"""
         nodes_2d = gpd.GeoDataFrame()
         # * inputs every element from row as a new function argument.
@@ -238,8 +253,9 @@ class OneDTwoDTest:
         )
         return nodes_2d
 
-
-    def _create_depth_raster(self, wlvl_list, dem_list, dem_nodata, dem_meta, raster_output_path):
+    def _create_depth_raster(
+        self, wlvl_list, dem_list, dem_nodata, dem_meta, raster_output_path
+    ):
         """Calculate the depth raster by subtracting the dem from the wlvl raster."""
         # difference between surface and initial water level
         try:
@@ -342,8 +358,7 @@ class OneDTwoDTest:
         #     hrt.gdf_write_to_csv(result, csv_path, filename)
         #     hrt.gdf_write_to_geopackage(result, gpkg_path, filename)
 
-
-    #TODO staat dit niet al in hhnk_research_tools
+    # TODO staat dit niet al in hhnk_research_tools
     def _2d_nodes_to_grid(self, nodes_wlvl):
         """Transfer the nodes into polygons of the grid."""
         try:
@@ -352,11 +367,12 @@ class OneDTwoDTest:
             nodes_2d.loc[:, df_geo_col] = [
                 box(*row) for row in self.grid_result.cells.subset(all_2d).cell_coords.T
             ]
-            nodes_2d.loc[:, minimal_dem_col] = self.grid_result.cells.subset(all_2d).z_coordinate
+            nodes_2d.loc[:, minimal_dem_col] = self.grid_result.cells.subset(
+                all_2d
+            ).z_coordinate
             return nodes_2d
         except Exception as e:
             raise e from None
-
 
     def run_flowline_stats(self):
         """
@@ -373,11 +389,14 @@ class OneDTwoDTest:
         pumplines_gdf = self._read_pumpline_results()
 
         # combine to one table
-        lines_gdf = pd.concat([flowlines_gdf, pumplines_gdf], ignore_index=True, sort=False)
-        lines_gdf = lines_gdf[lines_gdf.geometry.length != 0]  # Drop weird values with -9999 geometries
+        lines_gdf = pd.concat(
+            [flowlines_gdf, pumplines_gdf], ignore_index=True, sort=False
+        )
+        lines_gdf = lines_gdf[
+            lines_gdf.geometry.length != 0
+        ]  # Drop weird values with -9999 geometries
 
         return lines_gdf
-
 
     def _read_flowline_results(self):
         try:
@@ -385,7 +404,9 @@ class OneDTwoDTest:
                 self.grid_result.lines.line_geometries
             )  # create gdf from node coords
 
-            flowlines_gdf = gpd.GeoDataFrame(geometry=coords, crs=f"EPSG:{DEF_TRGT_CRS}")
+            flowlines_gdf = gpd.GeoDataFrame(
+                geometry=coords, crs=f"EPSG:{DEF_TRGT_CRS}"
+            )
             flowlines_gdf[id_col] = self.grid_result.lines.id
             flowlines_gdf[spatialite_id_col] = self.grid_result.lines.content_pk
 
@@ -431,7 +452,8 @@ class OneDTwoDTest:
                 if time_str == max_sfx:
                     vel_max_ind = abs(vel_all).argmax(axis=0)
                     flowlines_gdf[vel_m_s_col + time_str] = np.round(
-                        [row[vel_max_ind[enum]] for enum, row in enumerate(vel_all.T)], 5
+                        [row[vel_max_ind[enum]] for enum, row in enumerate(vel_all.T)],
+                        5,
                     )
                 else:
                     flowlines_gdf[vel_m_s_col + time_str] = np.round(vel[index], 3)
@@ -440,20 +462,28 @@ class OneDTwoDTest:
             # Therefore we invert this here so arrows are plotted correctly
             for index, time_str in enumerate(suffixes_list):
                 flowlines_gdf.loc[
-                    flowlines_gdf[content_type_col] == one_d_two_d, q_m3_s_col + time_str
+                    flowlines_gdf[content_type_col] == one_d_two_d,
+                    q_m3_s_col + time_str,
                 ] = flowlines_gdf.loc[
-                    flowlines_gdf[content_type_col] == one_d_two_d, q_m3_s_col + time_str
-                ].apply(lambda x: x * -1)
+                    flowlines_gdf[content_type_col] == one_d_two_d,
+                    q_m3_s_col + time_str,
+                ].apply(
+                    lambda x: x * -1
+                )
 
             for index, time_str in enumerate(suffixes_list):
-                filt= flowlines_gdf[content_type_col] == one_d_two_d, vel_m_s_col + time_str
+                filt = (
+                    flowlines_gdf[content_type_col] == one_d_two_d,
+                    vel_m_s_col + time_str,
+                )
 
-                flowlines_gdf.loc[filt] = flowlines_gdf.loc[filt].apply(lambda x: x * -1)
+                flowlines_gdf.loc[filt] = flowlines_gdf.loc[filt].apply(
+                    lambda x: x * -1
+                )
 
             return flowlines_gdf
         except Exception as e:
             raise e from None
-
 
     def _read_pumpline_results(self):
         try:
@@ -480,13 +510,11 @@ class OneDTwoDTest:
                 if time_str == max_sfx:
                     q_max_ind = abs(q_all_pump).argmax(axis=0)
                     pump_gdf[q_m3_s_col + time_str] = np.round(
-                        [row[q_max_ind[enum]] for enum, row in enumerate(q_all_pump.T)], 5
+                        [row[q_max_ind[enum]] for enum, row in enumerate(q_all_pump.T)],
+                        5,
                     )
                 else:
                     pump_gdf[q_m3_s_col + time_str] = np.round(q_m3[index], 5)
             return pump_gdf
         except Exception as e:
             raise e from None
-
-
-

@@ -9,8 +9,8 @@ Note: the curent tests are only ran to check if the functions work.
 They still must be checked qualitatively
 
 """
-if __name__ == '__main__':
-    import set_local_paths #add local git repos.
+if __name__ == "__main__":
+    import set_local_paths  # add local git repos.
 
 # First-party imports
 import pathlib
@@ -139,7 +139,7 @@ def test_results():
 
 
 # %%
-if __name__ == '__main__':
+if __name__ == "__main__":
     test_import_information_object()
     test_levee_intersections()
     test_divergent_waterlevel_nodes()

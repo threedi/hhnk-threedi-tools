@@ -7,8 +7,8 @@ Created on Mon Aug 23 10:46:05 2021
 
 Functional testing for zeroDoneD object
 """
-if __name__=='__main__':
-    import set_local_paths #add local git repos.
+if __name__ == "__main__":
+    import set_local_paths  # add local git repos.
 
 # First-party imports
 import pathlib
@@ -37,6 +37,6 @@ def test_run_hydraulic_test():
 
 
 # %%
-if __name__ == '__main__':
+if __name__ == "__main__":
     test_run_zero_d_one_d_test()
     test_run_hydraulic_test()
