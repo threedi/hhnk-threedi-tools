@@ -1,4 +1,3 @@
-# %%
 # -*- coding: utf-8 -*-
 """
 Created on Sat May 14 09:28:04 2022
@@ -21,7 +20,6 @@ import xarray as xr
 
 from threedidepth.calculate import calculate_waterdepth
 from threedigrid.admin.gridresultadmin import GridH5ResultAdmin
-
 
 class GridEdit:
     def __init__(self, netcdf_path):
@@ -147,16 +145,14 @@ def edit_nodes_in_grid(
             range(0, len(node_ids)), "Filtering water cells on 10 meter levels"
         ):
             node_id = node_ids[i]
-            if node_levels[0][i] > dem_height or node_levels[1][i] > dem_height:
+            if node_levels[0][i] > dem_height: #or node_levels[1][i] > dem_height:
                 water_cell = water_cells.filter(nod_id=node_id)[0].copy()
                 filtered_water_cells.add(water_cell)
 
         building_cells = fixed_cells.spatial_filter(
             buildings, method="Within", quiet=False, use_ogr=False
         )
-        for building_cell in tre.Progress(
-            building_cells, "adding within cells of buildings"
-        ):
+        for building_cell in tre.Progress(building_cells, "adding within cells of buildings"):
             filtered_water_cells.add(building_cell)
 
         cells = fixed_cells.spatial_filter(
@@ -240,107 +236,6 @@ def calculate_depth(
                 path,
                 calculation_steps=[step],
                 progress_func=progress.gdal,
-                mode="lizard",
+                mode='lizard'
             )
 
-
-# %%
-
-from hhnk_threedi_tools import Folders
-
-folder_path = r"E:\02.modellen\model_test_v2"
-folder = Folders(folder_path)
-
-result = folder.threedi_results.zero_d_one_d["BWN bwn_test #7 0d1d_test1"]
-
-
-# %%
-gridadmin_path = result.grid_path.path
-results_3di_path = result.admin_path.path
-import threedidepth
-import h5py
-
-h5 = h5py.File(results_3di_path)
-
-# %%
-from threedidepth.calculate import ResultAdmin
-
-result_admin = ResultAdmin(
-    gridadmin_path=gridadmin_path,
-    results_3di_path=results_3di_path,
-)
-
-# %%
-if True:
-    calculate_waterdepth(
-        gridadmin_path=result.grid_path.path,
-        results_3di_path=result.admin_path.path,
-        dem_path=folder.model.schema_base.rasters.dem.path,
-        waterdepth_path="test.tif",
-        calculation_steps=[-1],
-        progress_func=None,
-        mode="lizard",
-    )
-
-# %%
-if __name__ == "__main__":
-    location = r"K:\W0214"
-    EVENTS = ["sted_DPRA70", "sted_DPRA90", "sted_DPRA160"]
-
-    STEPS_PER_EVENTS = {
-        "sted_DPRA70": [12],
-        "sted_DPRA90": [12],
-        "sted_DPRA160": [24],
-    }
-
-    dem_height = 10
-    bgt_waterdeel_path = rf"{location}\input\bgt/bgt_waterdelen_per_cluster.gpkg"
-    threedi_results_path = rf"{location}\input\scenarios\raw_results/"
-    polder_cluster_path = rf"{location}\input\BWN_polderclusters.gpkg"
-    bag_path = rf"{location}\input\bag/panden_per_cluster.gpkg"
-    dem_folder = rf"{location}\input\dem"
-
-    output_path = pathlib.Path(rf"{location}\processing\scenarios")
-
-    polderclusters = tre.Vector(polder_cluster_path)
-    for cluster in polderclusters:
-        print(f"Starting processing {cluster['naam']}")
-
-        cluster_name = cluster["naam"]
-        cluster_folder = output_path / cluster_name
-        cluster_folder.mkdir(parents=True, exist_ok=True)
-        waterdeel = tre.Vector(bgt_waterdeel_path, cluster["naam"])
-        panden = tre.Vector(bag_path, cluster["naam"])
-
-        for event in EVENTS:
-            print(f"Starting event {cluster_name} - {event}")
-
-            # sett variables based on name and cluster
-            calculation_steps = STEPS_PER_EVENTS[event]
-            threedi_results_folder = threedi_results_path + f"{cluster_name}_{event}"
-
-            dem_path = f"{dem_folder}/panden_15cm_{cluster['naam']}.tif"
-
-            output_folder = cluster_folder / event
-            interpolated_folder = output_folder / "interpolated"
-            interpolated_results = interpolated_folder / "results_3di.nc"
-
-            print(output_folder)
-
-            if not os.path.exists(interpolated_results):
-                levels = edit_nodes_in_grid(
-                    waterdeel,
-                    panden,
-                    threedi_results_folder,
-                    str(output_folder),
-                    calculation_steps,
-                    dem_height,
-                )
-
-            if os.path.exists(interpolated_results):
-                calculate_depth(
-                    str(interpolated_folder),
-                    dem_path,
-                    str(output_folder),
-                    calculation_steps,
-                )
