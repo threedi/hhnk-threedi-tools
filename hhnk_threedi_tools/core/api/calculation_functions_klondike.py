@@ -1,4 +1,3 @@
-# %%
 # First-party imports
 import os
 import time
@@ -7,6 +6,7 @@ from datetime import datetime, timedelta
 
 
 # Third-party imports
+import numpy as np
 import logging
 import sqlite3
 from IPython.core.display import display, HTML
@@ -18,7 +18,61 @@ from hhnk_threedi_tools.variables.api_settings import API_SETTINGS
 import hhnk_research_tools as hrt
 
 # local imports
-from hhnk_threedi_tools.core.api.download_functions import create_download_url, start_download
+from hhnk_threedi_tools.core.api.download_functions import (
+    create_download_url,
+    start_download,
+)
+
+# TODO remove
+NUM_MIN = {
+    # General
+    "limiter_waterlevel_gradient_1d": 1,
+    "limiter_waterlevel_gradient_2d": 1,
+    "limiter_slope_crossectional_area_2d": 0,
+    "limiter_slope_friction_2d": 0,
+    "limiter_slope_thin_water_layer": 0,
+    # Matrix
+    "convergence_cg": 1e-12,
+    "convergence_eps": 0.00005,
+    "use_of_cg": 20,
+    "use_nested_newton": 1,
+    "max_degree_gauss_seidel": 0,
+    "max_non_linear_newton_iterations": 20,
+    "precon_cg": 1,
+    "integration_method": 0,
+    # Thresholds
+    "flow_direction_threshold": 1e-13,
+    "general_numerical_threshold": 1e-13,
+    "thin_water_layer_definition": None,
+    "minimum_friction_velocity": None,
+    "minimum_surface_area": None,
+    "min_friction_velocity": 0.01,
+    "min_surface_area": 1.0e-8,
+    "flooding_threshold": 0.000001,
+    # Miscellaneous
+    "cfl_strictness_factor_1d": 1,
+    "cfl_strictness_factor_2d": 1,
+    "friction_shallow_water_depth_correction": 0,
+    "pump_implicit_ratio": 1,
+    "preissmann_slot": 0,
+    "time_integration_method": 0,
+}
+
+
+def secure_numerical(numerical_settings):
+    for key, value in numerical_settings.items():
+        if value == None and key in NUM_MIN:
+            numerical_settings[key] = NUM_MIN[key]
+
+    return numerical_settings
+
+
+def clean_numerical(numerical_settings):
+
+    for key, value in numerical_settings.items():
+        if type(value).__module__ == np.__name__:
+            numerical_settings[key] = value.item()  # np to python types
+    return numerical_settings
 
 
 def add_to_simulation(func, **kwargs):
@@ -26,25 +80,28 @@ def add_to_simulation(func, **kwargs):
     while True:
         try:
             func(**kwargs)
-        except ApiException:
+        except ApiException as e:
+            print(e)
             time.sleep(10)
             continue
         break
+
 
 def add_laterals_from_sqlite(sim, db_file, simulation):
     """
     Read 1D laterals from the Sqlite and use them in the initialisation of the simulation
     """
     try:
-        for index, row in hrt.sqlite_table_to_df(database_path=db_file, 
-                    table_name='v2_1d_lateral').iterrows():
+        for index, row in hrt.sqlite_table_to_df(
+            database_path=db_file, table_name="v2_1d_lateral"
+        ).iterrows():
             data = None
 
-            connection_node = int(row['connection_node_id'])
+            connection_node = int(row["connection_node_id"])
 
             values = []
 
-            for entry in row['timeseries'].splitlines():
+            for entry in row["timeseries"].splitlines():
                 t = int(entry.split(",")[0]) * 60
                 q = float(entry.split(",")[1])
                 values.append([min(t, simulation.duration), q])
@@ -83,49 +140,54 @@ def add_control_from_sqlite(sim, db_file, simulation):
     # db_file = r"E:\02.modellen\23_Katvoed\02_schematisation\00_basis\bwn_katvoed.sqlite"
     try:
         # Assuming control_group_id = 1
-        cntrl_group = hrt.execute_sql_selection(query="SELECT control_group_id FROM v2_global_settings",
-                    database_path=db_file)
-        #TODO gaat dit goed? ook bij meerdere global settings.
+        cntrl_group = hrt.execute_sql_selection(
+            query="SELECT control_group_id FROM v2_global_settings",
+            database_path=db_file,
+        )
+        # TODO gaat dit goed? ook bij meerdere global settings.
         for index, row in cntrl_group.iterrows():
-            if row['control_group_id'] is None:
+            if row["control_group_id"] is None:
                 return
             else:
-                control_group_id = int(row['control_group_id'])
+                control_group_id = int(row["control_group_id"])
 
         v2_control = []
-        v2_control_df = hrt.execute_sql_selection(query= \
-                "SELECT * FROM v2_control WHERE control_group_id = {}".format(
-                    control_group_id),
-                database_path=db_file)
+        v2_control_df = hrt.execute_sql_selection(
+            query="SELECT * FROM v2_control WHERE control_group_id = {}".format(
+                control_group_id
+            ),
+            database_path=db_file,
+        )
         for index, row in v2_control_df.iterrows():
-                data = {
-                    "id": int(row['id']),
-                    "control_type": row['control_type'],
-                    "control_id": int(row['control_id']),
-                    "control_group_id": int(row['control_group_id']),
-                    "measure_group_id": int(row['measure_group_id']),
-                }
-                v2_control.append(data)
-
+            data = {
+                "id": int(row["id"]),
+                "control_type": row["control_type"],
+                "control_id": int(row["control_id"]),
+                "control_group_id": int(row["control_group_id"]),
+                "measure_group_id": int(row["measure_group_id"]),
+            }
+            v2_control.append(data)
 
         v2_control_measure_map = []
-        for index, row in hrt.sqlite_table_to_df(database_path=db_file, 
-                    table_name='v2_control_measure_map').iterrows():
+        for index, row in hrt.sqlite_table_to_df(
+            database_path=db_file, table_name="v2_control_measure_map"
+        ).iterrows():
             data = {
-                "id": int(row['id']),
-                "measure_group_id": int(row['measure_group_id']),
-                "object_type": row['object_type'],
-                "object_id": int(row['object_id']),
-                "weight": int(row['weight']),
+                "id": int(row["id"]),
+                "measure_group_id": int(row["measure_group_id"]),
+                "object_type": row["object_type"],
+                "object_id": int(row["object_id"]),
+                "weight": int(row["weight"]),
             }
             v2_control_measure_map.append(data)
 
         v2_control_table = []
-        for index, row in hrt.sqlite_table_to_df(database_path=db_file, 
-                    table_name='v2_control_table').iterrows():
-            action_table_string = row['action_table']
+        for index, row in hrt.sqlite_table_to_df(
+            database_path=db_file, table_name="v2_control_table"
+        ).iterrows():
+            action_table_string = row["action_table"]
             action_table = []
-            action_type = row['action_type']
+            action_type = row["action_type"]
             for entry in action_table_string.split("#"):
                 measurement = [float(entry.split(";")[0])]
                 if action_type in ["set_crest_level", "set_pump_capacity"]:
@@ -147,12 +209,12 @@ def add_control_from_sqlite(sim, db_file, simulation):
                 elif measure_operator in [">", ">="]:
                     action_table.append(measurement + action)
             data = {
-                "id": row['id'],
+                "id": row["id"],
                 "action_table": action_table,
                 "measure_operator": measure_operator,
-                "target_id": row['target_id'],
-                "target_type": row['target_type'],
-                "measure_variable": row['measure_variable'],
+                "target_id": row["target_id"],
+                "target_type": row["target_type"],
+                "measure_variable": row["measure_variable"],
                 "action_type": action_type,
             }
             v2_control_table.append(data)
@@ -282,28 +344,26 @@ def create_threedi_simulation(
     # create simulation api
     # threedi_sim_api = openapi_client.api.SimulationsApi(threedi_api_client)
 
-
-    #TODO melden bij NenS namen in sqlite komen niet overeen met API
+    # TODO melden bij NenS namen in sqlite komen niet overeen met API
     # old:new
     translate_dict_numerical = {
-        'frict_shallow_water_correction':'friction_shallow_water_depth_correction',
-        'integration_method':'time_integration_method',
-        'limiter_grad_1d':'limiter_waterlevel_gradient_1d',
-        'limiter_grad_2d':'limiter_waterlevel_gradient_2d',
-        'max_nonlin_iterations':'max_non_linear_newton_iterations',
-        'max_degree':'max_degree_gauss_seidel',
-        'minimum_friction_velocity':'min_friction_velocity',
-        'minimum_surface_area':'min_surface_area',
-        'precon_cg':'use_preconditioner_cg',
-        'thin_water_layer_definition':'limiter_slope_thin_water_layer',
-        'use_of_nested_newton':'use_nested_newton',
-        }
+        "frict_shallow_water_correction": "friction_shallow_water_depth_correction",
+        "integration_method": "time_integration_method",
+        "limiter_grad_1d": "limiter_waterlevel_gradient_1d",
+        "limiter_grad_2d": "limiter_waterlevel_gradient_2d",
+        "max_nonlin_iterations": "max_non_linear_newton_iterations",
+        "max_degree": "max_degree_gauss_seidel",
+        "minimum_friction_velocity": "min_friction_velocity",
+        "minimum_surface_area": "min_surface_area",
+        "precon_cg": "use_preconditioner_cg",
+        "thin_water_layer_definition": "limiter_slope_thin_water_layer",
+        "use_of_nested_newton": "use_nested_newton",
+    }
 
-    
     def update_dict_keys(mydict, translate_dict={}, remove_keys=[]) -> dict:
         """Rename dict keys and/or remove."""
         for key_old in translate_dict:
-            key_new=translate_dict[key_old]
+            key_new = translate_dict[key_old]
             if key_old in mydict:
                 mydict[key_new] = mydict.pop(key_old)
 
@@ -313,34 +373,41 @@ def create_threedi_simulation(
 
         return mydict
 
-
-    global_setting_df = hrt.sqlite_table_to_df(database_path=sqlite_file, 
-                        table_name='v2_global_settings')
+    global_setting_df = hrt.sqlite_table_to_df(
+        database_path=sqlite_file, table_name="v2_global_settings"
+    )
     global_setting = global_setting_df.iloc[0].to_dict()
 
-    numerical_setting_df = hrt.sqlite_table_to_df(database_path=sqlite_file, 
-                        table_name='v2_numerical_settings')
-    numerical_setting_df.set_index('id', inplace=True)   
-    numerical_settings = numerical_setting_df.loc[global_setting['numerical_settings_id']].to_dict()
+    numerical_setting_df = hrt.sqlite_table_to_df(
+        database_path=sqlite_file, table_name="v2_numerical_settings"
+    )
+    numerical_setting_df.set_index("id", inplace=True)
+    numerical_settings = numerical_setting_df.loc[
+        global_setting["numerical_settings_id"]
+    ].to_dict()
 
-    numerical_settings = update_dict_keys(mydict=numerical_settings, 
-                        translate_dict = translate_dict_numerical, 
-                        remove_keys=['id'])
-    numerical_settings["flooding_threshold"] = 1e-5 #Not in sqlite?
-    numerical_settings["use_nested_newton"] = bool(numerical_settings["use_nested_newton"])
+    numerical_settings = update_dict_keys(
+        mydict=numerical_settings,
+        translate_dict=translate_dict_numerical,
+        remove_keys=["id"],
+    )
+    numerical_settings["flooding_threshold"] = 1e-5  # Not in sqlite?
 
+    numerical_settings = secure_numerical(numerical_settings)
+
+    numerical_settings = clean_numerical(numerical_settings)
 
     physical_settings = {
-    "use_advection_1d": global_setting['advection_1d'],
-    "use_advection_2d": global_setting['advection_2d']
+        "use_advection_1d": int(global_setting["advection_1d"]),
+        "use_advection_2d": int(global_setting["advection_2d"]),
     }
 
     time_step_settings = {
-    "time_step": global_setting['sim_time_step'],
-    "min_time_step": global_setting['minimum_sim_time_step'],
-    "max_time_step": global_setting['maximum_sim_time_step'],
-    "use_time_step_stretch": bool(global_setting['timestep_plus']),
-    "output_time_step": global_setting['output_time_step']
+        "time_step": global_setting["sim_time_step"],
+        "min_time_step": global_setting["minimum_sim_time_step"],
+        "max_time_step": global_setting["maximum_sim_time_step"],
+        "use_time_step_stretch": bool(global_setting["timestep_plus"]),
+        "output_time_step": global_setting["output_time_step"],
     }
 
     # set up simulation
@@ -355,27 +422,35 @@ def create_threedi_simulation(
     )
 
     # add initial water (1d)
-    add_to_simulation(sim.threedi_api.simulations_initial1d_water_level_predefined_create,
-            simulation_pk=simulation.id, 
-            data={}, async_req=False)
+    add_to_simulation(
+        sim.threedi_api.simulations_initial1d_water_level_predefined_create,
+        simulation_pk=simulation.id,
+        data={},
+        async_req=False,
+    )
 
     if sqlite_file is not None:
         # add control structures (from sqlite)
         add_control_from_sqlite(sim, sqlite_file, simulation)
         add_laterals_from_sqlite(sim, sqlite_file, simulation)
 
+    add_to_simulation(
+        sim.threedi_api.simulations_settings_time_step_create,
+        simulation_pk=simulation.id,
+        data=time_step_settings,
+    )
 
-    add_to_simulation(sim.threedi_api.simulations_settings_time_step_create, 
-            simulation_pk=simulation.id,
-            data=time_step_settings)
+    add_to_simulation(
+        sim.threedi_api.simulations_settings_numerical_create,
+        simulation_pk=simulation.id,
+        data=numerical_settings,
+    )
 
-    add_to_simulation(sim.threedi_api.simulations_settings_numerical_create,
-            simulation_pk=simulation.id,
-            data=numerical_settings)
-    add_to_simulation(sim.threedi_api.simulations_settings_physical_create,
-            simulation_pk=simulation.id,
-            data=physical_settings)
-
+    add_to_simulation(
+        sim.threedi_api.simulations_settings_physical_create,
+        simulation_pk=simulation.id,
+        data=physical_settings,
+    )
 
     # add rainfall event
     rain_intensity_mmph = float(rain_intensity)  # mm/hour
@@ -396,11 +471,11 @@ def create_threedi_simulation(
         "units": "m/s",
     }
 
-
-    add_to_simulation(sim.threedi_api.simulations_events_rain_constant_create,
-                simulation_pk=simulation.id, 
-                data=rain_data)
-
+    add_to_simulation(
+        sim.threedi_api.simulations_events_rain_constant_create,
+        simulation_pk=simulation.id,
+        data=rain_data,
+    )
 
     # Add postprocessing
     if basic_processing:
@@ -409,26 +484,30 @@ def create_threedi_simulation(
             "process_basic_results": True,
         }
 
-        add_to_simulation(sim.threedi_api.simulations_results_post_processing_lizard_basic_create,
-                    simulation_pk=simulation.id, 
-                    data=basic_processing_data)
-
+        add_to_simulation(
+            sim.threedi_api.simulations_results_post_processing_lizard_basic_create,
+            simulation_pk=simulation.id,
+            data=basic_processing_data,
+        )
 
     # Damage posprocessing
     if damage_processing:
         damage_processing_data = API_SETTINGS["damage_processing"]
 
-        add_to_simulation(sim.threedi_api.simulations_results_post_processing_lizard_damage_create,
-                    simulation_pk=simulation.id, 
-                    data=damage_processing_data)
-
+        add_to_simulation(
+            sim.threedi_api.simulations_results_post_processing_lizard_damage_create,
+            simulation_pk=simulation.id,
+            data=damage_processing_data,
+        )
 
     # Arrival time
     if arrival_processing:
         arrival_processing_data = {"basic_post_processing": True}
-        add_to_simulation(sim.threedi_api.simulations_results_post_processing_lizard_arrival_create,
-            simulation_pk=simulation.id, 
-            data=arrival_processing_data)
+        add_to_simulation(
+            sim.threedi_api.simulations_results_post_processing_lizard_arrival_create,
+            simulation_pk=simulation.id,
+            data=arrival_processing_data,
+        )
 
     # return simulation object
     return simulation
@@ -670,4 +749,111 @@ def wait_to_download_results(
     )
     scheduler.start()  # Start the scheduled job
 
-# %%
+
+# if __name__ == "__main__":
+#     #Test
+#     from hhnk_threedi_tools.core.api.calculation import Simulation
+#     sim = Simulation("MrQsALQY.NzTqxGhMnPr0CwYh3jWe4egKvJlDLgDc")
+#     sqlite_file = r"C:\Users\chris.kerklaan\Documents\threedi_models\bwn-katvoed - bwn_katvoed_1d2d_glg (5)\work in progress\schematisation/bwn_katvoed.sqlite"
+#     scenario_name = "test"
+#     model_id = 3946
+#     organisation_uuid  = "48dac75b-ef8a-42eb-bb52-e8f89bbdb9f2"
+
+#     create_threedi_simulation(
+#         sim,
+#         sqlite_file,
+#         scenario_name,
+#         model_id,
+#         organisation_uuid,
+#     )
+
+#     translate_dict_numerical = {
+#         'frict_shallow_water_correction':'friction_shallow_water_depth_correction',
+#         'integration_method':'time_integration_method',
+#         'limiter_grad_1d':'limiter_waterlevel_gradient_1d',
+#         'limiter_grad_2d':'limiter_waterlevel_gradient_2d',
+#         'max_nonlin_iterations':'max_non_linear_newton_iterations',
+#         'max_degree':'max_degree_gauss_seidel',
+#         'minimum_friction_velocity':'min_friction_velocity',
+#         'minimum_surface_area':'min_surface_area',
+#         'precon_cg':'use_preconditioner_cg',
+#         'thin_water_layer_definition':'limiter_slope_thin_water_layer',
+#         'use_of_nested_newton':'use_nested_newton',
+#         }
+
+
+#     def update_dict_keys(mydict, translate_dict={}, remove_keys=[]) -> dict:
+#         """Rename dict keys and/or remove."""
+#         for key_old in translate_dict:
+#             key_new=translate_dict[key_old]
+#             if key_old in mydict:
+#                 mydict[key_new] = mydict.pop(key_old)
+
+#         for key in remove_keys:
+#             if key in mydict:
+#                 mydict.pop(key)
+
+#         return mydict
+
+
+#     global_setting_df = hrt.sqlite_table_to_df(database_path=sqlite_file,
+#                         table_name='v2_global_settings')
+#     global_setting = global_setting_df.iloc[0].to_dict()
+
+#     numerical_setting_df = hrt.sqlite_table_to_df(database_path=sqlite_file,
+#                         table_name='v2_numerical_settings')
+#     numerical_setting_df.set_index('id', inplace=True)
+#     numerical_settings = numerical_setting_df.loc[global_setting['numerical_settings_id']].to_dict()
+
+#     numerical_settings = update_dict_keys(mydict=numerical_settings,
+#                         translate_dict = translate_dict_numerical,
+#                         remove_keys=['id'])
+#     numerical_settings["flooding_threshold"] = 1e-5 #Not in sqlite?
+#     numerical_settings["use_nested_newton"] = bool(numerical_settings["use_nested_newton"])
+#     numerical_settings = secure_numerical(numerical_settings)
+
+#     physical_settings = {
+#     "use_advection_1d": global_setting['advection_1d'],
+#     "use_advection_2d": global_setting['advection_2d']
+#     }
+
+#     time_step_settings = {
+#     "time_step": global_setting['sim_time_step'],
+#     "min_time_step": global_setting['minimum_sim_time_step'],
+#     "max_time_step": global_setting['maximum_sim_time_step'],
+#     "use_time_step_stretch": bool(global_setting['timestep_plus']),
+#     "output_time_step": global_setting['output_time_step']
+#     }
+
+#     # set up simulation
+#     simulation = sim.threedi_api.simulations_create(
+#         threedi_api_client.openapi.models.simulation.Simulation(
+#             name=scenario_name,
+#             threedimodel=model_id,
+#             organisation="48dac75bef8a42ebbb52e8f89bbdb9f2",
+#             start_datetime=datetime(2000,1,1),
+#             end_datetime=datetime(2000,1,10),
+#         )
+#     )
+#     # add initial water (1d)
+#     add_to_simulation(sim.threedi_api.simulations_initial1d_water_level_predefined_create,
+#             simulation_pk=simulation.id,
+#             data={}, async_req=False)
+
+#     if sqlite_file is not None:
+#         # add control structures (from sqlite)
+#         add_control_from_sqlite(sim, sqlite_file, simulation)
+#         add_laterals_from_sqlite(sim, sqlite_file, simulation)
+
+
+#     add_to_simulation(sim.threedi_api.simulations_settings_time_step_create,
+#             simulation_pk=simulation.id,
+#             data=time_step_settings)
+
+#     add_to_simulation(sim.threedi_api.simulations_settings_numerical_create,
+#             simulation_pk=simulation.id,
+#             data=numerical_settings)
+
+#     add_to_simulation(sim.threedi_api.simulations_settings_physical_create,
+#             simulation_pk=simulation.id,
+# data=physical_settings)

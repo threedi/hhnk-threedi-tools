@@ -298,6 +298,6 @@ def api_result(
 
 
 if __name__ == "__main__":
-    sim = Simulation("chris.kerklaan", "YumYum01!")
+    sim = Simulation("6fh7l3HU.hefCEcK7sNk9QTbWmUefU24671Q1NAB2")
     sim.model = "BWN Schermer interflow referentie #2"
     sim.template = "Referentie"

@@ -20,7 +20,7 @@ setup(
     packages=find_packages(),
     # packages=find_packages("", exclude=['tests']),
     python_requires=">=3.7",
-    install_requires=["hhnk-research-tools==0.8"],
+    install_requires=["hhnk-research-tools==0.8", "xarray"],
     # setup_requires=['setuptools_scm'],
     include_package_data=True,
 )

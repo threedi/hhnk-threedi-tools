@@ -8,6 +8,7 @@ Created on Fri Aug 20 16:09:34 2021
 import pandas as pd
 import hhnk_research_tools as hrt
 from hhnk_research_tools.threedi.construct_rain_scenario import threedi_timesteps
+
 # from hhnk_research_tools.threedi.construct_rain_scenario_dataframe import (
 #     create_results_dataframe,
 # )
@@ -67,8 +68,14 @@ class ZeroDOneDTest:
     def __init__(self, folder: Folders, revision=0):
         self.fenv = folder
         self.grid_result = folder.threedi_results.zero_d_one_d[revision].grid
-        rain, detected_rain, timestep, days_dry_start, days_dry_end, self.timestep_df = grid_result_metadata.construct_scenario(self.grid_result)
-
+        (
+            rain,
+            detected_rain,
+            timestep,
+            days_dry_start,
+            days_dry_end,
+            self.timestep_df,
+        ) = grid_result_metadata.construct_scenario(self.grid_result)
 
     @classmethod
     def from_path(cls, path_to_polder, revision=0):

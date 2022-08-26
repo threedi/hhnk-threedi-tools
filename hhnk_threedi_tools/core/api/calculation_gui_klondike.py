@@ -1,19 +1,16 @@
-# %%
+# TODO
+# Vind de juiste modellen?
+# GUI wat simplificeren.
+
 # system imports
 import os
-import shutil
 import pprint
-from datetime import datetime
-
 
 # Third-party imports
-import json
 import time
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
 import ipywidgets as widgets
-from IPython.core.display import display, HTML
 from traitlets import Unicode
 from apscheduler.schedulers.blocking import BlockingScheduler
 from ipyfilechooser import FileChooser
@@ -21,24 +18,31 @@ from ipyfilechooser import FileChooser
 # threedi
 from threedi_scenario_downloader import downloader as dl
 from .read_api_file import read_api_file
-import openapi_client
+from threedi_api_client.openapi.exceptions import ApiException
 
-# local imports
+# Home made
 from hhnk_threedi_tools import Folders
-
+from hhnk_threedi_tools.core.api.calculation import Simulation
 from hhnk_threedi_tools.core.api.calculation_functions_klondike import (
-    create_3Di_start_API_call_data,
-    start_3di_calculation,
-    wait_to_download_results,
     create_threedi_simulation,
 )
-
-from hhnk_threedi_tools.core.api.download_functions import (
-    create_download_url,
-    start_download,
+from hhnk_threedi_tools.core.api.calculation_functions_klondike import (
+    wait_to_download_results,
 )
 
-from hhnk_threedi_tools.core.api.calculation import Simulation
+
+# unused imports?
+# from hhnk_threedi_tools.core.api.download_functions import (
+#     create_download_url,
+#     start_download,
+# )
+# from hhnk_threedi_tools.core.api.calculation_functions_klondike import (
+#     create_3Di_start_API_call_data,
+#     start_3di_calculation,
+#     wait_to_download_results,
+#     create_threedi_simulation,
+# )
+# from IPython.core.display import display, HTML
 
 # Globals
 from hhnk_threedi_tools.variables.api_settings import (
@@ -70,11 +74,11 @@ def start_calculation_gui(
         api_keys = read_api_file(data["api_keys_path"])
         main_folder = data["polder_folder"]
     else:
-        api_keys={}
-        api_keys['lizard'] = lizard_api_key
-        api_keys['threedi'] = ''
+        api_keys = {}
+        api_keys["lizard"] = lizard_api_key
+        api_keys["threedi"] = ""
 
-    if not api_keys['lizard']:
+    if not api_keys["lizard"]:
         raise ValueError(
             """Please fill in the lizard api key.\n
                          Log in and create your own at: https://hhnk.lizard.net/management/personal_api_keys
@@ -82,8 +86,8 @@ def start_calculation_gui(
         )
     dl.LIZARD_URL = "https://hhnk.lizard.net/api/v3/"
     THREEDI_API_HOST = "https://api.3di.live/v3"
-    RESULT_LIMIT = 20
-    dl.set_api_key(api_keys['lizard'])
+    RESULT_LIMIT = 100
+    dl.set_api_key(api_keys["lizard"])
 
     if base_scenario_name is None:
         base_scenario_name_str = ""
@@ -92,7 +96,7 @@ def start_calculation_gui(
 
     scheduler = BlockingScheduler(timezone="Europe/Amsterdam")
 
-    #TODO remove, replaced by API_KEY
+    # TODO remove, replaced by API_KEY
     # # Change threediscenario downloader header
     # def new_get_headers():
     #     """Setting the headers in the original toolbox is not easy when using this GUI.
@@ -156,14 +160,15 @@ def start_calculation_gui(
     class ApikeyWidget(widgets.Text):
         _view_name = Unicode("PasswordView").tag(sync=True)
 
-
     # Api key widgets
     lizard_apikey_widget = ApikeyWidget(
-        description="Lizard key:", layout=item_layout(width="261px", grid_area="lizard_apikey")
+        description="Lizard key:",
+        layout=item_layout(width="261px", grid_area="lizard_apikey"),
     )
 
     threedi_apikey_widget = ApikeyWidget(
-        description="Threedi Key:", layout=item_layout(width="261px", grid_area="threedi_apikey")
+        description="Threedi Key:",
+        layout=item_layout(width="261px", grid_area="threedi_apikey"),
     )
 
     # Login button, after login create threedi api client
@@ -175,7 +180,9 @@ def start_calculation_gui(
     def login(action):
         global sim
 
-        sim = Simulation(api_key=api_keys['threedi']) #username=lizard_apikey_widget.value, password=threedi_apikey_widget.value, 
+        sim = Simulation(
+            api_key=api_keys["threedi"]
+        )  # username=lizard_apikey_widget.value, password=threedi_apikey_widget.value,
 
         try:
             sim.logged_in
@@ -241,12 +248,12 @@ def start_calculation_gui(
         repository_dropdown.options = slug_list
 
     # Polder revision widget
-    model_revision_label = widgets.Label(
-        "Model revision:", layout=item_layout(grid_area="model_rev_label")
-    )
-    model_revision_widget = widgets.Text(
-        layout=item_layout(grid_area="model_rev_widget"), disabled=True
-    )
+    # model_revision_label = widgets.Label(
+    #     "Model revision:", layout=item_layout(grid_area="model_rev_label")
+    # )
+    # model_revision_widget = widgets.Text(
+    #     layout=item_layout(grid_area="model_rev_widget"), disabled=True
+    # )
 
     # --------------------------------------------------------------------------------------------------
     # 3. Go to model repository and make model visible
@@ -264,12 +271,12 @@ def start_calculation_gui(
     )
 
     # Link to model repository (batch only for now)
-    link_to_model_repository = widgets.HTML(
-        layout=item_layout(grid_area="link_to_model_repository")
-    )
+    # link_to_model_repository = widgets.HTML(
+    #     layout=item_layout(grid_area="link_to_model_repository")
+    # )
 
     revision_label = widgets.Label(
-        "3Di model: ", layout=item_layout(grid_area="revision_label")
+        "3Di basis model: ", layout=item_layout(grid_area="revision_label")
     )
     revision_dropdown = widgets.Dropdown(
         layout=item_layout(grid_area="revision_dropdown")
@@ -941,7 +948,7 @@ def start_calculation_gui(
 
         # Find all models in the specified repository which are not disabled (due to maximum available revisions)
         model_list = sim.threedi_api.threedimodels_list(
-            slug__icontains=selected_repository['new'], disabled=False, limit=1000
+            slug__icontains=selected_repository["new"], disabled=False, limit=1000
         ).results
         revision_numbers = []
         revisions = []
@@ -952,13 +959,12 @@ def start_calculation_gui(
                 revision_string = f"{model.revision_number} - {model.revision_commit_date[:19]} - {model.user}".format()
                 revisions.insert(0, revision_string)
 
-        #TODO sorting by revision number removed, may need to be checked
+        # TODO sorting by revision number removed, may need to be checked
         # revision_numbers.sort()
 
         revision_dropdown.options = revisions
         update_create_simulation_button()
         update_start_batch_button()
-
 
     repository_dropdown.observe(on_select_schematisation, names="value")
 
@@ -969,46 +975,56 @@ def start_calculation_gui(
         except:
             pass
 
-        revision_number = str.split(selected_revision)[0]
+        # revision_number = str.split(selected_revision)[0]
 
         # Search for models within selected revision
         model_list = sim.threedi_api.threedimodels_list(
-            slug__startswith=repository_dropdown.value,
-            revision__number=revision_number,
+            slug__startswith=polder_name_widget.value,
+            # revision__number=revision_number,
             limit=100,
         ).results
-        models = []
+        model_list_rev = [
+            f"{model.revision_number}@{model.name}" for model in model_list
+        ]
+        model_list = [model.name for model in model_list]
 
-        for model in model_list:
-            models.append(model.name)
+        models = {v: [] for v in ["glg", "ggg", "ghg"]}
+        for model in model_list_rev:
 
-        model_name_dropdown.options = models
-        model_name_glg_dropdown.options = models
-        model_name_ggg_dropdown.options = models
-        model_name_ghg_dropdown.options = models
+            if "glg" in model:
+                models["glg"].append(model)
+            if "ggg" in model:
+                models["ggg"].append(model)
+            if "ghg" in model:
+                models["ghg"].append(model)
 
-        # Select glg, ggg, ghg for batch download. Select None if multiple found.
-        def analyze_options(options, search_str):
-            """if more than one option, return None"""
-            options = [a for a in options if search_str in a]
-            if len(options) != 1:
-                return None
-            else:
-                return options[0]
+        model_name_dropdown.options = model_list
+        model_name_glg_dropdown.options = models["glg"]
+        model_name_ggg_dropdown.options = models["ggg"]
+        model_name_ghg_dropdown.options = models["ghg"]
 
-        model_name_glg_dropdown.value = analyze_options(
-            options=model_name_glg_dropdown.options, search_str="glg"
-        )
-        model_name_ggg_dropdown.value = analyze_options(
-            options=model_name_ggg_dropdown.options, search_str="ggg"
-        )
-        model_name_ghg_dropdown.value = analyze_options(
-            options=model_name_ghg_dropdown.options, search_str="ghg"
-        )
+        # # Select glg, ggg, ghg for batch download. Select None if multiple found.
+        # def analyze_options(options, search_str):
+        #     """if more than one option, return None"""
+        #     options = [a for a in options if search_str in a]
+        #     if len(options) != 1:
+        #         return None
+        #     else:
+        #         return options[0]
+
+        # model_name_glg_dropdown.value = analyze_options(
+        #     options=model_name_glg_dropdown.options, search_str="glg"
+        # )
+        # model_name_ggg_dropdown.value = analyze_options(
+        #     options=model_name_ggg_dropdown.options, search_str="ggg"
+        # )
+        # model_name_ghg_dropdown.value = analyze_options(
+        #     options=model_name_ghg_dropdown.options, search_str="ghg"
+        # )
 
         # update the scenario name
-        update_scenario_name_widget()
-        update_batch_scenario_name_widget()
+        # update_scenario_name_widget()
+        # update_batch_scenario_name_widget()
         update_create_simulation_button()
         update_start_batch_button()
 
@@ -1372,11 +1388,11 @@ def start_calculation_gui(
 
         scenario_name = scenario_name_widget.value
 
-        output_folder = os.path.join(
-            str(scenarios["folder"].threedi_results),
-            scenarios["selected_folder"],
-            scenario_name_widget.value,
-        )
+        # output_folder = os.path.join(
+        #     str(scenarios["folder"].threedi_results),
+        #     scenarios["selected_folder"],
+        #     scenario_name_widget.value,
+        # )
         organisation_uuid = organisation_uuid = API_SETTINGS["org_uuid"][
             organisation_box.value
         ]
@@ -1388,7 +1404,6 @@ def start_calculation_gui(
         model_id = None
         if len(models) != 1:
             print("No, or more than 1 model found")
-            print(models)
         else:
             model_id = models[0].id
 
@@ -1521,13 +1536,24 @@ def start_calculation_gui(
             """return threedi model ids of the selected glg, ggg and ghg model"""
 
             def get_model_idx(name):
-                revision_number = str.split(revision_dropdown.value)[0]
-                results = sim.threedi_api.threedimodels_list(
-                    slug__startswith=repository_dropdown.value,
-                    revision__number=revision_number,
-                    name=name,
-                    limit=100,
-                ).results
+                if "ggg" in name or "ghg" in name or "glg" in name:
+                    revision_number = name.split("@")[0]
+                    name = name.split("@")[-1]
+                    results = sim.threedi_api.threedimodels_list(
+                        revision__number=revision_number,
+                        name=name,
+                        limit=100,
+                    ).results
+
+                else:
+                    revision_number = str.split(revision_dropdown.value)[0]
+                    results = sim.threedi_api.threedimodels_list(
+                        slug__startswith=repository_dropdown.value,
+                        revision__number=revision_number,
+                        name=name,
+                        limit=100,
+                    ).results
+
                 if len(results) != 1:
                     raise Exception(f"model '{name}' is not unique or not found.")
                 else:
@@ -1539,7 +1565,7 @@ def start_calculation_gui(
             model_idx["1d2d_ggg"] = get_model_idx(model_name_ggg_dropdown.value)
             model_idx["1d2d_ghg"] = get_model_idx(model_name_ghg_dropdown.value)
 
-            #TODO batch sommen werkt nog niet met nieuwe schematisaties
+            # TODO batch sommen werkt nog niet met nieuwe schematisaties
             # gw = "glg"
             # if gw not in model_name_glg_dropdown.value:
             #     raise Exception(f"{gw} Model name should contain {gw}")
@@ -1686,7 +1712,7 @@ def start_calculation_gui(
                                             damage_processing=damage_processing,
                                             arrival_processing=arrival_processing,
                                         )
-                                    except openapi_client.ApiException:
+                                    except ApiException:
                                         time.sleep(10)
                                         continue
                                     break
@@ -1709,7 +1735,7 @@ def start_calculation_gui(
                                         ] = sim.threedi_api.simulations_events(
                                             id=simulation.id
                                         )
-                                    except openapi_client.ApiException:
+                                    except ApiException:
                                         time.sleep(10)
                                         continue
                                     break
@@ -1941,8 +1967,8 @@ def start_calculation_gui(
         ),
     )
 
-    lizard_apikey_widget.value = api_keys['lizard']
-    threedi_apikey_widget.value = api_keys['threedi']
+    lizard_apikey_widget.value = api_keys["lizard"]
+    threedi_apikey_widget.value = api_keys["threedi"]
     login_button.click()
     # polder_name_widget.value= 'Katvoed'
 
@@ -1958,6 +1984,3 @@ def start_calculation_gui(
 
     # start_calculation_tab = start_calculation_gui(); start_calculation_tab
     #     start_calculation_tab
-
-
-# %%

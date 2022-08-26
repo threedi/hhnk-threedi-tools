@@ -8,8 +8,8 @@ Created on Mon Aug 23 10:46:05 2021
 Functional testing for oneDtwoD object
 
 """
-if __name__=='__main__':
-    import set_local_paths #add local git repos.
+if __name__ == "__main__":
+    import set_local_paths  # add local git repos.
 
 # First-party imports
 import os
@@ -47,8 +47,9 @@ def test_run_node_stats():
 
     assert round(output["minimal_dem"][1], 3) == 1.54
 
+
 # %%
-if __name__ == '__main__':
+if __name__ == "__main__":
     test_run_depth_at_timesteps_test()
     test_run_flowline_stats()
     test_run_node_stats()

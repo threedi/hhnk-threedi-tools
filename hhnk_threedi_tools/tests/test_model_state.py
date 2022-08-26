@@ -34,13 +34,17 @@ def test_get_state():
 
 def test_adjustments_global_settings():
     folder = Folders(TEST_MODEL)
-    output = folder.model.schema_base.proposed_adjustments("global_settings", one_d_two_d_state)[0]
+    output = folder.model.schema_base.proposed_adjustments(
+        "global_settings", one_d_two_d_state
+    )[0]
     assert output["new_control_group_id"][0].values[0] == 1
 
 
 def test_adjustments_channels():
     folder = Folders(TEST_MODEL)
-    output = folder.model.schema_base.proposed_adjustments("channels", one_d_two_d_state)
+    output = folder.model.schema_base.proposed_adjustments(
+        "channels", one_d_two_d_state
+    )
     assert output["code"][46] == "162_1"
 
 
@@ -52,5 +56,7 @@ def test_adjustments_weirs():
 
 def test_adjustments_manholes():
     folder = Folders(TEST_MODEL)
-    output = folder.model.schema_base.proposed_adjustments("manholes", one_d_two_d_state)
+    output = folder.model.schema_base.proposed_adjustments(
+        "manholes", one_d_two_d_state
+    )
     assert output.empty == True
