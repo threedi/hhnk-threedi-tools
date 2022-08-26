@@ -14,6 +14,7 @@ import os
 import glob
 import inspect
 from pathlib import Path
+import inspect
 
 # Third-party imports
 from threedigrid.admin.gridadmin import GridH5Admin
@@ -150,8 +151,14 @@ class File:
             exists = "exists"
         else:
             exists = "doesn't exist"
-
-        return f"{self.name} @ {self.file_path} ({exists})"
+        funcs = '.'+' .'.join([i for i in dir(self) if not i.startswith('__') and hasattr(inspect.getattr_static(self,i)
+        , '__call__')])
+        variables = '.'+' .'.join([i for i in dir(self) if not i.startswith('__') and not hasattr(inspect.getattr_static(self,i)
+        , '__call__')])
+        repr_str = f"""functions: {funcs}
+variables: {variables}"""
+        return f"""{self.name} @ {self.file_path} ({exists})
+{repr_str}"""
 
 
 class FileGDB(File):
@@ -271,6 +278,7 @@ class Folder:
             return str(self.pl / name)
 
     def add_file(self, objectname, filename, ftype="file"):
+        """ftype options = ['file', 'filegdb', 'raster', 'sqlite'] """
         # if not os.path.exists(self.full_path(filename)) or
         if filename in [None, ""]:
             filepath = ""
@@ -297,10 +305,16 @@ class Folder:
         return self.base
 
     def __repr__(self):
+        funcs = '.'+' .'.join([i for i in dir(self) if not i.startswith('__') and hasattr(inspect.getattr_static(self,i), '__call__')]) #getattr resulted in RecursionError. https://stackoverflow.com/questions/1091259/how-to-test-if-a-class-attribute-is-an-instance-method
+        variables = '.'+' .'.join([i for i in dir(self) if not i.startswith('__') and not hasattr(inspect.getattr_static(self,i)
+                , '__call__')])
+        repr_str = f"""functions: {funcs}
+variables: {variables}"""
         return f"""{self.name} @ {self.path}
-                    Folders:\t{self.structure}
-                    Files:\t{list(self.files.keys())}
-                    Layers:\t{list(self.olayers.keys())}
+        Folders:\t{self.structure}
+        Files:\t{list(self.files.keys())}
+        Layers:\t{list(self.olayers.keys())}
+{repr_str}
                 """
 
 
