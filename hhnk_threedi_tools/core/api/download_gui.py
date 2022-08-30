@@ -918,9 +918,8 @@ def download_gui(main_folder=None, lizard_api_key="", data=None):
 
         # Get raster size of dem, max depth rasters are downloaded on this resolution.
         print(scenarios["folder"])
-
-        print(folder.model.rasters.full_path(dem_path_dropdown.value))
-        dem = hrt.Raster(folder.model.rasters.full_path(dem_path_dropdown.value))
+        print(folder.model.schema_base.rasters.full_path(dem_path_dropdown.value))
+        dem = hrt.Raster(folder.model.schema_base.rasters.dem.path)
 
         # Start download of selected files (if any are selected) ------------------------------------------------
         for name, row in df.iterrows():
@@ -958,6 +957,7 @@ def download_gui(main_folder=None, lizard_api_key="", data=None):
             # TODO max_depth should be defined in folders.py?
             max_depth = getattr(batch_fd.downloads, row["dl_name"]).max_depth
 
+            print(dem)
             if not max_depth.exists:
                 print("Preparing download of max waterdepth raster")
                 uuid_list.append(selected_result["uuid"])

@@ -15,6 +15,9 @@ import pathlib
 import numpy as np
 
 # Third-party imports
+import sys
+
+sys.path.append(r"C:\Users\chris.kerklaan\Documents\Github\threedi-raster-edits")
 import threedi_raster_edits as tre
 import xarray as xr
 
