@@ -67,6 +67,7 @@ def md5(fname):
     return hash_md5.hexdigest()
 
 
+
 def get_or_create_schematisation(
     schematisation_name: str,
     organisation_uuid="48dac75bef8a42ebbb52e8f89bbdb9f2",
@@ -183,30 +184,42 @@ def create_threedimodel(
     max_retries_creation=60,
     wait_time_creation=5,
     max_retries_processing=60,
-    wait_time_processing=60,
+    wait_time_processing=5,
 ):
     threedimodel = None
     for i in range(max_retries_creation):
         try:
+            #Check number of models, if more than 2, delete oldest.
+            threedimodels = threedi.api.threedimodels_list(revision__schematisation__name=schematisation.name)
+            models = threedimodels.to_dict()['results']
+            print(f'Found {len(models)} existing models')
+            if len(models)> 2:
+                print("Max 3 models are allowed. Removing oldest threedi model")
+                threedi.api.threedimodels_delete(id=models[-1]['id'])
+                #time.sleep(wait_time_creation)
+
+            #Create model
             threedimodel = threedi.api.schematisations_revisions_create_threedimodel(
-                revision.id, schematisation.id
+                id=revision.id, schematisation_pk=schematisation.id
             )
             print(f"Creating threedimodel with id {threedimodel.id}...")
             break
-        except ApiException:
+        except ApiException as e:
+            print(e)
             time.sleep(wait_time_creation)
             continue
     if threedimodel:
         for i in range(max_retries_processing):
             threedimodel = threedi.api.threedimodels_read(threedimodel.id)
             if threedimodel.is_valid:
-                print(f"Succesfully created threedimodel with id {threedimodel.id}")
+                print(f"\nSuccesfully created threedimodel with id {threedimodel.id}")
                 break
             else:
+                print(f'waiting for model to become valid [{i}/{max_retries_processing}]', end='\r')
                 time.sleep(wait_time_processing)
         if not threedimodel.is_valid:
             print(
-                f"Failed to sucessfully process threedimodel with id {threedimodel.id}"
+                f"\nFailed to sucessfully process threedimodel with id {threedimodel.id}"
             )
     else:
         print("Failed to create threedimodel")
@@ -258,3 +271,5 @@ def upload_and_process(
     # 3Di model en simulation template genereren
     threedimodel = create_threedimodel(schematisation, revision)
     return threedimodel
+
+# %%

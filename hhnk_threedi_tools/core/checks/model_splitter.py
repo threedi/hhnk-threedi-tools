@@ -225,7 +225,20 @@ class ModelSchematisations:
             commit_message=commit_message,
         )
 
+#%%
 
+# def get_revision_info(revision__schematisation__name):
+#     threedimodel = upload.threedi.api.threedimodels_list(revision__schematisation__name=schematisation.name)
+#     if threedimodel.results == []:
+#         return "no previous model(s) available"
+    
+#     else:
+#         schema_id = threedimodel.to_dict()['results'][0]['schematisation_id']
+#         latest_revision = threedi.api.schematisations_latest_revision(schema_id)
+#         rev_model = threedimodel.to_dict()['results'][0]['name']
+#         return "previous model revision: " + rev_model + " " + latest_revision.commit_message 
+
+        
 # %%
 if __name__ == "__main__":
     from hhnk_threedi_tools.core.folders import Folders
@@ -245,4 +258,100 @@ if __name__ == "__main__":
     )
     # %%
     upload.threedi.set_api_key("")
-    upload.threedi.api.schematisations_revisions_create_threedimodel(41870, 5746, {})
+    #upload.threedi.api.threedimodels_list?
+
+# %%
+
+# # Check beschikbare modellen
+# threedimodels = upload.threedi.api.threedimodels_list(revision__schematisation__name=schematisation.name)
+# models = threedimodels.to_dict()['results']#[0]['id']
+# if len(models)> 2:
+#     cont = input("Remove oldest threedi model? [y/n]")
+#     if cont=='y':
+#         upload.threedi.api.threedimodels_delete(id=models[-1]['id'])
+
+
+# upload.threedi.api.schematisations_revisions_create_threedimodel(id=41937, 
+#                 schematisation_pk=5746)
+
+# # %%
+
+
+
+#     # Schematisatie maken als die nog niet bestaat
+# schematisation = upload.get_or_create_schematisation(
+#         schematisation_name="model_test_v2__0d1d_test", tags=["model_test_v2__0d1d_test", "model_test_v2"]
+#     )
+    
+
+
+#     # Nieuwe (lege) revisie aanmaken
+# revision = upload.threedi.api.schematisations_revisions_list( 
+#         schematisation.id)
+
+
+
+# # %%
+
+# upload.create_threedimodel(schematisation, revision)
+
+# # %%
+
+# schematisation.id
+
+# threedimodels = upload.threedi.api.threedimodels_list(revision__schematisation__name=schematisation.name)
+# threedischema = upload.threedi.api.schematisations_list()
+# schema = threedischema.to_dict()['results']
+# i = schema.count()
+# x = 0
+# schema_list = []
+# #models = threedimodels.to_dict()['results']#[0]['id']
+# while x < 800:
+#     a = threedischema.to_dict()['results'][x]['id']
+#     schema_list.append(a)
+#     x = x + 1 
+    
+
+# if len(models)> 2:
+#     cont = input("Remove oldest threedi model? [y/n]")
+#     if cont=='y':
+#         upload.threedi.api.threedimodels_delete(id=models[-1]['id'])
+    
+
+# # %%
+
+# %%
+def create_threedimodel(
+    schematisation,
+    revision,
+    max_retries_creation=60,
+    wait_time_creation=5,
+    max_retries_processing=60,
+    wait_time_processing=60,
+):
+    threedimodel = None
+    for i in range(max_retries_creation):
+        try:
+            threedimodel = threedi.api.schematisations_revisions_create_threedimodel(
+                revision.id, schematisation.id
+            )
+            print(f"Creating threedimodel with id {threedimodel.id}...")
+            break
+        except ApiException:
+            time.sleep(wait_time_creation)
+            continue
+    if threedimodel:
+        for i in range(max_retries_processing):
+            threedimodel = threedi.api.threedimodels_read(threedimodel.id)
+            if threedimodel.is_valid:
+                print(f"Succesfully created threedimodel with id {threedimodel.id}")
+                break
+            else:
+                time.sleep(wait_time_processing)
+        if not threedimodel.is_valid:
+            print(
+                f"Failed to sucessfully process threedimodel with id {threedimodel.id}"
+            )
+    else:
+        print("Failed to create threedimodel")
+    return threedimodel.id
