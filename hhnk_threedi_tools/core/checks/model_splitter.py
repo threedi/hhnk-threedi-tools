@@ -22,7 +22,6 @@ RASTER_FILES = [
     "max_infiltration_capacity_file",
 ]
 # %%
-#
 class ModelSchematisations:
     def __init__(self, folder, modelsettings_path):
         self.folder = folder
@@ -58,6 +57,29 @@ class ModelSchematisations:
                 f"""Er staan kolommen zowel in de defaut als in de andere modelsettings.
         Dat lijkt me een slecht plan. Kolommen: {inter.values}"""
             )
+
+    def get_revision_info(self, name, api_key):
+        upload.threedi.set_api_key(api_key)
+        name=name        
+        row = self.settings_df.loc[name]
+        schema_folder = os.path.join(str(self.folder.model))
+        if not os.path.exists(schema_folder + "\\revisions"):
+            os.makedirs(schema_folder + "\\revisions")
+            count = len(os.listdir(str(self.folder.model)+"\\revisions"))
+            return str("Latest local revision:      rev" + count)
+
+        schematisation = row["schematisation_name"]
+        threedimodel = upload.threedi.api.threedimodels_list(revision__schematisation__name=schematisation)
+
+        if threedimodel.results == []:
+            return str("No previous model(s) available for: " + schematisation)
+    
+        if threedimodel.results != []:
+            schema_id = threedimodel.to_dict()['results'][0]['schematisation_id']
+            latest_revision = upload.threedi.api.schematisations_latest_revision(schema_id)
+            rev_model = threedimodel.to_dict()['results'][0]['name']
+            return str("Latest model revision:      " + rev_model + " - " + latest_revision.commit_message)
+
 
     def create_schematisation(self, name):
         """Create a schematisation based on the modelsettings.
@@ -191,6 +213,17 @@ class ModelSchematisations:
             hrt.execute_sql_changes(query=query, database=database_path_new)
 
     def upload_schematisation(self, name, commit_message, api_key):
+        schema_folder = os.path.join(str(self.folder.model))
+        
+        if not os.path.exists(schema_folder + "\\revisions"):
+            os.makedirs(schema_folder + "\\revisions")
+     
+
+        count = len(os.listdir(str(self.folder.model) + "\\revisions"))
+        if not os.path.exists(self.folder.model + "\\revisions\\rev" + (count+1)):
+            os.makedirs((self.folder.model + "\\revisions\\rev" + (count+1)))
+            
+             
         """
         possible raster_names
         [ dem_file, equilibrium_infiltration_rate_file, frict_coef_file,
@@ -202,6 +235,9 @@ class ModelSchematisations:
 
         row = self.settings_df.loc[name]
         schema_new = getattr(self.folder.model, f"schema_{name}")
+        schema_str = str(schema_new)
+        target_file = str(self.folder.model) + "\\revisions\\rev" + str(count+1)
+        shutil.copyfile(schema_str, target_file)
 
         upload.threedi.set_api_key(api_key)
 
@@ -228,13 +264,13 @@ class ModelSchematisations:
 #%%
 
 # def get_revision_info(revision__schematisation__name):
-#     threedimodel = upload.threedi.api.threedimodels_list(revision__schematisation__name=schematisation.name)
+#     threedimodel = upload.threedi.api.threedimodels_list(revision__schematisation__name)
 #     if threedimodel.results == []:
 #         return "no previous model(s) available"
     
 #     else:
 #         schema_id = threedimodel.to_dict()['results'][0]['schematisation_id']
-#         latest_revision = threedi.api.schematisations_latest_revision(schema_id)
+#         latest_revision = upload.threedi.api.schematisations_latest_revision(schema_id)
 #         rev_model = threedimodel.to_dict()['results'][0]['name']
 #         return "previous model revision: " + rev_model + " " + latest_revision.commit_message 
 

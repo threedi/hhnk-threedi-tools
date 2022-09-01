@@ -67,6 +67,18 @@ def md5(fname):
     return hash_md5.hexdigest()
 
 
+def get_revision_info(revision__schematisation__name:str):
+    threedimodel = threedi.api.threedimodels_list("model_test_v2__0d1d_test")
+    if threedimodel.results == []:
+        return "no previous model(s) available"
+    
+    else:
+        schema_id = threedimodel.to_dict()['results'][0]['schematisation_id']
+        latest_revision = threedi.api.schematisations_latest_revision(schema_id)
+        rev_model = threedimodel.to_dict()['results'][0]['name']
+        return "previous model revision: " + rev_model + " " + latest_revision.commit_message 
+
+
 
 def get_or_create_schematisation(
     schematisation_name: str,

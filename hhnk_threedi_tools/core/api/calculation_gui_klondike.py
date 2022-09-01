@@ -1398,8 +1398,8 @@ def start_calculation_gui(
         organisation_uuid = organisation_uuid = API_SETTINGS["org_uuid"][
             organisation_box.value
         ]
-        basic_processing = True
-        damage_processing = True
+        basic_processing = False    #FIXME DEM voor een 0d1d uitschakelen
+        damage_processing = False
         arrival_processing = False
 
         models = get_models()
