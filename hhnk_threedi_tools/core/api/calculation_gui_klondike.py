@@ -13,6 +13,8 @@ import matplotlib.pyplot as plt
 import ipywidgets as widgets
 from traitlets import Unicode
 from apscheduler.schedulers.blocking import BlockingScheduler
+from apscheduler.triggers.interval import IntervalTrigger
+
 from ipyfilechooser import FileChooser
 
 # threedi
@@ -979,7 +981,7 @@ def start_calculation_gui(
 
         # Search for models within selected revision
         model_list = sim.threedi_api.threedimodels_list(
-            slug__startswith=polder_name_widget.value,
+            name__startswith=polder_name_widget.value,
             # revision__number=revision_number,
             limit=100,
         ).results
@@ -1314,7 +1316,7 @@ def start_calculation_gui(
             if (
                 repository_dropdown.value is not None
                 and revision_dropdown.value is not None
-                and model_name_dropdown.value is not None
+                # and model_name_dropdown.value is not None #FIXME tijdelijk uitgezet voor starten heemskerk
                 # and sqlite_selection.selected is not None
             ):
                 create_simulation_button.disabled = False
@@ -1396,8 +1398,8 @@ def start_calculation_gui(
         organisation_uuid = organisation_uuid = API_SETTINGS["org_uuid"][
             organisation_box.value
         ]
-        basic_processing = True
-        damage_processing = True
+        basic_processing = False    #FIXME DEM voor een 0d1d uitschakelen
+        damage_processing = False
         arrival_processing = False
 
         models = get_models()
@@ -1408,6 +1410,13 @@ def start_calculation_gui(
             model_id = models[0].id
 
         sqlite = sqlite_selection.selected
+
+        output_folder = os.path.join(
+            str(scenarios["folder"].threedi_results),
+            scenarios["selected_folder"],
+            scenario_name_widget.value,
+        ) #FIXME dubbel, staat ook in def start_simulation(wait_to_download=0)
+
         simulation = create_threedi_simulation(
             sim=sim,
             sqlite_file=sqlite,
@@ -1424,6 +1433,7 @@ def start_calculation_gui(
             basic_processing=basic_processing,
             damage_processing=damage_processing,
             arrival_processing=arrival_processing,
+            output_folder=output_folder,
         )
         update_API_call_widget_v3(simulation)
         update_available_results()
@@ -1525,7 +1535,7 @@ def start_calculation_gui(
 
         # print("schedule monitoring task")
 
-        scheduler.add_job(update_start_button, "interval", seconds=10)
+        scheduler.add_job(update_start_button, IntervalTrigger(timezone="Europe/Amsterdam"), seconds=10)
         scheduler.start()  # Start the scheduled job
 
     def start_batch_simulation():

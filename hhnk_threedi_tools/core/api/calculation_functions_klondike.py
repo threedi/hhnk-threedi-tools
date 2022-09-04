@@ -1,12 +1,14 @@
-# First-party imports
+#%%# First-party imports
 import os
 import time
 import requests
 from datetime import datetime, timedelta
+from hhnk_threedi_tools.core.api.upload_model.threedi_calls import ThreediCalls
 
 
 # Third-party imports
 import numpy as np
+
 import logging
 import sqlite3
 from IPython.core.display import display, HTML
@@ -306,6 +308,7 @@ def create_threedi_simulation(
     basic_processing,
     damage_processing,
     arrival_processing,
+    output_folder,
 ):  # , days_dry_start, hours_dry_start, days_rain, hours_rain, days_dry_end, hours_dry_end, rain_intensity, organisation_uuid, model_slug, scenario_name, store_results):
     """
     Creates and returns a Simulation (doesn't start yet) and initializes it with
@@ -378,6 +381,10 @@ def create_threedi_simulation(
     )
     global_setting = global_setting_df.iloc[0].to_dict()
 
+    boundary_1d_settings_df = hrt.sqlite_table_to_df(
+        database_path=sqlite_file, table_name="v2_1d_boundary_conditions"
+    )
+
     numerical_setting_df = hrt.sqlite_table_to_df(
         database_path=sqlite_file, table_name="v2_numerical_settings"
     )
@@ -410,6 +417,8 @@ def create_threedi_simulation(
         "output_time_step": global_setting["output_time_step"],
     }
 
+
+
     # set up simulation
     simulation = sim.threedi_api.simulations_create(
         threedi_api_client.openapi.models.simulation.Simulation(
@@ -430,9 +439,11 @@ def create_threedi_simulation(
     )
 
     if sqlite_file is not None:
-        # add control structures (from sqlite)
-        add_control_from_sqlite(sim, sqlite_file, simulation)
-        add_laterals_from_sqlite(sim, sqlite_file, simulation)
+        if "0d1d_test" not in scenario_name: #FIXME betere oplossing voor maken.
+            # add control structures (from sqlite)
+            add_control_from_sqlite(sim, sqlite_file, simulation)
+            add_laterals_from_sqlite(sim, sqlite_file, simulation)
+
 
     add_to_simulation(
         sim.threedi_api.simulations_settings_time_step_create,
@@ -451,6 +462,69 @@ def create_threedi_simulation(
         simulation_pk=simulation.id,
         data=physical_settings,
     )
+
+
+
+    boundary_types =   {1: 'water_level', 
+                        2: 'velocity',
+                        3: 'discharge', 
+                        5: 'sommerfeldt'
+    }
+
+    #1d boundary conditions
+    # Deels overgenomen van threedi_models_and_simulations
+    def save_json(filepath, data):
+        import json
+        with open(filepath, 'w', encoding='utf-8') as f:
+            json.dump(data, f, ensure_ascii=False, indent=4)
+
+    def upload_json(upload_result, filepath):
+        """upload_result: instance returned by creating the file on the API"""
+        with open(filepath, "rb") as file:
+            response = requests.put(upload_result.put_url, data=file)
+            return response
+        
+
+    data = []
+    for index, row in boundary_1d_settings_df.iterrows():
+
+        values=[]
+        rows=[i for i in row['timeseries'].split('\n')]
+        for i in rows:
+            values.append([float(j) for j in i.split(',')])
+        data_singleboundary= {
+            "id": row["id"],
+            "type": "1D",
+            "interpolate": True,
+            "values":values
+        }
+        data.append(data_singleboundary)
+
+    filename='boundaryconditions.json'
+    if not os.path.exists(output_folder):
+        os.mkdir(output_folder)
+    filepath = os.path.join(output_folder,  filename)
+    save_json(filepath, data)
+
+
+    tc = ThreediCalls(threedi_api=sim.threedi_api)
+
+    UPLOAD_TIMEOUT = 45
+    valid_states = ["processed", "valid"]
+    
+    bc_upload = sim.threedi_api.simulations_events_boundaryconditions_file_create(simulation_pk=simulation.id,
+                data={'filename':filename})
+    upload_json(bc_upload, filepath)
+    print(f"create: {filepath}")
+    for ti in range(int(UPLOAD_TIMEOUT // 2)):
+        uploaded_bc = tc.fetch_boundarycondition_files(simulation.id)[0]
+        if uploaded_bc.state in valid_states:
+            print('\nUpload success')
+            break
+        else:
+            print(f'Uploading {filename} ({ti}/{int(UPLOAD_TIMEOUT // 2)})', end='\r')
+            time.sleep(2)
+
 
     # add rainfall event
     rain_intensity_mmph = float(rain_intensity)  # mm/hour
@@ -750,22 +824,22 @@ def wait_to_download_results(
     scheduler.start()  # Start the scheduled job
 
 
-# if __name__ == "__main__":
-#     #Test
-#     from hhnk_threedi_tools.core.api.calculation import Simulation
-#     sim = Simulation("MrQsALQY.NzTqxGhMnPr0CwYh3jWe4egKvJlDLgDc")
-#     sqlite_file = r"C:\Users\chris.kerklaan\Documents\threedi_models\bwn-katvoed - bwn_katvoed_1d2d_glg (5)\work in progress\schematisation/bwn_katvoed.sqlite"
-#     scenario_name = "test"
-#     model_id = 3946
-#     organisation_uuid  = "48dac75b-ef8a-42eb-bb52-e8f89bbdb9f2"
+if __name__ == "__main__":
+    #Test
+    from hhnk_threedi_tools.core.api.calculation import Simulation
+    sim = Simulation("MrQsALQY.NzTqxGhMnPr0CwYh3jWe4egKvJlDLgDc")
+    sqlite_file = r"E:\02.modellen\Heemkerkerdui_Recalculation_v3\02_schematisation\00_basis\Heemkerkerduin_Recalculatio22.sqlite"
+    scenario_name = "test"
+    model_id = 3946
+    organisation_uuid  = "48dac75b-ef8a-42eb-bb52-e8f89bbdb9f2"
 
-#     create_threedi_simulation(
-#         sim,
-#         sqlite_file,
-#         scenario_name,
-#         model_id,
-#         organisation_uuid,
-#     )
+    # create_threedi_simulation(
+    #     sim,
+    #     sqlite_file,
+    #     scenario_name,
+    #     model_id,
+    #     organisation_uuid,
+    # )
 
 #     translate_dict_numerical = {
 #         'frict_shallow_water_correction':'friction_shallow_water_depth_correction',
@@ -857,3 +931,5 @@ def wait_to_download_results(
 #     add_to_simulation(sim.threedi_api.simulations_settings_physical_create,
 #             simulation_pk=simulation.id,
 # data=physical_settings)
+
+# %%
