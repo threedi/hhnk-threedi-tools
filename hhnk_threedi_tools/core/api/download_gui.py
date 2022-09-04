@@ -643,13 +643,13 @@ def download_gui(main_folder=None, lizard_api_key="", data=None):
         """Download the selected models to the output folders"""
         selected_file_results = []  # list of selected files from the model to download
         if netcdf_button.value:
-            selected_file_results += ["raw 3Di output"]
+            selected_file_results += ["Raw 3Di output"]
         if agg_netcdf_button.value:
             selected_file_results += ["aggregated 3Di output"]
         if h5_button.value:
-            selected_file_results += ["grid administration"]
+            selected_file_results += ["Grid administration"]
         if log_button.value:
-            selected_file_results += ["calculation core logging"]
+            selected_file_results += ["Calculation core logging"]
 
         scenarios["download_url"] = create_download_url(
             scenarios["results"], scenarios["selected_ids"], selected_file_results

@@ -8,6 +8,8 @@ import hhnk_research_tools as hrt
 
 def stack_raster_arrays(raster_classes, window):
     """Inladen waterdieptes van alle 18 diepte rasters voor het gegeven window"""
+    
+    window = list(map(int, window)) # make everything a integer for reading the array.
     stacked_array = []
     for raster in raster_classes:
         depth_array = raster._read_array(window=window)

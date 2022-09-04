@@ -75,7 +75,7 @@ def create_download_url(results, scenario_ids, selected_results=""):
         else:
             # Get the id's of the selected result files (if they exist)
             result_ids = [a.index(b) for b in selected_results if b in a]
-
+        
         for result_id in result_ids:
             if scenario["result_set"][result_id]["result_type"]["has_raster"]:
                 download_raster[scenario["name"]].append(
@@ -89,6 +89,7 @@ def create_download_url(results, scenario_ids, selected_results=""):
                 print("Don't know what to do with the following object:")
                 print(scenario["result_set"][result_id])
     #             print('')
+    print("Download url", download_url)
     return download_url
 
 
