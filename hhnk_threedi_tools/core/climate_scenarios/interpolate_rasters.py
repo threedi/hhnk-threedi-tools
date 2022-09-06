@@ -21,7 +21,7 @@ def stack_raster_arrays(raster_classes, window):
     return stacked_array
 
 
-def interpoleer_deel(int_frequentie, waterdieptes, frequenties):
+def interpoleer_deel(int_frequentie, waterdieptes, frequenties, min_value=0):
     # zet de frequenties die horen bij de waterdieptes in dezelfde 3d array als de waterdieptes
     fr = np.array([l * f for l, f in zip(np.ones(waterdieptes.shape), frequenties)])
 
@@ -53,7 +53,8 @@ def interpoleer_deel(int_frequentie, waterdieptes, frequenties):
     # Bepaal de grootste frequentie waarbij inundatie voorkomt. Als deze kleiner is dan
     # de interpolatiefrequentie moet de waterdiepte naar 0
     maxovfreq = ovfreq.copy()
-    maxovfreq[waterdieptes <= 0.0] = 0.0
+    if min_value is not None:
+        maxovfreq[waterdieptes <= min_value] = min_value
     maxovfreq = maxovfreq.max(axis=0)
     wlev_nul = maxovfreq < int_frequentie
 
