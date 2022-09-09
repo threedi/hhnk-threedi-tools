@@ -1,9 +1,11 @@
 # TODO
 # Vind de juiste modellen?
 # GUI wat simplificeren.
-
+# %%
 # system imports
 import os
+
+
 import pprint
 
 # Third-party imports
@@ -19,7 +21,7 @@ from ipyfilechooser import FileChooser
 
 # threedi
 from threedi_scenario_downloader import downloader as dl
-from .read_api_file import read_api_file
+from hhnk_threedi_tools.core.api.read_api_file import read_api_file
 from threedi_api_client.openapi.exceptions import ApiException
 
 # Home made
@@ -1992,5 +1994,11 @@ def start_calculation_gui(
 
     return tab
 
-    # start_calculation_tab = start_calculation_gui(); start_calculation_tab
-    #     start_calculation_tab
+
+if __name__ == '__main__':
+    data = {'polder_folder': 'E:\\02.modellen\\model_test_v2',
+ 'api_keys_path': 'C:\\Users\\wvangerwen\\AppData\\Roaming\\3Di\\QGIS3\\profiles\\default\\python\\plugins\\hhnk_threedi_plugin\\api_key.txt'}
+    start_calculation_tab = start_calculation_gui(data=data); 
+    start_calculation_tab
+
+

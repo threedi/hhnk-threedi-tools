@@ -4,7 +4,11 @@ import os
 import shutil
 import pprint
 from datetime import datetime
+# %%
 
+import requests
+from pathlib import Path
+import zipfile
 
 # Third-party imports
 import json
@@ -20,7 +24,7 @@ from ipyfilechooser import FileChooser
 
 # threedi
 from threedi_scenario_downloader import downloader as dl
-from .read_api_file import read_api_file
+from hhnk_threedi_tools.core.api.read_api_file import read_api_file
 import openapi_client
 
 # local imports
@@ -75,81 +79,925 @@ def item_layout(width="95%", grid_area="", **kwargs):
     )  # override the default width of the button to 'auto' to let the button grow
 
 
+
+
 class StartCalculationWidgets:
     def __init__(self):
-
         # --------------------------------------------------------------------------------------------------
-        # 1. Login with 3Di account
+        # 1. Login with API keys
         # --------------------------------------------------------------------------------------------------
-        self.login_label = widgets.HTML(
-            "<b>1. Login with 3Di account</b>",
-            layout=item_layout(grid_area="login_label"),
-        )
+        self.login = self.LoginWidgets()
+        self.model = self.ModelWidgets()
+        self.rain = self.RainWidgets(self)
+        self.output = self.OutputWidgets()
+        self.settings = self.SettingsWidgets()
+        self.feedback = self.FeedbackWidgets()
+        self.start = self.StartWidgets()
 
-        # Username widget
-        self.username_widget = widgets.Text(
-            description="Username:",
-            layout=item_layout(width="261px", grid_area="username"),
-        )
 
-        # Password widget
-        class PasswordWidget(widgets.Text):
-            _view_name = Unicode("PasswordView").tag(sync=True)
+    class LoginWidgets:
+        def __init__(self):
+            class ApikeyWidget(widgets.Text):
+                _view_name = Unicode("PasswordView").tag(sync=True)
 
-        self.password_widget = PasswordWidget(
-            description="Password:",
-            layout=item_layout(width="261px", grid_area="password"),
-        )
+            #Label
+            self.label = widgets.HTML(
+                "<b>1. Login with API keys</b>",
+                layout=item_layout(grid_area="login_label"),
+            )
 
-        # Login button, after login create threedi api client
-        self.login_button = widgets.Button(
-            description="Login",
-            layout=item_layout(height="30px", grid_area="login_button"),
-        )
+            # Api key widgets
+            self.lizard_apikey_widget = ApikeyWidget(
+                description="Lizard key:",
+                layout=item_layout(grid_area="lizard_apikey_widget"),
+            )
 
-        self.logout_button = widgets.Button(
-            description="Logout",
-            layout=item_layout(height="30px", grid_area="logout_button"),
-            disabled=True,
-        )
+            self.threedi_apikey_widget = ApikeyWidget(
+                description="Threedi key:",
+                layout=item_layout(grid_area="threedi_apikey_widget"),
+            )
+
+            # Login button, after login create threedi api client
+            self.button = widgets.Button(
+                description="Login",
+                layout=item_layout(height="30px", grid_area="login_button"),
+            )
+
+    class ModelWidgets:
+        def __init__(self):
+
+            #Searching for the schema on 3Di servers.
+            self.label = widgets.HTML(
+                    "<b>2. Search for schematisation on 3Di</b>",
+                    layout=item_layout(grid_area="model_label"),
+                )
+            self.schema_name_widget = widgets.Text(
+                    layout=item_layout(grid_area="schema_name_widget")
+                )
+            self.search_button = widgets.Button(
+                    description="Search",
+                    layout=item_layout(height="30px", grid_area="model_name_search_button"),
+                )
+
+
+
+            #Selecting the schematisation, rev and sqlite
+            self.select_label = widgets.HTML(
+                    "<b>3. Select schematisation and model </b>",
+                    layout=item_layout(grid_area="schema_select_label"),
+                )
+
+            self.schema_label = widgets.Label(
+                    "Schematisation: ", layout=item_layout(grid_area="schema_label")
+                )
+            self.schema_dropdown = widgets.Dropdown(
+                    layout=item_layout(grid_area="schema_dropdown")
+                )
+            self.revision_label = widgets.Label(
+                    "Revision: ", layout=item_layout(grid_area="revision_label")
+                )
+            self.revision_dropdown = widgets.Dropdown(
+                    layout=item_layout(grid_area="revision_dropdown")
+                )
+            self.threedimodel_label = widgets.Label(
+                    "3Di model: ", layout=item_layout(grid_area="threedimodel_label")
+                )
+            self.threedimodel_dropdown = widgets.Dropdown(
+                    disabled=True, layout=item_layout(grid_area="threedimodel_dropdown")
+                )
+            self.organisation_label = widgets.Label(
+                    "Organisation:", layout=item_layout(grid_area="organisation_label")
+                )
+            self.organisation_box = widgets.Select(
+                options=[],
+                rows=2,
+                disabled=False,
+                layout=item_layout(height="60px", grid_area="organisation_box"),
+            )
+
+
+            # self.sqlite_label = widgets.Label(
+            #         "Select sqlite containing structure control rules",
+            #         layout=item_layout(grid_area="sqlite_label"),
+            #     )
+            # self.sqlite_dropdown = widgets.Dropdown(
+            #         layout=item_layout(grid_area="sqlite_dropdown")
+            #     )
+            # self.sqlite_chooser = FileChooser(filter_pattern='*sqlite',
+            #             layout=item_layout(grid_area="sqlite_chooser"))
+
+    class RainWidgets():
+        def __init__(self, caller):
+            self.caller=caller
+            self.label = widgets.HTML(
+                    "<b>4. Select rain event</b>", layout=item_layout(grid_area="rain_label")
+                )
+
+            # hydraulic test; 1 dry, 5 days rain, 2 dry
+            self.test_0d1d_button = widgets.Button(
+                description="Hyd test (0d1d)", layout=item_layout(grid_area="test_0d1d_button")
+            )
+
+            # 1d2d test: T10 rain peak. 35.5mm total
+            self.test_1d2d_button = widgets.Button(
+                description="1d2d test",
+                layout=item_layout(grid_area="test_1d2d_button", justify_self="end"),
+            )
+
+            #One hour test
+            self.test_hour_button = widgets.Button(
+                description="1 hour test",
+                layout=item_layout(grid_area="hour_test_button", justify_self="end"),
+            )
+
+            for rtype in RAIN_TYPES: #["piek", "blok"]
+                for rscenario in RAIN_SCENARIOS: #["T10", "T100", "T1000"]
+                    setattr(self, f"{rscenario}_{rtype}_button", widgets.Button(
+                        description=f"{rscenario}_{rtype}", layout=item_layout(grid_area=f"{rscenario}_{rtype}_button")
+                    ))
+
+            self.widget_class = self.caller.RainEventWidget()
+            self.rain_event_widget = self.widget_class.rain_event_widget
+
+    class RainEventWidget():
+        def __init__(self):
+            """Create interactive plot with sliders for various input parameters"""
+
+
+            style = {"description_width": "100px"}
+
+            self.days_dry_start_slider = self._create_float_slider(
+                    1, 0, 5, 1, style, '',
+                )
+            self.hours_dry_start_slider = self._create_float_slider(
+                    0, 0, 23, 1, style, '', 
+                )
+            self.days_rain_slider = self._create_float_slider(
+                    5, 0, 10, 1, style, '', 
+                )
+            self.hours_rain_slider= self._create_float_slider(
+                    0, 0, 23, 1, style, '',
+                )
+            self.days_dry_end_slider=self._create_float_slider(
+                    2, 0, 5.0, 1, style, '',
+                )
+            self.hours_dry_end_slider=self._create_float_slider(
+                    0, 0, 23, 1, style, '',
+                )
+            self.rain_intensity_slider=self._create_float_slider(
+                    4.167, 0, 100, 0.01, style, "rain [mm/hour]",
+                )
+                
+            # Comebine plot and sliders
+            self.rain_event_widget = widgets.interactive(
+                self.plot_rain_event,
+                days_dry_start=self.days_dry_start_slider,
+                hours_dry_start=self.hours_dry_start_slider,
+                days_rain=self.days_rain_slider,
+                hours_rain=self.hours_rain_slider,
+                days_dry_end=self.days_dry_end_slider,
+                hours_dry_end=self.hours_dry_end_slider,
+                rain_intensity=self.rain_intensity_slider,
+            )
+            # Give this widget a name so it can be placed in the grid
+            self.rain_event_widget.layout = widgets.Layout(grid_area="rain_event_widget")
+
+
+        def _create_float_slider(self, value, minval, maxval,step, style, description):
+            return widgets.FloatSlider(
+                    value=value,
+                    min=minval,
+                    max=maxval,
+                    step=step,
+                    style=style,
+                    description=description,
+                    layout=item_layout(),
+                    continuous_update=False,
+                )
+
+        def plot_rain_event(self,
+            days_dry_start,
+            hours_dry_start,
+            days_rain,
+            hours_rain,
+            days_dry_end,
+            hours_dry_end,
+            rain_intensity,
+        ):
+            def create_plot(x, y, title, xlabel, ylabel):
+                fig, ax = plt.subplots(figsize=[10, 3])
+                plt.plot(x, y)
+                plt.title(title)
+                plt.xlabel(xlabel)
+                plt.ylabel(ylabel)
+                ax.grid()
+                return fig, ax
+
+            # Create timeseries
+            dt = 1 / 24
+
+            part1 = [
+                round(x, 2)
+                for x in np.arange(
+                    0, days_dry_start + hours_dry_start / 24, dt
+                ).tolist()
+            ]
+            part2 = [
+                round(x, 2)
+                for x in np.arange(
+                    days_dry_start + hours_dry_start / 24,
+                    days_dry_start + hours_dry_start / 24 + days_rain + hours_rain / 24,
+                    dt,
+                ).tolist()
+            ]
+            part3 = [
+                round(x, 2)
+                for x in np.arange(
+                    days_dry_start + hours_dry_start / 24 + days_rain + hours_rain / 24,
+                    days_dry_start
+                    + hours_dry_start / 24
+                    + days_rain
+                    + hours_rain / 24
+                    + days_dry_end
+                    + hours_dry_end / 24
+                    + dt,
+                    dt,
+                ).tolist()
+            ]
+
+            part1 = np.arange(0, days_dry_start + hours_dry_start / 24, dt).tolist()
+            part2 = np.arange(
+                days_dry_start + hours_dry_start / 24,
+                days_dry_start + hours_dry_start / 24 + days_rain + hours_rain / 24,
+                dt,
+            ).tolist()
+            part3 = np.arange(
+                days_dry_start + hours_dry_start / 24 + days_rain + hours_rain / 24,
+                days_dry_start
+                + hours_dry_start / 24
+                + days_rain
+                + hours_rain / 24
+                + days_dry_end
+                + hours_dry_end / 24
+                + dt,
+                dt,
+            ).tolist()
+
+            if part2:  # part2 is the rain part
+                time = part1 + [part2[0]] + part2 + [part3[0]] + part3
+            else:
+                time = part1 + part2 + [part3[0]] + part3
+
+            # Create rain intensity timeseries
+            rain = np.zeros(np.size(time))
+
+            # Add some indices for nicer plotting
+            if days_dry_start == 0 and hours_dry_start == 0:
+                value_start = 0
+            else:
+                value_start = 1
+            if days_dry_end == 0 and hours_dry_end == 0:
+                value_end = 3
+            else:
+                value_end = 1
+
+            if days_rain != 0 or hours_rain != 0:
+                rain[
+                    time.index(days_dry_start + hours_dry_start / 24)
+                    + value_start : time.index(
+                        days_dry_start
+                        + hours_dry_start / 24
+                        + days_rain
+                        + hours_rain / 24
+                    )
+                    + value_end
+                ] = rain_intensity
+
+            fig, ax = create_plot(
+                time, rain, "Rain event", "Time [days]", "Rain intensity [mm/hour]"
+            )
+            # fig.show()
+        
+
+
+        def update_sliders(self,
+            days_dry_start,
+            hours_dry_start,
+            days_rain,
+            hours_rain,
+            days_dry_end,
+            hours_dry_end,
+            rain_intensity,
+        ):
+            """Update sliders with input values, used for buttons."""
+            self.days_dry_start_slider.value = days_dry_start
+            self.hours_dry_start_slider.value = hours_dry_start
+            self.days_rain_slider.value = days_rain
+            self.hours_rain_slider.value = hours_rain
+            self.days_dry_end_slider.value = days_dry_end
+            self.hours_dry_end_slider.value = hours_dry_end
+            self.rain_intensity_slider.value = rain_intensity
+
+        def update_sliders_rain_event(self, rain_type, rain_scenario):
+            self.update_sliders(
+                days_dry_start=RAIN_SETTINGS[rain_type]["days_dry_start"],
+                hours_dry_start=RAIN_SETTINGS[rain_type]["hours_dry_start"],
+                days_rain=RAIN_SETTINGS[rain_type]["days_rain"],
+                hours_rain=RAIN_SETTINGS[rain_type]["hours_rain"],
+                days_dry_end=RAIN_SETTINGS[rain_type]["days_dry_end"],
+                hours_dry_end=RAIN_SETTINGS[rain_type]["hours_dry_end"],
+                rain_intensity=RAIN_INTENSITY[rain_type][rain_scenario],
+            )
+
+
+    class OutputWidgets():
+        def __init__(self):
+            self.label = widgets.HTML(
+                    "<b>5. Select output folder/name</b>",
+                    layout=item_layout(grid_area="output_label"),
+                )
+
+            # dropdown box with polders (output folder)
+            self.folder_label = widgets.Label(
+                    "Output folder:", layout=item_layout(grid_area="output_folder_label")
+                )
+            self.folder_value = widgets.Label(
+                    '', layout=item_layout(grid_area="output_folder_value"),
+                )
+
+            # Selection box of the folder the output should be put in. (Hyd toets or Extreme)
+            self.folder_options = ["1d2d_results", "0d1d_results", "batch_results"]
+            self.subfolder_label = widgets.Label(
+                    "Sub folder:", layout=item_layout(grid_area="output_subfolder_label")
+                )
+            self.subfolder_box = widgets.Select(
+                    options=self.folder_options,
+                    rows=3,
+                    disabled=False,
+                    layout=item_layout(grid_area="output_subfolder_box"),
+                )
+
+
+    class SettingsWidgets():
+        def __init__(self):
+            self.label = widgets.HTML(
+                    "<b>6. Select settings to include</b>", layout=item_layout(grid_area="settings_label")
+                )
+
+            self.basic_processing = widgets.ToggleButton(
+                    value=False, description="basic processing", layout=item_layout(grid_area="settings_basic_processing"), icon="plus"
+                )
+            self.damage_processing = widgets.ToggleButton(
+                    value=False, description="damage processing", layout=item_layout(grid_area="settings_damage_processing"), icon="plus"
+                )
+            self.arrival_processing = widgets.ToggleButton(
+                    value=False, description="arrival processing", layout=item_layout(grid_area="settings_arrival_processing"), icon="plus"
+                )
+            self.structure_control = widgets.ToggleButton(
+                    value=True, description="structure control", layout=item_layout(grid_area="settings_structure_control"), icon="check"
+                )
+            self.laterals = widgets.ToggleButton(
+                    value=True, description="laterals", layout=item_layout(grid_area="settings_laterals"), icon="check"
+                )
+
+            self.children = [self.basic_processing, 
+                            self.damage_processing, 
+                            self.arrival_processing, 
+                            self.structure_control, 
+                            self.laterals]
+
+
+    class FeedbackWidgets():
+        def __init__(self):
+            self.label = widgets.HTML(
+                    "<b>6. API call</b>", layout=item_layout(grid_area="feedback_label")
+                )
+
+            # API call HTML widget that shows the API call
+            self.widget = widgets.HTML(layout=item_layout(grid_area="feedback_widget"))
+
+
+
+    class StartWidgets():
+        def __init__(self):
+            self.label = widgets.HTML(
+                    "<b>7. Start calculation</b>",
+                    layout=item_layout(grid_area="start_label"),
+                )
+
+            self.create_simulation_button = widgets.Button(
+                    description="Create simulation",
+                    layout=item_layout(height="90%", grid_area="create_simulation_button"),
+                )
+
+            self.start_button = widgets.Button(
+                    description="Start calculation",
+                    layout=item_layout(height="90%", grid_area="start_button"),
+                )
+
+
+
+
+class StartCalculationWidgetsInteraction(StartCalculationWidgets):
+    def __init__(self, caller):
+        super().__init__()
+        self.caller = caller
+
+        #Login with API key
+        @self.login.button.on_click
+        def login(action):
+            self.vars.sim = Simulation(
+                api_key=self.vars.api_keys["threedi"]
+            ) 
+            dl.set_api_key(self.vars.api_keys['lizard'])
+            try:
+                self.sim.logged_in
+                # Login success
+                self.login.button.style.button_color = "lightgreen"
+                self.login.button.description = "Logged in"
+            except:
+                # Login failed
+                self.login.button.style.button_color = "red"
+                self.login.button.description = "Invalid API key"
+
+
+        #Search schematisations
+        @self.model.search_button.on_click
+        def search_models(action):
+            schematisations = self.sim.threedi_api.schematisations_list(
+                slug__icontains=self.model.schema_name_widget.value, limit=RESULT_LIMIT
+            ).results
+
+            self.vars.schematisations={}
+            for result in schematisations:  
+                self.vars.schematisations[result.id] = result
+
+
+            organisations = self.sim.threedi_api.organisations_list().results
+            self.vars.organisations = {}
+            for org in organisations:
+                self.vars.organisations[org.name] = org
+
+
+            #TODO add check of available calc cores. self.vars.sim.threedi_api.statuses_statistics(simulation__organisation__unique_id='48dac75bef8a42ebbb52e8f89bbdb9f2', simulation__type__live=True)
+
+            self.update_dropdowns(schema=True)
+            self.update_organisations()
+
+
+        #Search revisions
+        def on_select_schematisation(selected_schematisation):
+            """Update revisions options when repository/schematisation is selected"""
+            revisions = self.sim.threedi_api.schematisations_revisions_list(
+                    schematisation_pk=self.selected_schema_id, limit=RESULT_LIMIT #selected_schematisation['new'].split(' -')[0]
+                ).results
+
+            self.vars.revisions = {}
+            for revision in revisions:  
+                self.vars.revisions[revision.id] = revision #vars.schema_results is empty dict
+
+            threedimodels = self.sim.threedi_api.threedimodels_list(
+                    revision__schematisation__id=self.selected_schema_id, limit=RESULT_LIMIT
+                ).results
+
+            self.vars.threedimodels = {}
+            for threedimodel in threedimodels:  
+                self.vars.threedimodels[threedimodel.revision_id] = threedimodel 
+
+            self.update_dropdowns(revision=True, threedimodel=True)
+
+        self.model.schema_dropdown.observe(on_select_schematisation, names="value")
+
+
+        #Search model with revision
+        def on_select_revision(selected_revision):
+            """Update revisions options when repository/schematisation is selected"""
+            self.model.threedimodel_dropdown.value = self.vars.threedimodel_dropdown_viewlist[self.vars.revision_dropdown_viewlist.index(selected_revision['new'])]
+
+        self.model.revision_dropdown.observe(on_select_revision, names="value")
+
+
+        #Select sqlite
+        # def on_select_sqlite(selected_sqlite):
+        #     self.update_folder(schema_viewname=selected_sqlite["new"])
+        
+        # self.model.sqlite_dropdown.observe(on_select_sqlite, names="value")
+
+
+        @self.rain.test_0d1d_button.on_click
+        def change_rain(action):
+            self.rain.widget_class.update_sliders(
+                days_dry_start=1,
+                hours_dry_start=0,
+                days_rain=5,
+                hours_rain=0,
+                days_dry_end=2,
+                hours_dry_end=0,
+                rain_intensity=100
+                / 24,  # 100mm/day, using impervious surface mapping makes 14.4mm/day and 11.5mm/day
+            )
+            self._activate_button_color(self.rain.test_0d1d_button)
+            self.output.subfolder_box.value =self.output.subfolder_box.options[1]
+            self._update_settings_buttons(structure_control=False, laterals=True)
+            # update_scenario_name_widget()
+
+
+        @self.rain.test_1d2d_button.on_click
+        def change_rain(action):
+            self.rain.widget_class.update_sliders(
+                days_dry_start=0,
+                hours_dry_start=1,
+                days_rain=0,
+                hours_rain=2,
+                days_dry_end=0,
+                hours_dry_end=12,
+                rain_intensity=426 / 24,
+            )
+            self._activate_button_color(self.rain.test_1d2d_button)
+            self.output.subfolder_box.value =self.output.subfolder_box.options[0]
+            self._update_settings_buttons(structure_control=True, laterals=True)
+
+            # update_scenario_name_widget()
+
+
+        @self.rain.test_hour_button.on_click
+        def change_rain(action):
+            self.rain.widget_class.update_sliders(
+                days_dry_start=0,
+                hours_dry_start=0,
+                days_rain=0,
+                hours_rain=1,
+                days_dry_end=0,
+                hours_dry_end=0,
+                rain_intensity=2400 / 24,
+            )
+            self._activate_button_color(self.rain.test_hour_button)
+            self.output.subfolder_box.value =self.output.subfolder_box.options[0]
+            self._update_settings_buttons(structure_control=True, laterals=True)
+
+            # update_scenario_name_widget(" 1hour")
+
+        @self.rain.T10_blok_button.on_click
+        def change_rain(action):
+            self.rain.widget_class.update_sliders_rain_event(rain_type='blok', 
+                                                                rain_scenario='T10')
+            self._activate_button_color(self.rain.T10_blok_button)
+            self.output.subfolder_box.value =self.output.subfolder_box.options[0]
+            self._update_settings_buttons(structure_control=True, laterals=True)
+
+        @self.rain.T100_blok_button.on_click
+        def change_rain(action):
+            self.rain.widget_class.update_sliders_rain_event(rain_type='blok', 
+                                                                rain_scenario='T100')
+            self._activate_button_color(self.rain.T100_blok_button)
+            self.output.subfolder_box.value =self.output.subfolder_box.options[0]
+            self._update_settings_buttons(structure_control=True, laterals=True)
+
+        @self.rain.T1000_blok_button.on_click
+        def change_rain(action):
+            self.rain.widget_class.update_sliders_rain_event(rain_type='blok', 
+                                                                rain_scenario='T1000')
+            self._activate_button_color(self.rain.T1000_blok_button)
+            self.output.subfolder_box.value =self.output.subfolder_box.options[0]
+            self._update_settings_buttons(structure_control=True, laterals=True)
+
+        @self.rain.T10_piek_button.on_click
+        def change_rain(action):
+            self.rain.widget_class.update_sliders_rain_event(rain_type='piek', 
+                                                                rain_scenario='T10')
+            self._activate_button_color(self.rain.T10_piek_button)
+            self.output.subfolder_box.value =self.output.subfolder_box.options[0]
+            self._update_settings_buttons(structure_control=True, laterals=True)
+
+        @self.rain.T100_piek_button.on_click
+        def change_rain(action):
+            self.rain.widget_class.update_sliders_rain_event(rain_type='piek', 
+                                                                rain_scenario='T100')
+            self._activate_button_color(self.rain.T100_piek_button)
+            self.output.subfolder_box.value =self.output.subfolder_box.options[0]
+            self._update_settings_buttons(structure_control=True, laterals=True)
+
+        @self.rain.T1000_piek_button.on_click
+        def change_rain(action):
+            self.rain.widget_class.update_sliders_rain_event(rain_type='piek', 
+                                                                rain_scenario='T1000')
+            self._activate_button_color(self.rain.T1000_piek_button)
+            self.output.subfolder_box.value =self.output.subfolder_box.options[0]
+            self._update_settings_buttons(structure_control=True, laterals=True)
+
+
+        # Observe all settings buttons
+        for button in self.settings.children:
+            button.observe(self._update_button_icon, "value")
+
+
+    def update_api_keys(self, api_keys_path):
+        self.vars.api_keys = read_api_file(api_keys_path)
+        self.login.lizard_apikey_widget.value=self.vars.api_keys["lizard"]
+        self.login.threedi_apikey_widget.value=self.vars.api_keys["threedi"]
+        self.login.button.click()
+
+    def update_organisations(self):
+        self.model.organisation_box.options = self.vars.organisations_viewlist 
+
+
+    def update_dropdowns(self, **kwargs):
+        if 'schema' in kwargs:
+            self.model.schema_dropdown.options = self.vars.schema_dropdown_viewlist
+        if 'threedimodel' in kwargs: #Needs to be defined before revision because we observe that box.
+            self.model.threedimodel_dropdown.options = self.vars.threedimodel_dropdown_viewlist
+        if 'revision' in kwargs:
+            self.model.revision_dropdown.options = self.vars.revision_dropdown_viewlist
+        # if 'sqlite' in kwargs:
+        #     self.model.sqlite_dropdown.options = self.vars.sqlite_dropdown_viewlist
+
+
+    def update_folder(self):
+        """when main folder changes, we update some values"""
+
+        # if schema_viewname is None:
+        #     db = self.vars.folder.model.schema_base.database
+        # else:
+        #     db = self.vars.sqlite_dropdown_options[schema_viewname].database
+
+        # if db.exists:
+        #     self.model.sqlite_chooser.reset(path=str(db.pl.parent), filename=db.pl.name)
+        #     self.model.sqlite_chooser._select.click() #Dont know how else to update the window. 
+        #     self.model.sqlite_chooser._select.click()
+
+        #Output folder string
+        self.output.folder_value.value = self.vars.folder.threedi_results.path
+        
+    def download_sqlite(self):
+        """Download sqlite of selected revision to temporary folder"""
+        schema_id = self.selected_schema_id
+        rev_id = self.selected_revision_id
+
+        if schema_id is not None and rev_id is not None:
+            output_path = Path(f"tempfiles/schema{schema_id}_rev{rev_id}.zip")
+            output_path.parent.mkdir(exist_ok=True) #Create parent folder
+            if not output_path.with_suffix('').exists():
+                if not output_path.exists():
+                    sqlite_dnwld = self.vars.sim.threedi_api.schematisations_revisions_sqlite_download(id=int(rev_id), schematisation_pk=int(schema_id))
+                    r = requests.get(sqlite_dnwld.get_url)
+                    with open(output_path, 'wb') as f:
+                        f.write(r.content)
+
+                #unpack zip
+                zip_ref = zipfile.ZipFile(output_path, "r")
+                zip_ref.extractall(output_path.with_suffix(''))
+                zip_ref.close()
+
+            self.vars.sqlite_path = [i for i in output_path.with_suffix('').glob('*sqlite')][0]
+
+    def _activate_button_color(self, button):
+        """Make active button green and rest of rain buttons grey"""
+        for button_grey in [
+                self.rain.test_0d1d_button,
+                self.rain.test_1d2d_button,
+                self.rain.test_hour_button,
+                self.rain.T10_blok_button,
+                self.rain.T100_blok_button,
+                self.rain.T1000_blok_button,
+                self.rain.T10_piek_button,
+                self.rain.T100_piek_button,
+                self.rain.T1000_piek_button,
+            ]:
+            button_grey.style.button_color = None
+        button.style.button_color = "lightgreen"
+
+
+    def _update_settings_buttons(self, **kwargs):
+        """set buttons for basic_processsing, damage_processing, etc.."""
+        for kwarg in kwargs:
+            getattr(self.settings,kwarg).value=kwargs[kwarg]
+
+
+    def _update_button_icon(self, value):
+        """Add icons to buttons based on their state"""
+        try:
+            # change the icon of the same button that was observed.
+            button = value["owner"]  
+        except:
+            button = value  # if function is not called with observe
+        if button.disabled == True:
+            button.icon = "minus"  # https://fontawesome.com/icons?d=gallery
+        else:
+            # When button is not selected but available remove icon.
+            button.icon = "plus"
+            if button.value == True:
+                button.icon = "check"  # https://fontawesome.com/icons?d=gallery
+
+    @property
+    def selected_schema_id(self):
+        try:
+            return self.model.schema_dropdown.value.split(' -')[0]
+        except:
+            return None
+
+    @property
+    def selected_revision_id(self):
+        try:
+            return self.model.revision_dropdown.value.split(' -')[0]
+        except:
+            return None
+
+    @property
+    def sim(self):
+        return self.caller.vars.sim
+
+    @property
+    def vars(self):
+        return self.caller.vars
+
+
+class GuiVariables:
+    def __init__(self):
+        self._folder = None
+
+        self.sim = None #Is filled when pressing login
+        self.schematisations = {} #Is filled when searching for models by name
+        self.revisions = {}
+        self.threedimodels = {}
+        self.sqlite_dropdown_options = {}
+        self.sqlite_path = None #Sqlite is downloaded and placed here.
+        self.organisations = {}
+        self.api_keys = {"lizard":"", "threedi":""}
+
+        
+    @property
+    def folder(self):
+        return self._folder
+
+    @folder.setter
+    def main_folder(self, main_folder):
+        self._folder = Folders(main_folder, create=False)
+
+    @property
+    def schema_dropdown_viewlist(self):
+        schema_list = [f"{idx} - {self.schematisations[idx].name}" for idx in self.schematisations]
+        schema_list.reverse()
+        return schema_list
+
+    @property
+    def revision_dropdown_viewlist(self):
+        revision_list = []
+        for idx in self.revisions:
+            rev = self.revisions[idx]
+            try:
+                commit_date = rev.commit_date.strftime('%y/%m/%d-%H:%M:%S') or None
+            except:
+                commit_date=None
+            # if rev.is_valid:
+            revision_list.append(f"{idx} - #{rev.number} - {commit_date} - valid:{rev.is_valid} - {rev.commit_user}")
+        return revision_list
+
+    @property
+    def threedimodel_dropdown_viewlist(self):
+        threedimodel_list = []
+        for rev in self.revisions.keys():
+            if rev in self.threedimodels.keys():
+                threedimodel_list.append(f"{self.threedimodels[rev].id}")
+            else:
+                threedimodel_list.append(f"Revison has no model")
+        return threedimodel_list
+        
+    @property
+    def sqlite_dropdown_viewlist(self):
+        self.folder.model.set_modelsplitter_paths() #set all paths in model_settings.xlsx
+        for schema in self.folder.model.schema_list:
+            if getattr(self.folder.model, schema).database.exists:
+                schemafolder=  getattr(self.folder.model, schema)
+                viewname = f"{schemafolder.pl.name}/{schemafolder.database.pl.name}" 
+                self.sqlite_dropdown_options[viewname] =schemafolder
+
+        return self.sqlite_dropdown_options.keys()
+
+    @property
+    def organisations_viewlist(self):
+
+        return self.organisations.keys()
 
 
 class StartCalculationGui:
     def __init__(
-        self, main_folder=None, base_scenario_name=None, lizard_api_key=None, data=None
+        self, data=None, base_scenario_name=None, 
+        lizard_api_key=None, threedi_api_key=None, main_folder=None, 
     ):
 
+        self.vars = GuiVariables()
+        self.widgets = StartCalculationWidgetsInteraction(self)
+
+
         if data:
-            self.api_keys = read_api_file(data["api_keys_path"])
-            self.main_folder = data["polder_folder"]
+            self.widgets.update_api_keys(api_keys_path=data["api_keys_path"])
+            self.vars.main_folder = data["polder_folder"]
         else:
-            self.lizard_api_key = lizard_api_key
-            self.main_folder = main_folder
-        self.base_scenario_name = base_scenario_name
-        self.main_folder = main_folder
+            self.vars.api_keys["lizard"] = lizard_api_key
+            self.vars.api_keys["threedi"] = threedi_api_key
+            self.vars.main_folder = main_folder
 
-        if not self.lizard_api_key:
-            raise ValueError(
-                """Please fill in the lizard api key.\n
-                            Log in and create your own at: https://hhnk.lizard.net/management/personal_api_keys
-                            """
-            )
-        else:
-            dl.set_api_key(self.lizard_api_key)
+        self.widgets.update_folder()
+        # self.base_scenario_name = base_scenario_name
+           
 
-        if base_scenario_name is None:
-            self.base_scenario_name_str = ""
-        else:
-            self.base_scenario_name_str = f"{self.base_scenario_name} "
+        # if base_scenario_name is None:
+        #     self.base_scenario_name_str = ""
+        # else:
+        #     self.base_scenario_name_str = f"{self.base_scenario_name} "
 
-        if not self.main_folder:
-            self.main_folder = os.getcwd()
+        if not self.vars.main_folder:
+            self.vars.main_folder = os.getcwd()
 
         self.scheduler = BlockingScheduler(timezone="Europe/Amsterdam")
 
-        self.scenarios = self._init_scenarios()
+        # self.scenarios = self._init_scenarios()
 
-        self.widgets = StartCalculationWidgets()
+
+
+
+        self.start_calculation_tab = widgets.GridBox(
+            children=[
+                self.w.login.label,
+                self.w.login.button,
+                self.w.login.lizard_apikey_widget,
+                self.w.login.threedi_apikey_widget,  # 1 login
+                self.w.model.label,
+                self.w.model.schema_name_widget,
+                self.w.model.search_button,
+                self.w.model.schema_label,
+                self.w.model.select_label,
+                self.w.model.schema_dropdown,
+                self.w.model.revision_label,
+                self.w.model.revision_dropdown,
+                self.w.model.threedimodel_label,
+                self.w.model.threedimodel_dropdown,
+                self.w.model.organisation_label,
+                self.w.model.organisation_box,
+                # self.w.model.sqlite_label,
+                # self.w.model.sqlite_dropdown,
+                # self.w.model.sqlite_chooser,
+                self.w.rain.label,
+                self.w.rain.test_0d1d_button,
+                self.w.rain.test_1d2d_button,
+                self.w.rain.test_hour_button,
+                self.w.rain.T10_blok_button,
+                self.w.rain.T100_blok_button,
+                self.w.rain.T1000_blok_button,
+                self.w.rain.T10_piek_button,
+                self.w.rain.T100_piek_button,
+                self.w.rain.T1000_piek_button,
+                self.w.rain.rain_event_widget,
+                self.w.output.label,
+                self.w.output.folder_label,
+                self.w.output.folder_value,
+                self.w.output.subfolder_label,
+                self.w.output.subfolder_box,
+                self.w.settings.label,
+                self.w.settings.basic_processing,
+                self.w.settings.damage_processing,
+                self.w.settings.arrival_processing,
+                self.w.settings.structure_control,
+                self.w.settings.laterals,
+                self.w.feedback.label,
+                self.w.feedback.widget,
+                self.w.start.label,
+                self.w.start.create_simulation_button,
+                self.w.start.start_button,
+                ],  # 8
+            layout=widgets.Layout(
+                width="100%",
+                grid_row_gap="200px 200px 200px 200px",
+                #             grid_template_rows='auto auto auto 50px auto 40px auto 20px 40px',
+                grid_template_rows="auto auto auto",
+                grid_template_columns="1% 12% 8% 10% 10% 14% 15% 15% 15%",
+                grid_template_areas="""
+                '. login_label login_label model_label model_label schema_select_label schema_select_label schema_select_label schema_select_label' 
+                '. lizard_apikey_widget lizard_apikey_widget . . schema_label schema_dropdown schema_dropdown schema_dropdown' 
+                '. threedi_apikey_widget threedi_apikey_widget schema_name_widget schema_name_widget revision_label revision_dropdown revision_dropdown revision_dropdown' 
+                '. login_button login_button model_name_search_button model_name_search_button threedimodel_label threedimodel_dropdown threedimodel_dropdown threedimodel_dropdown' 
+                '. . . . . organisation_label organisation_box organisation_box organisation_box' 
+                '. rain_label . . . output_label output_label output_label output_label' 
+                '. test_0d1d_button rain_event_widget rain_event_widget rain_event_widget output_folder_label output_folder_value output_folder_value output_folder_value'
+                '. test_1d2d_button rain_event_widget rain_event_widget rain_event_widget output_subfolder_label output_subfolder_box output_subfolder_box output_subfolder_box'
+                '. hour_test_button rain_event_widget rain_event_widget rain_event_widget . . . .'
+                '. . rain_event_widget rain_event_widget rain_event_widget . . . .'
+                '. T10_blok_button rain_event_widget rain_event_widget rain_event_widget . . . .'
+                '. T100_blok_button rain_event_widget rain_event_widget rain_event_widget settings_label settings_label settings_label settings_label'
+                '. T1000_blok_button rain_event_widget rain_event_widget rain_event_widget . settings_basic_processing settings_damage_processing settings_arrival_processing' 
+                '. T10_piek_button rain_event_widget rain_event_widget rain_event_widget . settings_structure_control settings_laterals .' 
+                '. T100_piek_button rain_event_widget rain_event_widget rain_event_widget . . . .' 
+                '. T1000_piek_button rain_event_widget rain_event_widget rain_event_widget . . . .' 
+                '. feedback_label . . . . . start_label start_label'
+                '. feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget create_simulation_button create_simulation_button'
+                '. feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget start_button start_button'
+                '. . . . . . . . .' 
+                """,
+            ))
+
+
+
+
 
     @property
     def w(self):
@@ -173,38 +1021,185 @@ class StartCalculationGui:
         return scenarios
 
 
+
+if __name__ == '__main__':
+    data = {'polder_folder': 'E:\\02.modellen\\model_test_v2',
+ 'api_keys_path': 'C:\\Users\\wvangerwen\\AppData\\Roaming\\3Di\\QGIS3\\profiles\\default\\python\\plugins\\hhnk_threedi_plugin\\api_key.txt'}
+    self = StartCalculationGui(data=data); 
+    display(self.start_calculation_tab)
+
+    self.widgets.model.schema_name_widget.value='hub_0d1d'
+    # self.widgets.model.search_button.click()
+
+## TODO
+# Vind de juiste modellen?
+# GUI wat simplificeren.
 # %%
+
+# # Globals
+# from hhnk_threedi_tools.variables.api_settings import (
+#     RAIN_SETTINGS,
+#     RAIN_TYPES,
+#     RAIN_INTENSITY,
+#     GROUNDWATER,
+#     RAIN_SCENARIOS,
+#     API_SETTINGS,
+#     MODEL_TYPES,
+# )
+
+# simulation = None
+# batch_started = False
+
+
+# # #  %% TESTNNG %% ##
+# # main_folder = "C:/Users/wvangerwen/Github/hhnk-threedi-tools/hhnk_threedi_tools/tests/data/multiple_polders"
+# # # main_folder=None
+# # base_scenario_name=None
+# # lizard_api_key=LIZARD_API_KEY
+# # if True:
+# # #  %% TESTNNG %% ##
+# def start_calculation_gui(
+#     main_folder=None, base_scenario_name=None, lizard_api_key=None, data=None
+# ):
+
+#     if data:
+#         api_keys = read_api_file(data["api_keys_path"])
+#         main_folder = data["polder_folder"]
+#     else:
+#         api_keys = {}
+#         api_keys["lizard"] = lizard_api_key
+#         api_keys["threedi"] = ""
+
+#     if not api_keys["lizard"]:
+#         raise ValueError(
+#             """Please fill in the lizard api key.\n
+#                          Log in and create your own at: https://hhnk.lizard.net/management/personal_api_keys
+#                          """
+#         )
+#     dl.LIZARD_URL = "https://hhnk.lizard.net/api/v3/"
+#     THREEDI_API_HOST = "https://api.3di.live/v3"
+#     RESULT_LIMIT = 100
+#     dl.set_api_key(api_keys["lizard"])
+
+#     if base_scenario_name is None:
+#         base_scenario_name_str = ""
+#     else:
+#         base_scenario_name_str = f"{base_scenario_name} "
+
+#     scheduler = BlockingScheduler(timezone="Europe/Amsterdam")
+
+#     # TODO remove, replaced by API_KEY
+#     # # Change threediscenario downloader header
+#     # def new_get_headers():
+#     #     """Setting the headers in the original toolbox is not easy when using this GUI.
+#     #     Therefore we change this function in the toolbox so everything else works."""
+#     #     headers_results = {
+#     #         "username": "{}".format(lizard_apikey_widget.value),
+#     #         "password": "{}".format(threedi_apikey_widget.value),
+#     #         "Content-Type": "application/json",
+#     #     }
+#     #     return headers_results
+
+#     # setattr(dl, "get_headers", new_get_headers)
+
+#     def item_layout(width="95%", grid_area="", **kwargs):
+#         return widgets.Layout(
+#             width=width, grid_area=grid_area, **kwargs
+#         )  # override the default width of the button to 'auto' to let the button grow
+
+#     ###################################################################################################
+#     # Layout of the GUI
+#     ###################################################################################################
+#     # initialize functions and dictorionaries that can be called
+#     scenarios = {}  # This dict is filled certain buttons are pressed
+#     scenarios["names"] = []  # Names of models that can be downloaded
+#     scenarios["selected_folder"] = ""  # 03 hyd toets or 05extreme data
+#     scenarios["results"] = ""
+#     scenarios["model_type"] = ""
+#     scenarios["api_data"] = {}  # API call
+#     scenarios["api_data_json"] = ""
+
+#     if not main_folder:
+#         main_folder = os.getcwd()
+
+#     # Fetch the first folder
+#     scenarios["folder"] = Folders(main_folder, create=False)
+
 #     def update_folders(polder_name):
 #         # folder = Folders(os.path.join(main_folder, polder_name), create=False)
 #         output_polder_dropdown.value = polder_name
 #         # scenarios["folder"] = folder
 
+#     # # --------------------------------------------------------------------------------------------------
+#     # # 0. Select polder folder
+#     # # --------------------------------------------------------------------------------------------------
 
-#     @self.widgets.login_button.on_click
-#     def login(self, action):
+#     # polders_folder_selection = FileChooser(os.getcwd())
+#     # polders_folder_selection.layout.grid_area = "polders_folder"
+
+#     # polders_folder_label = widgets.Label(
+#     #     "Select the folder where multiple polders are situated",
+#     #     layout=item_layout(grid_area="polders_folder_label"),
+#     # )
+
+#     # --------------------------------------------------------------------------------------------------
+#     # 1. Login with 3Di account
+#     # --------------------------------------------------------------------------------------------------
+#     login_label = widgets.HTML(
+#         "<b>1. Login with API keys</b>", layout=item_layout(grid_area="login_label")
+#     )
+
+#     class ApikeyWidget(widgets.Text):
+#         _view_name = Unicode("PasswordView").tag(sync=True)
+
+#     # Api key widgets
+#     lizard_apikey_widget = ApikeyWidget(
+#         description="Lizard key:",
+#         layout=item_layout(width="261px", grid_area="lizard_apikey"),
+#     )
+
+#     threedi_apikey_widget = ApikeyWidget(
+#         description="Threedi Key:",
+#         layout=item_layout(width="261px", grid_area="threedi_apikey"),
+#     )
+
+#     # Login button, after login create threedi api client
+#     login_button = widgets.Button(
+#         description="Login", layout=item_layout(height="30px", grid_area="login_button")
+#     )
+
+#     @login_button.on_click
+#     def login(action):
 #         global sim
 
-#         sim = Simulation(username=self.w.username_widget.value, password=self.w.password_widget.value, api_key=self.lizard_api_key)
+#         sim = Simulation(
+#             api_key=api_keys["threedi"]
+#         )  # username=lizard_apikey_widget.value, password=threedi_apikey_widget.value,
 
 #         try:
 #             sim.logged_in
 #             # Login success
-#             self.w.login_button.style.button_color = "lightgreen"
-#             self.w.login_button.description = "Logged in"
-#             self.w.logout_button.disabled = False
+#             login_button.style.button_color = "lightgreen"
+#             login_button.description = "Logged in"
+#             logout_button.disabled = False
 #         except:
 #             # Login failed
-#             self.w.login_button.style.button_color = "red"
-#             self.w.login_button.description = "Try again"
-#             self.w.logout_button.disabled = True
+#             login_button.style.button_color = "red"
+#             login_button.description = "Try again"
+#             logout_button.disabled = True
 
+#     logout_button = widgets.Button(
+#         description="Logout",
+#         layout=item_layout(height="30px", grid_area="logout_button"),
+#         disabled=True,
+#     )
 
 #     @logout_button.on_click
 #     def logout(action):
 #         global sim
 
-#         username_widget.value = ""
-#         password_widget.value = ""
+#         # lizard_apikey_widget.value = ""
+#         # threedi_apikey_widget.value = ""
 #         sim = None
 
 #         login_button.style.button_color = None
@@ -245,12 +1240,12 @@ class StartCalculationGui:
 #         repository_dropdown.options = slug_list
 
 #     # Polder revision widget
-#     model_revision_label = widgets.Label(
-#         "Model revision:", layout=item_layout(grid_area="model_rev_label")
-#     )
-#     model_revision_widget = widgets.Text(
-#         layout=item_layout(grid_area="model_rev_widget"), disabled=True
-#     )
+#     # model_revision_label = widgets.Label(
+#     #     "Model revision:", layout=item_layout(grid_area="model_rev_label")
+#     # )
+#     # model_revision_widget = widgets.Text(
+#     #     layout=item_layout(grid_area="model_rev_widget"), disabled=True
+#     # )
 
 #     # --------------------------------------------------------------------------------------------------
 #     # 3. Go to model repository and make model visible
@@ -268,12 +1263,12 @@ class StartCalculationGui:
 #     )
 
 #     # Link to model repository (batch only for now)
-#     link_to_model_repository = widgets.HTML(
-#         layout=item_layout(grid_area="link_to_model_repository")
-#     )
+#     # link_to_model_repository = widgets.HTML(
+#     #     layout=item_layout(grid_area="link_to_model_repository")
+#     # )
 
 #     revision_label = widgets.Label(
-#         "3Di model: ", layout=item_layout(grid_area="revision_label")
+#         "3Di basis model: ", layout=item_layout(grid_area="revision_label")
 #     )
 #     revision_dropdown = widgets.Dropdown(
 #         layout=item_layout(grid_area="revision_dropdown")
@@ -945,7 +1940,7 @@ class StartCalculationGui:
 
 #         # Find all models in the specified repository which are not disabled (due to maximum available revisions)
 #         model_list = sim.threedi_api.threedimodels_list(
-#             revision__schematisation__id=selected_repository.id, disabled=False, limit=1000
+#             slug__icontains=selected_repository["new"], disabled=False, limit=1000
 #         ).results
 #         revision_numbers = []
 #         revisions = []
@@ -953,10 +1948,10 @@ class StartCalculationGui:
 #         # Add revision numbers of available models to the revision number list
 #         for model in model_list:
 #             if model.revision_number not in revision_numbers:
-#                 revision_string = f"{model.revision_number} ({model.revision_commit_date[:19]})".format()
+#                 revision_string = f"{model.revision_number} - {model.revision_commit_date[:19]} - {model.user}".format()
 #                 revisions.insert(0, revision_string)
 
-#         #TODO sorting by revision number removed, may need to be checked
+#         # TODO sorting by revision number removed, may need to be checked
 #         # revision_numbers.sort()
 
 #         revision_dropdown.options = revisions
@@ -972,46 +1967,56 @@ class StartCalculationGui:
 #         except:
 #             pass
 
-#         revision_number = str.split(selected_revision)[0]
+#         # revision_number = str.split(selected_revision)[0]
 
 #         # Search for models within selected revision
 #         model_list = sim.threedi_api.threedimodels_list(
-#             slug__startswith=repository_dropdown.value,
-#             revision__number=revision_number,
+#             name__startswith=polder_name_widget.value,
+#             # revision__number=revision_number,
 #             limit=100,
 #         ).results
-#         models = []
+#         model_list_rev = [
+#             f"{model.revision_number}@{model.name}" for model in model_list
+#         ]
+#         model_list = [model.name for model in model_list]
 
-#         for model in model_list:
-#             models.append(model.name)
+#         models = {v: [] for v in ["glg", "ggg", "ghg"]}
+#         for model in model_list_rev:
 
-#         model_name_dropdown.options = models
-#         model_name_glg_dropdown.options = models
-#         model_name_ggg_dropdown.options = models
-#         model_name_ghg_dropdown.options = models
+#             if "glg" in model:
+#                 models["glg"].append(model)
+#             if "ggg" in model:
+#                 models["ggg"].append(model)
+#             if "ghg" in model:
+#                 models["ghg"].append(model)
 
-#         # Select glg, ggg, ghg for batch download. Select None if multiple found.
-#         def analyze_options(options, search_str):
-#             """if more than one option, return None"""
-#             options = [a for a in options if search_str in a]
-#             if len(options) != 1:
-#                 return None
-#             else:
-#                 return options[0]
+#         model_name_dropdown.options = model_list
+#         model_name_glg_dropdown.options = models["glg"]
+#         model_name_ggg_dropdown.options = models["ggg"]
+#         model_name_ghg_dropdown.options = models["ghg"]
 
-#         model_name_glg_dropdown.value = analyze_options(
-#             options=model_name_glg_dropdown.options, search_str="glg"
-#         )
-#         model_name_ggg_dropdown.value = analyze_options(
-#             options=model_name_ggg_dropdown.options, search_str="ggg"
-#         )
-#         model_name_ghg_dropdown.value = analyze_options(
-#             options=model_name_ghg_dropdown.options, search_str="ghg"
-#         )
+#         # # Select glg, ggg, ghg for batch download. Select None if multiple found.
+#         # def analyze_options(options, search_str):
+#         #     """if more than one option, return None"""
+#         #     options = [a for a in options if search_str in a]
+#         #     if len(options) != 1:
+#         #         return None
+#         #     else:
+#         #         return options[0]
+
+#         # model_name_glg_dropdown.value = analyze_options(
+#         #     options=model_name_glg_dropdown.options, search_str="glg"
+#         # )
+#         # model_name_ggg_dropdown.value = analyze_options(
+#         #     options=model_name_ggg_dropdown.options, search_str="ggg"
+#         # )
+#         # model_name_ghg_dropdown.value = analyze_options(
+#         #     options=model_name_ghg_dropdown.options, search_str="ghg"
+#         # )
 
 #         # update the scenario name
-#         update_scenario_name_widget()
-#         update_batch_scenario_name_widget()
+#         # update_scenario_name_widget()
+#         # update_batch_scenario_name_widget()
 #         update_create_simulation_button()
 #         update_start_batch_button()
 
@@ -1301,7 +2306,7 @@ class StartCalculationGui:
 #             if (
 #                 repository_dropdown.value is not None
 #                 and revision_dropdown.value is not None
-#                 and model_name_dropdown.value is not None
+#                 # and model_name_dropdown.value is not None #FIXME tijdelijk uitgezet voor starten heemskerk
 #                 # and sqlite_selection.selected is not None
 #             ):
 #                 create_simulation_button.disabled = False
@@ -1375,11 +2380,11 @@ class StartCalculationGui:
 
 #         scenario_name = scenario_name_widget.value
 
-#         output_folder = os.path.join(
-#             str(scenarios["folder"].threedi_results),
-#             scenarios["selected_folder"],
-#             scenario_name_widget.value,
-#         )
+#         # output_folder = os.path.join(
+#         #     str(scenarios["folder"].threedi_results),
+#         #     scenarios["selected_folder"],
+#         #     scenario_name_widget.value,
+#         # )
 #         organisation_uuid = organisation_uuid = API_SETTINGS["org_uuid"][
 #             organisation_box.value
 #         ]
@@ -1391,11 +2396,17 @@ class StartCalculationGui:
 #         model_id = None
 #         if len(models) != 1:
 #             print("No, or more than 1 model found")
-#             print(models)
 #         else:
 #             model_id = models[0].id
 
 #         sqlite = sqlite_selection.selected
+
+#         output_folder = os.path.join(
+#             str(scenarios["folder"].threedi_results),
+#             scenarios["selected_folder"],
+#             scenario_name_widget.value,
+#         ) #FIXME dubbel, staat ook in def start_simulation(wait_to_download=0)
+
 #         simulation = create_threedi_simulation(
 #             sim=sim,
 #             sqlite_file=sqlite,
@@ -1412,6 +2423,7 @@ class StartCalculationGui:
 #             basic_processing=basic_processing,
 #             damage_processing=damage_processing,
 #             arrival_processing=arrival_processing,
+#             output_folder=output_folder,
 #         )
 #         update_API_call_widget_v3(simulation)
 #         update_available_results()
@@ -1424,8 +2436,8 @@ class StartCalculationGui:
 #     def disable_input(disable=True):
 
 #         widgets = [
-#             username_widget,
-#             password_widget,
+#             lizard_apikey_widget,
+#             threedi_apikey_widget,
 #             login_button,
 #             polder_name_widget,
 #             polder_name_search_button,
@@ -1513,7 +2525,7 @@ class StartCalculationGui:
 
 #         # print("schedule monitoring task")
 
-#         scheduler.add_job(update_start_button, "interval", seconds=10)
+#         scheduler.add_job(update_start_button, IntervalTrigger(timezone="Europe/Amsterdam"), seconds=10)
 #         scheduler.start()  # Start the scheduled job
 
 #     def start_batch_simulation():
@@ -1524,13 +2536,24 @@ class StartCalculationGui:
 #             """return threedi model ids of the selected glg, ggg and ghg model"""
 
 #             def get_model_idx(name):
-#                 revision_number = str.split(revision_dropdown.value)[0]
-#                 results = sim.threedi_api.threedimodels_list(
-#                     slug__startswith=repository_dropdown.value,
-#                     revision__number=revision_number,
-#                     name=name,
-#                     limit=100,
-#                 ).results
+#                 if "ggg" in name or "ghg" in name or "glg" in name:
+#                     revision_number = name.split("@")[0]
+#                     name = name.split("@")[-1]
+#                     results = sim.threedi_api.threedimodels_list(
+#                         revision__number=revision_number,
+#                         name=name,
+#                         limit=100,
+#                     ).results
+
+#                 else:
+#                     revision_number = str.split(revision_dropdown.value)[0]
+#                     results = sim.threedi_api.threedimodels_list(
+#                         slug__startswith=repository_dropdown.value,
+#                         revision__number=revision_number,
+#                         name=name,
+#                         limit=100,
+#                     ).results
+
 #                 if len(results) != 1:
 #                     raise Exception(f"model '{name}' is not unique or not found.")
 #                 else:
@@ -1542,15 +2565,16 @@ class StartCalculationGui:
 #             model_idx["1d2d_ggg"] = get_model_idx(model_name_ggg_dropdown.value)
 #             model_idx["1d2d_ghg"] = get_model_idx(model_name_ghg_dropdown.value)
 
-#             gw = "glg"
-#             if gw not in model_name_glg_dropdown.value:
-#                 raise Exception(f"{gw} Model name should contain {gw}")
-#             gw = "ggg"
-#             if gw not in model_name_ggg_dropdown.value:
-#                 raise Exception(f"{gw} Model name should contain {gw}")
-#             gw = "ghg"
-#             if gw not in model_name_ghg_dropdown.value:
-#                 raise Exception(f"{gw} Model name should contain {gw}")
+#             # TODO batch sommen werkt nog niet met nieuwe schematisaties
+#             # gw = "glg"
+#             # if gw not in model_name_glg_dropdown.value:
+#             #     raise Exception(f"{gw} Model name should contain {gw}")
+#             # gw = "ggg"
+#             # if gw not in model_name_ggg_dropdown.value:
+#             #     raise Exception(f"{gw} Model name should contain {gw}")
+#             # gw = "ghg"
+#             # if gw not in model_name_ghg_dropdown.value:
+#             #     raise Exception(f"{gw} Model name should contain {gw}")
 #             return model_idx
 
 #         model_idx = get_all_model_idx()
@@ -1688,7 +2712,7 @@ class StartCalculationGui:
 #                                             damage_processing=damage_processing,
 #                                             arrival_processing=arrival_processing,
 #                                         )
-#                                     except openapi_client.ApiException:
+#                                     except ApiException:
 #                                         time.sleep(10)
 #                                         continue
 #                                     break
@@ -1711,11 +2735,11 @@ class StartCalculationGui:
 #                                         ] = sim.threedi_api.simulations_events(
 #                                             id=simulation.id
 #                                         )
-#                                     except openapi_client.ApiException:
+#                                     except ApiException:
 #                                         time.sleep(10)
 #                                         continue
 #                                     break
-#                                 # start_3di_calculation(data, json.dumps(data), username_widget.value, password_widget.value, output_folder, apicall_txt, batch=1)
+#                                 # start_3di_calculation(data, json.dumps(data), lizard_apikey_widget.value, threedi_apikey_widget.value, output_folder, apicall_txt, batch=1)
 
 #                             else:
 #                                 print(
@@ -1744,10 +2768,10 @@ class StartCalculationGui:
 #             outfile.write(pprint.pformat(all_api_calls))
 
 #         # start the simulation
-#         for sim in simulations:
+#         for simulation in simulations:
 #             print("Starting all the created simulations")
 #             sim.threedi_api.simulations_actions_create(
-#                 simulation_pk=sim.id, data={"name": "queue"}
+#                 simulation_pk=simulation.id, data={"name": "queue"}
 #             )
 
 #     # --------------------------------------------------------------------------------------------------
@@ -1789,8 +2813,8 @@ class StartCalculationGui:
 #     start_calculation_tab = widgets.GridBox(
 #         children=[
 #             login_label,
-#             username_widget,
-#             password_widget,
+#             lizard_apikey_widget,
+#             threedi_apikey_widget,
 #             login_button,
 #             logout_button,  # 1 login
 #             select_polder_label,
@@ -1842,8 +2866,8 @@ class StartCalculationGui:
 #             grid_template_columns="12% 8% 10% 10% 18% 10% 10% 10% 10%",
 #             grid_template_areas="""
 #             'login_label login_label . select_polder_label select_polder_label get_slug_label get_slug_label get_slug_label get_slug_label'
-#             'username username username polder_name_label polder_name_widget  repository_label repository_dropdown repository_dropdown repository_dropdown'
-#             'password password password . polder_name_search_button revision_label revision_dropdown revision_dropdown revision_dropdown'
+#             'lizard_apikey lizard_apikey lizard_apikey polder_name_label polder_name_widget  repository_label repository_dropdown repository_dropdown repository_dropdown'
+#             'threedi_apikey threedi_apikey threedi_apikey . polder_name_search_button revision_label revision_dropdown revision_dropdown revision_dropdown'
 #             'login_button logout_button . . . model_name_label model_name_dropdown model_name_dropdown model_name_dropdown'
 #             'rain_event_label rain_event_label . . . output_folder_label output_folder_label . .'
 #             '. rain_event_widget rain_event_widget rain_event_widget rain_event_widget output_polder_label output_polder_dropdown output_polder_dropdown output_polder_dropdown'
@@ -1869,8 +2893,8 @@ class StartCalculationGui:
 #     start_batch_calculation_tab = widgets.GridBox(
 #         children=[
 #             login_label,
-#             username_widget,
-#             password_widget,
+#             lizard_apikey_widget,
+#             threedi_apikey_widget,
 #             login_button,
 #             logout_button,  # 1 login
 #             select_polder_label,
@@ -1917,8 +2941,8 @@ class StartCalculationGui:
 #             grid_template_areas="""
 
 #             'login_label login_label . select_polder_label select_polder_label get_slug_label get_slug_label get_slug_label get_slug_label'
-#             'username username username polder_name_label polder_name_widget repository_label repository_dropdown repository_dropdown repository_dropdown'
-#             'password password password . polder_name_search_button revision_label revision_dropdown revision_dropdown revision_dropdown'
+#             'lizard_apikey lizard_apikey lizard_apikey polder_name_label polder_name_widget repository_label repository_dropdown repository_dropdown repository_dropdown'
+#             'threedi_apikey threedi_apikey threedi_apikey . polder_name_search_button revision_label revision_dropdown revision_dropdown revision_dropdown'
 #             'login_button logout_button . . . model_name_glg_label model_name_glg_dropdown model_name_glg_dropdown model_name_glg_dropdown'
 #             '. . . . . model_name_ggg_label model_name_ggg_dropdown model_name_ggg_dropdown model_name_ggg_dropdown'
 #             '. . . . . model_name_ghg_label model_name_ghg_dropdown model_name_ghg_dropdown model_name_ghg_dropdown'
@@ -1943,10 +2967,10 @@ class StartCalculationGui:
 #         ),
 #     )
 
-#     # username_widget.value = 'wietse.vangerwen'
-#     # password_widget.value = ''
-#     # polder_name_widget.value= 'Egmond'
-#     #     model_slug_widget.value = 'bwn-assendelft-bwn_assendelft_1d2d_glg-5-e5e6f7f7ed668bed2c896c5d4afc62700ac0e805'
+#     lizard_apikey_widget.value = api_keys["lizard"]
+#     threedi_apikey_widget.value = api_keys["threedi"]
+#     login_button.click()
+#     # polder_name_widget.value= 'Katvoed'
 
 #     update_create_simulation_button()
 #     update_start_simulation_button()
@@ -1956,10 +2980,13 @@ class StartCalculationGui:
 #     tab.set_title(0, "single calculation")
 #     tab.set_title(1, "batch calculation")
 
-#     # return tab
-
-#     # start_calculation_tab = start_calculation_gui(); start_calculation_tab
-#     #     start_calculation_tab
+#     return tab
 
 
-# # %%
+# if __name__ == '__main__':
+#     data = {'polder_folder': 'E:\\02.modellen\\model_test_v2',
+#  'api_keys_path': 'C:\\Users\\wvangerwen\\AppData\\Roaming\\3Di\\QGIS3\\profiles\\default\\python\\plugins\\hhnk_threedi_plugin\\api_key.txt'}
+#     start_calculation_tab = start_calculation_gui(data=data); 
+#     start_calculation_tab
+
+

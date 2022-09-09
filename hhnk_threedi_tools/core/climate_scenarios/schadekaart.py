@@ -61,7 +61,7 @@ def main_maak_schadekaart(
 
     # #Loop over windows and calculate results
     for idx, part in parts.iterrows():
-        window = part["window"]
+        window = part["window_readarray"]
 
         window, schade_window_array = bereken_contante_schade_window(
             idx=idx,

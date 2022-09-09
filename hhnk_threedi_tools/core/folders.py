@@ -57,6 +57,7 @@ from hhnk_threedi_tools.variables.api_settings import (
 
 import fiona
 import geopandas as gpd
+import pandas as pd
 
 
 # Globals
@@ -369,7 +370,7 @@ class Folders(Folder):
 
         """
 
-    def __init__(self, base, create=True):
+    def __init__(self, base, create=False):
         super().__init__(base)
 
         print("v9")
@@ -666,10 +667,31 @@ class ModelPathsParent(Folder):
         self.add_file("settings", "model_settings.xlsx", ftype="file")
         self.add_file("settings_default", "model_settings_default.xlsx", ftype="file")
 
-    def add_modelpath(self, name):
+
+        #Load settings excel
+        self.settings_loaded = False
+        self.settings_df = None
+
+    def _add_modelpath(self, name):
         setattr(self, f"schema_{name}", ModelPaths(base=self.base, name=name))
         self.schema_list.append(f"schema_{name}")
         return f"schema_{name}"
+
+
+    def set_modelsplitter_paths(self):
+        """Call this to set the individual schematisations for the splitter."""
+        if self.settings.exists:
+            if not self.settings_loaded: #only read once. #FIXME test this, might cause issues.
+                    self.settings_df = pd.read_excel(self.settings.path, engine="openpyxl")
+                    self.settings_df.set_index("name", drop=False, inplace=True)
+                    self.settings_loaded = True
+
+                    for item_name, row in self.settings_df.iterrows():
+                        self._add_modelpath(name=item_name)
+        else:
+            print(f"Tried to load {self.settings.path}, but it doesnt exist.")
+
+       
 
     def __repr__(self):
         return f"""{self.name} @ {self.path}
@@ -681,7 +703,7 @@ class ModelPathsParent(Folder):
 
 
 class ModelPaths(Folder):
-    """Inidividual model."""
+    """Inidividual model/schematisation."""
 
     def __init__(self, base, name):
         super().__init__(os.path.join(base, name))
@@ -778,12 +800,12 @@ class ModelPaths(Folder):
         else:
             return ""
 
-    def set_database(self, name_or_idx):
+    def set_database(self, name_or_idx): #TODO Deprecated?
         """set the model database with either an index or a name"""
         if type(name_or_idx) == str:
-            self.add_file("database", self.model_path(None, name_or_idx))
+            self.add_file("database", self.model_path(idx=None, name=name_or_idx))
         else:
-            self.add_file("database", self.model_path(name_or_idx, None))
+            self.add_file("database", self.model_path(idx=name_or_idx, name=None))
 
 
 # TODO Deprecated and replaced by ThreediRasters, ready to remove.

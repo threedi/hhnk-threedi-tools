@@ -1230,14 +1230,11 @@ def start_calculation_gui(
         else:
             model_revision = str.split(revision_dropdown.value)[0]
 
-        scenario_name = (
-            base_scenario_name_str
-            + "batch {polder} #{revision} {batch_extra_name}".format(
-                polder=polder_name_widget.value,
-                revision=model_revision,
-                # i=len(scenarios["folder"].threedi_results.batch.revisions),
-                batch_extra_name=batch_scenario_name_widget_extra.value,
-            )
+        scenario_name = base_scenario_name_str + "batch {polder} #{revision} {batch_extra_name}".format(
+            polder=polder_name_widget.value,
+            revision=model_revision,
+            # i=len(scenarios["folder"].threedi_results.batch.revisions),
+            batch_extra_name=batch_scenario_name_widget_extra.value,
         )
 
         # scenario_name = base_scenario_name_str + "{polder} #{revision} {groundwater_type} {rain_type} {rain_scenario} ({i}) {batch_extra_name}".format(
@@ -1674,17 +1671,14 @@ def start_calculation_gui(
                                 model_id = None
                             # model_slug = model_slugs[[a for a in MODEL_TYPES if groundwater_type.lower() in a][0]] #e.g.: select '1d2d_ggg' for 'GGG'
 
-                            scenario_name = (
-                                base_scenario_name_str
-                                + "{polder} #{revision} {groundwater_type} {rain_type} {rain_scenario} ({i}) {batch_extra_name}".format(
-                                    polder=polder_name_widget.value,
-                                    revision=revision_number,
-                                    groundwater_type=groundwater_type,
-                                    rain_type=rain_type,
-                                    rain_scenario=rain_scenario,
-                                    i=i,
-                                    batch_extra_name=batch_scenario_name_widget_extra.value,
-                                )
+                            scenario_name = base_scenario_name_str + "{polder} #{revision} {groundwater_type} {rain_type} {rain_scenario} ({i}) {batch_extra_name}".format(
+                                polder=polder_name_widget.value,
+                                revision=revision_number,
+                                groundwater_type=groundwater_type,
+                                rain_type=rain_type,
+                                rain_scenario=rain_scenario,
+                                i=i,
+                                batch_extra_name=batch_scenario_name_widget_extra.value,
                             )
                             scenario_name = scenario_name.strip()
 
