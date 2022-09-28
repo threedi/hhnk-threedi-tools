@@ -208,6 +208,9 @@ class OneDTwoDTest:
                 for t in timesteps_arr
             ]
 
+            assert timestrings == [1, 3, 15]
+
+
             dem_list, dem_nodata, dem_meta = hrt.load_gdal_raster(self.dem_path)
 
             for timestep, timestr in zip(timesteps_arr, timestrings):
