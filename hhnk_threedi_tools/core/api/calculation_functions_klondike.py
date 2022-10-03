@@ -530,7 +530,7 @@ def create_threedi_simulation(
 
     # add rainfall event
     rain_intensity_mmph = float(rain_intensity)  # mm/hour
-    rain_intensity_mps = rain_intensity_mmph / (1000 * 3600)
+    rain_intensity_mps = rain_intensity_mmph / (1000 * 3600) #m/s
     rain_start_dt = start_datetime + timedelta(
         days=days_dry_start, hours=hours_dry_start
     )

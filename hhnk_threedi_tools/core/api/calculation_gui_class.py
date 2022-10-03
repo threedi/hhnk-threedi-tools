@@ -3,8 +3,8 @@
 import os
 import shutil
 import pprint
-from datetime import datetime
-# %%
+import datetime
+
 
 import requests
 from pathlib import Path
@@ -90,7 +90,7 @@ class StartCalculationWidgets:
         self.model = self.ModelWidgets()
         self.rain = self.RainWidgets(self)
         self.output = self.OutputWidgets()
-        self.settings = self.SettingsWidgets()
+        self.calc_settings = self.CalcSettingsWidgets()
         self.feedback = self.FeedbackWidgets()
         self.start = self.StartWidgets()
 
@@ -216,8 +216,20 @@ class StartCalculationWidgets:
                         description=f"{rscenario}_{rtype}", layout=item_layout(grid_area=f"{rscenario}_{rtype}_button")
                     ))
 
+            #custom rain
+            self.custom_rain_button = widgets.Button(
+                    description=f"custom rain", layout=item_layout(grid_area=f"custom_rain_button")
+                )
+
+            self.custom_rain_label = widgets.Label("Rain string format [offset[h], duration[h], value [mm/hour]; offset, dur...]", 
+                                                    layout=item_layout(grid_area="custom_rain_label"))
+            self.custom_rain_text = widgets.Text(layout=item_layout(grid_area="custom_rain_text"), continuous_update=False)
+
+
             self.widget_class = self.caller.RainEventWidget()
             self.rain_event_widget = self.widget_class.rain_event_widget
+
+
 
     class RainEventWidget():
         def __init__(self):
@@ -247,7 +259,7 @@ class StartCalculationWidgets:
             self.rain_intensity_slider=self._create_float_slider(
                     4.167, 0, 100, 0.01, style, "rain [mm/hour]",
                 )
-                
+
             # Comebine plot and sliders
             self.rain_event_widget = widgets.interactive(
                 self.plot_rain_event,
@@ -292,6 +304,7 @@ class StartCalculationWidgets:
                 plt.ylabel(ylabel)
                 ax.grid()
                 return fig, ax
+
 
             # Create timeseries
             dt = 1 / 24
@@ -376,6 +389,7 @@ class StartCalculationWidgets:
             fig, ax = create_plot(
                 time, rain, "Rain event", "Time [days]", "Rain intensity [mm/hour]"
             )
+
             # fig.show()
         
 
@@ -410,6 +424,8 @@ class StartCalculationWidgets:
             )
 
 
+
+
     class OutputWidgets():
         def __init__(self):
             self.label = widgets.HTML(
@@ -438,26 +454,26 @@ class StartCalculationWidgets:
                 )
 
 
-    class SettingsWidgets():
+    class CalcSettingsWidgets():
         def __init__(self):
             self.label = widgets.HTML(
-                    "<b>6. Select settings to include</b>", layout=item_layout(grid_area="settings_label")
+                    "<b>6. Select settings to include</b>", layout=item_layout(grid_area="calc_settings_label")
                 )
 
             self.basic_processing = widgets.ToggleButton(
-                    value=False, description="basic processing", layout=item_layout(grid_area="settings_basic_processing"), icon="plus"
+                    value=False, description="basic processing", layout=item_layout(grid_area="calc_settings_basic_processing"), icon="plus"
                 )
             self.damage_processing = widgets.ToggleButton(
-                    value=False, description="damage processing", layout=item_layout(grid_area="settings_damage_processing"), icon="plus"
+                    value=False, description="damage processing", layout=item_layout(grid_area="calc_settings_damage_processing"), icon="plus"
                 )
             self.arrival_processing = widgets.ToggleButton(
-                    value=False, description="arrival processing", layout=item_layout(grid_area="settings_arrival_processing"), icon="plus"
+                    value=False, description="arrival processing", layout=item_layout(grid_area="calc_settings_arrival_processing"), icon="plus"
                 )
             self.structure_control = widgets.ToggleButton(
-                    value=True, description="structure control", layout=item_layout(grid_area="settings_structure_control"), icon="check"
+                    value=True, description="structure control", layout=item_layout(grid_area="calc_settings_structure_control"), icon="check"
                 )
             self.laterals = widgets.ToggleButton(
-                    value=True, description="laterals", layout=item_layout(grid_area="settings_laterals"), icon="check"
+                    value=True, description="laterals", layout=item_layout(grid_area="calc_settings_laterals"), icon="check"
                 )
 
             self.children = [self.basic_processing, 
@@ -577,11 +593,12 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
         self.model.revision_dropdown.observe(on_select_revision, names="value")
 
 
-        #Select sqlite
+        #Select sqlite - deprecated, sqlite is downloaded from api.
         # def on_select_sqlite(selected_sqlite):
         #     self.update_folder(schema_viewname=selected_sqlite["new"])
         
         # self.model.sqlite_dropdown.observe(on_select_sqlite, names="value")
+
 
 
         @self.rain.test_0d1d_button.on_click
@@ -598,7 +615,7 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
             )
             self._activate_button_color(self.rain.test_0d1d_button)
             self.output.subfolder_box.value =self.output.subfolder_box.options[1]
-            self._update_settings_buttons(structure_control=False, laterals=True)
+            self._update_calc_settings_buttons(structure_control=False, laterals=True)
             # update_scenario_name_widget()
 
 
@@ -611,11 +628,11 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
                 hours_rain=2,
                 days_dry_end=0,
                 hours_dry_end=12,
-                rain_intensity=426 / 24,
+                rain_intensity=17.75,
             )
             self._activate_button_color(self.rain.test_1d2d_button)
             self.output.subfolder_box.value =self.output.subfolder_box.options[0]
-            self._update_settings_buttons(structure_control=True, laterals=True)
+            self._update_calc_settings_buttons(structure_control=True, laterals=True)
 
             # update_scenario_name_widget()
 
@@ -629,11 +646,11 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
                 hours_rain=1,
                 days_dry_end=0,
                 hours_dry_end=0,
-                rain_intensity=2400 / 24,
+                rain_intensity=100,
             )
             self._activate_button_color(self.rain.test_hour_button)
             self.output.subfolder_box.value =self.output.subfolder_box.options[0]
-            self._update_settings_buttons(structure_control=True, laterals=True)
+            self._update_calc_settings_buttons(structure_control=True, laterals=True)
 
             # update_scenario_name_widget(" 1hour")
 
@@ -643,7 +660,7 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
                                                                 rain_scenario='T10')
             self._activate_button_color(self.rain.T10_blok_button)
             self.output.subfolder_box.value =self.output.subfolder_box.options[0]
-            self._update_settings_buttons(structure_control=True, laterals=True)
+            self._update_calc_settings_buttons(structure_control=True, laterals=True)
 
         @self.rain.T100_blok_button.on_click
         def change_rain(action):
@@ -651,7 +668,7 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
                                                                 rain_scenario='T100')
             self._activate_button_color(self.rain.T100_blok_button)
             self.output.subfolder_box.value =self.output.subfolder_box.options[0]
-            self._update_settings_buttons(structure_control=True, laterals=True)
+            self._update_calc_settings_buttons(structure_control=True, laterals=True)
 
         @self.rain.T1000_blok_button.on_click
         def change_rain(action):
@@ -659,7 +676,7 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
                                                                 rain_scenario='T1000')
             self._activate_button_color(self.rain.T1000_blok_button)
             self.output.subfolder_box.value =self.output.subfolder_box.options[0]
-            self._update_settings_buttons(structure_control=True, laterals=True)
+            self._update_calc_settings_buttons(structure_control=True, laterals=True)
 
         @self.rain.T10_piek_button.on_click
         def change_rain(action):
@@ -667,7 +684,7 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
                                                                 rain_scenario='T10')
             self._activate_button_color(self.rain.T10_piek_button)
             self.output.subfolder_box.value =self.output.subfolder_box.options[0]
-            self._update_settings_buttons(structure_control=True, laterals=True)
+            self._update_calc_settings_buttons(structure_control=True, laterals=True)
 
         @self.rain.T100_piek_button.on_click
         def change_rain(action):
@@ -675,7 +692,7 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
                                                                 rain_scenario='T100')
             self._activate_button_color(self.rain.T100_piek_button)
             self.output.subfolder_box.value =self.output.subfolder_box.options[0]
-            self._update_settings_buttons(structure_control=True, laterals=True)
+            self._update_calc_settings_buttons(structure_control=True, laterals=True)
 
         @self.rain.T1000_piek_button.on_click
         def change_rain(action):
@@ -683,14 +700,35 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
                                                                 rain_scenario='T1000')
             self._activate_button_color(self.rain.T1000_piek_button)
             self.output.subfolder_box.value =self.output.subfolder_box.options[0]
-            self._update_settings_buttons(structure_control=True, laterals=True)
+            self._update_calc_settings_buttons(structure_control=True, laterals=True)
+
+        @self.rain.custom_rain_button.on_click
+        def update_custom_rain_text(action):
+            rain_intensity_mmph = float(self.rain.widget_class.rain_intensity_slider.value)  # mm/hour
+            start_datetime = datetime.datetime(2000, 1, 1, 0, 0)
+
+            rain_start_dt = start_datetime + datetime.timedelta(
+                    days=self.rain.widget_class.days_dry_start_slider.value, hours=self.rain.widget_class.hours_dry_start_slider.value
+                )
+            rain_end_dt = rain_start_dt + datetime.timedelta(
+                    days=self.rain.widget_class.days_rain_slider.value, hours=self.rain.widget_class.hours_rain_slider.value
+                )
+            duration = (rain_end_dt - rain_start_dt).total_seconds()/3600
+            offset = (rain_start_dt - start_datetime).total_seconds()/3600
+
+            self.rain.custom_rain_text.value = f"{offset},{duration},{rain_intensity_mmph}"
+            self._activate_button_color(self.rain.custom_rain_button)
 
 
-        # Observe all settings buttons
-        for button in self.settings.children:
+        def on_custom_rain_change(rain_text):
+            self.vars.rain_settings_view = rain_text['new']
+        self.rain.custom_rain_text.observe(on_custom_rain_change, names="value")
+
+        # Observe all calculation settings buttons
+        for button in self.calc_settings.children:
             button.observe(self._update_button_icon, "value")
 
-
+    #-- end of __init__ --#
     def update_api_keys(self, api_keys_path):
         self.vars.api_keys = read_api_file(api_keys_path)
         self.login.lizard_apikey_widget.value=self.vars.api_keys["lizard"]
@@ -762,15 +800,16 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
                 self.rain.T10_piek_button,
                 self.rain.T100_piek_button,
                 self.rain.T1000_piek_button,
+                self.rain.custom_rain_button,
             ]:
             button_grey.style.button_color = None
         button.style.button_color = "lightgreen"
 
 
-    def _update_settings_buttons(self, **kwargs):
+    def _update_calc_settings_buttons(self, **kwargs):
         """set buttons for basic_processsing, damage_processing, etc.."""
         for kwarg in kwargs:
-            getattr(self.settings,kwarg).value=kwargs[kwarg]
+            getattr(self.calc_settings,kwarg).value=kwargs[kwarg]
 
 
     def _update_button_icon(self, value):
@@ -823,6 +862,7 @@ class GuiVariables:
         self.sqlite_path = None #Sqlite is downloaded and placed here.
         self.organisations = {}
         self.api_keys = {"lizard":"", "threedi":""}
+        self.rain_settings_view = None #offset[s], duration[s], value[mm/h]
 
         
     @property
@@ -875,8 +915,26 @@ class GuiVariables:
 
     @property
     def organisations_viewlist(self):
-
         return self.organisations.keys()
+
+    @property
+    def rain_settings(self):
+        if self.rain_settings_view is None:
+            return None
+
+        r_settings = []
+        for r in self.rain_settings_view.split(';'):
+            rainsplit = r.split(',')
+            if len(rainsplit) ==3:
+                r_settings.append({
+                    "offset": int(eval(rainsplit[0])*3600), #hours -> seconds
+                    "duration": int(eval(rainsplit[1])*3600), #hours -> seconds
+                    "value": eval(rainsplit[2])/(1000*3600), #mm/hour -> m/s
+                    "units": "m/s",
+                })
+            else:
+                raise Exception(f"Custom rain settings not valid")
+        return r_settings
 
 
 class StartCalculationGui:
@@ -948,17 +1006,22 @@ class StartCalculationGui:
                 self.w.rain.T100_piek_button,
                 self.w.rain.T1000_piek_button,
                 self.w.rain.rain_event_widget,
+            
+                self.w.rain.custom_rain_button,
+                self.w.rain.custom_rain_label,
+                self.w.rain.custom_rain_text,
+                
                 self.w.output.label,
                 self.w.output.folder_label,
                 self.w.output.folder_value,
                 self.w.output.subfolder_label,
                 self.w.output.subfolder_box,
-                self.w.settings.label,
-                self.w.settings.basic_processing,
-                self.w.settings.damage_processing,
-                self.w.settings.arrival_processing,
-                self.w.settings.structure_control,
-                self.w.settings.laterals,
+                self.w.calc_settings.label,
+                self.w.calc_settings.basic_processing,
+                self.w.calc_settings.damage_processing,
+                self.w.calc_settings.arrival_processing,
+                self.w.calc_settings.structure_control,
+                self.w.calc_settings.laterals,
                 self.w.feedback.label,
                 self.w.feedback.widget,
                 self.w.start.label,
@@ -981,13 +1044,14 @@ class StartCalculationGui:
                 '. test_0d1d_button rain_event_widget rain_event_widget rain_event_widget output_folder_label output_folder_value output_folder_value output_folder_value'
                 '. test_1d2d_button rain_event_widget rain_event_widget rain_event_widget output_subfolder_label output_subfolder_box output_subfolder_box output_subfolder_box'
                 '. hour_test_button rain_event_widget rain_event_widget rain_event_widget . . . .'
-                '. . rain_event_widget rain_event_widget rain_event_widget . . . .'
                 '. T10_blok_button rain_event_widget rain_event_widget rain_event_widget . . . .'
-                '. T100_blok_button rain_event_widget rain_event_widget rain_event_widget settings_label settings_label settings_label settings_label'
-                '. T1000_blok_button rain_event_widget rain_event_widget rain_event_widget . settings_basic_processing settings_damage_processing settings_arrival_processing' 
-                '. T10_piek_button rain_event_widget rain_event_widget rain_event_widget . settings_structure_control settings_laterals .' 
+                '. T100_blok_button rain_event_widget rain_event_widget rain_event_widget calc_settings_label calc_settings_label calc_settings_label calc_settings_label'
+                '. T1000_blok_button rain_event_widget rain_event_widget rain_event_widget . calc_settings_basic_processing calc_settings_damage_processing calc_settings_arrival_processing' 
+                '. T10_piek_button rain_event_widget rain_event_widget rain_event_widget . calc_settings_structure_control calc_settings_laterals .' 
                 '. T100_piek_button rain_event_widget rain_event_widget rain_event_widget . . . .' 
                 '. T1000_piek_button rain_event_widget rain_event_widget rain_event_widget . . . .' 
+                '. . custom_rain_label custom_rain_label custom_rain_label . . . .' 
+                '. custom_rain_button custom_rain_text custom_rain_text custom_rain_text . . . .'
                 '. feedback_label . . . . . start_label start_label'
                 '. feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget create_simulation_button create_simulation_button'
                 '. feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget start_button start_button'
@@ -2990,3 +3054,5 @@ if __name__ == '__main__':
 #     start_calculation_tab
 
 
+
+# %%
