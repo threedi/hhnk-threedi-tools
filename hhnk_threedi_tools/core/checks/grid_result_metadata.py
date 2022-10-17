@@ -6,7 +6,7 @@ def calculate_rain_days(rain):
     """
     Calculates days dry before and after rain
     """
-    detected_rain = [i for i, e in enumerate(rain) if e > 0.00001]
+    detected_rain = [i for i, e in enumerate(rain) if e > 0.0001]
     # Collect indexes of items in rain where rain falls (every index represents an hour)
     if detected_rain:
         # Detected rain[0] is the first index where rain occurs, so the last dry

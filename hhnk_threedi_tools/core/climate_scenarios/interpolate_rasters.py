@@ -96,7 +96,7 @@ def interpoleer_raster_window(
 ):
     """Interpolatie van rasters voor een berekening over meerdere cores"""
     # Bepaal window
-    window = part["window"]
+    window = part["window_readarray"]
 
     # Laad waterdieptes
     stacked_raster_array = stack_raster_arrays(

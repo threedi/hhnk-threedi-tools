@@ -698,7 +698,7 @@ def add_nodes_area(fixeddrainage, conn_nodes_geo):
             fixeddrainage,
             conn_nodes_geo,
             how="left",
-            op="intersects",  # FIXME future version this will be 'predicate'
+            op="intersects",  # FIXME in future pythion version this will be 'predicate'
             lsuffix="fd",
             rsuffix="conn",
         )

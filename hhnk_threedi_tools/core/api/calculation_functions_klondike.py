@@ -308,6 +308,8 @@ def create_threedi_simulation(
     basic_processing,
     damage_processing,
     arrival_processing,
+    use_structure_control,
+    use_laterals,
     output_folder,
 ):  # , days_dry_start, hours_dry_start, days_rain, hours_rain, days_dry_end, hours_dry_end, rain_intensity, organisation_uuid, model_slug, scenario_name, store_results):
     """
@@ -439,9 +441,9 @@ def create_threedi_simulation(
     )
 
     if sqlite_file is not None:
-        if "0d1d_test" not in scenario_name: #FIXME betere oplossing voor maken.
-            # add control structures (from sqlite)
+        if use_structure_control:
             add_control_from_sqlite(sim, sqlite_file, simulation)
+        if use_laterals:
             add_laterals_from_sqlite(sim, sqlite_file, simulation)
 
 
@@ -528,7 +530,7 @@ def create_threedi_simulation(
 
     # add rainfall event
     rain_intensity_mmph = float(rain_intensity)  # mm/hour
-    rain_intensity_mps = rain_intensity_mmph / (1000 * 3600)
+    rain_intensity_mps = rain_intensity_mmph / (1000 * 3600) #m/s
     rain_start_dt = start_datetime + timedelta(
         days=days_dry_start, hours=hours_dry_start
     )
@@ -576,7 +578,7 @@ def create_threedi_simulation(
 
     # Arrival time
     if arrival_processing:
-        arrival_processing_data = {"basic_post_processing": True}
+        arrival_processing_data = {"arrival_time": True} #TODO check if works? was: {"basic_post_processing": True}
         add_to_simulation(
             sim.threedi_api.simulations_results_post_processing_lizard_arrival_create,
             simulation_pk=simulation.id,
@@ -827,7 +829,7 @@ def wait_to_download_results(
 if __name__ == "__main__":
     #Test
     from hhnk_threedi_tools.core.api.calculation import Simulation
-    sim = Simulation("MrQsALQY.NzTqxGhMnPr0CwYh3jWe4egKvJlDLgDc")
+    sim = Simulation("")
     sqlite_file = r"E:\02.modellen\Heemkerkerdui_Recalculation_v3\02_schematisation\00_basis\Heemkerkerduin_Recalculatio22.sqlite"
     scenario_name = "test"
     model_id = 3946

@@ -40,8 +40,6 @@ class Simulation:
 
     def __init__(
         self,
-        # username: str,
-        # password: str,
         api_key: str,
         start_time: datetime = datetime(2000, 1, 1, 0, 0),
         end_time: datetime = datetime(2000, 1, 2, 0, 0),
