@@ -26,7 +26,7 @@ RAIN_INTENSITY["piek"]["T100"] = "55.7 / 2"  # mm/hour
 RAIN_INTENSITY["piek"]["T1000"] = "80.5 / 2"  # mm/hour
 
 RAIN_TYPES = ["piek", "blok"]
-GROUNDWATER = ["GLG", "GGG", "GHG"]
+GROUNDWATER = ["glg", "ggg", "ghg"]
 RAIN_SCENARIOS = ["T10", "T100", "T1000"]
 
 # Dict with uuids for the organisation. Organisation names are equal to the

@@ -1,4 +1,4 @@
-# %% TODO UNDER CONSTRUCTION
+# %%
 # system imports
 import os
 import datetime
@@ -55,6 +55,7 @@ class StartCalculationWidgets:
         self.login = self.LoginWidgets()
         self.model = self.ModelWidgets()
         self.rain = self.RainWidgets(self)
+        self.batch = self.BatchRainSchemaWidgets()
         self.output = self.OutputWidgets()
         self.calc_settings = self.CalcSettingsWidgets()
         self.feedback = self.FeedbackWidgets()
@@ -105,6 +106,10 @@ class StartCalculationWidgets:
                     layout=item_layout(height="30px", grid_area="model_name_search_button"),
                 )
 
+            self.search_button_batch = widgets.Button(
+                    description="Search",
+                    layout=item_layout(height="30px", grid_area="search_button_batch"),
+                )
 
 
             #Selecting the schematisation, rev and sqlite
@@ -141,6 +146,34 @@ class StartCalculationWidgets:
                 layout=item_layout(height="60px", grid_area="organisation_box"),
             )
 
+            #Batch requires 3x schema revision and model.
+            for gxg in GROUNDWATER:
+                setattr(self, f"schema_label_{gxg}", 
+                    widgets.Label(
+                        f"Schematisation {gxg}:", layout=item_layout(grid_area=f"schema_label_{gxg}")
+                        )
+                    )
+                setattr(self, f"schema_dropdown_{gxg}", 
+                    widgets.Dropdown(
+                        layout=item_layout(grid_area=f"schema_dropdown_{gxg}")
+                        )
+                    )
+                setattr(self, f"schema_view_{gxg}", 
+                    widgets.HTML("",
+                        layout=item_layout(grid_area=f"schema_view_{gxg}")
+                        )
+                    )
+                setattr(self, f"revision_dropdown_{gxg}", 
+                    widgets.Dropdown(
+                        layout=item_layout(grid_area=f"revision_dropdown_{gxg}")
+                        )
+                    )
+                setattr(self, f"threedimodel_dropdown_{gxg}", 
+                    widgets.Dropdown(
+                        disabled=True,
+                        layout=item_layout(grid_area=f"threedimodel_dropdown_{gxg}")
+                        )
+                    )
 
             # self.sqlite_label = widgets.Label(
             #         "Select sqlite containing structure control rules",
@@ -338,6 +371,88 @@ class StartCalculationWidgets:
 
 
 
+    class BatchRainSchemaWidgets():
+        def __init__(self):
+
+            #Searching for the schema on 3Di servers.
+            self.label = widgets.HTML("<b>4. Select scenarios to be run</b>",
+                    layout=item_layout(grid_area="batch_scenario_label"),
+                )
+
+            self.scenario_toggle = {}
+
+            # add togglebutton for every scenario (T10, T100, T1000)
+            for rs in RAIN_SCENARIOS: 
+                self.scenario_toggle[rs] = {}
+                # add togglebutton for Gxg
+                for gxg in GROUNDWATER:
+                    self.scenario_toggle[rs][gxg] = widgets.ToggleButton(
+                            value=True, layout=item_layout(), icon="check"
+                        )
+
+            row_widget={}
+            calc_scenarios={}
+            for row in RAIN_SCENARIOS: 
+                # loop over groundwater conditions (first entry is for headers)
+                row_widget[row] ={}
+                for col in GROUNDWATER:
+                    row_widget[row][col] = self.scenario_toggle[row][col]
+
+                #rain scenario label
+                calc_scenarios[row] = widgets.HBox(
+                    # (widgets.HTML("<b>{}</b>".format(row), layout=item_layout(width="100%")),),
+                    layout=item_layout(width="100%")
+                ) 
+                        
+                for key in row_widget[row]:
+                    calc_scenarios[row].children += (row_widget[row][key],)
+
+
+                # calc_scenarios[row] = widgets.HBox(
+                #     [row_widget[col] for col in row_widget], layout=item_layout()
+                # ) 
+
+                # #Add GxG label
+                # calc_scenarios[row].children += (
+                #     widgets.HTML("<b>{}</b>".format(row), layout=item_layout()),
+                #     )
+
+            self.gxg_label_box = widgets.HBox(
+                layout=item_layout(grid_area="gxg_label_box", width="100%"),
+            )
+            for row in GROUNDWATER: 
+                self.gxg_label_box.children += (
+                    widgets.HTML("<b><center>{}</center></b>".format(row), 
+                    layout=item_layout()),
+                    )
+
+            self.rain_label_box = widgets.VBox(
+                layout=item_layout(grid_area="rain_label_box", width="100%"),
+            )
+            for row in RAIN_SCENARIOS: 
+                self.rain_label_box.children += (
+                    widgets.HTML("<b>{}</b>".format(row), layout=item_layout()),
+                    )
+            
+
+            
+            #Buttons for T10,T100,T1000, GxG
+            self.scenario_box = widgets.VBox(
+                    [calc_scenarios[row] for row in calc_scenarios],
+                    layout=item_layout(grid_area="batch_scenario_box", width="100%"),
+                )
+
+            # buttons for Piek and Blok
+            self.rain_type_widgets = {}
+            for rain_type in RAIN_TYPES:
+                self.rain_type_widgets[rain_type] = widgets.ToggleButton(
+                    value=True, description=rain_type, layout=item_layout(), icon="check"
+                )
+            self.rain_type_box = widgets.HBox(
+                [self.rain_type_widgets[t] for t in self.rain_type_widgets],
+                layout=item_layout(grid_area="batch_rain_type_box"),)
+
+
     class OutputWidgets():
         def __init__(self):
             self.label = widgets.HTML(
@@ -365,6 +480,11 @@ class StartCalculationWidgets:
                     layout=item_layout(grid_area="output_subfolder_box"),
                 )
 
+            self.folder_value_batch = widgets.Text(
+                                '', 
+                                disabled=True,
+                                layout=item_layout(grid_area="output_folder_value_batch"),
+                            )
 
     class CalcSettingsWidgets():
         def __init__(self):
@@ -398,7 +518,7 @@ class StartCalculationWidgets:
     class FeedbackWidgets():
         def __init__(self):
             self.label = widgets.HTML(
-                    "<b>6. API call</b>", layout=item_layout(grid_area="feedback_label")
+                    "<b>6. Feedback</b>", layout=item_layout(grid_area="feedback_label")
                 )
 
             # API call HTML widget that shows the API call
@@ -421,7 +541,6 @@ class StartCalculationWidgets:
                     layout=item_layout(grid_area="simulation_name_widget")
                 )
 
-
             self.create_simulation_button = widgets.Button(
                     description="Create simulation",
                     layout=item_layout(height="90%", grid_area="create_simulation_button"),
@@ -433,6 +552,22 @@ class StartCalculationWidgets:
                     layout=item_layout(height="90%", grid_area="start_button"),
                 )
 
+            #Batch
+            self.simulation_batch_name_widget = widgets.Text(
+                    value="{schema_name} #{rev} {rt}_{gxg}_{rs} ({i})",
+                    layout=item_layout(grid_area="simulation_batch_name_widget")
+                )
+
+            self.check_batch_input_button = widgets.Button(
+                    description="Check input",
+                    layout=item_layout(height="90%", grid_area="check_batch_input_button"),
+                )
+
+            self.start_batch_button = widgets.Button(
+                    description="Start batch simulation",
+                    disabled=True,
+                    layout=item_layout(height="90%", grid_area="start_batch_button"),
+                )
 
 class StartCalculationWidgetsInteraction(StartCalculationWidgets):
     def __init__(self, caller):
@@ -457,27 +592,15 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
 
         #Search schematisations
         @self.model.search_button.on_click
-        def search_models(action):
-            schematisations = self.sim.threedi_api.schematisations_list(
-                slug__icontains=self.model.schema_name_widget.value, limit=RESULT_LIMIT
-            ).results
-
-            self.vars.schematisations={}
-            for result in schematisations:  
-                self.vars.schematisations[result.id] = result
-
-
-            organisations = self.sim.threedi_api.organisations_list().results
-            self.vars.organisations = {}
-            for org in organisations:
-                self.vars.organisations[org.name] = org
-
+        def search(action):
+            self.search_models()
 
             #TODO add check of available calc cores. self.vars.sim.threedi_api.statuses_statistics(simulation__organisation__unique_id='48dac75bef8a42ebbb52e8f89bbdb9f2', simulation__type__live=True)
 
-            self.update_dropdowns(schema=True)
+            self.update_dropdowns(batch=False, schema=True)
             self.update_organisations()
-            
+
+
 
         #Search revisions
         def on_select_schematisation(selected_schematisation):
@@ -498,7 +621,7 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
             for threedimodel in threedimodels:  
                 self.vars.threedimodels[threedimodel.revision_id] = threedimodel 
 
-            self.update_dropdowns(revision=True, threedimodel=True)
+            self.update_dropdowns(batch=False, revision=True, threedimodel=True)
 
         self.model.schema_dropdown.observe(on_select_schematisation, names="value")
 
@@ -634,8 +757,7 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
         def create_simulation(action):
             sim_create_status, sim_message = self.check_create_simulation()
             if  not sim_create_status:
-                with self.feedback.widget:
-                    print(f"{self.vars.time_now} ERROR - {sim_message}")
+                self.add_feedback("ERROR", sim_message)
                 return 
 
 
@@ -644,10 +766,9 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
                 self.sim.simulation = None
                 self.sim.simulation_created = False
                 self.update_create_simulation_button()
-                self.update_start_simulation_button(disabled=True)
+                self.update_start_simulation_button(disabled=True, button=self.start.start_button)
 
-                with self.feedback.widget:
-                    print(f"{self.vars.time_now} - Simulation widget reset.")
+                self.add_feedback("INFO", "Simulation widget reset.")
                 return
 
             self.feedback.widget.clear_output()
@@ -692,7 +813,7 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
 
             self.update_simulation_feedback()
             self.update_create_simulation_button()
-            self.update_start_simulation_button(disabled=False)
+            self.update_start_simulation_button(disabled=False, button=self.start.start_button)
 
 
         @self.start.start_button.on_click
@@ -700,7 +821,7 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
             #start simulation
             self.vars.sim.start()
 
-            self.update_start_simulation_button(disabled=True)
+            self.update_start_simulation_button(disabled=True, button=self.start.start_button)
 
             with self.feedback.widget:
                 print(f"{self.vars.time_now} - Simulation (hopefully) started or queued.\n\
@@ -714,7 +835,97 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
                     )
                 )
 
+
+        #-- #%%^^%%# --# BATCH interactions #-- #%%^^%%# --# 
+        #Search schematisations
+        @self.model.search_button_batch.on_click
+        def search(action):
+            self.search_models()
+
+
+            #TODO add check of available calc cores. self.vars.sim.threedi_api.statuses_statistics(simulation__organisation__unique_id='48dac75bef8a42ebbb52e8f89bbdb9f2', simulation__type__live=True)
+
+            self.update_dropdowns(batch=True, schema=True)
+            self.update_organisations()
+
+
+        #Search revisions
+        def on_select_schematisation_gxg(selected_schematisation, gxg):
+            if self.selected_schema_id_gxg(gxg):
+                """Update revisions options when repository/schematisation is selected"""
+                revisions = self.sim.threedi_api.schematisations_revisions_list(
+                        schematisation_pk=self.selected_schema_id_gxg(gxg), limit=RESULT_LIMIT #selected_schematisation['new'].split(' -')[0]
+                    ).results
+            else:
+                revisions = []
+
+            self.vars.revisions_gxg[gxg] = {}
+            for revision in revisions:  
+                self.vars.revisions_gxg[gxg][revision.id] = revision #vars.schema_results is empty dict
+
+            if self.selected_schema_id_gxg(gxg):
+                threedimodels = self.sim.threedi_api.threedimodels_list(
+                        revision__schematisation__id=self.selected_schema_id_gxg(gxg), limit=RESULT_LIMIT
+                    ).results
+            else:
+                threedimodels = []
+
+            self.vars.threedimodels_gxg[gxg] = {}
+            for threedimodel in threedimodels:  
+                self.vars.threedimodels_gxg[gxg][threedimodel.revision_id] = threedimodel 
+
+            self.update_dropdowns(batch=True, revision=True, threedimodel=True)
+
+            #update views of schematisations
+            if getattr(self.model, f"schema_dropdown_{gxg}").value is not None:
+                getattr(self.model, f"schema_view_{gxg}").value = getattr(self.model, f"schema_dropdown_{gxg}").value
+            else:
+                getattr(self.model, f"schema_view_{gxg}").value = ""
+
+
+        self.model.schema_dropdown_glg.observe(lambda change: on_select_schematisation_gxg(change, "glg"), 'value', type='change')
+        self.model.schema_dropdown_ggg.observe(lambda change: on_select_schematisation_gxg(change, "ggg"), 'value', type='change')
+        self.model.schema_dropdown_ghg.observe(lambda change: on_select_schematisation_gxg(change, "ghg"), 'value', type='change')
+
+
+        #Search model with revision
+        def on_select_revision_gxg(selected_revision, gxg):
+            """Update revisions options when repository/schematisation is selected"""
+            getattr(self.model, f"threedimodel_dropdown_{gxg}").value = self.vars.threedimodel_dropdown_viewlist_gxg[gxg][self.vars.revision_dropdown_viewlist_gxg[gxg].index(selected_revision['new'])]
+
+        self.model.revision_dropdown_glg.observe(lambda change: on_select_revision_gxg(change, "glg"), 'value', type='change')
+        self.model.revision_dropdown_ggg.observe(lambda change: on_select_revision_gxg(change, "ggg"), 'value', type='change')
+        self.model.revision_dropdown_ghg.observe(lambda change: on_select_revision_gxg(change, "ghg"), 'value', type='change')
+
+
+        # Observe all calculation settings buttons
+        for key in self.batch.scenario_toggle:
+            for button in self.batch.scenario_toggle[key].values():
+                button.observe(self._update_button_icon, "value")
+
+        for button in self.batch.rain_type_widgets.values():
+            button.observe(self._update_button_icon, "value")
             
+
+        @self.start.check_batch_input_button.on_click
+        def check_batch_input(action):
+            ready_to_roll = self.check_create_batch_simulation()
+
+
+
+
+        @self.start.start_batch_button.on_click
+        def start_batch_calculation(action):
+            ready_to_roll = self.check_create_batch_simulation()
+            if not ready_to_roll:
+                self.add_feedback("ERROR", "Check inputs again.")
+                return
+            
+            self.sim.simulation = None
+            self.sim.simulation_created = False
+
+
+    #-- #%%^^%%# --# end of __init__ #-- #%%^^%%# --#
     def check_create_simulation(self):
         """check if we can create a simulation"""
         if "ERROR" in self.rain.rain_settings:
@@ -731,9 +942,75 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
             return False, "Missing API key"
 
         return True, ""
-    
 
-    #-- end of __init__ --#
+    def check_create_batch_simulation(self):
+        self.feedback.widget.clear_output()
+        ready_to_roll = True
+
+        selected_models = []
+        for gxg in GROUNDWATER:
+            if np.any([x for x in self.selected_batch_scenarios[gxg].values()]):
+                if self.selected_schema_id_gxg(gxg) is None:
+                    self.add_feedback("ERROR", f"{gxg} has no schematisation selected")
+                    ready_to_roll=False
+                else:
+                    threedimodel_gxg = getattr(self.model, f"threedimodel_dropdown_{gxg}").value
+                    schema_name = self.vars.schematisations[int(self.selected_schema_id_gxg(gxg))].name
+
+                    if threedimodel_gxg is None \
+                        or threedimodel_gxg  == "Revision has no model":
+                        self.add_feedback("ERROR", f"{gxg} scenario selected but missing model.")
+                        ready_to_roll=False
+                    else:
+                        selected_models += [threedimodel_gxg]
+                    
+                    if not gxg in schema_name:
+                        self.add_feedback("ERROR", f"{gxg} not in schema_name_{gxg}") 
+                        ready_to_roll=False
+                    
+                
+        if len(set(selected_models)) != len(selected_models):
+            self.add_feedback("ERROR", "selected schematisations have the same 3Di model id.\nSelect different schematisations.")
+            ready_to_roll=False
+        
+
+        if ready_to_roll:
+            batch_scenario_names = self.batch_scenario_names()
+
+            self.add_feedback("INFO", f"Ready to start simulations ({len(batch_scenario_names)} total)")
+            with self.feedback.widget:
+                for name in batch_scenario_names:
+                    print(name)
+            self.update_start_simulation_button(disabled=False, button=self.start.start_batch_button)
+            
+        else:
+            self.update_start_simulation_button(disabled=True, button=self.start.start_batch_button)
+
+        return ready_to_roll
+
+    def search_models(self):
+        """search models on 3Di and organisations. Add them to vars"""
+        schematisations = self.sim.threedi_api.schematisations_list(
+            slug__icontains=self.model.schema_name_widget.value, limit=RESULT_LIMIT
+        ).results
+
+        self.vars.schematisations={}
+        for result in schematisations:  
+            self.vars.schematisations[result.id] = result
+
+
+        # organisations = self.sim.threedi_api.organisations_list().results
+        # self.vars.organisations = {}
+        # for org in organisations:
+        #     self.vars.organisations[org.name] = org
+
+        contracts = self.sim.threedi_api.contracts_list().results
+        self.vars.contracts = {}
+        for con in contracts:
+            self.vars.contracts[con.organisation_name] = con
+
+
+
     def update_api_keys(self, api_keys_path):
         self.vars.api_keys = htt.read_api_file(api_keys_path)
         self.login.lizard_apikey_widget.value=self.vars.api_keys["lizard"]
@@ -745,13 +1022,28 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
         self.model.organisation_box.options = self.vars.organisations_viewlist 
 
 
-    def update_dropdowns(self, **kwargs):
-        if 'schema' in kwargs:
-            self.model.schema_dropdown.options = self.vars.schema_dropdown_viewlist
-        if 'threedimodel' in kwargs: #Needs to be defined before revision because we observe that box.
-            self.model.threedimodel_dropdown.options = self.vars.threedimodel_dropdown_viewlist
-        if 'revision' in kwargs:
-            self.model.revision_dropdown.options = self.vars.revision_dropdown_viewlist
+    def update_dropdowns(self, batch=False, **kwargs):
+        if not batch:
+            if 'schema' in kwargs:
+                self.model.schema_dropdown.options = self.vars.schema_dropdown_viewlist
+            if 'threedimodel' in kwargs: #Needs to be defined before revision because we observe that box.
+                self.model.threedimodel_dropdown.options = self.vars.threedimodel_dropdown_viewlist
+            if 'revision' in kwargs:
+                self.model.revision_dropdown.options = self.vars.revision_dropdown_viewlist
+        
+        else:
+            if 'schema' in kwargs:
+                for gxg in GROUNDWATER:
+                    getattr(self.model, f"schema_dropdown_{gxg}").options = self.vars.schema_dropdown_viewlist
+            if 'threedimodel' in kwargs: #Needs to be defined before revision because we observe that box.
+                for gxg in GROUNDWATER:
+                    getattr(self.model, f"threedimodel_dropdown_{gxg}").options = self.vars.threedimodel_dropdown_viewlist_gxg[gxg]
+            if 'revision' in kwargs:
+                for gxg in GROUNDWATER:
+                    getattr(self.model, f"revision_dropdown_{gxg}").options = self.vars.revision_dropdown_viewlist_gxg[gxg]
+        # if 'sqlite' in kwargs:
+        #     self.model.sqlite_dropdown.options = self.vars.sqlite_dropdown_viewlist
+
         # if 'sqlite' in kwargs:
         #     self.model.sqlite_dropdown.options = self.vars.sqlite_dropdown_viewlist
 
@@ -761,6 +1053,7 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
 
         #Output folder string
         self.output.folder_value.value = self.vars.folder.threedi_results.path
+        self.output.folder_value_batch.value = self.vars.folder.threedi_results.batch.path
 
 
     def update_simulation_feedback(self):
@@ -769,6 +1062,11 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
         with self.feedback.widget:
             print(f"{self.vars.time_now} - Simulation created")
             display(self.sim.simulation_info(str_type="html"))
+
+
+    def add_feedback(self, errortype, message):
+        with self.feedback.widget:
+            print(f"{self.vars.time_now} {errortype} - {message}")                        
 
 
     def update_create_simulation_button(self):
@@ -802,13 +1100,13 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
             self.start.create_simulation_button.style.button_color = "lightgreen"
 
 
-    def update_start_simulation_button(self, disabled: bool):
-        
-        self.start.start_button.disabled=disabled
+    def update_start_simulation_button(self, disabled: bool, button):
+        button.disabled=disabled
         if disabled:
-            self.start.start_button.style.button_color="red"
+            button.style.button_color="red"
         else:
-            self.start.start_button.style.button_color="lightgreen"
+            button.style.button_color="lightgreen"
+
 
 
     def _activate_button_color(self, button):
@@ -850,6 +1148,7 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
             if button.value == True:
                 button.icon = "check"  # https://fontawesome.com/icons?d=gallery
 
+
     def update_simulation_name_widget(self, model_type=None):
 
         #Update the dict, which updates the view.
@@ -864,11 +1163,75 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
 
         self.start.simulation_name_widget.value = self.vars.simulation_name_view
 
+
+    def batch_scenario_names(self):
+        simulation_names = []
+        schema_name = self.model.schema_name_widget.value #used in eval
+        
+        for rt, gxg, rs,i in self.loop_batch_selection():
+                rev = self.selected_revision_gxg(gxg).number #used in eval
+                simulation_names.append(self.start.simulation_batch_name_widget.value.format(
+                        schema_name=schema_name,
+                        rev=rev,
+                        rt=rt,
+                        gxg=gxg,
+                        rs=rs,
+                        i=i,
+                        )
+                )
+                                
+        return simulation_names
+
+
+    def loop_batch_selection(self):
+        i=0
+        for rt in RAIN_TYPES:
+            for gxg in GROUNDWATER:
+                for rs in RAIN_SCENARIOS:
+                    i+=1
+                    if self.batch.rain_type_widgets[rt].value: #check piek/block selection
+                        if self.batch.scenario_toggle[rs][gxg].value: #check T1xxx/gxg selection
+                            yield rt, gxg, rs, i
+
+
+    @property
+    def selected_batch_scenarios(self):
+        """return list of selected scenarios"""
+        selected_scenarios={}
+        for gxg in GROUNDWATER:
+            selected_scenarios[gxg]={}
+            for rs in RAIN_SCENARIOS:
+                selected_scenarios[gxg][rs] = self.batch.scenario_toggle[rs][gxg].value
+        return selected_scenarios
+
     @property
     def selected_schema_id(self):
         """id of selected schematization"""
         try:
             return self.model.schema_dropdown.value.split(' - ')[0]
+        except:
+            return None
+
+
+    def selected_schema_id_gxg(self, gxg):
+        """id of selected schematization"""
+        try:
+            return getattr(self.model, f"schema_dropdown_{gxg}").value.split(' - ')[0]
+        except:
+            return None
+
+
+    def selected_revision_gxg(self, gxg):
+        try:
+            return self.vars.revisions_gxg[gxg][int(self.selected_revision_id_gxg(gxg))]
+        except:
+            return None
+
+
+    def selected_revision_id_gxg(self, gxg):
+        """id of selected revision"""
+        try:
+            return getattr(self.model, f"revision_dropdown_{gxg}").value.split(' - ')[0]
         except:
             return None
 
@@ -896,13 +1259,21 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
             return None
 
 
+    # @property
+    # def selected_organisation_id(self):
+    #     try:
+    #         return self.vars.organisations[self.model.organisation_box.value].unique_id
+
+    #     except:
+    #         return None
+
     @property
     def selected_organisation_id(self):
         try:
-            return self.vars.organisations[self.model.organisation_box.value].unique_id
+            return self.vars.contracts[self.model.organisation_box.value.split("  -")[0]].organisation
 
         except:
-            return None
+            return None           
 
     @property
     def sim(self):
@@ -918,12 +1289,15 @@ class GuiVariables:
         self._folder = None
 
         self.sim = None #Is filled when pressing login
+        self.batch_sim = {} #Copies of .sim for batch calculations.
         self.schematisations = {} #Is filled when searching for models by name
         self.revisions = {}
+        self.revisions_gxg = {"glg":{}, "ggg":{}, "ghg":{}}
         self.threedimodels = {}
+        self.threedimodels_gxg = {"glg":{}, "ggg":{}, "ghg":{}}
         self.sqlite_dropdown_options = {}
         self.sqlite_path = None #Sqlite is downloaded and placed here.
-        self.organisations = {}
+        self.contracts = {} #holds organisations
         self.api_keys = {"lizard":"", "threedi":""}
 
         self.simulation_name_dict = {"n1_schema_name":"",
@@ -959,6 +1333,25 @@ class GuiVariables:
             revision_list.append(f"{idx} - #{rev.number} - {commit_date} - valid:{rev.is_valid} - {rev.commit_user}")
         return revision_list
 
+
+    @property
+    def revision_dropdown_viewlist_gxg(self):
+        revision_dict = {}
+        for gxg in GROUNDWATER:
+            revision_list = []
+
+            for idx in self.revisions_gxg[gxg]:
+                rev = self.revisions_gxg[gxg][idx]
+                try:
+                    commit_date = rev.commit_date.strftime('%y/%m/%d-%H:%M:%S') or None
+                except:
+                    commit_date=None
+                # if rev.is_valid:
+                revision_list.append(f"{idx} - #{rev.number} - {commit_date} - valid:{rev.is_valid} - {rev.commit_user}")
+            revision_dict[gxg] = revision_list
+        return revision_dict
+
+
     @property
     def threedimodel_dropdown_viewlist(self):
         threedimodel_list = []
@@ -966,9 +1359,23 @@ class GuiVariables:
             if rev in self.threedimodels.keys():
                 threedimodel_list.append(f"{self.threedimodels[rev].id}")
             else:
-                threedimodel_list.append(f"Revison has no model")
+                threedimodel_list.append(f"Revision has no model")
         return threedimodel_list
         
+
+    @property
+    def threedimodel_dropdown_viewlist_gxg(self):
+        threedimodel_dict = {}
+        for gxg in GROUNDWATER:
+            threedimodel_list = []
+            for rev in self.revisions_gxg[gxg].keys():
+                if rev in self.threedimodels_gxg[gxg].keys():
+                    threedimodel_list.append(f"{self.threedimodels_gxg[gxg][rev].id}")
+                else:
+                    threedimodel_list.append(f"Revision has no model")
+            threedimodel_dict[gxg]=threedimodel_list
+        return threedimodel_dict
+
     @property
     def sqlite_dropdown_viewlist(self):
         self.folder.model.set_modelsplitter_paths() #set all paths in model_settings.xlsx
@@ -982,7 +1389,7 @@ class GuiVariables:
 
     @property
     def organisations_viewlist(self):
-        return self.organisations.keys()
+        return [f"{org}  -  ({self.contracts[org].current_sessions}/{self.contracts[org].session_limit})" for org in self.contracts.keys()]
 
     @property
     def time_now(self):
@@ -1080,32 +1487,134 @@ class StartCalculationGui:
                 grid_template_rows="auto auto auto",
                 grid_template_columns="1% 10% 10% 10% 10% 14% 15% 15% 15%",
                 grid_template_areas="""
-                '. login_label login_label model_label model_label schema_select_label schema_select_label schema_select_label schema_select_label' 
-                '. lizard_apikey_widget lizard_apikey_widget . . schema_label schema_dropdown schema_dropdown schema_dropdown' 
-                '. threedi_apikey_widget threedi_apikey_widget schema_name_widget schema_name_widget revision_label revision_dropdown revision_dropdown revision_dropdown' 
-                '. login_button login_button model_name_search_button model_name_search_button threedimodel_label threedimodel_dropdown threedimodel_dropdown threedimodel_dropdown' 
-                '. . . . . organisation_label organisation_box organisation_box organisation_box' 
-                '. rain_label . . . output_label output_label output_label output_label' 
-                '. rain_box rain_box rain_box rain_box output_folder_label output_folder_value output_folder_value output_folder_value'
-                '. rain_box rain_box rain_box rain_box output_subfolder_label output_subfolder_box output_subfolder_box output_subfolder_box'
-                '. rain_box rain_box rain_box rain_box . . . .'
-                '. rain_box rain_box rain_box rain_box . . . .'
-                '. rain_box rain_box rain_box rain_box calc_settings_label calc_settings_label calc_settings_label calc_settings_label'
-                '. rain_box rain_box rain_box rain_box . calc_settings_basic_processing calc_settings_damage_processing calc_settings_arrival_processing' 
-                '. rain_box rain_box rain_box rain_box . calc_settings_structure_control calc_settings_laterals .' 
-                '. rain_box rain_box rain_box rain_box . . . .' 
-                '. rain_box rain_box rain_box rain_box . . . .' 
-                '. feedback_label . . . . start_label start_label start_label'
-                '. feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget simulation_name_label simulation_name_widget simulation_name_widget'
-                '. feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget . create_simulation_button create_simulation_button'
-                '. feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget . start_button start_button'
-                '. . . . . . . . .' 
-                """,
+'. login_label login_label model_label model_label schema_select_label schema_select_label schema_select_label schema_select_label'
+'. lizard_apikey_widget lizard_apikey_widget . . schema_label schema_dropdown schema_dropdown schema_dropdown'
+'. threedi_apikey_widget threedi_apikey_widget schema_name_widget schema_name_widget revision_label revision_dropdown revision_dropdown revision_dropdown'
+'. login_button login_button model_name_search_button model_name_search_button threedimodel_label threedimodel_dropdown threedimodel_dropdown threedimodel_dropdown'
+'. . . . . organisation_label organisation_box organisation_box organisation_box'
+'. rain_label . . . output_label output_label output_label output_label'
+'. rain_box rain_box rain_box rain_box output_folder_label output_folder_value output_folder_value output_folder_value'
+'. rain_box rain_box rain_box rain_box output_subfolder_label output_subfolder_box output_subfolder_box output_subfolder_box'
+'. rain_box rain_box rain_box rain_box . . . .'
+'. rain_box rain_box rain_box rain_box . . . .'
+'. rain_box rain_box rain_box rain_box calc_settings_label calc_settings_label calc_settings_label calc_settings_label'
+'. rain_box rain_box rain_box rain_box . calc_settings_basic_processing calc_settings_damage_processing calc_settings_arrival_processing'
+'. rain_box rain_box rain_box rain_box . calc_settings_structure_control calc_settings_laterals .'
+'. rain_box rain_box rain_box rain_box . . . .'
+'. rain_box rain_box rain_box rain_box . . . .'
+'. feedback_label . . . . start_label start_label start_label'
+'. feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget simulation_name_label simulation_name_widget simulation_name_widget'
+'. feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget . create_simulation_button create_simulation_button'
+'. feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget . start_button start_button'
+'. . . . . . . . .'
+""",
             ))
 
+        self.start_batch_calculation_tab = widgets.GridBox(
+            children=[
+                self.w.login.label,
+                self.w.login.button,
+                self.w.login.lizard_apikey_widget,
+                self.w.login.threedi_apikey_widget,  # 1 login
+                self.w.model.label,
+                self.w.model.schema_name_widget,
+                # self.w.model.search_button,
+                self.w.model.search_button_batch,
+                self.w.model.select_label,
+                self.w.model.schema_label,
+                self.w.model.schema_label_glg,
+                self.w.model.schema_label_ggg,
+                self.w.model.schema_label_ghg,
+                self.w.model.schema_view_glg,
+                self.w.model.schema_view_ggg,
+                self.w.model.schema_view_ghg,
+                # self.w.model.schema_dropdown,
+                self.w.model.schema_dropdown_glg,
+                self.w.model.schema_dropdown_ggg,
+                self.w.model.schema_dropdown_ghg,
+                self.w.model.revision_label,
+                # self.w.model.revision_dropdown,
+                self.w.model.revision_dropdown_glg,
+                self.w.model.revision_dropdown_ggg,
+                self.w.model.revision_dropdown_ghg,
+                self.w.model.threedimodel_label,
+                # self.w.model.threedimodel_dropdown,
+                self.w.model.threedimodel_dropdown_glg,
+                self.w.model.threedimodel_dropdown_ggg,
+                self.w.model.threedimodel_dropdown_ghg,
+                self.w.model.organisation_label,
+                self.w.model.organisation_box,
+                # self.w.model.sqlite_label,
+                # self.w.model.sqlite_dropdown,
+                # self.w.model.sqlite_chooser,
+                # self.w.rain.label,
+                # self.w.rain.gridbox,
+                self.w.batch.label,
+                self.w.batch.gxg_label_box,
+                self.w.batch.rain_label_box,
+                self.w.batch.scenario_box,
+                self.w.batch.rain_type_box,
+                self.w.output.label,
+                self.w.output.folder_label,
+                # self.w.output.folder_value,
+                self.w.output.folder_value_batch,
+                # self.w.output.subfolder_label,
+                # self.w.output.subfolder_box,
+                # self.w.calc_settings.label,
+                # self.w.calc_settings.basic_processing,
+                # self.w.calc_settings.damage_processing,
+                # self.w.calc_settings.arrival_processing,
+                # self.w.calc_settings.structure_control,
+                # self.w.calc_settings.laterals,
+                self.w.feedback.label,
+                self.w.feedback.widget,
+                self.w.start.label,
+                self.w.start.simulation_name_label,
+                # self.w.start.simulation_name_widget,
+                self.w.start.simulation_batch_name_widget,
+                # self.w.start.create_simulation_button,
+                self.w.start.check_batch_input_button,
+                # self.w.start.start_button,
+                self.w.start.start_batch_button,
+                ],  # 8
+            layout=widgets.Layout(
+                width="100%",
+                grid_row_gap="200px 200px 200px 200px",
+                #             grid_template_rows='auto auto auto 50px auto 40px auto 20px 40px',
+                grid_template_rows="auto auto auto",
+                grid_template_columns="1% 10% 10% 10% 10% 2% 14% 15% 28%",
+                grid_template_areas="""
+'. login_label login_label model_label model_label . schema_select_label schema_select_label schema_select_label'
+'. lizard_apikey_widget lizard_apikey_widget . . . schema_label_glg schema_view_glg schema_view_glg'
+'. threedi_apikey_widget threedi_apikey_widget schema_name_widget schema_name_widget . schema_label_ggg schema_view_ggg schema_view_ggg'
+'. login_button login_button search_button_batch search_button_batch . schema_label_ghg schema_view_ghg schema_view_ghg'
+'. . . . . . organisation_label organisation_box organisation_box'
+'. batch_scenario_label batch_scenario_label batch_scenario_label batch_scenario_label . output_label output_label output_label'
+'. . batch_rain_type_box batch_rain_type_box batch_rain_type_box . output_folder_label output_folder_value_batch output_folder_value_batch'
+'. . gxg_label_box gxg_label_box gxg_label_box . . . .'
+'. rain_label_box batch_scenario_box batch_scenario_box batch_scenario_box . . . .'
+'. rain_label_box batch_scenario_box batch_scenario_box batch_scenario_box . . . .'
+'. rain_label_box batch_scenario_box batch_scenario_box batch_scenario_box . start_label start_label start_label'
+'. schema_label schema_dropdown_glg schema_dropdown_ggg schema_dropdown_ghg . simulation_name_label simulation_batch_name_widget simulation_batch_name_widget'
+'. revision_label revision_dropdown_glg revision_dropdown_ggg revision_dropdown_ghg . . check_batch_input_button check_batch_input_button'
+'. threedimodel_label threedimodel_dropdown_glg threedimodel_dropdown_ggg threedimodel_dropdown_ghg . . start_batch_button start_batch_button'
+'. feedback_label . . . . . . .'
+'. feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget'
+'. feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget'
+""",
 
 
-
+# '. . . . . . . . . .'
+# '. . . . . . . . . .'
+# '. . . . . . . . .' 
+# """,
+        ))
+    @property
+    def tab(self):
+        tab = widgets.Tab(children=[self.start_calculation_tab, self.start_batch_calculation_tab])
+        tab.set_title(0, "single calculation")
+        tab.set_title(1, "batch calculation")
+        return tab
 
     @property
     def w(self):
@@ -1134,6 +1643,35 @@ if __name__ == '__main__':
     data = {'polder_folder': 'E:\\02.modellen\\model_test_v2',
  'api_keys_path': 'C:\\Users\\wvangerwen\\AppData\\Roaming\\3Di\\QGIS3\\profiles\\default\\python\\plugins\\hhnk_threedi_plugin\\api_key.txt'}
     self = StartCalculationGui(data=data); 
-    display(self.start_calculation_tab)
+    display(self.start_batch_calculation_tab)
+    # display(self.w.batch.scenario_box)
 
     self.widgets.model.schema_name_widget.value='model_test_v2'
+    self.widgets.model.schema_name_widget.value='katvoed'
+
+# %%
+
+grid_template_areas="""
+'. login_label login_label model_label model_label . schema_select_label schema_select_label schema_select_label'
+'. lizard_apikey_widget lizard_apikey_widget . . . schema_label_glg schema_view_glg schema_view_glg'
+'. threedi_apikey_widget threedi_apikey_widget schema_name_widget schema_name_widget . schema_label_ggg schema_view_ggg schema_view_ggg'
+'. login_button login_button search_button_batch search_button_batch . schema_label_ghg schema_view_ghg schema_view_ghg'
+'. . . . . . organisation_label organisation_box organisation_box'
+'. batch_scenario_label batch_scenario_label batch_scenario_label batch_scenario_label . output_label output_label output_label'
+'. . batch_rain_type_box batch_rain_type_box batch_rain_type_box . output_folder_label output_folder_value_batch output_folder_value_batch'
+'. . gxg_label_box gxg_label_box gxg_label_box . . . .'
+'. rain_label_box batch_scenario_box batch_scenario_box batch_scenario_box . . . .'
+'. rain_label_box batch_scenario_box batch_scenario_box batch_scenario_box . . . .'
+'. rain_label_box batch_scenario_box batch_scenario_box batch_scenario_box . start_label start_label start_label'
+'. schema_label schema_dropdown_glg schema_dropdown_ggg schema_dropdown_ghg . simulation_name_label simulation_batch_name_widget simulation_batch_name_widget'
+'. revision_label revision_dropdown_glg revision_dropdown_ggg revision_dropdown_ghg . . check_batch_input_button check_batch_input_button'
+'. threedimodel_label threedimodel_dropdown_glg threedimodel_dropdown_ggg threedimodel_dropdown_ghg . . start_batch_button start_batch_button'
+'. feedback_label . . . . . . .'
+'. feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget'
+'. feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget'
+"""
+
+a=[row.split(" ") for row in grid_template_areas.split("\n")]
+for i in a:
+    print(f"{len(i)} {i}")
+# [len(i) for i in a]
