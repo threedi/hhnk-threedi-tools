@@ -464,8 +464,10 @@ class StartCalculationWidgets:
             self.folder_label = widgets.Label(
                     "Output folder:", layout=item_layout(grid_area="output_folder_label")
                 )
-            self.folder_value = widgets.Label(
-                    '', layout=item_layout(grid_area="output_folder_value"),
+            self.folder_value = widgets.Text(
+                    '',
+                    disabled=True,
+                    layout=item_layout(grid_area="output_folder_value"),
                 )
 
             # Selection box of the folder the output should be put in. (Hyd toets or Extreme)
@@ -518,7 +520,7 @@ class StartCalculationWidgets:
     class FeedbackWidgets():
         def __init__(self):
             self.label = widgets.HTML(
-                    "<b>6. Feedback</b>", layout=item_layout(grid_area="feedback_label")
+                    "<b>8. Feedback</b>", layout=item_layout(grid_area="feedback_label")
                 )
 
             # API call HTML widget that shows the API call
@@ -537,8 +539,14 @@ class StartCalculationWidgets:
                 )
 
             self.simulation_name_widget = widgets.Text(
-                    value="",
+                    value="{schema_name} #{rev} {model_type}",
                     layout=item_layout(grid_area="simulation_name_widget")
+                )
+
+            self.simulation_name_view_widget = widgets.Text(
+                    value="",
+                    disabled=True,
+                    layout=item_layout(grid_area="simulation_name_view_widget")
                 )
 
             self.create_simulation_button = widgets.Button(
@@ -654,7 +662,7 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
             self._activate_button_color(self.rain.test_0d1d_button)
             self.output.subfolder_box.value =self.output.subfolder_box.options[1]
             self._update_calc_settings_buttons(structure_control=False, laterals=True)
-            self.update_simulation_name_widget(model_type = " 0d1d_test")
+            self.update_simulation_name_widget(model_type = "0d1d_test")
 
 
         @self.rain.test_1d2d_button.on_click
@@ -668,7 +676,7 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
             self._activate_button_color(self.rain.test_1d2d_button)
             self.output.subfolder_box.value =self.output.subfolder_box.options[0]
             self._update_calc_settings_buttons(structure_control=True, laterals=True)
-            self.update_simulation_name_widget(model_type = " 1d2d_test")
+            self.update_simulation_name_widget(model_type = "1d2d_test")
 
 
         @self.rain.test_hour_button.on_click
@@ -683,7 +691,7 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
             self._activate_button_color(self.rain.test_hour_button)
             self.output.subfolder_box.value =self.output.subfolder_box.options[0]
             self._update_calc_settings_buttons(structure_control=True, laterals=True)
-            self.update_simulation_name_widget(model_type = " 1hour_test")
+            self.update_simulation_name_widget(model_type = "1hour_test")
 
         @self.rain.T10_blok_button.on_click
         def change_rain(action):
@@ -691,7 +699,7 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
             self._activate_button_color(self.rain.T10_blok_button)
             self.output.subfolder_box.value =self.output.subfolder_box.options[0]
             self._update_calc_settings_buttons(structure_control=True, laterals=True)
-            self.update_simulation_name_widget(model_type=" blok_T10")
+            self.update_simulation_name_widget(model_type="blok_T10")
 
         @self.rain.T100_blok_button.on_click
         def change_rain(action):
@@ -699,7 +707,7 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
             self._activate_button_color(self.rain.T100_blok_button)
             self.output.subfolder_box.value =self.output.subfolder_box.options[0]
             self._update_calc_settings_buttons(structure_control=True, laterals=True)
-            self.update_simulation_name_widget(model_type=" blok_T100")
+            self.update_simulation_name_widget(model_type="blok_T100")
 
         @self.rain.T1000_blok_button.on_click
         def change_rain(action):
@@ -707,7 +715,7 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
             self._activate_button_color(self.rain.T1000_blok_button)
             self.output.subfolder_box.value =self.output.subfolder_box.options[0]
             self._update_calc_settings_buttons(structure_control=True, laterals=True)
-            self.update_simulation_name_widget(model_type=" blok_T1000")
+            self.update_simulation_name_widget(model_type="blok_T1000")
 
         @self.rain.T10_piek_button.on_click
         def change_rain(action):
@@ -715,7 +723,7 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
             self._activate_button_color(self.rain.T10_piek_button)
             self.output.subfolder_box.value =self.output.subfolder_box.options[0]
             self._update_calc_settings_buttons(structure_control=True, laterals=True)
-            self.update_simulation_name_widget(model_type=" piek_T10")
+            self.update_simulation_name_widget(model_type="piek_T10")
 
         @self.rain.T100_piek_button.on_click
         def change_rain(action):
@@ -723,7 +731,7 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
             self._activate_button_color(self.rain.T100_piek_button)
             self.output.subfolder_box.value =self.output.subfolder_box.options[0]
             self._update_calc_settings_buttons(structure_control=True, laterals=True)
-            self.update_simulation_name_widget(model_type=" piek_T100")
+            self.update_simulation_name_widget(model_type="piek_T100")
 
         @self.rain.T1000_piek_button.on_click
         def change_rain(action):
@@ -731,7 +739,7 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
             self._activate_button_color(self.rain.T1000_piek_button)
             self.output.subfolder_box.value =self.output.subfolder_box.options[0]
             self._update_calc_settings_buttons(structure_control=True, laterals=True)
-            self.update_simulation_name_widget(model_type=" piek_T1000")
+            self.update_simulation_name_widget(model_type="piek_T1000")
 
         @self.rain.custom_rain_button.on_click
         def change_rain(action):
@@ -753,6 +761,8 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
             button.observe(self._update_button_icon, "value")
 
 
+        self.start.simulation_name_widget.observe(lambda change: self.update_simulation_name_widget(model_type=None), 'value', type='change')
+
         @self.start.create_simulation_button.on_click
         def create_simulation(action):
             sim_create_status, sim_message = self.check_create_simulation()
@@ -773,13 +783,15 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
 
             self.feedback.widget.clear_output()
 
-            self.vars.output_folder = self.vars.folder.threedi_results.full_path(f"{self.output.subfolder_box.value}{os.sep}{self.start.simulation_name_widget.value}")
+            self.vars.output_folder = self.vars.folder.threedi_results.full_path(
+                    f"{self.output.subfolder_box.value}{os.sep}{self.start.simulation_name_view_widget.value}"
+                )
 
 
-            self.vars.sqlite_path = self.sim.download_sqlite() #TODO
+            self.vars.sqlite_path = self.sim.download_sqlite()
 
             self.sim.create(output_folder=self.vars.output_folder,
-                        simulation_name=self.start.simulation_name_widget.value,
+                        simulation_name=self.start.simulation_name_view_widget.value,
                         model_id=self.selected_threedimodel_id,
                         organisation_uuid=self.selected_organisation_id,
                         sim_duration=eval(self.rain.simulation_duration_widget.value)
@@ -811,7 +823,7 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
                 self.sim.add_arrival_post_processing()
 
 
-            self.update_simulation_feedback()
+            self.update_simulation_feedback(sim=self.sim)
             self.update_create_simulation_button()
             self.update_start_simulation_button(disabled=False, button=self.start.start_button)
 
@@ -841,9 +853,6 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
         @self.model.search_button_batch.on_click
         def search(action):
             self.search_models()
-
-
-            #TODO add check of available calc cores. self.vars.sim.threedi_api.statuses_statistics(simulation__organisation__unique_id='48dac75bef8a42ebbb52e8f89bbdb9f2', simulation__type__live=True)
 
             self.update_dropdowns(batch=True, schema=True)
             self.update_organisations()
@@ -912,8 +921,6 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
             ready_to_roll = self.check_create_batch_simulation()
 
 
-
-
         @self.start.start_batch_button.on_click
         def start_batch_calculation(action):
             ready_to_roll = self.check_create_batch_simulation()
@@ -921,8 +928,64 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
                 self.add_feedback("ERROR", "Check inputs again.")
                 return
             
-            self.sim.simulation = None
-            self.sim.simulation_created = False
+            self.update_start_simulation_button(disabled=True, button=self.start.start_batch_button)
+
+            self.vars.output_folder_batch = self.output.folder_value_batch.value
+            batch_scenario_names = self.batch_scenario_names()
+            self.add_feedback("INFO", f"Starting simulations.\nOutput wil be stored in {self.vars.output_folder_batch}")
+            for rt, gxg, rs, i in self.loop_batch_selection():
+
+                shortname = f"{rt}_{gxg}_{rs}"
+                self.vars.sim_batch[shortname] = Simulation(api_key=self.vars.api_keys["threedi"]) 
+
+                sim = self.vars.sim_batch[shortname]
+                sim.simulation = None
+                sim.simulation_created = False
+
+                self.vars.sqlite_path_batch[shortname] = sim.download_sqlite()
+
+                #TODO check if already run.
+                sim.create(output_folder=self.vars.output_folder_batch,
+                            simulation_name=batch_scenario_names[shortname],
+                            model_id=self.selected_threedimodel_id_gxg(gxg),
+                            organisation_uuid=self.selected_organisation_id,
+                            sim_duration=RAIN_SETTINGS[rt]["simulation_duration"]
+                    )
+
+                #Load data from sqlite
+                sim.get_data(rain_data={
+                                    "offset": int(eval(RAIN_SETTINGS[rt]["rain_offset"])), 
+                                    "duration": int(eval(RAIN_SETTINGS[rt]["rain_duration"])),
+                                    "value": eval(RAIN_INTENSITY[rt][rs])/(1000*3600), #mm/hour -> m/s
+                                    "units": "m/s",
+                                })
+
+                #Add data to simulation
+                sim.add_default_settings()
+                sim.add_constant_rain()
+                sim.add_boundaries()
+
+                sim.add_structure_control()
+                sim.add_laterals()
+
+                #Postprocessing disabled.
+                # self.sim.add_basic_post_processing()
+                # self.sim.add_damage_post_processing()
+                # self.sim.add_arrival_post_processing()
+
+                self.update_simulation_feedback(sim=sim)
+
+                sim.start()
+            with self.feedback.widget:
+                print(f"{self.vars.time_now} - All simulations (hopefully) started or queued.\n\
+                    stop broken simulation with self.vars.sim.shutdown(simulation_pk=)")
+                display(
+                    HTML(
+                        "<a href={} target='_blank'>Check progress on 3di</a>".format(
+                            "https://3di.live/"
+                        )
+                    )
+                )
 
 
     #-- #%%^^%%# --# end of __init__ #-- #%%^^%%# --#
@@ -943,9 +1006,21 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
 
         return True, ""
 
+
     def check_create_batch_simulation(self):
         self.feedback.widget.clear_output()
         ready_to_roll = True
+
+        #Set output folder
+        output_folder = self.start.simulation_batch_name_widget.value.replace("{rt}_{gxg}_{rs}","")
+        output_folder = output_folder.replace("({i})","")
+        output_folder = output_folder.replace("  "," ")
+        output_folder=output_folder.format(schema_name=self.model.schema_name_widget.value,
+                                            rev="-",
+                                            model_type=self.vars.model_type,)
+
+        self.output.folder_value_batch.value = self.vars.folder.threedi_results.batch.full_path(output_folder)
+
 
         selected_models = []
         for gxg in GROUNDWATER:
@@ -979,14 +1054,15 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
 
             self.add_feedback("INFO", f"Ready to start simulations ({len(batch_scenario_names)} total)")
             with self.feedback.widget:
-                for name in batch_scenario_names:
-                    print(name)
+                for key in batch_scenario_names:
+                    print(batch_scenario_names[key])
             self.update_start_simulation_button(disabled=False, button=self.start.start_batch_button)
             
         else:
             self.update_start_simulation_button(disabled=True, button=self.start.start_batch_button)
 
         return ready_to_roll
+
 
     def search_models(self):
         """search models on 3Di and organisations. Add them to vars"""
@@ -999,16 +1075,10 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
             self.vars.schematisations[result.id] = result
 
 
-        # organisations = self.sim.threedi_api.organisations_list().results
-        # self.vars.organisations = {}
-        # for org in organisations:
-        #     self.vars.organisations[org.name] = org
-
         contracts = self.sim.threedi_api.contracts_list().results
         self.vars.contracts = {}
         for con in contracts:
             self.vars.contracts[con.organisation_name] = con
-
 
 
     def update_api_keys(self, api_keys_path):
@@ -1056,12 +1126,12 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
         self.output.folder_value_batch.value = self.vars.folder.threedi_results.batch.path
 
 
-    def update_simulation_feedback(self):
+    def update_simulation_feedback(self, sim):
         """Give feedback of created simulation"""
     
         with self.feedback.widget:
             print(f"{self.vars.time_now} - Simulation created")
-            display(self.sim.simulation_info(str_type="html"))
+            display(sim.simulation_info(str_type="html"))
 
 
     def add_feedback(self, errortype, message):
@@ -1108,7 +1178,6 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
             button.style.button_color="lightgreen"
 
 
-
     def _activate_button_color(self, button):
         """Make active button green and rest of rain buttons grey"""
         for button_grey in [
@@ -1150,35 +1219,41 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
 
 
     def update_simulation_name_widget(self, model_type=None):
-
-        #Update the dict, which updates the view.
-        self.vars.simulation_name_dict["n1_schema_name"]=self.model.schema_name_widget.value
+        schema_name = self.model.schema_name_widget.value #used in eval
         if self.selected_revision:
-            self.vars.simulation_name_dict["n2_rev_number"]=f" #{self.selected_revision.number}"
+            rev=f"{self.selected_revision.number}"
         else:
-            self.vars.simulation_name_dict["n2_rev_number"]=""
-        if model_type is not None:
-            self.vars.simulation_name_dict["n3_model_type"] = model_type
-        
+           rev=""
 
-        self.start.simulation_name_widget.value = self.vars.simulation_name_view
+        if model_type is None:
+            model_type = self.vars.model_type
+        else:
+            self.vars.model_type = model_type
+
+        try:
+            self.start.simulation_name_view_widget.value = self.start.simulation_name_widget.value.format(
+                        schema_name=schema_name,
+                        rev=rev,
+                        model_type=model_type,
+                        )
+        except:
+            pass
 
 
     def batch_scenario_names(self):
-        simulation_names = []
+        simulation_names = {}
         schema_name = self.model.schema_name_widget.value #used in eval
         
-        for rt, gxg, rs,i in self.loop_batch_selection():
+        for rt, gxg, rs, i in self.loop_batch_selection():
                 rev = self.selected_revision_gxg(gxg).number #used in eval
-                simulation_names.append(self.start.simulation_batch_name_widget.value.format(
+                simulation_names[f"{rt}_{gxg}_{rs}"] =self.start.simulation_batch_name_widget.value.format(
                         schema_name=schema_name,
                         rev=rev,
                         rt=rt,
                         gxg=gxg,
                         rs=rs,
                         i=i,
-                        )
-                )
+                    )
                                 
         return simulation_names
 
@@ -1203,6 +1278,7 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
             for rs in RAIN_SCENARIOS:
                 selected_scenarios[gxg][rs] = self.batch.scenario_toggle[rs][gxg].value
         return selected_scenarios
+
 
     @property
     def selected_schema_id(self):
@@ -1235,6 +1311,15 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
         except:
             return None
 
+
+    def selected_threedimodel_id_gxg(self, gxg):
+        """id of selected model"""
+        try:
+            return getattr(self.model, f"threedimodel_dropdown_{gxg}").value
+        except:
+            return None     
+
+
     @property
     def selected_revision_id(self):
         """id of selected revision"""
@@ -1242,6 +1327,7 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
             return self.model.revision_dropdown.value.split(' - ')[0]
         except:
             return None
+
 
     @property
     def selected_threedimodel_id(self):
@@ -1251,6 +1337,7 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
         except:
             return None         
 
+
     @property
     def selected_revision(self):
         try:
@@ -1258,14 +1345,6 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
         except:
             return None
 
-
-    # @property
-    # def selected_organisation_id(self):
-    #     try:
-    #         return self.vars.organisations[self.model.organisation_box.value].unique_id
-
-    #     except:
-    #         return None
 
     @property
     def selected_organisation_id(self):
@@ -1275,9 +1354,11 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
         except:
             return None           
 
+
     @property
     def sim(self):
         return self.caller.vars.sim
+
 
     @property
     def vars(self):
@@ -1289,7 +1370,7 @@ class GuiVariables:
         self._folder = None
 
         self.sim = None #Is filled when pressing login
-        self.batch_sim = {} #Copies of .sim for batch calculations.
+        self.sim_batch = {} #Copies of .sim for batch calculations.
         self.schematisations = {} #Is filled when searching for models by name
         self.revisions = {}
         self.revisions_gxg = {"glg":{}, "ggg":{}, "ghg":{}}
@@ -1297,14 +1378,14 @@ class GuiVariables:
         self.threedimodels_gxg = {"glg":{}, "ggg":{}, "ghg":{}}
         self.sqlite_dropdown_options = {}
         self.sqlite_path = None #Sqlite is downloaded and placed here.
-        self.contracts = {} #holds organisations
+        self.sqlite_path_batch = {} #Sqlite is downloaded and placed here.
+
+        self.contracts = {} #holds organisations and available sessions
         self.api_keys = {"lizard":"", "threedi":""}
 
-        self.simulation_name_dict = {"n1_schema_name":"",
-                                        "n2_rev_number":"",
-                                        "n3_model_type":"",}
+        self.simulation_model_type = ""
         self.output_folder = None #Filled when create_simulation is clicked.
-
+        self.output_folder_batch = None #filled when start batch simulation is clicked.
         
     @property
     def folder(self):
@@ -1394,10 +1475,6 @@ class GuiVariables:
     @property
     def time_now(self):
         return datetime.datetime.now().strftime("%H:%M:%S")
-    
-    @property
-    def simulation_name_view(self):
-        return "".join([i for i in self.simulation_name_dict.values()])
 
 
 class StartCalculationGui:
@@ -1434,8 +1511,6 @@ class StartCalculationGui:
         self.scheduler = BlockingScheduler(timezone="Europe/Amsterdam")
 
         # self.scenarios = self._init_scenarios()
-
-
 
 
         self.start_calculation_tab = widgets.GridBox(
@@ -1477,6 +1552,7 @@ class StartCalculationGui:
                 self.w.start.label,
                 self.w.start.simulation_name_label,
                 self.w.start.simulation_name_widget,
+                self.w.start.simulation_name_view_widget,
                 self.w.start.create_simulation_button,
                 self.w.start.start_button,
                 ],  # 8
@@ -1485,27 +1561,27 @@ class StartCalculationGui:
                 grid_row_gap="200px 200px 200px 200px",
                 #             grid_template_rows='auto auto auto 50px auto 40px auto 20px 40px',
                 grid_template_rows="auto auto auto",
-                grid_template_columns="1% 10% 10% 10% 10% 14% 15% 15% 15%",
+                grid_template_columns="1% 10% 10% 10% 10% 2% 19% 19% 19%",
                 grid_template_areas="""
-'. login_label login_label model_label model_label schema_select_label schema_select_label schema_select_label schema_select_label'
-'. lizard_apikey_widget lizard_apikey_widget . . schema_label schema_dropdown schema_dropdown schema_dropdown'
-'. threedi_apikey_widget threedi_apikey_widget schema_name_widget schema_name_widget revision_label revision_dropdown revision_dropdown revision_dropdown'
-'. login_button login_button model_name_search_button model_name_search_button threedimodel_label threedimodel_dropdown threedimodel_dropdown threedimodel_dropdown'
-'. . . . . organisation_label organisation_box organisation_box organisation_box'
-'. rain_label . . . output_label output_label output_label output_label'
-'. rain_box rain_box rain_box rain_box output_folder_label output_folder_value output_folder_value output_folder_value'
-'. rain_box rain_box rain_box rain_box output_subfolder_label output_subfolder_box output_subfolder_box output_subfolder_box'
-'. rain_box rain_box rain_box rain_box . . . .'
-'. rain_box rain_box rain_box rain_box . . . .'
-'. rain_box rain_box rain_box rain_box calc_settings_label calc_settings_label calc_settings_label calc_settings_label'
+'. login_label login_label model_label model_label . schema_select_label schema_select_label schema_select_label'
+'. lizard_apikey_widget lizard_apikey_widget . . . schema_label schema_dropdown schema_dropdown'
+'. threedi_apikey_widget threedi_apikey_widget schema_name_widget schema_name_widget . revision_label revision_dropdown revision_dropdown'
+'. login_button login_button model_name_search_button model_name_search_button . threedimodel_label threedimodel_dropdown threedimodel_dropdown'
+'. . . . . . organisation_label organisation_box organisation_box'
+'. rain_label rain_label rain_label rain_label . output_label output_label output_label'
+'. rain_box rain_box rain_box rain_box . output_folder_label output_folder_value output_folder_value'
+'. rain_box rain_box rain_box rain_box . output_subfolder_label output_subfolder_box output_subfolder_box '
+'. rain_box rain_box rain_box rain_box . calc_settings_label calc_settings_label calc_settings_label'
 '. rain_box rain_box rain_box rain_box . calc_settings_basic_processing calc_settings_damage_processing calc_settings_arrival_processing'
 '. rain_box rain_box rain_box rain_box . calc_settings_structure_control calc_settings_laterals .'
-'. rain_box rain_box rain_box rain_box . . . .'
-'. rain_box rain_box rain_box rain_box . . . .'
-'. feedback_label . . . . start_label start_label start_label'
-'. feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget simulation_name_label simulation_name_widget simulation_name_widget'
-'. feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget . create_simulation_button create_simulation_button'
-'. feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget . start_button start_button'
+'. rain_box rain_box rain_box rain_box . start_label start_label start_label'
+'. rain_box rain_box rain_box rain_box . simulation_name_label simulation_name_widget simulation_name_widget'
+'. rain_box rain_box rain_box rain_box . . simulation_name_view_widget simulation_name_view_widget'
+'. rain_box rain_box rain_box rain_box . . create_simulation_button create_simulation_button'
+'. feedback_label . . . . . start_button start_button'
+'. feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget . . .'
+'. feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget . . .'
+'. feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget . . .'
 '. . . . . . . . .'
 """,
             ))
@@ -1644,31 +1720,36 @@ if __name__ == '__main__':
  'api_keys_path': 'C:\\Users\\wvangerwen\\AppData\\Roaming\\3Di\\QGIS3\\profiles\\default\\python\\plugins\\hhnk_threedi_plugin\\api_key.txt'}
     self = StartCalculationGui(data=data); 
     display(self.start_batch_calculation_tab)
+    # display(self.start_calculation_tab)
+
     # display(self.w.batch.scenario_box)
 
     self.widgets.model.schema_name_widget.value='model_test_v2'
-    self.widgets.model.schema_name_widget.value='katvoed'
+    # self.widgets.model.schema_name_widget.value='katvoed'
 
 # %%
 
 grid_template_areas="""
-'. login_label login_label model_label model_label . schema_select_label schema_select_label schema_select_label'
-'. lizard_apikey_widget lizard_apikey_widget . . . schema_label_glg schema_view_glg schema_view_glg'
-'. threedi_apikey_widget threedi_apikey_widget schema_name_widget schema_name_widget . schema_label_ggg schema_view_ggg schema_view_ggg'
-'. login_button login_button search_button_batch search_button_batch . schema_label_ghg schema_view_ghg schema_view_ghg'
-'. . . . . . organisation_label organisation_box organisation_box'
-'. batch_scenario_label batch_scenario_label batch_scenario_label batch_scenario_label . output_label output_label output_label'
-'. . batch_rain_type_box batch_rain_type_box batch_rain_type_box . output_folder_label output_folder_value_batch output_folder_value_batch'
-'. . gxg_label_box gxg_label_box gxg_label_box . . . .'
-'. rain_label_box batch_scenario_box batch_scenario_box batch_scenario_box . . . .'
-'. rain_label_box batch_scenario_box batch_scenario_box batch_scenario_box . . . .'
-'. rain_label_box batch_scenario_box batch_scenario_box batch_scenario_box . start_label start_label start_label'
-'. schema_label schema_dropdown_glg schema_dropdown_ggg schema_dropdown_ghg . simulation_name_label simulation_batch_name_widget simulation_batch_name_widget'
-'. revision_label revision_dropdown_glg revision_dropdown_ggg revision_dropdown_ghg . . check_batch_input_button check_batch_input_button'
-'. threedimodel_label threedimodel_dropdown_glg threedimodel_dropdown_ggg threedimodel_dropdown_ghg . . start_batch_button start_batch_button'
+'. login_label login_label model_label model_label schema_select_label schema_select_label schema_select_label schema_select_label'
+'. lizard_apikey_widget lizard_apikey_widget . . schema_label schema_dropdown schema_dropdown schema_dropdown'
+'. threedi_apikey_widget threedi_apikey_widget schema_name_widget schema_name_widget revision_label revision_dropdown revision_dropdown revision_dropdown'
+'. login_button login_button model_name_search_button model_name_search_button threedimodel_label threedimodel_dropdown threedimodel_dropdown threedimodel_dropdown'
+'. . . . . organisation_label organisation_box organisation_box organisation_box'
+'. rain_label rain_label rain_label rain_label output_label output_label output_label output_label'
+'. rain_box rain_box rain_box rain_box output_folder_label output_folder_value output_folder_value output_folder_value'
+'. rain_box rain_box rain_box rain_box output_subfolder_label output_subfolder_box output_subfolder_box output_subfolder_box'
+'. rain_box rain_box rain_box rain_box calc_settings_label calc_settings_label calc_settings_label calc_settings_label'
+'. rain_box rain_box rain_box rain_box . calc_settings_basic_processing calc_settings_damage_processing calc_settings_arrival_processing'
+'. rain_box rain_box rain_box rain_box . calc_settings_structure_control calc_settings_laterals .'
+'. rain_box rain_box rain_box rain_box . start_label start_label start_label'
+'. rain_box rain_box rain_box rain_box . . simulation_name_label simulation_name_widget simulation_name_widget
+'. rain_box rain_box rain_box rain_box . . . create_simulation_button create_simulation_button'
+'. rain_box rain_box rain_box rain_box . . start_button start_button'
 '. feedback_label . . . . . . .'
-'. feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget'
-'. feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget'
+'. feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget . . .'
+'. feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget . . .'
+'. feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget . . .'
+'. . . . . . . . .'
 """
 
 a=[row.split(" ") for row in grid_template_areas.split("\n")]

@@ -639,7 +639,7 @@ class Simulation:
                 if self.error.status==400:
                     print(self.error.body)
                     break
-                else:
+                else: #TODO add error code of API overload
                     time.sleep(10)
                     continue
             break
@@ -651,8 +651,6 @@ class Simulation:
         if len(result.results) == 0:
             raise ValueError(message)
         return result.results[0]
-
-
 
 
     def create(self, output_folder, simulation_name, model_id, organisation_uuid, sim_duration):
@@ -768,6 +766,7 @@ class Simulation:
                 self.add_damage_post_processing()
             if arrival_processing:
                 self.add_arrival_post_processing()
+                #TODO aggregation
 
         else:
             print("Tried to add data to simulation that doesnt have data loaded yet.")
