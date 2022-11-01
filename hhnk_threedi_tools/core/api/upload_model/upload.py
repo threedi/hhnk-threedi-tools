@@ -98,18 +98,15 @@ def get_or_create_schematisation(
         raise ValueError(f"Found > 1 schematisations named'{schematisation_name}!")
 
     # if not found -> create
-    cont = input(f"Create new schematisation? [y/n] - {schematisation_name}")
-    if cont == "y":
-        schematisation = threedi.api.schematisations_create(
-            data={
-                "owner": organisation_uuid,
-                "name": schematisation_name,
-                "tags": tags,
-            }
-        )
-        return schematisation
-    else:
-        return None
+    schematisation = threedi.api.schematisations_create(
+        data={
+            "owner": organisation_uuid,
+            "name": schematisation_name,
+            "tags": tags,
+        }
+    )
+    return schematisation
+
 
 
 def upload_sqlite(schematisation, revision, sqlite_path: Union[str, Path]):
