@@ -231,7 +231,7 @@ class ModelSchematisations:
         """
 
         row = self.settings_df.loc[name]
-        schema_new = getattr(self.folder.model, "schema_base")
+        schema_new = getattr(self.folder.model, f"schema_{name}")
         schema_str = str(schema_new)
         target_file = str(self.folder.model) + "\\revisions\\rev" + str(count+1) + "_" + str(commit_message)
         shutil.copytree(schema_str, target_file)
