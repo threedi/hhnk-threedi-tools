@@ -949,16 +949,16 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
                             simulation_name=batch_scenario_names[shortname],
                             model_id=self.selected_threedimodel_id_gxg(gxg),
                             organisation_uuid=self.selected_organisation_id,
-                            sim_duration=RAIN_SETTINGS[rt]["simulation_duration"]
+                            sim_duration=eval(RAIN_SETTINGS[rt]["simulation_duration"])
                     )
 
                 #Load data from sqlite
-                sim.get_data(rain_data={
+                sim.get_data(rain_data=[{
                                     "offset": int(eval(RAIN_SETTINGS[rt]["rain_offset"])), 
                                     "duration": int(eval(RAIN_SETTINGS[rt]["rain_duration"])),
                                     "value": eval(RAIN_INTENSITY[rt][rs])/(1000*3600), #mm/hour -> m/s
                                     "units": "m/s",
-                                })
+                                }])
 
                 #Add data to simulation
                 sim.add_default_settings()
@@ -976,6 +976,7 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
                 self.update_simulation_feedback(sim=sim)
 
                 sim.start()
+
             with self.feedback.widget:
                 print(f"{self.vars.time_now} - All simulations (hopefully) started or queued.\n\
                     stop broken simulation with self.vars.sim.shutdown(simulation_pk=)")
@@ -1018,6 +1019,7 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
         output_folder=output_folder.format(schema_name=self.model.schema_name_widget.value,
                                             rev="-",
                                             model_type=self.vars.model_type,)
+        output_folder = output_folder.rstrip(" ")
 
         self.output.folder_value_batch.value = self.vars.folder.threedi_results.batch.full_path(output_folder)
 
@@ -1128,20 +1130,19 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
 
     def update_simulation_feedback(self, sim):
         """Give feedback of created simulation"""
-    
+
+        self.feedback.widget.append_stdout(f"{self.vars.time_now} - Simulation created")
         with self.feedback.widget:
-            print(f"{self.vars.time_now} - Simulation created")
             display(sim.simulation_info(str_type="html"))
 
 
     def add_feedback(self, errortype, message):
-        with self.feedback.widget:
-            print(f"{self.vars.time_now} {errortype} - {message}")                        
-
+        self.feedback.widget.append_stdout(f"{self.vars.time_now} {errortype} - {message}")
+        
 
     def update_create_simulation_button(self):
         """
-        Make sure the following data is supplied:
+        Make sure the following data is supplied:s
             - Repository
             - Revision
             - Model name
@@ -1716,15 +1717,15 @@ class StartCalculationGui:
 
 
 if __name__ == '__main__':
-    data = {'polder_folder': 'E:\\02.modellen\\model_test_v2',
+    data = {'polder_folder': 'E:\\02.modellen\\Egmond',
  'api_keys_path': 'C:\\Users\\wvangerwen\\AppData\\Roaming\\3Di\\QGIS3\\profiles\\default\\python\\plugins\\hhnk_threedi_plugin\\api_key.txt'}
     self = StartCalculationGui(data=data); 
-    display(self.start_batch_calculation_tab)
+    display(self.tab)
     # display(self.start_calculation_tab)
 
     # display(self.w.batch.scenario_box)
 
-    self.widgets.model.schema_name_widget.value='model_test_v2'
+    self.widgets.model.schema_name_widget.value='Egmond'
     # self.widgets.model.schema_name_widget.value='katvoed'
 
 # %%

@@ -5,7 +5,7 @@ Created on Tue Apr 12 14:40:28 2022
 
 @author: chris.kerklaan
 
-note, this was not needed.
+note, this was not needed
 """
 
 # First-party imports
@@ -149,6 +149,9 @@ class SimulationData:
         )
 
         self.rain = rain_data
+        if type(self.rain)==dict:
+            self.rain = [self.rain]
+
         self.structure_control = self._get_control_from_sqlite(sim_duration=sim_duration)
         self.laterals = self._get_laterals_from_sqlite(sim_duration=sim_duration)
         self.boundaries = self._get_boundary_data()
@@ -417,7 +420,7 @@ class Simulation:
     ):
 
         self.start_time = start_time
-        self._end_time = "set self.sim_duration first"
+        # self._end_time = "set self.sim_duration first"
         self._sqlite_path = "call self.download_sqlite first"
 
 
@@ -439,13 +442,18 @@ class Simulation:
         self.simulation=None
         self.simulation_created = False
 
+    # @property
+    # def end_time(self):
+    #     return self._end_time
+
+    # @end_time.setter
+    # def end_time(self, sim_duration):
+    #     self._end_time = self.start_time + datetime.timedelta(seconds=sim_duration)
+
+
     @property
     def end_time(self):
-        return self._end_time
-
-    @end_time.setter
-    def sim_duration(self, sim_duration):
-        self._end_time = self.start_time + datetime.timedelta(seconds=sim_duration)
+        return self.start_time + datetime.timedelta(seconds=self.sim_duration)
 
 
     @property
@@ -559,6 +567,39 @@ class Simulation:
                 simulation_pk=self.id,
                 data=rain_data,
             )
+    def check_structure_control(self, max_retries=10):
+        
+        i=0
+        valid = False
+
+        while (valid is False) or (i<max_retries):
+            i+=1
+            structure_control_list = self.threedi_api.simulations_events_structure_control_table_list(simulation_pk=self.id)
+
+            valid = True
+            for r in structure_control_list.results:
+                for l in r.measure_specification.locations:
+                    if l.state != "valid":
+                        valid=False
+            
+            if not valid:
+                print(f"waiting for structure control to become valid ({i}/{max_retries})")
+                time.sleep(10)
+                    
+            
+        if valid:
+            print("structure control is valid")
+            return True
+        elif i > max_retries:
+                print("max_retries exceeded (100 sec) for structure control to become valid, simulation did not start")
+                return False
+        else:
+            print("this shouldnt happen..")
+            return False    
+           
+            
+
+
 
     def add_structure_control(self):
         for control_data in self.data.structure_control:
@@ -574,7 +615,7 @@ class Simulation:
                         )
 
 
-    def add_boundaries(self, filename="boundaryconditions.json"):
+    def add_boundaries(self):
         # Deels overgenomen van threedi_models_and_simulations
         def save_json(filepath, data):
             import json
@@ -586,13 +627,15 @@ class Simulation:
             with open(filepath, "rb") as file:
                 response = requests.put(upload_result.put_url, data=file)
                 return response
+       
+        filename = f"boundaryconditions_{self.model_id}.json"
 
         output_path = Path(os.path.join(self.output_folder, "tempfiles", filename))
         output_path.parent.parent.mkdir(exist_ok=True)
         output_path.parent.mkdir(exist_ok=True) #Create parent folder
 
-
-        save_json(output_path, self.data.boundaries)
+        if not output_path.exists():
+            save_json(output_path, self.data.boundaries)
 
         tc = ThreediCalls(threedi_api=self.threedi_api)
 
@@ -632,11 +675,18 @@ class Simulation:
         """add something to simulation, if apiexcetion is raised sleep on it and try again."""
         while True:
             try:
+                #check if data is dict
+                if "data" in kwargs.keys():
+                    if type(kwargs["data"]) != dict:
+                        print("OJEE... data is geen dict {func}")
+                        break
+
                 func(**kwargs)
             except ApiException as e:
                 self.error=e
                 print(e)
                 if self.error.status==400:
+                    print(f"ERROR in {func}")
                     print(self.error.body)
                     break
                 else: #TODO add error code of API overload
@@ -666,7 +716,8 @@ class Simulation:
         # self.simulation = self._api_result(call, "Simulation is not yet processed")
 
         self.output_folder = output_folder
-        self.sim_duration = sim_duration #sets self.end_time
+        self.sim_duration = sim_duration
+
         self.set_model(model_id=model_id)
 
         #Download the sqlite so we can retrieve some settings
@@ -723,13 +774,17 @@ class Simulation:
 
 
     def start(self, batch=False):
-        self.start_feedback = self.threedi_api.simulations_actions_create(simulation_pk=self.id, data={"name": "queue"})
+        self.structure_control_valid = self.check_structure_control()
+        if self.structure_control_valid:
+            self.start_feedback = self.threedi_api.simulations_actions_create(simulation_pk=self.id, data={"name": "queue"})
 
-        if not batch:
-            # Create APIcall.txt file
-            apicall_txt = os.path.join(self.output_folder,f"apicall_simid_{self.simulation.id}_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.txt")
-            with open(apicall_txt, "a") as t:
-                t.write(self.simulation_info(str_type="text"))
+            if not batch:
+                # Create APIcall.txt file
+                apicall_txt = os.path.join(self.output_folder, f"apicall_simid_{self.simulation.id}_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.txt")
+                with open(apicall_txt, "a") as t:
+                    t.write(self.simulation_info(str_type="text"))
+        else:
+            self.start_feedback="simulation_did not start"            
 
 
     def shutdown(self, simulation_pk):
@@ -749,7 +804,7 @@ class Simulation:
             newline = "<br>"
             return HTML(f"Simulation id: <a href={sim.url}>{sim.id}</a>{newline}Scenario name: {sim.name}\
                     {newline}Organisation name: {sim.organisation_name}{newline}Duration: {sim.duration}s ({sim.duration/3600}h)\
-                    {newline}Rain events: {self.data.rain}{newline}Control structures count: {len(self.data.structure_control)}")
+                    {newline}Rain events: {self.data.rain}{newline}Control structures count: {len(self.data.structure_control)} {newline}")
 
 
     def example_use(self, basic_processing=False, damage_processing=False, arrival_processing=False):
