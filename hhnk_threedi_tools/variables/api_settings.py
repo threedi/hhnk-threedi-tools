@@ -4,35 +4,29 @@ RAIN_SETTINGS = {}
 
 # blok= 2 days of continuous rain
 RAIN_SETTINGS["blok"] = {}
-RAIN_SETTINGS["blok"]["days_dry_start"] = 0
-RAIN_SETTINGS["blok"]["hours_dry_start"] = 0
-RAIN_SETTINGS["blok"]["days_rain"] = 2
-RAIN_SETTINGS["blok"]["hours_rain"] = 0
-RAIN_SETTINGS["blok"]["days_dry_end"] = 0
-RAIN_SETTINGS["blok"]["hours_dry_end"] = 0
+RAIN_SETTINGS["blok"]["simulation_duration"] = "48*3600"
+RAIN_SETTINGS["blok"]["rain_offset"] = "0"
+RAIN_SETTINGS["blok"]["rain_duration"] = "48*3600"
 
 # piek=2 hours of rain in a 2 day simulation
 RAIN_SETTINGS["piek"] = {}
-RAIN_SETTINGS["piek"]["days_dry_start"] = 0
-RAIN_SETTINGS["piek"]["hours_dry_start"] = 0
-RAIN_SETTINGS["piek"]["days_rain"] = 0
-RAIN_SETTINGS["piek"]["hours_rain"] = 2
-RAIN_SETTINGS["piek"]["days_dry_end"] = 1
-RAIN_SETTINGS["piek"]["hours_dry_end"] = 22
+RAIN_SETTINGS["piek"]["simulation_duration"] = "48*3600"
+RAIN_SETTINGS["piek"]["rain_offset"] = "0"
+RAIN_SETTINGS["piek"]["rain_duration"] = "2*3600"
 
 # Rain intensity per scenario
 RAIN_INTENSITY = {}
 RAIN_INTENSITY["blok"] = {}
-RAIN_INTENSITY["blok"]["T10"] = 71.2 / 48  # mm/hour
-RAIN_INTENSITY["blok"]["T100"] = 100.9 / 48  # mm/hour
-RAIN_INTENSITY["blok"]["T1000"] = 134.6 / 48  # mm/hour
+RAIN_INTENSITY["blok"]["T10"] = "71.2 / 48"  # mm/hour
+RAIN_INTENSITY["blok"]["T100"] = "100.9 / 48"  # mm/hour
+RAIN_INTENSITY["blok"]["T1000"] = "134.6 / 48"  # mm/hour
 RAIN_INTENSITY["piek"] = {}
-RAIN_INTENSITY["piek"]["T10"] = 35.5 / 2  # mm/hour
-RAIN_INTENSITY["piek"]["T100"] = 55.7 / 2  # mm/hour
-RAIN_INTENSITY["piek"]["T1000"] = 80.5 / 2  # mm/hour
+RAIN_INTENSITY["piek"]["T10"] = "35.5 / 2"  # mm/hour
+RAIN_INTENSITY["piek"]["T100"] = "55.7 / 2"  # mm/hour
+RAIN_INTENSITY["piek"]["T1000"] = "80.5 / 2"  # mm/hour
 
 RAIN_TYPES = ["piek", "blok"]
-GROUNDWATER = ["GLG", "GGG", "GHG"]
+GROUNDWATER = ["glg", "ggg", "ghg"]
 RAIN_SCENARIOS = ["T10", "T100", "T1000"]
 
 # Dict with uuids for the organisation. Organisation names are equal to the

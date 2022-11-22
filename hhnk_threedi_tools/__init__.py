@@ -13,6 +13,9 @@ import hhnk_threedi_tools.core
 import hhnk_threedi_tools.resources
 
 
+#api
+from hhnk_threedi_tools.core.api.read_api_file import read_api_file
+
 # tests
 from hhnk_threedi_tools.core.checks.bank_levels import (
     BankLevelTest,

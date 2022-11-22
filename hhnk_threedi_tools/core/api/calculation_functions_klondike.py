@@ -308,9 +308,9 @@ def create_threedi_simulation(
     basic_processing,
     damage_processing,
     arrival_processing,
-    use_structure_control,
-    use_laterals,
     output_folder,
+    use_structure_control=True,
+    use_laterals=True,
 ):  # , days_dry_start, hours_dry_start, days_rain, hours_rain, days_dry_end, hours_dry_end, rain_intensity, organisation_uuid, model_slug, scenario_name, store_results):
     """
     Creates and returns a Simulation (doesn't start yet) and initializes it with
