@@ -66,7 +66,7 @@ class ModelSchematisations:
         if not os.path.exists(schema_folder + "\\revisions"):
             os.makedirs(schema_folder + "\\revisions")
             count = len(os.listdir(str(self.folder.model)+"\\revisions"))
-            return str("Latest local revision:      rev" + count)
+            return str("Latest local revision:      rev" + str(count))
 
         schematisation = row["schematisation_name"]
         threedimodel = upload.threedi.api.threedimodels_list(revision__schematisation__name=schematisation)
@@ -87,7 +87,7 @@ class ModelSchematisations:
         only the globalsettings"""
         row = self.settings_df.loc[name].copy()
 
-        schema_name = self.folder.model.add_modelpath(name)
+        schema_name = self.folder.model._add_modelpath(name)
 
         # Copy the files that are in the global settings.
         # This menas rasters that are not defined are not added to the schematisation.
@@ -214,16 +214,13 @@ class ModelSchematisations:
 
     def upload_schematisation(self, name, commit_message, api_key):
         schema_folder = os.path.join(str(self.folder.model))
+        commit_message=commit_message
         
         if not os.path.exists(schema_folder + "\\revisions"):
             os.makedirs(schema_folder + "\\revisions")
      
-
-        count = len(os.listdir(str(self.folder.model) + "\\revisions"))
-        if not os.path.exists(self.folder.model + "\\revisions\\rev" + (count+1)):
-            os.makedirs((self.folder.model + "\\revisions\\rev" + (count+1)))
-            
-             
+        count = len(os.listdir(str(schema_folder) + "\\revisions"))
+                    
         """
         possible raster_names
         [ dem_file, equilibrium_infiltration_rate_file, frict_coef_file,
@@ -236,8 +233,8 @@ class ModelSchematisations:
         row = self.settings_df.loc[name]
         schema_new = getattr(self.folder.model, f"schema_{name}")
         schema_str = str(schema_new)
-        target_file = str(self.folder.model) + "\\revisions\\rev" + str(count+1)
-        shutil.copyfile(schema_str, target_file)
+        target_file = str(self.folder.model) + "\\revisions\\rev" + str(count+1) + "_" + str(commit_message)
+        shutil.copytree(schema_str, target_file)
 
         upload.threedi.set_api_key(api_key)
 
