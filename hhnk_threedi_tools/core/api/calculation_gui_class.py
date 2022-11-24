@@ -464,11 +464,24 @@ class StartCalculationWidgets:
             self.folder_label = widgets.Label(
                     "Output folder:", layout=item_layout(grid_area="output_folder_label")
                 )
+
             self.folder_value = widgets.Text(
                     '',
                     disabled=True,
                     layout=item_layout(grid_area="output_folder_value"),
                 )
+
+
+            self.folder_map_label = widgets.Label(
+                    "Output folder map:", layout=item_layout(grid_area="output_folder_map_label")
+                )    
+
+            self.folder_map_value = widgets.Text(
+                    '',
+                    disabled=False,
+                    layout=item_layout(grid_area="output_folder_map_value"),
+                )
+
 
             # Selection box of the folder the output should be put in. (Hyd toets or Extreme)
             self.folder_options = ["1d2d_results", "0d1d_results", "batch_results"]
@@ -918,6 +931,7 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
 
         @self.start.check_batch_input_button.on_click
         def check_batch_input(action):
+            # self.feedback.widget.clear_output()
             ready_to_roll = self.check_create_batch_simulation()
 
 
@@ -931,6 +945,10 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
             self.update_start_simulation_button(disabled=True, button=self.start.start_batch_button)
 
             self.vars.output_folder_batch = self.output.folder_value_batch.value
+            if os.path.exists(str(self.vars.output_folder_batch)) == False:
+                os.mkdir(str(self.vars.output_folder_batch))
+
+
             batch_scenario_names = self.batch_scenario_names()
             self.add_feedback("INFO", f"Starting simulations.\nOutput wil be stored in {self.vars.output_folder_batch}")
             for rt, gxg, rs, i in self.loop_batch_selection():
@@ -989,6 +1007,10 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
                 )
 
 
+
+
+
+
     #-- #%%^^%%# --# end of __init__ #-- #%%^^%%# --#
     def check_create_simulation(self):
         """check if we can create a simulation"""
@@ -1011,18 +1033,26 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
     def check_create_batch_simulation(self):
         self.feedback.widget.clear_output()
         ready_to_roll = True
-
+           
         #Set output folder
-        output_folder = self.start.simulation_batch_name_widget.value.replace("{rt}_{gxg}_{rs}","")
-        output_folder = output_folder.replace("({i})","")
-        output_folder = output_folder.replace("  "," ")
-        output_folder=output_folder.format(schema_name=self.model.schema_name_widget.value,
-                                            rev="-",
-                                            model_type=self.vars.model_type,)
-        output_folder = output_folder.rstrip(" ")
 
-        self.output.folder_value_batch.value = self.vars.folder.threedi_results.batch.full_path(output_folder)
+        output_folder = self.output.folder_map_value.value
+        if output_folder == "":
+            ready_to_roll=False
+            self.add_feedback("ERROR", "No output folder map selected.")
+            
+        else:
+            self.output.folder_value_batch.value = self.vars.folder.threedi_results.batch.full_path(output_folder)
+            if os.path.exists(self.vars.folder.threedi_results.batch.full_path(output_folder)):
+                self.add_feedback("Warning", "Output folder map already exists!")
 
+        # output_folder = self.start.simulation_batch_name_widget.value.replace("{rt}_{gxg}_{rs}","")
+        # output_folder = output_folder.replace("({i})","")
+        # output_folder = output_folder.replace("  "," ")
+        # output_folder=output_folder.format(schema_name=self.model.schema_name_widget.value,
+        #                                     rev="-",
+        #                                     model_type=self.vars.model_type,)
+        # output_folder = output_folder.rstrip(" ")
 
         selected_models = []
         for gxg in GROUNDWATER:
@@ -1055,9 +1085,11 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
             batch_scenario_names = self.batch_scenario_names()
 
             self.add_feedback("INFO", f"Ready to start simulations ({len(batch_scenario_names)} total)")
-            with self.feedback.widget:
-                for key in batch_scenario_names:
-                    print(batch_scenario_names[key])
+            for key in batch_scenario_names:
+                self.feedback.widget.append_stdout(f"{batch_scenario_names[key]}\n")
+
+                # with self.feedback.widget:
+                #     print(batch_scenario_names[key])
             self.update_start_simulation_button(disabled=False, button=self.start.start_batch_button)
             
         else:
@@ -1137,8 +1169,8 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
 
 
     def add_feedback(self, errortype, message):
-        self.feedback.widget.append_stdout(f"{self.vars.time_now} {errortype} - {message}")
-        
+        self.feedback.widget.append_stdout(f"{self.vars.time_now} {errortype} - {message}\n")
+
 
     def update_create_simulation_button(self):
         """
@@ -1635,6 +1667,8 @@ class StartCalculationGui:
                 self.w.output.folder_label,
                 # self.w.output.folder_value,
                 self.w.output.folder_value_batch,
+                self.w.output.folder_map_label,
+                self.w.output.folder_map_value,
                 # self.w.output.subfolder_label,
                 # self.w.output.subfolder_box,
                 # self.w.calc_settings.label,
@@ -1668,7 +1702,7 @@ class StartCalculationGui:
 '. . . . . . organisation_label organisation_box organisation_box'
 '. batch_scenario_label batch_scenario_label batch_scenario_label batch_scenario_label . output_label output_label output_label'
 '. . batch_rain_type_box batch_rain_type_box batch_rain_type_box . output_folder_label output_folder_value_batch output_folder_value_batch'
-'. . gxg_label_box gxg_label_box gxg_label_box . . . .'
+'. . gxg_label_box gxg_label_box gxg_label_box . output_folder_map_label output_folder_map_value output_folder_map_value'
 '. rain_label_box batch_scenario_box batch_scenario_box batch_scenario_box . . . .'
 '. rain_label_box batch_scenario_box batch_scenario_box batch_scenario_box . . . .'
 '. rain_label_box batch_scenario_box batch_scenario_box batch_scenario_box . start_label start_label start_label'
