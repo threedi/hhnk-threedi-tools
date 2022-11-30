@@ -636,24 +636,31 @@ class Simulation:
 
         if not output_path.exists():
             save_json(output_path, self.data.boundaries)
+        
+        if self.data.boundaries == []:
+            print("Info: Boundary file is empty, file not uploaded")
+            return "Info: Boundary file is empty, file not uploaded"
 
         tc = ThreediCalls(threedi_api=self.threedi_api)
 
         UPLOAD_TIMEOUT = 45
         valid_states = ["processed", "valid"]
-        
-        bc_upload = self.threedi_api.simulations_events_boundaryconditions_file_create(simulation_pk=self.id,
-                    data={'filename':filename})
-        upload_json(bc_upload, output_path)
-        print(f"create: {output_path}")
-        for ti in range(int(UPLOAD_TIMEOUT // 2)):
-            uploaded_bc = tc.fetch_boundarycondition_files(self.id)[0]
-            if uploaded_bc.state in valid_states:
-                print('\nUpload success')
-                break
-            else:
-                print(f'Uploading {filename} ({ti}/{int(UPLOAD_TIMEOUT // 2)})', end='\r')
-                time.sleep(2)
+
+
+        if self.data.boundaries != []:
+
+            bc_upload = self.threedi_api.simulations_events_boundaryconditions_file_create(simulation_pk=self.id,
+                        data={'filename':filename})
+            upload_json(bc_upload, output_path)
+            print(f"create: {output_path}")
+            for ti in range(int(UPLOAD_TIMEOUT // 2)):
+                uploaded_bc = tc.fetch_boundarycondition_files(self.id)[0]
+                if uploaded_bc.state in valid_states:
+                    print('\nUpload success')
+                    break
+                else:
+                    print(f'Uploading {filename} ({ti}/{int(UPLOAD_TIMEOUT // 2)})', end='\r')
+                    time.sleep(2)
 
 
     def add_basic_post_processing(self):
