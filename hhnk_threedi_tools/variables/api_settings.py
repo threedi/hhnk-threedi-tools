@@ -64,12 +64,13 @@ API_SETTINGS["damage_processing"] = {
 MODEL_TYPES = ["0d1d_test", "1d2d_test", "1d2d_glg", "1d2d_ggg", "1d2d_ghg"]
 
 # Batch calculation postprocessing settings
-RAW_DOWNLOADS = ["piek_GHG_T1000", "blok_GHG_T1000"]  # Needed for mask/filter map
+RAW_DOWNLOADS = ["piek_ghg_T1000", "blok_ghg_T1000"]  # Needed for mask/filter map
 RUIMTEKAART_SCENARIOS = [
-    "blok_GGG_T10",
-    "blok_GGG_T100",
-    "blok_GGG_T1000",
-    "blok_GHG_T10",
-    "blok_GHG_T100",
-    "blok_GHG_T1000",
+    "blok_ggg_T10",
+    "blok_ggg_T100",
+    "blok_ggg_T1000",
+    "blok_ghg_T10",
+    "blok_ghg_T100",
+    "blok_ghg_T1000",
 ]
+

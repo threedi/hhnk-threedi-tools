@@ -16,12 +16,12 @@ logger = logging.getLogger(__name__)
 
 
 SCENARIOS = (
-    "blok_GGG_T10",
-    "blok_GHG_T10",
-    "blok_GGG_T100",
-    "blok_GHG_T100",
-    "blok_GGG_T1000",
-    "blok_GHG_T1000",
+    "blok_ggg_T10",
+    "blok_ghg_T10",
+    "blok_ggg_T100",
+    "blok_ghg_T100",
+    "blok_ggg_T1000",
+    "blok_ghg_T1000",
 )
 
 ATTRS = {

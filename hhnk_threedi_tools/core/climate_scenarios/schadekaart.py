@@ -62,7 +62,8 @@ def main_maak_schadekaart(
     # #Loop over windows and calculate results
     for idx, part in parts.iterrows():
         window = part["window_readarray"]
-
+        window_normal = part["window"] 
+        
         window, schade_window_array = bereken_contante_schade_window(
             idx=idx,
             window=window,
@@ -71,8 +72,8 @@ def main_maak_schadekaart(
             cw_factor=cw_factor,
         )
 
-        array_out[window[1] : window[3], window[0] : window[2]] = schade_window_array
-
+        array_out[window_normal[1] : window_normal[3], window_normal[0] : window_normal[2]] = schade_window_array 
+    
     hrt.save_raster_array_to_tiff(
         output_file=output_raster.path,
         raster_array=array_out,
