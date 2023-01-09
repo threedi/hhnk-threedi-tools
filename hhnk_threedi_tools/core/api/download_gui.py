@@ -713,9 +713,11 @@ def download_gui(main_folder=None, lizard_api_key="", data=None):
             )
 
             # Start download of selected rasters (if any are selected) -----------------------------------------------
-
-            time = time_pick_dropdown.value.replace("-", "_")
-            time = time.replace(":", "_")
+            time = time_pick_dropdown.value
+            if time is not None:
+                time = time.replace("-", "_")
+                time = time.replace(":", "_")
+                
             res = str(resolution_dropdown.value).replace(".", "_")
 
             # Output files
@@ -879,7 +881,7 @@ def download_gui(main_folder=None, lizard_api_key="", data=None):
                         )  # strip 'T' because its not used in older versions.
                         if (
                             (rain_type in name)
-                            and (groundwater in name)
+                            and (groundwater.upper() in name)
                             and (rain_scenario in name)
                         ):
                             if "0" not in [
@@ -896,7 +898,7 @@ def download_gui(main_folder=None, lizard_api_key="", data=None):
 
                         # Sommige resultaten zijn aangeroepen met GG ipv GGG in de naam. Onderstaande elif statement om dit te voorkomen
                         elif (
-                            (groundwater == "GGG")
+                            (groundwater.upper() == "GGG")
                             and (rain_type in name)
                             and ("GG" in name)
                             and (rain_scenario in name)
@@ -1085,7 +1087,7 @@ def download_gui(main_folder=None, lizard_api_key="", data=None):
 
     #     username_widget.value='wietse.vangerwen'
     # password_widget.value =''
-    #     polder_name_widget.value='HUB'
+    polder_name_widget.value='heiloo_geen_gemaal'
     #     model_revision_widget.value='50'
     return download_tab
 
@@ -1111,3 +1113,11 @@ def download_gui(main_folder=None, lizard_api_key="", data=None):
     #  'BWN Hoekje [#30] GLG piek 1000 (3)',
     #  'BWN Hoekje [#30] GLG piek 100 (2)',
     #  'BWN Hoekje [#30] GLG piek 10 (1)')
+
+# %%
+if __name__ == '__main__':
+    data = {'polder_folder': 'E:\\02.modellen\\heiloo_geen_gemaal',
+ 'api_keys_path': 'C:\\Users\\wvangerwen\\AppData\\Roaming\\3Di\\QGIS3\\profiles\\default\\python\\plugins\\hhnk_threedi_plugin\\api_key.txt'}
+    self = download_gui(data=data)
+    display(self)
+# %%

@@ -662,6 +662,7 @@ class ModelPathsParent(Folder):
     def __init__(self, base):
         super().__init__(os.path.join(base, "02_schematisation"))
 
+        self.revisions = ModelRevisionsParent(base=self.base)
         self.schema_base = ModelPaths(base=self.base, name="00_basis")
         self.schema_list = ["schema_base"]
         self.add_file("settings", "model_settings.xlsx", ftype="file")
@@ -683,11 +684,13 @@ class ModelPathsParent(Folder):
         if self.settings.exists:
             if not self.settings_loaded: #only read once. #FIXME test this, might cause issues.
                     self.settings_df = pd.read_excel(self.settings.path, engine="openpyxl")
+                    self.settings_df = self.settings_df[self.settings_df['name'].notna()]
                     self.settings_df.set_index("name", drop=False, inplace=True)
                     self.settings_loaded = True
 
                     for item_name, row in self.settings_df.iterrows():
-                        self._add_modelpath(name=item_name)
+                        if not pd.isnull(row["name"]):
+                            self._add_modelpath(name=item_name)
         else:
             print(f"Tried to load {self.settings.path}, but it doesnt exist.")
 
@@ -807,6 +810,11 @@ class ModelPaths(Folder):
         else:
             self.add_file("database", self.model_path(idx=name_or_idx, name=None))
 
+
+class ModelRevisionsParent(Folder):
+    def __init__(self, base):
+        super().__init__(os.path.join(base, "revisions"))
+        self.create()
 
 # TODO Deprecated and replaced by ThreediRasters, ready to remove.
 # class RasterPaths(Folder):

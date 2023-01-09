@@ -80,7 +80,35 @@ def get_revision_info(revision__schematisation__name:str):
 
 
 
-def get_or_create_schematisation(
+def get_schematisation(
+    schematisation_name: str,
+    organisation_uuid="48dac75bef8a42ebbb52e8f89bbdb9f2",
+    tags: List = None,
+) -> Schematisation:
+    tags = [] if not tags else tags
+    resp = threedi.api.schematisations_list(
+        name=schematisation_name, owner__unique_id=organisation_uuid
+    )
+    if resp.count == 1:
+        print(
+            f"Schematisation '{schematisation_name}' already exists, skipping creation."
+        )
+        return resp.results[0]
+    elif resp.count > 1:
+        raise ValueError(f"Found > 1 schematisations named'{schematisation_name}!")
+
+    else:
+        print(
+            f"Schematisation '{schematisation_name}' doesn't exists."
+        )
+        return resp.results[0]
+
+
+def get_or_create_schematisation():
+    return print("change function")
+
+
+def get_and_create_schematisation(
     schematisation_name: str,
     organisation_uuid="48dac75bef8a42ebbb52e8f89bbdb9f2",
     tags: List = None,
@@ -98,6 +126,8 @@ def get_or_create_schematisation(
         raise ValueError(f"Found > 1 schematisations named'{schematisation_name}!")
 
     # if not found -> create
+    # cont = input(f"Create new schematisation? [y/n] - {schematisation_name}")
+    # if cont == "y":
     schematisation = threedi.api.schematisations_create(
         data={
             "owner": organisation_uuid,
@@ -106,7 +136,8 @@ def get_or_create_schematisation(
         }
     )
     return schematisation
-
+    # else:
+    #     return None
 
 
 def upload_sqlite(schematisation, revision, sqlite_path: Union[str, Path]):
@@ -192,8 +223,8 @@ def create_threedimodel(
     revision,
     max_retries_creation=60,
     wait_time_creation=5,
-    max_retries_processing=60,
-    wait_time_processing=5,
+    # max_retries_processing=60,
+    # wait_time_processing=5,
 ):
     threedimodel = None
     for i in range(max_retries_creation):
@@ -217,21 +248,21 @@ def create_threedimodel(
             print(e)
             time.sleep(wait_time_creation)
             continue
-    if threedimodel:
-        for i in range(max_retries_processing):
-            threedimodel = threedi.api.threedimodels_read(threedimodel.id)
-            if threedimodel.is_valid:
-                print(f"\nSuccesfully created threedimodel with id {threedimodel.id}")
-                break
-            else:
-                print(f'waiting for model to become valid [{i}/{max_retries_processing}]', end='\r')
-                time.sleep(wait_time_processing)
-        if not threedimodel.is_valid:
-            print(
-                f"\nFailed to sucessfully process threedimodel with id {threedimodel.id}"
-            )
-    else:
-        print("Failed to create threedimodel")
+    # if threedimodel:
+    #     for i in range(max_retries_processing):
+    #         threedimodel = threedi.api.threedimodels_read(threedimodel.id)
+    #         if threedimodel.is_valid:
+    #             print(f"\nSuccesfully created threedimodel with id {threedimodel.id}")
+    #             break
+    #         else:
+    #             print(f'waiting for model to become valid [{i}/{max_retries_processing}]', end='\r')
+    #             time.sleep(wait_time_processing)
+    #     if not threedimodel.is_valid:
+    #         print(
+    #             f"\nFailed to sucessfully process threedimodel with id {threedimodel.id}"
+    #         )
+    # else:
+    #     print("Failed to create threedimodel")
     return threedimodel.id
 
 
@@ -243,7 +274,7 @@ def upload_and_process(
     commit_message: str = "auto-commit",
 ):
     # Schematisatie maken als die nog niet bestaat
-    schematisation = get_or_create_schematisation(
+    schematisation = get_and_create_schematisation(
         schematisation_name, tags=schematisation_create_tags
     )
 
