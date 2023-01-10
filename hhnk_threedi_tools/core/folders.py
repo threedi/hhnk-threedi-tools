@@ -904,6 +904,10 @@ infiltration - {self.infiltration.name}
 class ThreediResultsPaths(Folder):
     """
     Folder in which 3di results are saved
+
+    to use with list indexing use the following options:
+    options = ["01d_results", "1d2d_results", "climate_results", "batch_results]
+    .threedi_results[options[x]]
     """
 
     def __init__(self, base):
@@ -918,8 +922,8 @@ class ThreediResultsPaths(Folder):
     def structure(self):
         return f"""  
                {self.space}threedi_results
-               {self.space}├── zero_d_one_d
-               {self.space}├── one_d_two_d
+               {self.space}├── zero_d_one_d  ["0d1d_results"]
+               {self.space}├── one_d_two_d  ["1d2d_results"]
                {self.space}└── climate_results or batch or climate
                """
 

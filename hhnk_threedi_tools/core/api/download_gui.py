@@ -1116,7 +1116,7 @@ def download_gui(main_folder=None, lizard_api_key="", data=None):
 
 # %%
 if __name__ == '__main__':
-    data = {'polder_folder': 'E:\\02.modellen\\heiloo_geen_gemaal',
+    data = {'polder_folder': 'E:\\02.modellen\\23_Katvoed',
  'api_keys_path': 'C:\\Users\\wvangerwen\\AppData\\Roaming\\3Di\\QGIS3\\profiles\\default\\python\\plugins\\hhnk_threedi_plugin\\api_key.txt'}
     self = download_gui(data=data)
     display(self)

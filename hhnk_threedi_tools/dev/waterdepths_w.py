@@ -42,7 +42,10 @@ import pandas as pd
 from shapely import wkt
 import geopandas as gpd
 # from rasterstats import zonal_stats
-from threedidepth.calculate import calculate_waterdepth
+# from threedidepth.calculate import calculate_waterdepth
+from hhnk_threedi_tools.dev.calculate_patched import calculate_waterdepth
+import threedidepth
+
 from threedigrid.admin.gridresultadmin import GridH5ResultAdmin
 
 # Local imports
@@ -91,9 +94,10 @@ def get_neighbor_cells(grid: GridH5ResultAdmin, node_id: int):
 def threedi_nodes_within_vector(
     vector: gpd.geodataframe.GeoDataFrame, grid: GridH5ResultAdmin
 ):
+
     """
     returns node ids of 2D and 1D nodes which are present within
-    the shape of the Vector.
+    the shape of the Vector. The vectors are the watersurface polygons.
     params:
         vector: Geopandas geodataframewith polygons
         grid: GridH5ResultAdmin with 1D/2D
@@ -102,7 +106,9 @@ def threedi_nodes_within_vector(
     # Get cells
     ds, cells = get_geometry_grid_cells(grid)
     # Get dissolved geometry
-    shape = ogr.CreateGeometryFromWkt(vector.dissolve()["geometry"].to_wkt().iloc[0])
+    # shape = ogr.CreateGeometryFromWkt(vector.dissolve()["geometry"].to_wkt().iloc[0])
+    shape = ogr.CreateGeometryFromWkt(vector.geometry.unary_union.wkt)
+
 
     # Spatial filter
     cells.SetSpatialFilter(shape)
@@ -113,7 +119,6 @@ def threedi_nodes_within_vector(
         geometry = wkt.loads(c.GetGeometryRef().ExportToWkt())
         if vector.geometry.contains(geometry).any():
             output.append(c["nod_id"])
-
     return output
 
 
@@ -207,7 +212,7 @@ def edit_nodes_in_grid(
     netcdf_path = str(folder.threedi_results.one_d_two_d[scenario].grid_path)
     edit = GridEdit(netcdf_path)
 
-    # 1. retrieve the nodes where the cells are fully wthing the geometry
+    # 1. retrieve the nodes where the cells are fully within the geometry
     node_ids = threedi_nodes_within_vector(vector, grid)
     print(f"Retrieved {len(node_ids)} nodes:", node_ids)
 
@@ -239,10 +244,10 @@ def edit_nodes_in_grid(
     # write
     if not os.path.exists(output_folder):
         os.mkdir(output_folder)
-    edit.write(output_folder + "/results_3di.nc")
+    edit.write(output_folder/"results_3di.nc")
     shutil.copy(
         str(folder.threedi_results.one_d_two_d[scenario].admin_path),
-        output_folder + "/gridadmin.h5",
+        output_folder/"gridadmin.h5",
     )
     return levels_per_node
 
@@ -261,18 +266,21 @@ def calculate_depth(
 
     folder = Folders(folder_path)
     result = folder.threedi_results[results_type][revision]
-    dem_path = str(folder.model.rasters.dem)
+    dem_path = str(folder.model.schema_base.rasters.dem)
 
     folder.output[results_type][revision].create()
-    output_path = (
-        str(folder.output[results_type][revision]) + f"/depth_{calculation_step}.tif"
-    )
+    output_path = str(folder.output[results_type][revision].pl/f"depth_{calculation_step}.tif")
+
+
+    if calculation_step!="MAX":
+        calculation_step=[int(calculation_step)]
+
     calculate_waterdepth(
         str(result.admin_path),
         str(result.grid_path),
         dem_path,
         output_path,
-        calculation_steps=[int(calculation_step)],
+        calculation_steps=calculation_step,
     )
     print("Output at", output_path)
 
@@ -332,37 +340,75 @@ def threedi_result_volume(
     return np.nansum(vol)
 
 
+# %%
 if __name__ == "__main__":
     import os
 
-    os.chdir(
-        r"C:\Users\chris.kerklaan\Documents\Projecten\hhnk_detachering\hhnk_scripting\bwn_beemster"
-    )
+    # os.chdir(r"E:\02.modellen\23_Katvoed")
 
     ## input
-    folder_path = r"C:\Users\chris.kerklaan\Documents\Projecten\hhnk_detachering\hhnk_scripting\bwn_beemster"
-    results_type = (
-        "results_1d2d"  # can be "0d1d_results", "1d2d_results" or "batch_results"
-    )
-    revision = "nieuw"
-    calculation_step = 1
+    folder_path = r"E:\02.modellen\23_Katvoed"
+    folder = Folders(folder_path)
 
-    vector_path = r"C:\Users\chris.kerklaan\Documents\Projecten\hhnk_detachering\hhnk_scripting\bwn_beemster/01_Source_data/DAMO.gdb"
-    layer_name = "Waterdeel"
-    netcdf_path = r"C:\Users\chris.kerklaan\Documents\Projecten\hhnk_detachering\hhnk_scripting\bwn_beemster/03_3di_resultaten\1d2d_results\nieuw/results_3di.nc"
-    depth_path = r"C:\Users\chris.kerklaan\Documents\Projecten\hhnk_detachering\hhnk_scripting\bwn_beemster\Output\1d2d_tests\nieuw\Layers\depth_576.tif"
+    threedi_result = folder.threedi_results.one_d_two_d['ghg_blok_t1000_interp']
 
-    # original
-    # calculate_depth(folder_path, "1d2d_results", "nieuw", 576)
-    scenario = "nieuw"
-    method = "interpolated"
+    # # original
+    folder_path=folder.path
+    scenario='ghg_blok_t1000'
+    method="interpolated"
+    output_folder = threedi_result.pl.with_stem("ghg_blok_t1000_interp")
+    # %%
+    # data = edit_nodes_in_grid(folder_path=folder.path, scenario='ghg_blok_t1000', method="interpolated", output_folder=output_folder)
 
-    output_folder = r"C:\Users\chris.kerklaan\Documents\Projecten\hhnk_detachering\hhnk_scripting\bwn_beemster/03_3di_resultaten\1d2d_results/test_interpolated"
-    data = edit_nodes_in_grid(folder_path, "nieuw", "interpolated", output_path)
+    # %%
+    calculate_depth(folder_path=folder_path,
+                         results_type="1d2d_results",
+                         revision="ghg_blok_t1000_interp",
+                         calculation_step="MAX",
+                        )
+    # %%
+    # edit = GridEdit(netcdf_path)
+    # output_path = r"C:\Users\chris.kerklaan\Documents\Projecten\hhnk_detachering\hhnk_scripting\bwn_beemster/03_3di_resultaten\1d2d_results/replacement/results_3di.nc"
+    # edit_nodes_in_grid(folder_path, "nieuw", "1d_replacement", output_path)
+    # calculate_depth(folder_path, "1d2d_results", "test", 576)
 
-    calculate_depth(folder_path, "1d2d_results", "test_interpolated", 576)
 
-    edit = GridEdit(netcdf_path)
-    output_path = r"C:\Users\chris.kerklaan\Documents\Projecten\hhnk_detachering\hhnk_scripting\bwn_beemster/03_3di_resultaten\1d2d_results/replacement/results_3di.nc"
-    edit_nodes_in_grid(folder_path, "nieuw", "1d_replacement", output_path)
-    calculate_depth(folder_path, "1d2d_results", "test", 576)
+# %% dataframe met max depth.
+
+
+
+# threedi_result.grid.lines()
+grid_gdf = get_geometry_grid_cells(threedi_result.grid, use_ogr=False)
+s1_all = threedi_result.grid.nodes.subset("2D_open_water").timeseries(indexes=slice(0, -1)).s1
+
+s1_max_ind = s1_all.argmax(axis=0)
+grid_gdf["s1_max"] = np.round(
+    [row[s1_max_ind[enum]] for enum, row in enumerate(s1_all.T)], 5
+)
+
+
+gr = threedi_result.grid
+
+from shapely.geometry import Point
+from shapely.geometry import box
+
+nodes_2d = gpd.GeoDataFrame()
+        # * inputs every element from row as a new function argument.
+nodes_2d["geometry"] = [
+            box(*row) for row in gr.nodes.subset("2D_ALL").cell_coords.T
+        ]
+
+nodes_2d["wlvl_max"] = np.round(
+    [row[s1_max_ind[enum]] for enum, row in enumerate(s1_all.T)], 5
+)
+
+# gr.nodes.subset("2D_open_water").cell_coords
+
+gr.nodes.subset("2D_ALL").coordinates
+
+
+nodes_2d.crs="EPSG:28992"
+nodes_2d.to_file(folder.pl/"test_interp.gpkg", driver="GPKG")
+
+# %%
+
