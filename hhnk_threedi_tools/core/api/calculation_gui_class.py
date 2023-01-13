@@ -989,6 +989,7 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
                 #Postprocessing are enabled.
                 sim.add_basic_post_processing()
                 sim.add_damage_post_processing()
+                #sim.add_arrival_post_processing()   -  Gebruiken bij BWN simulaties
 
                 self.update_simulation_feedback(sim=sim)
 
