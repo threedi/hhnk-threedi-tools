@@ -986,10 +986,9 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
                 sim.add_structure_control()
                 sim.add_laterals()
 
-                #Postprocessing disabled.
-                # self.sim.add_basic_post_processing()
-                # self.sim.add_damage_post_processing()
-                # self.sim.add_arrival_post_processing()
+                #Postprocessing are enabled.
+                sim.add_basic_post_processing()
+                sim.add_damage_post_processing()
 
                 self.update_simulation_feedback(sim=sim)
 
@@ -1751,7 +1750,7 @@ class StartCalculationGui:
 
 
 if __name__ == '__main__':
-    data = {'polder_folder': 'E:\\02.modellen\\Egmond',
+    data = {'polder_folder': 'E:\\02.modellen\\HUB - Scenarioberekeningen wateroverlast',
  'api_keys_path': 'C:\\Users\\wvangerwen\\AppData\\Roaming\\3Di\\QGIS3\\profiles\\default\\python\\plugins\\hhnk_threedi_plugin\\api_key.txt'}
     self = StartCalculationGui(data=data); 
     display(self.tab)
@@ -1759,7 +1758,7 @@ if __name__ == '__main__':
 
     # display(self.w.batch.scenario_box)
 
-    self.widgets.model.schema_name_widget.value='Egmond'
+    self.widgets.model.schema_name_widget.value='Schagerkogge'
     # self.widgets.model.schema_name_widget.value='katvoed'
 
 # %%
@@ -1791,3 +1790,4 @@ a=[row.split(" ") for row in grid_template_areas.split("\n")]
 for i in a:
     print(f"{len(i)} {i}")
 # [len(i) for i in a]
+
