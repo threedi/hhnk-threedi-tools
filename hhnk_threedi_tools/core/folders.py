@@ -662,6 +662,7 @@ class ModelPathsParent(Folder):
     def __init__(self, base):
         super().__init__(os.path.join(base, "02_schematisation"))
 
+        self.revisions = ModelRevisionsParent(base=self.base)
         self.schema_base = ModelPaths(base=self.base, name="00_basis")
         self.schema_list = ["schema_base"]
         self.add_file("settings", "model_settings.xlsx", ftype="file")
@@ -683,11 +684,13 @@ class ModelPathsParent(Folder):
         if self.settings.exists:
             if not self.settings_loaded: #only read once. #FIXME test this, might cause issues.
                     self.settings_df = pd.read_excel(self.settings.path, engine="openpyxl")
+                    self.settings_df = self.settings_df[self.settings_df['name'].notna()]
                     self.settings_df.set_index("name", drop=False, inplace=True)
                     self.settings_loaded = True
 
                     for item_name, row in self.settings_df.iterrows():
-                        self._add_modelpath(name=item_name)
+                        if not pd.isnull(row["name"]):
+                            self._add_modelpath(name=item_name)
         else:
             print(f"Tried to load {self.settings.path}, but it doesnt exist.")
 
@@ -808,6 +811,11 @@ class ModelPaths(Folder):
             self.add_file("database", self.model_path(idx=name_or_idx, name=None))
 
 
+class ModelRevisionsParent(Folder):
+    def __init__(self, base):
+        super().__init__(os.path.join(base, "revisions"))
+        self.create()
+
 # TODO Deprecated and replaced by ThreediRasters, ready to remove.
 # class RasterPaths(Folder):
 #     def __init__(self, base):
@@ -896,6 +904,10 @@ infiltration - {self.infiltration.name}
 class ThreediResultsPaths(Folder):
     """
     Folder in which 3di results are saved
+
+    to use with list indexing use the following options:
+    options = ["01d_results", "1d2d_results", "climate_results", "batch_results]
+    .threedi_results[options[x]]
     """
 
     def __init__(self, base):
@@ -910,8 +922,8 @@ class ThreediResultsPaths(Folder):
     def structure(self):
         return f"""  
                {self.space}threedi_results
-               {self.space}├── zero_d_one_d
-               {self.space}├── one_d_two_d
+               {self.space}├── zero_d_one_d  ["0d1d_results"]
+               {self.space}├── one_d_two_d  ["1d2d_results"]
                {self.space}└── climate_results or batch or climate
                """
 

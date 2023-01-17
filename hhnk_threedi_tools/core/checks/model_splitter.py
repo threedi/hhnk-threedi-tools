@@ -1,4 +1,6 @@
 # %%
+import sys
+sys.path.insert(0, r"E:/github/wvangerwen/hhnk-threedi-tools")
 import shutil
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -21,14 +23,16 @@ RASTER_FILES = [
     "infiltration_rate_file",
     "max_infiltration_capacity_file",
 ]
-# %%
+
 class ModelSchematisations:
     def __init__(self, folder, modelsettings_path):
         self.folder = folder
         self.settings_loaded = False
 
+
         if os.path.exists(modelsettings_path):
             self.settings_df = pd.read_excel(modelsettings_path, engine="openpyxl")
+            self.settings_df = self.settings_df[self.settings_df['name'].notna()]
             self.settings_df.set_index("name", drop=False, inplace=True)
             self.settings_loaded = True
         else:
@@ -43,6 +47,10 @@ class ModelSchematisations:
         else:
             self.settings_default_series = None
             self.settings_loaded = False
+
+            
+        self.folder.model.set_modelsplitter_paths()
+
 
         if self.settings_loaded:
             self._sanity_check()
@@ -92,7 +100,7 @@ class ModelSchematisations:
         # Copy the files that are in the global settings.
         # This menas rasters that are not defined are not added to the schematisation.
         schema_base = self.folder.model.schema_base
-        schema_new = getattr(self.folder.model, schema_name)
+        schema_new = getattr(self.folder.model, f"schema_{name}")
 
         # Write the sqlite and rasters to new folders.
 
@@ -212,15 +220,7 @@ class ModelSchematisations:
 
             hrt.execute_sql_changes(query=query, database=database_path_new)
 
-    def upload_schematisation(self, name, commit_message, api_key):
-        schema_folder = os.path.join(str(self.folder.model))
-        commit_message=commit_message
-        
-        if not os.path.exists(schema_folder + "\\revisions"):
-            os.makedirs(schema_folder + "\\revisions")
-     
-        count = len(os.listdir(str(schema_folder) + "\\revisions"))
-                    
+    def upload_schematisation(self, name, commit_message, api_key):             
         """
         possible raster_names
         [ dem_file, equilibrium_infiltration_rate_file, frict_coef_file,
@@ -229,6 +229,12 @@ class ModelSchematisations:
         leakage_file, phreatic_storage_capacity_file, hydraulic_conductivity_file, porosity_file, infiltration_rate_file,
         max_infiltration_capacity_file, interception_file ]
         """
+        revision_parent_folder = self.folder.model.revisions.path
+
+        count = len(os.listdir(revision_parent_folder))
+        revision_folder = os.path.join(revision_parent_folder, f"rev_{count+1}")
+        if not os.path.exists(revision_folder):
+            os.makedirs(revision_folder)
 
         row = self.settings_df.loc[name]
         schema_new = getattr(self.folder.model, f"schema_{name}")
@@ -273,20 +279,22 @@ class ModelSchematisations:
 
         
 # %%
+
 if __name__ == "__main__":
     from hhnk_threedi_tools.core.folders import Folders
 
-    path = r"E:\02.modellen\model_test_v2"
+    # path = r"E:\02.modellen\model_test_v2"
+    path = r"\\corp.hhnk.nl\data\Hydrologen_data\Data\02.modellen\heiloo_geen_gemaal"
     folder = Folders(path)
-    name = "0d1d_test"
+    name = "1d2d_glg"
 
     self = ModelSchematisations(
         folder=folder, modelsettings_path=folder.model.settings.path
     )
-    self.create_schematisation(name="0d1d_test")
+    self.create_schematisation(name=name)
     self.upload_schematisation(
-        name="0d1d_test",
-        commit_message="blabla_v2",
+        name=name,
+        commit_message="Load Model. Pump capacity 466 l/sec",
         api_key="aDFMXSfR.XdXc1MaWXYtA3DIXxrgzXzH1u4Lnfe7N",
     )
     # %%

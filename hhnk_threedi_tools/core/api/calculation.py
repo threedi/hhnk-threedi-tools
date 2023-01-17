@@ -732,10 +732,12 @@ class Simulation:
 
         #Create simulation on API
         data={  "name":simulation_name,
-                "threedimodel":self.model_id,
+            	"threedimodel":self.model_id,
                 "organisation":organisation_uuid,
                 "start_datetime":self.start_time,
-                "end_datetime":self.end_time,}
+                "end_datetime":self.end_time,
+                "store_results": True
+                }
         self.simulation = self.threedi_api.simulations_create(data)
         self.simulation_created = True
 
