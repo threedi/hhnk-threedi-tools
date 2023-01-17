@@ -508,6 +508,8 @@ class Folders(Folder):
             files_dict["init_water_level_filename"] = "initieel_water_level"
             files_dict["dewatering_filename"] = "drooglegging"
             files_dict["water_surface_filename"] = "oppervlaktewater"
+            files_dict["cross_section_filename"] = "overlappende_profielen"
+            files_dict["cross_section_intersection_filename"] = "profielen_geen_vertex"
 
         if test_type == 2:
             files_dict["zero_d_one_d_filename"] = "0d1d_toetsing"
@@ -1448,7 +1450,8 @@ class OutputFolderSqlite(Folder):
         self.add_file("drooglegging", "drooglegging.tif", "raster")
         self.add_file("geometry_check", "geometry_check.csv", "file")
         self.add_file("general_sqlite_checks", "general_sqlite_checks.csv", "file")
-
+        self.add_file("overlappende_profielen", "overlappende_profielen.gpkg", "file")
+        self.add_file("profielen_geen_vertex", "profielen_geen_vertex.gpkg", "file")
 
 class OutputFolder0d1d(ResultsRevisions):
     def __init__(self, base, folder):
