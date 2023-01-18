@@ -603,6 +603,7 @@ class SourcePaths(Folder):
         self.add_file("hdb", HDB, ftype="filegdb")
         self.add_file("datachecker", "datachecker_output.gdb", ftype="filegdb")
         self.add_file("polder_polygon", POLDER_POLY)
+        self.add_file("panden", "panden.gpkg", ftype="filegdb")
 
         # Layers
         self.add_layer("datachecker_fixed_drainage", "fixeddrainagelevelarea")
