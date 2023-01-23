@@ -667,80 +667,6 @@ SUBSET_2D_OPEN_WATER = "2D_open_water"
 
 
 # %%
-class BaseCalculator:
-
-    PIXEL_MAP = "pixel_map"
-    LOOKUP_S1 = "lookup_s1"
-    INTERPOLATOR = "interpolator"
-    DELAUNAY = "delaunay"
-
-    def __init__(self):
-
-        self.cache= {}
-
-        #Wlvl gets reordered for the delaunay.
-        self.node_id_translatedict = grid_gdf["id"].to_dict()
-        self.wlvl_raw = np.array(grid_gdf["wlvl_max_orig"]).copy()
-
-    @property
-    def lookup_wlvl(self):
-        """
-        Return the lookup table to find waterlevel by cell id.
-
-        Both cells outside any defined grid cell and cells in a grid cell that
-        are currently not active ('no data') will return the NO_DATA_VALUE as
-        defined in threedigrid.
-        """
-        try:
-            return self.cache[self.LOOKUP_S1]
-        except KeyError:
-            lookup_s1 = np.full((grid_gdf["id"]).max() + 1, NO_DATA_VALUE)
-  
-            lookup_s1[grid_gdf["id"]] = self.wlvl_raw
-            self.cache[self.LOOKUP_S1] = lookup_s1
-        return lookup_s1
-
-    @property
-    def delaunay(self):
-        """
-        Return a (delaunay, s1) tuple.
-
-        `delaunay` is a qhull.Delaunay object, and `s1` is an array of
-        waterlevels for the corresponding delaunay vertices.
-        """
-        # try:
-        #     return self.cache[self.DELAUNAY]
-        # except KeyError:
-        if True:
-            points_grid = np.array(grid_gdf.centroid.apply(lambda x: [x.x, x.y]).to_list())
-            wlvl = self.wlvl_raw
-
-            # reorder a la lizard
-            points_grid, wlvl = morton.reorder(points_grid, wlvl)
-            delaunay = qhull.Delaunay(points_grid)
-            self.cache[self.DELAUNAY] = delaunay, wlvl
-            return delaunay, wlvl
-
-    def _get_points_mesh(self, window):
-        """Create mesh grid points with coordinates every 0.5m with the input window.
-        Point are created in the centre of the cell (0.5)
-        Args:
-            indices (tuple): ((i1, j1), (i2, j2)) subarray indices
-        """
-        #i1=leftx, i2=rightx (or y.. not sure)
-        (j1, i1), (j2, i2) = (window[0], window[1]), (window[0] + window[2], window[1] + window[3])
-        #Create meshgrid with window bounds
-        local_ji = np.mgrid[i1:i2, j1:j2].reshape(2, -1)[::-1].transpose()
-        xstart, xres, b, ystart, c, yres = output_raster.metadata.georef
-
-        #0.5*res gives a point in the centre of the cell. 
-        return local_ji * [xres, yres] + [xstart + 0.5 * xres, ystart + 0.5 * -yres]
-
-calculator = BaseCalculator()
-
-points_mesh = calculator._get_points_mesh(window)
-
-
 if DEBUG:
     if False:
         points_mesh_gdf = gpd.GeoDataFrame(geometry=[Point(i) for i in points_mesh])
@@ -748,54 +674,6 @@ if DEBUG:
 
         points_mesh_gdf.to_file(threedi_result.pl/"debug"/"mesh_block.gpkg", driver="GPKG")
 
-# determine result raster cell centers and in which triangle they are
-delaunay, wlvl = calculator.delaunay
-simplices=delaunay.find_simplex(points_mesh)
-
-
-# start with the constant level result
-#node_id_grid is 1d array of the node ids in the mesh grid
-node_id_grid = block_nodeid.ravel()
-#the waterlevel is known per nodeid. This loopuptable gets the waterlevel 
-#per point in the mesh grid 
-level = calculator.lookup_wlvl[node_id_grid]
-
-
-# determine which points will use interpolation
-in_gridcell = node_id_grid != 0
-in_triangle = simplices != -1
-in_interpol = in_gridcell & in_triangle
-points_int = points_mesh[in_interpol]
-
-# get the nodes and the transform for the corresponding triangles
-transform = delaunay.transform[simplices[in_interpol]]
-vertices = delaunay.vertices[simplices[in_interpol]]
-
-# calculate weight, see print(spatial.Delaunay.transform.__doc__) and
-# Wikipedia about barycentric coordinates
-weight = np.empty(vertices.shape)
-weight[:, :2] = np.sum(
-    transform[:, :2] * (points_int - transform[:, 2])[:, np.newaxis], 2
-)
-weight[:, 2] = 1 - weight[:, 0] - weight[:, 1]
-
-# set weight to zero when for inactive nodes
-nodelevel = wlvl[vertices]
-weight[nodelevel == NO_DATA_VALUE] = 0
-
-# determine the sum of weights per result cell
-weight_sum = weight.sum(axis=1)
-
-# further subselect points suitable for interpolation
-suitable = weight_sum > 0.5
-weight = weight[suitable] / weight_sum[suitable][:, np.newaxis]
-nodelevel = nodelevel[suitable]
-
-# combine weight and nodelevel into result
-in_interpol_and_suitable = in_interpol.copy()
-in_interpol_and_suitable[in_interpol] &= suitable
-level[in_interpol_and_suitable] = np.sum(weight * nodelevel, axis=1)
-mesh_grid_interp = level.reshape(block_nodeid.shape)
 
 
 # %%

@@ -24,16 +24,6 @@ import os
 
 import geopandas as gpd
 
-MODE_COPY = "copy"
-MODE_NODGRID = "nodgrid"
-MODE_CONSTANT_S1 = "constant-s1"
-MODE_LINEAR_S1 = "linear-s1"
-MODE_LIZARD_S1 = "lizard-s1"
-MODE_CONSTANT = "constant"
-MODE_LINEAR = "linear"
-MODE_LIZARD = "lizard"
-
-
 
 class BaseCalculatorGPKG:
     """Calculate interpolated rasters from a grid. The grid_gdf is 
@@ -47,14 +37,11 @@ class BaseCalculatorGPKG:
     LOOKUP_WLVL = "lookup_wlvl"
     INTERPOLATOR = "interpolator"
     DELAUNAY = "delaunay"
-    def __init__(self, output_folder,
-                        output_raster_name,
+    def __init__(self, 
                         dem_path,
                         grid_gdf,
                         wlvl_column,):
 
-        self.output_raster = hrt.Raster(os.path.join(output_folder, output_raster_name))
-        self.nodeid_raster = hrt.Raster(os.path.join(output_folder, "nodeid.tif"))
         self.dem_raster = hrt.Raster(dem_path)
 
         self.grid_gdf = grid_gdf
@@ -87,10 +74,9 @@ class BaseCalculatorGPKG:
         `delaunay` is a qhull.Delaunay object, and `s1` is an array of
         waterlevels for the corresponding delaunay vertices.
         """
-        # try:
-        #     return self.cache[self.DELAUNAY]
-        # except KeyError:
-        if True:
+        try:
+            return self.cache[self.DELAUNAY]
+        except KeyError:
             points_grid = np.array(self.grid_gdf.centroid.apply(lambda x: [x.x, x.y]).to_list())
 
             # reorder a la lizard
@@ -185,12 +171,22 @@ class BaseCalculatorGPKG:
         return level.reshape(nodeid_block.shape)
 
 
-    def calculate_delauney_depth(self, window):
+    def block_calculate_delauney_wdepth(self, window):
+        """depth=wlvl-dem"""
+        #Read/create input
+        wlvl_block = self.block_calculate_delauney_wlvl(window)
+        dem_block = self.dem_raster._read_array(window=window)
 
-        wlvl_block = self.calculate_delauney_wlvl(window)
+        #Mask output
+        mask=(dem_block==self.dem_raster.nodata) | (wlvl_block==self.output_raster.nodata)
+        # mask = np.any([masks[i] for i in masks],0)
 
-        return wlvl_block
-        
+        #Calculate depth
+        block_out = wlvl_block-dem_block
+        block_out[mask] = self.output_raster.nodata
+        return block_out
+
+
     def create_nodeid_raster(self):
         """Create raster of nodeids with same res as dem."""
         if not self.nodeid_raster.exists:
@@ -203,38 +199,46 @@ class BaseCalculatorGPKG:
                 read_array=False)
 
 
-    def run(self, mode="MODE_WLVL", min_block_size=1024):
-        #Create rasters
-        self.create_nodeid_raster()
-        self.output_raster.create(metadata=self.dem_raster.metadata, nodata=NO_DATA_VALUE)
+    def run(self, output_folder, output_raster_name, mode="MODE_WLVL", min_block_size=1024, overwrite=False):
+        #Init rasters
+        self.nodeid_raster = hrt.Raster(os.path.join(output_folder, "nodeid.tif"))
+        self.output_raster = hrt.Raster(os.path.join(output_folder, output_raster_name))
 
-        self.wlvl_raw = np.array(self.grid_gdf[self.wlvl_column]).copy()
+        if self.output_raster.exists:
+            if overwrite is False:
+                print(f"Output exists: {self.output_raster.source_path}")
+                return
+            else:
+                self.output_raster.pl.unlink
+
+
+        #Create rasters
+        self.output_raster.create(metadata=self.dem_raster.metadata, nodata=NO_DATA_VALUE)
+        self.create_nodeid_raster() #Nodeid raster for calculation
+
+        self.wlvl_raw = np.array(self.grid_gdf[self.wlvl_column]).copy() #wlvl list
 
         
         #Open outputraster
-        # target_ds=gdal.Open(str(self.output_raster.source_path), gdal.GA_Update)
-        # target_band = target_ds.GetRasterBand(1)
+        target_ds=gdal.Open(str(self.output_raster.source_path), gdal.GA_Update)
+        target_band = target_ds.GetRasterBand(1)
 
 
         #Do calculations per block
-        self.output_raster.min_block_size = min_block_size
-        self.output_raster.generate_blocks_geometry()
-        for idx, block_row in self.output_raster.blocks.iterrows():
-            window=block_row['window_readarray']
-
+        for idx, window, block_row in self.output_raster.iter_window(min_block_size=min_block_size):
             if mode=="MODE_WLVL":
                 block_out = self.block_calculate_delauney_wlvl(window)
             if mode=="MODE_WDEPTH":
-                block_out = self.block_calculate_delauney_depth(window)
-            break
+                block_out = self.block_calculate_delauney_wdepth(window)
 
-            # target_band.WriteArray(block_out, xoff=window[0], yoff=window[1])
-        # target_band.FlushCache()  # close file after writing
+            target_band.WriteArray(block_out, xoff=window[0], yoff=window[1])
+        target_band.FlushCache()  # close file after writing
         target_band = None
         target_ds = None
 
 
     def __enter__(self):
+        "with BaseCalculatorGPKG(**args) as x. will call this func."
         self.cache = {}
         return self
 
@@ -245,24 +249,31 @@ class BaseCalculatorGPKG:
 if __name__ == "__main__":
     from hhnk_threedi_tools import Folders
 
+    OVERWRITE = True
+
+
     folder_path = r"E:\02.modellen\23_Katvoed"
     folder = Folders(folder_path)
-
     threedi_result = folder.threedi_results.one_d_two_d['ghg_blok_t1000']
  
 
-    grid_gdf = gpd.read_file(threedi_result.pl/"grid_raw.gpkg", driver="GPKG")
+    # grid_gdf = gpd.read_file(threedi_result.pl/"grid_raw.gpkg", driver="GPKG")
+    grid_gdf = gpd.read_file(threedi_result.pl/"grid_corr.gpkg", driver="GPKG")
 
 
-    calculator_kwargs = {"output_folder":threedi_result.pl,
-                                "output_raster_name":"depth_test.tif",
-                                "dem_path":folder.model.schema_base.rasters.dem.path,
-                                "grid_gdf":grid_gdf, 
-                                "wlvl_column":"wlvl_max_orig"}
+    calculator_kwargs = {"dem_path":folder.model.schema_base.rasters.dem.path,
+                            "grid_gdf":grid_gdf, 
+                            "wlvl_column":"wlvl_max_orig"}
 
     #Init calculator
     with BaseCalculatorGPKG(**calculator_kwargs) as self:
-        self.run(mode="MODE_WLVL")
-
+        # self.run(output_folder=threedi_result.pl,  
+        #             output_raster_name="wlvl_corr.tif",
+        #             mode="MODE_WLVL",
+        #             overwrite=OVERWRITE)
+        self.run(output_folder=threedi_result.pl,  
+                    output_raster_name="wdepth_orig.tif",
+                    mode="MODE_WDEPTH",
+                    overwrite=OVERWRITE)
         print("Done.")
 # %%

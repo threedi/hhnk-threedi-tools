@@ -60,7 +60,8 @@ polders_folder = "C:/Users/wvangerwen/Github/hhnk-threedi-tools/hhnk_threedi_too
 polder = "egmond"
 # --------------------------------------------------
 
-folder = Folders(os.path.join(polders_folder, polder))
+# folder = Folders(os.path.join(polders_folder, polder))
+folder=Folders(r"E:\02.modellen\HUB - Scenarioberekeningen wateroverlast")
 # %%
 
 
@@ -81,21 +82,26 @@ output_folder_box = widgets.Select(
 )
 
 
+# Set dem path
+folder.model.set_modelsplitter_paths()
+dem_path = folder.model.schema_1d2d_ggg.rasters.dem
+
+
 # Set Dem path if its not found
-dem_path_dropdown = widgets.Dropdown(
-    options="",
-    disabled=False,
-    layout=item_layout(grid_area="dem_path_dropdown"),
-)
+# dem_path_dropdown = widgets.Dropdown(
+#     options="",
+#     disabled=False,
+#     layout=item_layout(grid_area="dem_path_dropdown"),
+# )
 
 
-if folder.model.rasters.find_dem() == "":
-    dem_path_dropdown.options = [
-        i.split(os.sep)[-1] for i in folder.model.rasters.find_ext("tif")
-    ]
-else:
-    dem_path_dropdown.options = [folder.model.rasters.dem.name]
-# Batch folder selection
+# if folder.model.schema_base.rasters.find_dem() == "":
+#     dem_path_dropdown.options = [
+#         i.split(os.sep)[-1] for i in folder.model.schema_base.rasters.find_ext("tif")
+#     ]
+# else:
+#     dem_path_dropdown.options = [folder.model.schema_base.rasters.dem.name]
+# # Batch folder selection
 
 
 # Display precipitation zones
@@ -105,7 +111,7 @@ with pkg_resources.path(htt.resources, "precipitation_zones_hhnk.tif") as p:
         p.absolute().as_posix(), band_count=3
     )
 with pkg_resources.path(htt.resources, "precipitation_frequency.xlsx") as p:
-    freqs = pd.read_excel(p.absolute().as_posix())
+    freqs = pd.read_excel(p.absolute().as_posix(), engine="openpyxl")
 
 # fig, ax = plt.subplots(figsize=(15, 15))
 # ax.imshow(neerslag_list, extent=neerslag_meta['bounds'])
@@ -122,10 +128,12 @@ precipitation_zone_box = widgets.Select(
 
 print("Selecteer map met batch resultaten")
 display(output_folder_box)
+
 print("Selecteer neerslagzone")
 display(precipitation_zone_box)
-print("Selecteer DEM bestand")
-display(dem_path_dropdown)
+print("Geselecteerd DEM bestand")
+print(dem_path)
+# display(dem_path_dropdown)
 
 # %%
 batch_fd = folder.threedi_results.batch[output_folder_box.value]
@@ -178,8 +186,8 @@ else:
 
 # Aanmaken polygon van maskerkaart
 maskerkaart.command(
-    path_piek=batch_fd.downloads.piek_GHG_T1000.netcdf.path,
-    path_blok=batch_fd.downloads.blok_GHG_T1000.netcdf.path,
+    path_piek=batch_fd.downloads.piek_ghg_T1000.netcdf.path,
+    path_blok=batch_fd.downloads.blok_ghg_T1000.netcdf.path,
     path_out=batch_fd.output.maskerkaart.path,
 )
 
@@ -251,7 +259,7 @@ for T in [10, 100, 1000]:
         rasters=diepte_rasters,
         frequenties=frequenties,
         output_nodata=-9999.00,
-        dem_path=folder.model.rasters.full_path(dem_path_dropdown.value),
+        dem_path=folder.model.rasters.full_path(dem_path),
         extra_nodata_value=0,
     )
 
