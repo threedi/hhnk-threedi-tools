@@ -41,7 +41,8 @@ def build_output_files_dict(test_type, base_folder, revision_dir_name=None):
         files_dict["init_water_level_filename"] = "initieel_water_level"
         files_dict["dewatering_filename"] = "drooglegging"
         files_dict["water_surface_filename"] = "oppervlaktewater"
-
+        files_dict["cross_section_filename"] = "overlappende_profielen"
+        files_dict["cross_section_intersection_filename"] = "profielen_geen_vertex"
     if test_type == 2:
         add_log_layer_path(base_path=files_dict["output"])
         files_dict["zero_d_one_d_filename"] = "0d1d_toetsing"

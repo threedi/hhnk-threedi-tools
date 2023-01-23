@@ -508,6 +508,8 @@ class Folders(Folder):
             files_dict["init_water_level_filename"] = "initieel_water_level"
             files_dict["dewatering_filename"] = "drooglegging"
             files_dict["water_surface_filename"] = "oppervlaktewater"
+            files_dict["cross_section_filename"] = "overlappende_profielen"
+            files_dict["cross_section_intersection_filename"] = "profielen_geen_vertex"
 
         if test_type == 2:
             files_dict["zero_d_one_d_filename"] = "0d1d_toetsing"
@@ -601,6 +603,7 @@ class SourcePaths(Folder):
         self.add_file("hdb", HDB, ftype="filegdb")
         self.add_file("datachecker", "datachecker_output.gdb", ftype="filegdb")
         self.add_file("polder_polygon", POLDER_POLY)
+        self.add_file("panden", "panden.gpkg", ftype="filegdb")
 
         # Layers
         self.add_layer("datachecker_fixed_drainage", "fixeddrainagelevelarea")
@@ -1123,14 +1126,14 @@ class ClimateResult(Folder):
     def __init__(self, base):
         super().__init__(base)
 
-        self.downloads = ClimateResultDownloads(self.base)
+        self.downloads = _ClimateResultDownloads(self.base)
         self.output = ClimateResultOutput(self.base)
 
         # Files
-        self.add_file("blok_grid_path", "/01_downloads/blok_GHG_T1000/results_3di.nc")
-        self.add_file("blok_admin_path", "/01_downloads/blok_GHG_T1000/gridadmin.h5")
-        self.add_file("piek_grid_path", "/01_downloads/piek_GHG_T1000/results_3di.nc")
-        self.add_file("piek_admin_path", "/01_downloads/piek_GHG_T1000/gridadmin.h5")
+        self.add_file("blok_grid_path", "/01_downloads/blok_ghg_T1000/results_3di.nc")
+        self.add_file("blok_admin_path", "/01_downloads/blok_ghg_T1000/gridadmin.h5")
+        self.add_file("piek_grid_path", "/01_downloads/piek_ghg_T1000/results_3di.nc")
+        self.add_file("piek_admin_path", "/01_downloads/piek_ghg_T1000/gridadmin.h5")
 
     @property
     def grid_path(self):
@@ -1159,6 +1162,74 @@ class ClimateResult(Folder):
                {self.space}├── downloads
                {self.space}└── output
                 """
+
+class _ClimateResultDownloads(Folder):
+    def __init__(self, base):
+        super().__init__(os.path.join(base, "01_downloads"))
+
+        # Files
+        self.add_file("download_uuid", "download_uuid.csv")
+        self.names = GROUNDWATER  # Initializes names.setter
+
+        # for name in RAW_DOWNLOADS:
+        #     setattr(self, name, ThreediResult(self.full_path(name)))
+
+        # Files
+        self.add_file("blok_grid_path", "/blok_ghg_T1000/results_3di.nc")
+        self.add_file("blok_admin_path", "/blok_ghg_T1000/gridadmin.h5")
+        self.add_file("piek_grid_path", "/piek_ghg_T1000/results_3di.nc")
+        self.add_file("piek_admin_path", "/piek_ghg_T1000/gridadmin.h5")
+
+        for name in self.names:
+            setattr(self, name, ClimateResultScenario(self.base, name))
+
+    @property
+    def names(self):
+        return self._names
+
+    @names.setter
+    def names(self, groundwater_types=GROUNDWATER):
+        names = []
+        for rain_type in RAIN_TYPES:
+            for groundwater in groundwater_types:
+                for rain_scenario in RAIN_SCENARIOS:
+                    names.append(f"{rain_type}_{groundwater}_{rain_scenario}")
+        self._names = names
+
+    @property
+    def grid_path(self):
+        return self.blok_grid_path
+
+    @property
+    def admin_path(self):
+        return self.blok_admin_path
+
+    def grid(self, _type):
+        if _type == "blok":
+            return GridH5ResultAdmin(
+                self.blok_admin_path.file_path, self.blok_grid_path.file_path
+            )
+        return GridH5ResultAdmin(
+            self.piek_admin_path.file_path, self.piek_grid_path.file_path
+        )
+
+    def admin(self):
+        return GridH5Admin(self.blok_admin_path.file_path)
+
+    def __repr__(self):
+        return f"""{self.name} @ {self.path}
+                    Folders:\t{self.structure}
+                    Files:\t{list(self.files.keys())}
+                    Layers:\t{list(self.olayers.keys())}
+                    Groups:\t{list(self.names)}
+                """
+
+    # def _set_raster_files(self):
+    # for rastertype in raster_types:
+    #     self.add_file(
+    #         f"{rastertype}_{name}", f"{rastertype}_{name}.tif", "raster"
+    #     )
+
 
 
 class ThreediResult(Folder):
@@ -1253,72 +1324,6 @@ class ClimateResultOutputTemp(Folder):
         self.create(parents=False)  # create outputfolder if parent exists
 
 
-class ClimateResultDownloads(Folder):
-    def __init__(self, base):
-        super().__init__(os.path.join(base, "01_downloads"))
-
-        # Files
-        self.add_file("download_uuid", "download_uuid.csv")
-        self.names = GROUNDWATER  # Initializes names.setter
-
-        # for name in RAW_DOWNLOADS:
-        #     setattr(self, name, ThreediResult(self.full_path(name)))
-
-        # Files
-        self.add_file("blok_grid_path", "/blok_GHG_T1000/results_3di.nc")
-        self.add_file("blok_admin_path", "/blok_GHG_T1000/gridadmin.h5")
-        self.add_file("piek_grid_path", "/piek_GHG_T1000/results_3di.nc")
-        self.add_file("piek_admin_path", "/piek_GHG_T1000/gridadmin.h5")
-
-        for name in self.names:
-            setattr(self, name, ClimateResultScenario(self.base, name))
-
-    @property
-    def names(self):
-        return self._names
-
-    @names.setter
-    def names(self, groundwater_types=GROUNDWATER):
-        names = []
-        for rain_type in RAIN_TYPES:
-            for groundwater in groundwater_types:
-                for rain_scenario in RAIN_SCENARIOS:
-                    names.append(f"{rain_type}_{groundwater}_{rain_scenario}")
-        self._names = names
-
-    @property
-    def grid_path(self):
-        return self.blok_grid_path
-
-    @property
-    def admin_path(self):
-        return self.blok_admin_path
-
-    def grid(self, _type):
-        if _type == "blok":
-            return GridH5ResultAdmin(
-                self.blok_admin_path.file_path, self.blok_grid_path.file_path
-            )
-        return GridH5ResultAdmin(
-            self.piek_admin_path.file_path, self.piek_grid_path.file_path
-        )
-
-    def admin(self):
-        return GridH5Admin(self.blok_admin_path.file_path)
-
-    def __repr__(self):
-        return f"""{self.name} @ {self.path}
-                    Folders:\t{self.structure}
-                    Files:\t{list(self.files.keys())}
-                    Layers:\t{list(self.olayers.keys())}
-                    Groups:\t{list(self.names)}
-                """
-
-    # def _set_raster_files(self):
-    # for rastertype in raster_types:
-    #     self.add_file(
-    #         f"{rastertype}_{name}", f"{rastertype}_{name}.tif", "raster"
-    #     )
 
 
 # TODO dit komt nu niet netjes in de print van de class.
@@ -1448,7 +1453,8 @@ class OutputFolderSqlite(Folder):
         self.add_file("drooglegging", "drooglegging.tif", "raster")
         self.add_file("geometry_check", "geometry_check.csv", "file")
         self.add_file("general_sqlite_checks", "general_sqlite_checks.csv", "file")
-
+        self.add_file("overlappende_profielen", "overlappende_profielen.gpkg", "file")
+        self.add_file("profielen_geen_vertex", "profielen_geen_vertex.gpkg", "file")
 
 class OutputFolder0d1d(ResultsRevisions):
     def __init__(self, base, folder):

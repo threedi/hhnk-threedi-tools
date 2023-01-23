@@ -47,7 +47,7 @@ class BaseCalculator:
     """
 
     PIXEL_MAP = "pixel_map"
-    LOOKUP_S1 = "lookup_s1"
+    LOOKUP_WLVL = "lookup_wlvl"
     INTERPOLATOR = "interpolator"
     DELAUNAY = "delaunay"
 
@@ -99,7 +99,7 @@ class BaseCalculator:
         return depth
 
     @property
-    def lookup_s1(self):
+    def lookup_wlvl(self):
         """
         Return the lookup table to find waterlevel by cell id.
 
@@ -108,8 +108,9 @@ class BaseCalculator:
         defined in threedigrid.
         """
         try:
-            return self.cache[self.LOOKUP_S1]
+            return self.cache[self.LOOKUP_WLVL]
         except KeyError:
+            print("hi")
             nodes = self.gr.nodes.subset(SUBSET_2D_OPEN_WATER)
             
             if self.calculation_step!="MAX": #TODO option to calculate raster based on maximum wlvl added.
@@ -118,7 +119,7 @@ class BaseCalculator:
                 timeseries = nodes.timeseries(indexes=slice(0, -1))
 
             data = timeseries.only("s1", "id").data
-            lookup_s1 = np.full((data["id"]).max() + 1, NO_DATA_VALUE)
+            lookup_wlvl = np.full((data["id"]).max() + 1, NO_DATA_VALUE)
 
             if self.calculation_step!="MAX":
                 s1 = data["s1"][0]
@@ -128,9 +129,9 @@ class BaseCalculator:
                 s1 = np.round(
                     [row[s1_max_ind[enum]] for enum, row in enumerate(s1_all.T)], 5
                 )            
-            lookup_s1[data["id"]] = s1
-            self.cache[self.LOOKUP_S1] = lookup_s1
-        return lookup_s1
+            lookup_wlvl[data["id"]] = s1
+            self.cache[self.LOOKUP_WLVL] = lookup_wlvl
+        return lookup_wlvl
 
     @property
     def interpolator(self):
@@ -239,6 +240,7 @@ class BaseCalculator:
         self.cache = None
 
 
+
 class CopyCalculator(BaseCalculator):
     def __call__(self, indices, values, no_data_value):
         """Return input values unmodified."""
@@ -254,7 +256,7 @@ class NodGridCalculator(BaseCalculator):
 class ConstantLevelCalculator(BaseCalculator):
     def __call__(self, indices, values, no_data_value):
         """Return waterlevel array."""
-        return self.lookup_s1[self._get_nodgrid(indices)]
+        return self.lookup_wlvl[self._get_nodgrid(indices)]
 
 
 class LinearLevelCalculator(BaseCalculator):
@@ -283,7 +285,7 @@ class LizardLevelCalculator(BaseCalculator):
         used."""
         # start with the constant level result
         nodgrid = self._get_nodgrid(indices).ravel()
-        level = self.lookup_s1[nodgrid]
+        level = self.lookup_wlvl[nodgrid]
 
         # determine result raster cell centers and in which triangle they are
         points = self._get_points(indices)
@@ -352,6 +354,7 @@ class LizardLevelDepthCalculator(LizardLevelCalculator):
         return self._depth_from_water_level(
             dem=values, fillvalue=no_data_value, waterlevel=waterlevel
         )
+
 
 
 class GeoTIFFConverter:
@@ -487,6 +490,7 @@ class GeoTIFFConverter:
             self.target.GetRasterBand(band + 1).WriteArray(
                 array=result, xoff=xoff, yoff=yoff,
             )
+            return indices, values, no_data_value
 
 
 class NetcdfConverter(GeoTIFFConverter):
@@ -625,6 +629,7 @@ class NetcdfConverter(GeoTIFFConverter):
             water_depth[band, yoff:yoff + ysize, xoff:xoff + xsize] = result
 
 
+
 class ProgressClass:
     """ Progress function and calculation step iterator in one.
 
@@ -666,12 +671,12 @@ calculator_classes = {
     MODE_LIZARD: LizardLevelDepthCalculator,
 }
 
-# Was def calculate_waterdepth
-def calculate_waterdepth(
+# Was; def calculate_waterdepth
+def create_raster_from_netcdf(
     gridadmin_path,
     results_3di_path,
     dem_path,
-    waterdepth_path,
+    output_path,
     calculation_steps=None,
     mode=MODE_LIZARD,
     progress_func=None,
@@ -705,7 +710,7 @@ def calculate_waterdepth(
     )
     converter_kwargs = {
         "source_path": dem_path,
-        "target_path": waterdepth_path,
+        "target_path": output_path,
         "progress_func": None if progress_func is None else progress_class,
     }
     if netcdf:
@@ -732,3 +737,36 @@ def calculate_waterdepth(
 
             with CalculatorClass(**calculator_kwargs) as calculator:
                 converter.convert_using(calculator=calculator, band=band)
+
+
+
+
+
+def create_max_depth_raster_from_netcdf(gridadmin_path,
+    results_3di_path,
+    dem_path,
+    output_path,
+    mode=MODE_LIZARD,):
+    """Calculate the maximum depth over all timesteps in the netcdf. 
+    Create raster with metadata of dem"""
+
+    create_raster_from_netcdf(gridadmin_path=gridadmin_path,
+            results_3di_path=results_3di_path,
+            dem_path=dem_path,
+            output_path=output_path,
+            calculation_steps=["MAX"],
+            mode=mode,)
+
+
+def create_max_depth_raster_from_gpkg(gridadmin_path,
+    results_3di_path,
+    dem_path,
+    output_path,
+    mode=MODE_LIZARD,):
+
+    create_raster_from_netcdf(gridadmin_path=gridadmin_path,
+            results_3di_path=results_3di_path,
+            dem_path=dem_path,
+            output_path=output_path,
+            calculation_steps=["MAX"],
+            mode=mode,)

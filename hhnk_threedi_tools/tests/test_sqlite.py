@@ -82,6 +82,20 @@ def test_run_used_profiles():
 
     assert output["width_at_wlvl"][0] == 2
 
+def test_run_cross_section():
+    folder = Folders(TEST_MODEL)
+    sqlite_test = SqliteTest(folder=folder)
+    output = sqlite_test.run_cross_secction()
+
+    assert output["width_at_wlvl"][0] == 2
+
+def test_run_cross_section():
+    folder = Folders(TEST_MODEL)
+    sqlite_test = SqliteTest(folder=folder)
+    output = sqlite_test.run_cross_secction_vertex()
+
+    assert output["width_at_wlvl"][0] == 2
+
 
 def test_run_struct_channel_bed_level():
     """#TODO empty check"""
