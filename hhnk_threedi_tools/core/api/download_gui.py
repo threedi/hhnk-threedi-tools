@@ -862,8 +862,8 @@ def download_gui(main_folder=None, lizard_api_key="", data=None):
         batch_fd.downloads.create()
 
         selected_file_results = [
-            "raw 3Di output",
-            "grid administration",
+            "Raw 3Di output",
+            "Grid administration",
         ]  # list of selected files from the model to download
         scenarios["download_url"] = create_download_url(
             scenarios["results"], scenarios["selected_ids"], selected_file_results
@@ -876,9 +876,7 @@ def download_gui(main_folder=None, lizard_api_key="", data=None):
             for rain_type in RAIN_TYPES:
                 for groundwater in GROUNDWATER:
                     for rain_scenario in RAIN_SCENARIOS:
-                        rain_scenario = rain_scenario.strip(
-                            "T"
-                        )  # strip 'T' because its not used in older versions.
+                        rain_scenario = rain_scenario.strip("T")  # strip 'T' because its not used in older versions.
                         if (
                             (rain_type in name)
                             and (groundwater.lower() in name.lower())
@@ -934,6 +932,7 @@ def download_gui(main_folder=None, lizard_api_key="", data=None):
                 )
             )
 
+            #Download netcdf of 2 GHG_T1000 results.
             if row["dl_name"] in RAW_DOWNLOADS:
 
                 output_folder = getattr(batch_fd.downloads, row["dl_name"]).netcdf
@@ -1116,7 +1115,7 @@ def download_gui(main_folder=None, lizard_api_key="", data=None):
 
 # %%
 if __name__ == '__main__':
-    data = {'polder_folder': 'E:\\02.modellen\\23_Katvoed',
+    data = {'polder_folder': 'E:\\02.modellen\\HUB - Scenarioberekeningen wateroverlast',
  'api_keys_path': 'C:\\Users\\wvangerwen\\AppData\\Roaming\\3Di\\QGIS3\\profiles\\default\\python\\plugins\\hhnk_threedi_plugin\\api_key.txt'}
     self = download_gui(data=data)
     display(self)
