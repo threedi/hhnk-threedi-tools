@@ -881,7 +881,7 @@ def download_gui(main_folder=None, lizard_api_key="", data=None):
                         )  # strip 'T' because its not used in older versions.
                         if (
                             (rain_type in name)
-                            and (groundwater.upper() in name)
+                            and (groundwater.lower() in name.lower())
                             and (rain_scenario in name)
                         ):
                             if "0" not in [
@@ -898,7 +898,7 @@ def download_gui(main_folder=None, lizard_api_key="", data=None):
 
                         # Sommige resultaten zijn aangeroepen met GG ipv GGG in de naam. Onderstaande elif statement om dit te voorkomen
                         elif (
-                            (groundwater.upper() == "GGG")
+                            (groundwater.lower() == "ggg")
                             and (rain_type in name)
                             and ("GG" in name)
                             and (rain_scenario in name)

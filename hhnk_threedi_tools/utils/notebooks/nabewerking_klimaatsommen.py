@@ -113,9 +113,9 @@ with pkg_resources.path(htt.resources, "precipitation_zones_hhnk.tif") as p:
 with pkg_resources.path(htt.resources, "precipitation_frequency.xlsx") as p:
     freqs = pd.read_excel(p.absolute().as_posix(), engine="openpyxl")
 
-# fig, ax = plt.subplots(figsize=(15, 15))
-# ax.imshow(neerslag_list, extent=neerslag_meta['bounds'])
-# polder_shape.plot(ax=ax, color='red')
+fig, ax = plt.subplots(figsize=(15, 15))
+ax.imshow(neerslag_list, extent=neerslag_meta['bounds'])
+polder_shape.plot(ax=ax, color='red')
 
 
 precipitation_zone_box = widgets.Select(
@@ -192,25 +192,25 @@ maskerkaart.command(
 )
 
 # Omzetten polygon in raster voor diepteraster
-_, _, depth_meta = hrt.load_gdal_raster(
-    batch_fd.downloads.piek_GLG_T10.max_depth.path, return_array=False
-)
+# _, _, depth_meta = hrt.load_gdal_raster(
+#     batch_fd.downloads.piek_glg_T10.max_depth.path, return_array=False
+# )
 mask_depth = rasterize_maskerkaart(
     input_file=batch_fd.output.maskerkaart.path,
     mask_plas_path=batch_fd.output.mask_diepte_plas.path,
     mask_overlast_path=batch_fd.output.mask_diepte_overlast.path,
-    meta=depth_meta,
+    meta=hrt.Raster(batch_fd.downloads.piek_glg_T10.max_depth.path).metadata,
 )
 
 # Omzetten polygon in raster voor schaderaster (kan verschillen van diepte met andere resolutie)
-_, _, damage_meta = hrt.load_gdal_raster(
-    batch_fd.downloads.piek_GLG_T10.total_damage.path, return_array=False
-)
+# _, _, damage_meta = hrt.load_gdal_raster(
+#     batch_fd.downloads.piek_glg_T10.total_damage.path, return_array=False
+# )
 mask_damage = rasterize_maskerkaart(
     input_file=batch_fd.output.maskerkaart.path,
     mask_plas_path=batch_fd.output.mask_schade_plas.path,
     mask_overlast_path=batch_fd.output.mask_schade_overlast.path,
-    meta=damage_meta,
+    meta=hrt.Raster(batch_fd.downloads.piek_glg_T10.total_damage.path).metadata,
 )
 
 
@@ -259,7 +259,7 @@ for T in [10, 100, 1000]:
         rasters=diepte_rasters,
         frequenties=frequenties,
         output_nodata=-9999.00,
-        dem_path=folder.model.rasters.full_path(dem_path),
+        dem_path=dem_path.path,
         extra_nodata_value=0,
     )
 
@@ -384,7 +384,7 @@ schade_per_polder.to_csv(batch_fd.output.schade_polder.path)
 # %%
 import sys, importlib
 
-source_path = "C:\\Users\\wvangerwen\\Github\\hhnk-threedi-tools\\hhnk_threedi_tools\\tests\\data\\multiple_polders\\poldera\\03_3di_resultaten\\batch_results\\bwn_test #5 (1) klimaatsommen\\01_downloads\\max_depth_piek_GLG_T1000.tif"
+source_path = "C:\\Users\\wvangerwen\\Github\\hhnk-threedi-tools\\hhnk_threedi_tools\\tests\\data\\multiple_polders\\poldera\\03_3di_resultaten\\batch_results\\bwn_test #5 (1) klimaatsommen\\01_downloads\\max_depth_piek_glg_T1000.tif"
 
 
 # %%
