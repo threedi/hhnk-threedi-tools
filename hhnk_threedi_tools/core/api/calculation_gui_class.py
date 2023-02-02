@@ -472,14 +472,15 @@ class StartCalculationWidgets:
                 )
 
 
-            self.folder_map_label = widgets.Label(
-                    "Output folder map:", layout=item_layout(grid_area="output_folder_map_label")
+            #folder_map is subfolder for batch 
+            self.subfolder_batch_label = widgets.Label(
+                    "Output folder map:", layout=item_layout(grid_area="output_subfolder_batch_label")
                 )    
 
-            self.folder_map_value = widgets.Text(
+            self.subfolder_batch_value = widgets.Text(
                     '',
                     disabled=False,
-                    layout=item_layout(grid_area="output_folder_map_value"),
+                    layout=item_layout(grid_area="output_subfolder_batch_value"),
                 )
 
 
@@ -803,6 +804,7 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
 
             self.vars.sqlite_path = self.sim.download_sqlite()
 
+            #Creating will set sim.simulation_created to True.
             self.sim.create(output_folder=self.vars.output_folder,
                         simulation_name=self.start.simulation_name_view_widget.value,
                         model_id=self.selected_threedimodel_id,
@@ -1036,10 +1038,10 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
            
         #Set output folder
 
-        output_folder = self.output.folder_map_value.value
+        output_folder = self.output.subfolder_batch_value.value
         if output_folder == "":
             ready_to_roll=False
-            self.add_feedback("ERROR", "No output folder map selected.")
+            self.add_feedback("ERROR", "No output subfolder selected.")
             
         else:
             self.output.folder_value_batch.value = self.vars.folder.threedi_results.batch.full_path(output_folder)
@@ -1402,7 +1404,7 @@ class GuiVariables:
     def __init__(self):
         self._folder = None
 
-        self.sim = None #Is filled when pressing login
+        self.sim = None #Is filled when pressing login #htt.core.api.calculation.Calculation class
         self.sim_batch = {} #Copies of .sim for batch calculations.
         self.schematisations = {} #Is filled when searching for models by name
         self.revisions = {}
@@ -1667,8 +1669,8 @@ class StartCalculationGui:
                 self.w.output.folder_label,
                 # self.w.output.folder_value,
                 self.w.output.folder_value_batch,
-                self.w.output.folder_map_label,
-                self.w.output.folder_map_value,
+                self.w.output.subfolder_batch_label,
+                self.w.output.subfolder_batch_value,
                 # self.w.output.subfolder_label,
                 # self.w.output.subfolder_box,
                 # self.w.calc_settings.label,
@@ -1702,7 +1704,7 @@ class StartCalculationGui:
 '. . . . . . organisation_label organisation_box organisation_box'
 '. batch_scenario_label batch_scenario_label batch_scenario_label batch_scenario_label . output_label output_label output_label'
 '. . batch_rain_type_box batch_rain_type_box batch_rain_type_box . output_folder_label output_folder_value_batch output_folder_value_batch'
-'. . gxg_label_box gxg_label_box gxg_label_box . output_folder_map_label output_folder_map_value output_folder_map_value'
+'. . gxg_label_box gxg_label_box gxg_label_box . output_subfolder_batch_label output_subfolder_batch_value output_subfolder_batch_value'
 '. rain_label_box batch_scenario_box batch_scenario_box batch_scenario_box . . . .'
 '. rain_label_box batch_scenario_box batch_scenario_box batch_scenario_box . . . .'
 '. rain_label_box batch_scenario_box batch_scenario_box batch_scenario_box . start_label start_label start_label'
@@ -1764,31 +1766,31 @@ if __name__ == '__main__':
 
 # %%
 
-grid_template_areas="""
-'. login_label login_label model_label model_label schema_select_label schema_select_label schema_select_label schema_select_label'
-'. lizard_apikey_widget lizard_apikey_widget . . schema_label schema_dropdown schema_dropdown schema_dropdown'
-'. threedi_apikey_widget threedi_apikey_widget schema_name_widget schema_name_widget revision_label revision_dropdown revision_dropdown revision_dropdown'
-'. login_button login_button model_name_search_button model_name_search_button threedimodel_label threedimodel_dropdown threedimodel_dropdown threedimodel_dropdown'
-'. . . . . organisation_label organisation_box organisation_box organisation_box'
-'. rain_label rain_label rain_label rain_label output_label output_label output_label output_label'
-'. rain_box rain_box rain_box rain_box output_folder_label output_folder_value output_folder_value output_folder_value'
-'. rain_box rain_box rain_box rain_box output_subfolder_label output_subfolder_box output_subfolder_box output_subfolder_box'
-'. rain_box rain_box rain_box rain_box calc_settings_label calc_settings_label calc_settings_label calc_settings_label'
-'. rain_box rain_box rain_box rain_box . calc_settings_basic_processing calc_settings_damage_processing calc_settings_arrival_processing'
-'. rain_box rain_box rain_box rain_box . calc_settings_structure_control calc_settings_laterals .'
-'. rain_box rain_box rain_box rain_box . start_label start_label start_label'
-'. rain_box rain_box rain_box rain_box . . simulation_name_label simulation_name_widget simulation_name_widget
-'. rain_box rain_box rain_box rain_box . . . create_simulation_button create_simulation_button'
-'. rain_box rain_box rain_box rain_box . . start_button start_button'
-'. feedback_label . . . . . . .'
-'. feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget . . .'
-'. feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget . . .'
-'. feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget . . .'
-'. . . . . . . . .'
-"""
+# grid_template_areas="""
+# '. login_label login_label model_label model_label schema_select_label schema_select_label schema_select_label schema_select_label'
+# '. lizard_apikey_widget lizard_apikey_widget . . schema_label schema_dropdown schema_dropdown schema_dropdown'
+# '. threedi_apikey_widget threedi_apikey_widget schema_name_widget schema_name_widget revision_label revision_dropdown revision_dropdown revision_dropdown'
+# '. login_button login_button model_name_search_button model_name_search_button threedimodel_label threedimodel_dropdown threedimodel_dropdown threedimodel_dropdown'
+# '. . . . . organisation_label organisation_box organisation_box organisation_box'
+# '. rain_label rain_label rain_label rain_label output_label output_label output_label output_label'
+# '. rain_box rain_box rain_box rain_box output_folder_label output_folder_value output_folder_value output_folder_value'
+# '. rain_box rain_box rain_box rain_box output_subfolder_label output_subfolder_box output_subfolder_box output_subfolder_box'
+# '. rain_box rain_box rain_box rain_box calc_settings_label calc_settings_label calc_settings_label calc_settings_label'
+# '. rain_box rain_box rain_box rain_box . calc_settings_basic_processing calc_settings_damage_processing calc_settings_arrival_processing'
+# '. rain_box rain_box rain_box rain_box . calc_settings_structure_control calc_settings_laterals .'
+# '. rain_box rain_box rain_box rain_box . start_label start_label start_label'
+# '. rain_box rain_box rain_box rain_box . . simulation_name_label simulation_name_widget simulation_name_widget
+# '. rain_box rain_box rain_box rain_box . . . create_simulation_button create_simulation_button'
+# '. rain_box rain_box rain_box rain_box . . start_button start_button'
+# '. feedback_label . . . . . . .'
+# '. feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget . . .'
+# '. feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget . . .'
+# '. feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget . . .'
+# '. . . . . . . . .'
+# """
 
-a=[row.split(" ") for row in grid_template_areas.split("\n")]
-for i in a:
-    print(f"{len(i)} {i}")
+# a=[row.split(" ") for row in grid_template_areas.split("\n")]
+# for i in a:
+#     print(f"{len(i)} {i}")
 # [len(i) for i in a]
 

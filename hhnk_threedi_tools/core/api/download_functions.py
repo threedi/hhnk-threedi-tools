@@ -89,7 +89,7 @@ def create_download_url(results, scenario_ids, selected_results=""):
                 print("Don't know what to do with the following object:")
                 print(scenario["result_set"][result_id])
     #             print('')
-    print("Download url", download_url)
+    # print("Download url", download_url)
     return download_url
 
 
@@ -146,6 +146,6 @@ def start_download(download_url, output_folder, api_key, automatic_download):
         proceed_download = "y"
     if proceed_download == "y":
         download_file(download_url, output_folder)
-        print("All downloads finished!")
+        print("All file downloads finished!")
     else:
         print("Process aborted.")
