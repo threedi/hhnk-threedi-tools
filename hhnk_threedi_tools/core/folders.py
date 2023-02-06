@@ -204,7 +204,7 @@ class Sqlite(File):
 class Folder:
     """Base folder class for creating, deleting and see if folder exists"""
 
-    def __init__(self, base):
+    def __init__(self, base, create=True):
         self.base = base
         self.pl = Path(base)  # pathlib path
 
@@ -212,7 +212,8 @@ class Folder:
         self.olayers = {}
         self.space = "\t\t\t\t"
         self.isfolder = True
-        self.create(parents=False)
+        if create:
+            self.create(parents=False)
 
     @property
     def structure(self):
@@ -819,38 +820,6 @@ class ModelRevisionsParent(Folder):
         super().__init__(os.path.join(base, "revisions"))
         self.create()
 
-# TODO Deprecated and replaced by ThreediRasters, ready to remove.
-# class RasterPaths(Folder):
-#     def __init__(self, base):
-#         super().__init__(os.path.join(base, "rasters"))
-
-#         # Files
-#         self.add_file("dem", self.find_dem(), "raster")
-
-#     @property
-#     def structure(self):
-#         return None
-
-#     def find_dem(self):
-#         """
-#         Look for file starting with dem_ and ending with extension .tif in given directory
-
-#         Returns path if found, empty string if not found
-#         """
-#         if not self.exists:
-#             return ""
-#         else:
-#             p = Path(self.base)
-#             dir_list = [
-#                 item
-#                 for item in p.iterdir()
-#                 if item.suffix == file_types_dict[TIF] and item.stem.startswith("dem_")
-#             ]
-#             if len(dir_list) == 1:
-#                 return os.path.join(self.base, dir_list[0].name)
-#             else:
-#                 return ""
-
 
 class ThreediRasters(Folder):
     def __init__(self, base, caller):
@@ -1042,39 +1011,6 @@ class OneDTwoD(ThreediRevisions):
         return self.revision_structure("one_d_two_d")
 
 
-# TODO vervangen door ResultsRevisions
-# class ClimateResultsRevisions(Folder):
-#     def __init__(self, base, folder):
-#         super().__init__(os.path.join(base, folder))
-#         self.isrevisions = True
-
-#     def __getitem__(self, revision):
-#         """revision can be a integer or a path"""
-#         if type(revision) == int:
-#             return ClimateResult(self.full_path(self.revisions[revision]))
-#         elif os.path.exists(revision):
-#             return ClimateResult(revision)
-#         elif (self.pl / revision).exists():
-#             return ClimateResult(self.full_path(revision))
-#         else:
-#             print("path not found, create with '.create()'")
-#             return ClimateResult(self.full_path(revision))
-
-#     def revision_structure(self, name):
-#         spacing = "\n\t\t\t\t\t\t\t"
-#         structure = f""" {spacing}{name} """
-#         for i, rev in enumerate(self.revisions):
-#             if i == len(self.revisions) - 1:
-#                 structure = structure + f"{spacing}└── {rev}"
-#             else:
-#                 structure = structure + f"{spacing}├── {rev}"
-
-#         return structure
-
-#     @property
-#     def revisions(self):
-#         return self.content
-
 
 class ResultsRevisions(Folder):
     def __init__(self, base, folder, returnclass):
@@ -1129,31 +1065,31 @@ class ClimateResult(Folder):
         self.downloads = _ClimateResultDownloads(self.base)
         self.output = ClimateResultOutput(self.base)
 
-        # Files
-        self.add_file("blok_grid_path", "/01_downloads/blok_ghg_T1000/results_3di.nc")
-        self.add_file("blok_admin_path", "/01_downloads/blok_ghg_T1000/gridadmin.h5")
-        self.add_file("piek_grid_path", "/01_downloads/piek_ghg_T1000/results_3di.nc")
-        self.add_file("piek_admin_path", "/01_downloads/piek_ghg_T1000/gridadmin.h5")
+        # # Files
+        # self.add_file("blok_grid_path", "/01_downloads/blok_ghg_T1000/results_3di.nc")
+        # self.add_file("blok_admin_path", "/01_downloads/blok_ghg_T1000/gridadmin.h5")
+        # self.add_file("piek_grid_path", "/01_downloads/piek_ghg_T1000/results_3di.nc")
+        # self.add_file("piek_admin_path", "/01_downloads/piek_ghg_T1000/gridadmin.h5")
 
-    @property
-    def grid_path(self):
-        return self.blok_grid_path
+    # @property
+    # def grid_path(self):
+    #     return self.blok_grid_path
 
-    @property
-    def admin_path(self):
-        return self.blok_admin_path
+    # @property
+    # def admin_path(self):
+    #     return self.blok_admin_path
 
-    def grid(self, _type):
-        if _type == "blok":
-            return GridH5ResultAdmin(
-                self.blok_admin_path.file_path, self.blok_grid_path.file_path
-            )
-        return GridH5ResultAdmin(
-            self.piek_admin_path.file_path, self.piek_grid_path.file_path
-        )
+    # def grid(self, _type):
+    #     if _type == "blok":
+    #         return GridH5ResultAdmin(
+    #             self.blok_admin_path.file_path, self.blok_grid_path.file_path
+    #         )
+    #     return GridH5ResultAdmin(
+    #         self.piek_admin_path.file_path, self.piek_grid_path.file_path
+    #     )
 
-    def admin(self):
-        return GridH5Admin(self.blok_admin_path.file_path)
+    # def admin(self):
+    #     return GridH5Admin(self.blok_admin_path.file_path)
 
     @property
     def structure(self):
@@ -1168,17 +1104,17 @@ class _ClimateResultDownloads(Folder):
         super().__init__(os.path.join(base, "01_downloads"))
 
         # Files
-        self.add_file("download_uuid", "download_uuid.csv")
-        self.names = GROUNDWATER  # Initializes names.setter
+        # self.add_file("download_uuid", "download_uuid.csv")
+        self.names = None  # Initializes names.setter
 
         # for name in RAW_DOWNLOADS:
         #     setattr(self, name, ThreediResult(self.full_path(name)))
 
         # Files
-        self.add_file("blok_grid_path", "/blok_ghg_T1000/results_3di.nc")
-        self.add_file("blok_admin_path", "/blok_ghg_T1000/gridadmin.h5")
-        self.add_file("piek_grid_path", "/piek_ghg_T1000/results_3di.nc")
-        self.add_file("piek_admin_path", "/piek_ghg_T1000/gridadmin.h5")
+        # self.add_file("blok_grid_path", "/blok_ghg_T1000/results_3di.nc")
+        # self.add_file("blok_admin_path", "/blok_ghg_T1000/gridadmin.h5")
+        # self.add_file("piek_grid_path", "/piek_ghg_T1000/results_3di.nc")
+        # self.add_file("piek_admin_path", "/piek_ghg_T1000/gridadmin.h5")
 
         for name in self.names:
             setattr(self, name, ClimateResultScenario(self.base, name))
@@ -1188,33 +1124,34 @@ class _ClimateResultDownloads(Folder):
         return self._names
 
     @names.setter
-    def names(self, groundwater_types=GROUNDWATER):
+    def names(self, dummy):
         names = []
         for rain_type in RAIN_TYPES:
-            for groundwater in groundwater_types:
+            for groundwater in GROUNDWATER:
                 for rain_scenario in RAIN_SCENARIOS:
                     names.append(f"{rain_type}_{groundwater}_{rain_scenario}")
         self._names = names
 
-    @property
-    def grid_path(self):
-        return self.blok_grid_path
+    #Fixme zou in ClimateResultScenario moeten staan. 
+    # @property
+    # def grid_path(self):
+    #     return self.blok_grid_path
 
-    @property
-    def admin_path(self):
-        return self.blok_admin_path
+    # @property
+    # def admin_path(self):
+    #     return self.blok_admin_path
 
-    def grid(self, _type):
-        if _type == "blok":
-            return GridH5ResultAdmin(
-                self.blok_admin_path.file_path, self.blok_grid_path.file_path
-            )
-        return GridH5ResultAdmin(
-            self.piek_admin_path.file_path, self.piek_grid_path.file_path
-        )
+    # def grid(self, _type):
+    #     if _type == "blok":
+    #         return GridH5ResultAdmin(
+    #             self.blok_admin_path.file_path, self.blok_grid_path.file_path
+    #         )
+    #     return GridH5ResultAdmin(
+    #         self.piek_admin_path.file_path, self.piek_grid_path.file_path
+    #     )
 
-    def admin(self):
-        return GridH5Admin(self.blok_admin_path.file_path)
+    # def admin(self):
+    #     return GridH5Admin(self.blok_admin_path.file_path)
 
     def __repr__(self):
         return f"""{self.name} @ {self.path}
@@ -1231,12 +1168,37 @@ class _ClimateResultDownloads(Folder):
     #     )
 
 
+# TODO dit komt nu niet netjes in de print van de class.
+class ClimateResultScenario(Folder):
+    """Single scenario with multiple results"""
+
+    def __init__(self, base, name):
+        super().__init__(base)
+
+        raster_types = ["depth_max", "damage_total", "wlvl_max"]
+
+        for rastertype in raster_types:
+            self.add_file(rastertype, f"{rastertype}_{name}.tif", ftype="raster")
+        self.structure_extra = []
+        # Netcdf for piek_ghg_t1000 and blok_ghg_t1000 for use in ruimtekaart.
+        # if name in RAW_DOWNLOADS:
+        if True:
+            setattr(self, "netcdf", ThreediResult(self.full_path(name)))
+            self.structure_extra = ["netcdf"]
+
+    def __repr__(self):
+        return f"""{self.name} @ {self.path}
+                    Folders:\t{self.structure_extra}
+                    Files:\t{list(self.files.keys())}
+                    Layers:\t{list(self.olayers.keys())}
+                """
+
 
 class ThreediResult(Folder):
     """Use .grid to get GridH5ResultAdmin and .admin to get GridH5Admin"""
 
     def __init__(self, base):
-        super().__init__(base)
+        super().__init__(base, create=False)
 
         # Files
         self.add_file("grid_path", "results_3di.nc")
@@ -1322,32 +1284,6 @@ class ClimateResultOutputTemp(Folder):
         self.add_file("peilgebieden", "peilgebieden_clipped.shp")
 
         self.create(parents=False)  # create outputfolder if parent exists
-
-
-
-
-# TODO dit komt nu niet netjes in de print van de class.
-class ClimateResultScenario(Folder):
-    """Single scenario with multiple results"""
-
-    def __init__(self, base, name):
-        super().__init__(base)
-
-        raster_types = ["max_depth", "total_damage", "wlvl_max"]
-        for rastertype in raster_types:
-            self.add_file(rastertype, f"{rastertype}_{name}.tif", ftype="raster")
-        self.structure_extra = []
-        # Netcdf for piek_ghg_t1000 and blok_ghg_t1000 for use in ruimtekaart.
-        if name in RAW_DOWNLOADS:
-            setattr(self, "netcdf", ThreediResult(self.full_path(name)))
-            self.structure_extra = ["netcdf"]
-
-    def __repr__(self):
-        return f"""{self.name} @ {self.path}
-                    Folders:\t{self.structure_extra}
-                    Files:\t{list(self.files.keys())}
-                    Layers:\t{list(self.olayers.keys())}
-                """
 
 
 class OutputFolder(Folder):

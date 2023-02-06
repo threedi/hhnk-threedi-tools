@@ -990,11 +990,21 @@ def download_gui(main_folder=None, lizard_api_key="", data=None):
                 print("{} already on system".format(total_damage.name))
 
             # TODO: call batch download function
-        print("uuid_list: {}".format(uuid_list))
-        print("code_list: {}".format(code_list))
-        print("target_srs_list: {}".format(target_srs_list))
-        print("resolution_list: {}".format(resolution_list))
+        # print("uuid_list: {}".format(uuid_list))
+        # print("code_list: {}".format(code_list))
+        # print("target_srs_list: {}".format(target_srs_list))
+        # print("resolution_list: {}".format(resolution_list))
         # print("pathname_list: {}".format(pathname_list))
+
+        print("\nStarting download of rasters")
+        print(f"uuid_list: {uuid_list}")
+        print(f"code_list: {code_list}")
+        print(f"target_srs_list: {target_srs_list}")
+        print(f"resolution_list: {resolution_list}")
+        print(f"bounds_list: {bounds_list}")
+        print(f"bounds_srs_list: {bounds_srs_list}")
+        print(f"pathname_list: {pathname_list}")
+        print(f"Wait until download is finished")
 
         batch_path = batch_fd.full_path(
             f"{datetime.now().strftime('%Y-%m-%d %Hh%M')}_download_raster_batch.csv"

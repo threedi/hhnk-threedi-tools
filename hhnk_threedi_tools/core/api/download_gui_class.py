@@ -2,7 +2,7 @@
 # system imports
 import os
 import datetime
-
+import re
 from pathlib import Path
 
 # Third-party imports
@@ -13,13 +13,17 @@ import ipywidgets as widgets
 from IPython.core.display import HTML
 from traitlets import Unicode
 from apscheduler.schedulers.blocking import BlockingScheduler
+import requests
+
 
 # threedi
-from threedi_scenario_downloader import downloader as dl
+# from threedi_scenario_downloader import downloader as dl #FIXME local changes, push to threedi_scenario_downloader?
+from hhnk_threedi_tools.core.api import downloader as dl
 import hhnk_threedi_tools.core.api.download_functions as download_functions
 
 # local imports
 import hhnk_threedi_tools as htt
+import hhnk_research_tools as hrt
 from hhnk_threedi_tools import Folders
 
 from hhnk_threedi_tools.core.api.calculation import Simulation
@@ -37,8 +41,8 @@ from hhnk_threedi_tools.variables.api_settings import (
 
 
 dl.LIZARD_URL = "https://hhnk.lizard.net/api/v3/"
-THREEDI_API_HOST = "https://api.3di.live/v3"
-RESULT_LIMIT = 10
+# THREEDI_API_HOST = "https://api.3di.live/v3"
+RESULT_LIMIT = 50 #Results on search
 
 
 def item_layout(width="95%", grid_area="", **kwargs):
@@ -46,6 +50,40 @@ def item_layout(width="95%", grid_area="", **kwargs):
         width=width, grid_area=grid_area, **kwargs
     )  # override the default width of the button to 'auto' to let the button grow
 
+
+
+class dlRaster():
+    """Helper for input of download_functions."""
+    def __init__(self, uuid, code, resolution, timelist, output_path, button, name, bounds=None, bounds_srs=None):
+        self.uuid = uuid
+        self.code = code
+        self.resolution = resolution
+        self.timelist = timelist
+        self.output_path = output_path
+        self.button = button
+        self.name = name
+        self.bounds = bounds
+        self.bounds_srs = bounds_srs
+
+class dlRasterSettings():
+    def __init__(self, target_srs = "EPSG:28992") -> None:
+        self.uuid_list = []
+        self.code_list = []
+        self.target_srs_list = target_srs
+        self.resolution_list = []
+        self.time_list = []
+        self.pathname_list = []
+        self.bounds_list = []
+        self.bounds_srs_list = []
+
+    def add_raster(self, r: dlRaster):
+        self.uuid_list.append(r.uuid)
+        self.code_list.append(r.code)
+        self.resolution_list.append(r.resolution)
+        self.time_list.append(r.timelist)
+        self.pathname_list.append(r.output_path)
+        self.bounds_list.append(r.bounds)
+        self.bounds_srs_list.append(r.bounds_srs)
 
 
 
@@ -137,8 +175,9 @@ class DownloadWidgets:
         """Output box with available results for simulation"""
         def __init__(self) -> None:
 
+            self.dl_select_label_text = "<b>3. Select simulation results  ( {} selected )</b>"
             self.dl_select_label = widgets.HTML(
-                "<b>3. Select simulation result(s)</b>",
+                self.dl_select_label_text.format(0),
                 layout=item_layout(grid_area="dl_select_label"),
             )
 
@@ -335,6 +374,14 @@ class DownloadWidgets:
                 "<b>6. Download selected</b>",
                 layout=item_layout(grid_area="download_button_label"),
             )
+            self.use_dem_label = widgets.Label(
+                "DEM extent:", layout=item_layout(grid_area="use_dem_label")
+            )
+            self.use_dem_button = widgets.ToggleButton(
+                value=False,
+                description="use",
+                layout=item_layout(grid_area="use_dem_button"),
+            )
             self.button = widgets.Button(
                 description="Download",
                 layout=item_layout(
@@ -371,7 +418,7 @@ class DownloadWidgets:
 
             # Select DEM file to use to determine which resolution to download depth rasters on
             self.dem_path_label = widgets.Label(
-                "Locatie DEM (voor batch):", layout=item_layout(grid_area="dem_path_label")
+                "Locatie DEM:", layout=item_layout(grid_area="dem_path_label")
             )
             self.dem_path_dropdown = widgets.Dropdown(
                 options="",
@@ -384,8 +431,6 @@ class DownloadWidgetsInteraction(DownloadWidgets):
     def __init__(self, caller):
         super().__init__()
         self.caller = caller
-
-
 
         # --------------------------------------------------------------------------------------------------
         # 1. Login with API key
@@ -414,11 +459,13 @@ class DownloadWidgetsInteraction(DownloadWidgets):
             self.search.search_button.description = "Searching..."
             
 
-            self.vars.scenario_results = dl.find_scenarios(
-                model_name=self.search.sim_name_widget.value,
+            self.vars.scenarios = dl.find_scenarios(
+                name__icontains=self.search.sim_name_widget.value,
                 model_revision=self.search.sim_rev_widget.value,
                 limit=self.search.limit_widget.value,
             )
+            # Reset/initialize results
+            self.vars.scenario_results = {}
 
             # Update selection box
             self.select.dl_select_box.options = self.vars.scenario_names
@@ -426,6 +473,8 @@ class DownloadWidgetsInteraction(DownloadWidgets):
             self.search.search_button.style.button_color = "lightgreen"
             self.search.search_button.description = "Search"
 
+            
+            
 
 
         # --------------------------------------------------------------------------------------------------
@@ -450,7 +499,8 @@ class DownloadWidgetsInteraction(DownloadWidgets):
 
         def get_scenarios_selected_result(value):
             
-
+            self.select.dl_select_label.value = self.select.dl_select_label_text.format(len(self.select.dl_select_box.value))
+            self.get_scenario_results() #Get available results for selected scenarios.
             self.update_buttons()  # Change button state based on selected scenarios
             self.update_time_pick_dropdown()  # change button state and dropdown based on selected scenarios
 
@@ -485,34 +535,13 @@ class DownloadWidgetsInteraction(DownloadWidgets):
         # --------------------------------------------------------------------------------------------------
         # 6. Download
         # --------------------------------------------------------------------------------------------------
+        self.download.use_dem_button.observe(self._update_button_icon, "value")
+
         @self.download.button.on_click
         def download(action):
             """Download the selected models to the output folders"""
-            selected_file_results = []  # list of selected files from the model to download
-            if self.outputtypes.netcdf_button.value:
-                selected_file_results += ["Raw 3Di output"]
-            if self.outputtypes.agg_netcdf_button.value:
-                selected_file_results += ["aggregated 3Di output"]
-            if self.outputtypes.h5_button.value:
-                selected_file_results += ["Grid administration"]
-            if self.outputtypes.log_button.value:
-                selected_file_results += ["Calculation core logging"]
-
-            self.vars.scenario_download_url = download_functions.create_download_url(
-                self.vars.scenario_results, self.scenario_selected_ids, selected_file_results
-            )  # url to all download links.
-
-            # Log in to 3Di server
-            #     headers, username, passw, headers_results = retrieve_username_pw(username_widget.value, password_widget.value)
-
-            uuid_list = []
-            code_list = []
-            target_srs_list = []
-            resolution_list = []
-            time_list = []
-            pathname_list = []
-
-
+            
+            
 
             self.vars.output_df = pd.DataFrame()
 
@@ -521,23 +550,26 @@ class DownloadWidgetsInteraction(DownloadWidgets):
             self.download.button.description = "Downloading..."
             self.download.button.disabled = True
             
+            #Init empty raster settings.
+            dl_raster_settings = dlRasterSettings()
 
             # Start download of selected files (if any are selected) ------------------------------------------------
-            for name in self.select.dl_select_box.value:
-                scenario_id = self.vars.scenario_names.index(name)
-                selected_result = self.vars.scenario_results[scenario_id]
+            for scenario_id in self.scenario_selected_ids:
+                scenario = self.vars.scenarios[scenario_id]
+                download_urls = self.scenario_raw_download_urls[scenario_id]
+                scenario_name = scenario["name"]
                 # Print download URLs
 
                 print(
                     "\n\033[1m\033[31mDownloading files for {} (uuid={}):\033[0m".format(
-                        name, selected_result["uuid"]
+                        scenario_name, scenario["uuid"]
                     )
                 )
-                for index, url in enumerate(self.vars.scenario_download_url[name]):
+                for index, url in enumerate(download_urls):
                     print("{}: {}".format(index + 1, url))
 
                 # Print destination folder
-                output_folder = str(self.vars.folder.threedi_results[self.output.subfolder_box.value][name])
+                output_folder = str(self.vars.folder.threedi_results[self.output.subfolder_box.value][scenario_name])
 
                 # De 3Di plugin kan geen '[' en ']' aan.
                 output_folder = output_folder.replace("[", "")
@@ -554,16 +586,16 @@ class DownloadWidgetsInteraction(DownloadWidgets):
                 #add somee variables to overview
                 self.vars.output_df = self.vars.output_df.append({
                                 "id":scenario_id,
-                                "name": name,
-                                "uuid": selected_result["uuid"],
-                                "scenario_download_url": self.vars.scenario_download_url[name],
+                                "name": scenario_name,
+                                "uuid": scenario["uuid"],
+                                "scenario_download_url": download_urls,
                                 "output_folder": output_folder}, 
                             ignore_index=True)
 
 
                 # Start downloading of the files
                 download_functions.start_download(
-                    self.vars.scenario_download_url[name],
+                    download_urls,
                     output_folder,
                     api_key=dl.get_api_key(),
                     automatic_download=1,
@@ -577,103 +609,281 @@ class DownloadWidgetsInteraction(DownloadWidgets):
                     
                 res = str(self.outputtypes.resolution_dropdown.value).replace(".", "_")
 
-                # Output files
+
+
+                if self.download.use_dem_button.value:
+                    dem = hrt.Raster(self.vars.folder.model.schema_base.rasters.dem.path)
+                    class dlRasterPreset(dlRaster):
+                        def __init__(self, 
+                                        uuid=scenario["uuid"], 
+                                        resolution=self.outputtypes.resolution_dropdown.value,
+                                        bounds=dem.metadata["bounds_dl"],
+                                        bounds_srs="EPSG:28992",
+                                        **kwargs):
+                            super().__init__(uuid=uuid, resolution=resolution, bounds=bounds, bounds_srs=bounds_srs, **kwargs)
+                else:
+                    class dlRasterPreset(dlRaster):
+                        def __init__(self, 
+                                        uuid=scenario["uuid"], 
+                                        resolution=self.outputtypes.resolution_dropdown.value,
+                                        **kwargs):
+                            super().__init__(uuid=uuid, resolution=resolution, **kwargs)
+
+
+                raster_max_wlvl = dlRasterPreset(code="s1-max-dtri",
+                                        timelist=None,
+                                        output_path=os.path.join(output_folder, f"max_wlvl_res{res}m.tif"), 
+                                        button=self.outputtypes.max_wlvl_button,
+                                        name="max waterlevel",
+                )
+                raster_max_depth = dlRasterPreset(code="depth-max-dtri",
+                                        timelist=None,
+                                        output_path=os.path.join(output_folder, f"max_depth_res{res}m.tif"), 
+                                        button=self.outputtypes.max_depth_button,
+                                        name="max waterdepth",
+                )
+                raster_total_damage = dlRasterPreset(code="total-damage",
+                                        timelist=None,
+                                        output_path=os.path.join(output_folder, f"total_damage_res{res}m.tif"), 
+                                        button=self.outputtypes.total_damage_button,
+                                        name="total damge",
+                )
+                raster_wlvl = dlRasterPreset(code="s1-dtri",
+                                        timelist=time,
+                                        output_path=os.path.join(output_folder, f"wlvl_{time}_res{res}m.tif"), 
+                                        button=self.outputtypes.wlvl_button,
+                                        name="waterlevel at timestep {time}",
+                )
+                raster_wdepth = dlRasterPreset(code="depth-dtri",
+                                        timelist=time,
+                                        output_path=os.path.join(output_folder, f"depth_{time}_res{res}m.tif"), 
+                                        button=self.outputtypes.depth_button,
+                                        name="waterdepth at timestep {time}",
+                )
+                raster_depth_dmg = dlRasterPreset(code="dmge-depth",
+                                        timelist=None,
+                                        output_path=os.path.join(output_folder, f"depth_for_lizard_dmg_res{res}m.tif"), 
+                                        button=self.outputtypes.depth_damage_button,
+                                        name="waterdepth for lizard damage calc",
+                )
+
+
+                for r in [raster_max_wlvl, raster_max_depth, raster_total_damage, raster_wlvl, raster_wdepth, raster_depth_dmg]:
+                    if r.button.value == True:
+                        if not os.path.exists(r.output_path):
+                            dl_raster_settings.add_raster(r)
+                        else:
+                            print("{} already on system".format(r.output_path.split("/")[-1]))
+
+
+            if len(dl_raster_settings.uuid_list)==0:
+                print("\nNo rasters will be downloaded")
+            else:
+                print("\nStarting download of rasters")
+                print(f"uuid_list: {dl_raster_settings.uuid_list}")
+                print(f"code_list: {dl_raster_settings.code_list}")
+                print(f"target_srs_list: {dl_raster_settings.target_srs_list}")
+                print(f"resolution_list: {dl_raster_settings.resolution_list}")
+                print(f"bounds_list: {dl_raster_settings.bounds_list}")
+                print(f"bounds_srs_list: {dl_raster_settings.bounds_srs_list}")
+                print(f"pathname_list: {dl_raster_settings.pathname_list}")
+                print(f"Wait until download is finished")
+                
+                self.vars.dl_raster_settings=dl_raster_settings
                 logging_batch_path = os.path.join(
                     output_folder,
                     "download_raster_batch_{}.csv".format(datetime.datetime.now().strftime("%Y-%m-%d %Hh%M")),
                 )
 
-                class dlRaster():
-                    def __init__(self, output_folder, filename, name, button, code, timelist):
-                        self.name = name
-                        self.output_path = os.path.join(output_folder, filename)
-                        self.button = button
-                        self.code = code
-                        self.timelist = timelist
-
-                raster_max_wlvl = dlRaster(output_folder=output_folder, 
-                                        filename=f"max_wlvl_res{res}m.tif", 
-                                        name="max waterlevel",
-                                        button=self.outputtypes.max_wlvl_button,
-                                        code="s1-max-dtri",
-                                        timelist=None,
-                )
-                raster_max_depth = dlRaster(output_folder=output_folder, 
-                                        filename=f"max_depth_res{res}m.tif", 
-                                        name="max waterdepth",
-                                        button=self.outputtypes.max_depth_button,
-                                        code="depth-max-dtri",
-                                        timelist=None,
-                )
-                raster_total_damage = dlRaster(output_folder=output_folder, 
-                                        filename=f"total_damage_res{res}m.tif", 
-                                        name="total damge",
-                                        button=self.outputtypes.total_damage_button,
-                                        code="total-damage",
-                                        timelist=None,
-                )
-                raster_wlvl = dlRaster(output_folder=output_folder, 
-                                        filename= f"wlvl_{time}_res{res}m.tif", 
-                                        name=f"waterlevel at timestep {time}",
-                                        button=self.outputtypes.wlvl_button,
-                                        code="s1-dtri",
-                                        timelist=time,
-                )
-                raster_wdepth = dlRaster(output_folder=output_folder, 
-                                        filename= f"depth_{time}_res{res}m.tif", 
-                                        name=f"waterdepth at timestep {time}",
-                                        button=self.outputtypes.depth_button,
-                                        code="depth-dtri",
-                                        timelist=time,
-                )
-                raster_depth_dmg = dlRaster(output_folder=output_folder, 
-                                        filename= f"depth_for_lizard_dmg_res{res}m.tif", 
-                                        name=f"waterdepth for lizard damage calc",
-                                        button=self.outputtypes.depth_damage_button,
-                                        code="dmge-depth",
-                                        timelist=None,
+                dl.download_raster(
+                    scenario=dl_raster_settings.uuid_list,
+                    raster_code=dl_raster_settings.code_list,
+                    target_srs=dl_raster_settings.target_srs_list,
+                    resolution=dl_raster_settings.resolution_list,
+                    bounds=dl_raster_settings.bounds_list,
+                    bounds_srs=dl_raster_settings.bounds_srs_list,
+                    time=dl_raster_settings.time_list,
+                    pathname=dl_raster_settings.pathname_list,
+                    export_task_csv=logging_batch_path,
                 )
 
-                for r in [raster_max_wlvl, raster_max_depth, raster_total_damage, raster_wlvl, raster_wdepth, raster_depth_dmg]:
-                    if r.button.value == True:
-                        if not os.path.exists(r.output_path):
-                            # print(f"Preparing download of raster {r.name}")
-                            # dl.download_maximum_waterlevel_raster(selected_result['uuid'],"EPSG:28992",resolution_dropdown.value, pathname=max_wlvl_path)
-                            uuid_list.append(selected_result["uuid"])
-                            code_list.append(r.code)
-                            target_srs_list.append("EPSG:28992")
-                            resolution_list.append(self.outputtypes.resolution_dropdown.value)
-                            time_list.append(r.timelist)
-                            pathname_list.append(r.output_path)
-                        else:
-                            print("{} already on system".format(r.output_path.split("/")[-1]))
+                print("Download of rasters finished")
 
-
-
-            print("\nStarting download of rasters")
-            print("uuid_list: {}".format(uuid_list))
-            print("code_list: {}".format(code_list))
-            print("target_srs_list: {}".format(target_srs_list))
-            print("resolution_list: {}".format(resolution_list))
-            print("time_list: {}".format(time_list))
-            print("pathname_list: {}".format(pathname_list))
-
-            dl.download_raster(
-                uuid_list,
-                raster_code=code_list,
-                target_srs=target_srs_list,
-                resolution=resolution_list,
-                time=time_list,
-                pathname=pathname_list,
-                export_task_csv=logging_batch_path,
-            )
 
             #Re enable download button
             self.download.button.style.button_color = "lightgreen"
             self.download.button.description = "Download"
             self.download.button.disabled = False
-            print("Download of rasters finished")
 
+
+        @self.download_batch.button.on_click
+        def download_batch(action):
+            """Download the selected models to the output folders"""
+            # Initialize folders and load directory structure
+
+            self.vars.batch_fd = self.vars.folder.threedi_results.batch[self.download_batch.batch_folder_dropdown.value]
+
+            # batch_fd = create_batch_folders_dict(batch_folder)
+            # batch_fd = Folders(batch_folder).
+            # Create destination folder
+
+            self.vars.batch_fd.create()
+            self.vars.batch_fd.downloads.create()
+
+            #Temporary disable download button
+            self.download_batch.button.style.button_color = "orange"
+            self.download_batch.button.description = "Downloading..."
+            self.download_batch.button.disabled = True
+
+
+            # Link selected files to scenarios. e.g: BWN Hoekje [#30] GLG blok 10 (10) 	 blok_GLG_T10
+            df = pd.DataFrame(self.select.dl_select_box.value, columns=["name"])
+            for index, row in df.iterrows():
+                name = row["name"]
+                for rain_type in RAIN_TYPES:
+                    for groundwater in GROUNDWATER:
+                        for rain_scenario in RAIN_SCENARIOS:
+                            rain_scenario = rain_scenario.strip("T")  # strip 'T' because its not used in older versions.
+
+                            scenario_id = self.vars.scenario_names.index(name)
+                            scenario = self.vars.scenarios[scenario_id]
+
+                            #Scenario should have nameformat piek/blok_gxg_Txx
+                            if (
+                                (rain_type in name)
+                                and (groundwater.lower() in name.lower())
+                                and (rain_scenario in name)
+                            ):
+                                if "0" not in [
+                                    name[a.start() + len(rain_scenario)]
+                                    for a in re.finditer(rain_scenario, name)
+                                    if len(name) > (a.start() + len(rain_scenario))
+                                ]:  # filters this: BWN Hoekje [#10] GLG blok 100 (10)
+                                    df.loc[index, "dl_name"] = f"{rain_type}_{groundwater}_T{rain_scenario}"
+                                    df.loc[index, "uuid"] = scenario["uuid"]
+
+
+            df.set_index("name", inplace=True)
+            # display(df)
+            df.to_csv(str(
+                self.vars.batch_fd.downloads.full_path("download_netcdf_batch_{}.csv".format(datetime.datetime.now().strftime("%Y-%m-%d %Hh%M")))
+                )
+            )
+
+            # Get raster size of dem, max depth rasters are downloaded on this resolution.
+            # print(self.vars.folder)
+            # print(self.vars.folder.model.schema_base.rasters.full_path(self.download_batch.dem_path_dropdown.value))
+            dem = hrt.Raster(self.vars.folder.model.schema_base.rasters.dem.path)
+
+
+            #Init empty raster settings.
+            dl_raster_settings = dlRasterSettings()
+
+            # Start download of selected files (if any are selected) ------------------------------------------------
+            for name, row in df.iterrows():
+                scenario_id = self.vars.scenario_names.index(name)
+                scenario = self.vars.scenarios[scenario_id]
+                download_urls = self.scenario_raw_download_urls[scenario_id]
+
+                print(f"\n\033[1m\033[31mDownloading files for {name} (uuid={scenario['uuid']}):\033[0m")
+
+                #Download netcdf of 2 GHG_T1000 results.
+                # if row["dl_name"] in RAW_DOWNLOADS:
+
+                #Download netcdf of all results.
+                if True:
+                    output_folder = getattr(self.vars.batch_fd.downloads, row["dl_name"]).netcdf
+
+                    # Create destination folder
+                    output_folder.create()
+
+                    # Start downloading of the files
+                    download_functions.start_download(
+                        download_urls,
+                        output_folder.path,
+                        api_key=dl.get_api_key(),
+                        automatic_download=1,
+                    )
+
+                # Donwload max depth and damage rasters
+                class dlRasterPreset(dlRaster):
+                    def __init__(self, 
+                                    uuid=scenario["uuid"], 
+                                    code=None, 
+                                    resolution=None, 
+                                    timelist=None, 
+                                    output_path=None, 
+                                    button=None, 
+                                    name=None,
+                                    bounds=dem.metadata["bounds_dl"],
+                                    bounds_srs="EPSG:28992"):
+                        super().__init__(uuid, code, resolution, timelist, output_path, button, name, bounds, bounds_srs)
+
+                wlvl_max = getattr(self.vars.batch_fd.downloads, row["dl_name"]).wlvl_max
+                raster_max_wlvl = dlRasterPreset(code="s1-max-dtri",
+                                        resolution=dem.metadata["pixel_width"],
+                                        output_path=wlvl_max.path, 
+                                        button=self.outputtypes.max_wlvl_button,
+                                        name="max waterlvl",                                        
+                )
+                depth_max = getattr(self.vars.batch_fd.downloads, row["dl_name"]).depth_max
+                raster_max_depth = dlRasterPreset(code="depth-max-dtri",
+                                        resolution=dem.metadata["pixel_width"],
+                                        output_path=depth_max.path, 
+                                        button=self.outputtypes.max_depth_button,
+                                        name="max waterdepth",
+                )
+                damage_total = getattr(self.vars.batch_fd.downloads, row["dl_name"]).damage_total
+                raster_total_damage = dlRasterPreset(code="total-damage",
+                                        resolution=0.5, #FIXME 0.5 res
+                                        output_path=damage_total.path, 
+                                        button=self.outputtypes.total_damage_button,
+                                        name="total damge",
+                )
+                
+
+                for r in [raster_max_wlvl, raster_max_depth, raster_total_damage]:
+                    if r.button.value == True:
+                        if not os.path.exists(r.output_path):
+                            dl_raster_settings.add_raster(r)
+
+            #To vars so we can inspect.
+            self.vars.dl_raster_settings = dl_raster_settings
+
+            if len(dl_raster_settings.uuid_list)==0:
+                print("\nNo rasters will be downloaded")
+            else:
+                print("\nStarting download of rasters")
+                print(f"uuid_list: {dl_raster_settings.uuid_list}")
+                print(f"code_list: {dl_raster_settings.code_list}")
+                print(f"target_srs_list: {dl_raster_settings.target_srs_list}")
+                print(f"resolution_list: {dl_raster_settings.resolution_list}")
+                print(f"bounds_list: {dl_raster_settings.bounds_list}")
+                print(f"bounds_srs_list: {dl_raster_settings.bounds_srs_list}")
+                print(f"pathname_list: {dl_raster_settings.pathname_list}")
+                print(f"Wait until download is finished")
+                
+
+                logging_batch_path = self.vars.batch_fd.downloads.full_path(
+                    "download_raster_batch_{}.csv".format(datetime.datetime.now().strftime("%Y-%m-%d %Hh%M")),
+                )
+
+                dl.download_raster(
+                    scenario=dl_raster_settings.uuid_list,
+                    raster_code=dl_raster_settings.code_list,
+                    target_srs=dl_raster_settings.target_srs_list,
+                    resolution=dl_raster_settings.resolution_list,
+                    bounds=dl_raster_settings.bounds_list,
+                    bounds_srs=dl_raster_settings.bounds_srs_list,
+                    pathname=dl_raster_settings.pathname_list,
+                    export_task_csv=logging_batch_path,
+                )
+
+                print("Download of rasters finished")
+
+            self.download_batch.button.style.button_color = "lightgreen"
+            self.download_batch.button.description = "Download batch"
+            self.download_batch.button.disabled = False
 
 
     def update_folder(self):
@@ -682,6 +892,33 @@ class DownloadWidgetsInteraction(DownloadWidgets):
         #Output folder string
         self.output.folder_value.value = self.vars.folder.threedi_results.path
 
+
+    # --------------------------------------------------------------------------------------------------
+    # 3. SelectWidgets
+    # --------------------------------------------------------------------------------------------------
+    def get_scenario_results(self):
+
+        #TODO zou in threedi_scenario_downloader moeten staan.
+        def find_scenario_results(scenario_url):
+            """results under scenario (raw results / rasters)"""
+            payload = {"limit": 20} #Always want to see all available results.
+
+            url = f"{scenario_url}results/"
+            r=requests.get(url=url, auth=("__key__", dl.get_api_key()), params=payload)
+            r.raise_for_status()
+            return r.json()["results"]
+
+        #Search for available results per scenario
+        for index, scenario_id in enumerate(self.scenario_selected_ids):
+            scenario = self.vars.scenarios[scenario_id]
+
+            #Every result will be placed in dict per scenario with key=code (e.g. s1-max-dtri)
+            self.vars.scenario_results[scenario_id]= {}
+
+            r = find_scenario_results(scenario_url=scenario['url'])
+            #Loop individual results and add to dict
+            for result in r:
+                self.vars.scenario_results[scenario_id][result["code"]]=result
 
     # --------------------------------------------------------------------------------------------------
     # 4. Result layers selection
@@ -693,20 +930,23 @@ class DownloadWidgetsInteraction(DownloadWidgets):
 
         def retrieve_time_interval(selected_result):
             """retrieve selected time"""
-            Tstart = datetime.datetime.strptime(
-                selected_result["start_time_sim"], "%Y-%m-%dT%H:%M:%SZ"
-            )
-            Tend = datetime.datetime.strptime(selected_result["end_time_sim"], "%Y-%m-%dT%H:%M:%SZ")
+            try:
+                Tstart = datetime.datetime.strptime(
+                    selected_result["simulation_start"], "%Y-%m-%dT%H:%M:%SZ"
+                )
+                Tend = datetime.datetime.strptime(selected_result["simulation_end"], "%Y-%m-%dT%H:%M:%SZ")
 
-            dates = pd.date_range(Tstart, Tend, freq="H")
-            time_pick_options = [(date.strftime("%Y-%m-%dT%H:%M:%S")) for date in dates]
-            return time_pick_options
+                dates = pd.date_range(Tstart, Tend, freq="H")
+                time_pick_options = [(date.strftime("%Y-%m-%dT%H:%M:%S")) for date in dates]
+                return time_pick_options
+            except:
+                return None
 
         time_pick_options = []
         for scenario_id in self.scenario_selected_ids:
-            time_pick_options.append(
-                retrieve_time_interval(self.vars.scenario_results[scenario_id])
-            )
+            time_pick_option = retrieve_time_interval(self.vars.scenarios[scenario_id])
+            if time_pick_option is not None:
+                time_pick_options.append(time_pick_option)
 
         if not all(
             [len(x) == len(time_pick_options[0]) for x in time_pick_options]
@@ -766,10 +1006,7 @@ class DownloadWidgetsInteraction(DownloadWidgets):
         on their occrence in the results"""
         result_codes = []
         for index, scenario_id in enumerate(self.scenario_selected_ids):
-            result_codes += [
-                rset["result_type"]["code"]
-                for rset in self.vars.scenario_results[scenario_id]["result_set"]
-            ]  # available results
+            result_codes += self.vars.scenario_results[scenario_id].keys()
 
         # select results that appear in all selected scenarios. If for instance rasters are not in one of the results
         # all rasters are dropped from the list.
@@ -783,36 +1020,19 @@ class DownloadWidgetsInteraction(DownloadWidgets):
 
         # we now know which results are available for all selected models. Only these buttons will be available for download.
         # Enable or disable buttons based on their availability in the results
-        for button in [self.outputtypes.netcdf_button, self.outputtypes.h5_button, self.outputtypes.log_button]:
-            if "results-3di" in result_codes:
-                self.change_button_state(button, button_disabled=False, button_value=True)
-            else:
-                self.change_button_state(button, button_disabled=True, button_value=False)
 
-        if "aggregate-results-3di" in result_codes:
-            self.change_button_state(
-                self.outputtypes.agg_netcdf_button, button_disabled=False, button_value=True
-            )
-        else:
-            self.change_button_state(
-                self.outputtypes.agg_netcdf_button, button_disabled=True, button_value=False
-            )
 
-        for button in [self.outputtypes.max_wlvl_button, 
-                        self.outputtypes.max_depth_button, 
-                        self.outputtypes.wlvl_button, 
-                        self.outputtypes.depth_button]:
-            if "ucr-max-quad" in result_codes:
-                self.change_button_state(button, button_disabled=False, button_value=False)
-            else:
-                self.change_button_state(button, button_disabled=True, button_value=False)
 
-        for button in [self.outputtypes.total_damage_button,
-                        self.outputtypes.depth_damage_button]:
-            if "total-damage" in result_codes:
-                self.change_button_state(button, button_disabled=False, button_value=False)
+        for code in self.button_codes:
+            if code in result_codes:
+                if code in ["results-3di", "grid-admin", "logfiles", "aggregate-results-3di"]:
+                    self.change_button_state(self.button_codes[code], button_disabled=False, button_value=True)
+                else:
+                    self.change_button_state(self.button_codes[code], button_disabled=False, button_value=False)
+
             else:
-                self.change_button_state(button, button_disabled=True, button_value=False)
+                self.change_button_state(self.button_codes[code], button_disabled=True, button_value=False)
+        self.vars.result_codes=result_codes
 
 
     # --------------------------------------------------------------------------------------------------
@@ -834,9 +1054,9 @@ class DownloadWidgetsInteraction(DownloadWidgets):
             self.vars.folder.threedi_results[self.output.subfolder_box.value].revisions
         )
 
-        # Batch folder gets the same options.
+        # Batch folder gets only batch_folder options
         self.download_batch.batch_folder_dropdown.options = (
-            self.vars.folder.threedi_results[self.output.subfolder_box.value].revisions
+            self.vars.folder.threedi_results["batch_results"].revisions
         )
 
         # Add the newly selected records to the list
@@ -866,8 +1086,40 @@ class DownloadWidgetsInteraction(DownloadWidgets):
         # self.login.button.click()
 
     @property
+    def button_codes(self):
+        """Map buttons to scenario result code on lizard"""
+        return  {"results-3di": self.outputtypes.netcdf_button,
+                        "grid-admin": self.outputtypes.h5_button, 
+                        "logfiles": self.outputtypes.log_button,
+                        "aggregate-results-3di": self.outputtypes.agg_netcdf_button,
+                        "s1-max-dtri": self.outputtypes.max_wlvl_button,
+                        "depth-max-dtri": self.outputtypes.max_depth_button,
+                        "s1-dtri": self.outputtypes.wlvl_button,
+                        "depth-dtri": self.outputtypes.depth_button,
+                        "total-damage": self.outputtypes.total_damage_button,
+                        "dmge-depth": self.outputtypes.depth_damage_button,
+                        }
+
+
+
+
+    @property
     def scenario_selected_ids(self):
         return  [self.vars.scenario_names.index(a) for a in self.select.dl_select_box.value]  # id's of selected models to download
+
+    @property
+    def scenario_raw_download_urls(self):
+        """Retrieve urls from scenario raw results of selected results"""
+        scenario_download_urls = {}
+        for scenario_id in self.scenario_selected_ids:
+            scenario_result = self.vars.scenario_results[scenario_id]
+            download_urls = []
+
+            for code in ["results-3di", "grid-admin", "logfiles", "aggregate-results-3di"]:
+                if self.button_codes[code].value:
+                    download_urls.append(scenario_result[code]["attachment_url"])
+            scenario_download_urls[scenario_id] = download_urls
+        return scenario_download_urls
 
     @property
     def vars(self):
@@ -878,7 +1130,9 @@ class GuiVariables:
     def __init__(self) -> None:
         self._folder = None
 
-        self.scenario_results = None #filled when clicking search
+        self.scenarios = None #filled when clicking search
+        self.scenario_results = None #Filled when selecting a scenario, reset when clicking search
+        self.dl_raster_settings = None #filled when clicking download
 
         self.api_keys = {"lizard":"", "threedi":""}
         self.scenarios = {}
@@ -894,7 +1148,7 @@ class GuiVariables:
 
     @property
     def scenario_names(self):
-        return [a["name"] for a in self.scenario_results]
+        return [a["name"] for a in self.scenarios]
 
 
     @property
@@ -921,6 +1175,7 @@ class DownloadGui:
 
         self.widgets.update_folder()
         self.widgets.update_buttons() #disable filetype buttons
+        self.widgets.download.use_dem_button.value = True
         self.widgets.output.subfolder_box.value = "1d2d_results"
         self.widgets.search.sim_name_widget.value = ""  #hopefully prevents cursor from going to api key field.
 
@@ -964,6 +1219,8 @@ class DownloadGui:
                 self.w.output.subfolder_box,
                 self.w.output.output_select_box,
                 self.w.download.label,
+                self.w.download.use_dem_label,
+                self.w.download.use_dem_button,
                 self.w.download.button,
                 self.w.download_batch.label,
                 self.w.download_batch.button,
@@ -989,8 +1246,8 @@ class DownloadGui:
                     'dl_select_box dl_select_box dl_select_box raster_buttons_label raster_buttons_label output_select_box output_select_box output_select_box'
                     'dl_select_box dl_select_box dl_select_box raster_buttons_box raster_buttons_box output_select_box output_select_box output_select_box'
                     'search_results button_0d1d all_button raster_buttons_box raster_buttons_box  output_select_box output_select_box output_select_box'
-                    '. . . time_resolution_box time_resolution_box time_resolution_box download_button_label download_button_label'
-                    '. . . time_resolution_box time_resolution_box time_resolution_box download_button download_button'
+                    '. . use_dem_label time_resolution_box time_resolution_box time_resolution_box download_button_label download_button_label'
+                    '. . use_dem_button time_resolution_box time_resolution_box time_resolution_box download_button download_button'
                     '. . . . . . download_batch_button_label download_batch_button_label'
                     '. . dem_path_label dem_path_label batch_folder_label batch_folder_label download_batch_button download_batch_button'
                     '. . dem_path_dropdown dem_path_dropdown batch_folder_dropdown batch_folder_dropdown download_batch_button download_batch_button'
@@ -1011,8 +1268,8 @@ class DownloadGui:
 
 
 if __name__ == "__main__":
-        data = {'polder_folder': 'E:\\02.modellen\\23_Katvoed',
+        data = {'polder_folder': 'E:\\02.modellen\\model_test_v2',
     'api_keys_path': 'C:\\Users\\wvangerwen\\AppData\\Roaming\\3Di\\QGIS3\\profiles\\default\\python\\plugins\\hhnk_threedi_plugin\\api_key.txt'}
         self = DownloadGui(data=data); 
         display(self.tab)
-# %%
+ 

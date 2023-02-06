@@ -15,7 +15,8 @@ from traitlets import Unicode
 from apscheduler.schedulers.blocking import BlockingScheduler
 
 # threedi
-from threedi_scenario_downloader import downloader as dl
+# from threedi_scenario_downloader import downloader as dl
+from hhnk_threedi_tools.core.api import downloader as dl
 
 # local imports
 import hhnk_threedi_tools as htt
@@ -36,6 +37,7 @@ from hhnk_threedi_tools.variables.api_settings import (
 
 
 dl.LIZARD_URL = "https://hhnk.lizard.net/api/v3/"
+DL_RESULT_LIMIT = 1000
 THREEDI_API_HOST = "https://api.3di.live/v3"
 RESULT_LIMIT = 20
 
@@ -790,7 +792,7 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
                 self.sim.simulation = None
                 self.sim.simulation_created = False
                 self.update_create_simulation_button()
-                self.update_start_simulation_button(disabled=True, button=self.start.start_button)
+                self.update_start_simulation_button(status=0, button=self.start.start_button)
 
                 self.add_feedback("INFO", "Simulation widget reset.")
                 return
@@ -840,7 +842,7 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
 
             self.update_simulation_feedback(sim=self.sim)
             self.update_create_simulation_button()
-            self.update_start_simulation_button(disabled=False, button=self.start.start_button)
+            self.update_start_simulation_button(status=2, button=self.start.start_button)
 
 
         @self.start.start_button.on_click
@@ -848,7 +850,7 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
             #start simulation
             self.vars.sim.start()
 
-            self.update_start_simulation_button(disabled=True, button=self.start.start_button)
+            self.update_start_simulation_button(status=2, button=self.start.start_button)
 
             with self.feedback.widget:
                 print(f"{self.vars.time_now} - Simulation (hopefully) started or queued.\n\
@@ -939,12 +941,15 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
 
         @self.start.start_batch_button.on_click
         def start_batch_calculation(action):
+            # self.feedback.widget.clear_output()
+
             ready_to_roll = self.check_create_batch_simulation()
             if not ready_to_roll:
                 self.add_feedback("ERROR", "Check inputs again.")
                 return
             
-            self.update_start_simulation_button(disabled=True, button=self.start.start_batch_button)
+            self.update_start_simulation_button(status=1, button=self.start.start_batch_button)
+            self.start.start_batch_button.style.button_color
 
             self.vars.output_folder_batch = self.output.folder_value_batch.value
             if os.path.exists(str(self.vars.output_folder_batch)) == False:
@@ -952,10 +957,18 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
 
 
             batch_scenario_names = self.batch_scenario_names()
+
+
             self.add_feedback("INFO", f"Starting simulations.\nOutput wil be stored in {self.vars.output_folder_batch}")
             for rt, gxg, rs, i in self.loop_batch_selection():
 
                 shortname = f"{rt}_{gxg}_{rs}"
+
+
+                #Skip simulation if it already exists on lizard
+                if batch_scenario_names[shortname] in self.vars.available_batch_results:
+                    continue
+
                 self.vars.sim_batch[shortname] = Simulation(api_key=self.vars.api_keys["threedi"]) 
 
                 sim = self.vars.sim_batch[shortname]
@@ -963,8 +976,7 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
                 sim.simulation_created = False
 
                 self.vars.sqlite_path_batch[shortname] = sim.download_sqlite()
-
-                #TODO check if already run.
+                
                 sim.create(output_folder=self.vars.output_folder_batch,
                             simulation_name=batch_scenario_names[shortname],
                             model_id=self.selected_threedimodel_id_gxg(gxg),
@@ -995,7 +1007,7 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
 
                 self.update_simulation_feedback(sim=sim)
 
-                sim.start()
+                sim.start(extra_name=f"_{shortname}")
 
             with self.feedback.widget:
                 print(f"{self.vars.time_now} - All simulations (hopefully) started or queued.\n\
@@ -1008,6 +1020,7 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
                     )
                 )
 
+            self.update_start_simulation_button(status=0, button=self.start.start_batch_button)
 
 
 
@@ -1028,6 +1041,17 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
                 return False, "API key incorrect"
         except:
             return False, "Missing API key"
+
+        #Check for available results on lizard.
+        r = dl.find_scenarios(name__icontains=self.model.schema_name_widget.value, limit=DL_RESULT_LIMIT)
+        available_results = []
+        if len(r) > 0:
+            for i in r:
+                available_results.append(i["name"].lower())
+
+        self.vars.available_results = available_results
+        if self.start.simulation_name_view_widget.value.lower() in self.vars.available_results:
+            return False, "Simulation already available on lizard"
 
         return True, ""
 
@@ -1082,20 +1106,46 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
             self.add_feedback("ERROR", "selected schematisations have the same 3Di model id.\nSelect different schematisations.")
             ready_to_roll=False
         
+        #Check for available results on lizard.
+        r = dl.find_scenarios(name__icontains=self.model.schema_name_widget.value, limit=DL_RESULT_LIMIT)
+        available_results = []
+        if len(r) > 0:
+            for i in r:
+                available_results.append(i['name'].lower())
+
+        self.vars.available_results = available_results
+
 
         if ready_to_roll:
             batch_scenario_names = self.batch_scenario_names()
 
+            self.vars.available_batch_results = [b for b in batch_scenario_names.values() if b.lower() in self.vars.available_results]
+
             self.add_feedback("INFO", f"Ready to start simulations ({len(batch_scenario_names)} total)")
+            self.add_feedback("INFO", f"{len(self.vars.available_batch_results)} simulations already have results on lizard and wont be started")
+
             for key in batch_scenario_names:
-                self.feedback.widget.append_stdout(f"{batch_scenario_names[key]}\n")
+                name = batch_scenario_names[key]
+                if name not in self.vars.available_batch_results:
+                    self.feedback.widget.append_stdout(f"{name}\n")
+                else:
+                    self.feedback.widget.append_stdout(f"{name} -- already exists\n")
 
                 # with self.feedback.widget:
                 #     print(batch_scenario_names[key])
-            self.update_start_simulation_button(disabled=False, button=self.start.start_batch_button)
+            self.update_start_simulation_button(status=2, button=self.start.start_batch_button)
+
+            if len(batch_scenario_names) == len(self.vars.available_batch_results):
+                self.add_feedback("Warning", f"All selected scenarios already exist on lizard") 
+                ready_to_roll=False
+                self.update_start_simulation_button(status=0, button=self.start.start_batch_button)
+
             
         else:
-            self.update_start_simulation_button(disabled=True, button=self.start.start_batch_button)
+            self.update_start_simulation_button(status=0, button=self.start.start_batch_button)
+
+        
+
 
         return ready_to_roll
 
@@ -1205,11 +1255,19 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
             self.start.create_simulation_button.style.button_color = "lightgreen"
 
 
-    def update_start_simulation_button(self, disabled: bool, button):
-        button.disabled=disabled
-        if disabled:
+    def update_start_simulation_button(self, status: int, button):
+        """
+        0 = disable red
+        1 = disable orange
+        2 = enable green"""
+        if status == 0:
+            button.disabled=True
             button.style.button_color="red"
-        else:
+        elif status == 1:
+            button.disabled=True
+            button.style.button_color="orange"
+        elif status == 2:
+            button.disabled=False
             button.style.button_color="lightgreen"
 
 
@@ -1420,6 +1478,7 @@ class GuiVariables:
 
         self.simulation_model_type = ""
         self.output_folder = None #Filled when create_simulation is clicked.
+        self.available_results = None #Filled when create_simulation is clicked
         self.output_folder_batch = None #filled when start batch simulation is clicked.
         
     @property
@@ -1614,9 +1673,9 @@ class StartCalculationGui:
 '. rain_box rain_box rain_box rain_box . . simulation_name_view_widget simulation_name_view_widget'
 '. rain_box rain_box rain_box rain_box . . create_simulation_button create_simulation_button'
 '. feedback_label . . . . . start_button start_button'
-'. feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget . . .'
-'. feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget . . .'
-'. feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget . . .'
+'. feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget'
+'. feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget'
+'. feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget'
 '. . . . . . . . .'
 """,
             ))
@@ -1753,7 +1812,7 @@ class StartCalculationGui:
 
 
 if __name__ == '__main__':
-    data = {'polder_folder': 'E:\\02.modellen\\HUB - Scenarioberekeningen wateroverlast',
+    data = {'polder_folder': 'E:\\02.modellen\\model_test_v2',
  'api_keys_path': 'C:\\Users\\wvangerwen\\AppData\\Roaming\\3Di\\QGIS3\\profiles\\default\\python\\plugins\\hhnk_threedi_plugin\\api_key.txt'}
     self = StartCalculationGui(data=data); 
     display(self.tab)
@@ -1761,7 +1820,7 @@ if __name__ == '__main__':
 
     # display(self.w.batch.scenario_box)
 
-    self.widgets.model.schema_name_widget.value='Schagerkogge'
+    self.widgets.model.schema_name_widget.value='model_test'
     # self.widgets.model.schema_name_widget.value='katvoed'
 
 # %%
