@@ -257,15 +257,34 @@ class ModelSchematisations:
 
         revision_parent_folder = self.folder.model.revisions.path
         count = len(os.listdir(revision_parent_folder))
-        revision_folder = os.path.join(revision_parent_folder, f"rev_{count+1}")
         schema_str = str(schema_new)
 
-        if not os.path.exists(revision_folder):
-            os.makedirs(revision_folder)
-        
-        target_file = str(self.folder.model) + "\\revisions\\rev" + str(count+1) + "_" + str(commit_message)
+        list_of_files = [os.path.join(revision_parent_folder, x) for x in os.listdir(revision_parent_folder)]
 
-        shutil.copytree(schema_str, target_file)
+        if list_of_files == []:
+            target_file = str(revision_parent_folder) +"\\rev_" + str(count+1) + " - " + str(commit_message[:25])
+            shutil.copytree(schema_str, target_file)
+
+        if list_of_files != []:
+            latest_file = max(list_of_files, key=os.path.getctime) 
+            if str(revision_parent_folder + "\\rev_" + str(count) + " - " + str(commit_message[:25])) != str(latest_file): 
+                target_file = str(revision_parent_folder) +"\\rev_" + str(count+1) + " - " + str(commit_message[:25])
+                shutil.copytree(schema_str, target_file)
+
+
+
+
+        
+        # revision_folder = os.path.join(revision_parent_folder, f"rev_{count+1} " + str(commit_message))
+        
+
+        # if not os.path.exists(revision_folder):
+        #     os.makedirs(revision_folder)
+        
+        
+        # #target_file = str(self.folder.model) + "\\revisions\\rev" + str(count+1) + "_" + str(commit_message)
+
+        # shutil.copytree(schema_str, revision_folder)
 
 
 #%%
@@ -287,8 +306,8 @@ class ModelSchematisations:
 if __name__ == "__main__":
     from hhnk_threedi_tools.core.folders import Folders
 
-    # path = r"E:\02.modellen\model_test_v2"
-    path = r"\\corp.hhnk.nl\data\Hydrologen_data\Data\02.modellen\heiloo_geen_gemaal"
+    path = r"E:\02.modellen\model_test_v2"
+    #path = r"\\corp.hhnk.nl\data\Hydrologen_data\Data\02.modellen\heiloo_geen_gemaal"
     folder = Folders(path)
     name = "1d2d_glg"
 
