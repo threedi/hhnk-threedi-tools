@@ -229,18 +229,9 @@ class ModelSchematisations:
         leakage_file, phreatic_storage_capacity_file, hydraulic_conductivity_file, porosity_file, infiltration_rate_file,
         max_infiltration_capacity_file, interception_file ]
         """
-        revision_parent_folder = self.folder.model.revisions.path
 
-        count = len(os.listdir(revision_parent_folder))
-        revision_folder = os.path.join(revision_parent_folder, f"rev_{count+1}")
-        if not os.path.exists(revision_folder):
-            os.makedirs(revision_folder)
-
-        row = self.settings_df.loc[name]
         schema_new = getattr(self.folder.model, f"schema_{name}")
-        schema_str = str(schema_new)
-        target_file = str(self.folder.model) + "\\revisions\\rev" + str(count+1) + "_" + str(commit_message)
-        shutil.copytree(schema_str, target_file)
+        row = self.settings_df.loc[name]
 
         upload.threedi.set_api_key(api_key)
 
@@ -263,6 +254,19 @@ class ModelSchematisations:
             schematisation_create_tags=tags,
             commit_message=commit_message,
         )
+
+        revision_parent_folder = self.folder.model.revisions.path
+        count = len(os.listdir(revision_parent_folder))
+        revision_folder = os.path.join(revision_parent_folder, f"rev_{count+1}")
+        schema_str = str(schema_new)
+
+        if not os.path.exists(revision_folder):
+            os.makedirs(revision_folder)
+        
+        target_file = str(self.folder.model) + "\\revisions\\rev" + str(count+1) + "_" + str(commit_message)
+
+        shutil.copytree(schema_str, target_file)
+
 
 #%%
 
