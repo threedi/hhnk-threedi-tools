@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 import ipywidgets as widgets
 from IPython.core.display import HTML
 from traitlets import Unicode
-from apscheduler.schedulers.blocking import BlockingScheduler
+# from apscheduler.schedulers.blocking import BlockingScheduler
 import requests
 
 
@@ -1184,7 +1184,7 @@ class DownloadGui:
             self.vars.main_folder = os.getcwd()
 
 
-        self.scheduler = BlockingScheduler(timezone="Europe/Amsterdam")
+        # self.scheduler = BlockingScheduler(timezone="Europe/Amsterdam")
 
 
 

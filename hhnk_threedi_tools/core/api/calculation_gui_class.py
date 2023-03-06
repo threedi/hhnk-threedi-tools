@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 import ipywidgets as widgets
 from IPython.core.display import HTML
 from traitlets import Unicode
-from apscheduler.schedulers.blocking import BlockingScheduler
+# from apscheduler.schedulers.blocking import BlockingScheduler
 
 # threedi
 # from threedi_scenario_downloader import downloader as dl
@@ -1602,7 +1602,7 @@ class StartCalculationGui:
 
         self.w.rain.test_0d1d_button.click()
 
-        self.scheduler = BlockingScheduler(timezone="Europe/Amsterdam")
+        # self.scheduler = BlockingScheduler(timezone="Europe/Amsterdam")
 
         # self.scenarios = self._init_scenarios()
 
