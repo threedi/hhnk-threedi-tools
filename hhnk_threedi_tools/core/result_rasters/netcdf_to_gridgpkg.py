@@ -38,6 +38,12 @@ class ThreediGrid:
             print(f"{self.gpkg_raw_path} already exists")
             return
 
+        #Check required files
+        if not self.folder.source_data.damo.exists:
+            raise Exception(f"{self.folder.source_data.damo} - doesnt exist")
+        if not self.folder.source_data.panden.exists:
+            raise Exception(f"{self.folder.source_data.panden} - doesnt exist")
+
         grid_gdf = gpd.GeoDataFrame()
 
         s1_all = self.grid.nodes.subset("2D_open_water").timeseries(indexes=slice(0, -1)).s1
