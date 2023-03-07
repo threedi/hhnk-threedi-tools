@@ -1114,11 +1114,7 @@ def download_gui(main_folder=None, lizard_api_key="", data=None):
 
 # %%
 if __name__ == '__main__':
-<<<<<<< Updated upstream
-    data = {'polder_folder': 'E:\\02.modellen\\HUB - Scenarioberekeningen wateroverlast',
-=======
     data = {'polder_folder': 'E:\\02.modellen\\Eijerland_EKmin90',
->>>>>>> Stashed changes
  'api_keys_path': 'C:\\Users\\wvangerwen\\AppData\\Roaming\\3Di\\QGIS3\\profiles\\default\\python\\plugins\\hhnk_threedi_plugin\\api_key.txt'}
     self = download_gui(data=data)
     display(self)
