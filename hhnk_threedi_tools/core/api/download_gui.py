@@ -834,7 +834,6 @@ def download_gui(main_folder=None, lizard_api_key="", data=None):
             pathname=pathname_list,
             export_task_csv=batch_path,
         )
-
     # --------------------------------------------------------------------------------------------------
     # 7. Download batch
     # --------------------------------------------------------------------------------------------------
@@ -1086,7 +1085,7 @@ def download_gui(main_folder=None, lizard_api_key="", data=None):
 
     #     username_widget.value='wietse.vangerwen'
     # password_widget.value =''
-    polder_name_widget.value='heiloo_geen_gemaal'
+    polder_name_widget.value='Eijerland_EKmin90'
     #     model_revision_widget.value='50'
     return download_tab
 
@@ -1115,7 +1114,11 @@ def download_gui(main_folder=None, lizard_api_key="", data=None):
 
 # %%
 if __name__ == '__main__':
+<<<<<<< Updated upstream
     data = {'polder_folder': 'E:\\02.modellen\\HUB - Scenarioberekeningen wateroverlast',
+=======
+    data = {'polder_folder': 'E:\\02.modellen\\Eijerland_EKmin90',
+>>>>>>> Stashed changes
  'api_keys_path': 'C:\\Users\\wvangerwen\\AppData\\Roaming\\3Di\\QGIS3\\profiles\\default\\python\\plugins\\hhnk_threedi_plugin\\api_key.txt'}
     self = download_gui(data=data)
     display(self)

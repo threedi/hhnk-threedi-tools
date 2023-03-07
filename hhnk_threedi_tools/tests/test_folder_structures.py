@@ -36,13 +36,13 @@ def test_create_project():
     folder = Folders(FOLDER)
     folder.create_project()
     assert os.path.exists(FOLDER + "/01_Source_data")
-    assert os.path.exists(FOLDER + "/02_Model")
-    assert os.path.exists(FOLDER + "/02_Model/00_basis")
+    assert os.path.exists(FOLDER + "/02_schematisation")
+    assert os.path.exists(FOLDER + "/02_schematisation/00_basis")
     assert os.path.exists(FOLDER + "/03_3di_resultaten")
     assert os.path.exists(FOLDER + "/Output")
 
     assert os.path.exists(FOLDER + "/01_Source_data/read_me.txt")
-    assert os.path.exists(FOLDER + "/02_Model/read_me.txt")
+    assert os.path.exists(FOLDER + "/02_schematisation/read_me.txt")
     assert os.path.exists(FOLDER + "/03_3di_resultaten/read_me.txt")
     assert os.path.exists(FOLDER + "/Output/read_me.txt")
 
@@ -93,7 +93,7 @@ def test_to_test_file_dict():
 
 def test_find_dem():
     folder = Folders(MODEL_FOLDER)
-    dem_path = TEST_DIRECTORY + "/model_test/02_model/00_basis/rasters/dem_hoekje.tif"
+    dem_path = TEST_DIRECTORY + "/model_test/02_schematisation/00_basis/rasters/dem_hoekje.tif"
     assert pathlib.Path(folder.model.schema_base.rasters.dem.path) == pathlib.Path(
         dem_path
     )
