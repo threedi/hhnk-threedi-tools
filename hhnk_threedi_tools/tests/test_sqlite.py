@@ -131,6 +131,7 @@ if __name__ == "__main__":
     test_run_struct_channel_bed_level()
     test_run_watersurface_area()
     test_run_weir_flood_level()
-
+    test_run_cross_secction_vertex()
+    test_run_cross_section()
 
 # %%
