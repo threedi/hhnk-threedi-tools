@@ -295,7 +295,7 @@ if __name__ == "__main__":
     self.upload_schematisation(
         name=name,
         commit_message="Load Model. Pump capacity 466 l/sec",
-        api_key="aDFMXSfR.XdXc1MaWXYtA3DIXxrgzXzH1u4Lnfe7N",
+        api_key="",
     )
     # %%
     upload.threedi.set_api_key("")
