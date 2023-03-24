@@ -49,7 +49,7 @@ def test_import_information_object():
     assert bl_test.imports["conn_nodes"]["conn_node_id"][15] == 15
     assert bl_test.imports["channels"]["initial_waterlevel"][487] == -0.55
     assert bl_test.imports["cross_loc"]["reference_level"][282] == -0.94
-    assert bl_test.imports["levee_lines"]["levee_height"][8970] == 0.159
+    assert bl_test.imports["levee_lines"]["levee_height"][54] == 0.159
 
 
 def test_levee_intersections():
@@ -57,7 +57,7 @@ def test_levee_intersections():
     bl_test = BankLevelTest(Folders(TEST_MODEL))
     bl_test.import_data()
     bl_test.line_intersections()
-    assert bl_test.line_intersects["levee_id"][425] == 1154.0
+    assert bl_test.line_intersects["levee_id"][425] == 16
 
 
 def test_divergent_waterlevel_nodes():
