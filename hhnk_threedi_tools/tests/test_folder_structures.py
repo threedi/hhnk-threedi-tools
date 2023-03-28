@@ -38,13 +38,13 @@ def test_create_project():
     assert os.path.exists(FOLDER + "/01_Source_data")
     assert os.path.exists(FOLDER + "/02_schematisation")
     assert os.path.exists(FOLDER + "/02_schematisation/00_basis")
-    assert os.path.exists(FOLDER + "/03_3di_resultaten")
-    assert os.path.exists(FOLDER + "/Output")
+    assert os.path.exists(FOLDER + "/03_3di_results")
+    assert os.path.exists(FOLDER + "/04_test_results")
 
-    assert os.path.exists(FOLDER + "/01_Source_data/read_me.txt")
+    assert os.path.exists(FOLDER + "/01_source_data/read_me.txt")
     assert os.path.exists(FOLDER + "/02_schematisation/read_me.txt")
-    assert os.path.exists(FOLDER + "/03_3di_resultaten/read_me.txt")
-    assert os.path.exists(FOLDER + "/Output/read_me.txt")
+    assert os.path.exists(FOLDER + "/03_3di_results/read_me.txt")
+    assert os.path.exists(FOLDER + "/04_test_results/read_me.txt")
 
 
 def test_to_dict():
@@ -102,7 +102,7 @@ def test_find_dem():
 def test_find_threedi_sources():
     results_path = (
         TEST_DIRECTORY
-        + "/model_test/03_3di_resultaten/0d1d_results/BWN bwn_test #5 0d1d_test"
+        + "/model_test/03_3di_results/0d1d_results/BWN bwn_test #5 0d1d_test"
     )
     folder = Folders(MODEL_FOLDER)
     results = folder.threedi_results.find(revision_path=results_path)
