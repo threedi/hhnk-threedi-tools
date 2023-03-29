@@ -35,7 +35,7 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - uses: conda-incubator/setup-miniconda@v2
       with:
         # Slow; solve env during action
@@ -46,10 +46,10 @@ jobs:
         activate-environment: hhnk_threedi
         # environment-file: envs\environment_test.yml
 
-        #semi fast; solve env once. using conda-lock -f envs/environment.yml -p win-64
+        #semi fast; solve env once. using conda-lock -f envs/environment.yml -p win-64 --kind=explicit
         auto-update-conda: false
         # activate-environment: explicit-env
-        environment-file: envs/conda-lock.yml
+        environment-file: envs/conda-win-64.lock
     - name: Test
       shell: pwsh
       run: |
@@ -58,5 +58,5 @@ jobs:
         pip install -e .
         pytest --cov-report term-missing --cov=hhnk_threedi_tools tests/
     - name: Upload Coverage to Codecov
-      uses: codecov/codecov-action@v2
+      uses: codecov/codecov-action@v3
     
