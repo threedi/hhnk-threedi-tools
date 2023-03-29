@@ -1,2 +1,0 @@
-control_id,action_table,target_type,target_id,code,geometry,start_action_value,min_action_value,max_action_value,hdb_streefpeil,hdb_kruin_min,hdb_kruin_max
-53,-0.85;-0.85#-0.84;-0.95#-0.83;-1.05#-0.82;-1.15#-0.81;-1.25#-0.8;-1.25#-0.79;-1.25#-0.78;-1.25#-0.77;-1.25#-0.76;-1.25,v2_weir,10105,KST-J-2349,"LINESTRING (109829.8958702882 542045.6998710542, 110017.9958684429 541907.1998707704)",-0.85,-1.25,-0.85,-0.85,-1.25,-0.25
