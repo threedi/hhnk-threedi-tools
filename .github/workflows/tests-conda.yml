@@ -1,6 +1,12 @@
 name: tests
 
-on: push
+on:   
+  pull_request:
+    branches:
+      - "*"
+  push:
+    branches:
+      - "master"
 
 jobs:
   build-windows:
@@ -10,12 +16,18 @@ jobs:
     - uses: actions/checkout@v2
     - uses: conda-incubator/setup-miniconda@v2
       with:
-        python-version: 3.9
-        miniconda-version: "latest"
-        channels: conda-forge,defaults
-        channel-priority: true
+        # Slow; solve env during action
+        # python-version: 3.9
+        # miniconda-version: "latest"
+        # channels: conda-forge,defaults
+        # channel-priority: true
         activate-environment: hhnk_threedi
-        environment-file: envs\environment_test.yml
+        # environment-file: envs\environment_test.yml
+
+        #semi fast; solve env once. using conda-lock -f envs/environment.yml -p win-64
+        auto-update-conda: false
+        activate-environment: explicit-env
+        environment-file: env/conda-lock.yml
     - name: Test
       shell: pwsh
       run: |
