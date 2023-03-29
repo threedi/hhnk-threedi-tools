@@ -22,4 +22,7 @@ jobs:
         conda info
         conda list
         pip install -e .
-        pytest --cov-report term-missing --cov=hhnk_threedi_tools --cov-report=xml tests/
+        pytest --cov-report term-missing --cov=hhnk_threedi_tools tests/
+    - name: Upload Coverage to Codecov
+      uses: codecov/codecov-action@v2
+    
