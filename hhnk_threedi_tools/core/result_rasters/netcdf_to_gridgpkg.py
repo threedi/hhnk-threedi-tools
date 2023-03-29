@@ -4,6 +4,7 @@ import numpy as np
 import geopandas as gpd
 import pandas as pd
 import hhnk_threedi_tools as htt
+
 class ThreediGrid:
     def __init__(self, 
                     threedi_result : htt.core.folders.ThreediResult, 
@@ -170,7 +171,7 @@ class ThreediGrid:
 
         #grid_gdf["replace_all"] = grid_gdf["replace_dem"] | grid_gdf["replace_water"] | grid_gdf["replace_pand"]
 
-        grid_gdf=gpd.GeoDataFrame(grid_gdf, geometry="geometry")
+        grid_gdf = gpd.GeoDataFrame(grid_gdf, geometry="geometry")
 
 
         #Save to file
@@ -218,14 +219,14 @@ if __name__ == "__main__":
     threedi_result = folder.threedi_results.one_d_two_d['katvoed #1 piek_ghg_T1000']
 
 
-    # self = ThreediGrid(folder=folder, threedi_result=threedi_result)
-    self = ThreediGrid(threedi_result=threedi_result, waterdeel_path=folder.source_data.damo.path)
+    self = ThreediGrid(folder=folder, threedi_result=threedi_result)
+    # self = ThreediGrid(threedi_result=threedi_result, waterdeel_path=folder.source_data.damo.path)
 
     # #Convert netcdf to grid gpkg
     self.netcdf_to_grid_gpkg()
 
     # #Replace waterlevel of selected cells with avg of neighbours.
-    self.waterlevel_correction(output_col="wlvl_max_replaced")
+    # self.waterlevel_correction(output_col="wlvl_max_replaced")
     
 
 
