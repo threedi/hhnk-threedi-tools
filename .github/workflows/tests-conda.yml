@@ -49,7 +49,7 @@ jobs:
         #semi fast; solve env once. using conda-lock -f envs/environment.yml -p win-64
         auto-update-conda: false
         # activate-environment: explicit-env
-        environment-file: env/conda-lock.yml
+        environment-file: envs/conda-lock.yml
     - name: Test
       shell: pwsh
       run: |
