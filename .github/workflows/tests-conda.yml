@@ -7,7 +7,7 @@ on:
   push:
     branches:
       - "master"
-      - "unitest-codecov"
+      # - "unitest-codecov"
 
   workflow_dispatch:
     inputs:
