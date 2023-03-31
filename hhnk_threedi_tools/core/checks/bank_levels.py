@@ -18,7 +18,7 @@ from hhnk_research_tools.threedi.geometry_functions import extract_boundary_from
 
 # Local imports
 from hhnk_threedi_tools.core.folders import Folders
-from hhnk_threedi_tools.variables.default_variables import DEF_TRGT_CRS
+from hhnk_threedi_tools.variables.default_variables import DEF_TRGT_CRS, DEF_SRC_CRS
 from hhnk_threedi_tools.variables.datachecker_variables import (
     peil_id_col,
     streefpeil_bwn_col,
@@ -390,7 +390,9 @@ def get_manhole_information(
             .sort_index()
         )
         all_manholes.reset_index(drop=True, inplace=True)
-        all_manholes_gdf = gpd.GeoDataFrame(all_manholes, crs=f"EPSG:{DEF_TRGT_CRS}")
+        # all_manholes_trf = gpd.GeoDataFrame.set_crs(all_manholes, crs=f"EPSG:{DEF_SRC_CRS }")
+        # all_manholes_gdf =all_manholes_trf.to_crs(epsg=DEF_TRGT_CRS)
+        all_manholes_gdf = gpd.GeoDataFrame.set_crs(all_manholes, crs=f"EPSG:{DEF_SRC_CRS}", epsg={DEF_TRGT_CRS})
         return all_manholes_gdf
     except Exception as e:
         raise e from None
