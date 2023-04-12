@@ -16,8 +16,13 @@ import pathlib
 # Local imports
 from hhnk_threedi_tools.core.checks.zero_d_one_d import ZeroDOneDTest
 
+#from hhnk_threedi_tools.core.folders import Folders
+
 # Globals
 # __file__ = "C:/Users/chris.kerklaan/Documents/Github/hhnk-threedi-tests/hhnk_threedi_tests/tests/test_zero_d_one_d.py"
+
+#folder = str(pathlib.Path(__file__).parent.absolute()) + "/data/model_test/"
+#TEST_MODEL = folder.threedi_results.zero_d_one_d[0].grid
 TEST_MODEL = str(pathlib.Path(__file__).parent.absolute()) + "/data/model_test/"
 
 
@@ -40,3 +45,5 @@ def test_run_hydraulic_test():
 if __name__ == "__main__":
     test_run_zero_d_one_d_test()
     test_run_hydraulic_test()
+
+# %%

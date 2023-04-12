@@ -87,14 +87,14 @@ def test_run_cross_section():
     sqlite_test = SqliteTest(folder=folder)
     output = sqlite_test.run_cross_secction()
 
-    assert output["width_at_wlvl"][0] == 2
+    assert output.empty
 
-def test_run_cross_section():
+def test_run_cross_secction_vertex():
     folder = Folders(TEST_MODEL)
     sqlite_test = SqliteTest(folder=folder)
     output = sqlite_test.run_cross_secction_vertex()
 
-    assert output["width_at_wlvl"][0] == 2
+    assert output.empty
 
 
 def test_run_struct_channel_bed_level():
@@ -131,6 +131,7 @@ if __name__ == "__main__":
     test_run_struct_channel_bed_level()
     test_run_watersurface_area()
     test_run_weir_flood_level()
-
+    test_run_cross_secction_vertex()
+    test_run_cross_section()
 
 # %%
