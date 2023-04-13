@@ -98,8 +98,8 @@ def _get_python_interpreter():
 
 def user_installed_notebook_path():
     path = site.getusersitepackages().replace("site-packages", "Scripts")
-    if os.path.exists(path + "/jupyter-notebook.exe"):
-        return path + "/jupyter-notebook.exe"
+    if os.path.exists(path + "/jupyter-lab.exe"):
+        return path + "/jupyter-lab.exe"
     else:
         return None
 
@@ -120,12 +120,14 @@ def notebook_command(location="osgeo", ipython=False):
     'user' uses an exectuable
     """
     system, python_interpreter = _get_python_interpreter()
-
+    print(location)
     if location == "osgeo":
-        if system == "qgis":
-            command = [python_interpreter, "-m", "notebook"]
-        else:
-            command = [python_interpreter, "-m", "jupyter", "notebook"]
+        command = [python_interpreter, "-m", "jupyter-lab"]
+
+        # if system == "qgis":
+        #     command = [python_interpreter, "-m", "notebook"]
+        # else:
+        #     command = [python_interpreter, "-m", "jupyter", "notebook"]
     else:
         if ipython:
             return [python_interpreter, user_installed_ipython_path()]

@@ -25,7 +25,7 @@ THREEDI_API = ThreediApi(config=CONFIG, version="v3-beta")
 
 # Define timezones
 AMSTERDAM = pytz.timezone("Europe/Amsterdam")
-UTC = pytz.utc
+UTC = datetime.timezone.utc
 
 # Define start/end date
 SIMULATION_START = datetime(2021, 6, 29, 17, 0).astimezone(AMSTERDAM)
