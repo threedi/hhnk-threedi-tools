@@ -8,14 +8,10 @@ Modified to have more flexibility in input and calculation
 
 
 import numpy as np
-from scipy.interpolate import LinearNDInterpolator
 from scipy.spatial import qhull
 
 from osgeo import gdal
-from threedigrid.admin.gridresultadmin import GridH5ResultAdmin
-from threedigrid.admin.constants import SUBSET_2D_OPEN_WATER
 from threedigrid.admin.constants import NO_DATA_VALUE
-from threedidepth.fixes import fix_gridadmin
 from threedidepth import morton
 
 
@@ -183,6 +179,8 @@ class BaseCalculatorGPKG:
 
         #Calculate depth
         block_out = wlvl_block-dem_block
+
+        block_out[block_out<-0.01] = self.output_raster.nodata
         block_out[mask] = self.output_raster.nodata
         return block_out
 

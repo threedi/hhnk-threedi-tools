@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 import logging
 import sqlite3
 from IPython.core.display import display, HTML
-from apscheduler.schedulers.blocking import BlockingScheduler
+# from apscheduler.schedulers.blocking import BlockingScheduler
 from threedi_api_client import ThreediApiClient
 import openapi_client
 from openapi_client import ApiException
@@ -523,91 +523,91 @@ def start_3di_calculation(
         pass
 
 
-def wait_to_download_results(
-    dl, scenario_name, polder_name, revision_nr, output_folder, logger_path, wait_time=5
-):
-    """This function checks the API every x minutes for new results. Once the results appear, the download will start."""
+# def wait_to_download_results(
+#     dl, scenario_name, polder_name, revision_nr, output_folder, logger_path, wait_time=5
+# ):
+#     """This function checks the API every x minutes for new results. Once the results appear, the download will start."""
 
-    def check_API_for_update():
-        print(
-            "{} - Checking API for update".format(
-                datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            )
-        )
+#     def check_API_for_update():
+#         print(
+#             "{} - Checking API for update".format(
+#                 datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+#             )
+#         )
 
-        # Check the api by searching for results.
-        results = dl.find_scenarios(
-            name=scenario_name,
-            model_name=polder_name,
-            model_revision=int(revision_nr),
-            limit=1000,
-        )
+#         # Check the api by searching for results.
+#         results = dl.find_scenarios(
+#             name=scenario_name,
+#             model_name=polder_name,
+#             model_revision=int(revision_nr),
+#             limit=1000,
+#         )
 
-        # See all names that are returned
-        scenario_names = [a["name"] for a in results]
+#         # See all names that are returned
+#         scenario_names = [a["name"] for a in results]
 
-        # write scenario names to logger
-        logger.error("")
-        logger.warning("polder: " + str(polder_name) + "revision: " + str(revision_nr))
-        try:
-            logger.warning("results: " + str(results))
-        except:
-            pass
-        logger.warning("scenario_names: " + str(scenario_names))
+#         # write scenario names to logger
+#         logger.error("")
+#         logger.warning("polder: " + str(polder_name) + "revision: " + str(revision_nr))
+#         try:
+#             logger.warning("results: " + str(results))
+#         except:
+#             pass
+#         logger.warning("scenario_names: " + str(scenario_names))
 
-        # Execute the job till the count of 5
-        if scenario_name in scenario_names:
-            # Find the id of the download url
-            scenario_ids = [
-                scenario_names.index(scenario_name)
-            ]  # id's of selected models to download
-            download_dict = {}
-            download_dict["download_url"] = create_download_url(
-                results, scenario_ids
-            )  # url to all download links.
+#         # Execute the job till the count of 5
+#         if scenario_name in scenario_names:
+#             # Find the id of the download url
+#             scenario_ids = [
+#                 scenario_names.index(scenario_name)
+#             ]  # id's of selected models to download
+#             download_dict = {}
+#             download_dict["download_url"] = create_download_url(
+#                 results, scenario_ids
+#             )  # url to all download links.
 
-            print("Results were found! Proceeding to download.")
+#             print("Results were found! Proceeding to download.")
 
-            # Call download script.
-            name = scenario_name
+#             # Call download script.
+#             name = scenario_name
 
-            print("\n\033[1m\033[31mDownloading files for " + name + ":\033[0m")
-            for index, url in enumerate(download_dict["download_url"][name]):
-                print("{}: {}".format(index + 1, url))
+#             print("\n\033[1m\033[31mDownloading files for " + name + ":\033[0m")
+#             for index, url in enumerate(download_dict["download_url"][name]):
+#                 print("{}: {}".format(index + 1, url))
 
-            # Print destination folder
-            print("\nThey will be placed in:\n" + output_folder)
+#             # Print destination folder
+#             print("\nThey will be placed in:\n" + output_folder)
 
-            # Create destination folder
-            if not os.path.exists(output_folder) and output_folder != "":
-                os.mkdir(output_folder)
+#             # Create destination folder
+#             if not os.path.exists(output_folder) and output_folder != "":
+#                 os.mkdir(output_folder)
 
-            # Start downloading of the files
-            start_download(
-                download_dict["download_url"][name],
-                output_folder,
-                dl.get_headers(),
-                automatic_download=1,
-            )
+#             # Start downloading of the files
+#             start_download(
+#                 download_dict["download_url"][name],
+#                 output_folder,
+#                 dl.get_headers(),
+#                 automatic_download=1,
+#             )
 
-            # Stop the scheduler
-            scheduler.shutdown(wait=False)
+#             # Stop the scheduler
+#             scheduler.shutdown(wait=False)
 
-    scheduler = BlockingScheduler(timezone="Europe/Amsterdam")
-    scheduler.add_job(check_API_for_update, "interval", minutes=wait_time)
+#     scheduler = BlockingScheduler(timezone="Europe/Amsterdam")
+#     scheduler.add_job(check_API_for_update, "interval", minutes=wait_time)
 
-    # create logger
-    logger = logging.getLogger()
-    handler = logging.FileHandler(logger_path)
-    formatter = logging.Formatter(
-        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-    )
-    handler.setFormatter(formatter)
-    logger.addHandler(handler)
+#     # create logger
+#     logger = logging.getLogger()
+#     handler = logging.FileHandler(logger_path)
+#     formatter = logging.Formatter(
+#         "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+#     )
+#     handler.setFormatter(formatter)
+#     logger.addHandler(handler)
 
-    print(
-        "{} - Checking API for update started".format(
-            datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        )
-    )
-    scheduler.start()  # Start the scheduled job
+#     print(
+#         "{} - Checking API for update started".format(
+#             datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+#         )
+#     )
+#     scheduler.start()  # Start the scheduled job
