@@ -40,13 +40,13 @@ from hhnk_threedi_tools.variables.model_state import (
     invalid_path,
 )
 
-from hhnk_threedi_tools.core.checks.model_state import (
-    detect_model_states,
-    get_proposed_adjustments_weir_width,
-    get_proposed_updates_manholes,
-    get_proposed_adjustments_global_settings,
-    get_proposed_adjustments_channels,
-)
+# from hhnk_threedi_tools.core.checks.model_state import (
+#     detect_model_states,
+#     get_proposed_adjustments_weir_width,
+#     get_proposed_updates_manholes,
+#     get_proposed_adjustments_global_settings,
+#     get_proposed_adjustments_channels,
+# )
 
 from hhnk_threedi_tools.variables.api_settings import (
     RAIN_SCENARIOS,
@@ -741,9 +741,9 @@ class ModelPaths(Folder):
                {self.space}└── rasters
                """
 
-    @property
-    def state(self):
-        return detect_model_states(self.database.path)
+    # @property #TODO Deprecated
+    # def state(self):
+    #     return detect_model_states(self.database.path)
 
     @property
     def database_path(self):
@@ -752,37 +752,37 @@ class ModelPaths(Folder):
     def states(self):
         return [hydraulic_test_state, one_d_two_d_state, undefined_state, invalid_path]
 
-    def proposed_adjustments(self, table, to_state):
-        """
-        returns proposed adjustments for parts of the model
-        params:
-            table: can either be:
-                'global_settings',
-                'weirs',
-                'manholes',
-                'channels'
-            to_state:
-                'Hydraulische toets'
-                '1d2d toets'
-                'Niet gedefinieerd/uit modelbuilder'
-                'Ongeldig pad/niet geselecteerd'
-        """
-        if table == "global_settings":
-            return get_proposed_adjustments_global_settings(
-                self.database_path, to_state
-            )
-        if table == "weirs":
-            return get_proposed_adjustments_weir_width(
-                self.database_path, self.state, to_state
-            )
-        if table == "manholes":
-            return get_proposed_updates_manholes(
-                self.database_path, self.state, to_state
-            )
-        if table == "channels":
-            return get_proposed_adjustments_channels(
-                self.database_path, self.state, to_state
-            )
+    # def proposed_adjustments(self, table, to_state): #TODO Deprecated
+    #     """
+    #     returns proposed adjustments for parts of the model
+    #     params:
+    #         table: can either be:
+    #             'global_settings',
+    #             'weirs',
+    #             'manholes',
+    #             'channels'
+    #         to_state:
+    #             'Hydraulische toets'
+    #             '1d2d toets'
+    #             'Niet gedefinieerd/uit modelbuilder'
+    #             'Ongeldig pad/niet geselecteerd'
+    #     """
+    #     if table == "global_settings":
+    #         return get_proposed_adjustments_global_settings(
+    #             self.database_path, to_state
+    #         )
+    #     if table == "weirs":
+    #         return get_proposed_adjustments_weir_width(
+    #             self.database_path, self.state, to_state
+    #         )
+    #     if table == "manholes":
+    #         return get_proposed_updates_manholes(
+    #             self.database_path, self.state, to_state
+    #         )
+    #     if table == "channels":
+    #         return get_proposed_adjustments_channels(
+    #             self.database_path, self.state, to_state
+    #         )
 
     @property
     def sqlite_paths(self):
