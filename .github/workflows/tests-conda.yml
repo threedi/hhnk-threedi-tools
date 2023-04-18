@@ -7,7 +7,7 @@ on:
   push:
     branches:
       - "master"
-      # - "unitest-codecov"
+      - "unitest-codecov"
 
   workflow_dispatch:
     inputs:
@@ -49,7 +49,8 @@ jobs:
         #semi slow; solve env once. using conda-lock -f envs/environment.yml -p win-64 --kind=explicit          ##drag result to envs dir.
         auto-update-conda: false
         # activate-environment: explicit-env
-        environment-file: envs/conda-win-64.lock
+        # environment-file: envs/conda-win-64.lock
+        environment-file: envs/environment.yml
     - name: Test
       shell: pwsh
       run: |
