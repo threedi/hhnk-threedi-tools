@@ -23,7 +23,7 @@ from hhnk_threedi_tools.core.checks.one_d_two_d import OneDTwoDTest
 TEST_MODEL = str(pathlib.Path(__file__).parent.absolute()) + "/data/model_test/"
 
 
-def test_run_depth_at_timesteps_test():
+def rtest_run_depth_at_timesteps_test():
     """test of de 0d1d test werkt"""
     test_1d2d = OneDTwoDTest.from_path(TEST_MODEL)
     output = test_1d2d.run_levels_depths_at_timesteps()

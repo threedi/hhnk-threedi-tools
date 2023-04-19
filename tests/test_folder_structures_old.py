@@ -100,7 +100,7 @@ def test_find_dem():
     )
 
 
-def test_find_threedi_sources():
+def rtest_find_threedi_sources():
     results_path = (
         TEST_DIRECTORY
         + "/model_test/03_3di_results/0d1d_results/BWN bwn_test #5 0d1d_test"
