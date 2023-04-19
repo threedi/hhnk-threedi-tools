@@ -27,3 +27,4 @@ hhnk_threedi_tools/utils/notebooks/02_calculation_gui_v3_klondike.ipynb
 coverage.xml
 test.cmd
 tests/data/new_project/*
+envs/environment_spyder_test.yml

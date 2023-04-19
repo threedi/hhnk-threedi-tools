@@ -3,7 +3,7 @@ name: tests
 on: push
 
 jobs:
-  build-windows:
+  run-pytests:
     runs-on: windows-latest
 
     steps:
@@ -24,3 +24,5 @@ jobs:
         conda list
         pip install -e .
         pytest --cov-report term-missing --cov=hhnk_threedi_tools --cov-report=xml tests/
+    - name: Upload coverage
+      uses: codecov/codecov-action@v2
