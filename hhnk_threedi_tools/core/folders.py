@@ -204,7 +204,7 @@ class Sqlite(File):
 class Folder:
     """Base folder class for creating, deleting and see if folder exists"""
 
-    def __init__(self, base):
+    def __init__(self, base, create=True):
         self.base = base
         self.pl = Path(base)  # pathlib path
 
@@ -212,7 +212,8 @@ class Folder:
         self.olayers = {}
         self.space = "\t\t\t\t"
         self.isfolder = True
-        self.create(parents=False)
+        if create:
+            self.create(parents=False)
 
     @property
     def structure(self):
@@ -261,7 +262,7 @@ class Folder:
     def create(self, parents=True):
         """Create folder, if parents==False path wont be
         created if parent doesnt exist."""
-        if parents == False:
+        if not parents:
             if not self.pl.parent.exists():
                 print(f"{self.path} not created, parent doesnt exist.")
                 return
@@ -376,20 +377,17 @@ class Folders(Folder):
         print("v11")
 
         # source
-        self.source_data = SourcePaths(self.base)
+        self.source_data = SourcePaths(self.base, create=create)
 
         # model files
-        self.model = ModelPathsParent(self.base)
+        self.model = ModelPathsParent(self.base, create=create)
 
         # Threedi results
-        self.threedi_results = ThreediResultsPaths(self.base)
+        self.threedi_results = ThreediResultsPaths(self.base, create=create)
 
         # Results of tests
-        self.output = OutputPaths(self.base)
+        self.output = OutputPaths(self.base, create=create)
 
-        if create and not self.exists:
-            print("CREATING")
-            self.create_project()
 
     @property
     def structure(self):
@@ -590,8 +588,8 @@ class SourcePaths(Folder):
     Paths to source data (datachecker, DAMO, HDB)
     """
 
-    def __init__(self, base):
-        super().__init__(os.path.join(base, "01_source_data"))
+    def __init__(self, base, create):
+        super().__init__(os.path.join(base, "01_source_data"), create)
 
         # Folders
         self.modelbuilder = ModelbuilderPaths(self.base)
@@ -662,11 +660,11 @@ class ModelPathsParent(Folder):
     all share the same base schematisation, with only differences in
     global settings or other things specific for that model"""
 
-    def __init__(self, base):
-        super().__init__(os.path.join(base, "02_schematisation"))
+    def __init__(self, base, create):
+        super().__init__(os.path.join(base, "02_schematisation"), create)
 
-        self.revisions = ModelRevisionsParent(base=self.base)
-        self.schema_base = ModelPaths(base=self.base, name="00_basis")
+        self.revisions = ModelRevisionsParent(base=self.base, create=create)
+        self.schema_base = ModelPaths(base=self.base, name="00_basis", create=create)
         self.schema_list = ["schema_base"]
         self.add_file("settings", "model_settings.xlsx", ftype="file")
         self.add_file("settings_default", "model_settings_default.xlsx", ftype="file")
@@ -711,8 +709,8 @@ class ModelPathsParent(Folder):
 class ModelPaths(Folder):
     """Inidividual model/schematisation."""
 
-    def __init__(self, base, name):
-        super().__init__(os.path.join(base, name))
+    def __init__(self, base, name, create=True):
+        super().__init__(os.path.join(base, name), create=create)
 
         # File
         # self.add_file("database", self.model_path(), ftype='sqlite')
@@ -815,9 +813,10 @@ class ModelPaths(Folder):
 
 
 class ModelRevisionsParent(Folder):
-    def __init__(self, base):
-        super().__init__(os.path.join(base, "revisions"))
-        self.create()
+    def __init__(self, base, create=True):
+        super().__init__(os.path.join(base, "revisions"), create)
+        if create:
+            self.create()
 
 # TODO Deprecated and replaced by ThreediRasters, ready to remove.
 # class RasterPaths(Folder):
@@ -913,13 +912,13 @@ class ThreediResultsPaths(Folder):
     .threedi_results[options[x]]
     """
 
-    def __init__(self, base):
-        super().__init__(os.path.join(base, "03_3di_results"))
+    def __init__(self, base, create):
+        super().__init__(os.path.join(base, "03_3di_results"), create)
 
         # Folders
         self.zero_d_one_d = ZeroDOneD(self.base)
         self.one_d_two_d = OneDTwoD(self.base)
-        self.climate_results = ClimateResults(self.base)
+        self.climate_results = ClimateResults(self.base, create=create)
 
     @property
     def structure(self):
@@ -1111,9 +1110,10 @@ class ResultsRevisions(Folder):
 
 
 class ClimateResults(ResultsRevisions):
-    def __init__(self, base):
+    def __init__(self, base, create=True):
         super().__init__(base, folder="batch_results", returnclass=ClimateResult)
-        self.create(parents=False)  # create outputfolder if parent exists
+        if create:
+            self.create(parents=False)  # create outputfolder if parent exists
 
     @property
     def structure(self):
@@ -1374,14 +1374,14 @@ class OutputPaths(Folder):
     paths are not up to the user)
     """
 
-    def __init__(self, base):
-        super().__init__(os.path.join(base, "04_test_results"))
+    def __init__(self, base, create):
+        super().__init__(os.path.join(base, "04_test_results"), create)
 
         self.sqlite_tests = OutputFolderSqlite(self.full_path("sqlite_tests"))
         self.bank_levels = OutputFolder(self.full_path("bank_levels"))
         self.zero_d_one_d = OutputFolder0d1d(self.base, "0d1d_tests")
         self.one_d_two_d = OutputFolder1d2d(self.base, "1d2d_tests")
-        self.climate = OutputClimate(self.base, "climate")
+        self.climate = OutputClimate(self.base, "climate", create=create)
 
     def __getitem__(self, name):
         if name == "0d1d_results":
@@ -1512,9 +1512,10 @@ class Outputd1d2d_revision(Folder):
 
 # TODO hoort deze class hier nog? resultaten staan op een andere plek
 class OutputClimate(ResultsRevisions):
-    def __init__(self, base, folder):
+    def __init__(self, base, folder, create=True):
         super().__init__(base, folder=folder, returnclass=Outputd1d2d_revision)
-        self.create()  # create outputfolder if parent exists
+        if create:
+            self.create()  # create outputfolder if parent exists
 
     @property
     def structure(self):
