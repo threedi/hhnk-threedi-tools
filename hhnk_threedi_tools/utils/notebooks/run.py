@@ -16,6 +16,7 @@ import tempfile
 import shutil
 import json
 import site
+from pathlib import Path
 
 CREATE_NEW_PROCESS_GROUP = 0x00000200
 DETACHED_PROCESS = 0x00000008
@@ -120,7 +121,6 @@ def notebook_command(location="osgeo", ipython=False):
     'user' uses an exectuable
     """
     system, python_interpreter = _get_python_interpreter()
-    print(location)
     if location == "osgeo":
         command = [python_interpreter, "-m", "jupyter-lab"]
 
@@ -130,12 +130,12 @@ def notebook_command(location="osgeo", ipython=False):
         #     command = [python_interpreter, "-m", "jupyter", "notebook"]
     else:
         if ipython:
-            return [python_interpreter, user_installed_ipython_path()]
+            command = [python_interpreter, user_installed_ipython_path()]
         else:
-            return [python_interpreter, user_installed_notebook_path()]
+            command = [python_interpreter, user_installed_notebook_path()]
+    return command
 
-
-def open_server(directory=None, location="osgeo", use="run"):
+def open_server(directory=None, location="osgeo", use="run", notebook_paths=[]):
     """directory:
         notebooks open in a certain directory
     location:
@@ -144,6 +144,12 @@ def open_server(directory=None, location="osgeo", use="run"):
     use:
         subprocess mode ('popen' or 'run')
     """
+    paths = [Path(i) for i in os.environ.get("PATH").split(os.pathsep)]
+    for path in notebook_paths:
+        path = Path(path)
+        if not path in paths:
+            os.environ["PATH"] = f"{path.as_posix()}{os.pathsep}{os.environ['PATH']}"
+    print(f"path :{os.environ.get('PATH').split(os.pathsep)}")
     command = notebook_command(location)
 
     if directory:
