@@ -204,7 +204,7 @@ class Sqlite(File):
 class Folder:
     """Base folder class for creating, deleting and see if folder exists"""
 
-    def __init__(self, base, create=True):
+    def __init__(self, base, create=False):
         self.base = base
         self.pl = Path(base)  # pathlib path
 
@@ -345,10 +345,10 @@ class Folders(Folder):
                 Heiloo @ C:/Poldermodellen/Heiloo
                                 Folders:	  
                            				Folders
-                           				├── source_data
-                           				├── model
-                           				├── threedi_results
-                           				└── output
+                           				├── 01_source_data
+                           				├── 02_schematisation
+                           				├── 03_3di_results
+                           				└── 04_test_results
                            
                                 Files:	[]
                                 Layers:	[]
@@ -372,9 +372,7 @@ class Folders(Folder):
         """
 
     def __init__(self, base, create=False):
-        super().__init__(base)
-
-        print("v11")
+        super().__init__(base, create=create)
 
         # source
         self.source_data = SourcePaths(self.base, create=create)
@@ -393,10 +391,10 @@ class Folders(Folder):
     def structure(self):
         return f"""  
                {self.space}Folders
-               {self.space}├── source_data
-               {self.space}├── model
-               {self.space}├── threedi_results
-               {self.space}└── output
+               {self.space}├── 01_source_data
+               {self.space}├── 02_schematisation
+               {self.space}├── 03_3di_results
+               {self.space}└── 04_test_results
                """
 
     @classmethod
@@ -582,6 +580,10 @@ class Folders(Folder):
         except Exception as e:
             raise e from None
 
+    def is_valid(self):
+        """Check if folder stucture is available in input folder."""
+        SUB_FOLDERS = ["01_source_data", "02_schematisation", "03_3di_results", "04_test_results"]
+        return all([self.pl.joinpath(i).exists() for i in SUB_FOLDERS])
 
 class SourcePaths(Folder):
     """
@@ -616,7 +618,7 @@ class SourcePaths(Folder):
     @property
     def structure(self):
         return f"""  
-               {self.space}source_data
+               {self.space}01_source_data
                {self.space}└── modelbuilder
                {self.space}└── peilgebieden
                {self.space}└── wsa_output_administratie
