@@ -529,8 +529,8 @@ class SqliteTest:
                 output_path=os.path.join(output_folder, f"{i}.gpkg"),
             )
 
-    def run_cross_secction (self):
-
+    def run_cross_section(self):
+        """TODO add docstring en implementeren in plugin"""
         try:
             cross_section_df = hrt.execute_sql_selection(
                 query =cross_section_location_query , database_path=self.model
@@ -541,7 +541,7 @@ class SqliteTest:
             cross_section_buffer_gdf["geometry"] = cross_section_buffer_gdf.buffer(0.5) 
             
             cross_section_join =  gpd.sjoin(cross_section_buffer_gdf, cross_section_point,
-                              how="inner", op="intersects")
+                              how="inner", predicate="intersects")
             cross_section_join['new'] = np.where((cross_section_join["channel_id_right"]==cross_section_join["channel_id_left"]), cross_section_join['cross_loc_id_left'], np.nan)
             cross_section_loc_id = cross_section_join.set_index('new')
             cross_sec_id = [] 
@@ -549,7 +549,7 @@ class SqliteTest:
             cross_location_id = []
             
             for id in cross_section_loc_id.index:
-                print(id)
+                # print(id)
                 cross_sec_id.append(id)
             for _ in cross_sec_id:    
                 cross_location_id.append(_)
@@ -566,8 +566,8 @@ class SqliteTest:
             raise e from None
 
 
-    def run_cross_secction_vertex (self):
-
+    def run_cross_section_vertex(self):
+        """TODO add docstring en implementeren in plugin"""
         try:
             cross_section_point = hrt.execute_sql_selection(
                 query =cross_section_location_query , database_path=self.model
@@ -733,7 +733,7 @@ def expand_multipolygon(df):
     """
     try:
         exploded = df.set_index([peil_id_col])[geometry_col]
-        exploded = exploded.explode()
+        exploded = exploded.explode(index_parts=True)
         exploded = exploded.reset_index()
         exploded = exploded.rename(
             columns={0: geometry_col, "level_1": "multipolygon_level"}
@@ -779,7 +779,7 @@ def add_nodes_area(fixeddrainage, conn_nodes_geo):
             fixeddrainage,
             conn_nodes_geo,
             how="left",
-            op="intersects",  # FIXME in future pythion version this will be 'predicate'
+            predicate="intersects",
             lsuffix="fd",
             rsuffix="conn",
         )
