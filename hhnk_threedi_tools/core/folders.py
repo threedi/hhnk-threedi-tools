@@ -718,7 +718,7 @@ class ThreediRasters(Folder):
                 raster_path = os.path.join(self.caller.base, raster_name)
         else:
             raster_path = ""
-        return Raster(raster_path)
+        return File(raster_path) #FIXME dit was Raster, maar met gdal.Open bij init gaat niet helemaal lekker.
 
     def __repr__(self):
         return f"""  

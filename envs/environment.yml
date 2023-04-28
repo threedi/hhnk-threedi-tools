@@ -55,5 +55,5 @@ dependencies:
     - threedigrid_builder==1.8.0
 
     #Plugin
-    - hhnk_research_tools==2023.1
+    - hhnk_research_tools==2023.2
     # - hhnk_threedi_tools==2023.1

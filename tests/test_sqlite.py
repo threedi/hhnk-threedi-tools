@@ -32,8 +32,7 @@ class TestSqlite:
 
 
     def test_run_dewatering_depth(self):
-        if self.folder.output.sqlite_tests.drooglegging.exists:
-            self.folder.output.sqlite_tests.drooglegging.path
+        self.folder.output.sqlite_tests.drooglegging.unlink_if_exists()
             
         output = self.sqlite_test.run_dewatering_depth(
             output_file=self.folder.output.sqlite_tests.drooglegging.path
@@ -102,5 +101,3 @@ if __name__ == "__main__":
         if i.startswith('test_') and hasattr(inspect.getattr_static(self,i), '__call__'):
             print(i)
             getattr(self, i)()
-
-# %%
