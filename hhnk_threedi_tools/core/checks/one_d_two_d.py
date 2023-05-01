@@ -35,7 +35,7 @@ from hhnk_research_tools.variables import (
 
 # Local imports
 import hhnk_threedi_tools.core.checks.grid_result_metadata as grid_result_metadata
-from hhnk_threedi_tools.core.folders import Folders, create_tif_path
+from hhnk_threedi_tools.core.folders import Folders
 from hhnk_threedi_tools.variables.default_variables import DEF_TRGT_CRS
 from hhnk_threedi_tools.variables.database_aliases import df_geo_col
 from hhnk_threedi_tools.variables.one_d_two_d import (
