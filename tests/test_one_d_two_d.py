@@ -17,14 +17,21 @@ import pathlib
 
 # Local imports
 from hhnk_threedi_tools.core.checks.one_d_two_d import OneDTwoDTest
+from hhnk_threedi_tools.core.folders import Folders
 
 # Globals
 # __file__ = "C:/Users/chris.kerklaan/Documents/Github/hhnk-threedi-tests/hhnk_threedi_tools/tests/test_one_d_two_d.py"
 TEST_MODEL = str(pathlib.Path(__file__).parent.absolute()) + "/data/model_test/"
-
+REVISION = "BWN bwn_test #6 1d2d_test"
 
 class TestOneDTwoD:
-    test_1d2d = OneDTwoDTest.from_path(TEST_MODEL)
+
+    folder = Folders(TEST_MODEL)
+
+    #Remove previous output
+    folder.output.one_d_two_d.unlink_contents(rmdirs=True)
+
+    test_1d2d = OneDTwoDTest(folder=folder, revision=REVISION)
 
     def test_run_depth_at_timesteps_test(self):
         """test of de 0d1d test werkt"""
@@ -32,7 +39,7 @@ class TestOneDTwoD:
 
         assert len(output) > 0
         assert output[0] == 1
-        assert "waterdiepte_T15.tif" in self.test_1d2d.fenv.output.one_d_two_d[0].content
+        assert "waterdiepte_T15.tif" in self.test_1d2d.fenv.output.one_d_two_d[self.test_1d2d.revision].content
 
 
     def test_run_flowline_stats(self):

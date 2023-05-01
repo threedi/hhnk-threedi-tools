@@ -594,7 +594,7 @@ class OutputDirParent(Folder):
         class Outputd0d1d_revision(Folder):
             """Outputfolder 0d1d for a specific revision."""
 
-            def __init__(self, base, create):
+            def __init__(self, base, create=False):
                 super().__init__(base, create=create)
 
                 self.add_file("nodes_0d1d_test", "nodes_0d1d_test.gpkg", "file")
@@ -634,7 +634,7 @@ class OutputDirParent(Folder):
     class Outputd1d2d_revision(Folder):
         """Outputfolder 1d2d for a specific revision."""
 
-        def __init__(self, base, create):
+        def __init__(self, base, create=True):
             super().__init__(base, create=create)
 
             self.add_file("grid_nodes_2d", "grid_nodes_2d.gpkg", "file")

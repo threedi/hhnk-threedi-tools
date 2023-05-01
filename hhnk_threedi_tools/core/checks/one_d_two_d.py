@@ -536,7 +536,7 @@ if __name__ == "__main__":
     from hhnk_threedi_tools import Folders
     TEST_MODEL = Path(__file__).parent.parent.parent.parent / "tests/data/model_test/"
     folder = Folders(TEST_MODEL)
-# %%
+    # %%
     self = OneDTwoDTest.from_path(TEST_MODEL)
 
     # def test_run_depth_at_timesteps_test(self):
@@ -549,3 +549,4 @@ if __name__ == "__main__":
     assert "waterdiepte_T15.tif" in self.test_1d2d.fenv.output.one_d_two_d[0].content
 
     # %%
+    folder.threedi_results.one_d_two_d.revisions
