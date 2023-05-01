@@ -125,7 +125,7 @@ class ClimateResult(hrt.Folder):
             super().__init__(base + "/02_output_rasters")
 
             # Folders
-            self.temp = ClimateResultOutputTemp(self.base)
+            self.temp = self.ClimateResultOutputTemp(self.base)
 
             # Files
             self.add_file("maskerkaart", "maskerkaart.shp")
@@ -182,13 +182,13 @@ class ClimateResult(hrt.Folder):
                     """
 
 
-    class ClimateResultOutputTemp(hrt.Folder):
-        def __init__(self, base, create):
-            super().__init__(os.path.join(base, "temp", create=create))
+        class ClimateResultOutputTemp(hrt.Folder):
+            def __init__(self, base, create):
+                super().__init__(os.path.join(base, "temp", create=create))
 
-            self.add_file("peilgebieden_diepte", "peilgebieden_diepte.tif", "raster")
-            self.add_file("peilgebieden_schade", "peilgebieden_schade.tif", "raster")
-            self.add_file("peilgebieden", "peilgebieden_clipped.shp")
+                self.add_file("peilgebieden_diepte", "peilgebieden_diepte.tif", "raster")
+                self.add_file("peilgebieden_schade", "peilgebieden_schade.tif", "raster")
+                self.add_file("peilgebieden", "peilgebieden_clipped.shp")
 
 
     class ClimateResultScenario(hrt.Folder):
