@@ -23,33 +23,39 @@ from hhnk_threedi_tools.core.checks.one_d_two_d import OneDTwoDTest
 TEST_MODEL = str(pathlib.Path(__file__).parent.absolute()) + "/data/model_test/"
 
 
-def rtest_run_depth_at_timesteps_test():
-    """test of de 0d1d test werkt"""
+class TestOneDTwoD:
     test_1d2d = OneDTwoDTest.from_path(TEST_MODEL)
-    output = test_1d2d.run_levels_depths_at_timesteps()
 
-    assert len(output) > 0
-    assert output[0] == 1
-    assert "waterdiepte_T15.tif" in test_1d2d.fenv.output.one_d_two_d[0].content
+    def test_run_depth_at_timesteps_test(self):
+        """test of de 0d1d test werkt"""
+        output = self.test_1d2d.run_levels_depths_at_timesteps()
 
-
-def test_run_flowline_stats():
-    """test of de hydraulische testen werken"""
-    test_1d2d = OneDTwoDTest.from_path(TEST_MODEL)
-    output = test_1d2d.run_flowline_stats()
-
-    assert output["pump_capacity_m3_s"][1094] == 0.00116666666666667
+        assert len(output) > 0
+        assert output[0] == 1
+        assert "waterdiepte_T15.tif" in self.test_1d2d.fenv.output.one_d_two_d[0].content
 
 
-def test_run_node_stats():
-    test_1d2d = OneDTwoDTest.from_path(TEST_MODEL)
-    output = test_1d2d.run_node_stats()
+    def test_run_flowline_stats(self):
+        """test of de hydraulische testen werken"""
+        output = self.test_1d2d.run_flowline_stats()
 
-    assert round(output["minimal_dem"][1], 3) == 1.54
+        assert output["pump_capacity_m3_s"][1094] == 0.00116666666666667
+
+
+    def test_run_node_stats(self):
+        output = self.test_1d2d.run_node_stats()
+
+        assert round(output["minimal_dem"][1], 3) == 1.54
 
 
 # %%
 if __name__ == "__main__":
-    test_run_depth_at_timesteps_test()
-    test_run_flowline_stats()
-    test_run_node_stats()
+    import inspect
+    selftest = TestOneDTwoD()
+    self = selftest.test_1d2d
+    #Run all testfunctions
+    for i in dir(selftest):
+        if i.startswith('test_') and hasattr(inspect.getattr_static(selftest,i), '__call__'):
+            print(i)
+            getattr(selftest, i)()  
+# %%

@@ -16,13 +16,11 @@ import inspect
 from pathlib import Path
 import inspect
 
-# Third-party imports
-from threedigrid.admin.gridadmin import GridH5Admin
-from threedigrid.admin.gridresultadmin import GridH5ResultAdmin
+
 
 import hhnk_research_tools as hrt
 
-from hhnk_research_tools import Folder, Raster, File, FileGDB, Sqlite, ThreediResult
+from hhnk_research_tools import Folder, Raster, File, FileGDB, Sqlite
 
 from hhnk_research_tools.variables import (
     file_types_dict,
@@ -50,12 +48,8 @@ from hhnk_threedi_tools.variables.model_state import (
 #     get_proposed_adjustments_channels,
 # )
 
-from hhnk_threedi_tools.variables.api_settings import (
-    RAIN_SCENARIOS,
-    GROUNDWATER,
-    RAIN_TYPES,
-    RAW_DOWNLOADS,
-)
+
+from hhnk_threedi_tools.core.folder_helpers import ClimateResult
 
 import fiona
 import geopandas as gpd
@@ -75,22 +69,22 @@ DATACHECKER_FIXED_DRAINAGE = "fixeddrainagelevelarea"
 HDB_STURING_3DI = "Sturing_3Di"
 WATERLEVEL_VAL_FIELD = "streefpeil_bwn2"
 
-POLDER_STRUCTURE = """
-    Main Polder object
-        ├── 01.Source_data
+FOLDER_STRUCTURE = """
+    Main Folders object
+        ├── 01_source_data
         │ ├── DAMO.gdb
         │ ├── HDB.gdb
         │ ├── datachecker_output.gdb
         │ └── modelbuilder_output
         │     └── preprocessed
-        ├── 02.Model
+        ├── 02_schematisation
         │ ├── rasters (include DEM)
         │ └── * model(.sqlite) *
-        ├── 03.3di_results
+        ├── 03_3di_results
         │ ├── 0d1d_results
         │ └── 1d2d_results
         | |__ batch_results
-        └── Output
+        └── 04_test_results
             ├── 0d1d_tests
             │   ├── *some revision*
             │     ├── Layers
@@ -157,7 +151,7 @@ class Folders(Folder):
                                     Layers:	['datachecker_fixed_drainage', ...]
             
             
-        {POLDER_STRUCTURE}
+        {FOLDER_STRUCTURE}
 
         """
 
@@ -165,26 +159,26 @@ class Folders(Folder):
         super().__init__(base, create=create)
 
         # source
-        self.source_data = SourcePaths(self.base, create=create)
+        self.source_data = SourceDir(self.base, create=create)
 
         # model files
-        self.model = ModelPathsParent(self.base, create=create)
+        self.model = SchemaDirParent(self.base, create=create)
 
         # Threedi results
-        self.threedi_results = ThreediResultsPaths(self.base, create=create)
+        self.threedi_results = ThreediResultsDir(self.base, create=create)
 
         # Results of tests
-        self.output = OutputPaths(self.base, create=create)
+        self.output = OutputDirParent(self.base, create=create)
 
 
     @property
     def structure(self):
         return f"""  
                {self.space}Folders
-               {self.space}├── 01_source_data
-               {self.space}├── 02_schematisation
-               {self.space}├── 03_3di_results
-               {self.space}└── 04_test_results
+               {self.space}├── 01_source_data (.source_data)
+               {self.space}├── 02_schematisation (.model)
+               {self.space}├── 03_3di_results (.threedi_results)
+               {self.space}└── 04_test_results (.output)
                """
 
     @classmethod
@@ -193,32 +187,12 @@ class Folders(Folder):
 
     @property
     def full_structure(self):
-        return print(POLDER_STRUCTURE)
+        return print(FOLDER_STRUCTURE)
 
     @property
     def all_files(self):
         return all_files_in_folders(self)
 
-    # def to_dict(self):
-    #     """
-    #     Creates a dictionary containing all folder paths that need to be made when creating
-    #     a new project
-
-    #     Input: polder (project) path in which to create the structure
-    #     """
-    #     return {
-    #         "model_folder": str(self.model),
-    #         "threedi_results_folder": str(self.threedi_results),
-    #         "threedi_0d1d_results_folder": str(self.threedi_results.zero_d_one_d),
-    #         "threedi_1d2d_results_folder": str(self.threedi_results.one_d_two_d),
-    #         "threedi_climate_results_folder": str(self.threedi_results.climate_results),
-    #         "source_data_folder": str(self.source_data),
-    #         "output_folder": str(self.output),
-    #         "output_sqlite_tests_folder": str(self.output.sqlite_tests),
-    #         "output_bank_levels_folder": str(self.output.bank_levels),
-    #         "output_zero_d_one_d_folder": str(self.output.zero_d_one_d),
-    #         "output_one_d_two_d_folder": str(self.output.one_d_two_d),
-    #     }
 
     def to_file_dict(self):
         """
@@ -257,126 +231,13 @@ class Folders(Folder):
             "polder_folder": self.path_if_exists,
         }
 
-    #TODO deprecated -> test niet echt nuttig.
-    # def to_test_file_dict(self, test_type, revision_dir_name=None):
-    #     """
-    #     Creates a dict containing the file paths (without extensions) we will
-    #     use to write the output to files
-    #     types:
-    #     1 -> sqlite tests
-    #     2 -> 0d1d tests
-    #     3 -> bank levels
-    #     4 -> 1d2d tests
-    #     Base folder is the highest folder in the hierarchy specific to
-    #     a types of test (output/sqlite_tests or output/0d1d_tests for example)
-
-    #     """
-    #     files_dict = {}
-    #     if test_type in (2, 4) and revision_dir_name:
-    #         # If 3di revisions are involved, we add the revisions name to the output path
-    #         # ex: output/0d1d_tests/{polder name}_#{revision number}_{test type}
-    #         output_revision_dir = revision_dir_name.replace(" ", "_")
-    #         files_dict["output"] = os.path.join(self.base, output_revision_dir)
-    #     else:
-    #         files_dict["output"] = self.base
-
-    #     files_dict["log_path"] = os.path.join(self.base, "Logs")
-    #     files_dict["layer_path"] = os.path.join(self.base, "Layers")
-
-    #     if test_type == 1:
-    #         files_dict["impervious_surface_filename"] = "ondoorlatend_oppervlak"
-    #         files_dict["profiles_used_filename"] = "gebruikte_profielen"
-    #         files_dict["controlled_structs_filename"] = "gestuurde_kunstwerken"
-    #         files_dict["weir_heights_filename"] = "bodemhoogte_stuw"
-    #         files_dict["geometry_filename"] = "geometrie"
-    #         files_dict["structs_channel_filename"] = "bodemhoogte_kunstwerken"
-    #         files_dict["general_checks_filename"] = "algemene_tests"
-    #         files_dict["isolated_channels_filename"] = "geisoleerde_watergangen"
-    #         files_dict["init_water_level_filename"] = "initieel_water_level"
-    #         files_dict["dewatering_filename"] = "drooglegging"
-    #         files_dict["water_surface_filename"] = "oppervlaktewater"
-    #         files_dict["cross_section_filename"] = "overlappende_profielen"
-    #         files_dict["cross_section_intersection_filename"] = "profielen_geen_vertex"
-
-    #     if test_type == 2:
-    #         files_dict["zero_d_one_d_filename"] = "0d1d_toetsing"
-    #         files_dict["hyd_test_channels_filename"] = "hydraulische_toets_watergangen"
-    #         files_dict["hyd_test_structs_filename"] = "hydraulische_toets_kunstwerken"
-
-    #     if test_type == 3:
-    #         files_dict["flow_1d2d_flowlines_filename"] = "stroming_1d2d_flowlines"
-    #         files_dict[
-    #             "flow_1d2d_cross_sections_filename"
-    #         ] = "stroming_1d2d_cross_sections"
-    #         files_dict["flow_1d2d_channels_filename"] = "stroming_1d2d_watergangen"
-    #         files_dict["flow_1d2d_manholes_filename"] = "stroming_1d2d_putten"
-
-    #     if test_type == 4:
-    #         files_dict["grid_nodes_2d_filename"] = "grid_nodes_2d"
-    #         files_dict["1d2d_all_flowlines_filename"] = "1d2d_alle_stroming"
-    #         # The actual filename depends on the time steps we are looking at in the test
-    #         # Therefore we create a template rather than a set name
-    #         files_dict["water_level_filename_template"] = "waterstand_T{}_uur"
-    #         files_dict["water_depth_filename_template"] = "waterdiepte_T{}_uur"
-
-    #     return files_dict
-
-    # def create_project(self): #TODO deprecated -> readme maken we nu aan per folder. 
-    #     """
-    #     Takes a base path as input (ex: c:/..../project_name) and creates default project structure in it.
-    #     """
-    #     try:
-    #         fdict = self.to_dict()
-    #         for item in fdict.values():
-    #             os.makedirs(item, exist_ok=True)
-    #         expected_source_files = (
-    #             "Expected files are:\n\n"
-    #             "Damo geodatabase (*.gdb) named 'DAMO.gdb'\n"
-    #             "Datachecker geodatabase (*.gdb) named 'datachecker_output.gdb'\n"
-    #             "Hdb geodatabase (*.gdb) named 'HDB.gdb'\n"
-    #             "Folder named 'modelbuilder_output' and polder shapefile "
-    #             "(*.shp and associated file formats)"
-    #         )
-    #         with open(
-    #             os.path.join(fdict["source_data_folder"], "read_me.txt"), mode="w"
-    #         ) as f:
-    #             f.write(expected_source_files)
-    #         expected_model_files = (
-    #             "Expected files are:\n\n"
-    #             "Sqlite database (model): *.sqlite\n"
-    #             "Folder named 'rasters' containing DEM raster (*.tif) and other rasters\n"
-    #         )
-    #         with open(
-    #             os.path.join(fdict["model_folder"], "read_me.txt"), mode="w"
-    #         ) as f:
-    #             f.write(expected_model_files)
-    #         expected_threedi_files = (
-    #             "Expected files are:\n\n"
-    #             "Both sub folders in this folder expect to contain folders corresponding to "
-    #             "3di results from different revisions (e.g. containing *.nc, *.h5 and *.sqlite file)"
-    #         )
-    #         with open(
-    #             os.path.join(fdict["threedi_results_folder"], "read_me.txt"), mode="w"
-    #         ) as f:
-    #             f.write(expected_threedi_files)
-    #         output_folder_explanation = (
-    #             "This folder is the default folder where the HHNK toolbox "
-    #             "saves results of tests. The inner structure of these result folders "
-    #             "is automatically generated"
-    #         )
-    #         with open(
-    #             os.path.join(fdict["output_folder"], "read_me.txt"), mode="w"
-    #         ) as f:
-    #             f.write(output_folder_explanation)
-    #     except Exception as e:
-    #         raise e from None
 
     def is_valid(self):
         """Check if folder stucture is available in input folder."""
         SUB_FOLDERS = ["01_source_data", "02_schematisation", "03_3di_results", "04_test_results"]
         return all([self.pl.joinpath(i).exists() for i in SUB_FOLDERS])
 
-class SourcePaths(Folder):
+class SourceDir(Folder):
     """
     Paths to source data (datachecker, DAMO, HDB)
     """
@@ -385,9 +246,9 @@ class SourcePaths(Folder):
         super().__init__(os.path.join(base, "01_source_data"), create)
 
         # Folders
-        self.modelbuilder = ModelbuilderPaths(self.base, create=create)
-        self.peilgebieden = PeilgebiedenPaths(self.base, create=create)
-        self.wsa_output_administratie = WsaOutputAdministratie(self.base, create=create)
+        self.modelbuilder = self.ModelbuilderPaths(self.base, create=create)
+        self.peilgebieden = self.PeilgebiedenPaths(self.base, create=create)
+        self.wsa_output_administratie = self.WsaOutputAdministratie(self.base, create=create)
 
         if create:
             self.create_readme()
@@ -433,40 +294,38 @@ class SourcePaths(Folder):
                {self.space}└── wsa_output_administratie
                
                """
+    class WsaOutputAdministratie(Folder):
+        def __init__(self, base, create):
+            super().__init__(os.path.join(base, "wsa_output_administratie"), create=create)
+            self.add_file("opmerkingen", "opmerkingen.shp")
 
 
-class WsaOutputAdministratie(Folder):
-    def __init__(self, base, create):
-        super().__init__(os.path.join(base, "wsa_output_administratie"), create=create)
-        self.add_file("opmerkingen", "opmerkingen.shp")
+    class ModelbuilderPaths(Folder):
+        def __init__(self, base, create):
+            super().__init__(os.path.join(base, "modelbuilder_output"), create=create)
+            self.add_file("channel_from_profiles", CHANNEL_FROM_PROFILES)
 
 
-class ModelbuilderPaths(Folder):
-    def __init__(self, base, create):
-        super().__init__(os.path.join(base, "modelbuilder_output"), create=create)
-        self.add_file("channel_from_profiles", CHANNEL_FROM_PROFILES)
+    class PeilgebiedenPaths(Folder):
+        # TODO deze map moet een andere naam en plek krijgen.
+        def __init__(self, base, create):
+            super().__init__(os.path.join(base, "peilgebieden"), create=create)
+
+            # Find peilgebieden shapefile in folder.
+            if self.exists:
+                shape_name = [
+                    x
+                    for x in self.content
+                    if x.startswith("peilgebieden") and x.endswith(".shp")
+                ]
+                if len(shape_name) == 1:
+                    self.add_file("peilgebieden", shape_name[0])
+                else:
+                    self.add_file("peilgebieden", "peilgebieden.shp")
+            self.add_file("geen_schade", "geen_schade.shp")
 
 
-class PeilgebiedenPaths(Folder):
-    # TODO deze map moet een andere naam en plek krijgen.
-    def __init__(self, base, create):
-        super().__init__(os.path.join(base, "peilgebieden"), create=create)
-
-        # Find peilgebieden shapefile in folder.
-        if self.exists:
-            shape_name = [
-                x
-                for x in self.content
-                if x.startswith("peilgebieden") and x.endswith(".shp")
-            ]
-            if len(shape_name) == 1:
-                self.add_file("peilgebieden", shape_name[0])
-            else:
-                self.add_file("peilgebieden", "peilgebieden.shp")
-        self.add_file("geen_schade", "geen_schade.shp")
-
-
-class ModelPathsParent(Folder):
+class SchemaDirParent(Folder):
     """Parent folder with all model (schematisations) in it. These
     all share the same base schematisation, with only differences in
     global settings or other things specific for that model"""
@@ -474,8 +333,8 @@ class ModelPathsParent(Folder):
     def __init__(self, base, create):
         super().__init__(os.path.join(base, "02_schematisation"), create)
 
-        self.revisions = ModelRevisionsParent(base=self.base, create=create)
-        self.schema_base = ModelPaths(base=self.base, name="00_basis", create=create)
+        self.revisions = self.ModelRevisionsParent(base=self.base, create=create)
+        self.schema_base = hrt.ThreediSchematisation(base=self.base, name="00_basis", create=create)
         self.schema_list = ["schema_base"]
 
         if create:
@@ -490,7 +349,7 @@ class ModelPathsParent(Folder):
         self.settings_df = None
 
     def _add_modelpath(self, name):
-        setattr(self, f"schema_{name}", ModelPaths(base=self.base, name=name))
+        setattr(self, f"schema_{name}", hrt.ThreediSchematisation(base=self.base, name=name))
         self.schema_list.append(f"schema_{name}")
         return f"schema_{name}"
 
@@ -532,204 +391,15 @@ class ModelPathsParent(Folder):
                 """
 
 
-class ModelPaths(Folder):
-    """Inidividual model/schematisation."""
-
-    def __init__(self, base, name, create=True):
-        super().__init__(os.path.join(base, name), create=create)
-
-        # File
-        # self.add_file("database", self.model_path(), ftype='sqlite')
-
-    @property
-    def rasters(self):
-        return ThreediRasters(base=self.base, caller=self)
-
-    @property
-    def database(self):
-        filepath = self.model_path()
-        if filepath in [None, ""]:
-            filepath = ""
-
-        sqlite_cls = Sqlite(filepath)
-        # if os.path.exists(sqlite_cls.path):
-        #     return sqlite_cls
-        # else:
-        #     return None
-        return sqlite_cls
-
-    @property
-    def structure(self):
-        return f"""  
-               {self.space}model
-               {self.space}└── rasters
-               """
-
-    # @property #TODO Deprecated
-    # def state(self):
-    #     return detect_model_states(self.database.path)
-
-    @property
-    def database_path(self):
-        return str(self.database)
-
-    def states(self):
-        return [hydraulic_test_state, one_d_two_d_state, undefined_state, invalid_path]
-
-    # def proposed_adjustments(self, table, to_state): #TODO Deprecated
-    #     """
-    #     returns proposed adjustments for parts of the model
-    #     params:
-    #         table: can either be:
-    #             'global_settings',
-    #             'weirs',
-    #             'manholes',
-    #             'channels'
-    #         to_state:
-    #             'Hydraulische toets'
-    #             '1d2d toets'
-    #             'Niet gedefinieerd/uit modelbuilder'
-    #             'Ongeldig pad/niet geselecteerd'
-    #     """
-    #     if table == "global_settings":
-    #         return get_proposed_adjustments_global_settings(
-    #             self.database_path, to_state
-    #         )
-    #     if table == "weirs":
-    #         return get_proposed_adjustments_weir_width(
-    #             self.database_path, self.state, to_state
-    #         )
-    #     if table == "manholes":
-    #         return get_proposed_updates_manholes(
-    #             self.database_path, self.state, to_state
-    #         )
-    #     if table == "channels":
-    #         return get_proposed_adjustments_channels(
-    #             self.database_path, self.state, to_state
-    #         )
-
-    @property
-    def sqlite_paths(self):
-        """returns all sqlites in folder"""
-        return self.find_ext("sqlite")
-
-    @property
-    def sqlite_names(self):
-        """returns all sqlites in folder"""
-        return [Path(sp).stem for sp in self.sqlite_paths]
-
-    def model_path(self, idx=0, name=None):
-        """finds a model using an index"""
-        if name:
-            try:
-                idx = self.sqlite_names.index(name)
-            except Exception:
-                raise ValueError("name of sqlite given, but cannot be found")
-        if len(self.sqlite_paths) >= 1:
-            return self.sqlite_paths[idx]
-        else:
-            return ""
-
-    def set_database(self, name_or_idx): #TODO Deprecated?
-        """set the model database with either an index or a name"""
-        if type(name_or_idx) == str:
-            self.add_file("database", self.model_path(idx=None, name=name_or_idx))
-        else:
-            self.add_file("database", self.model_path(idx=name_or_idx, name=None))
+    class ModelRevisionsParent(Folder):
+        """Local revisions directory of base schematisation"""
+        def __init__(self, base, create):
+            super().__init__(os.path.join(base, "revisions"), create)
+            if create:
+                self.create()
 
 
-class ModelRevisionsParent(Folder):
-    def __init__(self, base, create=True):
-        super().__init__(os.path.join(base, "revisions"), create)
-        if create:
-            self.create()
-
-# TODO Deprecated and replaced by ThreediRasters, ready to remove.
-# class RasterPaths(Folder):
-#     def __init__(self, base):
-#         super().__init__(os.path.join(base, "rasters"))
-
-#         # Files
-#         self.add_file("dem", self.find_dem(), "raster")
-
-#     @property
-#     def structure(self):
-#         return None
-
-#     def find_dem(self):
-#         """
-#         Look for file starting with dem_ and ending with extension .tif in given directory
-
-#         Returns path if found, empty string if not found
-#         """
-#         if not self.exists:
-#             return ""
-#         else:
-#             p = Path(self.base)
-#             dir_list = [
-#                 item
-#                 for item in p.iterdir()
-#                 if item.suffix == file_types_dict[TIF] and item.stem.startswith("dem_")
-#             ]
-#             if len(dir_list) == 1:
-#                 return os.path.join(self.base, dir_list[0].name)
-#             else:
-#                 return ""
-
-
-class ThreediRasters(Folder):
-    def __init__(self, base, caller):
-        super().__init__(os.path.join(base, "rasters"))
-        self.caller = caller
-
-        self.dem = self.get_raster_path(
-            table_name="v2_global_settings", col_name="dem_file"
-        )
-        self.storage = self.get_raster_path(
-            table_name="v2_simple_infiltration",
-            col_name="max_infiltration_capacity_file",
-        )
-        self.friction = self.get_raster_path(
-            table_name="v2_global_settings", col_name="frict_coef_file"
-        )
-        self.infiltration = self.get_raster_path(
-            table_name="v2_simple_infiltration", col_name="infiltration_rate_file"
-        )
-
-    def get_raster_path(self, table_name, col_name):
-        """Read the sqlite to check which rasters are used in the model.
-        This only works for models from Klondike release onwards, where we only have
-        one global settings row."""
-
-        if self.caller.database.exists:
-            df = hrt.sqlite_table_to_df(
-                database_path=self.caller.database.path, table_name=table_name
-            )
-            # if len(df) > 1:
-            # print(f"{table_name} has more than 1 row. Choosing the first row for the rasters.")
-            if len(df) == 0:
-                raster_name = None
-            else:
-                raster_name = df.iloc[0][col_name]
-
-            if raster_name == None:
-                raster_path = ""
-            else:
-                raster_path = os.path.join(self.caller.base, raster_name)
-        else:
-            raster_path = ""
-        return File(raster_path) #FIXME dit was Raster, maar met gdal.Open bij init gaat niet helemaal lekker.
-
-    def __repr__(self):
-        return f"""  
-dem - {self.dem.name}
-storage - {self.storage.name}
-friction - {self.friction.name}
-infiltration - {self.infiltration.name}
-    """
-
-
-class ThreediResultsPaths(Folder):
+class ThreediResultsDir(Folder):
     """
     Folder in which 3di results are saved
 
@@ -742,12 +412,13 @@ class ThreediResultsPaths(Folder):
         super().__init__(os.path.join(base, "03_3di_results"), create)
 
         # Folders
-        self.zero_d_one_d = ZeroDOneD(self.base, create=create)
-        self.one_d_two_d = OneDTwoD(self.base, create=create)
-        self.climate_results = ClimateResults(self.base, create=create)
+        self.zero_d_one_d = self.ZeroDOneDDir(self.base, create=create)
+        self.one_d_two_d = self.OneDTwoDDir(self.base, create=create)
+        self.climate_results = self.ClimateResultsDir(self.base, create=create)
 
         if create:
             self.create_readme()
+
 
     @property
     def structure(self):
@@ -758,6 +429,7 @@ class ThreediResultsPaths(Folder):
                {self.space}└── climate_results or batch or climate
                """
 
+
     def __getitem__(self, name):
         if name == "0d1d_results":
             return self.zero_d_one_d
@@ -766,57 +438,21 @@ class ThreediResultsPaths(Folder):
         elif name in ["batch_results", "climate_results", "climate"]:
             return self.climate_results
 
+
     @property
     def climate(self):
         # makes more sense than climate_results
         return self.climate_results
+
 
     @property
     def batch(self):
         # makes more sense than climate_results
         return self.climate_results
 
+
     def find_revision(self, results_path, revision_dir):
-        return ThreediResult(os.path.join(results_path, revision_dir))
-
-    def find(self, results_path=None, revision_dir=None, revision_path=None):
-        """
-        Builds a dictionary containing paths to files pertaining to 3di results.
-        Note that you must either provide a revision_path or a results_path combined with a revision dir
-
-            build_threedi_source_paths_dict(
-                    results_path -> None (full path to main results folder (ex: C:/.../0d1d_tests))
-                    revision_dir -> None (name of revision folder (ex: heiloo_#13_1d2d_test))
-                    revision_path -> None (full path to revision (ex: C:/.../0d1d_tests/heiloo_#13_1d2d_test))
-
-                    Provide EITHER revision_path or results_path AND revision_dir
-                )
-
-        returns dictionary containing paths to .h5 ('h5_file') and .nc files ('nc_file')
-        If there are multiple files with those extensions, it will choose the last instance
-        """
-        try:
-            results_dict = {}
-            if (not revision_path and not (results_path and revision_dir)) or (
-                revision_path and (results_path or revision_dir)
-            ):
-                raise Exception(
-                    "Provide either revision_path or results_path and revision_dir"
-                )
-            if revision_path is None:
-                path = os.path.join(results_path, revision_dir)
-            else:
-                path = revision_path
-            for item in os.listdir(path):
-                if item.endswith(file_types_dict[NC]):
-                    results_dict["nc_file"] = os.path.join(path, item)
-                if item.endswith(file_types_dict[H5]):
-                    results_dict["h5_file"] = os.path.join(path, item)
-
-            results_dict["grid"] = ThreediResult
-            return results_dict
-        except Exception as e:
-            raise e from None
+        return hrt.ThreediResult(os.path.join(results_path, revision_dir))
 
 
     def create_readme(self):
@@ -830,363 +466,36 @@ class ThreediResultsPaths(Folder):
         ) as f:
             f.write(readme_txt)
 
-class ThreediRevisions(Folder):
-    def __init__(self, base, name, create):
-        super().__init__(os.path.join(base, name), create=create)
-        self.isrevisions = True
 
-    def __getitem__(self, revision):
-        """revision can be a integer or a path"""
-        if type(revision) == int:
-            return ThreediResult(self.full_path(self.revisions[revision]))
-        elif os.path.exists(revision):
-            return ThreediResult(revision)
-        elif (self.pl / revision).exists():
-            return ThreediResult(self.full_path(revision))
-        else:
-            # print(f"path; {self.base} not found, create with '.create()'")
-            return ThreediResult(self.full_path(revision))
+    class ZeroDOneDDir(hrt.RevisionsDir):
+        def __init__(self, base, create):
+            super().__init__(base, "0d1d_results", returnclass=hrt.ThreediResult, create=create)
 
-    def revision_structure(self, name):
-        spacing = "\n\t\t\t\t\t\t\t"
-        structure = f""" {spacing}{name} """
-        for i, rev in enumerate(self.revisions):
-            if i == len(self.revisions) - 1:
-                structure = structure + f"{spacing}└── {rev}"
-            else:
-                structure = structure + f"{spacing}├── {rev}"
+        @property
+        def structure(self):
+            return self.revision_structure("zero_d_one_d")
 
-        return structure
 
-    @property
-    def revisions(self):
-        return self.content
+    class OneDTwoDDir(hrt.RevisionsDir):
+        def __init__(self, base, create):
+            super().__init__(base, "1d2d_results", returnclass=hrt.ThreediResult, create=create)
 
+        @property
+        def structure(self):
+            return self.revision_structure("one_d_two_d")
 
-class ZeroDOneD(ThreediRevisions):
-    def __init__(self, base, create):
-        super().__init__(base, "0d1d_results", create=create)
 
-    @property
-    def structure(self):
-        return self.revision_structure("zero_d_one_d")
+    class ClimateResultsDir(hrt.RevisionsDir):
+        def __init__(self, base, create):
+            super().__init__(base, "batch_results", returnclass=ClimateResult, create=create)
 
-
-class OneDTwoD(ThreediRevisions):
-    def __init__(self, base, create):
-        super().__init__(base, "1d2d_results", create=create)
-
-    @property
-    def structure(self):
-        return self.revision_structure("one_d_two_d")
-
-
-# TODO vervangen door ResultsRevisions
-# class ClimateResultsRevisions(Folder):
-#     def __init__(self, base, folder):
-#         super().__init__(os.path.join(base, folder))
-#         self.isrevisions = True
-
-#     def __getitem__(self, revision):
-#         """revision can be a integer or a path"""
-#         if type(revision) == int:
-#             return ClimateResult(self.full_path(self.revisions[revision]))
-#         elif os.path.exists(revision):
-#             return ClimateResult(revision)
-#         elif (self.pl / revision).exists():
-#             return ClimateResult(self.full_path(revision))
-#         else:
-#             print("path not found, create with '.create()'")
-#             return ClimateResult(self.full_path(revision))
-
-#     def revision_structure(self, name):
-#         spacing = "\n\t\t\t\t\t\t\t"
-#         structure = f""" {spacing}{name} """
-#         for i, rev in enumerate(self.revisions):
-#             if i == len(self.revisions) - 1:
-#                 structure = structure + f"{spacing}└── {rev}"
-#             else:
-#                 structure = structure + f"{spacing}├── {rev}"
-
-#         return structure
-
-#     @property
-#     def revisions(self):
-#         return self.content
-
-
-class ResultsRevisions(Folder):
-    def __init__(self, base, folder, returnclass, create=False):
-        super().__init__(os.path.join(base, folder), create=create)
-        self.isrevisions = True
-        self.returnclass = returnclass  # eg ClimateResult
-
-    def __getitem__(self, revision):
-        """revision can be a integer or a path"""
-        if type(revision) == int:
-            return self.returnclass(self.full_path(self.revisions[revision]))
-        elif os.path.exists(revision):
-            return self.returnclass(revision)
-        elif (self.pl / revision).exists():
-            return self.returnclass(self.full_path(revision))
-        else:
-            # print(f"path; {self.base} not found, create with '.create()'")
-            return self.returnclass(self.full_path(revision))
-
-    def revision_structure(self, name):
-        spacing = "\n\t\t\t\t\t\t\t"
-        structure = f""" {spacing}{name} """
-        for i, rev in enumerate(self.revisions):
-            if i == len(self.revisions) - 1:
-                structure = structure + f"{spacing}└── {rev}"
-            else:
-                structure = structure + f"{spacing}├── {rev}"
-
-        return structure
-
-    @property
-    def revisions(self):
-        return self.content
-
-
-class ClimateResults(ResultsRevisions):
-    def __init__(self, base, create=True):
-        super().__init__(base, folder="batch_results", returnclass=ClimateResult, create=create)
-        if create:
-            self.create(parents=False)  # create outputfolder if parent exists
-
-    @property
-    def structure(self):
-        return self.revision_structure("climate_results")
-
-
-class ClimateResult(Folder):
-    """Individual result with download and output folder"""
-
-    def __init__(self, base, create):
-        super().__init__(base, create=create)
-
-        self.downloads = _ClimateResultDownloads(self.base)
-        self.output = ClimateResultOutput(self.base)
-
-        # Files
-        self.add_file("blok_grid_path", "/01_downloads/blok_ghg_T1000/results_3di.nc")
-        self.add_file("blok_admin_path", "/01_downloads/blok_ghg_T1000/gridadmin.h5")
-        self.add_file("piek_grid_path", "/01_downloads/piek_ghg_T1000/results_3di.nc")
-        self.add_file("piek_admin_path", "/01_downloads/piek_ghg_T1000/gridadmin.h5")
-
-    @property
-    def grid_path(self):
-        return self.blok_grid_path
-
-    @property
-    def admin_path(self):
-        return self.blok_admin_path
-
-    def grid(self, _type):
-        if _type == "blok":
-            return GridH5ResultAdmin(
-                self.blok_admin_path.file_path, self.blok_grid_path.file_path
-            )
-        return GridH5ResultAdmin(
-            self.piek_admin_path.file_path, self.piek_grid_path.file_path
-        )
-
-    def admin(self):
-        return GridH5Admin(self.blok_admin_path.file_path)
-
-    @property
-    def structure(self):
-        return f"""  
-               {self.space}{self.name}
-               {self.space}├── downloads
-               {self.space}└── output
-                """
-
-class _ClimateResultDownloads(Folder):
-    def __init__(self, base):
-        super().__init__(os.path.join(base, "01_downloads"))
-
-        # Files
-        self.add_file("download_uuid", "download_uuid.csv")
-        self.names = GROUNDWATER  # Initializes names.setter
-
-        # for name in RAW_DOWNLOADS:
-        #     setattr(self, name, ThreediResult(self.full_path(name)))
-
-        # Files
-        self.add_file("blok_grid_path", "/blok_ghg_T1000/results_3di.nc")
-        self.add_file("blok_admin_path", "/blok_ghg_T1000/gridadmin.h5")
-        self.add_file("piek_grid_path", "/piek_ghg_T1000/results_3di.nc")
-        self.add_file("piek_admin_path", "/piek_ghg_T1000/gridadmin.h5")
-
-        for name in self.names:
-            setattr(self, name, ClimateResultScenario(self.base, name))
-
-    @property
-    def names(self):
-        return self._names
-
-    @names.setter
-    def names(self, groundwater_types=GROUNDWATER):
-        names = []
-        for rain_type in RAIN_TYPES:
-            for groundwater in groundwater_types:
-                for rain_scenario in RAIN_SCENARIOS:
-                    names.append(f"{rain_type}_{groundwater}_{rain_scenario}")
-        self._names = names
-
-    @property
-    def grid_path(self):
-        return self.blok_grid_path
-
-    @property
-    def admin_path(self):
-        return self.blok_admin_path
-
-    def grid(self, _type):
-        if _type == "blok":
-            return GridH5ResultAdmin(
-                self.blok_admin_path.file_path, self.blok_grid_path.file_path
-            )
-        return GridH5ResultAdmin(
-            self.piek_admin_path.file_path, self.piek_grid_path.file_path
-        )
-
-    def admin(self):
-        return GridH5Admin(self.blok_admin_path.file_path)
-
-    def __repr__(self):
-        return f"""{self.name} @ {self.path}
-                    Folders:\t{self.structure}
-                    Files:\t{list(self.files.keys())}
-                    Layers:\t{list(self.olayers.keys())}
-                    Groups:\t{list(self.names)}
-                """
-
-    # def _set_raster_files(self):
-    # for rastertype in raster_types:
-    #     self.add_file(
-    #         f"{rastertype}_{name}", f"{rastertype}_{name}.tif", "raster"
-    #     )
-
-
-class ClimateResultOutput(Folder):
-    def __init__(self, base):
-        super().__init__(base + "/02_output_rasters")
-
-        # Folders
-        self.temp = ClimateResultOutputTemp(self.base)
-
-        # Files
-        self.add_file("maskerkaart", "maskerkaart.shp")
-        self.add_file("maskerkaart_diepte_tif", "maskerkaart_diepte.tif", "raster")
-        self.add_file("maskerkaart_schade_tif", "maskerkaart_schade.tif", "raster")
-        self.add_file("geen_schade_tif", "geen_schade.tif", "raster")
-        self.add_file("mask_diepte_plas", "mask_diepte_plas.tif", "raster")
-        self.add_file("mask_schade_plas", "mask_schade_plas.tif", "raster")
-        self.add_file("mask_diepte_overlast", "mask_diepte_overlast.tif", "raster")
-        self.add_file("mask_schade_overlast", "mask_schade_overlast.tif", "raster")
-        self.add_file("ruimtekaart", "ruimtekaart.shp")
-        self.add_file("schade_peilgebied", "schade_per_peilgebied.shp")
-        self.add_file("schade_peilgebied_corr", "schade_per_peilgebied_correctie.shp")
-        self.add_file("schade_polder", "schade_per_polder.csv")
-        self.add_file("schade_polder_corr", "schade_per_polder_correctie.csv")
-
-        self.set_scenario_files()
-        self.create(parents=False)  # create outputfolder if parent exists
-
-    def set_scenario_files(self):
-        for type_raster, type_raster_name in zip(
-            ["depth", "damage"], ["inundatiediepte", "schade"]
-        ):
-            for masker, masker_name in zip(
-                ["totaal", "plas", "overlast"], ["", "_plas", "_overlast"]
-            ):
-                for return_period in [10, 25, 100, 1000]:
-                    self.add_file(
-                        objectname=f"{type_raster}_T{return_period}_{masker}",
-                        filename=f"{type_raster_name}_T{str(return_period).zfill(4)}{masker_name}.tif",
-                        ftype="raster",
-                    )
-
-        for masker, masker_name in zip(
-            ["totaal", "plas", "overlast"], ["", "_plas", "_overlast"]
-        ):
-            self.add_file(
-                objectname=f"cw_schade_{masker}",
-                filename=f"cw_schade{masker_name}.tif",
-                ftype="raster",
-            )
-
-            self.add_file(
-                objectname=f"cw_schade_{masker}_corr",
-                filename=f"cw_schade{masker_name}_correctie.tif",
-                ftype="raster",
-            )
-
-    @property
-    def structure(self):
-        return f"""  
-               {self.space}{self.name}
-               {self.space}├── temp
-                """
-
-
-class ClimateResultOutputTemp(Folder):
-    def __init__(self, base):
-        super().__init__(os.path.join(base, "temp"))
-
-        self.add_file("peilgebieden_diepte", "peilgebieden_diepte.tif", "raster")
-        self.add_file("peilgebieden_schade", "peilgebieden_schade.tif", "raster")
-        self.add_file("peilgebieden", "peilgebieden_clipped.shp")
-
-        self.create(parents=False)  # create outputfolder if parent exists
-
-
-
-
-# TODO dit komt nu niet netjes in de print van de class.
-class ClimateResultScenario(Folder):
-    """Single scenario with multiple results"""
-
-    def __init__(self, base, name):
-        super().__init__(base)
-
-        raster_types = ["max_depth", "total_damage", "wlvl_max"]
-        for rastertype in raster_types:
-            self.add_file(rastertype, f"{rastertype}_{name}.tif", ftype="raster")
-        self.structure_extra = []
-        # Netcdf for piek_ghg_t1000 and blok_ghg_t1000 for use in ruimtekaart.
-        if name in RAW_DOWNLOADS:
-            setattr(self, "netcdf", ThreediResult(self.full_path(name)))
-            self.structure_extra = ["netcdf"]
-
-    def __repr__(self):
-        return f"""{self.name} @ {self.path}
-                    Folders:\t{self.structure_extra}
-                    Files:\t{list(self.files.keys())}
-                    Layers:\t{list(self.olayers.keys())}
-                """
-
-
-class OutputFolder(Folder):
-    def __init__(self, base, create):
-        super().__init__(base, create=create)
-        self.layers = Layers(os.path.join(self.base, "Layers"))
-        self.logs = Logs(os.path.join(self.base, "Logs"))
-
-    @property
-    def structure(self):
-        return f"""  
-               {self.space}{self.name}
-               {self.space}├── layers
-               {self.space}└── logs
-               """
+        @property
+        def structure(self):
+            return self.revision_structure("climate_results")
 
 
 # 1d2d output
-class OutputPaths(Folder):
+class OutputDirParent(Folder):
     """
     Output paths are only defined up to the foldername
     of the test, because we can internally decide on the
@@ -1197,11 +506,11 @@ class OutputPaths(Folder):
     def __init__(self, base, create):
         super().__init__(os.path.join(base, "04_test_results"), create)
 
-        self.sqlite_tests = OutputFolderSqlite(self.full_path("sqlite_tests"), create=create)
-        self.bank_levels = OutputFolder(self.full_path("bank_levels"), create=create)
-        self.zero_d_one_d = OutputFolder0d1d(self.base, "0d1d_tests", create=create)
-        self.one_d_two_d = OutputFolder1d2d(self.base, "1d2d_tests", create=create)
-        self.climate = OutputClimate(self.base, "climate", create=create)
+        self.sqlite_tests = self.OutputDirSqlite(self.full_path("sqlite_tests"), create=create)
+        self.bank_levels = self.OutputDirBankLevel(self.full_path("bank_levels"), create=create)
+        self.zero_d_one_d = self.OutputDir0d1d(base=self.base, name="0d1d_tests", create=create)
+        self.one_d_two_d = self.OutputDir1d2d(caller=self, base=self.base, name="1d2d_tests", create=create)
+        self.climate = self.OutputDirClimate(caller=self, base=self.base, name="climate", create=create)
 
         if create:
             self.create_readme()
@@ -1239,133 +548,110 @@ class OutputPaths(Folder):
                {self.space}├── zero_d_one_d
                {self.space}├── one_d_two_d
                {self.space}└── climate
-
                """
 
 
+    class OutputDirSqlite(Folder):
+        def __init__(self, base, create):
+            super().__init__(base, create=create)
 
-# TODO vervangen door ResultsRevisions
-# class OutputRevisions(Folder):
-#     def __init__(self, base):
-#         super().__init__(base)
-#         self.isrevisions = True
-
-#     def __getitem__(self, revision):
-#         if type(revision) == int:
-#             return OutputFolder(self.full_path(self.revisions[revision]))
-#         elif os.path.exists(revision):
-#             return OutputFolder(revision)
-#         elif (self.pl / revision).exists():
-#             return OutputFolder(self.full_path(revision))
-#         else:
-#             print("path not found, create with '.create()'")
-#             return OutputFolder(self.full_path(revision))
-
-#     def revision_structure(self, name):
-#         spacing = "\n\t\t\t\t\t\t\t"
-#         structure = f""" {spacing}{name} """
-#         for i, rev in enumerate(self.revisions):
-#             if i == len(self.revisions) - 1:
-#                 structure = structure + f"{spacing}└── {rev}"
-#             else:
-#                 structure = structure + f"{spacing}├── {rev}"
-
-#         return structure
-
-#     @property
-#     def revisions(self):
-#         return os.listdir(self.base)
+            self.add_file("bodemhoogte_kunstwerken", "bodemhoogte_kunstwerken.gpkg", "file")
+            self.add_file("bodemhoogte_stuw", "bodemhoogte_stuw.gpkg", "file")
+            self.add_file("gebruikte_profielen", "gebruikte_profielen.gpkg", "file")
+            self.add_file("geisoleerde_watergangen", "geisoleerde_watergangen.gpkg", "file")
+            self.add_file("gestuurde_kunstwerken", "gestuurde_kunstwerken.gpkg", "file")
+            self.add_file("drooglegging", "drooglegging.tif", "raster")
+            self.add_file("geometry_check", "geometry_check.csv", "file")
+            self.add_file("general_sqlite_checks", "general_sqlite_checks.csv", "file")
+            self.add_file("overlappende_profielen", "overlappende_profielen.gpkg", "file")
+            self.add_file("profielen_geen_vertex", "profielen_geen_vertex.gpkg", "file")
 
 
-class OutputFolderSqlite(Folder):
-    def __init__(self, base, create):
-        super().__init__(base, create=create)
+    class OutputDirBankLevel(Folder):
+        def __init__(self, base, create):
+            super().__init__(base, create=create)
+            # self.layers = Layers(os.path.join(self.base, "Layers"))
+            # self.logs = Logs(os.path.join(self.base, "Logs"))
 
-        self.add_file("bodemhoogte_kunstwerken", "bodemhoogte_kunstwerken.gpkg", "file")
-        self.add_file("bodemhoogte_stuw", "bodemhoogte_stuw.gpkg", "file")
-        self.add_file("gebruikte_profielen", "gebruikte_profielen.gpkg", "file")
-        self.add_file("geisoleerde_watergangen", "geisoleerde_watergangen.gpkg", "file")
-        self.add_file("gestuurde_kunstwerken", "gestuurde_kunstwerken.gpkg", "file")
-        self.add_file("drooglegging", "drooglegging.tif", "raster")
-        self.add_file("geometry_check", "geometry_check.csv", "file")
-        self.add_file("general_sqlite_checks", "general_sqlite_checks.csv", "file")
-        self.add_file("overlappende_profielen", "overlappende_profielen.gpkg", "file")
-        self.add_file("profielen_geen_vertex", "profielen_geen_vertex.gpkg", "file")
-
-class OutputFolder0d1d(ResultsRevisions):
-    def __init__(self, base, folder, create):
-        super().__init__(base, folder=folder, returnclass=Outputd0d1d_revision, create=create)
-
-    @property
-    def structure(self):
-        return self.revision_structure("zero_d_one_d")
+        @property
+        def structure(self):
+            return f"""  
+                {self.space}{self.name}
+                {self.space}├── layers
+                {self.space}└── logs
+                """
 
 
-class Outputd0d1d_revision(Folder):
-    """Outputfolder 0d1d for a specific revision."""
+    class OutputDir0d1d(hrt.RevisionsDir):
+        def __init__(self, base, name, create):
+            super().__init__(base, name, returnclass=self.Outputd0d1d_revision, create=create)
 
-    def __init__(self, base, create):
-        super().__init__(base, create=create)
-
-        self.add_file("nodes_0d1d_test", "nodes_0d1d_test.gpkg", "file")
-        self.add_file(
-            "hydraulische_toets_kunstwerken",
-            "hydraulische_toets_kunstwerken.gpkg",
-            "file",
-        )
-        self.add_file(
-            "hydraulische_toets_watergangen",
-            "hydraulische_toets_watergangen.gpkg",
-            "file",
-        )
+        @property
+        def structure(self):
+            return self.revision_structure("zero_d_one_d")
 
 
-class OutputFolder1d2d(ResultsRevisions):
-    def __init__(self, base, folder, create):
-        super().__init__(base, folder=folder, returnclass=Outputd1d2d_revision, create=create)
+        class Outputd0d1d_revision(Folder):
+            """Outputfolder 0d1d for a specific revision."""
 
-    @property
-    def structure(self):
-        return self.revision_structure("one_d_two_d")
+            def __init__(self, base, create):
+                super().__init__(base, create=create)
+
+                self.add_file("nodes_0d1d_test", "nodes_0d1d_test.gpkg", "file")
+                self.add_file(
+                    "hydraulische_toets_kunstwerken",
+                    "hydraulische_toets_kunstwerken.gpkg",
+                    "file",
+                )
+                self.add_file(
+                    "hydraulische_toets_watergangen",
+                    "hydraulische_toets_watergangen.gpkg",
+                    "file",
+                )
 
 
-class Outputd1d2d_revision(Folder):
-    """Outputfolder 1d2d for a specific revision."""
+    class OutputDir1d2d(hrt.RevisionsDir):
+        def __init__(self, caller, base, name, create):
+            super().__init__(base, name, returnclass=caller.Outputd1d2d_revision, create=create)
 
-    def __init__(self, base, create):
-        super().__init__(base, create=create)
-
-        self.add_file("grid_nodes_2d", "grid_nodes_2d.gpkg", "file")
-        self.add_file("stroming_1d2d_test", "stroming_1d2d_test.gpkg", "file")
-        for T in [1, 3, 15]:
-            self.add_file(f"waterstand_T{T}", f"waterstand_T{T}.tif", "raster")
-            self.add_file(f"waterdiepte_T{T}", f"waterdiepte_T{T}.tif", "raster")
-
-    # @property
-    # def structure(self):
-    #     return self.("one_d_two_d")
+        @property
+        def structure(self):
+            return self.revision_structure("one_d_two_d")
 
 
 # TODO hoort deze class hier nog? resultaten staan op een andere plek
-class OutputClimate(ResultsRevisions):
-    def __init__(self, base, folder, create=True):
-        super().__init__(base, folder=folder, returnclass=Outputd1d2d_revision, create=create)
-        # if create:
-        #     self.create()  # create outputfolder if parent exists
+    class OutputDirClimate(hrt.RevisionsDir):
+        def __init__(self, caller, base, name, create=True):
+            super().__init__(base, name, returnclass=caller.Outputd1d2d_revision, create=create)
+            # if create:
+            #     self.create()  # create outputfolder if parent exists
 
-    @property
-    def structure(self):
-        return self.revision_structure("Climate")
-
-
-class Layers(Folder):
-    def __init__(self, base):
-        super().__init__(base)
+        @property
+        def structure(self):
+            return self.revision_structure("Climate")
 
 
-class Logs(Folder):
-    def __init__(self, base):
-        super().__init__(base)
+    class Outputd1d2d_revision(Folder):
+        """Outputfolder 1d2d for a specific revision."""
+
+        def __init__(self, base, create):
+            super().__init__(base, create=create)
+
+            self.add_file("grid_nodes_2d", "grid_nodes_2d.gpkg", "file")
+            self.add_file("stroming_1d2d_test", "stroming_1d2d_test.gpkg", "file")
+            for T in [1, 3, 15]:
+                self.add_file(f"waterstand_T{T}", f"waterstand_T{T}.tif", "raster")
+                self.add_file(f"waterdiepte_T{T}", f"waterdiepte_T{T}.tif", "raster")
+
+
+# class Layers(Folder):
+#     def __init__(self, base):
+#         super().__init__(base)
+
+
+# class Logs(Folder):
+#     def __init__(self, base):
+#         super().__init__(base)
 
 
 def create_tif_path(folder, filename):

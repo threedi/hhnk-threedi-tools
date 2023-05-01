@@ -26,24 +26,29 @@ from hhnk_threedi_tools.core.checks.zero_d_one_d import ZeroDOneDTest
 TEST_MODEL = str(pathlib.Path(__file__).parent.absolute()) + "/data/model_test/"
 
 
-def test_run_zero_d_one_d_test():
-    """test of de 0d1d test werkt"""
+class TestZeroDOneD:
     test_0d1d = ZeroDOneDTest.from_path(TEST_MODEL)
-    test_0d1d.run()
 
-    assert test_0d1d.results["lvl_end"].count() == 157
+    def test_run_zero_d_one_d_test(self):
+        """test of de 0d1d test werkt"""
+        self.test_0d1d.run()
+        assert self.test_0d1d.results["lvl_end"].count() == 157
 
 
-def test_run_hydraulic_test():
-    """test of de hydraulische testen werken"""
-    test_0d1d = ZeroDOneDTest.from_path(TEST_MODEL)
-    test_0d1d.run_hydraulic()
-    assert test_0d1d.hydraulic_results["channels"]["code"].count() == 134
+    def test_run_hydraulic_test(self):
+        """test of de hydraulische testen werken"""
+        self.test_0d1d.run_hydraulic()
+        assert self.test_0d1d.hydraulic_results["channels"]["code"].count() == 134
 
 
 # %%
 if __name__ == "__main__":
-    test_run_zero_d_one_d_test()
-    test_run_hydraulic_test()
-
+    import inspect
+    selftest = TestZeroDOneD()
+    self = selftest.test_0d1d
+    #Run all testfunctions
+    for i in dir(selftest):
+        if i.startswith('test_') and hasattr(inspect.getattr_static(selftest,i), '__call__'):
+            print(i)
+            getattr(selftest, i)()    
 # %%

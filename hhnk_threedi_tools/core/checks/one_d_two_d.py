@@ -1,9 +1,14 @@
+# %%
 # -*- coding: utf-8 -*-
 """
 Created on Mon Aug 23 11:27:51 2021
 
 @author: chris.kerklaan
 """
+
+# if __name__ == "__main__":
+#     import set_local_paths  # add local git repos.
+
 # Third-party imports
 import os
 import numpy as np
@@ -101,95 +106,97 @@ class OneDTwoDTest:
     def results(self):
         return self.iresults
 
+    #FIXME deprecated? _read_flowline_results bestaat ook en deze wordt niet gebruikt.
     def read_flowline_results(self):
-        try:
-            threedi_result = self.threedi_results
-            timesteps_df = self.timestep_df
+        """"""
+        # try:
+        #     threedi_result = self.threedi_results
+        #     timesteps_df = self.timestep_df
 
-            coords = hrt.threedi.line_geometries_to_coords(
-                threedi_result.lines.line_geometries
-            )  # create gdf from node coords
+        #     coords = hrt.threedi.line_geometries_to_coords(
+        #         threedi_result.lines.line_geometries
+        #     )  # create gdf from node coords
 
-            flowlines_gdf = gpd.GeoDataFrame(
-                geometry=coords, crs=f"EPSG:{DEF_TRGT_CRS}"
-            )
-            flowlines_gdf[id_col] = threedi_result.lines.id
-            flowlines_gdf[spatialite_id_col] = threedi_result.lines.content_pk
+        #     flowlines_gdf = gpd.GeoDataFrame(
+        #         geometry=coords, crs=f"EPSG:{DEF_TRGT_CRS}"
+        #     )
+        #     flowlines_gdf[id_col] = threedi_result.lines.id
+        #     flowlines_gdf[spatialite_id_col] = threedi_result.lines.content_pk
 
-            content_type_list = threedi_result.lines.content_type.astype("U13")
-            flowlines_gdf[content_type_col] = content_type_list
+        #     content_type_list = threedi_result.lines.content_type.astype("U13")
+        #     flowlines_gdf[content_type_col] = content_type_list
 
-            flowlines_gdf[kcu_col] = threedi_result.lines.kcu
-            flowlines_gdf.loc[
-                flowlines_gdf[kcu_col].isin([51, 52]), content_type_col
-            ] = one_d_two_d
-            flowlines_gdf.loc[
-                flowlines_gdf[kcu_col].isin([100, 101]), content_type_col
-            ] = two_d
+        #     flowlines_gdf[kcu_col] = threedi_result.lines.kcu
+        #     flowlines_gdf.loc[
+        #         flowlines_gdf[kcu_col].isin([51, 52]), content_type_col
+        #     ] = one_d_two_d
+        #     flowlines_gdf.loc[
+        #         flowlines_gdf[kcu_col].isin([100, 101]), content_type_col
+        #     ] = two_d
 
-            q = threedi_result.lines.timeseries(
-                indexes=[
-                    timesteps_df[t_start_rain_col].value,
-                    timesteps_df[t_end_rain_col].value,
-                    timesteps_df[t_end_sum_col].value,
-                ]
-            ).q  # waterstand
-            vel = threedi_result.lines.timeseries(
-                indexes=[
-                    timesteps_df[t_start_rain_col].value,
-                    timesteps_df[t_end_rain_col].value,
-                    timesteps_df[t_end_sum_col].value,
-                ]
-            ).u1
-            q_all = threedi_result.lines.timeseries(indexes=slice(0, -1)).q
-            vel_all = threedi_result.lines.timeseries(indexes=slice(0, -1)).u1
+        #     q = threedi_result.lines.timeseries(
+        #         indexes=[
+        #             timesteps_df[t_start_rain_col].value,
+        #             timesteps_df[t_end_rain_col].value,
+        #             timesteps_df[t_end_sum_col].value,
+        #         ]
+        #     ).q  # waterstand
+        #     vel = threedi_result.lines.timeseries(
+        #         indexes=[
+        #             timesteps_df[t_start_rain_col].value,
+        #             timesteps_df[t_end_rain_col].value,
+        #             timesteps_df[t_end_sum_col].value,
+        #         ]
+        #     ).u1
+        #     q_all = threedi_result.lines.timeseries(indexes=slice(0, -1)).q
+        #     vel_all = threedi_result.lines.timeseries(indexes=slice(0, -1)).u1
 
-            # Write discharge and velocity to columns in dataframe
-            for index, time_str in enumerate(suffixes_list):
-                if time_str == max_sfx:
-                    q_max_ind = abs(q_all).argmax(axis=0)
-                    flowlines_gdf[q_m3_s_col + time_str] = np.round(
-                        [row[q_max_ind[enum]] for enum, row in enumerate(q_all.T)], 5
-                    )
-                else:
-                    flowlines_gdf[q_m3_s_col + time_str] = np.round(q[index], 5)
+        #     # Write discharge and velocity to columns in dataframe
+        #     for index, time_str in enumerate(suffixes_list):
+        #         if time_str == max_sfx:
+        #             q_max_ind = abs(q_all).argmax(axis=0)
+        #             flowlines_gdf[q_m3_s_col + time_str] = np.round(
+        #                 [row[q_max_ind[enum]] for enum, row in enumerate(q_all.T)], 5
+        #             )
+        #         else:
+        #             flowlines_gdf[q_m3_s_col + time_str] = np.round(q[index], 5)
 
-            for index, time_str in enumerate(suffixes_list):
-                if time_str == max_sfx:
-                    vel_max_ind = abs(vel_all).argmax(axis=0)
-                    flowlines_gdf[vel_m_s_col + time_str] = np.round(
-                        [row[vel_max_ind[enum]] for enum, row in enumerate(vel_all.T)],
-                        5,
-                    )
-                else:
-                    flowlines_gdf[vel_m_s_col + time_str] = np.round(vel[index], 3)
+        #     for index, time_str in enumerate(suffixes_list):
+        #         if time_str == max_sfx:
+        #             vel_max_ind = abs(vel_all).argmax(axis=0)
+        #             flowlines_gdf[vel_m_s_col + time_str] = np.round(
+        #                 [row[vel_max_ind[enum]] for enum, row in enumerate(vel_all.T)],
+        #                 5,
+        #             )
+        #         else:
+        #             flowlines_gdf[vel_m_s_col + time_str] = np.round(vel[index], 3)
 
-            # Flowlines of 1d2d lines weirdly have flow in different direction.
-            # Therefore we invert this here so arrows are plotted correctly
-            for index, time_str in enumerate(suffixes_list):
-                flowlines_gdf.loc[
-                    flowlines_gdf[content_type_col] == one_d_two_d,
-                    q_m3_s_col + time_str,
-                ] = flowlines_gdf.loc[
-                    flowlines_gdf[content_type_col] == one_d_two_d,
-                    q_m3_s_col + time_str,
-                ].apply(
-                    lambda x: x * -1
-                )
+        #     # Flowlines of 1d2d lines weirdly have flow in different direction.
+        #     # Therefore we invert this here so arrows are plotted correctly
+        #     for index, time_str in enumerate(suffixes_list):
+        #         flowlines_gdf.loc[
+        #             flowlines_gdf[content_type_col] == one_d_two_d,
+        #             q_m3_s_col + time_str,
+        #         ] = flowlines_gdf.loc[
+        #             flowlines_gdf[content_type_col] == one_d_two_d,
+        #             q_m3_s_col + time_str,
+        #         ].apply(
+        #             lambda x: x * -1
+        #         )
 
-            for index, time_str in enumerate(suffixes_list):
-                filt = (
-                    flowlines_gdf[content_type_col] == one_d_two_d,
-                    vel_m_s_col + time_str,
-                )
+        #     for index, time_str in enumerate(suffixes_list):
+        #         filt = (
+        #             flowlines_gdf[content_type_col] == one_d_two_d,
+        #             vel_m_s_col + time_str,
+        #         )
 
-                flowlines_gdf.loc[filt] = flowlines_gdf.loc[filt].apply(
-                    lambda x: x * -1
-                )
+        #         flowlines_gdf.loc[filt] = flowlines_gdf.loc[filt].apply(
+        #             lambda x: x * -1
+        #         )
 
-            return flowlines_gdf
-        except Exception as e:
-            raise e from None
+        #     return flowlines_gdf
+        # except Exception as e:
+        #     raise e from None
 
     def run_levels_depths_at_timesteps(self):
         """
@@ -521,3 +528,24 @@ class OneDTwoDTest:
             return pump_gdf
         except Exception as e:
             raise e from None
+
+
+# %%
+if __name__ == "__main__":
+    from pathlib import Path
+    from hhnk_threedi_tools import Folders
+    TEST_MODEL = Path(__file__).parent.parent.parent.parent / "tests/data/model_test/"
+    folder = Folders(TEST_MODEL)
+# %%
+    self = OneDTwoDTest.from_path(TEST_MODEL)
+
+    # def test_run_depth_at_timesteps_test(self):
+    """test of de 0d1d test werkt"""
+    self.read_flowline_results()
+    output = self.run_levels_depths_at_timesteps()
+
+    assert len(output) > 0
+    assert output[0] == 1
+    assert "waterdiepte_T15.tif" in self.test_1d2d.fenv.output.one_d_two_d[0].content
+
+    # %%

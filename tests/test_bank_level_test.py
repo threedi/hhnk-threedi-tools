@@ -14,7 +14,6 @@ if __name__ == "__main__":
 
 # First-party imports
 from pathlib import Path
-import inspect
 
 # Local imports
 from hhnk_threedi_tools.core.folders import Folders
@@ -127,6 +126,7 @@ class TestBankLevel:
 
 # %%
 if __name__ == "__main__":
+    import inspect
     selftest = TestBankLevel()
     self = selftest.bl_test
     #Run all testfunctions
