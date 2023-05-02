@@ -256,7 +256,7 @@ class SourceDir(Folder):
         # Files
         self.add_file("damo", DAMO, ftype="filegdb")
         self.add_file("hdb", HDB, ftype="filegdb")
-        self.add_file("datachecker", "datachecker_output.gdb", ftype="filegdb")
+        self.add_file("datachecker", "datachecker_output.gpkg", ftype="filegdb")
         self.add_file("polder_polygon", POLDER_POLY)
         self.add_file("panden", "panden.gpkg", ftype="filegdb")
 
