@@ -1,9 +1,11 @@
 name: tests
 
-on: pull_request
+on:
+  pull_request:
 
 jobs:
   run-pytests:
+    if: github.event.pull_request.draft == false
     runs-on: windows-latest
 
     steps:
@@ -26,3 +28,10 @@ jobs:
         pytest --cov-report term-missing --cov=hhnk_threedi_tools --cov-report=xml tests/
     - name: Upload coverage
       uses: codecov/codecov-action@v2
+
+  fail_if_pull_request_is_draft:
+    if: github.event.pull_request.draft == true
+    runs-on: windows-latest
+    steps:
+    - name: Fails in order to indicate that pull request needs to be marked as ready to review and unit tests workflow needs to pass.
+      run: exit 1

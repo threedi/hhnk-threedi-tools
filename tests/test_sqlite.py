@@ -18,6 +18,8 @@ TEST_MODEL = str(pathlib.Path(__file__).parent.absolute()) + "/data/model_test/"
 
 class TestSqlite:
     folder = Folders(TEST_MODEL)
+    folder.output.sqlite_tests.unlink_contents()
+
     sqlite_test = SqliteTest(folder=folder)
 
 
@@ -31,9 +33,7 @@ class TestSqlite:
         assert "voldoet aan de norm" in output
 
 
-    def test_run_dewatering_depth(self):
-        self.folder.output.sqlite_tests.drooglegging.unlink_if_exists()
-            
+    def test_run_dewatering_depth(self):           
         output = self.sqlite_test.run_dewatering_depth(
             output_file=self.folder.output.sqlite_tests.drooglegging.path
         )
