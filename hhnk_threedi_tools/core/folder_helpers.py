@@ -23,31 +23,6 @@ class ClimateResult(hrt.Folder):
         self.downloads = self.ClimateResultDownloads(self.base)
         self.output = self.ClimateResultOutput(self.base)
 
-        # Files
-        self.add_file("blok_grid_path", "/01_downloads/blok_ghg_T1000/results_3di.nc")
-        self.add_file("blok_admin_path", "/01_downloads/blok_ghg_T1000/gridadmin.h5")
-        self.add_file("piek_grid_path", "/01_downloads/piek_ghg_T1000/results_3di.nc")
-        self.add_file("piek_admin_path", "/01_downloads/piek_ghg_T1000/gridadmin.h5")
-
-    @property
-    def grid_path(self):
-        return self.blok_grid_path
-
-    @property
-    def admin_path(self):
-        return self.blok_admin_path
-
-    def grid(self, _type):
-        if _type == "blok":
-            return GridH5ResultAdmin(
-                self.blok_admin_path.file_path, self.blok_grid_path.file_path
-            )
-        return GridH5ResultAdmin(
-            self.piek_admin_path.file_path, self.piek_grid_path.file_path
-        )
-
-    def admin(self):
-        return GridH5Admin(self.blok_admin_path.file_path)
 
     @property
     def structure(self):
@@ -63,53 +38,26 @@ class ClimateResult(hrt.Folder):
             super().__init__(os.path.join(base, "01_downloads"))
 
             # Files
-            self.add_file("download_uuid", "download_uuid.csv")
-            self.names = GROUNDWATER  # Initializes names.setter
-
-            # for name in RAW_DOWNLOADS:
-            #     setattr(self, name, ThreediResult(self.full_path(name)))
-
-            # Files
-            self.add_file("blok_grid_path", "/blok_ghg_T1000/results_3di.nc")
-            self.add_file("blok_admin_path", "/blok_ghg_T1000/gridadmin.h5")
-            self.add_file("piek_grid_path", "/piek_ghg_T1000/results_3di.nc")
-            self.add_file("piek_admin_path", "/piek_ghg_T1000/gridadmin.h5")
+            self.names = None  # Initializes names.setter
 
             for name in self.names:
                 setattr(self, name, self.ClimateResultScenario(self.base, name))
+
 
         @property
         def names(self):
             return self._names
 
+
         @names.setter
-        def names(self, groundwater_types=GROUNDWATER):
+        def names(self, dummy):
             names = []
             for rain_type in RAIN_TYPES:
-                for groundwater in groundwater_types:
+                for groundwater in GROUNDWATER:
                     for rain_scenario in RAIN_SCENARIOS:
                         names.append(f"{rain_type}_{groundwater}_{rain_scenario}")
             self._names = names
 
-        @property
-        def grid_path(self):
-            return self.blok_grid_path
-
-        @property
-        def admin_path(self):
-            return self.blok_admin_path
-
-        def grid(self, _type):
-            if _type == "blok":
-                return GridH5ResultAdmin(
-                    self.blok_admin_path.file_path, self.blok_grid_path.file_path
-                )
-            return GridH5ResultAdmin(
-                self.piek_admin_path.file_path, self.piek_grid_path.file_path
-            )
-
-        def admin(self):
-            return GridH5Admin(self.blok_admin_path.file_path)
 
         def __repr__(self):
             return f"""{self.name} @ {self.path}
@@ -118,7 +66,30 @@ class ClimateResult(hrt.Folder):
                         Layers:\t{list(self.olayers.keys())}
                         Groups:\t{list(self.names)}
                     """
+        
 
+        class ClimateResultScenario(hrt.Folder):
+            """Single scenario with multiple results"""
+
+            def __init__(self, base, name, create=False):
+                super().__init__(base, create=create)
+
+                #Add rasters to main downloadfolder
+                raster_types = ["max_depth", "total_damage", "wlvl_max"]
+                for rastertype in raster_types:
+                    self.add_file(rastertype, f"{rastertype}_{name}.tif", ftype="raster")
+                self.structure_extra = []
+
+                #Add netcdf to subfolders for scenario
+                setattr(self, "netcdf", hrt.ThreediResult(self.full_path(name)))
+                self.structure_extra = ["netcdf"]
+
+            def __repr__(self):
+                return f"""{self.name} @ {self.path}
+                            Folders:\t{self.structure_extra}
+                            Files:\t{list(self.files.keys())}
+                            Layers:\t{list(self.olayers.keys())}
+                        """
 
     class ClimateResultOutput(hrt.Folder):
         def __init__(self, base):
@@ -191,24 +162,3 @@ class ClimateResult(hrt.Folder):
                 self.add_file("peilgebieden", "peilgebieden_clipped.shp")
 
 
-    class ClimateResultScenario(hrt.Folder):
-        """Single scenario with multiple results"""
-
-        def __init__(self, base, name):
-            super().__init__(base)
-
-            raster_types = ["max_depth", "total_damage", "wlvl_max"]
-            for rastertype in raster_types:
-                self.add_file(rastertype, f"{rastertype}_{name}.tif", ftype="raster")
-            self.structure_extra = []
-            # Netcdf for piek_ghg_t1000 and blok_ghg_t1000 for use in ruimtekaart.
-            if name in RAW_DOWNLOADS:
-                setattr(self, "netcdf", hrt.ThreediResult(self.full_path(name)))
-                self.structure_extra = ["netcdf"]
-
-        def __repr__(self):
-            return f"""{self.name} @ {self.path}
-                        Folders:\t{self.structure_extra}
-                        Files:\t{list(self.files.keys())}
-                        Layers:\t{list(self.olayers.keys())}
-                    """
