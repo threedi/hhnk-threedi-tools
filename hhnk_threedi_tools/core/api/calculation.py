@@ -649,8 +649,9 @@ class Simulation:
 
         if self.data.boundaries != []:
 
-            bc_upload = self.threedi_api.simulations_events_boundaryconditions_file_create(simulation_pk=self.id,
-                        data={'filename':filename})
+            bc_upload = self._add_to_simulation(self.threedi_api.simulations_events_boundaryconditions_file_create,
+                        simulation_pk=self.id, data={'filename':filename}
+            )
             upload_json(bc_upload, output_path)
             print(f"create: {output_path}")
             for ti in range(int(UPLOAD_TIMEOUT // 2)):
@@ -688,7 +689,8 @@ class Simulation:
                         print("OJEE... data is geen dict {func}")
                         break
 
-                func(**kwargs)
+                r=func(**kwargs)
+                return r
             except ApiException as e:
                 self.error=e
                 print(e)
@@ -738,7 +740,8 @@ class Simulation:
                 "end_datetime":self.end_time,
                 "store_results": True
                 }
-        self.simulation = self.threedi_api.simulations_create(data)
+
+        self.simulation = self._add_to_simulation(self.threedi_api.simulations_create, data=data)
         self.simulation_created = True
 
 
@@ -760,7 +763,9 @@ class Simulation:
         output_path.parent.mkdir(exist_ok=True) #Create parent folder
         if not output_path.with_suffix('').exists():
             if not output_path.exists():
-                sqlite_dnwld = self.threedi_api.schematisations_revisions_sqlite_download(id=int(self.revision_id), schematisation_pk=int(self.schema_id))
+                sqlite_dnwld = self._add_to_simulation(self.threedi_api.schematisations_revisions_sqlite_download,
+                        id=int(self.revision_id), schematisation_pk=int(self.schema_id)
+                )
                 r = requests.get(sqlite_dnwld.get_url)
                 with open(output_path, 'wb') as f:
                     f.write(r.content)
@@ -782,16 +787,17 @@ class Simulation:
             )
 
 
-    def start(self, batch=False):
+    def start(self, extra_name=""):
         self.structure_control_valid = self.check_structure_control()
         if self.structure_control_valid:
-            self.start_feedback = self.threedi_api.simulations_actions_create(simulation_pk=self.id, data={"name": "queue"})
+            self.start_feedback = self._add_to_simulation(self.threedi_api.simulations_actions_create,
+                                        simulation_pk=self.id, data={"name": "queue"}
+            )
 
-            if not batch:
-                # Create APIcall.txt file
-                apicall_txt = os.path.join(self.output_folder, f"apicall_simid_{self.simulation.id}_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.txt")
-                with open(apicall_txt, "a") as t:
-                    t.write(self.simulation_info(str_type="text"))
+            # Create APIcall.txt file
+            apicall_txt = os.path.join(self.output_folder, f"apicall{extra_name}_simid{self.simulation.id}_date{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.txt")
+            with open(apicall_txt, "a") as t:
+                t.write(self.simulation_info(str_type="text"))
         else:
             self.start_feedback="simulation_did not start"            
 
