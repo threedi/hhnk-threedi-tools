@@ -47,9 +47,9 @@ dependencies:
   - pip: # 3Di packages are not conda installable and are therefore installed by PIP
     # - et-xmlfile==1.1.0
     - openpyxl==3.1.2
-    - threedi_modelchecker==1.0.1
+    - threedi_modelchecker==2.1.0 #ThreediToolbox 2.5.2
     - threedi_scenario_downloader==0.16
-    - threedi_schema==0.214.4
+    - threedi_schema==0.216.4 #ThreediToolbox 2.5.2
     - threedi_raster_edits==0.26
     - threedi-api-client==4.1.1
     - threedigrid_builder==1.8.0
