@@ -19,7 +19,7 @@ from hhnk_research_tools.threedi.geometry_functions import extract_boundary_from
 
 # Local imports
 from hhnk_threedi_tools.core.folders import Folders
-from hhnk_threedi_tools.variables.default_variables import DEF_TRGT_CRS
+from hhnk_threedi_tools.variables.default_variables import DEF_TRGT_CRS, DEF_SRC_CRS
 from hhnk_threedi_tools.variables.datachecker_variables import (
     peil_id_col,
     streefpeil_bwn_col,
