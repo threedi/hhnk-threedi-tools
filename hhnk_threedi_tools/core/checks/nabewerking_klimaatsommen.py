@@ -34,7 +34,6 @@ class KlimaatsommenPrep:
         self.folder = folder
         self.batch_fd = self.folder.threedi_results.batch[batch_name]
 
-
         self.cfg_file = cfg_file
         self.landuse_file = landuse_file
 
@@ -167,96 +166,99 @@ class KlimaatsommenPrep:
             raise e from None
 
 
+    def create_scenario_metadata(self):
+        # Once the rasters are done, we read the information stored in them and then compare that 
+        # with the data from the CSV, which the data used to evaluate if the rasters are good or no.
+        dems_location = self.batch_fd.downloads.path
+        files = os.listdir(dems_location)
+        damage_rasters = []
+        depth_rasters = []
+        file_names_damage = []
+        min_damage= []
+        max_damage = []
+        mean_damage = []
+        stdDev_damage = []
+        west_damage = []
+        north_damage = [] 
+        damage_info = gpd.GeoDataFrame()
+
+
+        for raster_file in files:
+            if raster_file.endswith('.tif') and raster_file.split('_')[0]== 'damage':
+                path_damage = os.path.join(dems_location, raster_file)
+                damage_rasters.append(path_damage)
+            elif raster_file.endswith('.tif') and raster_file.split('_')[0]== 'depth':
+                path_depth = os.path.join(dems_location, raster_file)
+                depth_rasters.append(path_depth)
+                
+        for damage_raster in damage_rasters:
+            file_name = Path(damage_raster).name
+            file_names_damage.append(file_name)
+            gtif = gdal.Open(damage_raster)
+            srcband = gtif.GetRasterBand(1)
+            stats =  srcband.GetStatistics(True, True) 
+            min_damage.append(round(stats[0],6))
+            max_damage.append(round(stats[1],6))
+            mean_damage.append(round(stats[2],4))
+            stdDev_damage.append(round(stats[3],4))
+            metadata_damage = hrt.RasterMetadata(gtif)
+            west_damage.append(metadata_damage.bounds[0])
+            north_damage.append(metadata_damage.bounds[-1])
+
+        damage_info['file name']  = file_names_damage
+        damage_info['min'] = min_damage
+        damage_info['max'] = max_damage
+        damage_info['mean'] = mean_damage
+        damage_info['StdDev']= stdDev_damage
+        damage_info['bound west'] = west_damage
+        damage_info['bound north'] = north_damage
+        damage_info.set_index(['file name'], inplace = True)
+                        
+        # %%
+        file_names_depth = []
+        min_depth= []
+        max_depth = []
+        mean_depth = []
+        stdDev_depth = []
+        west_depth = []
+        north_depth = [] 
+        depth_info = gpd.GeoDataFrame()
+        location_file = self.threedi_results.batch['batch_test'].path
+        name ='raster_depth_info.csv'
+        raster_csv_path = os.path.join(location_file, name)
+        depth_data = pd.read_csv((raster_csv_path))
+
+        for depth_raster in depth_rasters:
+            file_name = Path(depth_raster).name
+            file_names_depth.append(file_name)
+            gtif = gdal.Open(depth_raster)
+            srcband = gtif.GetRasterBand(1)
+            stats =  srcband.GetStatistics(True, True) 
+            min_depth.append(round(stats[0],2))
+            max_depth.append(round(stats[1],2))
+            mean_depth.append(round(stats[2],2))
+            stdDev_depth.append(round(stats[3],2))
+            metadata = hrt.RasterMetadata(gtif)
+            west_depth.append(metadata.bounds[0])
+            north_depth.append(metadata.bounds[-1])
+
+        depth_info['file name']  = file_names_depth
+        depth_info['min'] = min_depth
+        depth_info['max'] = max_depth
+        depth_info['mean'] = mean_depth
+        depth_info['StdDev']= stdDev_depth
+        depth_info['bound west'] = west_depth
+        depth_info['bound north'] = north_depth
+        depth_info.set_index(['file name'], inplace = True)
+
+        frames = [ damage_info, depth_info]
+        result = pd.concat(frames)
+        return result
+        # return(damage_info, depth_info)
+
+# %%
 if __name__ == "__main__":
     folder = Folders()    
 
 
-    # Once the rasters are done, we read the information stored in them and then compare that 
-    # with the data from the CSV, which the data used to evaluate if the rasters are good or no.
-    dems_location = self.batch[batch_name].downloads.path
-    files = os.listdir(dems_location)
-    damage_rasters = []
-    depth_rasters = []
-    file_names_damage = []
-    min_damage= []
-    max_damage = []
-    mean_damage = []
-    stdDev_damage = []
-    west_damage = []
-    north_damage = [] 
-    damage_info = gpd.GeoDataFrame()
 
-    location_file = self.threedi_results.batch['batch_test'].path
-
-    for raster_file in files:
-        if raster_file.endswith('.tif') and raster_file.split('_')[0]== 'damage':
-            path_damage = os.path.join(dems_location, raster_file)
-            damage_rasters.append(path_damage)
-        elif raster_file.endswith('.tif') and raster_file.split('_')[0]== 'depth':
-            path_depth = os.path.join(dems_location, raster_file)
-            depth_rasters.append(path_depth)
-            
-    for damage_raster in damage_rasters:
-        file_name = Path(damage_raster).name
-        file_names_damage.append(file_name)
-        gtif = gdal.Open(damage_raster)
-        srcband = gtif.GetRasterBand(1)
-        stats =  srcband.GetStatistics(True, True) 
-        min_damage.append(round(stats[0],6))
-        max_damage.append(round(stats[1],6))
-        mean_damage.append(round(stats[2],4))
-        stdDev_damage.append(round(stats[3],4))
-        metadata_damage = hrt.RasterMetadata(gtif)
-        west_damage.append(metadata_damage.bounds[0])
-        north_damage.append(metadata_damage.bounds[-1])
-
-    damage_info['file name']  = file_names_damage
-    damage_info['min'] = min_damage
-    damage_info['max'] = max_damage
-    damage_info['mean'] = mean_damage
-    damage_info['StdDev']= stdDev_damage
-    damage_info['bound west'] = west_damage
-    damage_info['bound north'] = north_damage
-    damage_info.set_index(['file name'], inplace = True)
-                    
-    # %%
-    file_names_depth = []
-    min_depth= []
-    max_depth = []
-    mean_depth = []
-    stdDev_depth = []
-    west_depth = []
-    north_depth = [] 
-    depth_info = gpd.GeoDataFrame()
-    location_file = self.threedi_results.batch['batch_test'].path
-    name ='raster_depth_info.csv'
-    raster_csv_path = os.path.join(location_file, name)
-    depth_data = pd.read_csv((raster_csv_path))
-
-    for depth_raster in depth_rasters:
-        file_name = Path(depth_raster).name
-        file_names_depth.append(file_name)
-        gtif = gdal.Open(depth_raster)
-        srcband = gtif.GetRasterBand(1)
-        stats =  srcband.GetStatistics(True, True) 
-        min_depth.append(round(stats[0],2))
-        max_depth.append(round(stats[1],2))
-        mean_depth.append(round(stats[2],2))
-        stdDev_depth.append(round(stats[3],2))
-        metadata = hrt.RasterMetadata(gtif)
-        west_depth.append(metadata.bounds[0])
-        north_depth.append(metadata.bounds[-1])
-
-    depth_info['file name']  = file_names_depth
-    depth_info['min'] = min_depth
-    depth_info['max'] = max_depth
-    depth_info['mean'] = mean_depth
-    depth_info['StdDev']= stdDev_depth
-    depth_info['bound west'] = west_depth
-    depth_info['bound north'] = north_depth
-    depth_info.set_index(['file name'], inplace = True)
-
-    frames = [ damage_info, depth_info]
-    result = pd.concat(frames)
-    return result
-    # return(damage_info, depth_info)

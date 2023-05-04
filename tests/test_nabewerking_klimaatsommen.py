@@ -15,8 +15,8 @@ from hhnk_threedi_tools.core.checks.nabewerking_klimaatsommen import Nabewerking
 from hhnk_threedi_tools.core.folders import Folders
 from pandas.testing import assert_frame_equal
 
-# TEST_MODEL = str(pathlib.Path(__file__).parent.absolute()) + "/data/model_test/"
-TEST_MODEL = r'\\corp.hhnk.nl\data\Hydrologen_data\Data\02.modellen\model_test_v2'
+TEST_MODEL = str(pathlib.Path(__file__).parent.absolute()) + "/data/model_test/"
+# TEST_MODEL = r'\\corp.hhnk.nl\data\Hydrologen_data\Data\02.modellen\model_test_v2'
 
 
 def test_run_nabewerking_klimaatsommen():
@@ -41,6 +41,8 @@ def test_run_nabewerking_klimaatsommen():
     # assert output == (damage_data)
     assert_frame_equal(output, result)
     # assert output['mean'] ==1
+
+# %%
 if __name__ == "__main__":
     test_run_nabewerking_klimaatsommen()
 
