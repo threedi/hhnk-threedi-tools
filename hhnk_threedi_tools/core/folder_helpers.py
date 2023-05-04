@@ -15,9 +15,9 @@ from threedigrid.admin.gridresultadmin import GridH5ResultAdmin
 
 
 class ClimateResult(hrt.Folder):
-    """Individual result with download and output folder"""
+    """Individual batch result with download and output folder"""
 
-    def __init__(self, base, create):
+    def __init__(self, base, create=False):
         super().__init__(base, create=create)
 
         self.downloads = self.ClimateResultDownloads(self.base)
@@ -35,7 +35,7 @@ class ClimateResult(hrt.Folder):
 
     class ClimateResultDownloads(hrt.Folder):
         def __init__(self, base):
-            super().__init__(os.path.join(base, "01_downloads"))
+            super().__init__(os.path.join(base, "01_downloads"), create=False)
 
             # Files
             self.names = None  # Initializes names.setter
@@ -75,7 +75,7 @@ class ClimateResult(hrt.Folder):
                 super().__init__(base, create=create)
 
                 #Add rasters to main downloadfolder
-                raster_types = ["max_depth", "total_damage", "wlvl_max"]
+                raster_types = ["depth_max", "damage_total", "wlvl_max"]
                 for rastertype in raster_types:
                     self.add_file(rastertype, f"{rastertype}_{name}.tif", ftype="raster")
                 self.structure_extra = []
@@ -93,7 +93,7 @@ class ClimateResult(hrt.Folder):
 
     class ClimateResultOutput(hrt.Folder):
         def __init__(self, base):
-            super().__init__(base + "/02_output_rasters")
+            super().__init__(base + "/02_output_rasters", create=False)
 
             # Folders
             self.temp = self.ClimateResultOutputTemp(self.base)
@@ -154,8 +154,8 @@ class ClimateResult(hrt.Folder):
 
 
         class ClimateResultOutputTemp(hrt.Folder):
-            def __init__(self, base, create):
-                super().__init__(os.path.join(base, "temp", create=create))
+            def __init__(self, base):
+                super().__init__(os.path.join(base, "temp"), create=False)
 
                 self.add_file("peilgebieden_diepte", "peilgebieden_diepte.tif", "raster")
                 self.add_file("peilgebieden_schade", "peilgebieden_schade.tif", "raster")

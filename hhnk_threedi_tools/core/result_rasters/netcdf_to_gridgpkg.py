@@ -3,12 +3,13 @@ from shapely.geometry import box
 import numpy as np
 import geopandas as gpd
 import pandas as pd
-import hhnk_threedi_tools as htt
+from hhnk_threedi_tools import Folders
+import hhnk_research_tools as hrt
 
 class ThreediGrid:
     def __init__(self, 
-                    threedi_result : htt.core.folders.ThreediResult, 
-                    folder : htt.core.folders.Folders = None, 
+                    threedi_result : hrt.ThreediResult, 
+                    folder : Folders = None, 
                     waterdeel_path : str = None, 
                     waterdeel_layer : str = "Waterdeel",
                     panden_path : str = None,

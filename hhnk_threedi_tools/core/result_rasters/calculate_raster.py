@@ -207,7 +207,7 @@ class BaseCalculatorGPKG:
                 print(f"Output exists: {self.output_raster.source_path}")
                 return
             else:
-                self.output_raster.pl.unlink
+                self.output_raster.pl.unlink()
 
 
         #Create rasters

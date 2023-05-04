@@ -401,7 +401,7 @@ from shapely.geometry import box
 
 class ThreediGrid:
     def __init__(self, folder, threedi_result,):
-        """threedi_result : htt.core.folders.ThreediResult instance"""
+        """threedi_result : hrt.ThreediResult instance"""
 
         self.folder=folder
         self.threedi_result = threedi_result
