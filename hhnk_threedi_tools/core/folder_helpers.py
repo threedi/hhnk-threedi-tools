@@ -38,7 +38,7 @@ class ClimateResult(hrt.Folder):
             super().__init__(os.path.join(base, "01_downloads"), create=False)
 
             # Files
-            self.names = None  # Initializes names.setter
+            self.names = []  # Initializes names.setter
 
             for name in self.names:
                 setattr(self, name, self.ClimateResultScenario(self.base, name))
