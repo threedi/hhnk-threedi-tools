@@ -16,6 +16,7 @@ from shapely import wkt
 # research-tools
 import hhnk_research_tools as hrt
 from hhnk_research_tools.variables import OPEN_FILE_GDB_DRIVER, ESRI_DRIVER, GPKG
+from pathlib import Path
 
 # Local imports
 from hhnk_threedi_tools.core.folders import Folders, create_tif_path
@@ -222,7 +223,7 @@ class SqliteTest:
         except Exception as e:
             raise e from None
 
-    def run_dewatering_depth(self, output_file):
+    def run_dewatering_depth(self, output_file, overwrite=False):
         """
         Compares initial water level from fixed drainage level areas with
         surface level in DEM of model. Initial water level should be below
@@ -233,10 +234,16 @@ class SqliteTest:
         init_waterlevel_value_field = self.fenv.source_data.init_waterlevel_val_field
 
         try:
+            if Path(output_file).exists():
+                if overwrite is False:
+                    return output_file
+                else:
+                    Path(output_file).unlink()
+
             # Load layers
             fixeddrainage = gpd.read_file(
                 self.datachecker,
-                driver=OPEN_FILE_GDB_DRIVER,
+                driver=GPKG,
                 layer=self.datachecker_fixeddrainage,
             )
             dem_array, dem_nodata, dem_metadata = hrt.load_gdal_raster(self.dem)
@@ -260,6 +267,7 @@ class SqliteTest:
                 raster_array=dewatering_array,
                 nodata=dem_nodata,
                 metadata=dem_metadata,
+                overwrite=True
             )
             self.results["dewatering_depth"] = output_file
             return output_file
@@ -708,7 +716,7 @@ def add_damo_info(damo_path, layer, gdf):
 def add_datacheck_info(datachecker_path, layer, gdf):
     try:
         datachecker_gdb = gpd.read_file(
-            datachecker_path, driver=OPEN_FILE_GDB_DRIVER, layer=layer
+            datachecker_path, driver=GPKG, layer=layer
         )
         new_gdf = gdf.merge(
             datachecker_gdb[DATACHECKER_FIELDS],

@@ -4,7 +4,7 @@ if __name__ == "__main__":
 
 # First-party imports
 import os
-import pathlib
+from pathlib import Path
 import inspect
 
 # Local imports
@@ -13,7 +13,7 @@ from hhnk_threedi_tools.core.folders import Folders
 
 
 # Globals
-TEST_MODEL = str(pathlib.Path(__file__).parent.absolute()) + "/data/model_test/"
+TEST_MODEL = Path(__file__).parent.absolute() / "data/model_test/"
 
 
 class TestSqlite:
@@ -94,10 +94,11 @@ class TestSqlite:
 
 # %%
 if __name__ == "__main__":
-    self = TestSqlite()
+    selftest = TestSqlite()
+    self = selftest.sqlite_test
 
-    #Run all testfunctions
-    for i in dir(self):
-        if i.startswith('test_') and hasattr(inspect.getattr_static(self,i), '__call__'):
+    # Run all testfunctions
+    for i in dir(selftest):
+        if i.startswith('test_') and hasattr(inspect.getattr_static(selftest,i), '__call__'):
             print(i)
-            getattr(self, i)()
+            getattr(selftest, i)()
