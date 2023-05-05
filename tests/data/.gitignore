@@ -1,4 +1,4 @@
 new_project
 */04_test_results
-/model_test/01_source_data/logging
-/model_test/01_source_data/preprocessed
+model_test/01_source_data/modelbuilder_output/logging/
+model_test/01_source_data/modelbuilder_output/preprocessed/

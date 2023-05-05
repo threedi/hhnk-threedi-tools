@@ -64,8 +64,10 @@ class ThreediGrid:
         """Load waterdeel. if folder is defined as input we get if from there.
         Otherwise the path needs to be provided """
         gdf = None
-        if self.folder is not None:
-            gdf = self.folder.source_data.panden.load(layer=self.panden_layer)
+        if self.panden_path is None:
+            if self.folder is not None:
+                if self.folder.source_data.panden.exists:
+                    gdf = self.folder.source_data.panden.load(layer=self.panden_layer)
             
         elif self.panden_path is not None:
             if self.panden_path.endswith(".gdb"):

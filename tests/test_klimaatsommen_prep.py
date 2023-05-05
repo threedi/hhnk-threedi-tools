@@ -4,17 +4,16 @@ if __name__ == "__main__":
     import set_local_paths  # add local git repos.
 
 # First-party imports
-import os
 import pathlib
 import pandas as pd
 from pathlib import Path
+
 # Local imports
 from hhnk_threedi_tools.core.climate_scenarios.klimaatsommen_prep import KlimaatsommenPrep
 from hhnk_threedi_tools.core.folders import Folders
-from pandas.testing import assert_frame_equal
 
-TEST_MODEL = str(pathlib.Path(__file__).parent.absolute()) + "/data/model_test/"
-# TEST_MODEL = r'\\corp.hhnk.nl\data\Hydrologen_data\Data\02.modellen\model_test_v2'
+
+TEST_MODEL = pathlib.Path(__file__).parent.absolute() / "data/model_test/"
 
 
 def test_klimaatsommenprep():
@@ -30,20 +29,17 @@ def test_klimaatsommenprep():
         SCHADESCHATTER_PATH=SCHADESCHATTER_PATH
     )
     
-    klimaatsommenrep.run()
+    klimaatsommenrep.run(overwrite=True)
 
     for raster_type in ["depth_max", "damage_total"]:
-        scenario_metadata = pd.read_csv(klimaatsommenrep.info_file[raster_type])
-        assertion_metadata = pd.read_csv(klimaatsommenrep.info_file[raster_type].with_stem(f"{raster_type}_info_expected"))
+        scenario_metadata = pd.read_csv(klimaatsommenrep.info_file[raster_type], sep=";")
+        assertion_metadata = pd.read_csv(klimaatsommenrep.info_file[raster_type].with_stem(f"{raster_type}_info_expected"), sep=";")
         # scenario_metadata = damage_data.drop(['Unnamed: 0'], axis=1)
         # damage_data.set_index(['file name'], inplace = True)
 
-        assert_frame_equal(scenario_metadata, assertion_metadata)
+        pd.testing.assert_frame_equal(scenario_metadata, assertion_metadata)
 
 
 # %%
 if __name__ == "__main__":
     test_klimaatsommenprep()
-
-
-# %%

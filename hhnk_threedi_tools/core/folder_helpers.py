@@ -93,7 +93,7 @@ class ClimateResult(hrt.Folder):
 
     class ClimateResultOutput(hrt.Folder):
         def __init__(self, base):
-            super().__init__(base + "/02_output_rasters", create=False)
+            super().__init__(os.path.join(base, "02_output_rasters"), create=False)
 
             # Folders
             self.temp = self.ClimateResultOutputTemp(self.base)
