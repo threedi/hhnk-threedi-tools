@@ -12,6 +12,7 @@ build
 .eggs
 hhnk_threedi_tools/variables/localsettings.py
 hhnk_threedi_tools/tests/data/new_project/
+*.aux.xml
 
 #FIXME temporary
 01_downloads_blokt100fout

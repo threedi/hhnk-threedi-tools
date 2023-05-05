@@ -53,6 +53,7 @@ dependencies:
     - threedi_raster_edits==0.26
     - threedi-api-client==4.1.1
     - threedigrid_builder==1.8.0
+    - threedigrid_builder==1.10.0 #ThreediToolbox 2.5.2
 
     #Plugin
     - hhnk_research_tools==2023.2

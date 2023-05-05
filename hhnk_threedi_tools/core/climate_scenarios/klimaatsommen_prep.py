@@ -264,16 +264,15 @@ class KlimaatsommenPrep:
         """Raster statistics for single scenario"""
         raster = getattr(scenario, raster_type)
    
-        raster_src = raster.open_gdal_source_read()
-        stats = raster_src.GetRasterBand(1).GetStatistics(True, True) #[min, max, mean, std]
+        stats = raster.statistics(approve_ok=True, force=True)
 
         #Fill row data
         info_row = pd.Series(dtype=object)
         info_row['filename']  = raster.name
-        info_row['min'] = round(stats[0],6)
-        info_row['max'] = round(stats[1],6)
-        info_row['mean'] = round(stats[2],4)
-        info_row['std'] = round(stats[3],4)
+        info_row['min'] = round(stats["min"],6)
+        info_row['max'] = round(stats["max"],6)
+        info_row['mean'] = round(stats["mean"],4)
+        info_row['std'] = round(stats["std"],4)
         info_row['bounds'] = raster.metadata.bounds
         info_row['x_res'] = str(raster.metadata.x_res)
         info_row['y_res'] = str(raster.metadata.y_res)
@@ -299,4 +298,4 @@ if __name__ == "__main__":
         SCHADESCHATTER_PATH=SCHADESCHATTER_PATH
     )
 
-    self.run(overwrite=True)
+    self.run(overwrite=False)

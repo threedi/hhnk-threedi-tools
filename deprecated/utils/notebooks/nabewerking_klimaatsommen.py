@@ -32,7 +32,6 @@ import hhnk_threedi_tools.core.climate_scenarios.peilgebieden as peilgebieden
 from hhnk_threedi_tools.core.climate_scenarios.masker_filter_rasters import (
     rasterize_maskerkaart,
     apply_mask_to_raster,
-    remove_mask_from_raster,
 )
 
 import os

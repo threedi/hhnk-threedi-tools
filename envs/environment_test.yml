@@ -41,5 +41,5 @@ dependencies:
     - threedi_schema==0.216.4 #ThreediToolbox 2.5.2
     - threedi_raster_edits==0.26
     - threedi-api-client==4.1.1
-    - threedigrid_builder==1.8.0
+    - threedigrid_builder==1.10.0 #ThreediToolbox 2.5.2
     - hhnk_research_tools==2023.1

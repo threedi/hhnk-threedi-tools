@@ -1,3 +1,4 @@
+# %%
 # -*- coding: utf-8 -*-
 """
 Created on Tue Aug 24 14:11:45 2021
@@ -19,11 +20,9 @@ from hhnk_research_tools.variables import OPEN_FILE_GDB_DRIVER, ESRI_DRIVER, GPK
 from pathlib import Path
 
 # Local imports
-from hhnk_threedi_tools.core.folders import Folders, create_tif_path
+from hhnk_threedi_tools.core.folders import Folders
 from threedigrid_builder import make_gridadmin
 
-
-# %%
 # queries
 from hhnk_threedi_tools.utils.queries import (
     controlled_structures_query,
@@ -213,11 +212,12 @@ class SqliteTest:
 
     def run_dem_max_value(self):
         try:
-            dem_array, dem_nodata, dem_metadata = hrt.load_gdal_raster(self.dem)
-            if np.max(dem_array) > DEM_MAX_VALUE:
-                result = f"Maximale waarde DEM: {np.max(dem_array)} is te hoog"
+            dem = hrt.Raster(self.dem)
+            stats = dem.statistics(approve_ok=False, force=True)
+            if stats['max'] > DEM_MAX_VALUE:
+                result = f"Maximale waarde DEM: {stats['max']} is te hoog"
             else:
-                result = f"Maximale waarde DEM: {np.max(dem_array)} voldoet aan de norm"
+                result = f"Maximale waarde DEM: {stats['max']} voldoet aan de norm"
             self.results["dem_max_value"] = result
             return result
         except Exception as e:
@@ -255,7 +255,9 @@ class SqliteTest:
                 nodata=dem_nodata,
                 metadata=dem_metadata,
                 driver="MEM",
+                read_array=True,
             )
+
             dewatering_array = np.subtract(dem_array, initial_water_level_arr)
             # restore nodata pixels using mask
             nodata_mask = dem_array == dem_nodata
@@ -866,3 +868,10 @@ def _write_grid_to_file(grid, grid_type, output_path):
     df = pd.DataFrame(grid[grid_type])
     gdf = hrt.df_convert_to_gdf(df, geom_col_type="wkb", src_crs="28992")
     hrt.gdf_write_to_geopackage(gdf, filepath=output_path)
+
+
+# %%
+
+if __name__=="__main__":
+    raster_src = raster.open_gdal_source_read()
+    stats = raster_src.GetRasterBand(1).GetStatistics(True, True) #[min, max, mean, std]

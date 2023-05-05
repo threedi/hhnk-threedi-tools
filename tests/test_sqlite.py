@@ -94,6 +94,8 @@ class TestSqlite:
 
 # %%
 if __name__ == "__main__":
+    import hhnk_research_tools as hrt
+
     selftest = TestSqlite()
     self = selftest.sqlite_test
 
