@@ -103,7 +103,7 @@ from hhnk_threedi_tools.variables.database_aliases import (
 
 from hhnk_threedi_tools.variables.datachecker_variables import (
     peil_id_col,
-    streefpeil_bwn_col,
+    COL_STREEFPEIL_BWN,
     geometry_col,
 )
 
@@ -143,28 +143,18 @@ class SqliteTest:
     def __init__(
         self,
         folder: Folders,
-        # model_path=None,
-        # dem_path=None,
-        # datachecker_path=None,
-        # damo_path=None,
-        # hdb_path=None,
-        # polder_polygon_path=None,
-        # channels_from_profiles_path=None,
     ):
         self.fenv = folder
 
+        self.output_fd = self.fenv.output.sqlite_tests
+
         self.model = self.fenv.model.schema_base.database.path
-        self.dem = self.fenv.model.schema_base.rasters.dem.path
-        self.datachecker = self.fenv.source_data.datachecker.path
+        self.dem = hrt.Raster(self.fenv.model.schema_base.rasters.dem)
+        self.datachecker = self.fenv.source_data.datachecker
         self.damo = self.fenv.source_data.damo.path
-        self.hdb_path = self.fenv.source_data.hdb.path
-        self.polder_polygon = self.fenv.source_data.polder_polygon.path
-        self.channels_from_profiles = (
-            self.fenv.source_data.modelbuilder.channel_from_profiles.path
-        )
-        self.datachecker_fixeddrainage = (
-            self.fenv.source_data.datachecker_fixed_drainage
-        )
+        self.channels_from_profiles = self.fenv.source_data.modelbuilder.channel_from_profiles
+
+        self.layer_fixeddrainage = self.fenv.source_data.datachecker.layers.fixeddrainagelevelarea
 
         self.results = {}
 
@@ -191,7 +181,7 @@ class SqliteTest:
                 [START_ACTION, MIN_ACTION, MAX_ACTION]
             ] = model_control_gdf.apply(get_action_values, axis=1, result_type="expand")
             hdb_stuw_gdf = gpd.read_file(
-                self.hdb_path, driver=OPEN_FILE_GDB_DRIVER, layer=hdb_layer
+                self.fenv.source_data.hdb.path, driver=OPEN_FILE_GDB_DRIVER, layer=hdb_layer
             )[["CODE", "STREEFPEIL", "MIN_KRUINHOOGTE", "MAX_KRUINHOOGTE"]]
             hdb_stuw_gdf.rename(
                 columns={
@@ -212,8 +202,7 @@ class SqliteTest:
 
     def run_dem_max_value(self):
         try:
-            dem = hrt.Raster(self.dem)
-            stats = dem.statistics(approve_ok=False, force=True)
+            stats = self.dem.statistics(approve_ok=False, force=True)
             if stats['max'] > DEM_MAX_VALUE:
                 result = f"Maximale waarde DEM: {stats['max']} is te hoog"
             else:
@@ -223,58 +212,126 @@ class SqliteTest:
         except Exception as e:
             raise e from None
 
-    def run_dewatering_depth(self, output_file, overwrite=False):
+    # def run_dewatering_depth(self, output_file, overwrite=False):
+    #     """
+    #     Compares initial water level from fixed drainage level areas with
+    #     surface level in DEM of model. Initial water level should be below
+    #     surface level.
+    #     """
+    #     # This add .tif extension to output file name, is needed for save_raster_array_to_tif function
+
+    #     init_waterlevel_value_field = self.fenv.source_data.init_waterlevel_val_field
+
+    #     try:
+    #         if Path(output_file).exists():
+    #             if overwrite is False:
+    #                 return output_file
+    #             else:
+    #                 Path(output_file).unlink()
+
+    #         # Load layers
+    #         fixeddrainage = gpd.read_file(
+    #             self.datachecker,
+    #             driver=GPKG,
+    #             layer=self.datachecker_fixeddrainage,
+    #         )
+    #         dem_array, dem_nodata, dem_metadata = hrt.load_gdal_raster(self.dem)
+    #         # Rasterize fixeddrainage
+    #         initial_water_level_arr = hrt.gdf_to_raster(
+    #             gdf=fixeddrainage,
+    #             value_field=init_waterlevel_value_field,
+    #             raster_out="",
+    #             nodata=dem_nodata,
+    #             metadata=dem_metadata,
+    #             driver="MEM",
+    #             read_array=True,
+    #         )
+
+    #         dewatering_array = np.subtract(dem_array, initial_water_level_arr)
+    #         # restore nodata pixels using mask
+    #         nodata_mask = dem_array == dem_nodata
+
+    #         dewatering_array[nodata_mask] = dem_nodata
+    #         # Save array to raster
+    #         hrt.save_raster_array_to_tiff(
+    #             output_file=output_file,
+    #             raster_array=dewatering_array,
+    #             nodata=dem_nodata,
+    #             metadata=dem_metadata,
+    #             overwrite=True
+    #         )
+    #         self.results["dewatering_depth"] = output_file
+    #         return output_file
+    #     except Exception as e:
+    #         raise e from None
+
+    def run_dewatering_depth(self, overwrite=False):
         """
         Compares initial water level from fixed drainage level areas with
-        surface level in DEM of model. Initial water level should be below
-        surface level.
+        surface level in DEM of model. Initial water level should mostly 
+        be below surface level.
         """
-        # This add .tif extension to output file name, is needed for save_raster_array_to_tif function
+        def _create_drooglegging_raster(self, windows, band_out, **kwargs):
+            """hrt.Raster_calculator custom_run_window_function"""
+            self.dem = self.raster1
+            self.wlvl = self.raster2
 
-        init_waterlevel_value_field = self.fenv.source_data.init_waterlevel_val_field
+            block_dem = self.dem._read_array(window=windows["raster1"])
+            block_wlvl = self.wlvl._read_array(window=windows["raster2"])
+
+            #Calculate output
+            block_depth = np.subtract(block_wlvl, block_dem)
+
+            #Mask output
+            nodatamask = (block_dem == self.dem.nodata) | (block_dem == 10)
+            block_depth[nodatamask] = self.raster_out.nodata
+
+            #Get the window of the small raster
+            window_small = windows[[k for k,v in self.raster_mapping.items() if v=="small"][0]]
+
+            # Write to file
+            band_out.WriteArray(block_depth, xoff=window_small[0], yoff=window_small[1])
 
         try:
-            if Path(output_file).exists():
-                if overwrite is False:
-                    return output_file
-                else:
-                    Path(output_file).unlink()
-
             # Load layers
-            fixeddrainage = gpd.read_file(
-                self.datachecker,
-                driver=GPKG,
-                layer=self.datachecker_fixeddrainage,
-            )
-            dem_array, dem_nodata, dem_metadata = hrt.load_gdal_raster(self.dem)
+            fixeddrainage_gdf = self.layer_fixeddrainage.load()
+            wlvl_raster = self.output_fd.streefpeil
+            drooglegging_raster = self.output_fd.drooglegging
+
+            if drooglegging_raster.pl.exists():
+                if overwrite is False:
+                    return
+                else:
+                    drooglegging_raster.unlink_if_exists()
+
             # Rasterize fixeddrainage
-            initial_water_level_arr = hrt.gdf_to_raster(
-                gdf=fixeddrainage,
-                value_field=init_waterlevel_value_field,
-                raster_out="",
-                nodata=dem_nodata,
-                metadata=dem_metadata,
-                driver="MEM",
-                read_array=True,
+            hrt.gdf_to_raster(
+                gdf=fixeddrainage_gdf,
+                value_field=COL_STREEFPEIL_BWN,
+                raster_out=wlvl_raster,
+                nodata=self.dem.nodata,
+                metadata=self.dem.metadata,
+                read_array=False,
+                overwrite=overwrite,
             )
 
-            dewatering_array = np.subtract(dem_array, initial_water_level_arr)
-            # restore nodata pixels using mask
-            nodata_mask = dem_array == dem_nodata
+            #Calculate drooglegging raster
+            drooglegging_calculator = hrt.RasterCalculator(
+                            raster1=self.dem, 
+                            raster2=wlvl_raster, 
+                            raster_out=drooglegging_raster, 
+                            custom_run_window_function=_create_drooglegging_raster,
+                            output_nodata=self.dem.nodata,
+                            verbose=False)
 
-            dewatering_array[nodata_mask] = dem_nodata
-            # Save array to raster
-            hrt.save_raster_array_to_tiff(
-                output_file=output_file,
-                raster_array=dewatering_array,
-                nodata=dem_nodata,
-                metadata=dem_metadata,
-                overwrite=True
-            )
-            self.results["dewatering_depth"] = output_file
-            return output_file
+            drooglegging_calculator.run(overwrite=overwrite)
+
+            #remove temp files
+            wlvl_raster.unlink_if_exists()
+            # self.results["dewatering_depth"] = output_file
         except Exception as e:
             raise e from None
+    
 
     def run_model_checks(self):
         """
@@ -328,7 +385,7 @@ class SqliteTest:
                 index_col=id_col,
             )  # conn=test_params.conn, index_col=DEFAULT_INDEX_COLUMN
             polygon_imp_surface = gpd.read_file(
-                self.polder_polygon, driver=ESRI_DRIVER
+                self.fenv.source_data.polder_polygon.path, driver=ESRI_DRIVER
             )  # read_file(polder_file, driver=ESRI_DRIVER)
             db_surface, polygon_surface, area_diff = calc_surfaces_diff(
                 imp_surface_db, polygon_imp_surface
@@ -461,10 +518,8 @@ class SqliteTest:
                 conn_nodes_geo,
             ) = read_input(
                 database_path=self.model,
-                datachecker_path=self.datachecker,
                 channel_profile_path=self.channels_from_profiles,
-                damo_path=self.damo,
-                datachecker_layer=self.datachecker_fixeddrainage,
+                fixeddrainage_layer=self.fenv.source_data.datachecker.layers.fixeddrainagelevelarea,
                 damo_layer=self.fenv.source_data.damo_waterdeel_layer,
             )
             fixeddrainage = calc_area(
@@ -759,19 +814,16 @@ def expand_multipolygon(df):
 
 def read_input(
     database_path,
-    datachecker_path,
     channel_profile_path,
-    damo_path,
-    datachecker_layer,
+    fixeddrainage_layer,
     damo_layer,
 ):
     try:
-        fixeddrainage = gpd.read_file(
-            datachecker_path, layer=datachecker_layer, reader=GPKG
-        )[[peil_id_col, code_col, streefpeil_bwn_col, geometry_col]]
+        fixeddrainage = fixeddrainage_layer.load(
+                            )[[peil_id_col, code_col, COL_STREEFPEIL_BWN, geometry_col]]
         fixeddrainage = expand_multipolygon(fixeddrainage)
         modelbuilder_waterdeel = gpd.read_file(channel_profile_path, driver=ESRI_DRIVER)
-        damo_waterdeel = gpd.read_file(damo_path, layer=damo_layer, reader=GPKG)
+        damo_waterdeel = damo_layer.load()
         conn_nodes_geo = hrt.sqlite_table_to_gdf(
             query=watersurface_conn_node_query,
             id_col=a_watersurf_conn_id,

@@ -237,6 +237,7 @@ class Folders(Folder):
         SUB_FOLDERS = ["01_source_data", "02_schematisation", "03_3di_results", "04_test_results"]
         return all([self.pl.joinpath(i).exists() for i in SUB_FOLDERS])
 
+
 class SourceDir(Folder):
     """
     Paths to source data (datachecker, DAMO, HDB)
@@ -255,20 +256,30 @@ class SourceDir(Folder):
 
         # Files
         self.add_file("damo", DAMO, ftype="filegdb")
+        self.damo.add_layers(["DuikerSifonHevel", 
+                             "waterdeel"])
+        
         self.add_file("hdb", HDB, ftype="filegdb")
-        self.add_file("datachecker", "datachecker_output.gpkg", ftype="filegdb")
+        self.hdb.add_layer("sturing_3di")
+
+        self.add_file("datachecker", "datachecker_output.gpkg", ftype="gpkg")
+        self.datachecker.add_layers(["fixeddrainagelevelarea",
+                                    "culvert"])
+
         self.add_file("polder_polygon", POLDER_POLY)
         self.add_file("panden", "panden.gpkg", ftype="filegdb")
 
         # Layers
-        self.add_layer("datachecker_fixed_drainage", "fixeddrainagelevelarea")
-        self.add_layer("datachecker_culvert", "culvert")
-        self.add_layer("hdb_sturing_3di_layer", "Sturing_3Di")
-        self.add_layer("damo_duiker_sifon_layer", "DuikerSifonHevel")
-        self.add_layer("damo_waterdeel_layer", "waterdeel")
-        self.add_layer("init_waterlevel_val_field", "streefpeil_bwn2")
-        self.add_layer("init_water_level_filename", "initieel_water_level")
-        self.add_layer("dewatering_filename", "drooglegging")
+        # self.add_layer("datachecker_fixed_drainage", "fixeddrainagelevelarea")
+        # self.add_layer("datachecker_culvert", "culvert")
+        # self.add_layer("hdb_sturing_3di_layer", "Sturing_3Di")
+        # self.add_layer("damo_duiker_sifon_layer", "DuikerSifonHevel")
+        # self.add_layer("damo_waterdeel_layer", "waterdeel")
+        # self.add_layer("init_waterlevel_val_field", "streefpeil_bwn2")
+        # self.add_layer("init_water_level_filename", "initieel_water_level")
+
+
+
 
 
     def create_readme(self):
@@ -566,6 +577,7 @@ class OutputDirParent(Folder):
             self.add_file("overlappende_profielen", "overlappende_profielen.gpkg", "file")
             self.add_file("profielen_geen_vertex", "profielen_geen_vertex.gpkg", "file")
 
+            self.add_file("streefpeil", r"/temp/streefpeil.tif", "raster")
 
     class OutputDirBankLevel(Folder):
         def __init__(self, base, create):

@@ -22,7 +22,7 @@ from hhnk_threedi_tools.core.folders import Folders
 from hhnk_threedi_tools.variables.default_variables import DEF_TRGT_CRS, DEF_SRC_CRS
 from hhnk_threedi_tools.variables.datachecker_variables import (
     peil_id_col,
-    streefpeil_bwn_col,
+    COL_STREEFPEIL_BWN,
 )
 from hhnk_threedi_tools.utils.queries import (
     manholes_query,
@@ -515,7 +515,7 @@ def divergent_waterlevel_nodes(
         # nodes_in_drainage_area
         nodes_with_fixeddrainage_id = gpd.sjoin(
             conn_nodes,
-            fixeddrainage[[peil_id_col, streefpeil_bwn_col, df_geo_col]],
+            fixeddrainage[[peil_id_col, COL_STREEFPEIL_BWN, df_geo_col]],
         )
 
         # initialize new dataframe

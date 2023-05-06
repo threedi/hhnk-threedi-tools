@@ -1,4 +1,5 @@
-# %%
+# %% 
+# Test Sqlite test
 if __name__ == "__main__":
     import set_local_paths  # add local git repos.
 
@@ -10,7 +11,7 @@ import inspect
 # Local imports
 from hhnk_threedi_tools.core.checks.sqlite import SqliteTest
 from hhnk_threedi_tools.core.folders import Folders
-
+from hhnk_threedi_tools.variables.datachecker_variables import COL_STREEFPEIL_BWN
 
 # Globals
 TEST_MODEL = Path(__file__).parent.absolute() / "data/model_test/"

@@ -132,7 +132,6 @@ class OneDTwoDTest:
             #Mask output
             nodatamask = (block_dem == self.dem.nodata) | (block_dem == 10) | (block_depth < 0)
             block_depth[nodatamask] = self.raster_out.nodata
-            block_out = None #replace with a calculation.
 
             #Get the window of the small raster
             window_small = windows[[k for k,v in self.raster_mapping.items() if v=="small"][0]]
@@ -173,7 +172,8 @@ class OneDTwoDTest:
                 )
 
                 #Calculate depth raster
-                depth_calculator = hrt.RasterCalculator(raster1=self.dem, 
+                depth_calculator = hrt.RasterCalculator(
+                                raster1=self.dem, 
                                 raster2=wlvl_raster, 
                                 raster_out=depth_raster, 
                                 custom_run_window_function=_create_depth_raster,
