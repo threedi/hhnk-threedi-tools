@@ -509,8 +509,8 @@ class OutputDirParent(Folder):
         self.sqlite_tests = self.OutputDirSqlite(self.full_path("sqlite_tests"), create=create)
         self.bank_levels = self.OutputDirBankLevel(self.full_path("bank_levels"), create=create)
         self.zero_d_one_d = self.OutputDir0d1d(base=self.base, name="0d1d_tests", create=create)
-        self.one_d_two_d = self.OutputDir1d2d(caller=self, base=self.base, name="1d2d_tests", create=create)
-        self.climate = self.OutputDirClimate(caller=self, base=self.base, name="climate", create=create)
+        self.one_d_two_d = self.OutputDir1d2d(base=self.base, name="1d2d_tests", create=create)
+        self.climate = self.OutputDirClimate(base=self.base, name="climate", create=create)
 
         if create:
             self.create_readme()
@@ -611,18 +611,31 @@ class OutputDirParent(Folder):
 
 
     class OutputDir1d2d(hrt.RevisionsDir):
-        def __init__(self, caller, base, name, create):
-            super().__init__(base, name, returnclass=caller.Outputd1d2d_revision, create=create)
+        def __init__(self, base, name, create):
+            super().__init__(base, name, returnclass=self.Outputd1d2d_revision, create=create)
 
         @property
         def structure(self):
             return self.revision_structure("one_d_two_d")
 
+        class Outputd1d2d_revision(Folder):
+            """Outputfolder 1d2d for a specific revision."""
+
+            def __init__(self, base, create=True):
+                super().__init__(base, create=create)
+
+                self.add_file("grid_nodes_2d", "grid_nodes_2d.gpkg", "file")
+                self.add_file("stroming_1d2d_test", "stroming_1d2d_test.gpkg", "file")
+                for T in [1, 3, 15]:
+                    self.add_file(f"waterstand_T{T}", f"waterstand_T{T}.tif", "raster")
+                    self.add_file(f"waterdiepte_T{T}", f"waterdiepte_T{T}.tif", "raster")
+
+
 
 # TODO hoort deze class hier nog? resultaten staan op een andere plek
-    class OutputDirClimate(hrt.RevisionsDir):
-        def __init__(self, caller, base, name, create=True):
-            super().__init__(base, name, returnclass=caller.Outputd1d2d_revision, create=create)
+    class OutputDirClimate(hrt.Folder):
+        def __init__(self, base, name, create=True):
+            super().__init__(os.path.join(base, name), create=create)
             # if create:
             #     self.create()  # create outputfolder if parent exists
 
@@ -631,17 +644,6 @@ class OutputDirParent(Folder):
             return self.revision_structure("Climate")
 
 
-    class Outputd1d2d_revision(Folder):
-        """Outputfolder 1d2d for a specific revision."""
-
-        def __init__(self, base, create=True):
-            super().__init__(base, create=create)
-
-            self.add_file("grid_nodes_2d", "grid_nodes_2d.gpkg", "file")
-            self.add_file("stroming_1d2d_test", "stroming_1d2d_test.gpkg", "file")
-            for T in [1, 3, 15]:
-                self.add_file(f"waterstand_T{T}", f"waterstand_T{T}.tif", "raster")
-                self.add_file(f"waterdiepte_T{T}", f"waterdiepte_T{T}.tif", "raster")
 
 
 # class Layers(Folder):

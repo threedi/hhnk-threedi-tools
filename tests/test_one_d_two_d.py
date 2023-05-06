@@ -31,15 +31,7 @@ class TestOneDTwoD:
     #Remove previous output
     folder.output.one_d_two_d.unlink_contents(rmdirs=True)
 
-    test_1d2d = OneDTwoDTest(folder=folder, revision=REVISION)
-
-    def test_run_depth_at_timesteps_test(self):
-        """test of de 0d1d test werkt"""
-        output = self.test_1d2d.run_levels_depths_at_timesteps()
-
-        assert len(output) > 0
-        assert output[0] == 1
-        assert "waterdiepte_T15.tif" in self.test_1d2d.fenv.output.one_d_two_d[self.test_1d2d.revision].content
+    test_1d2d= OneDTwoDTest(folder=folder, revision=REVISION)
 
 
     def test_run_flowline_stats(self):
@@ -55,12 +47,23 @@ class TestOneDTwoD:
         assert round(output["minimal_dem"][1], 3) == 1.54
 
 
+    def test_run_depth_at_timesteps_test(self):
+        """test of de 0d1d test werkt"""
+
+        self.test_1d2d.run_wlvl_depth_at_timesteps(overwrite=True)
+
+        assert "waterdiepte_T15.tif" in self.test_1d2d.fenv.output.one_d_two_d[self.test_1d2d.revision].content
+        assert self.test_1d2d.fenv.output.one_d_two_d[self.test_1d2d.revision].waterdiepte_T1.shape == [787, 242]
+        assert self.test_1d2d.fenv.output.one_d_two_d[self.test_1d2d.revision].waterdiepte_T15.sum() == 1576.087158203125
+
+
 # %%
 if __name__ == "__main__":
     import inspect
     selftest = TestOneDTwoD()
     self = selftest.test_1d2d
-    #Run all testfunctions
+
+    # Run all testfunctions
     for i in dir(selftest):
         if i.startswith('test_') and hasattr(inspect.getattr_static(selftest,i), '__call__'):
             print(i)
