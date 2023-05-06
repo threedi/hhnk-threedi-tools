@@ -112,53 +112,6 @@ class OneDTwoDTest:
         return self.iresults
 
 
-
-    # def run_levels_depths_at_timesteps(self):
-    #     """
-    #     Deze functie bepaalt de waterstanden op de gegeven tijdstappen op basis van het 3di resultaat.
-    #     Vervolgens wordt op basis van de DEM en de waterstand per tijdstap de waterdiepte bepaald.
-    #     """
-    #     try:
-    #         timesteps_arr = [
-    #             self.timestep_df["t_start_rain"].value,
-    #             self.timestep_df["t_end_rain"].value,
-    #             self.timestep_df["t_end_sum"].value,
-    #         ]
-    #         # hours since start of calculation
-    #         timestrings = [
-    #             int(round(self.grid_result.nodes.timestamps[t] / 60 / 60, 0))
-    #             for t in timesteps_arr
-    #         ]
-
-    #         assert timestrings == [1, 3, 15]
-
-
-    #         dem_list, dem_nodata, dem_meta = hrt.load_gdal_raster(self.dem_path)
-
-    #         for timestep, timestr in zip(timesteps_arr, timestrings):
-    #             # output files
-    #             wlvl_raster = getattr(self.test_fd, f"waterstand_T{timestr}")
-    #             depth_raster = getattr(self.test_fd, f"waterdiepte_T{timestr}")
-
-    #             print(wlvl_output_path)
-    #             print(depth_output_path)
-    #             # calculate waterlevel at selected timestep in nodes gdf
-    #             nodes_2d_wlvl = self._read_2node_wlvl_at_timestep(timestep)
-    #             wlvl_list = hrt.gdf_to_raster(
-    #                 gdf=nodes_2d_wlvl,
-    #                 value_field=wtrlvl_col,
-    #                 raster_out=wlvl_output_path,
-    #                 nodata=dem_nodata,
-    #                 metadata=dem_meta,
-    #             )
-    #             # calculate water depth at time steps at nodes
-    #             _ = self._create_depth_raster(
-    #                 wlvl_list, dem_list, dem_nodata, dem_meta, depth_output_path
-    #             )
-    #         return timestrings
-    #     except Exception as e:
-    #         raise e from None
-
     def run_wlvl_depth_at_timesteps(self, overwrite=False):
         """
         Deze functie bepaalt de waterstanden op de gegeven tijdstappen op basis van het 3di resultaat.
@@ -232,7 +185,6 @@ class OneDTwoDTest:
             raise e from None
         
 
-
     def _read_2node_wlvl_at_timestep(self, timestep):
         """timesteps is the index of the time in the timeseries you want to use
         to calculate the wlvl and depth raster"""
@@ -247,34 +199,6 @@ class OneDTwoDTest:
         )
         return nodes_2d
 
-
-
-
-    # def _create_depth_raster(
-    #     self, wlvl_list, dem_list, dem_nodata, dem_meta, raster_output_path
-    # ):
-    #     """Calculate the depth raster by subtracting the dem from the wlvl raster."""
-    #     # difference between surface and initial water level
-    #     try:
-    #         depth_list = np.subtract(wlvl_list, dem_list)
-
-    #         # restore nodata pixels using a mask, also filter waterways (height=10) and negative depths
-    #         nodatamask = (dem_list == dem_nodata) | (dem_list == 10) | (depth_list < 0)
-    #         depth_list[nodatamask] = dem_nodata
-
-    #         # write array to tiff
-    #         hrt.save_raster_array_to_tiff(
-    #             output_file=raster_output_path,
-    #             raster_array=depth_list,
-    #             nodata=dem_nodata,
-    #             metadata=dem_meta,
-    #         )
-    #         return depth_list
-    #     except Exception as e:
-    #         raise e from None
-
-    #         content_type_list = threedi_result.lines.content_type.astype("U13")
-    #         flowlines_gdf[content_type_col] = content_type_list
 
     def run_node_stats(self):
         """
