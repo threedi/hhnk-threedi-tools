@@ -16,7 +16,6 @@ from hhnk_threedi_tools.core.folders import Folders
 # Globals
 TEST_MODEL = Path(__file__).parent.absolute() / "data/model_test/"
 
-
 class TestSqlite:
     folder = Folders(TEST_MODEL)
     folder.output.sqlite_tests.unlink_contents()
@@ -27,7 +26,7 @@ class TestSqlite:
     def test_run_controlled_structures(self):
         self.sqlite_test.run_controlled_structures()
 
-        output_file = self.sqlite_test.fenv.output.sqlite_tests.gestuurde_kunstwerken
+        output_file = self.sqlite_test.output_fd.gestuurde_kunstwerken
         assert output_file.exists
 
         output_df = output_file.load()
@@ -42,6 +41,12 @@ class TestSqlite:
     def test_run_dewatering_depth(self):           
         self.sqlite_test.run_dewatering_depth()
         assert self.sqlite_test.output_fd.drooglegging.pl.exists
+
+        assert selftest.sqlite_test.output_fd.drooglegging.statistics(approve_ok=False
+                    ) == {'min': -0.76, 
+                          'max': 10004.290039, 
+                          'mean': 2.167882, 
+                          'std': 91.391436}
 
 
     def test_run_model_checks(self):
@@ -94,6 +99,7 @@ class TestSqlite:
     def test_run_weir_flood_level(self):
         output = self.sqlite_test.run_weir_floor_level()
         assert output[0]["proposed_reference_level"][1] == -1.26
+
 
 
 # %%

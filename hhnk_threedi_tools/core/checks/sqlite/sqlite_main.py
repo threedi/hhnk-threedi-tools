@@ -240,7 +240,7 @@ class SqliteTest:
             block_wlvl = self.wlvl._read_array(window=windows["raster2"])
 
             #Calculate output
-            block_depth = np.subtract(block_wlvl, block_dem)
+            block_depth = np.subtract(block_dem, block_wlvl)
 
             #Mask output
             nodatamask = (block_dem == self.dem.nodata) | (block_dem == 10)
@@ -861,5 +861,12 @@ def _write_grid_to_file(grid, grid_type, output_path):
 # %%
 
 if __name__=="__main__":
-    raster_src = raster.open_gdal_source_read()
-    stats = raster_src.GetRasterBand(1).GetStatistics(True, True) #[min, max, mean, std]
+
+    TEST_MODEL = r"E:\02.modellen\model_test_v2"
+
+    folder = Folders(TEST_MODEL)
+    self = SqliteTest(folder=folder)
+
+    self.run_dewatering_depth(overwrite=True)
+
+
