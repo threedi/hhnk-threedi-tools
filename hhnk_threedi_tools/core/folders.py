@@ -566,11 +566,11 @@ class OutputDirParent(Folder):
         def __init__(self, base, create):
             super().__init__(base, create=create)
 
-            self.add_file("bodemhoogte_kunstwerken", "bodemhoogte_kunstwerken.gpkg", "file")
-            self.add_file("bodemhoogte_stuw", "bodemhoogte_stuw.gpkg", "file")
-            self.add_file("gebruikte_profielen", "gebruikte_profielen.gpkg", "file")
-            self.add_file("geisoleerde_watergangen", "geisoleerde_watergangen.gpkg", "file")
-            self.add_file("gestuurde_kunstwerken", "gestuurde_kunstwerken.gpkg", "file")
+            self.add_file("bodemhoogte_kunstwerken", "bodemhoogte_kunstwerken.gpkg", "gpkg")
+            self.add_file("bodemhoogte_stuw", "bodemhoogte_stuw.gpkg", "gpkg")
+            self.add_file("gebruikte_profielen", "gebruikte_profielen.gpkg", "gpkg")
+            self.add_file("geisoleerde_watergangen", "geisoleerde_watergangen.gpkg", "gpkg")
+            self.add_file("gestuurde_kunstwerken", "gestuurde_kunstwerken.gpkg", "gpkg")
             self.add_file("drooglegging", "drooglegging.tif", "raster")
             self.add_file("geometry_check", "geometry_check.csv", "file")
             self.add_file("general_sqlite_checks", "general_sqlite_checks.csv", "file")

@@ -288,7 +288,7 @@ def import_information(grid, model_path, datachecker_path, fixeddrainage_layer):
     """
     conn = None
     try:
-        conn = hrt.create_sqlite_connection(database_path=model_path)
+        conn = hrt.Sqlite(model_path).connect()
         fixeddrainage = gpd.read_file(
             datachecker_path, layer=fixeddrainage_layer, reader=GPKG_DRIVER
         )

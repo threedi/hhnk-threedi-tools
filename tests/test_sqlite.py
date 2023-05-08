@@ -9,9 +9,9 @@ from pathlib import Path
 import inspect
 
 # Local imports
-from hhnk_threedi_tools.core.checks.sqlite import SqliteTest
+from hhnk_threedi_tools.core.checks.sqlite.sqlite_main import SqliteTest
 from hhnk_threedi_tools.core.folders import Folders
-from hhnk_threedi_tools.variables.datachecker_variables import COL_STREEFPEIL_BWN
+
 
 # Globals
 TEST_MODEL = Path(__file__).parent.absolute() / "data/model_test/"
@@ -25,8 +25,13 @@ class TestSqlite:
 
 
     def test_run_controlled_structures(self):
-        output = self.sqlite_test.run_controlled_structures()
-        assert output["hdb_kruin_max"][0] == -0.25
+        self.sqlite_test.run_controlled_structures()
+
+        output_file = self.sqlite_test.fenv.output.sqlite_tests.gestuurde_kunstwerken
+        assert output_file.exists
+
+        output_df = output_file.load()
+        assert output_df["hdb_kruin_max"][0] == -0.25
 
 
     def test_run_dem_max_value(self):
@@ -35,10 +40,8 @@ class TestSqlite:
 
 
     def test_run_dewatering_depth(self):           
-        output = self.sqlite_test.run_dewatering_depth(
-            output_file=self.folder.output.sqlite_tests.drooglegging.path
-        )
-        assert os.path.exists(output)
+        self.sqlite_test.run_dewatering_depth()
+        assert self.sqlite_test.output_fd.drooglegging.pl.exists
 
 
     def test_run_model_checks(self):
@@ -96,8 +99,11 @@ class TestSqlite:
 # %%
 if __name__ == "__main__":
     import hhnk_research_tools as hrt
+    import geopandas as gpd
+    import numpy as np
 
     selftest = TestSqlite()
+    # self=selftest
     self = selftest.sqlite_test
 
     # Run all testfunctions

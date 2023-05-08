@@ -23,6 +23,8 @@ from pathlib import Path
 from hhnk_threedi_tools.core.folders import Folders
 from threedigrid_builder import make_gridadmin
 
+from hhnk_threedi_tools.core.checks.sqlite.structure_control import StructureControl
+
 # queries
 from hhnk_threedi_tools.utils.queries import (
     controlled_structures_query,
@@ -148,7 +150,7 @@ class SqliteTest:
 
         self.output_fd = self.fenv.output.sqlite_tests
 
-        self.model = self.fenv.model.schema_base.database.path
+        self.model = self.fenv.model.schema_base.database
         self.dem = hrt.Raster(self.fenv.model.schema_base.rasters.dem)
         self.datachecker = self.fenv.source_data.datachecker
         self.damo = self.fenv.source_data.damo.path
@@ -162,43 +164,53 @@ class SqliteTest:
     # def from_path(cls, path_to_polder, **kwargs):
     #     return cls(Folders(path_to_polder), **kwargs)
 
-    def run_controlled_structures(self):
-        """
-        Deze test selecteert alle gestuurde kunstwerken (uit de v2_culvert, v2_orifice en v2_weir tafels van het model) op
-        basis van de v2_control_table tafel. Per kunstwerk worden actiewaarden opgevraagd. Per gevonden gestuurd kunstwerk
-        wordt ook relevante informatie uit de HDB database toegevoegd, zoals het streefpeil en minimale en maximale kruin
-        hoogtes.
-        """
-        hdb_layer = str(self.fenv.source_data.hdb_sturing_3di_layer)
+    #TODO deprecated
+    # def run_controlled_structures(self):
+    #     """
+    #     Deze test selecteert alle gestuurde kunstwerken (uit de v2_culvert, v2_orifice en v2_weir tafels van het model) op
+    #     basis van de v2_control_table tafel. Per kunstwerk worden actiewaarden opgevraagd. Per gevonden gestuurd kunstwerk
+    #     wordt ook relevante informatie uit de HDB database toegevoegd, zoals het streefpeil en minimale en maximale kruin
+    #     hoogtes.
+    #     """
+    #     hdb_layer = str(self.fenv.source_data.hdb_sturing_3di_layer)
 
-        try:
-            # TODO sqlite_table_to_gdf better application?
-            model_control_db = hrt.execute_sql_selection(
-                query=controlled_structures_query, database_path=self.model
-            )
-            model_control_gdf = hrt.df_convert_to_gdf(df=model_control_db)
-            model_control_gdf[
-                [START_ACTION, MIN_ACTION, MAX_ACTION]
-            ] = model_control_gdf.apply(get_action_values, axis=1, result_type="expand")
-            hdb_stuw_gdf = gpd.read_file(
-                self.fenv.source_data.hdb.path, driver=OPEN_FILE_GDB_DRIVER, layer=hdb_layer
-            )[["CODE", "STREEFPEIL", "MIN_KRUINHOOGTE", "MAX_KRUINHOOGTE"]]
-            hdb_stuw_gdf.rename(
-                columns={
-                    "CODE": code_col,
-                    "STREEFPEIL": HDB_STREEFPEIL,
-                    "MIN_KRUINHOOGTE": HDB_KRUIN_MIN,
-                    "MAX_KRUINHOOGTE": HDB_KRUIN_MAX,
-                },
-                inplace=True,
-            )
-            control_final = model_control_gdf.merge(
-                hdb_stuw_gdf, on=code_col, how="left"
-            )
-            self.results["controlled_strucures_test"] = control_final
-            return control_final
-        except Exception as e:
-            raise e from None
+    #     try:
+    #         # TODO sqlite_table_to_gdf better application?
+    #         model_control_db = hrt.execute_sql_selection(
+    #             query=controlled_structures_query, database_path=self.model
+    #         )
+    #         model_control_gdf = hrt.df_convert_to_gdf(df=model_control_db)
+    #         model_control_gdf[
+    #             [START_ACTION, MIN_ACTION, MAX_ACTION]
+    #         ] = model_control_gdf.apply(get_action_values, axis=1, result_type="expand")
+    #         hdb_stuw_gdf = gpd.read_file(
+    #             self.fenv.source_data.hdb.path, driver=OPEN_FILE_GDB_DRIVER, layer=hdb_layer
+    #         )[["CODE", "STREEFPEIL", "MIN_KRUINHOOGTE", "MAX_KRUINHOOGTE"]]
+    #         hdb_stuw_gdf.rename(
+    #             columns={
+    #                 "CODE": code_col,
+    #                 "STREEFPEIL": HDB_STREEFPEIL,
+    #                 "MIN_KRUINHOOGTE": HDB_KRUIN_MIN,
+    #                 "MAX_KRUINHOOGTE": HDB_KRUIN_MAX,
+    #             },
+    #             inplace=True,
+    #         )
+    #         control_final = model_control_gdf.merge(
+    #             hdb_stuw_gdf, on=code_col, how="left"
+    #         )
+    #         self.results["controlled_strucures_test"] = control_final
+    #         return control_final
+    #     except Exception as e:
+    #         raise e from None
+
+
+    def run_controlled_structures(self, overwrite=False):
+        """Create leayer with structure control in schematisation"""
+        self.structure_control = StructureControl(model=self.fenv.model.schema_base.database, 
+                            hdb_control_layer=self.fenv.source_data.hdb.layers.sturing_3di,
+                            output_file=self.fenv.output.sqlite_tests.gestuurde_kunstwerken.pl)
+        self.structure_control.run(overwrite=overwrite)
+
 
     def run_dem_max_value(self):
         try:
@@ -212,58 +224,6 @@ class SqliteTest:
         except Exception as e:
             raise e from None
 
-    # def run_dewatering_depth(self, output_file, overwrite=False):
-    #     """
-    #     Compares initial water level from fixed drainage level areas with
-    #     surface level in DEM of model. Initial water level should be below
-    #     surface level.
-    #     """
-    #     # This add .tif extension to output file name, is needed for save_raster_array_to_tif function
-
-    #     init_waterlevel_value_field = self.fenv.source_data.init_waterlevel_val_field
-
-    #     try:
-    #         if Path(output_file).exists():
-    #             if overwrite is False:
-    #                 return output_file
-    #             else:
-    #                 Path(output_file).unlink()
-
-    #         # Load layers
-    #         fixeddrainage = gpd.read_file(
-    #             self.datachecker,
-    #             driver=GPKG,
-    #             layer=self.datachecker_fixeddrainage,
-    #         )
-    #         dem_array, dem_nodata, dem_metadata = hrt.load_gdal_raster(self.dem)
-    #         # Rasterize fixeddrainage
-    #         initial_water_level_arr = hrt.gdf_to_raster(
-    #             gdf=fixeddrainage,
-    #             value_field=init_waterlevel_value_field,
-    #             raster_out="",
-    #             nodata=dem_nodata,
-    #             metadata=dem_metadata,
-    #             driver="MEM",
-    #             read_array=True,
-    #         )
-
-    #         dewatering_array = np.subtract(dem_array, initial_water_level_arr)
-    #         # restore nodata pixels using mask
-    #         nodata_mask = dem_array == dem_nodata
-
-    #         dewatering_array[nodata_mask] = dem_nodata
-    #         # Save array to raster
-    #         hrt.save_raster_array_to_tiff(
-    #             output_file=output_file,
-    #             raster_array=dewatering_array,
-    #             nodata=dem_nodata,
-    #             metadata=dem_metadata,
-    #             overwrite=True
-    #         )
-    #         self.results["dewatering_depth"] = output_file
-    #         return output_file
-    #     except Exception as e:
-    #         raise e from None
 
     def run_dewatering_depth(self, overwrite=False):
         """
@@ -341,9 +301,7 @@ class SqliteTest:
         try:
             queries_lst = [item for item in vars(ModelCheck()).values()]
             query = "UNION ALL\n".join(queries_lst)
-            db = hrt.execute_sql_selection(
-                query=query, database_path=self.model
-            )  # , index_col=id_col #door index_col mee te geven verwdijnt deze.
+            db = self.model.execute_sql_selection(query=query)
 
             self.results["model_checks"] = db
             return db
@@ -356,10 +314,8 @@ class SqliteTest:
         v2_connection_nodes tafel. Als de verkeerde ids worden gebruikt geeft dit fouten in het model.
         """
         try:
-            query = geometry_check_query
-            gdf = hrt.sqlite_table_to_gdf(
-                query=query, database_path=self.model, id_col=id_col
-            )
+            gdf = self.model.execute_sql_selection(query=geometry_check_query,)
+
             gdf["start_check"] = gdf[a_geo_start_node] == gdf[a_geo_start_coord]
             gdf["end_check"] = gdf[a_geo_end_node] == gdf[a_geo_end_coord]
             add_distance_checks(gdf)
@@ -379,14 +335,12 @@ class SqliteTest:
         """
 
         try:
-            imp_surface_db = hrt.execute_sql_selection(
-                query=impervious_surface_query,
-                database_path=self.model,
-                index_col=id_col,
-            )  # conn=test_params.conn, index_col=DEFAULT_INDEX_COLUMN
-            polygon_imp_surface = gpd.read_file(
-                self.fenv.source_data.polder_polygon.path, driver=ESRI_DRIVER
-            )  # read_file(polder_file, driver=ESRI_DRIVER)
+            imp_surface_db = self.model.execute_sql_selection(impervious_surface_query)
+            imp_surface_db.set_index("id",inplace=True)
+
+            
+            polygon_imp_surface = gpd.read_file(self.fenv.source_data.polder_polygon.path)
+            
             db_surface, polygon_surface, area_diff = calc_surfaces_diff(
                 imp_surface_db, polygon_imp_surface
             )
@@ -407,10 +361,7 @@ class SqliteTest:
         deel daarvan geïsoleerd is.
         """
         try:
-            channels_df = hrt.execute_sql_selection(
-                query=isolated_channels_query, database_path=self.model
-            )
-            channels_gdf = hrt.df_convert_to_gdf(df=channels_df)
+            channels_gdf = self.model.execute_sql_selection(query=isolated_channels_query)
             channels_gdf[length_in_meters_col] = round(
                 channels_gdf[df_geo_col].length, 2
             )
@@ -442,10 +393,7 @@ class SqliteTest:
         try:
 
             # TODO use hrt.sqlite_table_to_gdf instead?
-            channels_df = hrt.execute_sql_selection(
-                query=profiles_used_query, database_path=self.model
-            )
-            channels_gdf = hrt.df_convert_to_gdf(df=channels_df)
+            channels_gdf = self.model.execute_sql_selection(query=profiles_used_query)
             # If zoom category is 4, channel is considered primary
             channels_gdf[primary_col] = channels_gdf[a_zoom_cat].apply(
                 lambda zoom_cat: zoom_cat == 4
@@ -469,22 +417,18 @@ class SqliteTest:
         Checks whether the reference level of any of the adjacent cross section locations (channels) to a structure
         is lower than the reference level for that structure (3di crashes if it is)
         """
-        datachecker_culvert_layer = str(self.fenv.source_data.datachecker_culvert)
-        damo_duiker_sifon_layer = str(self.fenv.source_data.damo_duiker_sifon_layer)
+        datachecker_culvert_layer = self.fenv.source_data.datachecker.layers.culvert
+        damo_duiker_sifon_layer = self.fenv.source_data.damo.layers.DuikerSifonHevel
 
         try:
             below_ref_query = struct_channel_bed_query
-            gdf_below_ref = hrt.sqlite_table_to_gdf(
-                query=below_ref_query,
-                id_col=a_chan_bed_struct_id,
-                database_path=self.model,
-            )
+            gdf_below_ref = self.model.execute_sql_selection(query=below_ref_query)
+            gdf_below_ref.rename(columns={'id':a_chan_bed_struct_id},inplace=True)
+
             # See git issue about below statements
-            gdf_with_damo = add_damo_info(
-                damo_path=self.damo, layer=damo_duiker_sifon_layer, gdf=gdf_below_ref
+            gdf_with_damo = add_damo_info(layer=damo_duiker_sifon_layer, gdf=gdf_below_ref
             )
-            gdf_with_datacheck = add_datacheck_info(
-                self.datachecker, datachecker_culvert_layer, gdf_with_damo
+            gdf_with_datacheck = add_datacheck_info(datachecker_culvert_layer, gdf_with_damo
             )
             gdf_with_datacheck.loc[:, down_has_assumption] = gdf_with_datacheck[
                 height_inner_lower_down
@@ -517,10 +461,10 @@ class SqliteTest:
                 damo_waterdeel,
                 conn_nodes_geo,
             ) = read_input(
-                database_path=self.model,
-                channel_profile_path=self.channels_from_profiles,
+                model=self.model,
+                channel_profile_path=self.channels_from_profiles.path,
                 fixeddrainage_layer=self.fenv.source_data.datachecker.layers.fixeddrainagelevelarea,
-                damo_layer=self.fenv.source_data.damo_waterdeel_layer,
+                damo_layer=self.fenv.source_data.damo.layers.waterdeel,
             )
             fixeddrainage = calc_area(
                 fixeddrainage, modelbuilder_waterdeel, damo_waterdeel, conn_nodes_geo
@@ -544,10 +488,7 @@ class SqliteTest:
         """
         try:
             # TODO use hrt.sqlite_table_to_gdf instead?
-            weirs_df = hrt.execute_sql_selection(
-                query=weir_height_query, database_path=self.model
-            )
-            weirs_gdf = hrt.df_convert_to_gdf(df=weirs_df)
+            weirs_gdf = self.model.execute_sql_selection(query=weir_height_query)
             # Bepaal de minimale kruinhoogte uit de action table
             weirs_gdf[min_crest_height] = [
                 min([float(b.split(";")[1]) for b in a.split("#")])
@@ -597,11 +538,10 @@ class SqliteTest:
     def run_cross_section(self):
         """TODO add docstring en implementeren in plugin"""
         try:
-            cross_section_df = hrt.execute_sql_selection(
-                query =cross_section_location_query , database_path=self.model
-            )
+            cross_section_point = self.model.read_table(table_name="v2_cross_section_location",  
+                                  columns=["id", "channel_id", "reference_level", "bank_level", "geometry"])
+            cross_section_point.rename({"id": "cross_loc_id"}, axis=1, inplace=True)
 
-            cross_section_point = hrt.df_convert_to_gdf(df=cross_section_df)
             cross_section_buffer_gdf = cross_section_point
             cross_section_buffer_gdf["geometry"] = cross_section_buffer_gdf.buffer(0.5) 
             
@@ -634,13 +574,11 @@ class SqliteTest:
     def run_cross_section_vertex(self):
         """TODO add docstring en implementeren in plugin"""
         try:
-            cross_section_point = hrt.execute_sql_selection(
-                query =cross_section_location_query , database_path=self.model
-            )
-            channels = hrt.execute_sql_selection(
-                query=channels_query, database_path=self.model)
-            cross_section_point = hrt.df_convert_to_gdf(df=cross_section_point)
-            channels_gdf = hrt.df_convert_to_gdf(df=channels)
+            cross_section_point = self.model.read_table(table_name="v2_cross_section_location",  
+                                  columns=["id", "channel_id", "reference_level", "bank_level", "geometry"])
+            cross_section_point.rename({"id": "cross_loc_id"}, axis=1, inplace=True)
+
+            channels_gdf = self.model.execute_sql_selection(query=channels_query)
             coord_x = []
             coord_y = []
             idxs=[]
@@ -675,14 +613,16 @@ class SqliteTest:
             raise e from None
 
 ## helper functions
-def get_action_values(row):
-    if row[target_type_col] is weir_layer:
-        action_values = [float(b.split(";")[1]) for b in row[action_col].split("#")]
-    else:
-        action_values = [
-            float(b.split(";")[1].split(" ")[0]) for b in row[action_col].split("#")
-        ]
-    return action_values[0], min(action_values), max(action_values)
+
+#TODO deprecated
+# def get_action_values(row):
+#     if row[target_type_col] is weir_layer:
+#         action_values = [float(b.split(";")[1]) for b in row[action_col].split("#")]
+#     else:
+#         action_values = [
+#             float(b.split(";")[1].split(" ")[0]) for b in row[action_col].split("#")
+#         ]
+#     return action_values[0], min(action_values), max(action_values)
 
 
 def add_distance_checks(gdf):
@@ -747,9 +687,9 @@ def get_max_depth(row):
     )
 
 
-def add_damo_info(damo_path, layer, gdf):
+def add_damo_info(layer, gdf):
     try:
-        damo_gdb = gpd.read_file(damo_path, driver=OPEN_FILE_GDB_DRIVER, layer=layer)
+        damo_gdb = layer.load()
         new_gdf = gdf.merge(
             damo_gdb[DAMO_FIELDS],
             how="left",
@@ -770,11 +710,9 @@ def add_damo_info(damo_path, layer, gdf):
         return new_gdf
 
 
-def add_datacheck_info(datachecker_path, layer, gdf):
+def add_datacheck_info(layer, gdf):
     try:
-        datachecker_gdb = gpd.read_file(
-            datachecker_path, driver=GPKG, layer=layer
-        )
+        datachecker_gdb = layer.load()
         new_gdf = gdf.merge(
             datachecker_gdb[DATACHECKER_FIELDS],
             how="left",
@@ -813,7 +751,7 @@ def expand_multipolygon(df):
 
 
 def read_input(
-    database_path,
+    model,
     channel_profile_path,
     fixeddrainage_layer,
     damo_layer,
@@ -824,11 +762,9 @@ def read_input(
         fixeddrainage = expand_multipolygon(fixeddrainage)
         modelbuilder_waterdeel = gpd.read_file(channel_profile_path, driver=ESRI_DRIVER)
         damo_waterdeel = damo_layer.load()
-        conn_nodes_geo = hrt.sqlite_table_to_gdf(
-            query=watersurface_conn_node_query,
-            id_col=a_watersurf_conn_id,
-            database_path=database_path,
-        )
+        conn_nodes_geo = model.execute_sql_selection(query=watersurface_conn_node_query)
+        conn_nodes_geo.set_index(a_watersurf_conn_id, inplace=True)
+
         return fixeddrainage, modelbuilder_waterdeel, damo_waterdeel, conn_nodes_geo
     except Exception as e:
         raise e from None
