@@ -155,12 +155,9 @@ class BankLevelTest:
             dem_path=self.fenv.model.schema_base.rasters.dem.path,
         )
 
-        self.fixeddrainage_layer = self.fenv.source_data.datachecker_fixed_drainage
-
         self.imports = import_information(
             model_path=self.model_path,
-            datachecker_path=self.datachecker_path,
-            fixeddrainage_layer=self.fixeddrainage_layer,
+            fixeddrainage_layer=self.fenv.source_data.datachecker.layers.fixeddrainagelevelarea,
             grid=self.grid,
         )
 
@@ -281,7 +278,7 @@ class BankLevelTest:
         self.write(str(new_folder), str(new_folder))
 
 
-def import_information(grid, model_path, datachecker_path, fixeddrainage_layer):
+def import_information(grid, model_path, fixeddrainage_layer):
     """
     Function that gathers all information from the model and datachecker that's needed
     to calculate the new manholes and bank levels
@@ -289,9 +286,8 @@ def import_information(grid, model_path, datachecker_path, fixeddrainage_layer):
     conn = None
     try:
         conn = hrt.Sqlite(model_path).connect()
-        fixeddrainage = gpd.read_file(
-            datachecker_path, layer=fixeddrainage_layer, reader=GPKG_DRIVER
-        )
+        fixeddrainage = fixeddrainage_layer.load()
+
         return {
             "fixeddrainage": fixeddrainage,
             "fixeddrainage_lines": extract_boundary_from_polygon(fixeddrainage, df_geo_col),

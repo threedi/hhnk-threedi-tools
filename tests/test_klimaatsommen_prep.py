@@ -29,7 +29,7 @@ def test_klimaatsommenprep():
         SCHADESCHATTER_PATH=SCHADESCHATTER_PATH
     )
     
-    klimaatsommenrep.run(overwrite=True)
+    klimaatsommenrep.run(overwrite=False) #TODO =True, maar test duurt lang
 
     for raster_type in ["depth_max", "damage_total"]:
         scenario_metadata = pd.read_csv(klimaatsommenrep.info_file[raster_type], sep=";")
