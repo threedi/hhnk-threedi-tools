@@ -117,7 +117,8 @@ class StructureControl:
     def append_hdb_layer(self):
         if self.layers.hdb_control is not None:
             return self.out_df.merge(self.layers.hdb_control, on="code", how="left", suffixes=["","_hdb"])
-
+        else:
+            return self.out_df
 
     def save(self):
         """save output to file"""

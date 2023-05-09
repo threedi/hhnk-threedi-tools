@@ -264,7 +264,7 @@ class SourceDir(Folder):
                                     "culvert"])
 
         self.add_file("polder_polygon", POLDER_POLY)
-        self.add_file("panden", "panden.gpkg", ftype="filegdb")
+        self.add_file("panden", "panden.gpkg", ftype="gpkg")
 
         # Layers
         # self.add_layer("datachecker_fixed_drainage", "fixeddrainagelevelarea")
