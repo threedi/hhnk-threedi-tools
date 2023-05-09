@@ -96,22 +96,7 @@ class BankLevelTest:
     def __init__(self, folder: Folders):
         self.fenv = folder  # fenv = folder environemnt
 
-    @classmethod
-    def from_path(cls, path_to_polder):
-        return cls(Folders(path_to_polder))
-
-    @classmethod
-    def from_model_path(cls, path_to_model):
-        return cls(Folders.from_model_path(path_to_model))
-
-    @property
-    def fenv_dict(self):
-        return self.fenv.to_file_dict()
-
-    @property
-    def result_revisions(self):
-        return self.fenv.zero_d_one_d.revisions
-
+ 
     @property
     def results(self):
         return {

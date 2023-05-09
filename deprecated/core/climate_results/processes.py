@@ -25,9 +25,14 @@ def multiprocess(
     !!!!!
     """
 
+    if stepsize == None:
+        stepsize = len(df)
+
+
     def update_pbar(*a):
         """show progress of the function"""
         pbar.update()
+
 
     def main_multi():
         multi_step = {0: 0}
@@ -53,8 +58,6 @@ def multiprocess(
                 results_local[i] = [p.get() for p in results_local[i]]
         return results_local
 
-    if stepsize == None:
-        stepsize = len(df)
 
     # Call target function with or without pbar
     if use_pbar == True:

@@ -181,9 +181,6 @@ class Folders(Folder):
                {self.space}└── 04_test_results (.output)
                """
 
-    @classmethod
-    def from_model_path(cls, model_path):
-        return cls(str(Path(model_path).parents[0].parents[0]))
 
     @property
     def full_structure(self):
