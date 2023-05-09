@@ -269,10 +269,10 @@ class KlimaatsommenPrep:
         #Fill row data
         info_row = pd.Series(dtype=object)
         info_row['filename']  = raster.name
-        info_row['min'] = round(stats["min"],6)
-        info_row['max'] = round(stats["max"],6)
-        info_row['mean'] = round(stats["mean"],4)
-        info_row['std'] = round(stats["std"],4)
+        info_row['min'] = stats["min"]
+        info_row['max'] = stats["max"]
+        info_row['mean'] = stats["mean"]
+        info_row['std'] = stats["std"]
         info_row['bounds'] = raster.metadata.bounds
         info_row['x_res'] = str(raster.metadata.x_res)
         info_row['y_res'] = str(raster.metadata.y_res)

@@ -252,11 +252,11 @@ class SourceDir(Folder):
             self.create_readme()
 
         # Files
-        self.add_file("damo", DAMO, ftype="filegdb")
+        self.add_file("damo", "DAMO.gpkg", ftype="gpkg")
         self.damo.add_layers(["DuikerSifonHevel", 
                              "waterdeel"])
         
-        self.add_file("hdb", HDB, ftype="filegdb")
+        self.add_file("hdb", "HDB.gpkg", ftype="gpkg")
         self.hdb.add_layer("sturing_3di")
 
         self.add_file("datachecker", "datachecker_output.gpkg", ftype="gpkg")

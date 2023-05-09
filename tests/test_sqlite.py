@@ -12,7 +12,7 @@ import inspect
 from hhnk_threedi_tools.core.checks.sqlite.sqlite_main import SqliteTest
 from hhnk_threedi_tools.core.folders import Folders
 
-
+# %%
 # Globals
 TEST_MODEL = Path(__file__).parent.absolute() / "data/model_test/"
 
