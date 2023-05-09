@@ -6,12 +6,7 @@ from hhnk_threedi_tools.variables.api_settings import (
     RAIN_SCENARIOS,
     GROUNDWATER,
     RAIN_TYPES,
-    RAW_DOWNLOADS,
 )
-
-# Third-party imports
-from threedigrid.admin.gridadmin import GridH5Admin
-from threedigrid.admin.gridresultadmin import GridH5ResultAdmin
 
 
 class ClimateResult(hrt.Folder):

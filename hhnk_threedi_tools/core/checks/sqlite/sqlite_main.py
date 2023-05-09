@@ -16,7 +16,7 @@ from shapely import wkt
 
 # research-tools
 import hhnk_research_tools as hrt
-from hhnk_research_tools.variables import OPEN_FILE_GDB_DRIVER, ESRI_DRIVER, GPKG
+from hhnk_research_tools.variables import ESRI_DRIVER
 from pathlib import Path
 
 # Local imports
@@ -159,49 +159,6 @@ class SqliteTest:
         self.layer_fixeddrainage = self.fenv.source_data.datachecker.layers.fixeddrainagelevelarea
 
         self.results = {}
-
-    # @classmethod
-    # def from_path(cls, path_to_polder, **kwargs):
-    #     return cls(Folders(path_to_polder), **kwargs)
-
-    #TODO deprecated
-    # def run_controlled_structures(self):
-    #     """
-    #     Deze test selecteert alle gestuurde kunstwerken (uit de v2_culvert, v2_orifice en v2_weir tafels van het model) op
-    #     basis van de v2_control_table tafel. Per kunstwerk worden actiewaarden opgevraagd. Per gevonden gestuurd kunstwerk
-    #     wordt ook relevante informatie uit de HDB database toegevoegd, zoals het streefpeil en minimale en maximale kruin
-    #     hoogtes.
-    #     """
-    #     hdb_layer = str(self.fenv.source_data.hdb_sturing_3di_layer)
-
-    #     try:
-    #         # TODO sqlite_table_to_gdf better application?
-    #         model_control_db = hrt.execute_sql_selection(
-    #             query=controlled_structures_query, database_path=self.model
-    #         )
-    #         model_control_gdf = hrt.df_convert_to_gdf(df=model_control_db)
-    #         model_control_gdf[
-    #             [START_ACTION, MIN_ACTION, MAX_ACTION]
-    #         ] = model_control_gdf.apply(get_action_values, axis=1, result_type="expand")
-    #         hdb_stuw_gdf = gpd.read_file(
-    #             self.fenv.source_data.hdb.path, driver=OPEN_FILE_GDB_DRIVER, layer=hdb_layer
-    #         )[["CODE", "STREEFPEIL", "MIN_KRUINHOOGTE", "MAX_KRUINHOOGTE"]]
-    #         hdb_stuw_gdf.rename(
-    #             columns={
-    #                 "CODE": code_col,
-    #                 "STREEFPEIL": HDB_STREEFPEIL,
-    #                 "MIN_KRUINHOOGTE": HDB_KRUIN_MIN,
-    #                 "MAX_KRUINHOOGTE": HDB_KRUIN_MAX,
-    #             },
-    #             inplace=True,
-    #         )
-    #         control_final = model_control_gdf.merge(
-    #             hdb_stuw_gdf, on=code_col, how="left"
-    #         )
-    #         self.results["controlled_strucures_test"] = control_final
-    #         return control_final
-    #     except Exception as e:
-    #         raise e from None
 
 
     def run_controlled_structures(self, overwrite=False):

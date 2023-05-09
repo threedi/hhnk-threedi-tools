@@ -11,11 +11,6 @@ self.base is the directory in which it is located
 """
 # First-party imports
 import os
-import glob
-import inspect
-from pathlib import Path
-import inspect
-
 
 
 import hhnk_research_tools as hrt
@@ -26,10 +21,6 @@ from hhnk_research_tools.variables import (
     file_types_dict,
     GDB,
     SHAPE,
-    SQLITE,
-    TIF,
-    NC,
-    H5,
 )
 
 # Local imports
@@ -40,19 +31,9 @@ from hhnk_threedi_tools.variables.model_state import (
     invalid_path,
 )
 
-# from hhnk_threedi_tools.core.checks.model_state import (
-#     detect_model_states,
-#     get_proposed_adjustments_weir_width,
-#     get_proposed_updates_manholes,
-#     get_proposed_adjustments_global_settings,
-#     get_proposed_adjustments_channels,
-# )
-
 
 from hhnk_threedi_tools.core.folder_helpers import ClimateResult
 
-import fiona
-import geopandas as gpd
 import pandas as pd
 
 
@@ -72,9 +53,9 @@ WATERLEVEL_VAL_FIELD = "streefpeil_bwn2"
 FOLDER_STRUCTURE = """
     Main Folders object
         ├── 01_source_data
-        │ ├── DAMO.gdb
-        │ ├── HDB.gdb
-        │ ├── datachecker_output.gdb
+        │ ├── DAMO.gpkg
+        │ ├── HDB.gpkg
+        │ ├── datachecker_output.gpkg
         │ └── modelbuilder_output
         │     └── preprocessed
         ├── 02_schematisation
@@ -282,9 +263,9 @@ class SourceDir(Folder):
     def create_readme(self):
         readme_txt = (
                 "Expected files are:\n\n"
-                "Damo geodatabase (*.gdb) named 'DAMO.gdb'\n"
-                "Datachecker geodatabase (*.gdb) named 'datachecker_output.gdb'\n"
-                "Hdb geodatabase (*.gdb) named 'HDB.gdb'\n"
+                "Damo geopackage (*.gpkg) named 'DAMO.gpkg'\n"
+                "Datachecker geopackage (*.gpkg) named 'datachecker_output.gpkg'\n"
+                "Hdb geopackage (*.gpkg) named 'HDB.gpkg'\n"
                 "Folder named 'modelbuilder_output' and polder shapefile "
                 "(*.shp and associated file formats)"
             )
@@ -671,7 +652,7 @@ def create_tif_path(folder, filename):
     and returns full path (ex: C:../output/Layers/raster.tif)
     """
     try:
-        full_path = os.path.join(folder, filename + file_types_dict[TIF])
+        full_path = os.path.join(folder, f"{filename}.tif")
         return full_path
     except Exception as e:
         raise e from None

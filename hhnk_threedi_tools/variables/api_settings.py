@@ -51,26 +51,3 @@ API_SETTINGS["damage_processing"] = {
     "repair_time_infrastructure": 120,
     "repair_time_buildings": 240,
 }
-# TODO verwijderen als oude settings werken.
-# damage_processing_data = {
-#     "basic_post_processing": True,
-#     "cost_type": "avg",
-#     "flood_month": "sep",
-#     "inundation_period": 1,
-#     "repair_time_infrastructure": 6,
-#     "repair_time_buildings": 24,
-# }
-
-MODEL_TYPES = ["0d1d_test", "1d2d_test", "1d2d_glg", "1d2d_ggg", "1d2d_ghg"]
-
-# Batch calculation postprocessing settings
-RAW_DOWNLOADS = ["piek_ghg_T1000", "blok_ghg_T1000"]  # Needed for mask/filter map
-RUIMTEKAART_SCENARIOS = [
-    "blok_ggg_T10",
-    "blok_ggg_T100",
-    "blok_ggg_T1000",
-    "blok_ghg_T10",
-    "blok_ghg_T100",
-    "blok_ghg_T1000",
-]
-

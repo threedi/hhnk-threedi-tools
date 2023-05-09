@@ -20,12 +20,7 @@ from shapely.geometry import LineString
 # research tools
 import hhnk_research_tools as hrt
 
-# from hhnk_research_tools.threedi.geometry_functions import coordinates_to_points
-# from hhnk_research_tools.variables import file_types_dict, TIF
-# from hhnk_research_tools.threedi.construct_rain_scenario import threedi_timesteps
-# from hhnk_research_tools.threedi.construct_rain_scenario_dataframe import (
-#     create_results_dataframe,
-# )
+
 from hhnk_research_tools.variables import (
     t_start_rain_col,
     t_end_rain_col,
