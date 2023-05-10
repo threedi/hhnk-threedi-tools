@@ -12,6 +12,7 @@ build
 .eggs
 hhnk_threedi_tools/variables/localsettings.py
 hhnk_threedi_tools/tests/data/new_project/
+*.aux.xml
 
 #FIXME temporary
 01_downloads_blokt100fout
@@ -27,3 +28,4 @@ hhnk_threedi_tools/utils/notebooks/02_calculation_gui_v3_klondike.ipynb
 coverage.xml
 test.cmd
 tests/data/new_project/*
+envs/environment_spyder_test.yml

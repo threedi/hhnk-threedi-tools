@@ -71,7 +71,7 @@ def create_ruimtekaart(pgb_path, output_path, batch_fd):
     labels_raster = hrt.Raster(batch_fd.output.temp.peilgebieden_diepte.path)
     labels_index = pgb_gdf["index"].values
     for i, fn in enumerate(SCENARIOS):
-        raster_path = getattr(batch_fd.downloads, fn).max_depth.path
+        raster_path = getattr(batch_fd.downloads, fn).depth_max.path
         input_raster = hrt.Raster(raster_path)
 
         logger.info("Aggregating '{}'".format(raster_path))
@@ -86,7 +86,7 @@ def create_ruimtekaart(pgb_path, output_path, batch_fd):
     labels_raster = hrt.Raster(batch_fd.output.temp.peilgebieden_schade.path)
     labels_index = pgb_gdf["index"].values
     for i, fn in enumerate(SCENARIOS):
-        raster_path = getattr(batch_fd.downloads, fn).total_damage.path
+        raster_path = getattr(batch_fd.downloads, fn).damage_total.path
         input_raster = hrt.Raster(raster_path)
 
         logger.info("Aggregating '{}'".format(raster_path))

@@ -6,39 +6,55 @@ channels:
   - defaults
 
 dependencies:
-  - attrs=22.2.0
+  #QGIS preinstalled
   - python=3.9.5 # equals MI python version
-  - apscheduler=3.10.1
-  - click=8.1.3
-  - click-plugins=1.1.1
-  - colorama=0.4.6
-  - exceptiongroup=1.1.1
-  - iniconfig=2.0.0
-  - ipyfilechooser=0.6.0
-  - jupyter=1.0.0
-  - geoalchemy2=0.10.2
   - geopandas=0.11.1
-  - tomli=2.0.1
-  - tzlocal=2.1
-  - packaging=23.0
   - pandas=1.1.3
-  - pluggy=1.0.0
-  - pygeos=0.14
-  - python-dateutil=2.8.2
-  - pytz=2020.1
-  - pytz-deprecation-shim=0.1.0.post0
+  - scipy=1.6.2
+
+  # - attrs=22.2.0
+  # - apscheduler=3.10.1
+  # - click=8.1.3
+  # - click-plugins=1.1.1
+  # - colorama=0.4.6
+  # - exceptiongroup=1.1.1
+  # - iniconfig=2.0.0
+  # - ipyfilechooser=0.6.0
+  # - jupyter=1.0.0
+  # - geoalchemy2=0.10.2
+  # - tomli=2.0.1
+  # - tzlocal=2.1
+  # - packaging=23.0
+  # - python-dateutil=2.8.2
+  # - pytz=2020.1
+  # - pytz-deprecation-shim=0.1.0.post0
+  # - sqlalchemy=1.3.24
+
+  #User folder
+  - jupyterlab=3.6.3
+  - ipywidgets=8.0.6
+  
+  #External deps plugin
   - pytest=7.2.2
   - pytest-cov
-  - scipy=1.6.2
-  - sqlalchemy=1.3.24
+  - pluggy=1.0.0 #pytest dependency
+  - exceptiongroup=1.1.1 #pytest dependency
+  - iniconfig=2.0.0 #pytest dependency
   - tqdm=4.64.0
   - xarray=2022.3.0
+  - pygeos=0.14 #required for geopandas
+
+
   - pip: # 3Di packages are not conda installable and are therefore installed by PIP
-    - et-xmlfile==1.1.0
+    # - et-xmlfile==1.1.0
     - openpyxl==3.1.2
-    - threedi_modelchecker==1.0.1
+    - threedi_modelchecker==2.1.0 #ThreediToolbox 2.5.2
     - threedi_scenario_downloader==0.16
-    - threedi_schema==0.214.4
+    - threedi_schema==0.216.4 #ThreediToolbox 2.5.2
     - threedi_raster_edits==0.26
     - threedi-api-client==4.1.1
-    - threedigrid_builder==1.8.0
+    - threedigrid_builder==1.10.0 #ThreediToolbox 2.5.2
+
+    #Plugin
+    - hhnk_research_tools==2023.2
+    # - hhnk_threedi_tools==2023.1

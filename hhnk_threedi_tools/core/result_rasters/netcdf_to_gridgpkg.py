@@ -3,22 +3,38 @@ from shapely.geometry import box
 import numpy as np
 import geopandas as gpd
 import pandas as pd
+from hhnk_threedi_tools import Folders
+import hhnk_research_tools as hrt
 
 class ThreediGrid:
-    def __init__(self, folder, threedi_result,):
-        """threedi_result : htt.core.folders.ThreediResult instance.
+    def __init__(self, 
+                    threedi_result:hrt.ThreediResult, 
+                    folder:Folders = None, 
+                    waterdeel_path:str = None, 
+                    waterdeel_layer:str = "Waterdeel",
+                    panden_path:str = None,
+                    panden_layer:str = "panden",
+                    grid_raw_filename = "grid_raw.gpkg",
+                    grid_corr_filename = "grid_corr.gpkg", 
+                    ):
+        """
         
         grid creation requires:
             folder.source_data.damo
-        folder.source_data.panden
+            folder.source_data.panden
+
+        Otherwise use waterdeel_path with waterdeel_layer
 
         """
-
-        self.folder=folder
         self.threedi_result = threedi_result
+        self.folder=folder
+        self.waterdeel_path = waterdeel_path
+        self.waterdeel_layer = waterdeel_layer
+        self.panden_path = panden_path     
+        self.panden_layer = panden_layer   
 
-        self.gpkg_raw_path = self.threedi_result.pl/"grid_raw.gpkg"
-        self.gpkg_corr_path = self.gpkg_raw_path.with_stem("grid_corr")
+        self.grid_path = self.threedi_result.pl/grid_raw_filename
+        self.grid_corr_path = self.threedi_result.pl/grid_corr_filename
 
 
     @property
@@ -26,7 +42,44 @@ class ThreediGrid:
         return self.threedi_result.grid
 
 
-    def netcdf_to_grid_gpkg(self, replace_dem_below_perc=50, replace_water_above_perc=95, replace_pand_above_perc=99):
+    def _load_water_gdf(self):
+        """Load waterdeel. if folder is defined as input we get if from there.
+        Otherwise the path needs to be provided """
+        gdf = None
+        if self.folder is not None:
+            gdf = self.folder.source_data.damo.load(layer=self.waterdeel_layer)
+            
+        elif self.waterdeel_path is not None:
+            if self.waterdeel_path.endswith(".gdb"):
+                gdf = gpd.read_file(self.waterdeel_path, layer=self.waterdeel_layer)
+            else:
+                gdf = gpd.read_file(self.waterdeel_path)
+
+        else:
+            print("Couldnt load waterdeel. Ignoring it in correction.")
+        return gdf
+
+
+    def _load_pand_gdf(self):
+        """Load waterdeel. if folder is defined as input we get if from there.
+        Otherwise the path needs to be provided """
+        gdf = None
+        if self.panden_path is None:
+            if self.folder is not None:
+                if self.folder.source_data.panden.exists:
+                    gdf = self.folder.source_data.panden.load(layer=self.panden_layer)
+            
+        elif self.panden_path is not None:
+            if self.panden_path.endswith(".gdb"):
+                gdf = gpd.read_file(self.panden_path, layer=self.panden_layer)
+            else:
+                gdf = gpd.read_file(self.panden_path)
+        else:
+            print("Couldnt load panden. Ignoring it in correction.")
+        return gdf
+
+
+    def netcdf_to_grid_gpkg(self, replace_dem_below_perc=50, replace_water_above_perc=95, replace_pand_above_perc=99, overwrite=False):
         """
         ignore_dem_perc : if cell has no dem above this value waterlevels will be replaced
         ignore_water_perc : if cell has water surface area above this value waterlevels will be replaced
@@ -34,9 +87,18 @@ class ThreediGrid:
         create gpkg of grid with maximum wlvl
         """
 
-        if self.gpkg_raw_path.exists():
-            print(f"{self.gpkg_raw_path} already exists")
-            return
+        if self.grid_path.exists():
+            if overwrite is False:
+                return
+            else:
+                self.grid_path.unlink()
+
+
+        #Check required files
+        # if not self.folder.source_data.damo.exists:
+        #     raise Exception(f"{self.folder.source_data.damo} - doesnt exist")
+        # if not self.folder.source_data.panden.exists:
+        #     raise Exception(f"{self.folder.source_data.panden} - doesnt exist")
 
         grid_gdf = gpd.GeoDataFrame()
 
@@ -66,38 +128,40 @@ class ThreediGrid:
         grid_gdf["dem_perc"] = grid_gdf["dem_area"]  / grid_gdf.area *100 
 
 
-
         #Check water surface area in a cell.
-        water_gdf = self.folder.source_data.damo.load(layer="Waterdeel")
+        water_gdf = self._load_water_gdf()
+        if water_gdf is not None:
+            water_gdf["water"] = 1
+            water_cell = gpd.overlay(grid_gdf[["id", "geometry"]], water_gdf[["water", "geometry"]], how="union")
+            #Select only areas with the merged feature.
+            water_cell = water_cell[water_cell["water"]==1]
 
-        water_gdf["water"] = 1
-        water_cell = gpd.overlay(grid_gdf[["id", "geometry"]], water_gdf[["water", "geometry"]], how="union")
-        #Select only areas with the merged feature.
-        water_cell = water_cell[water_cell["water"]==1]
+            #Calculate sum of area per cell
+            water_cell["water_area"] = water_cell.area
+            water_cell_area = water_cell.groupby("id").agg("sum")
 
-        #Calculate sum of area per cell
-        water_cell["water_area"] = water_cell.area
-        water_cell_area = water_cell.groupby("id").agg("sum")
-
-        grid_gdf = pd.merge(grid_gdf, water_cell_area["water_area"], left_on="id", right_on="id", how="left")
-        grid_gdf["water_perc"] = grid_gdf["water_area"]  / grid_gdf.area *100
+            grid_gdf = pd.merge(grid_gdf, water_cell_area["water_area"], left_on="id", right_on="id", how="left")
+            grid_gdf["water_perc"] = grid_gdf["water_area"]  / grid_gdf.area *100
+        else:
+            grid_gdf["water_perc"] = None
 
 
         #Check building area in a cell
-        pand_gdf = self.folder.source_data.panden.load(layer="panden")
+        pand_gdf = self._load_pand_gdf()
+        if pand_gdf is not None:
+            pand_gdf["pand"] = 1
+            pand_cell = gpd.overlay(grid_gdf[["id", "geometry"]], pand_gdf[["pand", "geometry"]], how="union")
+            #Select only areas with the merged feature.
+            pand_cell = pand_cell[pand_cell["pand"]==1]
 
-        pand_gdf["pand"] = 1
-        pand_cell = gpd.overlay(grid_gdf[["id", "geometry"]], pand_gdf[["pand", "geometry"]], how="union")
-        #Select only areas with the merged feature.
-        pand_cell = pand_cell[pand_cell["pand"]==1]
+            #Calculate sum of area per cell
+            pand_cell["pand_area"] = pand_cell.area
+            pand_cell_area = pand_cell.groupby("id").agg("sum")
 
-        #Calculate sum of area per cell
-        pand_cell["pand_area"] = pand_cell.area
-        pand_cell_area = pand_cell.groupby("id").agg("sum")
-
-        grid_gdf = pd.merge(grid_gdf, pand_cell_area["pand_area"], left_on="id", right_on="id", how="left")
-        grid_gdf["pand_perc"] = grid_gdf["pand_area"]  / grid_gdf.area *100
-
+            grid_gdf = pd.merge(grid_gdf, pand_cell_area["pand_area"], left_on="id", right_on="id", how="left")
+            grid_gdf["pand_perc"] = grid_gdf["pand_area"]  / grid_gdf.area *100
+        else:
+            grid_gdf["pand_perc"] = None
 
 
         #Select cells that need replacing of wlvl
@@ -114,20 +178,22 @@ class ThreediGrid:
 
         #grid_gdf["replace_all"] = grid_gdf["replace_dem"] | grid_gdf["replace_water"] | grid_gdf["replace_pand"]
 
-        grid_gdf=gpd.GeoDataFrame(grid_gdf, geometry="geometry")
+        grid_gdf = gpd.GeoDataFrame(grid_gdf, geometry="geometry")
 
 
         #Save to file
-        grid_gdf.to_file(self.gpkg_raw_path, driver="GPKG")
+        grid_gdf.to_file(self.grid_path, driver="GPKG")
 
 
-    def waterlevel_correction(self, output_col):
+    def waterlevel_correction(self, output_col="wlvl_max_replaced", overwrite=False):
 
-        if self.gpkg_corr_path.exists():
-            print(f"{self.gpkg_corr_path} already exists")
-            # return
+        if self.grid_corr_path.exists():
+            if overwrite is False:
+                return
+            else:
+                self.grid_corr_path.unlink()
 
-        grid_gdf = gpd.read_file(self.gpkg_raw_path, driver="GPKG")
+        grid_gdf = gpd.read_file(self.grid_path, driver="GPKG")
         
         grid_gdf[output_col] = grid_gdf["wlvl_max_orig"]
         replace_idx = grid_gdf["replace_all"]!= '0'
@@ -149,7 +215,7 @@ class ThreediGrid:
         grid_gdf["diff"] = grid_gdf[output_col] - grid_gdf["wlvl_max_orig"]
 
         #Save to file
-        grid_gdf.to_file(self.gpkg_corr_path, driver="GPKG")
+        grid_gdf.to_file(self.grid_corr_path, driver="GPKG")
 
 
 
@@ -159,17 +225,20 @@ if __name__ == "__main__":
     folder_path = r"E:\02.modellen\23_Katvoed"
     folder = Folders(folder_path)
 
-    threedi_result = folder.threedi_results.one_d_two_d['ghg_blok_t1000']
+    threedi_result = folder.threedi_results.one_d_two_d['katvoed #1 piek_ghg_T1000']
 
 
     self = ThreediGrid(folder=folder, threedi_result=threedi_result)
+    # self = ThreediGrid(threedi_result=threedi_result, waterdeel_path=folder.source_data.damo.path)
 
-    #Convert netcdf to grid gpkg
+    # #Convert netcdf to grid gpkg
     self.netcdf_to_grid_gpkg()
 
-    #Replace waterlevel of selected cells with avg of neighbours.
-    self.waterlevel_correction(output_col="wlvl_max_replaced")
+    # #Replace waterlevel of selected cells with avg of neighbours.
+    # self.waterlevel_correction(output_col="wlvl_max_replaced")
+    
 
 
 
 
+# %%

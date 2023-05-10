@@ -9,7 +9,7 @@ from osgeo import gdal
 # Local imports
 import hhnk_research_tools as hrt
 import hhnk_threedi_tools as htt
-from hhnk_threedi_tools.core.climate_scenarios.processes import multiprocess
+from deprecated.core.climate_results.processes import multiprocess
 from tqdm.notebook import trange, tqdm
 
 

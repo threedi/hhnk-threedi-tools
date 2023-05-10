@@ -8,14 +8,10 @@ Modified to have more flexibility in input and calculation
 
 
 import numpy as np
-from scipy.interpolate import LinearNDInterpolator
 from scipy.spatial import qhull
 
 from osgeo import gdal
-from threedigrid.admin.gridresultadmin import GridH5ResultAdmin
-from threedigrid.admin.constants import SUBSET_2D_OPEN_WATER
 from threedigrid.admin.constants import NO_DATA_VALUE
-from threedidepth.fixes import fix_gridadmin
 from threedidepth import morton
 
 
@@ -183,6 +179,8 @@ class BaseCalculatorGPKG:
 
         #Calculate depth
         block_out = wlvl_block-dem_block
+
+        block_out[block_out<-0.01] = self.output_raster.nodata
         block_out[mask] = self.output_raster.nodata
         return block_out
 
@@ -199,17 +197,17 @@ class BaseCalculatorGPKG:
                 read_array=False)
 
 
-    def run(self, output_folder, output_raster_name, mode="MODE_WLVL", min_block_size=1024, overwrite=False):
+    def run(self, output_file, mode="MODE_WLVL", min_block_size=1024, overwrite=False):
         #Init rasters
-        self.nodeid_raster = hrt.Raster(os.path.join(output_folder, "nodeid.tif"))
-        self.output_raster = hrt.Raster(os.path.join(output_folder, output_raster_name))
+        self.nodeid_raster = hrt.Raster(output_file.parent/"nodeid.tif")
+        self.output_raster = hrt.Raster(output_file)
 
         if self.output_raster.exists:
             if overwrite is False:
-                print(f"Output exists: {self.output_raster.source_path}")
+                # print(f"Output exists: {self.output_raster.source_path}")
                 return
             else:
-                self.output_raster.pl.unlink
+                self.output_raster.pl.unlink()
 
 
         #Create rasters

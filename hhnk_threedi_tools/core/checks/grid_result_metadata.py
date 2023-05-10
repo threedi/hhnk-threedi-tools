@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from threedigrid.admin.gridresultadmin import GridH5ResultAdmin
 
 
 def calculate_rain_days(rain):
@@ -114,8 +115,8 @@ def create_results_dataframe(timestep, days_dry_start, days_dry_end):
     return timesteps_dataframe
 
 
-def construct_scenario(grid_result):
-    """Input should be GridH5ResultAdmin instance from threedigrid.admin.gridresultadmin"""
+def construct_scenario(grid_result:GridH5ResultAdmin):
+    """Get scenario properties from threedi result."""
     try:
         rain, dt, timestep = get_rain_properties(grid_result)
         detected_rain, days_dry_start, days_dry_end = calculate_rain_days(rain)

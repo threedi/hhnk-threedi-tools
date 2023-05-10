@@ -12,10 +12,11 @@ import matplotlib.pyplot as plt
 import ipywidgets as widgets
 from IPython.core.display import HTML
 from traitlets import Unicode
-from apscheduler.schedulers.blocking import BlockingScheduler
+# from apscheduler.schedulers.blocking import BlockingScheduler
 
 # threedi
-from threedi_scenario_downloader import downloader as dl
+# from threedi_scenario_downloader import downloader as dl
+from hhnk_threedi_tools.core.api import downloader as dl
 
 # local imports
 import hhnk_threedi_tools as htt
@@ -30,12 +31,11 @@ from hhnk_threedi_tools.variables.api_settings import (
     RAIN_INTENSITY,
     GROUNDWATER,
     RAIN_SCENARIOS,
-    API_SETTINGS,
-    MODEL_TYPES,
 )
 
 
 dl.LIZARD_URL = "https://hhnk.lizard.net/api/v3/"
+DL_RESULT_LIMIT = 1000
 THREEDI_API_HOST = "https://api.3di.live/v3"
 RESULT_LIMIT = 20
 
@@ -472,14 +472,15 @@ class StartCalculationWidgets:
                 )
 
 
-            self.folder_map_label = widgets.Label(
-                    "Output folder map:", layout=item_layout(grid_area="output_folder_map_label")
+            #folder_map is subfolder for batch 
+            self.subfolder_batch_label = widgets.Label(
+                    "Output folder map:", layout=item_layout(grid_area="output_subfolder_batch_label")
                 )    
 
-            self.folder_map_value = widgets.Text(
+            self.subfolder_batch_value = widgets.Text(
                     '',
                     disabled=False,
-                    layout=item_layout(grid_area="output_folder_map_value"),
+                    layout=item_layout(grid_area="output_subfolder_batch_value"),
                 )
 
 
@@ -789,7 +790,7 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
                 self.sim.simulation = None
                 self.sim.simulation_created = False
                 self.update_create_simulation_button()
-                self.update_start_simulation_button(disabled=True, button=self.start.start_button)
+                self.update_start_simulation_button(status=0, button=self.start.start_button)
 
                 self.add_feedback("INFO", "Simulation widget reset.")
                 return
@@ -803,6 +804,7 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
 
             self.vars.sqlite_path = self.sim.download_sqlite()
 
+            #Creating will set sim.simulation_created to True.
             self.sim.create(output_folder=self.vars.output_folder,
                         simulation_name=self.start.simulation_name_view_widget.value,
                         model_id=self.selected_threedimodel_id,
@@ -838,7 +840,7 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
 
             self.update_simulation_feedback(sim=self.sim)
             self.update_create_simulation_button()
-            self.update_start_simulation_button(disabled=False, button=self.start.start_button)
+            self.update_start_simulation_button(status=2, button=self.start.start_button)
 
 
         @self.start.start_button.on_click
@@ -846,7 +848,7 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
             #start simulation
             self.vars.sim.start()
 
-            self.update_start_simulation_button(disabled=True, button=self.start.start_button)
+            self.update_start_simulation_button(status=2, button=self.start.start_button)
 
             with self.feedback.widget:
                 print(f"{self.vars.time_now} - Simulation (hopefully) started or queued.\n\
@@ -937,12 +939,15 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
 
         @self.start.start_batch_button.on_click
         def start_batch_calculation(action):
+            # self.feedback.widget.clear_output()
+
             ready_to_roll = self.check_create_batch_simulation()
             if not ready_to_roll:
                 self.add_feedback("ERROR", "Check inputs again.")
                 return
             
-            self.update_start_simulation_button(disabled=True, button=self.start.start_batch_button)
+            self.update_start_simulation_button(status=1, button=self.start.start_batch_button)
+            self.start.start_batch_button.style.button_color
 
             self.vars.output_folder_batch = self.output.folder_value_batch.value
             if os.path.exists(str(self.vars.output_folder_batch)) == False:
@@ -950,10 +955,18 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
 
 
             batch_scenario_names = self.batch_scenario_names()
+
+
             self.add_feedback("INFO", f"Starting simulations.\nOutput wil be stored in {self.vars.output_folder_batch}")
             for rt, gxg, rs, i in self.loop_batch_selection():
 
                 shortname = f"{rt}_{gxg}_{rs}"
+
+
+                #Skip simulation if it already exists on lizard
+                if batch_scenario_names[shortname] in self.vars.available_batch_results:
+                    continue
+
                 self.vars.sim_batch[shortname] = Simulation(api_key=self.vars.api_keys["threedi"]) 
 
                 sim = self.vars.sim_batch[shortname]
@@ -961,8 +974,7 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
                 sim.simulation_created = False
 
                 self.vars.sqlite_path_batch[shortname] = sim.download_sqlite()
-
-                #TODO check if already run.
+                
                 sim.create(output_folder=self.vars.output_folder_batch,
                             simulation_name=batch_scenario_names[shortname],
                             model_id=self.selected_threedimodel_id_gxg(gxg),
@@ -993,7 +1005,7 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
 
                 self.update_simulation_feedback(sim=sim)
 
-                sim.start()
+                sim.start(extra_name=f"_{shortname}")
 
             with self.feedback.widget:
                 print(f"{self.vars.time_now} - All simulations (hopefully) started or queued.\n\
@@ -1006,6 +1018,7 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
                     )
                 )
 
+            self.update_start_simulation_button(status=0, button=self.start.start_batch_button)
 
 
 
@@ -1027,6 +1040,17 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
         except:
             return False, "Missing API key"
 
+        #Check for available results on lizard.
+        r = dl.find_scenarios(name__icontains=self.model.schema_name_widget.value, limit=DL_RESULT_LIMIT)
+        available_results = []
+        if len(r) > 0:
+            for i in r:
+                available_results.append(i["name"].lower())
+
+        self.vars.available_results = available_results
+        if self.start.simulation_name_view_widget.value.lower() in self.vars.available_results:
+            return False, "Simulation already available on lizard"
+
         return True, ""
 
 
@@ -1036,10 +1060,10 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
            
         #Set output folder
 
-        output_folder = self.output.folder_map_value.value
+        output_folder = self.output.subfolder_batch_value.value
         if output_folder == "":
             ready_to_roll=False
-            self.add_feedback("ERROR", "No output folder map selected.")
+            self.add_feedback("ERROR", "No output subfolder selected.")
             
         else:
             self.output.folder_value_batch.value = self.vars.folder.threedi_results.batch.full_path(output_folder)
@@ -1080,20 +1104,46 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
             self.add_feedback("ERROR", "selected schematisations have the same 3Di model id.\nSelect different schematisations.")
             ready_to_roll=False
         
+        #Check for available results on lizard.
+        r = dl.find_scenarios(name__icontains=self.model.schema_name_widget.value, limit=DL_RESULT_LIMIT)
+        available_results = []
+        if len(r) > 0:
+            for i in r:
+                available_results.append(i['name'].lower())
+
+        self.vars.available_results = available_results
+
 
         if ready_to_roll:
             batch_scenario_names = self.batch_scenario_names()
 
+            self.vars.available_batch_results = [b for b in batch_scenario_names.values() if b.lower() in self.vars.available_results]
+
             self.add_feedback("INFO", f"Ready to start simulations ({len(batch_scenario_names)} total)")
+            self.add_feedback("INFO", f"{len(self.vars.available_batch_results)} simulations already have results on lizard and wont be started")
+
             for key in batch_scenario_names:
-                self.feedback.widget.append_stdout(f"{batch_scenario_names[key]}\n")
+                name = batch_scenario_names[key]
+                if name not in self.vars.available_batch_results:
+                    self.feedback.widget.append_stdout(f"{name}\n")
+                else:
+                    self.feedback.widget.append_stdout(f"{name} -- already exists\n")
 
                 # with self.feedback.widget:
                 #     print(batch_scenario_names[key])
-            self.update_start_simulation_button(disabled=False, button=self.start.start_batch_button)
+            self.update_start_simulation_button(status=2, button=self.start.start_batch_button)
+
+            if len(batch_scenario_names) == len(self.vars.available_batch_results):
+                self.add_feedback("Warning", f"All selected scenarios already exist on lizard") 
+                ready_to_roll=False
+                self.update_start_simulation_button(status=0, button=self.start.start_batch_button)
+
             
         else:
-            self.update_start_simulation_button(disabled=True, button=self.start.start_batch_button)
+            self.update_start_simulation_button(status=0, button=self.start.start_batch_button)
+
+        
+
 
         return ready_to_roll
 
@@ -1203,11 +1253,19 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
             self.start.create_simulation_button.style.button_color = "lightgreen"
 
 
-    def update_start_simulation_button(self, disabled: bool, button):
-        button.disabled=disabled
-        if disabled:
+    def update_start_simulation_button(self, status: int, button):
+        """
+        0 = disable red
+        1 = disable orange
+        2 = enable green"""
+        if status == 0:
+            button.disabled=True
             button.style.button_color="red"
-        else:
+        elif status == 1:
+            button.disabled=True
+            button.style.button_color="orange"
+        elif status == 2:
+            button.disabled=False
             button.style.button_color="lightgreen"
 
 
@@ -1402,7 +1460,7 @@ class GuiVariables:
     def __init__(self):
         self._folder = None
 
-        self.sim = None #Is filled when pressing login
+        self.sim = None #Is filled when pressing login #htt.core.api.calculation.Calculation class
         self.sim_batch = {} #Copies of .sim for batch calculations.
         self.schematisations = {} #Is filled when searching for models by name
         self.revisions = {}
@@ -1418,6 +1476,7 @@ class GuiVariables:
 
         self.simulation_model_type = ""
         self.output_folder = None #Filled when create_simulation is clicked.
+        self.available_results = None #Filled when create_simulation is clicked
         self.output_folder_batch = None #filled when start batch simulation is clicked.
         
     @property
@@ -1541,7 +1600,7 @@ class StartCalculationGui:
 
         self.w.rain.test_0d1d_button.click()
 
-        self.scheduler = BlockingScheduler(timezone="Europe/Amsterdam")
+        # self.scheduler = BlockingScheduler(timezone="Europe/Amsterdam")
 
         # self.scenarios = self._init_scenarios()
 
@@ -1612,9 +1671,9 @@ class StartCalculationGui:
 '. rain_box rain_box rain_box rain_box . . simulation_name_view_widget simulation_name_view_widget'
 '. rain_box rain_box rain_box rain_box . . create_simulation_button create_simulation_button'
 '. feedback_label . . . . . start_button start_button'
-'. feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget . . .'
-'. feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget . . .'
-'. feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget . . .'
+'. feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget'
+'. feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget'
+'. feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget'
 '. . . . . . . . .'
 """,
             ))
@@ -1667,8 +1726,8 @@ class StartCalculationGui:
                 self.w.output.folder_label,
                 # self.w.output.folder_value,
                 self.w.output.folder_value_batch,
-                self.w.output.folder_map_label,
-                self.w.output.folder_map_value,
+                self.w.output.subfolder_batch_label,
+                self.w.output.subfolder_batch_value,
                 # self.w.output.subfolder_label,
                 # self.w.output.subfolder_box,
                 # self.w.calc_settings.label,
@@ -1702,7 +1761,7 @@ class StartCalculationGui:
 '. . . . . . organisation_label organisation_box organisation_box'
 '. batch_scenario_label batch_scenario_label batch_scenario_label batch_scenario_label . output_label output_label output_label'
 '. . batch_rain_type_box batch_rain_type_box batch_rain_type_box . output_folder_label output_folder_value_batch output_folder_value_batch'
-'. . gxg_label_box gxg_label_box gxg_label_box . output_folder_map_label output_folder_map_value output_folder_map_value'
+'. . gxg_label_box gxg_label_box gxg_label_box . output_subfolder_batch_label output_subfolder_batch_value output_subfolder_batch_value'
 '. rain_label_box batch_scenario_box batch_scenario_box batch_scenario_box . . . .'
 '. rain_label_box batch_scenario_box batch_scenario_box batch_scenario_box . . . .'
 '. rain_label_box batch_scenario_box batch_scenario_box batch_scenario_box . start_label start_label start_label'
@@ -1751,7 +1810,7 @@ class StartCalculationGui:
 
 
 if __name__ == '__main__':
-    data = {'polder_folder': 'E:\\02.modellen\\HUB - Scenarioberekeningen wateroverlast',
+    data = {'polder_folder': 'E:\\02.modellen\\model_test_v2',
  'api_keys_path': 'C:\\Users\\wvangerwen\\AppData\\Roaming\\3Di\\QGIS3\\profiles\\default\\python\\plugins\\hhnk_threedi_plugin\\api_key.txt'}
     self = StartCalculationGui(data=data); 
     display(self.tab)
@@ -1759,36 +1818,36 @@ if __name__ == '__main__':
 
     # display(self.w.batch.scenario_box)
 
-    self.widgets.model.schema_name_widget.value='Schagerkogge'
+    self.widgets.model.schema_name_widget.value='model_test'
     # self.widgets.model.schema_name_widget.value='katvoed'
 
 # %%
 
-grid_template_areas="""
-'. login_label login_label model_label model_label schema_select_label schema_select_label schema_select_label schema_select_label'
-'. lizard_apikey_widget lizard_apikey_widget . . schema_label schema_dropdown schema_dropdown schema_dropdown'
-'. threedi_apikey_widget threedi_apikey_widget schema_name_widget schema_name_widget revision_label revision_dropdown revision_dropdown revision_dropdown'
-'. login_button login_button model_name_search_button model_name_search_button threedimodel_label threedimodel_dropdown threedimodel_dropdown threedimodel_dropdown'
-'. . . . . organisation_label organisation_box organisation_box organisation_box'
-'. rain_label rain_label rain_label rain_label output_label output_label output_label output_label'
-'. rain_box rain_box rain_box rain_box output_folder_label output_folder_value output_folder_value output_folder_value'
-'. rain_box rain_box rain_box rain_box output_subfolder_label output_subfolder_box output_subfolder_box output_subfolder_box'
-'. rain_box rain_box rain_box rain_box calc_settings_label calc_settings_label calc_settings_label calc_settings_label'
-'. rain_box rain_box rain_box rain_box . calc_settings_basic_processing calc_settings_damage_processing calc_settings_arrival_processing'
-'. rain_box rain_box rain_box rain_box . calc_settings_structure_control calc_settings_laterals .'
-'. rain_box rain_box rain_box rain_box . start_label start_label start_label'
-'. rain_box rain_box rain_box rain_box . . simulation_name_label simulation_name_widget simulation_name_widget
-'. rain_box rain_box rain_box rain_box . . . create_simulation_button create_simulation_button'
-'. rain_box rain_box rain_box rain_box . . start_button start_button'
-'. feedback_label . . . . . . .'
-'. feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget . . .'
-'. feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget . . .'
-'. feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget . . .'
-'. . . . . . . . .'
-"""
+# grid_template_areas="""
+# '. login_label login_label model_label model_label schema_select_label schema_select_label schema_select_label schema_select_label'
+# '. lizard_apikey_widget lizard_apikey_widget . . schema_label schema_dropdown schema_dropdown schema_dropdown'
+# '. threedi_apikey_widget threedi_apikey_widget schema_name_widget schema_name_widget revision_label revision_dropdown revision_dropdown revision_dropdown'
+# '. login_button login_button model_name_search_button model_name_search_button threedimodel_label threedimodel_dropdown threedimodel_dropdown threedimodel_dropdown'
+# '. . . . . organisation_label organisation_box organisation_box organisation_box'
+# '. rain_label rain_label rain_label rain_label output_label output_label output_label output_label'
+# '. rain_box rain_box rain_box rain_box output_folder_label output_folder_value output_folder_value output_folder_value'
+# '. rain_box rain_box rain_box rain_box output_subfolder_label output_subfolder_box output_subfolder_box output_subfolder_box'
+# '. rain_box rain_box rain_box rain_box calc_settings_label calc_settings_label calc_settings_label calc_settings_label'
+# '. rain_box rain_box rain_box rain_box . calc_settings_basic_processing calc_settings_damage_processing calc_settings_arrival_processing'
+# '. rain_box rain_box rain_box rain_box . calc_settings_structure_control calc_settings_laterals .'
+# '. rain_box rain_box rain_box rain_box . start_label start_label start_label'
+# '. rain_box rain_box rain_box rain_box . . simulation_name_label simulation_name_widget simulation_name_widget
+# '. rain_box rain_box rain_box rain_box . . . create_simulation_button create_simulation_button'
+# '. rain_box rain_box rain_box rain_box . . start_button start_button'
+# '. feedback_label . . . . . . .'
+# '. feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget . . .'
+# '. feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget . . .'
+# '. feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget . . .'
+# '. . . . . . . . .'
+# """
 
-a=[row.split(" ") for row in grid_template_areas.split("\n")]
-for i in a:
-    print(f"{len(i)} {i}")
+# a=[row.split(" ") for row in grid_template_areas.split("\n")]
+# for i in a:
+#     print(f"{len(i)} {i}")
 # [len(i) for i in a]
 

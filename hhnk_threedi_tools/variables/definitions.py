@@ -1,4 +1,4 @@
-DEM_MAX_VALUE = 1e20
+DEM_MAX_VALUE = 400
 channels_isolated_calc_type = 101
 manholes_isolated_calc_type = 1
 

@@ -1,5 +1,6 @@
+# %%
 from asyncio.windows_events import NULL
-from datetime import datetime
+import datetime
 from time import sleep
 
 import pytz
@@ -25,10 +26,10 @@ THREEDI_API = ThreediApi(config=CONFIG, version="v3-beta")
 
 # Define timezones
 AMSTERDAM = pytz.timezone("Europe/Amsterdam")
-UTC = pytz.utc
+UTC = datetime.timezone.utc
 
 # Define start/end date
-SIMULATION_START = datetime(2021, 6, 29, 17, 0).astimezone(AMSTERDAM)
+SIMULATION_START = datetime.datetime(2021, 6, 29, 17, 0).astimezone(AMSTERDAM)
 
 
 def get_model_and_simulation_name(schematisation_name: str, bui: str = "T100"):
@@ -58,7 +59,7 @@ def start_simulatie(schematisation_name: str, bui: str = "T100", duration=3 * 60
             "name": simulation_name,
             "tags": ["X0012"],
             "organisation": ORGANISATION_UUID,
-            "start_datetime": SIMULATION_START.astimezone(pytz.utc),
+            "start_datetime": SIMULATION_START.astimezone(datetime.timezone.utc),
             "duration": duration,
         }
     )
@@ -82,7 +83,7 @@ def start_simulatie(schematisation_name: str, bui: str = "T100", duration=3 * 60
                 "offset": 0,
                 "duration": duration,
                 "reference_uuid": RADAR_ID,
-                "start_datetime": SIMULATION_START.astimezone(pytz.utc),
+                "start_datetime": SIMULATION_START.astimezone(datetime.timezone.utc),
                 "units": "m/s",
                 "multiplier": 1,
             },
