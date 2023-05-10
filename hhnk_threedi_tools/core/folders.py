@@ -256,10 +256,6 @@ class SourceDir(Folder):
         # self.add_layer("init_waterlevel_val_field", "streefpeil_bwn2")
         # self.add_layer("init_water_level_filename", "initieel_water_level")
 
-
-
-
-
     def create_readme(self):
         readme_txt = (
                 "Expected files are:\n\n"
@@ -676,12 +672,6 @@ def if_exists(path):
         return None
     else:
         return path if os.path.exists(path) else None
-
-
-def add_log_layer_path(files_dict, base_path):
-    # Creates log and layer folders in test specific output folder
-    # ex: output/sqlite_tests/Logs and output/sqlite_tests/Layers
-    return files_dict
 
 
 def all_files_in_folders(_class):

@@ -9,24 +9,43 @@ from pathlib import Path
 import inspect
 
 # Local imports
-from hhnk_threedi_tools.core.checks.sqlite.sqlite_main import SqliteTest
-from hhnk_threedi_tools.core.folders import Folders
+from hhnk_threedi_tools.core.checks.sqlite.sqlite_main import SqliteCheck
+
+from .config import FOLDER_TEST
 
 # %%
 # Globals
-TEST_MODEL = Path(__file__).parent.absolute() / "data/model_test/"
+import csv
 
 class TestSqlite:
-    folder = Folders(TEST_MODEL)
-    folder.output.sqlite_tests.unlink_contents()
+    FOLDER_TEST.output.sqlite_tests.unlink_contents()
 
-    sqlite_test = SqliteTest(folder=folder)
+    sqlite_check = SqliteCheck(folder=FOLDER_TEST)
 
+    # open the file in the write mode
+    with open(r'E:\02.modellen\model_test_v2\t2.txt', 'w') as f:
+        # create the csv writer
+        writer = csv.writer(f)
 
-    def test_run_controlled_structures(self):
-        self.sqlite_test.run_controlled_structures()
+        # write a row to the csv file
+        writer.writerow([f"{sqlite_check.fenv.source_data}"])
+        writer.writerow([f"{sqlite_check.fenv.source_data.datachecker}"])
+        writer.writerow([f"{sqlite_check.fenv.source_data.datachecker.layers.culvert.parent}"])
 
-        output_file = self.sqlite_test.output_fd.gestuurde_kunstwerken
+    def test_run_controlled_structures(self):       
+        # open the file in the write mode
+        with open(r'E:\02.modellen\model_test_v2\t3.txt', 'w') as f:
+            # create the csv writer
+            writer = csv.writer(f)
+
+            # write a row to the csv file
+            writer.writerow([f"{self.sqlite_check.fenv.source_data}"])
+            writer.writerow([f"{self.sqlite_check.fenv.source_data.datachecker}"])
+            writer.writerow([f"{self.sqlite_check.fenv.source_data.datachecker.layers.culvert.parent}"])
+
+        self.sqlite_check.run_controlled_structures()
+
+        output_file = self.sqlite_check.output_fd.gestuurde_kunstwerken
         assert output_file.exists
 
         output_df = output_file.load()
@@ -34,15 +53,15 @@ class TestSqlite:
 
 
     def test_run_dem_max_value(self):
-        output = self.sqlite_test.run_dem_max_value()
+        output = self.sqlite_check.run_dem_max_value()
         assert "voldoet aan de norm" in output
 
 
     def test_run_dewatering_depth(self):           
-        self.sqlite_test.run_dewatering_depth()
-        assert self.sqlite_test.output_fd.drooglegging.pl.exists
+        self.sqlite_check.run_dewatering_depth()
+        assert self.sqlite_check.output_fd.drooglegging.pl.exists
 
-        assert self.sqlite_test.output_fd.drooglegging.statistics(approve_ok=False
+        assert self.sqlite_check.output_fd.drooglegging.statistics(approve_ok=False
                     ) == {'min': -0.76, 
                           'max': 10004.290039, 
                           'mean': 2.167882, 
@@ -50,54 +69,54 @@ class TestSqlite:
 
 
     def test_run_model_checks(self):
-        output = self.sqlite_test.run_model_checks()
+        output = self.sqlite_check.run_model_checks()
         assert "node without initial waterlevel" in output.set_index("id").loc[482, "error"]
 
 
     def test_run_geometry(self):
         """TODO empty check"""
-        output = self.sqlite_test.run_geometry_checks()
+        output = self.sqlite_check.run_geometry_checks()
         assert output.empty
 
 
     def test_run_imp_surface_area(self):
-        output = self.sqlite_test.run_imp_surface_area()
+        output = self.sqlite_check.run_imp_surface_area()
         assert "61 ha" in output
 
 
     def test_run_isolated_channels(self):
-        output = self.sqlite_test.run_isolated_channels()
+        output = self.sqlite_check.run_isolated_channels()
         assert output[0]["length_in_meters"][10] == 168.45
 
 
     def test_run_used_profiles(self):
-        output = self.sqlite_test.run_used_profiles()
+        output = self.sqlite_check.run_used_profiles()
         assert output["width_at_wlvl"][0] == 2
 
 
     def test_run_cross_section(self):
-        output = self.sqlite_test.run_cross_section()
+        output = self.sqlite_check.run_cross_section()
         assert output.empty
 
 
     def test_run_cross_section_vertex(self):
-        output = self.sqlite_test.run_cross_section_vertex()
+        output = self.sqlite_check.run_cross_section_vertex()
         assert output.empty
 
 
     def test_run_struct_channel_bed_level(self):
         """TODO empty check"""
-        output = self.sqlite_test.run_struct_channel_bed_level()
+        output = self.sqlite_check.run_struct_channel_bed_level()
         assert output.empty
 
 
     def test_run_watersurface_area(self):
-        output = self.sqlite_test.run_watersurface_area()
+        output = self.sqlite_check.run_watersurface_area()
         assert output[0]["area_diff"][0] == -20
 
 
     def test_run_weir_flood_level(self):
-        output = self.sqlite_test.run_weir_floor_level()
+        output = self.sqlite_check.run_weir_floor_level()
         assert output[0]["proposed_reference_level"][1] == -1.26
 
 

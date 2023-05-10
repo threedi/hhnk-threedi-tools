@@ -141,7 +141,7 @@ OUTPUT_COLS = [
 ]
 
 
-class SqliteTest:
+class SqliteCheck:
     def __init__(
         self,
         folder: Folders,
@@ -376,6 +376,20 @@ class SqliteTest:
         """
         datachecker_culvert_layer = self.fenv.source_data.datachecker.layers.culvert
         damo_duiker_sifon_layer = self.fenv.source_data.damo.layers.DuikerSifonHevel
+
+
+        import csv
+
+        # open the file in the write mode
+        with open(r'E:\02.modellen\model_test_v2\t.txt', 'w') as f:
+            # create the csv writer
+            writer = csv.writer(f)
+
+            # write a row to the csv file
+            writer.writerow([f"{self.fenv.source_data}"])
+            writer.writerow([f"{datachecker_culvert_layer.parent}"])
+            writer.writerow([f"{damo_duiker_sifon_layer.parent}"])
+
 
         try:
             below_ref_query = struct_channel_bed_query
@@ -822,7 +836,7 @@ if __name__=="__main__":
     TEST_MODEL = r"E:\02.modellen\model_test_v2"
 
     folder = Folders(TEST_MODEL)
-    self = SqliteTest(folder=folder)
+    self = SqliteCheck(folder=folder)
 
     self.run_dewatering_depth(overwrite=True)
 

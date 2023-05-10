@@ -21,17 +21,18 @@ from hhnk_threedi_tools.core.folders import Folders
 
 # Globals
 # __file__ = "C:/Users/chris.kerklaan/Documents/Github/hhnk-threedi-tests/hhnk_threedi_tools/tests/test_one_d_two_d.py"
-TEST_MODEL = str(pathlib.Path(__file__).parent.absolute()) + "/data/model_test/"
 REVISION = "BWN bwn_test #6 1d2d_test"
+
+from .config import FOLDER_TEST
+
 
 class TestOneDTwoD:
 
-    folder = Folders(TEST_MODEL)
 
     #Remove previous output
-    folder.output.one_d_two_d.unlink_contents(rmdirs=True)
+    FOLDER_TEST.output.one_d_two_d.unlink_contents(rmdirs=True)
 
-    test_1d2d= OneDTwoDTest(folder=folder, revision=REVISION)
+    test_1d2d= OneDTwoDTest(folder=FOLDER_TEST, revision=REVISION)
 
 
     def test_run_flowline_stats(self):
