@@ -7,7 +7,7 @@ setup(
     url="https://github.com/threedi/hhnk-threedi-tools",
     author="Wietse van Gerwen, Laure Ravier",
     author_email="w.vangerwen@hhnk.nl",
-    maintainer="Chris Kerklaan",
+    maintainer="Wietse van Gerwen",
     project_urls={
         "Bug Tracker": "https://github.com/threedi/hhnk-threedi-tools/issues",
     },
