@@ -1,0 +1,7 @@
+﻿id;name;dem_file;frict_coef_file;infiltration_rate_file;max_infiltration_capacity_file;display_name;output_time_step;use_2d_rain;kmax;control_group_id;use_2d_flow;simple_infiltration_settings_id;use_0d_inflow;infiltration_rate;infiltration_surface_option;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+1;0d1d_test;rasters/dem_hoekje.tif;;;;;900;0;3;;0;;1;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+2;1d2d_test;rasters/dem_hoekje.tif;rasters/friction_hoekje.tif;;;;300;1;3;1;1;;0;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+3;1d2d_glg;rasters/dem_hoekje.tif;rasters/friction_hoekje.tif;rasters/infiltration_hoekje.tif;rasters/storage_glg_hoekje.tif;glg;300;1;3;1;1;1;0;0;0;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+4;1d2d_ggg;rasters/dem_hoekje.tif;rasters/friction_hoekje.tif;rasters/infiltration_hoekje.tif;rasters/storage_ggg_hoekje.tif;ggg;300;1;3;1;1;2;0;0;0;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+5;1d2d_ghg;rasters/dem_hoekje.tif;rasters/friction_hoekje.tif;rasters/infiltration_hoekje.tif;rasters/storage_ghg_hoekje.tif;ghg;300;1;3;1;1;3;0;0;0;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+6;1d2d_bgs;rasters/dem_hoekje.tif;rasters/friction_hoekje.tif;rasters/infiltration_hoekje.tif;rasters/storage_bgs_hoekje.tif;bgs;300;1;3;1;1;4;0;0;0;;;;;;;;;;;;;;;;;;;;;;;;;;;;
