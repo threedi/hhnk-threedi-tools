@@ -33,6 +33,7 @@ dependencies:
   #User folder
   - jupyterlab=3.6.3
   - ipywidgets=8.0.6
+  
   #External deps plugin
   - pytest=7.2.2
   - pytest-cov
