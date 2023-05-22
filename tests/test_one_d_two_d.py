@@ -1,12 +1,7 @@
 # %%
 # -*- coding: utf-8 -*-
 """
-Created on Mon Aug 23 10:46:05 2021
-
-@author: chris.kerklaan
-
 Functional testing for oneDtwoD object
-
 """
 if __name__ == "__main__":
     import set_local_paths  # add local git repos.

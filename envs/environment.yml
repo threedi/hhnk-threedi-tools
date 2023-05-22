@@ -8,7 +8,7 @@ channels:
 dependencies:
   #QGIS preinstalled
   - python=3.9.5 # equals MI python version
-  - geopandas=0.11.1
+  - geopandas=0.12.2
   - pandas=1.1.3
   - scipy=1.6.2
 
@@ -42,7 +42,7 @@ dependencies:
   - iniconfig=2.0.0 #pytest dependency
   - tqdm=4.64.0
   - xarray=2022.3.0
-  - pygeos=0.14 #required for geopandas
+  # - pygeos=0.14 #required for geopandas, not for geopandas 0.12.2
 
 
   - pip: # 3Di packages are not conda installable and are therefore installed by PIP
