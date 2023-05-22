@@ -1,0 +1,608 @@
+---
+###!# generate_threedi_files started for bwn_thoekje.sqlite
+---
+###!# generate_threedi_files started for 0d1d_test from bwn_thoekje.sqlite
+---
+---
+###!# generate_threedi_files started for 1d2d_test from bwn_thoekje.sqlite
+---
+---
+###!# generate_threedi_files started for 1d2d_ghg from bwn_thoekje.sqlite
+---
+---
+###!# generate_threedi_files started for 1d2d_ggg from bwn_thoekje.sqlite
+---
+---
+###!# generate_threedi_files started for 1d2d_glg from bwn_thoekje.sqlite
+---
+13:02:06  INFO - Starting PyFlow...
+13:02:06  INFO - Running makegrid...
+13:04:06  INFO -  
+** INFO   : ___________WELCOME TO THE WONDERFUL WORLD OF 3Di___________________
+** DEBUG  : Number of threads used in making tables is:              2
+** INFO   : Opened file: /srv/bwn_modelbuilder/models/bwn_thoekje_0d1d_test.ini
+** DEBUG  : Found attribute in configuration file: model_type = 3di-v2
+** INFO   : Model folder location is: /srv/bwn_modelbuilder/models/bwn_thoekje_0d1d_test/
+** DEBUG  : Found attribute in configuration file: use_2d_flow =        0
+** DEBUG  : Found attribute in configuration file: use_1d_flow =        1
+** DEBUG  : Found attribute in configuration file: interflow_type =        0
+** DEBUG  : Found attribute in configuration file: infiltration_type =        0
+** DEBUG  : Found attribute in configuration file: use_groundwater_flow =        0
+** DEBUG  : Found attribute in configuration file: dem_file = rasters/dem_thoekje.tif
+** DEBUG  : Found attribute in configuration file: pump_file = bwn_thoekje_0d1d_test/input_generated/pumpstations.csv
+** DEBUG  : Found attribute in configuration file: friction_type =        2
+** DEBUG  : Found attribute in configuration file: friction_avg =        0
+** WARNING: Attribute not found in configuration file: friction_file
+** DEBUG  :  No value found for attribute in configuration file, set default: initial_infiltration_rate =   -9999.0000
+** WARNING: Attribute not found in configuration file: initial_infiltration_rate_file
+** DEBUG  :  No value found for attribute in configuration file, set default: initial_infiltration_rate_type =       -1
+** DEBUG  :  No value found for attribute in configuration file, set default: equilibrium_infiltration_rate =   -9999.0000
+** WARNING: Attribute not found in configuration file: equilibrium_infiltration_rate_file
+** DEBUG  :  No value found for attribute in configuration file, set default: equilibrium_infiltration_rate_type =       -1
+** DEBUG  :  No value found for attribute in configuration file, set default: infiltration_decay_period =   -9999.0000
+** WARNING: Attribute not found in configuration file: infiltration_decay_period_file
+** DEBUG  :  No value found for attribute in configuration file, set default: infiltration_decay_period_type =       -1
+** DEBUG  :  No value found for attribute in configuration file, set default: phreatic_storage_capacity =   -9999.0000
+** WARNING: Attribute not found in configuration file: phreatic_storage_capacity_file
+** DEBUG  :  No value found for attribute in configuration file, set default: phreatic_storage_capacity_type =       -1
+** DEBUG  :  No value found for attribute in configuration file, set default: groundwater_impervious_layer_level =   -9999.0000
+** WARNING: Attribute not found in configuration file: groundwater_impervious_layer_level_file
+** DEBUG  :  No value found for attribute in configuration file, set default: groundwater_impervious_layer_level_type =       -1
+** DEBUG  :  No value found for attribute in configuration file, set default: groundwater_hydro_connectivity =   -9999.0000
+** WARNING: Attribute not found in configuration file: groundwater_hydro_connectivity_file
+** DEBUG  :  No value found for attribute in configuration file, set default: groundwater_hydro_connectivity_type =       -1
+** WARNING: Attribute not found in configuration file: max_infiltration_capacity_file
+** DEBUG  :  No value found for attribute in configuration file, set default: porosity =       0.0000
+** WARNING: Attribute not found in configuration file: porosity_file
+** DEBUG  :  No value found for attribute in configuration file, set default: porosity_layer_thickness =       0.0000
+** DEBUG  :  No value found for attribute in configuration file, set default: impervious_layer_elevation =   10000.0000
+** DEBUG  :  No value found for attribute in configuration file, set default: hydraulic_conductivity =       0.0000
+** WARNING: Attribute not found in configuration file: hydraulic_conductivity_file
+** WARNING: Attribute not found in configuration file: wind_shielding_file
+** DEBUG  : Found attribute in configuration file: table_step_size =       0.0200
+** DEBUG  :  No value found for attribute in configuration file, set default: table_step_size_1d =       0.0200
+** DEBUG  :  No value found for attribute in configuration file, set default: table_step_size_volume_2d =       0.0200
+** DEBUG  : Found attribute in configuration file: flow_obstacle_file = bwn_thoekje_0d1d_test/input_generated/obstacle.  1
+** DEBUG  : Found attribute in configuration file: grid_information_file = bwn_thoekje_0d1d_test/input_generated/grid_information.tif
+** DEBUG  : Found attribute in configuration file: dem_obstacle_detection =  F
+** WARNING: Attribute not found in configuration file: dem_obstacle_height
+** WARNING: Attribute not found in configuration file: connections_1d2d_file
+** WARNING: Option not found embedded_cutoff_threshold
+** WARNING: Attribute not found in configuration file: boundary_conditions_2d_locations
+** DEBUG  : Found attribute in configuration file: preissmann_slot =       0.0000
+** DEBUG  : Found attribute in configuration file: limiter_slope_crossectional_area_2d =        0
+** DEBUG  : Found attribute in configuration file: limiter_slope_friction_2d =        0
+** DEBUG  : Found attribute in configuration file: limiter_slope_friction_2d =        0
+** DEBUG  : Found attribute in configuration file: friction_shallow_water_correction =        0
+** DEBUG  :  No value found for attribute in configuration file, set default: thin_water_layer_definition =   -9999.0000
+** DEBUG  : Found attribute in configuration file: epsg_code =    28992
+** INFO   : For configuration attribute: dem_file. Data read from GEOTIFF file: /srv/bwn_modelbuilder/models/rasters/dem_thoekje.tif
+** INFO   : For configuration attribute: pump_file. Data read from file: /srv/bwn_modelbuilder/models/bwn_thoekje_0d1d_test/input_generated/pumpstations.csv
+** INFO   : For configuration attribute: flow_obstacle_file. Data read from file: /srv/bwn_modelbuilder/models/bwn_thoekje_0d1d_test/input_generated/obstacle.  1
+** INFO   : For configuration attribute: grid_information_file. Data read from GEOTIFF file: /srv/bwn_modelbuilder/models/bwn_thoekje_0d1d_test/input_generated/grid_information.tif
+** DEBUG  : Number of 1D nodal end points:            468
+** DEBUG  : Number of 1D open boundary conditions:              0
+** DEBUG  : Number of 1d cross sections:           2125
+** DEBUG  : Number of 1d channels:            494
+** DEBUG  : mbed1d=              0
+** DEBUG  :  k,mmax(k),nmax(k)       1     196     176
+** DEBUG  :  k,mmax(k),nmax(k)       2      98      88
+** DEBUG  :  k,mmax(k),nmax(k)       3      49      44
+** DEBUG  : Number of 2D boundary cells, n2dobc =              0
+** DEBUG  : Number of neglected dampoints:              0
+** INFO   : Quadtree completed
+** DEBUG  : Number of 1d nodal endpoints:            468
+** DEBUG  : Number of cross section:            740
+** DEBUG  : Number of channels:            494
+** INFO   : 1D_channel network completed
+** DEBUG  : l1dtot,infl1d,nobc:    1352    1147       0
+** INFO   : Levees completed
+** INFO   : Lines completed
+** INFO   : Open boundaries added to the administration
+** INFO   : Node connection table completed
+** INFO   : Cross-section tables completed.
+** INFO   : Volume tables completed.
+** INFO   : Start make friction table
+** INFO   : Friction table completed
+** INFO   : Writing 1D files completed
+** INFO   : Write gridadmin completed
+** INFO   : Writing griddata completed
+** INFO   : Grid generation completed
+** INFO   : Network analysis completed
+** INFO   : Ik ben er ..., Je suis fini..., Ich bin fertig..., I am finished...
+** INFO   : Time of grid generation =     119.911003
+
+13:04:06  INFO - Setting rel_path for dem_thoekje.tif to rasters
+13:04:06  INFO - Setting rel_path for network.  1 to bwn_thoekje_0d1d_test/input_generated
+13:04:06  INFO - Setting rel_path for gridadmin.h5 to bwn_thoekje_0d1d_test/preprocessed
+13:04:06  INFO - Setting rel_path for grid_data_k= 3_l= 40_i=  7687_j=  6962.  1,  1 to bwn_thoekje_0d1d_test/preprocessed
+13:04:06  INFO - Setting rel_path for grid_information.tif to bwn_thoekje_0d1d_test/input_generated
+13:04:06  INFO - Setting rel_path for obstacle.  1 to bwn_thoekje_0d1d_test/input_generated
+13:04:06  INFO - Setting rel_path for ini_s1d.1 to bwn_thoekje_0d1d_test/scenario/initial_conditions
+13:04:06  INFO - Setting rel_path for measuring_locations.csv to bwn_thoekje_0d1d_test/scenario/controls
+13:04:06  INFO - Setting rel_path for controls.txt to bwn_thoekje_0d1d_test/scenario/controls
+13:04:06 WARNING - [!] No revision hash found, model does not seems to be under revision control
+13:04:06 WARNING - [!] No revision hash found, model does not seems to be under revision control
+13:04:06 WARNING - [!] No revision hash found, model does not seems to be under revision control
+The simulation will not be run, because of the --no-simulation option.
+Done.
+13:04:09  INFO - Starting PyFlow...
+13:04:09  INFO - Setting rel_path for dem_thoekje.tif to rasters
+13:04:09  INFO - Setting rel_path for network.  1 to bwn_thoekje_0d1d_test/input_generated
+13:04:09  INFO - Setting rel_path for gridadmin.h5 to bwn_thoekje_0d1d_test/preprocessed
+13:04:09  INFO - Setting rel_path for grid_data_k= 3_l= 40_i=  7687_j=  6962.  1,  1 to bwn_thoekje_0d1d_test/preprocessed
+13:04:09  INFO - Setting rel_path for grid_information.tif to bwn_thoekje_0d1d_test/input_generated
+13:04:09  INFO - Setting rel_path for obstacle.  1 to bwn_thoekje_0d1d_test/input_generated
+13:04:09  INFO - Setting rel_path for ini_s1d.1 to bwn_thoekje_0d1d_test/scenario/initial_conditions
+13:04:09  INFO - Setting rel_path for measuring_locations.csv to bwn_thoekje_0d1d_test/scenario/controls
+13:04:09  INFO - Setting rel_path for controls.txt to bwn_thoekje_0d1d_test/scenario/controls
+13:04:09  INFO - F - initialize
+13:04:09  INFO - F - Opened file: /srv/bwn_modelbuilder/models/bwn_thoekje_0d1d_test.ini
+13:04:09  INFO - F - Model folder location is: /srv/bwn_modelbuilder/models/bwn_thoekje_0d1d_test/
+13:04:09 WARNING - F - Attribute not found in configuration file: max_infiltration_capacity_file
+13:04:09 WARNING - F - Attribute not found in configuration file: max_infiltration_capacity_file
+13:04:09 WARNING - F - Attribute not found in configuration file: initial_waterlevel_type
+13:04:09 WARNING - F - Attribute not found in configuration file: initial_waterlevel_file_2d
+13:04:09 WARNING - F - Attribute not found in configuration file: initial_groundwater_level_file
+13:04:09 WARNING - F - Option not found wind_forcing_file
+13:04:09 WARNING - F - Option not found breach_file
+13:04:09 WARNING - F - Option not found rain_2d
+13:04:09 WARNING - F - Attribute not found in configuration file: lateral_2d_file
+13:04:09 WARNING - F - Attribute not found in configuration file: lateral_1d_file
+13:04:09 WARNING - F - Attribute not found in configuration file: boundary_conditions_2d_timeseries
+13:04:09 WARNING - F - Attribute not found in configuration file: leakage_file
+13:04:09 WARNING - F - Option not found num_predictor_corrector
+13:04:09 WARNING - F - Attribute not found in configuration file: aggregation_settings
+13:04:09  INFO - F - For configuration attribute: initial_waterlevel_file_1d. Data read from file: /srv/bwn_modelbuilder/models/bwn_thoekje_0d1d_test/scenario/initial_conditions/ini_s1d.1
+13:04:09  INFO - F - /srv/bwn_modelbuilder/models/bwn_thoekje_0d1d_test/preprocessed/grid_data_k= 3_l= 40_i=  7687_j=  6962.  1,  1
+13:04:10  INFO - F - Initialized 1D measuring station with ID: v2_connection_nodes#21#
+13:04:10  INFO - F - Measuring station "v2_connection_nodes#21#" added to group        1
+13:04:10  INFO - F - Measuring_station "v2_connection_nodes#21#" has weight      1.0000
+13:04:10  INFO - F - Initialized 1D measuring station with ID: v2_connection_nodes#249#
+13:04:10  INFO - F - Measuring station "v2_connection_nodes#249#" added to group        2
+13:04:10  INFO - F - Measuring_station "v2_connection_nodes#249#" has weight      1.0000
+13:04:10  INFO - F - Initialized 1D measuring station with ID: v2_connection_nodes#222#
+13:04:10  INFO - F - Measuring station "v2_connection_nodes#222#" added to group        3
+13:04:10  INFO - F - Measuring_station "v2_connection_nodes#222#" has weight      1.0000
+13:04:10  INFO - F - Initialized 1D measuring station with ID: v2_connection_nodes#2#
+13:04:10  INFO - F - Measuring station "v2_connection_nodes#2#" added to group        4
+13:04:10  INFO - F - Measuring_station "v2_connection_nodes#2#" has weight      1.0000
+13:04:10  INFO - F - Initializing table control with ID: 1
+13:04:10  INFO - F - Succesfully initialized control with ID: 1
+13:04:10  INFO - F - Initializing table control with ID: 2
+13:04:10  INFO - F - Succesfully initialized control with ID: 2
+13:04:10  INFO - F - Initializing table control with ID: 3
+13:04:10  INFO - F - Succesfully initialized control with ID: 3
+13:04:10  INFO - F - Initializing table control with ID: 4
+13:04:10  INFO - F - Succesfully initialized control with ID: 4
+13:04:10  INFO - Succesfully initialized Flow using config file: /srv/bwn_modelbuilder/models/bwn_thoekje_0d1d_test.ini
+13:04:10  INFO - Simulation start | step=0, t=0[s], tend=100[s]
+13:04:10  INFO - F - Total initial water volume in model domain= 0.243E+06
+13:04:10  INFO - F - Total initial water volume in 2D surface domain= 0.000E+00
+13:04:10  INFO - F - Total initial water volume in 1D network= 0.243E+06
+13:04:10  INFO - F - Created file: /srv/bwn_modelbuilder/models/bwn_thoekje_0d1d_test/results/results_3di.nc
+Running.. | step=1, t=15 of 100[s]/15.0[%], status=013:04:10  INFO - Running.. | step=1, t=15 of 100[s]/15.0[%], status=0
+13:04:10 WARNING - F - Change in dt: time step,dt,min dt in 1D domain, min dt in 2D domain     2,     11.5517     11.5517     15.0000
+13:04:10 WARNING - F - Change in dt due to the link: possible link in 1D domain, possible link in 2D domain   622     0
+Running.. | step=2, t=28 of 100[s]/28.3[%], status=013:04:10  INFO - Running.. | step=2, t=28 of 100[s]/28.3[%], status=0
+13:04:10 WARNING - F - Change in dt: time step,dt,min dt in 1D domain, min dt in 2D domain     3,     11.2922     11.2922     15.0000
+13:04:10 WARNING - F - Change in dt due to the link: possible link in 1D domain, possible link in 2D domain   622     0
+Running.. | step=3, t=40 of 100[s]/40.6[%], status=013:04:10  INFO - Running.. | step=3, t=40 of 100[s]/40.6[%], status=0
+13:04:10 WARNING - F - Change in dt: time step,dt,min dt in 1D domain, min dt in 2D domain     4,     11.3035     11.3035     15.0000
+13:04:10 WARNING - F - Change in dt due to the link: possible link in 1D domain, possible link in 2D domain   622     0
+Running.. | step=4, t=52 of 100[s]/52.5[%], status=013:04:10  INFO - Running.. | step=4, t=52 of 100[s]/52.5[%], status=0
+13:04:10 WARNING - F - Change in dt: time step,dt,min dt in 1D domain, min dt in 2D domain     5,     11.3337     11.3337     15.0000
+13:04:10 WARNING - F - Change in dt due to the link: possible link in 1D domain, possible link in 2D domain   622     0
+Running.. | step=5, t=64 of 100[s]/64.2[%], status=013:04:10  INFO - Running.. | step=5, t=64 of 100[s]/64.2[%], status=0
+13:04:10 WARNING - F - Change in dt: time step,dt,min dt in 1D domain, min dt in 2D domain     6,     11.3658     11.3658     15.0000
+13:04:10 WARNING - F - Change in dt due to the link: possible link in 1D domain, possible link in 2D domain   622     0
+Running.. | step=6, t=76 of 100[s]/76.0[%], status=013:04:10  INFO - Running.. | step=6, t=76 of 100[s]/76.0[%], status=0
+13:04:10 WARNING - F - Change in dt: time step,dt,min dt in 1D domain, min dt in 2D domain     7,     11.3884     11.3884     15.0000
+13:04:10 WARNING - F - Change in dt due to the link: possible link in 1D domain, possible link in 2D domain   622     0
+Running.. | step=7, t=87 of 100[s]/87.8[%], status=013:04:10  INFO - Running.. | step=7, t=87 of 100[s]/87.8[%], status=0
+13:04:10 WARNING - F - Change in dt: time step,dt,min dt in 1D domain, min dt in 2D domain     8,     11.4054     11.4054     15.0000
+13:04:10 WARNING - F - Change in dt due to the link: possible link in 1D domain, possible link in 2D domain   622     0
+Running.. | step=8, t=99 of 100[s]/99.7[%], status=013:04:10  INFO - Running.. | step=8, t=99 of 100[s]/99.7[%], status=0
+13:04:10 WARNING - F - Change in dt: time step,dt,min dt in 1D domain, min dt in 2D domain     9,     11.4227     11.4227     15.0000
+13:04:10 WARNING - F - Change in dt due to the link: possible link in 1D domain, possible link in 2D domain   622     0
+Running.. | step=9, t=111 of 100[s]/111.7[%], status=013:04:10  INFO - Running.. | step=9, t=111 of 100[s]/111.7[%], status=0
+13:04:10  INFO - Simulation end | number of steps=9, t=111[s], tend=100[s]
+13:04:10  INFO - finalize library
+ timeloop
+13:04:11  INFO - Starting PyFlow...
+13:04:11  INFO - Running makegrid...
+13:06:18  INFO -  
+** INFO   : ___________WELCOME TO THE WONDERFUL WORLD OF 3Di___________________
+** DEBUG  : Number of threads used in making tables is:              2
+** INFO   : Opened file: /srv/bwn_modelbuilder/models/bwn_thoekje_1d2d_test.ini
+** DEBUG  : Found attribute in configuration file: model_type = 3di-v2
+** INFO   : Model folder location is: /srv/bwn_modelbuilder/models/bwn_thoekje_1d2d_test/
+** DEBUG  : Found attribute in configuration file: use_2d_flow =        1
+** DEBUG  : Found attribute in configuration file: use_1d_flow =        1
+** DEBUG  : Found attribute in configuration file: interflow_type =        0
+** DEBUG  : Found attribute in configuration file: infiltration_type =        0
+** DEBUG  : Found attribute in configuration file: use_groundwater_flow =        0
+** DEBUG  : Found attribute in configuration file: dem_file = rasters/dem_thoekje.tif
+** DEBUG  : Found attribute in configuration file: pump_file = bwn_thoekje_1d2d_test/input_generated/pumpstations.csv
+** DEBUG  : Found attribute in configuration file: friction_type =        2
+** DEBUG  : Found attribute in configuration file: friction_avg =        0
+** DEBUG  : Found attribute in configuration file: friction_file = rasters/friction_thoekje.tif
+** DEBUG  :  No value found for attribute in configuration file, set default: initial_infiltration_rate =   -9999.0000
+** WARNING: Attribute not found in configuration file: initial_infiltration_rate_file
+** DEBUG  :  No value found for attribute in configuration file, set default: initial_infiltration_rate_type =       -1
+** DEBUG  :  No value found for attribute in configuration file, set default: equilibrium_infiltration_rate =   -9999.0000
+** WARNING: Attribute not found in configuration file: equilibrium_infiltration_rate_file
+** DEBUG  :  No value found for attribute in configuration file, set default: equilibrium_infiltration_rate_type =       -1
+** DEBUG  :  No value found for attribute in configuration file, set default: infiltration_decay_period =   -9999.0000
+** WARNING: Attribute not found in configuration file: infiltration_decay_period_file
+** DEBUG  :  No value found for attribute in configuration file, set default: infiltration_decay_period_type =       -1
+** DEBUG  :  No value found for attribute in configuration file, set default: phreatic_storage_capacity =   -9999.0000
+** WARNING: Attribute not found in configuration file: phreatic_storage_capacity_file
+** DEBUG  :  No value found for attribute in configuration file, set default: phreatic_storage_capacity_type =       -1
+** DEBUG  :  No value found for attribute in configuration file, set default: groundwater_impervious_layer_level =   -9999.0000
+** WARNING: Attribute not found in configuration file: groundwater_impervious_layer_level_file
+** DEBUG  :  No value found for attribute in configuration file, set default: groundwater_impervious_layer_level_type =       -1
+** DEBUG  :  No value found for attribute in configuration file, set default: groundwater_hydro_connectivity =   -9999.0000
+** WARNING: Attribute not found in configuration file: groundwater_hydro_connectivity_file
+** DEBUG  :  No value found for attribute in configuration file, set default: groundwater_hydro_connectivity_type =       -1
+** WARNING: Attribute not found in configuration file: max_infiltration_capacity_file
+** DEBUG  :  No value found for attribute in configuration file, set default: porosity =       0.0000
+** WARNING: Attribute not found in configuration file: porosity_file
+** DEBUG  :  No value found for attribute in configuration file, set default: porosity_layer_thickness =       0.0000
+** DEBUG  :  No value found for attribute in configuration file, set default: impervious_layer_elevation =   10000.0000
+** DEBUG  :  No value found for attribute in configuration file, set default: hydraulic_conductivity =       0.0000
+** WARNING: Attribute not found in configuration file: hydraulic_conductivity_file
+** WARNING: Attribute not found in configuration file: wind_shielding_file
+** DEBUG  : Found attribute in configuration file: table_step_size =       0.0200
+** DEBUG  :  No value found for attribute in configuration file, set default: table_step_size_1d =       0.0200
+** DEBUG  :  No value found for attribute in configuration file, set default: table_step_size_volume_2d =       0.0200
+** DEBUG  : Found attribute in configuration file: flow_obstacle_file = bwn_thoekje_1d2d_test/input_generated/obstacle.  1
+** DEBUG  : Found attribute in configuration file: grid_information_file = bwn_thoekje_1d2d_test/input_generated/grid_information.tif
+** DEBUG  : Found attribute in configuration file: dem_obstacle_detection =  F
+** WARNING: Attribute not found in configuration file: dem_obstacle_height
+** WARNING: Attribute not found in configuration file: connections_1d2d_file
+** WARNING: Option not found embedded_cutoff_threshold
+** WARNING: Attribute not found in configuration file: boundary_conditions_2d_locations
+** DEBUG  : Found attribute in configuration file: preissmann_slot =       0.0000
+** DEBUG  : Found attribute in configuration file: limiter_slope_crossectional_area_2d =        0
+** DEBUG  : Found attribute in configuration file: limiter_slope_friction_2d =        0
+** DEBUG  : Found attribute in configuration file: limiter_slope_friction_2d =        0
+** DEBUG  : Found attribute in configuration file: friction_shallow_water_correction =        0
+** DEBUG  :  No value found for attribute in configuration file, set default: thin_water_layer_definition =   -9999.0000
+** DEBUG  : Found attribute in configuration file: epsg_code =    28992
+** INFO   : For configuration attribute: dem_file. Data read from GEOTIFF file: /srv/bwn_modelbuilder/models/rasters/dem_thoekje.tif
+** INFO   : For configuration attribute: pump_file. Data read from file: /srv/bwn_modelbuilder/models/bwn_thoekje_1d2d_test/input_generated/pumpstations.csv
+** INFO   : For configuration attribute: friction_file. Data read from GEOTIFF file: /srv/bwn_modelbuilder/models/rasters/friction_thoekje.tif
+** INFO   : For configuration attribute: flow_obstacle_file. Data read from file: /srv/bwn_modelbuilder/models/bwn_thoekje_1d2d_test/input_generated/obstacle.  1
+** INFO   : For configuration attribute: grid_information_file. Data read from GEOTIFF file: /srv/bwn_modelbuilder/models/bwn_thoekje_1d2d_test/input_generated/grid_information.tif
+** DEBUG  : Number of 1D nodal end points:            468
+** DEBUG  : Number of 1D open boundary conditions:              0
+** DEBUG  : Number of 1d cross sections:           2125
+** DEBUG  : Number of 1d channels:            494
+** DEBUG  : mbed1d=              0
+** DEBUG  :  k,mmax(k),nmax(k)       1     196     176
+** DEBUG  :  k,mmax(k),nmax(k)       2      98      88
+** DEBUG  :  k,mmax(k),nmax(k)       3      49      44
+** DEBUG  : Number of 2D boundary cells, n2dobc =              0
+** DEBUG  : Number of neglected dampoints:              0
+** INFO   : Quadtree completed
+** DEBUG  : Number of 1d nodal endpoints:            468
+** DEBUG  : Number of cross section:            740
+** DEBUG  : Number of channels:            494
+** INFO   : 1D_channel network completed
+** DEBUG  : l1dtot,infl1d,nobc:    1352    1147       0
+** INFO   : Levees completed
+** INFO   : Lines completed
+** INFO   : Open boundaries added to the administration
+** INFO   : Node connection table completed
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link    16
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  2535
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  2536
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link    22
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link    31
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link    39
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link    40
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link    60
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link    61
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link    66
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link    67
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link    83
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link    85
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link   122
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  2589
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  2590
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  2593
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link   202
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link   225
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link   286
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link   298
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  2675
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  2676
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  2677
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  2678
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  2680
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  2681
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  2682
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  2683
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  2684
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  2685
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  2686
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  2688
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link   347
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  2694
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link   357
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link   367
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link   412
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  2737
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link   615
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link   639
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link   658
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link   668
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link   669
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link   743
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link   753
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  3039
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link   783
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link   790
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link   803
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link   804
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  3127
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link   888
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link   909
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link   984
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link   986
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link   999
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  1020
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  1038
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  3341
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  1092
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  1153
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  1166
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  1174
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  1240
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  1249
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  1255
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  1283
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  1309
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  1348
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  1393
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  1446
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  1461
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  1465
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  1482
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  1499
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  1575
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  1744
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  1863
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  1885
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  1909
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  1939
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  1967
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  2039
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  2080
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  2111
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  2141
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  2147
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  2288
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  2301
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  2310
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  2322
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  2329
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  2456
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  4471
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  2496
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  2504
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  2524
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  2525
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  4520
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  5118
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  5144
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  5155
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  5156
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  5235
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  5274
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  5275
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  5376
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  5378
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  5448
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  5453
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  5471
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  5475
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  5516
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  5617
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  5657
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  5662
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  5684
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  5705
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  5730
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  5809
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  5885
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  5952
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  5980
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  5984
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  6026
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  6044
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  6050
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  6051
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  6066
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  6068
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  6077
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  6086
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  6130
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  6159
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  6184
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  6195
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  6202
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  6236
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  6237
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  6238
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  6251
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  6272
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  6278
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  6292
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  6309
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  6312
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  6319
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  6340
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  6353
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  6372
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  6375
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  6390
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  6393
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  6396
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  6406
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  6426
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  6440
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  6445
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  6482
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  6516
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  6541
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  6545
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  6549
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  6583
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  6685
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  6692
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  6766
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  6773
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  6774
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  6871
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  6880
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  6923
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  6967
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  6980
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  6994
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  7013
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  7017
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  7076
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  7090
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  7209
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  7218
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  7233
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  7293
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  7398
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  7608
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  7665
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  7534
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  7862
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  7944
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  7982
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  8120
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  8323
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  8506
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  8519
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  8562
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  8829
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  8915
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  9272
+** WARNING: Obstacle height is lower than the values found in the DEM for link. Highest value of DEM and Obstacle is set on link  9486
+** INFO   : Cross-section tables completed.
+** INFO   : Volume tables completed.
+** INFO   : Start make friction table
+** INFO   : Friction table completed
+** INFO   : Writing 1D files completed
+** INFO   : Write gridadmin completed
+** INFO   : Writing griddata completed
+** INFO   : Grid generation completed
+** INFO   : Network analysis completed
+** INFO   : Ik ben er ..., Je suis fini..., Ich bin fertig..., I am finished...
+** INFO   : Time of grid generation =     127.101997
+
+13:06:18  INFO - Setting rel_path for dem_thoekje.tif to rasters
+13:06:18  INFO - Setting rel_path for network.  1 to bwn_thoekje_1d2d_test/input_generated
+13:06:18  INFO - Setting rel_path for friction_thoekje.tif to rasters
+13:06:18  INFO - Setting rel_path for gridadmin.h5 to bwn_thoekje_1d2d_test/preprocessed
+13:06:18  INFO - Setting rel_path for grid_data_k= 3_l= 40_i=  7687_j=  6962.  1,  1 to bwn_thoekje_1d2d_test/preprocessed
+13:06:18  INFO - Setting rel_path for grid_information.tif to bwn_thoekje_1d2d_test/input_generated
+13:06:18  INFO - Setting rel_path for obstacle.  1 to bwn_thoekje_1d2d_test/input_generated
+13:06:18  INFO - Setting rel_path for ini_s1d.1 to bwn_thoekje_1d2d_test/scenario/initial_conditions
+13:06:18  INFO - Setting rel_path for measuring_locations.csv to bwn_thoekje_1d2d_test/scenario/controls
+13:06:18  INFO - Setting rel_path for controls.txt to bwn_thoekje_1d2d_test/scenario/controls
+13:06:18 WARNING - [!] No revision hash found, model does not seems to be under revision control
+13:06:18 WARNING - [!] No revision hash found, model does not seems to be under revision control
+13:06:18 WARNING - [!] No revision hash found, model does not seems to be under revision control
+The simulation will not be run, because of the --no-simulation option.
+Done.
+13:06:22  INFO - Starting PyFlow...
+13:06:22  INFO - Setting rel_path for dem_thoekje.tif to rasters
+13:06:22  INFO - Setting rel_path for network.  1 to bwn_thoekje_1d2d_test/input_generated
+13:06:22  INFO - Setting rel_path for friction_thoekje.tif to rasters
+13:06:22  INFO - Setting rel_path for gridadmin.h5 to bwn_thoekje_1d2d_test/preprocessed
+13:06:22  INFO - Setting rel_path for grid_data_k= 3_l= 40_i=  7687_j=  6962.  1,  1 to bwn_thoekje_1d2d_test/preprocessed
+13:06:22  INFO - Setting rel_path for grid_information.tif to bwn_thoekje_1d2d_test/input_generated
+13:06:22  INFO - Setting rel_path for obstacle.  1 to bwn_thoekje_1d2d_test/input_generated
+13:06:22  INFO - Setting rel_path for ini_s1d.1 to bwn_thoekje_1d2d_test/scenario/initial_conditions
+13:06:22  INFO - Setting rel_path for measuring_locations.csv to bwn_thoekje_1d2d_test/scenario/controls
+13:06:22  INFO - Setting rel_path for controls.txt to bwn_thoekje_1d2d_test/scenario/controls
+13:06:22  INFO - F - initialize
+13:06:22  INFO - F - Opened file: /srv/bwn_modelbuilder/models/bwn_thoekje_1d2d_test.ini
+13:06:22  INFO - F - Model folder location is: /srv/bwn_modelbuilder/models/bwn_thoekje_1d2d_test/
+13:06:22 WARNING - F - Attribute not found in configuration file: max_infiltration_capacity_file
+13:06:22 WARNING - F - Attribute not found in configuration file: max_infiltration_capacity_file
+13:06:22 WARNING - F - Attribute not found in configuration file: initial_waterlevel_type
+13:06:22 WARNING - F - Attribute not found in configuration file: initial_waterlevel_file_2d
+13:06:22 WARNING - F - Attribute not found in configuration file: initial_groundwater_level_file
+13:06:22 WARNING - F - Option not found wind_forcing_file
+13:06:22 WARNING - F - Option not found breach_file
+13:06:22 WARNING - F - Option not found rain_2d
+13:06:22 WARNING - F - Attribute not found in configuration file: lateral_2d_file
+13:06:22 WARNING - F - Attribute not found in configuration file: lateral_1d_file
+13:06:22 WARNING - F - Attribute not found in configuration file: boundary_conditions_2d_timeseries
+13:06:22 WARNING - F - Attribute not found in configuration file: leakage_file
+13:06:22 WARNING - F - Option not found num_predictor_corrector
+13:06:22 WARNING - F - Attribute not found in configuration file: aggregation_settings
+13:06:22  INFO - F - For configuration attribute: initial_waterlevel_file_1d. Data read from file: /srv/bwn_modelbuilder/models/bwn_thoekje_1d2d_test/scenario/initial_conditions/ini_s1d.1
+13:06:22  INFO - F - /srv/bwn_modelbuilder/models/bwn_thoekje_1d2d_test/preprocessed/grid_data_k= 3_l= 40_i=  7687_j=  6962.  1,  1
+13:06:22  INFO - F - Initialized 1D measuring station with ID: v2_connection_nodes#21#
+13:06:22  INFO - F - Measuring station "v2_connection_nodes#21#" added to group        1
+13:06:22  INFO - F - Measuring_station "v2_connection_nodes#21#" has weight      1.0000
+13:06:22  INFO - F - Initialized 1D measuring station with ID: v2_connection_nodes#249#
+13:06:22  INFO - F - Measuring station "v2_connection_nodes#249#" added to group        2
+13:06:22  INFO - F - Measuring_station "v2_connection_nodes#249#" has weight      1.0000
+13:06:22  INFO - F - Initialized 1D measuring station with ID: v2_connection_nodes#222#
+13:06:22  INFO - F - Measuring station "v2_connection_nodes#222#" added to group        3
+13:06:22  INFO - F - Measuring_station "v2_connection_nodes#222#" has weight      1.0000
+13:06:22  INFO - F - Initialized 1D measuring station with ID: v2_connection_nodes#2#
+13:06:22  INFO - F - Measuring station "v2_connection_nodes#2#" added to group        4
+13:06:22  INFO - F - Measuring_station "v2_connection_nodes#2#" has weight      1.0000
+13:06:22  INFO - F - Initializing table control with ID: 1
+13:06:22  INFO - F - Succesfully initialized control with ID: 1
+13:06:22  INFO - F - Initializing table control with ID: 2
+13:06:22  INFO - F - Succesfully initialized control with ID: 2
+13:06:22  INFO - F - Initializing table control with ID: 3
+13:06:22  INFO - F - Succesfully initialized control with ID: 3
+13:06:22  INFO - F - Initializing table control with ID: 4
+13:06:22  INFO - F - Succesfully initialized control with ID: 4
+13:06:22  INFO - Succesfully initialized Flow using config file: /srv/bwn_modelbuilder/models/bwn_thoekje_1d2d_test.ini
+13:06:22  INFO - Simulation start | step=0, t=0[s], tend=100[s]
+13:06:22  INFO - F - Total initial water volume in model domain= 0.243E+06
+13:06:22  INFO - F - Total initial water volume in 2D surface domain= 0.000E+00
+13:06:22  INFO - F - Total initial water volume in 1D network= 0.243E+06
+13:06:22  INFO - F - Created file: /srv/bwn_modelbuilder/models/bwn_thoekje_1d2d_test/results/results_3di.nc
+Running.. | step=1, t=15 of 100[s]/15.0[%], status=013:06:22  INFO - Running.. | step=1, t=15 of 100[s]/15.0[%], status=0
+13:06:22 WARNING - F - Change in dt: time step,dt,min dt in 1D domain, min dt in 2D domain     2,     11.5517     11.5517     15.0000
+13:06:22 WARNING - F - Change in dt due to the link: possible link in 1D domain, possible link in 2D domain 10730     0
+Running.. | step=2, t=28 of 100[s]/28.3[%], status=013:06:22  INFO - Running.. | step=2, t=28 of 100[s]/28.3[%], status=0
+13:06:22 WARNING - F - Change in dt: time step,dt,min dt in 1D domain, min dt in 2D domain     3,     11.2922     11.2922     15.0000
+13:06:22 WARNING - F - Change in dt due to the link: possible link in 1D domain, possible link in 2D domain 10730     0
+Running.. | step=3, t=40 of 100[s]/40.6[%], status=013:06:23  INFO - Running.. | step=3, t=40 of 100[s]/40.6[%], status=0
+13:06:23 WARNING - F - Change in dt: time step,dt,min dt in 1D domain, min dt in 2D domain     4,     11.3035     11.3035     15.0000
+13:06:23 WARNING - F - Change in dt due to the link: possible link in 1D domain, possible link in 2D domain 10730     0
+Running.. | step=4, t=52 of 100[s]/52.5[%], status=013:06:23  INFO - Running.. | step=4, t=52 of 100[s]/52.5[%], status=0
+13:06:23 WARNING - F - Change in dt: time step,dt,min dt in 1D domain, min dt in 2D domain     5,     11.3337     11.3337     15.0000
+13:06:23 WARNING - F - Change in dt due to the link: possible link in 1D domain, possible link in 2D domain 10730     0
+Running.. | step=5, t=64 of 100[s]/64.2[%], status=013:06:23  INFO - Running.. | step=5, t=64 of 100[s]/64.2[%], status=0
+13:06:23 WARNING - F - Change in dt: time step,dt,min dt in 1D domain, min dt in 2D domain     6,     11.3658     11.3658     15.0000
+13:06:23 WARNING - F - Change in dt due to the link: possible link in 1D domain, possible link in 2D domain 10730     0
+Running.. | step=6, t=76 of 100[s]/76.0[%], status=013:06:23  INFO - Running.. | step=6, t=76 of 100[s]/76.0[%], status=0
+13:06:23 WARNING - F - Change in dt: time step,dt,min dt in 1D domain, min dt in 2D domain     7,     11.3884     11.3884     15.0000
+13:06:23 WARNING - F - Change in dt due to the link: possible link in 1D domain, possible link in 2D domain 10730     0
+Running.. | step=7, t=87 of 100[s]/87.8[%], status=013:06:23  INFO - Running.. | step=7, t=87 of 100[s]/87.8[%], status=0
+13:06:23 WARNING - F - Change in dt: time step,dt,min dt in 1D domain, min dt in 2D domain     8,     11.4054     11.4054     15.0000
+13:06:23 WARNING - F - Change in dt due to the link: possible link in 1D domain, possible link in 2D domain 10730     0
+Running.. | step=8, t=99 of 100[s]/99.7[%], status=013:06:23  INFO - Running.. | step=8, t=99 of 100[s]/99.7[%], status=0
+13:06:23 WARNING - F - Change in dt: time step,dt,min dt in 1D domain, min dt in 2D domain     9,     11.4227     11.4227     15.0000
+13:06:23 WARNING - F - Change in dt due to the link: possible link in 1D domain, possible link in 2D domain 10730     0
+Running.. | step=9, t=111 of 100[s]/111.7[%], status=013:06:23  INFO - Running.. | step=9, t=111 of 100[s]/111.7[%], status=0
+13:06:23  INFO - Simulation end | number of steps=9, t=111[s], tend=100[s]
+13:06:23  INFO - finalize library
+ timeloop

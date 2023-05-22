@@ -1,0 +1,6 @@
+/srv/bwn_modelbuilder
+(base.threedi_base.command_utils) 2019-05-10 09:05:12,048: [INFO] [*] Using custom ini file config_modelbuilder.ini
+Successfully snapped geometries for the tables bridge, sluice, polder, manhole, crosssection, culvert, orifice, channelsurface, weirs, pumpstation, fixeddrainagelevelarea, channel
+(base.threedi_base.command_utils) 2019-05-10 09:05:12,629: [INFO] [*] Using custom ini file config_modelbuilder.ini
+Successfully executed command in less than a second. 
+Output has been stored to deelgebied.channel_simplified
