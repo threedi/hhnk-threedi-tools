@@ -34,7 +34,8 @@ def backup_sqlite(filename):
 
 
 class MigrateSchema():
-    """Migrate schema to newest version"""
+    """Migrate schema to newest version
+    filename: path to sqlite"""
     def __init__(self, filename):
         self.schema_raw = Sqlite(filename)
        
