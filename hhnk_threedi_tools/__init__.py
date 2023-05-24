@@ -21,7 +21,7 @@ from hhnk_threedi_tools.core.checks.bank_levels import (
     BankLevelTest,
 )  # FIXME TypeError: metaclass conflict: the metaclass of a derived class must be a (non-strict) subclass of the metaclasses of all its bases
 from hhnk_threedi_tools.core.checks.one_d_two_d import OneDTwoDTest
-from hhnk_threedi_tools.core.checks.sqlite import SqliteTest  # FIXME
+from hhnk_threedi_tools.core.checks.sqlite.sqlite_main import SqliteCheck  # FIXME
 from hhnk_threedi_tools.core.checks.zero_d_one_d import ZeroDOneDTest
 
 
@@ -32,8 +32,6 @@ from hhnk_threedi_tools.utils.notebooks.run import read_notebook_json
 from hhnk_threedi_tools.utils.notebooks.run import open_server
 from hhnk_threedi_tools.utils.notebooks.run import copy_notebooks
 
-# qgis
-from hhnk_threedi_tools.qgis.project import copy_projects
 
 # backup
 from hhnk_threedi_tools.core.checks.model_backup import (

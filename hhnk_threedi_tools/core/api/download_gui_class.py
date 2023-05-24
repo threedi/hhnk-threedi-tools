@@ -30,13 +30,9 @@ from hhnk_threedi_tools.core.api.calculation import Simulation
 
 # Globals
 from hhnk_threedi_tools.variables.api_settings import (
-    RAIN_SETTINGS,
     RAIN_TYPES,
-    RAIN_INTENSITY,
     GROUNDWATER,
     RAIN_SCENARIOS,
-    API_SETTINGS,
-    MODEL_TYPES,
 )
 
 
@@ -787,8 +783,6 @@ class DownloadWidgetsInteraction(DownloadWidgets):
 
                 print(f"\n\033[1m\033[31mDownloading files for {name} (uuid={scenario['uuid']}):\033[0m")
 
-                #Download netcdf of 2 GHG_T1000 results.
-                # if row["dl_name"] in RAW_DOWNLOADS:
 
                 #Download netcdf of all results.
                 if True:

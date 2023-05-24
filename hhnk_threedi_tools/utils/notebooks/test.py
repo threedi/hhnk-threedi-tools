@@ -51,8 +51,5 @@ wss_local = hhnk_wss.wss_main.Waterschadeschatter(depth_file=depth_file,
                         output_file=output_file,
                         wss_settings=wss_settings)
 
-# # Aanmaken leeg output raster.
-wss_local.create_output_raster()
-
 # # #Berkenen schaderaster
-wss_local.calculate_damage_raster()
+wss_local.run()

@@ -1,0 +1,1 @@
+python -m pytest --cov-report term-missing --cov=hhnk_threedi_tools ../tests/

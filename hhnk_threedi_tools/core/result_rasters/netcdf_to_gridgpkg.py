@@ -3,16 +3,20 @@ from shapely.geometry import box
 import numpy as np
 import geopandas as gpd
 import pandas as pd
-import hhnk_threedi_tools as htt
+from hhnk_threedi_tools import Folders
+import hhnk_research_tools as hrt
 
 class ThreediGrid:
     def __init__(self, 
-                    threedi_result : htt.core.folders.ThreediResult, 
-                    folder : htt.core.folders.Folders = None, 
-                    waterdeel_path : str = None, 
-                    waterdeel_layer : str = "Waterdeel",
-                    panden_path : str = None,
-                    panden_layer : str = "panden"):
+                    threedi_result:hrt.ThreediResult, 
+                    folder:Folders = None, 
+                    waterdeel_path:str = None, 
+                    waterdeel_layer:str = "Waterdeel",
+                    panden_path:str = None,
+                    panden_layer:str = "panden",
+                    grid_raw_filename = "grid_raw.gpkg",
+                    grid_corr_filename = "grid_corr.gpkg", 
+                    ):
         """
         
         grid creation requires:
@@ -29,10 +33,8 @@ class ThreediGrid:
         self.panden_path = panden_path     
         self.panden_layer = panden_layer   
 
-        self.gpkg_raw_path = self.threedi_result.pl/"grid_raw.gpkg"
-        self.gpkg_corr_path = self.gpkg_raw_path.with_stem("grid_corr")
-
-
+        self.grid_path = self.threedi_result.pl/grid_raw_filename
+        self.grid_corr_path = self.threedi_result.pl/grid_corr_filename
 
 
     @property
@@ -62,8 +64,10 @@ class ThreediGrid:
         """Load waterdeel. if folder is defined as input we get if from there.
         Otherwise the path needs to be provided """
         gdf = None
-        if self.folder is not None:
-            gdf = self.folder.source_data.panden.load(layer=self.panden_layer)
+        if self.panden_path is None:
+            if self.folder is not None:
+                if self.folder.source_data.panden.exists:
+                    gdf = self.folder.source_data.panden.load(layer=self.panden_layer)
             
         elif self.panden_path is not None:
             if self.panden_path.endswith(".gdb"):
@@ -75,7 +79,7 @@ class ThreediGrid:
         return gdf
 
 
-    def netcdf_to_grid_gpkg(self, replace_dem_below_perc=50, replace_water_above_perc=95, replace_pand_above_perc=99):
+    def netcdf_to_grid_gpkg(self, replace_dem_below_perc=50, replace_water_above_perc=95, replace_pand_above_perc=99, overwrite=False):
         """
         ignore_dem_perc : if cell has no dem above this value waterlevels will be replaced
         ignore_water_perc : if cell has water surface area above this value waterlevels will be replaced
@@ -83,9 +87,12 @@ class ThreediGrid:
         create gpkg of grid with maximum wlvl
         """
 
-        if self.gpkg_raw_path.exists():
-            print(f"{self.gpkg_raw_path} already exists")
-            return
+        if self.grid_path.exists():
+            if overwrite is False:
+                return
+            else:
+                self.grid_path.unlink()
+
 
         #Check required files
         # if not self.folder.source_data.damo.exists:
@@ -175,16 +182,18 @@ class ThreediGrid:
 
 
         #Save to file
-        grid_gdf.to_file(self.gpkg_raw_path, driver="GPKG")
+        grid_gdf.to_file(self.grid_path, driver="GPKG")
 
 
-    def waterlevel_correction(self, output_col):
+    def waterlevel_correction(self, output_col="wlvl_max_replaced", overwrite=False):
 
-        if self.gpkg_corr_path.exists():
-            print(f"{self.gpkg_corr_path} already exists")
-            # return
+        if self.grid_corr_path.exists():
+            if overwrite is False:
+                return
+            else:
+                self.grid_corr_path.unlink()
 
-        grid_gdf = gpd.read_file(self.gpkg_raw_path, driver="GPKG")
+        grid_gdf = gpd.read_file(self.grid_path, driver="GPKG")
         
         grid_gdf[output_col] = grid_gdf["wlvl_max_orig"]
         replace_idx = grid_gdf["replace_all"]!= '0'
@@ -206,7 +215,7 @@ class ThreediGrid:
         grid_gdf["diff"] = grid_gdf[output_col] - grid_gdf["wlvl_max_orig"]
 
         #Save to file
-        grid_gdf.to_file(self.gpkg_corr_path, driver="GPKG")
+        grid_gdf.to_file(self.grid_corr_path, driver="GPKG")
 
 
 

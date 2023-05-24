@@ -1,9 +1,14 @@
+# %%
 # -*- coding: utf-8 -*-
 """
 Created on Mon Aug 23 11:27:51 2021
 
 @author: chris.kerklaan
 """
+
+# if __name__ == "__main__":
+#     import set_local_paths  # add local git repos.
+
 # Third-party imports
 import os
 import numpy as np
@@ -15,12 +20,7 @@ from shapely.geometry import LineString
 # research tools
 import hhnk_research_tools as hrt
 
-# from hhnk_research_tools.threedi.geometry_functions import coordinates_to_points
-# from hhnk_research_tools.variables import file_types_dict, TIF
-# from hhnk_research_tools.threedi.construct_rain_scenario import threedi_timesteps
-# from hhnk_research_tools.threedi.construct_rain_scenario_dataframe import (
-#     create_results_dataframe,
-# )
+
 from hhnk_research_tools.variables import (
     t_start_rain_col,
     t_end_rain_col,
@@ -30,7 +30,7 @@ from hhnk_research_tools.variables import (
 
 # Local imports
 import hhnk_threedi_tools.core.checks.grid_result_metadata as grid_result_metadata
-from hhnk_threedi_tools.core.folders import Folders, create_tif_path
+from hhnk_threedi_tools.core.folders import Folders
 from hhnk_threedi_tools.variables.default_variables import DEF_TRGT_CRS
 from hhnk_threedi_tools.variables.database_aliases import df_geo_col
 from hhnk_threedi_tools.variables.one_d_two_d import (
@@ -68,7 +68,11 @@ class OneDTwoDTest:
         self.fenv = folder
         self.revision = revision
 
-        self.grid_result = folder.threedi_results.one_d_two_d[self.revision].grid
+        self.result_fd = self.fenv.threedi_results.one_d_two_d[self.revision]
+        self.output_fd = self.fenv.output.one_d_two_d[self.revision]
+
+        self.grid_result = self.result_fd.grid
+
         (
             rain,
             detected_rain,
@@ -76,7 +80,7 @@ class OneDTwoDTest:
             days_dry_start,
             days_dry_end,
             self.timestep_df,
-        ) = grid_result_metadata.construct_scenario(self.grid_result)
+                                ) = grid_result_metadata.construct_scenario(self.grid_result)
 
         # if output_path:
         #     self.output_path = output_path
@@ -87,9 +91,10 @@ class OneDTwoDTest:
         #     self.log_path = str(folder.output.one_d_two_d[self.revision].logs)
 
         if dem_path:
-            self.dem_path = dem_path
+            self.dem = hrt.Raster(dem_path)
         else:
-            self.dem_path = self.fenv.model.schema_base.rasters.dem.path
+            self.dem = hrt.Raster(self.fenv.model.schema_base.rasters.dem.path)
+
 
         self.iresults = {}
 
@@ -101,101 +106,35 @@ class OneDTwoDTest:
     def results(self):
         return self.iresults
 
-    def read_flowline_results(self):
-        try:
-            threedi_result = self.threedi_results
-            timesteps_df = self.timestep_df
 
-            coords = hrt.threedi.line_geometries_to_coords(
-                threedi_result.lines.line_geometries
-            )  # create gdf from node coords
-
-            flowlines_gdf = gpd.GeoDataFrame(
-                geometry=coords, crs=f"EPSG:{DEF_TRGT_CRS}"
-            )
-            flowlines_gdf[id_col] = threedi_result.lines.id
-            flowlines_gdf[spatialite_id_col] = threedi_result.lines.content_pk
-
-            content_type_list = threedi_result.lines.content_type.astype("U13")
-            flowlines_gdf[content_type_col] = content_type_list
-
-            flowlines_gdf[kcu_col] = threedi_result.lines.kcu
-            flowlines_gdf.loc[
-                flowlines_gdf[kcu_col].isin([51, 52]), content_type_col
-            ] = one_d_two_d
-            flowlines_gdf.loc[
-                flowlines_gdf[kcu_col].isin([100, 101]), content_type_col
-            ] = two_d
-
-            q = threedi_result.lines.timeseries(
-                indexes=[
-                    timesteps_df[t_start_rain_col].value,
-                    timesteps_df[t_end_rain_col].value,
-                    timesteps_df[t_end_sum_col].value,
-                ]
-            ).q  # waterstand
-            vel = threedi_result.lines.timeseries(
-                indexes=[
-                    timesteps_df[t_start_rain_col].value,
-                    timesteps_df[t_end_rain_col].value,
-                    timesteps_df[t_end_sum_col].value,
-                ]
-            ).u1
-            q_all = threedi_result.lines.timeseries(indexes=slice(0, -1)).q
-            vel_all = threedi_result.lines.timeseries(indexes=slice(0, -1)).u1
-
-            # Write discharge and velocity to columns in dataframe
-            for index, time_str in enumerate(suffixes_list):
-                if time_str == max_sfx:
-                    q_max_ind = abs(q_all).argmax(axis=0)
-                    flowlines_gdf[q_m3_s_col + time_str] = np.round(
-                        [row[q_max_ind[enum]] for enum, row in enumerate(q_all.T)], 5
-                    )
-                else:
-                    flowlines_gdf[q_m3_s_col + time_str] = np.round(q[index], 5)
-
-            for index, time_str in enumerate(suffixes_list):
-                if time_str == max_sfx:
-                    vel_max_ind = abs(vel_all).argmax(axis=0)
-                    flowlines_gdf[vel_m_s_col + time_str] = np.round(
-                        [row[vel_max_ind[enum]] for enum, row in enumerate(vel_all.T)],
-                        5,
-                    )
-                else:
-                    flowlines_gdf[vel_m_s_col + time_str] = np.round(vel[index], 3)
-
-            # Flowlines of 1d2d lines weirdly have flow in different direction.
-            # Therefore we invert this here so arrows are plotted correctly
-            for index, time_str in enumerate(suffixes_list):
-                flowlines_gdf.loc[
-                    flowlines_gdf[content_type_col] == one_d_two_d,
-                    q_m3_s_col + time_str,
-                ] = flowlines_gdf.loc[
-                    flowlines_gdf[content_type_col] == one_d_two_d,
-                    q_m3_s_col + time_str,
-                ].apply(
-                    lambda x: x * -1
-                )
-
-            for index, time_str in enumerate(suffixes_list):
-                filt = (
-                    flowlines_gdf[content_type_col] == one_d_two_d,
-                    vel_m_s_col + time_str,
-                )
-
-                flowlines_gdf.loc[filt] = flowlines_gdf.loc[filt].apply(
-                    lambda x: x * -1
-                )
-
-            return flowlines_gdf
-        except Exception as e:
-            raise e from None
-
-    def run_levels_depths_at_timesteps(self):
+    def run_wlvl_depth_at_timesteps(self, overwrite=False):
         """
         Deze functie bepaalt de waterstanden op de gegeven tijdstappen op basis van het 3di resultaat.
         Vervolgens wordt op basis van de DEM en de waterstand per tijdstap de waterdiepte bepaald.
         """
+
+        def _create_depth_raster(self, windows, band_out, **kwargs):
+            """hrt.Raster_calculator custom_run_window_function"""
+            self.dem = self.raster1
+            self.wlvl = self.raster2
+
+            block_dem = self.dem._read_array(window=windows["raster1"])
+            block_wlvl = self.wlvl._read_array(window=windows["raster2"])
+
+            #Calculate output
+            block_depth = np.subtract(block_wlvl, block_dem)
+
+            #Mask output
+            nodatamask = (block_dem == self.dem.nodata) | (block_dem == 10) | (block_depth < 0)
+            block_depth[nodatamask] = self.raster_out.nodata
+
+            #Get the window of the small raster
+            window_small = windows[[k for k,v in self.raster_mapping.items() if v=="small"][0]]
+
+            # Write to file
+            band_out.WriteArray(block_depth, xoff=window_small[0], yoff=window_small[1])
+
+
         try:
             timesteps_arr = [
                 self.timestep_df["t_start_rain"].value,
@@ -210,37 +149,36 @@ class OneDTwoDTest:
 
             assert timestrings == [1, 3, 15]
 
-
-            dem_list, dem_nodata, dem_meta = hrt.load_gdal_raster(self.dem_path)
-
+            #For each timestring calculate wlvl and depth raster.
             for timestep, timestr in zip(timesteps_arr, timestrings):
-                # output files
-                wlvl_output_path = getattr(
-                    self.fenv.output.one_d_two_d[self.revision],
-                    f"waterstand_T{timestr}",
-                ).path
-                depth_output_path = getattr(
-                    self.fenv.output.one_d_two_d[self.revision],
-                    f"waterdiepte_T{timestr}",
-                ).path
-                print(wlvl_output_path)
-                print(depth_output_path)
-                # calculate waterlevel at selected timestep in nodes gdf
+                wlvl_raster = getattr(self.output_fd, f"waterstand_T{timestr}")
+                depth_raster = getattr(self.output_fd, f"waterdiepte_T{timestr}")
+
+                #Calculate wlvl raster
                 nodes_2d_wlvl = self._read_2node_wlvl_at_timestep(timestep)
-                wlvl_list = hrt.gdf_to_raster(
+                hrt.gdf_to_raster(
                     gdf=nodes_2d_wlvl,
                     value_field=wtrlvl_col,
-                    raster_out=wlvl_output_path,
-                    nodata=dem_nodata,
-                    metadata=dem_meta,
+                    raster_out=wlvl_raster,
+                    nodata=self.dem.nodata,
+                    metadata=self.dem.metadata,
+                    read_array=False,
+                    overwrite=overwrite,
                 )
-                # calculate water depth at time steps at nodes
-                _ = self._create_depth_raster(
-                    wlvl_list, dem_list, dem_nodata, dem_meta, depth_output_path
-                )
-            return timestrings
+
+                #Calculate depth raster
+                depth_calculator = hrt.RasterCalculator(
+                                raster1=self.dem, 
+                                raster2=wlvl_raster, 
+                                raster_out=depth_raster, 
+                                custom_run_window_function=_create_depth_raster,
+                                output_nodata=0,
+                                verbose=False)
+
+                depth_calculator.run(overwrite=overwrite)
         except Exception as e:
             raise e from None
+        
 
     def _read_2node_wlvl_at_timestep(self, timestep):
         """timesteps is the index of the time in the timeseries you want to use
@@ -256,31 +194,6 @@ class OneDTwoDTest:
         )
         return nodes_2d
 
-    def _create_depth_raster(
-        self, wlvl_list, dem_list, dem_nodata, dem_meta, raster_output_path
-    ):
-        """Calculate the depth raster by subtracting the dem from the wlvl raster."""
-        # difference between surface and initial water level
-        try:
-            depth_list = np.subtract(wlvl_list, dem_list)
-
-            # restore nodata pixels using a mask, also filter waterways (height=10) and negative depths
-            nodatamask = (dem_list == dem_nodata) | (dem_list == 10) | (depth_list < 0)
-            depth_list[nodatamask] = dem_nodata
-
-            # write array to tiff
-            hrt.save_raster_array_to_tiff(
-                output_file=raster_output_path,
-                raster_array=depth_list,
-                nodata=dem_nodata,
-                metadata=dem_meta,
-            )
-            return depth_list
-        except Exception as e:
-            raise e from None
-
-            content_type_list = threedi_result.lines.content_type.astype("U13")
-            flowlines_gdf[content_type_col] = content_type_list
 
     def run_node_stats(self):
         """
@@ -521,3 +434,24 @@ class OneDTwoDTest:
             return pump_gdf
         except Exception as e:
             raise e from None
+
+
+# %%
+if __name__ == "__main__":
+    from pathlib import Path
+    from hhnk_threedi_tools import Folders
+    TEST_MODEL = Path(__file__).parent.parent.parent.parent / "tests/data/model_test/"
+    folder = Folders(TEST_MODEL)
+    # %%
+    self = OneDTwoDTest.from_path(TEST_MODEL)
+
+    # def test_run_depth_at_timesteps_test(self):
+    """test of de 0d1d test werkt"""
+    output = self.run_levels_depths_at_timesteps()
+
+    assert len(output) > 0
+    assert output[0] == 1
+    assert "waterdiepte_T15.tif" in self.test_1d2d.fenv.output.one_d_two_d[0].content
+
+    # %%
+    folder.threedi_results.one_d_two_d.revisions

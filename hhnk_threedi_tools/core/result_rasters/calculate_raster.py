@@ -197,17 +197,17 @@ class BaseCalculatorGPKG:
                 read_array=False)
 
 
-    def run(self, output_folder, output_raster_name, mode="MODE_WLVL", min_block_size=1024, overwrite=False):
+    def run(self, output_file, mode="MODE_WLVL", min_block_size=1024, overwrite=False):
         #Init rasters
-        self.nodeid_raster = hrt.Raster(os.path.join(output_folder, "nodeid.tif"))
-        self.output_raster = hrt.Raster(os.path.join(output_folder, output_raster_name))
+        self.nodeid_raster = hrt.Raster(output_file.parent/"nodeid.tif")
+        self.output_raster = hrt.Raster(output_file)
 
         if self.output_raster.exists:
             if overwrite is False:
-                print(f"Output exists: {self.output_raster.source_path}")
+                # print(f"Output exists: {self.output_raster.source_path}")
                 return
             else:
-                self.output_raster.pl.unlink
+                self.output_raster.pl.unlink()
 
 
         #Create rasters

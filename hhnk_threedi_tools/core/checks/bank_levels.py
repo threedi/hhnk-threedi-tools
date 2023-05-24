@@ -1,3 +1,4 @@
+# %%
 # -*- coding: utf-8 -*-
 """
 Created on Thu Aug 19 09:04:52 2021
@@ -21,7 +22,7 @@ from hhnk_threedi_tools.core.folders import Folders
 from hhnk_threedi_tools.variables.default_variables import DEF_TRGT_CRS, DEF_SRC_CRS
 from hhnk_threedi_tools.variables.datachecker_variables import (
     peil_id_col,
-    streefpeil_bwn_col,
+    COL_STREEFPEIL_BWN,
 )
 from hhnk_threedi_tools.utils.queries import (
     manholes_query,
@@ -95,22 +96,7 @@ class BankLevelTest:
     def __init__(self, folder: Folders):
         self.fenv = folder  # fenv = folder environemnt
 
-    @classmethod
-    def from_path(cls, path_to_polder):
-        return cls(Folders(path_to_polder))
-
-    @classmethod
-    def from_model_path(cls, path_to_model):
-        return cls(Folders.from_model_path(path_to_model))
-
-    @property
-    def fenv_dict(self):
-        return self.fenv.to_file_dict()
-
-    @property
-    def result_revisions(self):
-        return self.fenv.zero_d_one_d.revisions
-
+ 
     @property
     def results(self):
         return {
@@ -154,12 +140,9 @@ class BankLevelTest:
             dem_path=self.fenv.model.schema_base.rasters.dem.path,
         )
 
-        self.fixeddrainage_layer = self.fenv.source_data.datachecker_fixed_drainage
-
         self.imports = import_information(
             model_path=self.model_path,
-            datachecker_path=self.datachecker_path,
-            fixeddrainage_layer=self.fixeddrainage_layer,
+            fixeddrainage_layer=self.fenv.source_data.datachecker.layers.fixeddrainagelevelarea,
             grid=self.grid,
         )
 
@@ -195,7 +178,9 @@ class BankLevelTest:
         returns a dataframe self.manhole_info
         """
         self.manholes_info = get_manhole_information(
-            self.line_intersects, self.diverging_wl_nodes, self.imports["manholes"]
+                intersections = self.line_intersects,
+                diverging_wl_nodes = self.diverging_wl_nodes,
+                manholes = self.imports["manholes"],     
         )
         if write:
             self.manholes_info.to_file("manholes_info.gpkg", driver="GPKG")
@@ -278,36 +263,25 @@ class BankLevelTest:
         self.write(str(new_folder), str(new_folder))
 
 
-def import_information(grid, model_path, datachecker_path, fixeddrainage_layer):
+def import_information(grid, model_path, fixeddrainage_layer):
     """
     Function that gathers all information from the model and datachecker that's needed
     to calculate the new manholes and bank levels
     """
     conn = None
     try:
-        conn = hrt.create_sqlite_connection(database_path=model_path)
-        fixeddrainage = gpd.read_file(
-            datachecker_path, layer=fixeddrainage_layer, reader=GPKG_DRIVER
-        )
+        conn = hrt.Sqlite(model_path).connect()
+        fixeddrainage = fixeddrainage_layer.load()
+
         return {
             "fixeddrainage": fixeddrainage,
-            "fixeddrainage_lines": extract_boundary_from_polygon(
-                fixeddrainage, df_geo_col
-            ),
+            "fixeddrainage_lines": extract_boundary_from_polygon(fixeddrainage, df_geo_col),
             "levee_lines": grid.import_levees(),
             "lines_1d2d": grid.read_1d2d_lines(),
-            "channels": hrt.sqlite_table_to_gdf(
-                conn=conn, query=channels_query, id_col=a_chan_id
-            ),
-            "cross_loc": hrt.sqlite_table_to_gdf(
-                conn=conn, query=cross_section_location_query, id_col=a_cross_loc_id
-            ),
-            "conn_nodes": hrt.sqlite_table_to_gdf(
-                conn=conn, query=conn_nodes_query, id_col=a_conn_node_id
-            ),
-            "manholes": hrt.sqlite_table_to_gdf(
-                conn=conn, query=manholes_query, id_col=a_man_id
-            ),
+            "channels": hrt.sqlite_table_to_gdf(conn=conn, query=channels_query, id_col=a_chan_id),
+            "cross_loc": hrt.sqlite_table_to_gdf(conn=conn, query=cross_section_location_query, id_col=a_cross_loc_id),
+            "conn_nodes": hrt.sqlite_table_to_gdf(conn=conn, query=conn_nodes_query, id_col=a_conn_node_id),
+            "manholes": hrt.sqlite_table_to_gdf(conn=conn, query=manholes_query, id_col=a_man_id),
         }
 
     except Exception as e:
@@ -377,7 +351,7 @@ def get_manhole_information(
         # check if nodes in wrong area (different initial waterlevel than rest in area) don't have manhole yet
         nodes_with_divergent_initial_wtrlvl_no_manhole = diverging_wl_nodes[
             ~diverging_wl_nodes[a_conn_node_id].isin(all_manholes[a_man_conn_id])
-        ]
+        ].copy()
         nodes_with_divergent_initial_wtrlvl_no_manhole[already_manhole_col] = False
         # also add these to the list
         all_manholes = all_manholes.append(
@@ -390,10 +364,9 @@ def get_manhole_information(
             .sort_index()
         )
         all_manholes.reset_index(drop=True, inplace=True)
-        # all_manholes_trf = gpd.GeoDataFrame.set_crs(all_manholes, crs=f"EPSG:{DEF_SRC_CRS }")
-        # all_manholes_gdf =all_manholes_trf.to_crs(epsg=DEF_TRGT_CRS)
-        all_manholes_gdf = gpd.GeoDataFrame.set_crs(all_manholes, crs=f"EPSG:{DEF_SRC_CRS}", epsg={DEF_TRGT_CRS})
-        return all_manholes_gdf
+        all_manholes.crs = f"EPSG:{DEF_TRGT_CRS}"
+        # all_manholes_gdf = gpd.GeoDataFrame(all_manholes, crs=f"EPSG:{DEF_TRGT_CRS}")
+        return all_manholes.copy()
     except Exception as e:
         raise e from None
 
@@ -523,7 +496,7 @@ def divergent_waterlevel_nodes(
         # nodes_in_drainage_area
         nodes_with_fixeddrainage_id = gpd.sjoin(
             conn_nodes,
-            fixeddrainage[[peil_id_col, streefpeil_bwn_col, df_geo_col]],
+            fixeddrainage[[peil_id_col, COL_STREEFPEIL_BWN, df_geo_col]],
         )
 
         # initialize new dataframe
@@ -624,9 +597,7 @@ def new_cross_loc_bank_levels(intersect_1d2d_all, channel_line_geo, cross_loc):
 
         """
         # filter nodes that need to have channels with bank levels equal to levee height
-        nodes_on_channel = intersect_1d2d_all[
-            intersect_1d2d_all["node_type"] == "added_calculation"
-        ].copy()
+        nodes_on_channel = intersect_1d2d_all[intersect_1d2d_all["node_type"] == "added_calculation"].copy()
         # nodes_on_channel = nodes_on_channel.rename(columns={'node_geometry': 'geometry'})
 
         nodes_on_channel.drop(["initial_waterlevel"], axis=1, inplace=True)
@@ -671,17 +642,13 @@ def new_cross_loc_bank_levels(intersect_1d2d_all, channel_line_geo, cross_loc):
         )
 
         # If a row doesn't have a levee height, the 1d2d line crosses with a fixeddrainagelevelarea (peilgrens).
-        cross_loc_fixeddrainage = cross_loc_levee[
-            cross_loc_levee["levee_height"].isna()
-        ]
+        cross_loc_fixeddrainage = cross_loc_levee[cross_loc_levee["levee_height"].isna()]
 
         # If there is a levee height, the 1d2d line crosses with a levee
         cross_loc_levee = cross_loc_levee[cross_loc_levee["levee_height"].notna()]
 
         # Find initial waterlevels for cross section locations by matching them to corresponding id of channels
-        cross_loc_new_all = cross_loc.join(
-            channel_line_geo[["initial_waterlevel"]], on="channel_id"
-        )
+        cross_loc_new_all = cross_loc.join(channel_line_geo[["initial_waterlevel"]], on="channel_id")
 
         # All bank levels are set to initial waterlevel +10cm
         cross_loc_new_all["new_bank_level"] = np.round(
@@ -699,17 +666,11 @@ def new_cross_loc_bank_levels(intersect_1d2d_all, channel_line_geo, cross_loc):
         cross_loc_new_all.loc[ref_higher_than_init, "new_bank_level"] = np.round(
             cross_loc_new_all["reference_level"] + 0.1, 3
         ).astype(float)
-        cross_loc_new_all.loc[
-            ref_higher_than_init, "bank_level_source"
-        ] = "reference+10cm"
+        cross_loc_new_all.loc[ref_higher_than_init, "bank_level_source"] = "reference+10cm"
 
         # The cross locations that need levee height are set here
-        cross_loc_new_all.loc[
-            cross_loc_levee.index, "new_bank_level"
-        ] = cross_loc_levee["levee_height"].astype(float)
-        cross_loc_new_all.loc[
-            cross_loc_levee.index, "bank_level_source"
-        ] = "levee_height"
+        cross_loc_new_all.loc[cross_loc_levee.index, "new_bank_level"] = cross_loc_levee["levee_height"].astype(float)
+        cross_loc_new_all.loc[cross_loc_levee.index, "bank_level_source"] = "levee_height"
 
         # Cross locations that are associated with peilgrenzen get a special label for recognition (values are already set)
         cross_loc_new_all.loc[
@@ -768,12 +729,15 @@ def get_updated_channels(channel_line_geo, cross_loc_new_all):
     )
     return all_channels
 
-
+# %%
 if __name__ == "__main__":
-    bl_test = BankLevelTest(
-        Folders(
-            r"C:\Users\chris.kerklaan\Documents\Github\hhnk-threedi-tools/test_polder"
-        )
-    )
-    bl_test.import_data()
-    bl_test.run()
+    from pathlib import Path
+    TEST_MODEL = Path(__file__).parent.parent.parent.parent / "tests/data/model_test/"
+    if not TEST_MODEL.exists():
+        raise Exception(f"{TEST_MODEL} doesnt exist")
+    
+    self = BankLevelTest(Folders(TEST_MODEL))
+    self.import_data()
+    self.run()
+    # self.manhole_information()
+

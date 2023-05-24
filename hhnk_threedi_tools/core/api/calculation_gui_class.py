@@ -31,8 +31,6 @@ from hhnk_threedi_tools.variables.api_settings import (
     RAIN_INTENSITY,
     GROUNDWATER,
     RAIN_SCENARIOS,
-    API_SETTINGS,
-    MODEL_TYPES,
 )
 
 
