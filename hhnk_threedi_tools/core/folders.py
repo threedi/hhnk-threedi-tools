@@ -321,6 +321,7 @@ class SchemaDirParent(Folder):
         self.revisions = self.ModelRevisionsParent(base=self.base, create=create)
         self.schema_base = hrt.ThreediSchematisation(base=self.base, name="00_basis", create=create)
         self.schema_list = ["schema_base"]
+        self.add_file("model_sql", "model_sql.json")
 
         if create:
             self.create_readme()
