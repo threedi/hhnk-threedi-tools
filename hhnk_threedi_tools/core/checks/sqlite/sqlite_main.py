@@ -414,11 +414,13 @@ class SqliteCheck:
 
     def run_watersurface_area(self):
         """
-        Deze test controleert per peilgebied in het model hoe groot het gebied is dat het oppervlaktewater beslaat in het
-        model. Dit totaal is opgebouwd uit de ```storage_area``` uit de ```v2_connection_nodes``` tafel opgeteld bij het
-        oppervlak van de watergangen (uitgelezen uit de ```channel_surface_from_profiles```) shapefile. Vervolgens worden de
-        totalen per peilgebied vergeleken met diezelfde totalen uit de DAMO database.
-
+        Deze test controleert per peilgebied in het model hoe groot het gebied 
+        is dat het oppervlaktewater beslaat in het model. Dit totaal is opgebouwd 
+        uit de kolom `storage_area` uit de `v2_connection_nodes` in de sqlite opgeteld
+        bij het oppervlak van de watergangen (uitgelezen uit `channel_surface_from_profiles`)
+        shapefile. Vervolgens worden de totalen per peilgebied vergeleken met diezelfde
+        totalen uit de waterdelen in DAMO.
+        
         De kolom namen in het resultaat zijn als volgt:
         From v2_connection_nodes -> area_nodes_m2
         From channel_surface_from_profiles -> area_channels_m2

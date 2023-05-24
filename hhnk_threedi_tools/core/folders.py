@@ -550,6 +550,8 @@ class OutputDirParent(Folder):
             self.add_file("general_sqlite_checks", "general_sqlite_checks.csv", "file")
             self.add_file("overlappende_profielen", "overlappende_profielen.gpkg", "file")
             self.add_file("profielen_geen_vertex", "profielen_geen_vertex.gpkg", "file")
+            self.add_file("wateroppervlak", "wateroppervlak.gpkg", "file")
+
 
             self.add_file("streefpeil", r"/temp/streefpeil.tif", "raster")
 
