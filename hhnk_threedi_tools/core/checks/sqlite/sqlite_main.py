@@ -506,40 +506,99 @@ class SqliteCheck:
                 output_path=os.path.join(output_folder, f"{i}.gpkg"),
             )
 
-    def run_cross_section(self):
-        """TODO add docstring en implementeren in plugin"""
+
+    def run_cross_vertex(self):
+        """WAT DOET DEZE FUNCTIE/CHECK????????????"""
+
+
+        
+        def _get_cross_section_vertex(cross_section_point, channels_gdf):
+
+            coord_x = []
+            coord_y = []
+            idxs=[]
+            for idx, row in channels_gdf.iterrows():
+                # ignore start and end vertex of channel lines
+                points_string_xy= row.geometry.xy
+                cnt = len(points_string_xy[0])
+                for i, idx1 in enumerate(points_string_xy[0]):
+                    if i == 0 or i==cnt-1:
+                        continue
+                    coord_x.append(idx1)
+                for i, idx1 in enumerate(points_string_xy[1]):
+                    if i == 0 or i==cnt-1:
+                        continue
+                    coord_y.append(idx1)
+                    idxs.append(row["channel_id"])
+            coordinates_dataframe = pd.DataFrame(data = {'x':coord_x, 'y':coord_y, "channel_id":idxs})
+            #All vertices of all channels to dataframe, buffer by x meters.
+            vertices_buffer = gpd.GeoDataFrame(coordinates_dataframe, geometry =gpd.points_from_xy(coordinates_dataframe.x, coordinates_dataframe.y, crs="EPSG:28992"))
+            vertices_buffer["geometry"] = vertices_buffer.buffer(0.05)
+            vertices_buffer.rename({"geometry": "geometry_line"}, axis=1, inplace=True)
+            cross_section_point.rename({"geometry": "geometry_point"}, axis=1, inplace=True)
+            # merge cross section and channel vertices on channels.
+            vertices_cross_merge = pd.merge(vertices_buffer, cross_section_point, left_on="channel_id", right_on="channel_id", how="left")
+            #Check if the cross section is within the buffered distance of a vertex
+            vertices_cross_intersect=vertices_cross_merge[gpd.GeoSeries.intersects(gpd.GeoSeries(vertices_cross_merge["geometry_line"]), gpd.GeoSeries(vertices_cross_merge["geometry_point"]))]
+            #Select cross sections that do not have a vertex within buffered distance
+            cross_no_vertex = cross_section_point[~cross_section_point["cross_loc_id"].isin(vertices_cross_intersect["cross_loc_id"].values)]
+            cross_no_vertex = gpd.GeoDataFrame(cross_no_vertex, geometry="geometry_point")
+            return cross_no_vertex
+
         try:
-            cross_section_point = self.model.read_table(table_name="v2_cross_section_location",  
-                                  columns=["id", "channel_id", "reference_level", "bank_level", "geometry"])
-            cross_section_point.rename({"id": "cross_loc_id"}, axis=1, inplace=True)
+            #w
+            sqlite_base = self.model.schema_base.database 
 
-            cross_section_buffer_gdf = cross_section_point
-            cross_section_buffer_gdf["geometry"] = cross_section_buffer_gdf.buffer(0.5) 
-            
-            cross_section_join =  gpd.sjoin(cross_section_buffer_gdf, cross_section_point,
-                              how="inner", predicate="intersects")
-            cross_section_join['new'] = np.where((cross_section_join["channel_id_right"]==cross_section_join["channel_id_left"]), cross_section_join['cross_loc_id_left'], np.nan)
-            cross_section_loc_id = cross_section_join.set_index('new')
-            cross_sec_id = [] 
-            counter = []
-            cross_location_id = []
-            
-            for id in cross_section_loc_id.index:
-                # print(id)
-                cross_sec_id.append(id)
-            for _ in cross_sec_id:    
-                cross_location_id.append(_)
-                count = cross_sec_id.count(_)
-                counter.append(count)
+            cross_section_point = sqlite_base.execute_sql_selection(query=cross_section_location_query)
+            channels_gdf = sqlite_base.execute_sql_selection(query=channels_query)
 
-            gdf_data = gpd.GeoDataFrame({"cross_loc_id_left":cross_location_id, 'count': counter})
-            gdf_data =  gdf_data.drop_duplicates(['cross_loc_id_left','count'],keep = 'last')
-            gdf_data = gdf_data[gdf_data['count']> 1 ]
-            list_id = gdf_data.cross_loc_id_left.values.tolist()
-            cross_section_warning = cross_section_point[cross_section_point['cross_loc_id'].isin(list_id)]
-            return cross_section_warning 
+            cross_no_vertex = _get_cross_section_vertex(cross_section_point, channels_gdf)
+            if cross_no_vertex is None or cross_no_vertex.empty:
+                print('All the points have vertex')
+            else:
+                print('Points with no vertex:')
+                print(cross_no_vertex)
+            return cross_no_vertex
+        
         except Exception as e:
             raise e from None
+
+    # def run_cross_section(self):
+    #     """TODO add docstring en implementeren in plugin"""
+
+        
+    #     try:
+    #         cross_section_point = self.model.read_table(table_name="v2_cross_section_location",  
+    #                               columns=["id", "channel_id", "reference_level", "bank_level", "geometry"])
+    #         cross_section_point.rename({"id": "cross_loc_id"}, axis=1, inplace=True)
+
+    #         cross_section_buffer_gdf = cross_section_point
+    #         cross_section_buffer_gdf["geometry"] = cross_section_buffer_gdf.buffer(0.5) 
+            
+    #         cross_section_join =  gpd.sjoin(cross_section_buffer_gdf, cross_section_point,
+    #                           how="inner", predicate="intersects")
+    #         cross_section_join['new'] = np.where((cross_section_join["channel_id_right"]==cross_section_join["channel_id_left"]), cross_section_join['cross_loc_id_left'], np.nan)
+    #         cross_section_loc_id = cross_section_join.set_index('new')
+    #         cross_sec_id = [] 
+    #         counter = []
+    #         cross_location_id = []
+            
+    #         for id in cross_section_loc_id.index:
+    #             # print(id)
+    #             cross_sec_id.append(id)
+    #         for _ in cross_sec_id:    
+    #             cross_location_id.append(_)
+    #             count = cross_sec_id.count(_)
+    #             counter.append(count)
+
+    #         gdf_data = gpd.GeoDataFrame({"cross_loc_id_left":cross_location_id, 'count': counter})
+    #         gdf_data =  gdf_data.drop_duplicates(['cross_loc_id_left','count'],keep = 'last')
+    #         gdf_data = gdf_data[gdf_data['count']> 1 ]
+    #         list_id = gdf_data.cross_loc_id_left.values.tolist()
+    #         cross_section_warning = cross_section_point[cross_section_point['cross_loc_id'].isin(list_id)]
+    #         return cross_section_warning 
+    #     except Exception as e:
+    #         raise e from None
 
 
     def run_cross_section_vertex(self):
