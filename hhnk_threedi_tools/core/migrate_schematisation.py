@@ -13,8 +13,7 @@ from uuid import uuid4
 import shutil
 from pathlib import Path
 
-from threedi_schema import ThreediDatabase
-from threedi_schema import errors
+from threedi_schema import ThreediDatabase, errors
 
 from hhnk_research_tools.folder_file_classes.folder_file_classes import Sqlite
 import hhnk_research_tools as hrt

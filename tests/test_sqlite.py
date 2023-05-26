@@ -22,27 +22,8 @@ class TestSqlite:
 
     sqlite_check = SqliteCheck(folder=FOLDER_TEST)
 
-    # open the file in the write mode
-    with open(r'E:\02.modellen\model_test_v2\t2.txt', 'w') as f:
-        # create the csv writer
-        writer = csv.writer(f)
-
-        # write a row to the csv file
-        writer.writerow([f"{sqlite_check.fenv.source_data}"])
-        writer.writerow([f"{sqlite_check.fenv.source_data.datachecker}"])
-        writer.writerow([f"{sqlite_check.fenv.source_data.datachecker.layers.culvert.parent}"])
 
     def test_run_controlled_structures(self):       
-        # open the file in the write mode
-        with open(r'E:\02.modellen\model_test_v2\t3.txt', 'w') as f:
-            # create the csv writer
-            writer = csv.writer(f)
-
-            # write a row to the csv file
-            writer.writerow([f"{self.sqlite_check.fenv.source_data}"])
-            writer.writerow([f"{self.sqlite_check.fenv.source_data.datachecker}"])
-            writer.writerow([f"{self.sqlite_check.fenv.source_data.datachecker.layers.culvert.parent}"])
-
         self.sqlite_check.run_controlled_structures()
 
         output_file = self.sqlite_check.output_fd.gestuurde_kunstwerken
