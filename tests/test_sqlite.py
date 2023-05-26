@@ -11,7 +11,7 @@ import inspect
 # Local imports
 from hhnk_threedi_tools.core.checks.sqlite.sqlite_main import SqliteCheck
 
-from .config import FOLDER_TEST
+from tests.config import FOLDER_TEST
 
 # %%
 # Globals

@@ -14,7 +14,7 @@ from hhnk_threedi_tools.core.folders import Folders
 from hhnk_threedi_tools.core.migrate_schematisation import MigrateSchema
 
 
-from config import FOLDER_TEST
+from tests.config import FOLDER_TEST
 
 
 def test_schema_migration():

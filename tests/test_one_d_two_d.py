@@ -18,7 +18,7 @@ from hhnk_threedi_tools.core.folders import Folders
 # __file__ = "C:/Users/chris.kerklaan/Documents/Github/hhnk-threedi-tests/hhnk_threedi_tools/tests/test_one_d_two_d.py"
 REVISION = "BWN bwn_test #6 1d2d_test"
 
-from .config import FOLDER_TEST
+from tests.config import FOLDER_TEST
 
 
 class TestOneDTwoD:

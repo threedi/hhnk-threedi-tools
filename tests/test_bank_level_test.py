@@ -22,7 +22,7 @@ from hhnk_threedi_tools.core.checks.bank_levels import BankLevelTest
 import pandas as pd
 pd.options.mode.chained_assignment = 'raise' #catch SettingWithCopyWarning
 
-from .config import FOLDER_TEST
+from tests.config import FOLDER_TEST
 
 
 class TestBankLevel:
