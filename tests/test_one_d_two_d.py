@@ -28,7 +28,8 @@ class TestOneDTwoD:
     FOLDER_TEST.output.one_d_two_d.unlink_contents(rmdirs=True)
 
     test_1d2d= OneDTwoDTest(folder=FOLDER_TEST, revision=REVISION)
-
+    test_1d2d.output_fd.create(parents=True)
+    
 
     def test_run_flowline_stats(self):
         """test of de hydraulische testen werken"""

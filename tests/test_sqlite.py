@@ -4,8 +4,6 @@ if __name__ == "__main__":
     import set_local_paths  # add local git repos.
 
 # First-party imports
-import os
-from pathlib import Path
 import inspect
 
 # Local imports
@@ -13,15 +11,12 @@ from hhnk_threedi_tools.core.checks.sqlite.sqlite_main import SqliteCheck
 
 from tests.config import FOLDER_TEST
 
-# %%
-# Globals
-import csv
 
 class TestSqlite:
     FOLDER_TEST.output.sqlite_tests.unlink_contents()
 
     sqlite_check = SqliteCheck(folder=FOLDER_TEST)
-
+    sqlite_check.output_fd.create(parents=True)
 
     def test_run_controlled_structures(self):       
         self.sqlite_check.run_controlled_structures()
@@ -110,7 +105,7 @@ if __name__ == "__main__":
 
     selftest = TestSqlite()
     # self=selftest
-    self = selftest.sqlite_test
+    self = selftest.sqlite_check
 
     # Run all testfunctions
     for i in dir(selftest):
