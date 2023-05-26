@@ -4,45 +4,21 @@ if __name__ == "__main__":
     import set_local_paths  # add local git repos.
 
 # First-party imports
-import os
-from pathlib import Path
 import inspect
 
 # Local imports
 from hhnk_threedi_tools.core.checks.sqlite.sqlite_main import SqliteCheck
 
-from .config import FOLDER_TEST
+from tests.config import FOLDER_TEST
 
-# %%
-# Globals
-import csv
 
 class TestSqlite:
     FOLDER_TEST.output.sqlite_tests.unlink_contents()
 
     sqlite_check = SqliteCheck(folder=FOLDER_TEST)
-
-    # open the file in the write mode
-    with open(r'E:\02.modellen\model_test_v2\t2.txt', 'w') as f:
-        # create the csv writer
-        writer = csv.writer(f)
-
-        # write a row to the csv file
-        writer.writerow([f"{sqlite_check.fenv.source_data}"])
-        writer.writerow([f"{sqlite_check.fenv.source_data.datachecker}"])
-        writer.writerow([f"{sqlite_check.fenv.source_data.datachecker.layers.culvert.parent}"])
+    sqlite_check.output_fd.create(parents=True)
 
     def test_run_controlled_structures(self):       
-        # open the file in the write mode
-        with open(r'E:\02.modellen\model_test_v2\t3.txt', 'w') as f:
-            # create the csv writer
-            writer = csv.writer(f)
-
-            # write a row to the csv file
-            writer.writerow([f"{self.sqlite_check.fenv.source_data}"])
-            writer.writerow([f"{self.sqlite_check.fenv.source_data.datachecker}"])
-            writer.writerow([f"{self.sqlite_check.fenv.source_data.datachecker.layers.culvert.parent}"])
-
         self.sqlite_check.run_controlled_structures()
 
         output_file = self.sqlite_check.output_fd.gestuurde_kunstwerken
@@ -129,7 +105,7 @@ if __name__ == "__main__":
 
     selftest = TestSqlite()
     # self=selftest
-    self = selftest.sqlite_test
+    self = selftest.sqlite_check
 
     # Run all testfunctions
     for i in dir(selftest):

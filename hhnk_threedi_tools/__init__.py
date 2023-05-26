@@ -23,7 +23,7 @@ from hhnk_threedi_tools.core.checks.bank_levels import (
 from hhnk_threedi_tools.core.checks.one_d_two_d import OneDTwoDTest
 from hhnk_threedi_tools.core.checks.sqlite.sqlite_main import SqliteCheck  # FIXME
 from hhnk_threedi_tools.core.checks.zero_d_one_d import ZeroDOneDTest
-
+from hhnk_threedi_tools.core.migrate_schematisation import MigrateSchema
 
 # notebooks
 from hhnk_threedi_tools.utils.notebooks.run import add_notebook_paths
