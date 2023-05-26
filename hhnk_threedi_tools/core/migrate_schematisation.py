@@ -17,18 +17,20 @@ from threedi_schema import ThreediDatabase
 from threedi_schema import errors
 
 from hhnk_research_tools.folder_file_classes.folder_file_classes import Sqlite
+import hhnk_research_tools as hrt
 
-
-def backup_sqlite(filename):
+def backup_sqlite(filename, clear_folder=False):
     u"""Make a backup of the sqlite database.
     direct copy of ThreeDiToolbox\\utils\\utils.py to reduce dependencies"""
 
-    backup_folder = os.path.join(os.path.dirname(os.path.dirname(filename)), "_backup")
-    os.makedirs(backup_folder, exist_ok=True)
+    backup_folder = hrt.Folder(os.path.join(os.path.dirname(os.path.dirname(filename)), "_backup"))
+    backup_folder.create()
+
+    if clear_folder:
+        backup_folder.unlink_contents() 
+
     prefix = str(uuid4())[:8]
-    backup_sqlite_path = os.path.join(
-        backup_folder, f"{prefix}_{os.path.basename(filename)}"
-    )
+    backup_sqlite_path = backup_folder.full_path(f"{prefix}_{os.path.basename(filename)}")
     shutil.copyfile(filename, backup_sqlite_path)
     return backup_sqlite_path
 
@@ -49,9 +51,9 @@ class MigrateSchema():
             raise e
 
 
-    def backup(self) -> Sqlite:
+    def backup(self, clear_folder=False) -> Sqlite:
         """create backup"""
-        backup_filepath = backup_sqlite(self.schema_raw.path)
+        backup_filepath = backup_sqlite(self.schema_raw.path, clear_folder=clear_folder)
         return Sqlite(backup_filepath)
     
 
@@ -75,7 +77,7 @@ class MigrateSchema():
     def run(self):
             #Create a backup and work on this one.
             #Editing in the original file causes filelock issues
-            self.schema_backup = self.backup()
+            self.schema_backup = self.backup(clear_folder=True)
 
             self.threedi_db = self.get_threedi_database(filename=self.schema_backup.path)
             if not self.threedi_db:

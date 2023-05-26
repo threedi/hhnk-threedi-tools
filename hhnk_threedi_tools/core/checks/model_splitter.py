@@ -280,14 +280,13 @@ class ModelSchematisations:
 
         list_of_files = [os.path.join(revision_parent_folder, x) for x in os.listdir(revision_parent_folder)]
 
+        target_file = revision_parent_folder.full_path(f"rev_{count+1} - {commit_message[:25]}")
         if list_of_files == []:
-            target_file = str(revision_parent_folder) +"\\rev_" + str(count+1) + " - " + str(commit_message[:25])
             shutil.copytree(schema_str, target_file)
 
         if list_of_files != []:
             latest_file = max(list_of_files, key=os.path.getctime) 
-            if str(revision_parent_folder + "\\rev_" + str(count) + " - " + str(commit_message[:25])) != str(latest_file): 
-                target_file = str(revision_parent_folder) +"\\rev_" + str(count+1) + " - " + str(commit_message[:25])
+            if revision_parent_folder.full_path(f"rev_{count} - {commit_message[:25]}") != str(latest_file): 
                 shutil.copytree(schema_str, target_file)
 
 
