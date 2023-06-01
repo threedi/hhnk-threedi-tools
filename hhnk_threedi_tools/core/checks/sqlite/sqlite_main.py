@@ -165,7 +165,7 @@ class SqliteCheck:
         """Create leayer with structure control in schematisation"""
         self.structure_control = StructureControl(model=self.fenv.model.schema_base.database, 
                             hdb_control_layer=self.fenv.source_data.hdb.layers.sturing_3di,
-                            output_file=self.fenv.output.sqlite_tests.gestuurde_kunstwerken.pl)
+                            output_file=self.output_fd.gestuurde_kunstwerken.pl)
         self.structure_control.run(overwrite=overwrite)
 
 
@@ -377,20 +377,6 @@ class SqliteCheck:
         datachecker_culvert_layer = self.fenv.source_data.datachecker.layers.culvert
         damo_duiker_sifon_layer = self.fenv.source_data.damo.layers.DuikerSifonHevel
 
-
-        import csv
-
-        # open the file in the write mode
-        with open(r'E:\02.modellen\model_test_v2\t.txt', 'w') as f:
-            # create the csv writer
-            writer = csv.writer(f)
-
-            # write a row to the csv file
-            writer.writerow([f"{self.fenv.source_data}"])
-            writer.writerow([f"{datachecker_culvert_layer.parent}"])
-            writer.writerow([f"{damo_duiker_sifon_layer.parent}"])
-
-
         try:
             below_ref_query = struct_channel_bed_query
             gdf_below_ref = self.model.execute_sql_selection(query=below_ref_query)
@@ -414,11 +400,13 @@ class SqliteCheck:
 
     def run_watersurface_area(self):
         """
-        Deze test controleert per peilgebied in het model hoe groot het gebied is dat het oppervlaktewater beslaat in het
-        model. Dit totaal is opgebouwd uit de ```storage_area``` uit de ```v2_connection_nodes``` tafel opgeteld bij het
-        oppervlak van de watergangen (uitgelezen uit de ```channel_surface_from_profiles```) shapefile. Vervolgens worden de
-        totalen per peilgebied vergeleken met diezelfde totalen uit de DAMO database.
-
+        Deze test controleert per peilgebied in het model hoe groot het gebied 
+        is dat het oppervlaktewater beslaat in het model. Dit totaal is opgebouwd 
+        uit de kolom `storage_area` uit de `v2_connection_nodes` in de sqlite opgeteld
+        bij het oppervlak van de watergangen (uitgelezen uit `channel_surface_from_profiles`)
+        shapefile. Vervolgens worden de totalen per peilgebied vergeleken met diezelfde
+        totalen uit de waterdelen in DAMO.
+        
         De kolom namen in het resultaat zijn als volgt:
         From v2_connection_nodes -> area_nodes_m2
         From channel_surface_from_profiles -> area_channels_m2

@@ -1,12 +1,7 @@
 # %%
 # -*- coding: utf-8 -*-
 """
-Created on Mon Aug 23 10:46:05 2021
-
-@author: chris.kerklaan
-
 Functional testing for oneDtwoD object
-
 """
 if __name__ == "__main__":
     import set_local_paths  # add local git repos.
@@ -23,7 +18,7 @@ from hhnk_threedi_tools.core.folders import Folders
 # __file__ = "C:/Users/chris.kerklaan/Documents/Github/hhnk-threedi-tests/hhnk_threedi_tools/tests/test_one_d_two_d.py"
 REVISION = "BWN bwn_test #6 1d2d_test"
 
-from .config import FOLDER_TEST
+from tests.config import FOLDER_TEST
 
 
 class TestOneDTwoD:
@@ -33,7 +28,8 @@ class TestOneDTwoD:
     FOLDER_TEST.output.one_d_two_d.unlink_contents(rmdirs=True)
 
     test_1d2d= OneDTwoDTest(folder=FOLDER_TEST, revision=REVISION)
-
+    test_1d2d.output_fd.create(parents=True)
+    
 
     def test_run_flowline_stats(self):
         """test of de hydraulische testen werken"""

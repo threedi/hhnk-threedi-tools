@@ -1,10 +1,10 @@
 # %%
 import sys
-sys.path.insert(0, r"E:/github/wvangerwen/hhnk-threedi-tools")
 import shutil
 import pandas as pd
 import matplotlib.pyplot as plt
 import os
+import json
 
 import hhnk_research_tools as hrt
 import hhnk_threedi_tools.core.api.upload_model.upload as upload
@@ -95,19 +95,22 @@ class ModelSchematisations:
         only the globalsettings"""
         row = self.settings_df.loc[name].copy()
 
-        schema_name = self.folder.model._add_modelpath(name)
+        # schema_name = self.folder.model._add_modelpath(name)
 
         # Copy the files that are in the global settings.
         # This menas rasters that are not defined are not added to the schematisation.
         schema_base = self.folder.model.schema_base
         schema_new = getattr(self.folder.model, f"schema_{name}")
 
+        database_base = schema_base.database
+        database_new = schema_new.database
+
         # Write the sqlite and rasters to new folders.
 
         # Copy sqlite
-        src = schema_base.database.path
-        dst = os.path.join(schema_new.path, schema_base.database.pl.name)
-        shutil.copyfile(src=src, dst=dst)
+        dst = os.path.join(schema_new.path, database_base.pl.name)
+        shutil.copyfile(src=database_base.path, dst=dst)
+
 
         schema_new.rasters.create(parents=False)
         # Copy rasters that are defined in the settings file
@@ -121,8 +124,6 @@ class ModelSchematisations:
                     # TODO raise error?
                     print(f"Couldnt find raster:\t{row[raster_file]}")
 
-        database_path_base = schema_base.database.path
-        database_path_new = schema_new.database.path
 
         # Edit the SQLITE
         table_names = ["v2_global_settings", "v2_simple_infiltration"]
@@ -135,16 +136,19 @@ class ModelSchematisations:
                 row["id"] = 1
 
             # Clear the table
-            hrt.execute_sql_changes(
-                query=f"""DELETE FROM {table_name}""", database=database_path_new
-            )
+            database_new.execute_sql_changes(query=f"""DELETE FROM {table_name}""")
+            # hrt.execute_sql_changes(
+            #     query=f"""DELETE FROM {table_name}""", database=database_path_new
+            # )
 
             # Create new value and column pairs. The new values are used from the settings.xlsx file.
             # Dont create v2_simple infiltration if the id is not defined
             if not pd.isnull(row["id"]):
-                df_table = hrt.sqlite_table_to_df(
-                    database_path=database_path_new, table_name=table_name
-                )
+
+                df_table = database_new.read_table(table_name=table_name)
+                # df_table = hrt.sqlite_table_to_df(
+                #     database_path=database_path_new, table_name=table_name
+                # )
                 columns = []
                 values = []
                 for key in df_table.keys():
@@ -177,15 +181,17 @@ class ModelSchematisations:
                 VALUES {values}"""
 
                 # Insert new row
-                hrt.execute_sql_changes(query, database=database_path_new)
+                database_new.execute_sql_changes(query=query)
+                # hrt.execute_sql_changes(query, database=database_path_new)
 
         # Additional model changes for different model types
-        if row["name"] == "0d1d_test":
+        if name == "0d1d_test":
             # Set every channel to isolated
-            hrt.execute_sql_changes(
-                query="UPDATE v2_channel SET calculation_type=101",
-                database=database_path_new,
-            )
+            database_new.execute_sql_changes(query="UPDATE v2_channel SET calculation_type=101")
+            # hrt.execute_sql_changes(
+            #     query="UPDATE v2_channel SET calculation_type=101",
+            #     database=database_path_new,
+            # )
 
             # Set controlled weirs to 10x width because we dont use controlled strcutures in hyd test.
             # To get the weir with we use the base database, so we cant accidentally run this twice.
@@ -199,9 +205,10 @@ class ModelSchematisations:
                 INNER JOIN v2_cross_section_definition ON v2_weir.cross_section_definition_id = v2_cross_section_definition.id
                 INNER JOIN v2_control_table ON v2_weir.id = v2_control_table.target_id
                 """
-            controlled_weirs_df = hrt.execute_sql_selection(
-                controlled_weirs_selection_query, database_path=database_path_base
-            )
+            controlled_weirs_df = database_base.execute_sql_selection(query=controlled_weirs_selection_query)
+            # controlled_weirs_df = hrt.execute_sql_selection(
+            #     controlled_weirs_selection_query, database_path=database_path_base
+            # )
 
             controlled_weirs_df.insert(
                 controlled_weirs_df.columns.get_loc("width") + 1,
@@ -218,7 +225,19 @@ class ModelSchematisations:
                 new_val_col="width_new",
             )
 
-            hrt.execute_sql_changes(query=query, database=database_path_new)
+            database_new.execute_sql_changes(query=query)
+            # hrt.execute_sql_changes(query=query, database=database_path_new)
+
+        #execute additional SQL code that is stored in 02_schematisation/model_sql.json.
+        if self.folder.model.model_sql.pl.exists():
+            with open(self.folder.model.model_sql.path) as f:
+                model_sql = json.loads(f.read())
+
+            if name in model_sql.keys():
+                for _, query in model_sql[name].items():
+                    database_new.execute_sql_changes(query=query)
+                    print(f"executed additional query on {name}: {query}")
+
 
     def upload_schematisation(self, name, commit_message, api_key):             
         """
@@ -261,14 +280,13 @@ class ModelSchematisations:
 
         list_of_files = [os.path.join(revision_parent_folder, x) for x in os.listdir(revision_parent_folder)]
 
+        target_file = revision_parent_folder.full_path(f"rev_{count+1} - {commit_message[:25]}")
         if list_of_files == []:
-            target_file = str(revision_parent_folder) +"\\rev_" + str(count+1) + " - " + str(commit_message[:25])
             shutil.copytree(schema_str, target_file)
 
         if list_of_files != []:
             latest_file = max(list_of_files, key=os.path.getctime) 
-            if str(revision_parent_folder + "\\rev_" + str(count) + " - " + str(commit_message[:25])) != str(latest_file): 
-                target_file = str(revision_parent_folder) +"\\rev_" + str(count+1) + " - " + str(commit_message[:25])
+            if revision_parent_folder.full_path(f"rev_{count} - {commit_message[:25]}") != str(latest_file): 
                 shutil.copytree(schema_str, target_file)
 
 
@@ -287,19 +305,6 @@ class ModelSchematisations:
         # shutil.copytree(schema_str, revision_folder)
 
 
-#%%
-
-# def get_revision_info(revision__schematisation__name):
-#     threedimodel = upload.threedi.api.threedimodels_list(revision__schematisation__name)
-#     if threedimodel.results == []:
-#         return "no previous model(s) available"
-    
-#     else:
-#         schema_id = threedimodel.to_dict()['results'][0]['schematisation_id']
-#         latest_revision = upload.threedi.api.schematisations_latest_revision(schema_id)
-#         rev_model = threedimodel.to_dict()['results'][0]['name']
-#         return "previous model revision: " + rev_model + " " + latest_revision.commit_message 
-
         
 # %%
 
@@ -307,115 +312,17 @@ if __name__ == "__main__":
     from hhnk_threedi_tools.core.folders import Folders
 
     path = r"E:\02.modellen\model_test_v2"
-    #path = r"\\corp.hhnk.nl\data\Hydrologen_data\Data\02.modellen\heiloo_geen_gemaal"
+
     folder = Folders(path)
-    name = "1d2d_glg"
+    name = "0d1d_test"
 
     self = ModelSchematisations(
         folder=folder, modelsettings_path=folder.model.settings.path
     )
     self.create_schematisation(name=name)
-    self.upload_schematisation(
-        name=name,
-        commit_message="Load Model. Pump capacity 466 l/sec",
-        api_key="",
-    )
-    # %%
-    upload.threedi.set_api_key("")
-    #upload.threedi.api.threedimodels_list?
+    # self.upload_schematisation(
+    #     name=name,
+    #     commit_message="Load Model. Pump capacity 466 l/sec",
+    #     api_key="",
+    # )
 
-# %%
-
-# # Check beschikbare modellen
-# threedimodels = upload.threedi.api.threedimodels_list(revision__schematisation__name=schematisation.name)
-# models = threedimodels.to_dict()['results']#[0]['id']
-# if len(models)> 2:
-#     cont = input("Remove oldest threedi model? [y/n]")
-#     if cont=='y':
-#         upload.threedi.api.threedimodels_delete(id=models[-1]['id'])
-
-
-# upload.threedi.api.schematisations_revisions_create_threedimodel(id=41937, 
-#                 schematisation_pk=5746)
-
-# # %%
-
-
-
-#     # Schematisatie maken als die nog niet bestaat
-# schematisation = upload.get_or_create_schematisation(
-#         schematisation_name="model_test_v2__0d1d_test", tags=["model_test_v2__0d1d_test", "model_test_v2"]
-#     )
-    
-
-
-#     # Nieuwe (lege) revisie aanmaken
-# revision = upload.threedi.api.schematisations_revisions_list( 
-#         schematisation.id)
-
-
-
-# # %%
-
-# upload.create_threedimodel(schematisation, revision)
-
-# # %%
-
-# schematisation.id
-
-# threedimodels = upload.threedi.api.threedimodels_list(revision__schematisation__name=schematisation.name)
-# threedischema = upload.threedi.api.schematisations_list()
-# schema = threedischema.to_dict()['results']
-# i = schema.count()
-# x = 0
-# schema_list = []
-# #models = threedimodels.to_dict()['results']#[0]['id']
-# while x < 800:
-#     a = threedischema.to_dict()['results'][x]['id']
-#     schema_list.append(a)
-#     x = x + 1 
-    
-
-# if len(models)> 2:
-#     cont = input("Remove oldest threedi model? [y/n]")
-#     if cont=='y':
-#         upload.threedi.api.threedimodels_delete(id=models[-1]['id'])
-    
-
-# # %%
-
-# %%
-def create_threedimodel(
-    schematisation,
-    revision,
-    max_retries_creation=60,
-    wait_time_creation=5,
-    max_retries_processing=60,
-    wait_time_processing=60,
-):
-    threedimodel = None
-    for i in range(max_retries_creation):
-        try:
-            threedimodel = threedi.api.schematisations_revisions_create_threedimodel(
-                revision.id, schematisation.id
-            )
-            print(f"Creating threedimodel with id {threedimodel.id}...")
-            break
-        except ApiException:
-            time.sleep(wait_time_creation)
-            continue
-    if threedimodel:
-        for i in range(max_retries_processing):
-            threedimodel = threedi.api.threedimodels_read(threedimodel.id)
-            if threedimodel.is_valid:
-                print(f"Succesfully created threedimodel with id {threedimodel.id}")
-                break
-            else:
-                time.sleep(wait_time_processing)
-        if not threedimodel.is_valid:
-            print(
-                f"Failed to sucessfully process threedimodel with id {threedimodel.id}"
-            )
-    else:
-        print("Failed to create threedimodel")
-    return threedimodel.id

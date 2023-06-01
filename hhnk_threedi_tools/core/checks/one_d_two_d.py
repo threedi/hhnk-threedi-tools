@@ -68,8 +68,10 @@ class OneDTwoDTest:
         self.fenv = folder
         self.revision = revision
 
+
         self.result_fd = self.fenv.threedi_results.one_d_two_d[self.revision]
         self.output_fd = self.fenv.output.one_d_two_d[self.revision]
+
 
         self.grid_result = self.result_fd.grid
 

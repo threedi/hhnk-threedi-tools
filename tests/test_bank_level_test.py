@@ -22,29 +22,13 @@ from hhnk_threedi_tools.core.checks.bank_levels import BankLevelTest
 import pandas as pd
 pd.options.mode.chained_assignment = 'raise' #catch SettingWithCopyWarning
 
-from .config import FOLDER_TEST
+from tests.config import FOLDER_TEST
 
 
 class TestBankLevel:
 
-    # open the file in the write mode
-    with open(r'E:\02.modellen\model_test_v2\t2.txt', 'w') as f:
-        import csv
-        writer = csv.writer(f)
-        writer.writerow([f"{FOLDER_TEST.source_data}"])
-        writer.writerow([f"{FOLDER_TEST.source_data.datachecker}"])
-        writer.writerow([f"{FOLDER_TEST.source_data.datachecker.layers.culvert.parent}"])
 
     bl_test = BankLevelTest(FOLDER_TEST)
-
-    # open the file in the write mode
-    with open(r'E:\02.modellen\model_test_v2\t3.txt', 'w') as f:
-        import csv
-        writer = csv.writer(f)
-        writer.writerow([f"{bl_test.fenv.source_data}"])
-        writer.writerow([f"{bl_test.fenv.source_data.datachecker}"])
-        writer.writerow([f"{bl_test.fenv.source_data.datachecker.layers.culvert.parent}"])
-
 
     bl_test.import_data()
 

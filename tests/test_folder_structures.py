@@ -6,7 +6,7 @@ from hhnk_threedi_tools.core.folders import Folders
 
 SUB_FOLDERS = ["01_source_data", "02_schematisation", "03_3di_results", "04_test_results"]
 
-from .config import FOLDER_TEST, PATH_TEST_MODEL, \
+from tests.config import FOLDER_TEST, PATH_TEST_MODEL, \
                         FOLDER_NEW, PATH_NEW_FOLDER
 
 class TestFolder:
