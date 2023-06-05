@@ -149,13 +149,14 @@ class SqliteCheck:
         self.fenv = folder
 
         self.output_fd = self.fenv.output.sqlite_tests
-
+        self.name = self.fenv.name
         self.model = self.fenv.model.schema_base.database
         self.dem = hrt.Raster(self.fenv.model.schema_base.rasters.dem)
         self.datachecker = self.fenv.source_data.datachecker
         self.damo = self.fenv.source_data.damo.path
         self.channels_from_profiles = self.fenv.source_data.modelbuilder.channel_from_profiles
-
+        self.sqlite = self.fenv.model.schema_base.database_path
+        self.sqlite_modify =hrt.ThreediSchematisation(base = self.fenv.model.path, name ="basis_modify", create=False)
         self.layer_fixeddrainage = self.fenv.source_data.datachecker.layers.fixeddrainagelevelarea
 
         self.results = {}
@@ -165,7 +166,7 @@ class SqliteCheck:
         """Create leayer with structure control in schematisation"""
         self.structure_control = StructureControl(model=self.fenv.model.schema_base.database, 
                             hdb_control_layer=self.fenv.source_data.hdb.layers.sturing_3di,
-                            output_file=self.output_fd.gestuurde_kunstwerken.pl)
+                            output_file=self.fenv.output.sqlite_tests.gestuurde_kunstwerken.pl)
         self.structure_control.run(overwrite=overwrite)
 
 
@@ -377,6 +378,20 @@ class SqliteCheck:
         datachecker_culvert_layer = self.fenv.source_data.datachecker.layers.culvert
         damo_duiker_sifon_layer = self.fenv.source_data.damo.layers.DuikerSifonHevel
 
+
+        import csv
+
+        # open the file in the write mode
+        with open(r'E:\02.modellen\model_test_v2\t.txt', 'w') as f:
+            # create the csv writer
+            writer = csv.writer(f)
+
+            # write a row to the csv file
+            writer.writerow([f"{self.fenv.source_data}"])
+            writer.writerow([f"{datachecker_culvert_layer.parent}"])
+            writer.writerow([f"{damo_duiker_sifon_layer.parent}"])
+
+
         try:
             below_ref_query = struct_channel_bed_query
             gdf_below_ref = self.model.execute_sql_selection(query=below_ref_query)
@@ -400,13 +415,11 @@ class SqliteCheck:
 
     def run_watersurface_area(self):
         """
-        Deze test controleert per peilgebied in het model hoe groot het gebied 
-        is dat het oppervlaktewater beslaat in het model. Dit totaal is opgebouwd 
-        uit de kolom `storage_area` uit de `v2_connection_nodes` in de sqlite opgeteld
-        bij het oppervlak van de watergangen (uitgelezen uit `channel_surface_from_profiles`)
-        shapefile. Vervolgens worden de totalen per peilgebied vergeleken met diezelfde
-        totalen uit de waterdelen in DAMO.
-        
+        Deze test controleert per peilgebied in het model hoe groot het gebied is dat het oppervlaktewater beslaat in het
+        model. Dit totaal is opgebouwd uit de ```storage_area``` uit de ```v2_connection_nodes``` tafel opgeteld bij het
+        oppervlak van de watergangen (uitgelezen uit de ```channel_surface_from_profiles```) shapefile. Vervolgens worden de
+        totalen per peilgebied vergeleken met diezelfde totalen uit de DAMO database.
+
         De kolom namen in het resultaat zijn als volgt:
         From v2_connection_nodes -> area_nodes_m2
         From channel_surface_from_profiles -> area_channels_m2
@@ -495,81 +508,66 @@ class SqliteCheck:
             )
 
     def run_cross_section(self):
-        """TODO add docstring en implementeren in plugin"""
+        """Deze functie een loop maken over het cross sections om een of meer intersect punten (cross_sections) vinden
+           Het ga een foutmelding geven als 1 of meer punten vinden"""
         try:
-            cross_section_point = self.model.read_table(table_name="v2_cross_section_location",  
-                                  columns=["id", "channel_id", "reference_level", "bank_level", "geometry"])
-            cross_section_point.rename({"id": "cross_loc_id"}, axis=1, inplace=True)
+            #Selecteren het sqlite volgen de conditie 
+            if self.name == 'model_test_v2':
+                database_path = self.sqlite_modify.database_path
+            else:
+                database_path = self.sqlite.database_path
 
-            cross_section_buffer_gdf = cross_section_point
-            cross_section_buffer_gdf["geometry"] = cross_section_buffer_gdf.buffer(0.5) 
-            
-            cross_section_join =  gpd.sjoin(cross_section_buffer_gdf, cross_section_point,
-                              how="inner", predicate="intersects")
-            cross_section_join['new'] = np.where((cross_section_join["channel_id_right"]==cross_section_join["channel_id_left"]), cross_section_join['cross_loc_id_left'], np.nan)
-            cross_section_loc_id = cross_section_join.set_index('new')
-            cross_sec_id = [] 
-            counter = []
-            cross_location_id = []
-            
-            for id in cross_section_loc_id.index:
-                # print(id)
-                cross_sec_id.append(id)
-            for _ in cross_sec_id:    
-                cross_location_id.append(_)
-                count = cross_sec_id.count(_)
-                counter.append(count)
+            #Selecteren vanaf de sqlite het cross_section een df maken over deze selectie
+            cross_section_df = hrt.execute_sql_selection(
+            query =cross_section_location_query , database_path=database_path
+        )
+            # zet df om in gdf
+            cross_section_point = hrt.df_convert_to_gdf(df=cross_section_df)
 
-            gdf_data = gpd.GeoDataFrame({"cross_loc_id_left":cross_location_id, 'count': counter})
-            gdf_data =  gdf_data.drop_duplicates(['cross_loc_id_left','count'],keep = 'last')
-            gdf_data = gdf_data[gdf_data['count']> 1 ]
-            list_id = gdf_data.cross_loc_id_left.values.tolist()
-            cross_section_warning = cross_section_point[cross_section_point['cross_loc_id'].isin(list_id)]
-            return cross_section_warning 
+            # gebruik het functie _get_intersected_ points om de snijpunten te krijgen. 
+            intersected_points = _get_intersected_points(cross_section_point)
+            
+            # Een foutmelding geven als de volgen de conditie.  
+            if intersected_points is None or intersected_points.empty:
+                print('No intersected points')
+            else:
+                print('Intersected Points:')
+                print(intersected_points)
+            return intersected_points
+        
         except Exception as e:
             raise e from None
 
 
     def run_cross_section_vertex(self):
-        """TODO add docstring en implementeren in plugin"""
+        
+        """Deze functie vind de punten/cross_sections dat niet in het vertex van en lijn/channel liggen.  
+           Het ga een foutmelding geven als 1 of meer punten vinden"""
+        #Selecteren het sqlite volgen de conditie 
         try:
-            cross_section_point = self.model.read_table(table_name="v2_cross_section_location",  
-                                  columns=["id", "channel_id", "reference_level", "bank_level", "geometry"])
-            cross_section_point.rename({"id": "cross_loc_id"}, axis=1, inplace=True)
+            if self.name == 'model_test_v2':
+                database_path = self.sqlite_modify.database
+            else:
+                database_path = self.sqlite.database
+            
+            #Selecteren vanaf de sqlite het cross_section een channels om df over deze selectie te maken
+            cross_section_point = database_path.execute_sql_selection(query=cross_section_location_query)
+            channels_gdf = database_path.execute_sql_selection(query=channels_query)
 
-            channels_gdf = self.model.execute_sql_selection(query=channels_query)
-            coord_x = []
-            coord_y = []
-            idxs=[]
-            for idx, row in channels_gdf.iterrows():
-                # ignore start and end vertex of channel lines
-                points_string_xy= row.geometry.xy
-                cnt = len(points_string_xy[0])
-                for i, idx1 in enumerate(points_string_xy[0]):
-                    if i == 0 or i==cnt-1:
-                        continue
-                    coord_x.append(idx1)
-                for i, idx1 in enumerate(points_string_xy[1]):
-                    if i == 0 or i==cnt-1:
-                        continue
-                    coord_y.append(idx1)
-                    idxs.append(row["channel_id"])
-            coordinates_dataframe = pd.DataFrame(data = {'x':coord_x, 'y':coord_y, "channel_id":idxs})
-            #All vertices of all channels to dataframe, buffer by x meters.
-            vertices_buffer = gpd.GeoDataFrame(coordinates_dataframe, geometry =gpd.points_from_xy(coordinates_dataframe.x, coordinates_dataframe.y, crs="EPSG:28992"))
-            vertices_buffer["geometry"] = vertices_buffer.buffer(0.05)
-            vertices_buffer.rename({"geometry": "geometry_line"}, axis=1, inplace=True)
-            cross_section_point.rename({"geometry": "geometry_point"}, axis=1, inplace=True)
-            # merge cross section and channel vertices on channels.
-            vertices_cross_merge = pd.merge(vertices_buffer, cross_section_point, left_on="channel_id", right_on="channel_id", how="left")
-            #Check if the cross section is within the buffered distance of a vertex
-            vertices_cross_intersect=vertices_cross_merge[gpd.GeoSeries.intersects(gpd.GeoSeries(vertices_cross_merge["geometry_line"]), gpd.GeoSeries(vertices_cross_merge["geometry_point"]))]
-            #Select cross sections that do not have a vertex within buffered distance
-            cross_no_vertex = cross_section_point[~cross_section_point["cross_loc_id"].isin(vertices_cross_intersect["cross_loc_id"].values)]
-            cross_no_vertex = gpd.GeoDataFrame(cross_no_vertex, geometry="geometry_point")
+            # gebruik het functie _get_cross_section_vertex  om de punten selecteren als zijn over de een vertex .             
+            cross_no_vertex = _get_cross_section_vertex(cross_section_point, channels_gdf)
+
+            # Een foutmelding geven als de volgen de conditie.  
+            if cross_no_vertex is None or cross_no_vertex.empty:
+                print('All the points have vertex')
+            else:
+                print('Points with no vertex:')
+                print(cross_no_vertex)
             return cross_no_vertex
+            
         except Exception as e:
-            raise e from None
+                raise e from None
+
 
 ## helper functions
 
@@ -816,7 +814,90 @@ def _write_grid_to_file(grid, grid_type, output_path):
     gdf = hrt.df_convert_to_gdf(df, geom_col_type="wkb", src_crs="28992")
     hrt.gdf_write_to_geopackage(gdf, filepath=output_path)
 
+def _get_intersected_points(cross_section_point):
+    """
+    Deze functie retourneert de snijpunten/punten die elkaar snijden.    
+    """
 
+    # Make buffer of the points to identify later if we have cross setion overlaping eachothers. 
+    cross_section_buffer_gdf = cross_section_point.copy()
+
+    cross_section_buffer_gdf["geometry"] = cross_section_buffer_gdf.buffer(0.5) 
+
+    #make spatial join between the buffer and the cross section point to identify possible overlaping
+    cross_section_join =  gpd.sjoin(cross_section_buffer_gdf, cross_section_point,
+                        how="inner", op="intersects")
+
+    #set the id of the colummn called as de cross location id according if it follows the following conditions. otherwise na
+    cross_section_join['new'] = np.where((cross_section_join["channel_id_right"]==cross_section_join["channel_id_left"]), 
+                                            cross_section_join['cross_loc_id_left'], np.nan)
+
+    #Set column new as new index
+    cross_section_id = cross_section_join.set_index('new')
+    #Transfor de id into a list
+    cross_sec_id = cross_section_id.index.tolist()
+
+    counter = []
+    cross_location_id = []
+
+    #loop over the cross section  table to add the id into a list and then count how many ids with the same value we have
+    for id in cross_sec_id:
+        cross_location_id.append(id)
+        count = cross_sec_id.count(id)
+        counter.append(count)
+    #Create a new geodataframe with columns id and counter
+    gdf_data = gpd.GeoDataFrame({"cross_loc_id_left":cross_location_id, 'count': counter})
+    # drop duplicated values base on those two columns. In this case ID, we identify intersection with the counter.
+    gdf_data =  gdf_data.drop_duplicates(['cross_loc_id_left','count'],keep = 'last')
+    # filter if the count colum is greater that 1 then there is an intersection. 
+    gdf_data = gdf_data[gdf_data['count']> 1 ]
+    #transfor the id from the previous step into a list
+    list_id = gdf_data.cross_loc_id_left.values.tolist()
+    #make  filter with the list_id to selected the intersected points from the initial data
+
+
+    intersected_points = cross_section_point[cross_section_point['cross_loc_id'].isin(list_id)]
+
+    return intersected_points
+
+def _get_cross_section_vertex(cross_section_point, channels_gdf):
+    """
+    Deze functie retourneert de punten die niet op de hoekpunten van de kanalen/lijnen liggen.    
+    """
+    # initialized de list that will store de coordinates x and y
+    coord_x = []
+    coord_y = []
+    idxs=[]
+
+    for idx, row in channels_gdf.iterrows():
+        # ignore start and end vertex of channel lines
+        points_string_xy= row.geometry.xy
+        cnt = len(points_string_xy[0])
+        for i, idx1 in enumerate(points_string_xy[0]):
+            if i == 0 or i==cnt-1:
+                continue
+            coord_x.append(idx1)
+        for i, idx1 in enumerate(points_string_xy[1]):
+            if i == 0 or i==cnt-1:
+                continue
+            coord_y.append(idx1)
+            idxs.append(row["channel_id"])
+    # create coordinates_dataframe from the previous loop
+    coordinates_dataframe = pd.DataFrame(data = {'x':coord_x, 'y':coord_y, "channel_id":idxs})
+    # add geometry to de dataframe
+    vertices_buffer = gpd.GeoDataFrame(coordinates_dataframe, geometry =gpd.points_from_xy(coordinates_dataframe.x, coordinates_dataframe.y, crs="EPSG:28992"))
+    #create buffer.
+    vertices_buffer["geometry"] = vertices_buffer.buffer(0.001)
+    vertices_buffer.rename({"geometry": "geometry_line"}, axis=1, inplace=True)
+    cross_section_point.rename({"geometry": "geometry_point"}, axis=1, inplace=True)
+    # merge cross section and channel vertices on channels.
+    vertices_cross_merge = pd.merge(vertices_buffer, cross_section_point, left_on="channel_id", right_on="channel_id", how="left")
+    #Check if the cross section is within the buffered distance of a vertex
+    vertices_cross_intersect=vertices_cross_merge[gpd.GeoSeries.intersects(gpd.GeoSeries(vertices_cross_merge["geometry_line"]), gpd.GeoSeries(vertices_cross_merge["geometry_point"]))]
+    #Select cross sections that do not have a vertex within buffered distance
+    cross_no_vertex = cross_section_point[~cross_section_point["cross_loc_id"].isin(vertices_cross_intersect["cross_loc_id"].values)]
+    cross_no_vertex = gpd.GeoDataFrame(cross_no_vertex, geometry="geometry_point")
+    return cross_no_vertex
 # %%
 
 if __name__=="__main__":
@@ -826,6 +907,8 @@ if __name__=="__main__":
     folder = Folders(TEST_MODEL)
     self = SqliteCheck(folder=folder)
 
-    self.run_dewatering_depth(overwrite=True)
+    self.run_cross_section_vertex()
+    self.run_cross_section()
 
 
+# %%
