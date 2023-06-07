@@ -6,7 +6,7 @@ on:
     
 jobs:
   run-pytests:
-    if: github.event.pull_request.draft == false
+    # if: github.event.pull_request.draft == false
     runs-on: windows-latest
 
     steps:
@@ -14,7 +14,11 @@ jobs:
     #Hopefully reduces run time; see https://github.com/conda-incubator/setup-miniconda/issues/277
     - name: Rename conda package cache
       shell: bash
-      run: mv "${CONDA_PKGS_DIR}" "${CONDA_PKGS_DIR}_do_not_cache"
+      # run: mv "${CONDA_PKGS_DIR}" "${CONDA_PKGS_DIR}_do_not_cache"
+      run: |
+        conda info
+        move "${CONDA_PKGS_DIR}" "${CONDA_PKGS_DIR}_do_not_cache"
+
     - uses: conda-incubator/setup-miniconda@v2
       with:
         python-version: 3.9
@@ -34,9 +38,9 @@ jobs:
     - name: Upload coverage
       uses: codecov/codecov-action@v2
 
-  fail_if_pull_request_is_draft:
-    if: github.event.pull_request.draft == true
-    runs-on: windows-latest
-    steps:
-    - name: Fails in order to indicate that pull request needs to be marked as ready to review and unit tests workflow needs to pass.
-      run: exit 1
+  # fail_if_pull_request_is_draft:
+  #   if: github.event.pull_request.draft == true
+  #   runs-on: windows-latest
+  #   steps:
+  #   - name: Fails in order to indicate that pull request needs to be marked as ready to review and unit tests workflow needs to pass.
+  #     run: exit 1
