@@ -2,11 +2,11 @@ name: tests
 
 on:
   pull_request:
-    types: [review_requested, ready_for_review]
+    # types: [review_requested, ready_for_review]
     
 jobs:
   run-pytests:
-    # if: github.event.pull_request.draft == false
+    if: github.event.pull_request.draft == false
     runs-on: windows-latest
 
     steps:
