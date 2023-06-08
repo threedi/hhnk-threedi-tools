@@ -2,7 +2,8 @@ name: tests
 
 on:
   pull_request:
-    # types: [review_requested, ready_for_review]
+    branches: 
+      - main
 
   push:    
     branches:      
@@ -15,7 +16,9 @@ env:
 
 jobs:
   run-pytests:
-    if: github.event.pull_request.draft == false
+    if: |
+      github.event.pull_request.merged == false ||
+      github.event.pull_request.draft == false
     strategy:
       matrix:
         include:
