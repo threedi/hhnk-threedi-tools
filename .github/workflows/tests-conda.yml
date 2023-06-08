@@ -34,7 +34,7 @@ jobs:
     name: ${{ matrix.label }}
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Setup Mambaforge
         uses: conda-incubator/setup-miniconda@v2
@@ -47,15 +47,15 @@ jobs:
       - name: Set cache date
         run: echo "DATE=$(date +'%Y%m%d')" >> $GITHUB_ENV
 
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         with:
           path: ${{ matrix.prefix }}
           key: ${{ matrix.label }}-conda-${{ hashFiles('envs\environment_test.yml') }}-${{ env.CACHE_NUMBER }}
         id: cache
 
       - name: Update environment
-        run: mamba env update -n my-env -f envs\environment_test.yml
         if: steps.cache.outputs.cache-hit != 'true'
+        run: mamba env update -n my-env -f envs\environment_test.yml
 
       - name: Test
         shell: pwsh
@@ -66,10 +66,11 @@ jobs:
           pytest --cov-report term-missing --cov=hhnk_threedi_tools --cov-report=xml tests/
       
       - name: Upload coverage
-        uses: codecov/codecov-action@v2
+        uses: codecov/codecov-action@v3
 
       #Hopefully reduces run time; see https://github.com/conda-incubator/setup-miniconda/issues/277
       - name: Rename conda package cache
+        if: steps.cache.outputs.cache-hit != 'true' #Doesnt work when cache is used.
         shell: bash
         run: mv "${CONDA_PKGS_DIR}" "${CONDA_PKGS_DIR}_do_not_cache"
 
