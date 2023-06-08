@@ -3,7 +3,11 @@ name: tests
 on:
   pull_request:
     # types: [review_requested, ready_for_review]
-    
+
+  push:    
+    branches:      
+      - main
+
 
 env:
   CACHE_NUMBER: 0  # increase to reset cache manually
@@ -11,6 +15,7 @@ env:
 
 jobs:
   run-pytests:
+    if: github.event.pull_request.draft == false
     strategy:
       matrix:
         include:
