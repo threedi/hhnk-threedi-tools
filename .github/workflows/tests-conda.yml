@@ -17,7 +17,7 @@ env:
 jobs:
   run-pytests:
     if: |
-      github.event.pull_request.merged == false &&
+      github.event_name == 'push' ||
       github.event.pull_request.draft == false
     strategy:
       matrix:
