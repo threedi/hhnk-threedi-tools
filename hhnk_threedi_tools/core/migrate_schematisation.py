@@ -6,7 +6,6 @@ copied and edited from ThreeDiToolbox\processing\schematisation_algorithms.py
 """  
 
 import os
-from uuid import uuid4
 
 
 
@@ -28,8 +27,7 @@ def backup_sqlite(filename, clear_folder=False):
     if clear_folder:
         backup_folder.unlink_contents() 
 
-    prefix = str(uuid4())[:8]
-    backup_sqlite_path = backup_folder.full_path(f"{prefix}_{os.path.basename(filename)}")
+    backup_sqlite_path = backup_folder.full_path(f"{hrt.get_uuid()}_{os.path.basename(filename)}")
     shutil.copyfile(filename, backup_sqlite_path)
     return backup_sqlite_path
 
