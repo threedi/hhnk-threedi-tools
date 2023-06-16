@@ -58,6 +58,8 @@ dependencies:
     - threedidepth==0.5 #ThreediToolbox 2.5.2
     - cached_property==1.5.2 #threedi_raster_edits dep
     - rtree==1.0.1 #threedi_raster_edits dep 
+    - sqlparse #Datachecker
+    - psycopg2 #Datachecker
     
     #Plugin
     - hhnk_research_tools==2023.2
