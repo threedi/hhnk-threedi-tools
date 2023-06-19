@@ -1,5 +1,6 @@
+# %%
 from setuptools import setup, find_packages
-
+# %%
 setup(
     name="hhnk-threedi-tools",
     version="2023.2",
@@ -17,8 +18,8 @@ setup(
         "Operating System :: OS Independent",
     ],
     # package_dir={'':'hhnk_threedi_tools'},
-    packages=find_packages(),
-    # packages=find_packages("", exclude=['tests']),
+    # packages=find_packages(),
+    packages=find_packages(exclude=['tests', 'deprecated']),
     python_requires=">=3.7",
     # install_requires=["hhnk-research-tools==2023.1", "xarray", "pytest"],
     # setup_requires=['setuptools_scm'],
