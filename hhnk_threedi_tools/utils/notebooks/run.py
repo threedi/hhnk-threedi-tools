@@ -46,7 +46,7 @@ def copy_notebooks(new_dir, original_dir=NOTEBOOK_DIRECTORY):
         print(file)
         if file.endswith(".ipynb"):
             cont=True
-        elif file == "notebook_syspath.py":
+        elif file == "notebook_setup.py":
             cont=True
         else:
             cont=False
