@@ -36,6 +36,7 @@ class MigrateSchema():
     """Migrate schema to newest version
     filename: path to sqlite"""
     def __init__(self, filename):
+        self.filename = filename
         self.schema_raw = Sqlite(filename)
        
 
@@ -46,6 +47,14 @@ class MigrateSchema():
             return threedi_db
         except Exception as e:
             raise e
+
+
+    def get_schema(self, filename):
+        self.threedi_db = self.get_threedi_database(filename=filename)
+        if not self.threedi_db:
+            raise Exception(f"Database does not exist; {filename}")
+        schema = self.threedi_db.schema
+        return schema
 
 
     def backup(self, clear_folder=False) -> Sqlite:
@@ -72,46 +81,42 @@ class MigrateSchema():
         
 
     def run(self):
-            #Create a backup and work on this one.
-            #Editing in the original file causes filelock issues
-            self.schema_backup = self.backup(clear_folder=True)
+        #Create a backup and work on this one.
+        #Editing in the original file causes filelock issues
+        self.schema_backup = self.backup(clear_folder=True)
 
-            self.threedi_db = self.get_threedi_database(filename=self.schema_backup.path)
-            if not self.threedi_db:
-                raise Exception(f"Database does not exist; {self.schema_backup.path}")
-            schema = self.threedi_db.schema
-
-            
+        self.schema = self.get_schema(filename=self.schema_backup.path)
+        
+        try:
+            self.schema.validate_schema()
+            # self.schema.set_spatial_indexes()
+        except errors.MigrationMissingError as e:
+            #Schema not up to date so we migrate.
+            print("Starting migration")
+            old_version = self.schema.get_version()
             try:
-                schema.validate_schema()
-                # schema.set_spatial_indexes()
-            except errors.MigrationMissingError as e:
-                #Schema not up to date so we migrate.
-                print("Starting migration")
-                old_version = schema.get_version()
-                try:
-                    retry_count=0
-                    schema.upgrade(backup=False, upgrade_spatialite_version=True)
-                except NotADirectoryError as e:
-                    """FIXME for some reason it works if you try it twice... 
-                    othwise there is some filelock on a temporary file or it doesnt exist.."""
-                    retry_count +=1
-                    if retry_count==1:
-                        schema.upgrade(backup=False, upgrade_spatialite_version=True)
-                    else:
-                        raise e
-                    
-                new_version = schema.get_version()
-                    
-                schema.set_spatial_indexes()
+                retry_count=0
+                self.schema.upgrade(backup=False, upgrade_spatialite_version=True)
+            except NotADirectoryError as e:
+                """FIXME for some reason it works if you try it twice... 
+                othwise there is some filelock on a temporary file or it doesnt exist.."""
+                retry_count +=1
+                if retry_count==1:
+                    self.schema.upgrade(backup=False, upgrade_spatialite_version=True)
+                else:
+                    raise e
+                
+            new_version = self.schema.get_version()
+                
+            self.schema.set_spatial_indexes()
 
-                self.overwrite_original()
+            self.overwrite_original()
 
-                print(f"Upgraded database from version {old_version} to {new_version}")
-                # self.schema_backup.unlink_if_exists()
+            print(f"Upgraded database from version {old_version} to {new_version}")
+            # self.schema_backup.unlink_if_exists()
 
-            except errors.UpgradeFailedError:
-                print("UpgradeFailedError")
+        except errors.UpgradeFailedError:
+            print("UpgradeFailedError")
 
 
 
