@@ -11,11 +11,12 @@ def update_syspath(sys_paths):
 
 def setup_notebook() -> json:
     """Load notebook data and fix syspath."""
+    notebook_data={}
     try:
         with open(os.getcwd() + "/notebook_data.json") as f:
             notebook_data = json.load(f)
         update_syspath(notebook_data["extra_paths"]) 
-        return notebook_data
     except:
         print("Failed to update path")
-        return {}
+    finally:
+        return notebook_data
