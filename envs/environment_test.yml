@@ -61,4 +61,4 @@ dependencies:
 
     #Plugin
     - git https://github.com/hhnk-research-tools.git@master
-    # - hhnk_threedi_tools==2023.2
+    # - hhnk_threedi_tools==2023.3
