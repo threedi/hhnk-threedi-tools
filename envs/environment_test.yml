@@ -55,6 +55,8 @@ dependencies:
     - threedi-api-client==4.1.1
     - threedigrid_builder==1.10.0 #ThreediToolbox 2.5.2
     - threedigrid==2.0.5
+    - cached_property==1.5.2 #threedi_raster_edits dep
+    - rtree==1.0.1 #threedi_raster_edits dep 
 
     #Plugin
     - hhnk_research_tools==2023.2
