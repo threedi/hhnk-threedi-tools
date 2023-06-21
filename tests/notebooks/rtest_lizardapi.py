@@ -55,9 +55,11 @@ for v,r in zip(["v3", "v4"], [v3_raster, v4_raster]):
     print(f"""
     {v}
     requested resolution: {resolution}
+    projection: {r.metadata.projection}
     sum: {r.sum()}
     stats: {r.statistics()}
     bounds: {r.metadata.bounds_dl}
-    pixelsize: {r.metadata.pixel_width}
+    georef: {r.metadata.georef}
+    pixelsize (x): {r.metadata.pixel_width}
     """)
 # %%
