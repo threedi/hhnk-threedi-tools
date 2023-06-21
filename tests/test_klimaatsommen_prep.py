@@ -1,12 +1,6 @@
 # %%
-# -*- coding: utf-8 -*-
-if __name__ == "__main__":
-    import set_local_paths  # add local git repos.
-
 # First-party imports
-import pathlib
 import pandas as pd
-from pathlib import Path
 import shutil
 import pytest
 

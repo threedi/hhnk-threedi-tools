@@ -1,15 +1,10 @@
 # %%
-if __name__ == "__main__":
-    import set_local_paths  # add local git repos.
-
 # First-party imports
-from pathlib import Path
 import geopandas as gpd
 
 
 # Local imports
 import hhnk_research_tools as hrt
-from hhnk_threedi_tools.core.folders import Folders
 from hhnk_threedi_tools.core.result_rasters.calculate_raster import BaseCalculatorGPKG
 # from hhnk_threedi_tools.core.result_rasters.netcdf_to_gridgpkg import BankLevelTest
 
@@ -18,7 +13,6 @@ import pandas as pd
 
 import pytest
 from tests.config import FOLDER_TEST, TEST_DIRECTORY, TEMP_DIR
-import time
 
 TEST_RESULT_DIR = TEST_DIRECTORY/r"test_result_rasters"
 

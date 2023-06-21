@@ -1,15 +1,4 @@
 # %%
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Aug 24 16:17:00 2021
-
-@author: chris.kerklaan
-"""
-
-if __name__ == "__main__":
-    import set_local_paths  # add local git repos.
-
-
 # First-party imports
 import os
 import pathlib

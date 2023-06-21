@@ -3,9 +3,6 @@
 """
 Functional testing for oneDtwoD object
 """
-if __name__ == "__main__":
-    import set_local_paths  # add local git repos.
-
 # First-party imports
 import os
 import pathlib
@@ -15,7 +12,6 @@ from hhnk_threedi_tools.core.checks.one_d_two_d import OneDTwoDTest
 from hhnk_threedi_tools.core.folders import Folders
 
 # Globals
-# __file__ = "C:/Users/chris.kerklaan/Documents/Github/hhnk-threedi-tests/hhnk_threedi_tools/tests/test_one_d_two_d.py"
 REVISION = "BWN bwn_test #6 1d2d_test"
 
 from tests.config import FOLDER_TEST
