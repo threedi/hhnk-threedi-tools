@@ -274,12 +274,11 @@ class ModelSchematisations:
             commit_message=commit_message,
         )
 
-        revision_parent_folder = self.folder.model.revisions
-        list_of_files = [i for i in revision_parent_folder.pl.glob('*')]
-
-        count = len(list_of_files)
+        revision_parent_folder = self.folder.model.revisions.path
+        count = len(os.listdir(revision_parent_folder))
         schema_str = str(schema_new)
 
+        list_of_files = [os.path.join(revision_parent_folder, x) for x in os.listdir(revision_parent_folder)]
 
         target_file = revision_parent_folder.full_path(f"rev_{count+1} - {commit_message[:25]}")
         if list_of_files == []:
@@ -321,9 +320,9 @@ if __name__ == "__main__":
         folder=folder, modelsettings_path=folder.model.settings.path
     )
     self.create_schematisation(name=name)
-    self.upload_schematisation(
-        name=name,
-        commit_message="testtest",
-        api_key="",
-    )
+    # self.upload_schematisation(
+    #     name=name,
+    #     commit_message="Load Model. Pump capacity 466 l/sec",
+    #     api_key="",
+    # )
 

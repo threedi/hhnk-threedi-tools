@@ -269,8 +269,8 @@ if __name__ == "__main__":
         #             output_raster_name="wlvl_corr.tif",
         #             mode="MODE_WLVL",
         #             overwrite=OVERWRITE)
-                   
-        self.run(output_file=threedi_result.pl/"wdepth_orig.tif",  
+        self.run(output_folder=threedi_result.pl,  
+                    output_raster_name="wdepth_orig.tif",
                     mode="MODE_WDEPTH",
                     overwrite=OVERWRITE)
         print("Done.")
