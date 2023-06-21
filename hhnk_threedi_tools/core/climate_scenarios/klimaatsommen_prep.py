@@ -1,11 +1,5 @@
 # %%
 import os
-import json
-try:
-    with open(os.getcwd() + "/notebook_data.json") as f:
-        notebook_data = json.load(f)
-except:
-    pass
 from hhnk_threedi_tools import Folders
 import pandas as pd
 import geopandas as gpd
@@ -26,18 +20,11 @@ class KlimaatsommenPrep:
         batch_name: str,
         cfg_file = "cfg_lizard.cfg",
         landuse_file:str = r"\\corp.hhnk.nl\data\Hydrologen_data\Data\01.basisgegevens\rasters\landgebruik\landuse2019_tiles\combined_rasters.vrt",
-        # SCHADESCHATTER_PATH:Path=Path(r"E:\01.basisgegevens\hhnk_schadeschatter"), #TODO naar een localsettings oid verplaatsen?
         verify=True,
     ):
-
-        #Schadeschatter import pas na aanroepen class
-        # if str(SCHADESCHATTER_PATH) not in sys.path:
-        #     sys.path.insert(1, str(SCHADESCHATTER_PATH))
-        # import hhnk_schadeschatter as hhnk_wss
-        # self.hhnk_wss = hhnk_wss
         if type(cfg_file) == str:
             cfg_file = hrt.get_pkg_resource_path(package_resource=hrt.waterschadeschatter.resources, 
-                                name="cfg_lizard.cfg")
+                                name=cfg_file)
             if not os.path.exists(cfg_file):
                 raise Exception(f"{cfg_file} doesnt exist.")            
 
@@ -298,13 +285,11 @@ if __name__ == "__main__":
     TEST_MODEL = r"E:\02.modellen\model_test_v2"
     folder = Folders(TEST_MODEL)
 
-    SCHADESCHATTER_PATH=Path(r"E:\01.basisgegevens\hhnk_schadeschatter") #TODO naar een localsettings oid verplaatsen?
-
     self = KlimaatsommenPrep(folder=folder,
         batch_name="batch_test2",
         cfg_file = 'cfg_lizard.cfg',
         landuse_file = r"\\corp.hhnk.nl\data\Hydrologen_data\Data\01.basisgegevens\rasters\landgebruik\landuse2019_tiles\combined_rasters.vrt",
-        SCHADESCHATTER_PATH=SCHADESCHATTER_PATH
+        verify=True
     )
 
     self.run(overwrite=False)
