@@ -62,5 +62,5 @@ dependencies:
     - psycopg2 #Datachecker
     
     #Plugin
-    # - hhnk_research_tools==2023.2
-    # - hhnk_threedi_tools==2023.2
+    # - hhnk_research_tools==2023.3
+    # - hhnk_threedi_tools==2023.3

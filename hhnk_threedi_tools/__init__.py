@@ -37,3 +37,6 @@ from hhnk_threedi_tools.core.checks.model_backup import (
     select_values_to_update_from_backup,
     update_bank_levels_last_calc,
 )
+
+
+__version__ = '2023.3'
