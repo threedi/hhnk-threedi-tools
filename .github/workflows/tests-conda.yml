@@ -60,6 +60,10 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
         run: mamba env update -n my-env -f envs\environment_test.yml
 
+      - name: Install hhnk-research_tools
+        shell: pwsh
+        run: pip install git+https://github.com/HHNK/hhnk-research-tools.git@master
+
       - name: Test
         shell: pwsh
         run: |

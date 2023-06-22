@@ -60,5 +60,6 @@ dependencies:
     - rtree==1.0.1 #threedi_raster_edits dep 
 
     #Plugin
-    - git https://github.com/hhnk-research-tools.git@master
+    # - hhnk_threedi_tools==2023.2
+    #- git+https://github.com/HHNK/hhnk-research-tools.git@master
     # - hhnk_threedi_tools==2023.3
