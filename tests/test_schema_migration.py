@@ -1,28 +1,21 @@
  # %%
-"""
-"""
-if __name__ == "__main__":
-    import set_local_paths  # add local git repos.
-
 # First-party imports
-import os
-import pathlib
 import shutil
 
 # Local imports
-from hhnk_threedi_tools.core.folders import Folders
 from hhnk_threedi_tools.core.migrate_schematisation import MigrateSchema
 
 
-from tests.config import FOLDER_TEST
+import hhnk_research_tools as hrt
+from tests.config import FOLDER_TEST, TEMP_DIR
 
-
+# %%
 def test_schema_migration():
     """test if an old sqlite can be migrated to the latest schema version"""
-
+    # %%
     #Make a copy, the migration is done on the same database.
-    filename_orig = FOLDER_TEST.full_path("bwn_test_pre_migration.sqlite")
-    filename = filename_orig.with_name("test_migration.sqlite")
+    filename_orig = FOLDER_TEST.full_path("bwn_test_v216.sqlite")
+    filename = TEMP_DIR/f"migrated_sqlite_{hrt.get_uuid()}.sqlite"
 
     try:
         filename.unlink(missing_ok=True)
@@ -30,17 +23,17 @@ def test_schema_migration():
         raise
 
     shutil.copy(filename_orig, filename)
-    assert filename_orig.stat().st_size == 4918272
+
+    #filelocks if we run get_schema twice on the same MigrateSchema instance, only in remote pytests.
+    migrate_schema = MigrateSchema(filename_orig) 
+    assert migrate_schema.get_schema(filename=filename_orig).get_version() == 216
 
     #Migrate to newest version
     migrate_schema = MigrateSchema(filename)
     migrate_schema.run()
 
-    assert filename.stat().st_size == 7225344
+    assert migrate_schema.schema.get_version() == 217
     
-
-
-
 
 # %%
 if __name__ == "__main__":

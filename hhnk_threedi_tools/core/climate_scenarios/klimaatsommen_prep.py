@@ -1,11 +1,5 @@
 # %%
 import os
-import json
-try:
-    with open(os.getcwd() + "/notebook_data.json") as f:
-        notebook_data = json.load(f)
-except:
-    pass
 from hhnk_threedi_tools import Folders
 import pandas as pd
 import geopandas as gpd
@@ -24,20 +18,15 @@ class KlimaatsommenPrep:
         self,
         folder: Folders,
         batch_name: str,
-        cfg_file:Path = None,
+        cfg_file = "cfg_lizard.cfg",
         landuse_file:str = r"\\corp.hhnk.nl\data\Hydrologen_data\Data\01.basisgegevens\rasters\landgebruik\landuse2019_tiles\combined_rasters.vrt",
-        SCHADESCHATTER_PATH:Path=Path(r"E:\01.basisgegevens\hhnk_schadeschatter"), #TODO naar een localsettings oid verplaatsen?
         verify=True,
     ):
-
-        #Schadeschatter import pas na aanroepen class
-        if str(SCHADESCHATTER_PATH) not in sys.path:
-            sys.path.insert(1, str(SCHADESCHATTER_PATH))
-        import hhnk_schadeschatter as hhnk_wss
-        self.hhnk_wss = hhnk_wss
-        if cfg_file is None:
-            cfg_file = SCHADESCHATTER_PATH/'01_data/cfg/cfg_lizard.cfg'
-
+        if type(cfg_file) == str:
+            cfg_file = hrt.get_pkg_resource_path(package_resource=hrt.waterschadeschatter.resources, 
+                                name=cfg_file)
+            if not os.path.exists(cfg_file):
+                raise Exception(f"{cfg_file} doesnt exist.")            
 
         self.folder = folder
         self.batch_fd = self.folder.threedi_results.batch[batch_name]
@@ -182,7 +171,7 @@ class KlimaatsommenPrep:
                 return
 
             #Calculation
-            wss = self.hhnk_wss.Waterschadeschatter(depth_file=depth_file.path, 
+            wss = hrt.Waterschadeschatter(depth_file=depth_file.path, 
                                     landuse_file=self.landuse_file, 
                                     wss_settings=wss_settings)
 
@@ -192,7 +181,7 @@ class KlimaatsommenPrep:
                     overwrite=overwrite)
 
 
-    def run(self, gridgpkg=True, depth=True, dmg=True, wlvl=False, overwrite=False):
+    def run(self, gridgpkg=True, depth=True, dmg=True, wlvl=False, overwrite=False, testing=False):
         try:
             self.dem = self.get_dem()
 
@@ -225,12 +214,17 @@ class KlimaatsommenPrep:
                                             threedi_result=threedi_result, 
                                             overwrite=overwrite)
 
-            self.create_scenario_metadata(overwrite=overwrite)
+
+                if testing:
+                    #For pytests we dont need to run this 18 times
+                    break
+
+            self.create_scenario_metadata(overwrite=overwrite, testing=testing)
         except Exception as e:
             raise e from None
 
 
-    def create_scenario_metadata(self, overwrite=False):
+    def create_scenario_metadata(self, overwrite=False, testing=False):
         """Metadata of all scenarios together. """
         #TODO create checks on a result if they make sense 
         #e.g. total volume of scenarios should be higher with more precip.
@@ -251,6 +245,10 @@ class KlimaatsommenPrep:
                                                         raster_type=raster_type)
                 #Add row to df
                 info_df = info_df.append(info_row, ignore_index=True)
+
+                if testing:
+                    #For pytests we dont need to run this 18 times
+                    break
 
             #Write to file
 
@@ -287,13 +285,11 @@ if __name__ == "__main__":
     TEST_MODEL = r"E:\02.modellen\model_test_v2"
     folder = Folders(TEST_MODEL)
 
-    SCHADESCHATTER_PATH=Path(r"E:\01.basisgegevens\hhnk_schadeschatter") #TODO naar een localsettings oid verplaatsen?
-
     self = KlimaatsommenPrep(folder=folder,
         batch_name="batch_test2",
-        cfg_file = SCHADESCHATTER_PATH/'01_data/cfg/cfg_lizard.cfg',
+        cfg_file = 'cfg_lizard.cfg',
         landuse_file = r"\\corp.hhnk.nl\data\Hydrologen_data\Data\01.basisgegevens\rasters\landgebruik\landuse2019_tiles\combined_rasters.vrt",
-        SCHADESCHATTER_PATH=SCHADESCHATTER_PATH
+        verify=True
     )
 
     self.run(overwrite=False)

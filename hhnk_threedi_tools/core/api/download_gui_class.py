@@ -1074,7 +1074,7 @@ class DownloadWidgetsInteraction(DownloadWidgets):
 
 
     def update_api_keys(self, api_keys_path):
-        self.vars.api_keys = htt.read_api_file(api_keys_path)
+        self.vars.api_keys = hrt.read_api_file(api_keys_path)
         self.login.lizard_apikey_widget.value=self.vars.api_keys["lizard"]
         # self.login.threedi_apikey_widget.value=self.vars.api_keys["threedi"]
         # self.login.button.click()

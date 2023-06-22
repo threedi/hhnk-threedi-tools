@@ -1,14 +1,5 @@
 # %%
 # -*- coding: utf-8 -*-
-"""
-Created on Mon Aug 23 11:27:51 2021
-
-@author: chris.kerklaan
-"""
-
-# if __name__ == "__main__":
-#     import set_local_paths  # add local git repos.
-
 # Third-party imports
 import os
 import numpy as np

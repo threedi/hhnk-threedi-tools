@@ -43,7 +43,15 @@ def copy_notebooks(new_dir, original_dir=NOTEBOOK_DIRECTORY):
     os.makedirs(new_dir, exist_ok=True)
 
     for file in os.listdir(original_dir):
+        print(file)
         if file.endswith(".ipynb"):
+            cont=True
+        elif file == "notebook_setup.py":
+            cont=True
+        else:
+            cont=False
+
+        if cont:
             shutil.copy2(original_dir + "/" + file, new_dir + "/" + file)
 
 
@@ -180,6 +188,7 @@ def create_command_bat_file(path, location="osgeo"):
         bat_file.write(" ".join(command))
 
 
+#TODO this doesnt work nicely with other  environments. Prepare for deprecation
 def add_notebook_paths(extra_notebook_paths):
     """adds extra notebook paths, which is used in the plugin"""
 

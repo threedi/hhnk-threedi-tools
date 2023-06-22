@@ -1,14 +1,6 @@
 # %%
-if __name__ == "__main__":
-    import set_local_paths  # add local git repos.
-
-
 # Local imports
 from hhnk_threedi_tools.core.checks.zero_d_one_d import ZeroDOneDTest
-
-
-#folder = str(pathlib.Path(__file__).parent.absolute()) + "/data/model_test/"
-#TEST_MODEL = folder.threedi_results.zero_d_one_d[0].grid
 from tests.config import FOLDER_TEST, PATH_TEST_MODEL
 
 

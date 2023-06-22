@@ -1,7 +1,9 @@
+# Exclude byte-compiled code # no-found due to natural exclusion
+prune /tests
+global-exclude */__pycache__/*
 # Include docs in the root.
 include *.rst
-# Exclude byte-compiled code # no-found due to natural exclusion
-prune hhnk_threedi_tools/tests
 #include notebook
 graft hhnk_threedi_tools/utils
 graft hhnk_threedi_tools/resources
+

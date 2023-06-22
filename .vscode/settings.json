@@ -1,3 +1,7 @@
-// {
-//     // "python.pythonPath": "C:\\OSGEO4~1\\apps\\Python39\\python.exe",
-// }
+{
+    "python.testing.pytestArgs": [
+        "tests"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true
+}

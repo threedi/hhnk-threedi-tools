@@ -1,8 +1,4 @@
 # %% 
-# Test Sqlite test
-if __name__ == "__main__":
-    import set_local_paths  # add local git repos.
-
 # First-party imports
 import inspect
 
