@@ -1067,7 +1067,7 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
             self.add_feedback("ERROR", "No output subfolder selected.")
             
         else:
-            self.output.folder_value_batch.value = self.vars.folder.threedi_results.batch.full_path(output_folder)
+            self.output.folder_value_batch.value = str(self.vars.folder.threedi_results.batch.full_path(output_folder))
             if os.path.exists(self.vars.folder.threedi_results.batch.full_path(output_folder)):
                 self.add_feedback("Warning", "Output folder map already exists!")
 
