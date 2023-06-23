@@ -39,4 +39,4 @@ from hhnk_threedi_tools.core.checks.model_backup import (
 )
 
 
-__version__ = '2023.3.1'
+__version__ = '2023.3.2'
