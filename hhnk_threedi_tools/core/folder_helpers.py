@@ -15,8 +15,8 @@ class ClimateResult(hrt.Folder):
     def __init__(self, base, create=False):
         super().__init__(base, create=create)
 
-        self.downloads = self.ClimateResultDownloads(self.base)
-        self.output = self.ClimateResultOutput(self.base)
+        self.downloads = self.ClimateResultDownloads(self.base, create=create)
+        self.output = self.ClimateResultOutput(self.base, create=create)
 
 
     @property
@@ -29,14 +29,14 @@ class ClimateResult(hrt.Folder):
 
 
     class ClimateResultDownloads(hrt.Folder):
-        def __init__(self, base):
-            super().__init__(os.path.join(base, "01_downloads"), create=False)
+        def __init__(self, base, create=False):
+            super().__init__(os.path.join(base, "01_downloads"), create=create)
 
             # Files
             self.names = []  # Initializes names.setter
 
             for name in self.names:
-                setattr(self, name, self.ClimateResultScenario(self.base, name))
+                setattr(self, name, self.ClimateResultScenario(self.base, name, create=create))
 
 
         @property
@@ -87,11 +87,11 @@ class ClimateResult(hrt.Folder):
                         """
 
     class ClimateResultOutput(hrt.Folder):
-        def __init__(self, base):
-            super().__init__(os.path.join(base, "02_output_rasters"), create=False)
+        def __init__(self, base, create):
+            super().__init__(os.path.join(base, "02_output_rasters"), create=create)
 
             # Folders
-            self.temp = self.ClimateResultOutputTemp(self.base)
+            self.temp = self.ClimateResultOutputTemp(self.base, create)
 
             # Files
             self.add_file("maskerkaart", "maskerkaart.shp")
@@ -149,8 +149,8 @@ class ClimateResult(hrt.Folder):
 
 
         class ClimateResultOutputTemp(hrt.Folder):
-            def __init__(self, base):
-                super().__init__(os.path.join(base, "temp"), create=False)
+            def __init__(self, base, create):
+                super().__init__(os.path.join(base, "temp"), create=create)
 
                 self.add_file("peilgebieden_diepte", "peilgebieden_diepte.tif", "raster")
                 self.add_file("peilgebieden_schade", "peilgebieden_schade.tif", "raster")
