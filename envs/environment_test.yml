@@ -31,8 +31,8 @@ dependencies:
   # - sqlalchemy=1.3.24
 
   #User folder
-  # - jupyterlab=3.6.3 #Uitgezet zolang we geen notebook tests draaien.
-  # - ipywidgets=8.0.6
+  - jupyterlab=3.6.3 #Uitgezet zolang we geen notebook tests draaien.
+  - ipywidgets=8.0.6
   
   #External deps plugin
   - pytest=7.2.2
