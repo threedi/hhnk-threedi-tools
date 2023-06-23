@@ -26,13 +26,10 @@ def test_simulationdata():
     #Timestep settings
     time_step_settings = simdata.time_step_settings
     assert time_step_settings["time_step"] == 15
-
     
     #Boundary data
     boundaries = simdata.boundaries
     assert boundaries == []
-
-    
 
 
 if __name__ == "__main__":

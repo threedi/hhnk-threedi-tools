@@ -33,7 +33,7 @@ def test_klimaatsommenprep():
     
     #Rebase the batch_fd so it will always create all output.
     batch_test = TEMP_DIR/f"batch_test_{hrt.get_uuid()}"
-    batch_test = ClimateResult(batch_test)
+    batch_test = ClimateResult(batch_test, create=True)
     shutil.copytree(src=klimaatsommenprep.batch_fd.downloads.piek_glg_T10.netcdf.pl,
                     dst=batch_test.downloads.piek_glg_T10.netcdf.pl)
     klimaatsommenprep.batch_fd = batch_test
