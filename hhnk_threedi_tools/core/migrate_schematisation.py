@@ -68,12 +68,12 @@ class MigrateSchema():
 
         backup2 = self.backup()
         try:
-            self.schema_raw.unlink_if_exists()
+            self.schema_raw.unlink(missing_ok=True)
 
             #Write migrated sqlite to file
             shutil.copy(self.schema_backup.path, self.schema_raw.path)
 
-            backup2.unlink_if_exists()
+            backup2.unlink(missing_ok=True)
 
         except Exception as e:
             print(f"Backup of sqlite saved in {backup2.path}")

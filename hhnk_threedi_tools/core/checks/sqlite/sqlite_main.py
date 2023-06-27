@@ -219,7 +219,7 @@ class SqliteCheck:
                 if overwrite is False:
                     return
                 else:
-                    drooglegging_raster.unlink_if_exists()
+                    drooglegging_raster.unlink(missing_ok=True)
 
             # Rasterize fixeddrainage
             hrt.gdf_to_raster(
@@ -244,7 +244,7 @@ class SqliteCheck:
             drooglegging_calculator.run(overwrite=overwrite)
 
             #remove temp files
-            wlvl_raster.unlink_if_exists()
+            wlvl_raster.unlink(missing_ok=True)
             # self.results["dewatering_depth"] = output_file
         except Exception as e:
             raise e from None
