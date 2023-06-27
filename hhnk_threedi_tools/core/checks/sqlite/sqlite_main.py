@@ -24,7 +24,7 @@ from hhnk_threedi_tools.core.folders import Folders
 from threedigrid_builder import make_gridadmin
 
 from hhnk_threedi_tools.core.checks.sqlite.structure_control import StructureControl
-
+from hhnk_threedi_tools.core.checks.model_splitter import ModelSchematisations
 # queries
 from hhnk_threedi_tools.utils.queries import (
     controlled_structures_query,
@@ -158,7 +158,7 @@ class SqliteCheck:
         self.sqlite = self.fenv.model.schema_base.database_path
         self.sqlite_modify =hrt.ThreediSchematisation(base = self.fenv.model.path, name ="basis_modify", create=False)
         self.layer_fixeddrainage = self.fenv.source_data.datachecker.layers.fixeddrainagelevelarea
-
+        self.model_settings = self.fenv.model.settings.path
         self.results = {}
 
 
@@ -512,17 +512,17 @@ class SqliteCheck:
            Het ga een foutmelding geven als 1 of meer punten vinden"""
         try:
             #Selecteren het sqlite volgen de conditie 
-            if self.name == 'model_test_v2':
-                database_path = self.sqlite_modify.database_path
+            if self.name == 'model_test':
+                schema = ModelSchematisations(folder)
+                schema.create_schematisation(name='basis_modify')
+                database_path = folder.model.schema_basis_modify.database_path
             else:
                 database_path = self.sqlite.database_path
 
             #Selecteren vanaf de sqlite het cross_section een df maken over deze selectie
-            cross_section_df = hrt.execute_sql_selection(
-            query =cross_section_location_query , database_path=database_path
-        )
-            # zet df om in gdf
-            cross_section_point = hrt.df_convert_to_gdf(df=cross_section_df)
+            cross_section_point = hrt.sqlite_table_to_gdf(
+            query = cross_section_location_query , id_col = 'cross_loc_id', database_path=database_path
+            )            
 
             # gebruik het functie _get_intersected_ points om de snijpunten te krijgen. 
             intersected_points = _get_intersected_points(cross_section_point)
@@ -545,14 +545,21 @@ class SqliteCheck:
            Het ga een foutmelding geven als 1 of meer punten vinden"""
         #Selecteren het sqlite volgen de conditie 
         try:
-            if self.name == 'model_test_v2':
-                database_path = self.sqlite_modify.database
+            if self.name == 'model_test':
+                schema = ModelSchematisations(folder)
+                schema.create_schematisation(name='basis_modify')
+                database_path = folder.model.schema_basis_modify.database_path
             else:
-                database_path = self.sqlite.database
+                database_path = self.sqlite
             
             #Selecteren vanaf de sqlite het cross_section een channels om df over deze selectie te maken
-            cross_section_point = database_path.execute_sql_selection(query=cross_section_location_query)
-            channels_gdf = database_path.execute_sql_selection(query=channels_query)
+            cross_section_point = hrt.sqlite_table_to_gdf(
+            query = cross_section_location_query , id_col = 'cross_loc_id', database_path=database_path
+            ) 
+            # cross_section_point = database_path.execute_sql_selection(query=cross_section_location_query)
+            channels_gdf = hrt.sqlite_table_to_gdf(    
+            query =channels_query , id_col = 'channel_id', database_path=database_path
+            )   
 
             # gebruik het functie _get_cross_section_vertex  om de punten selecteren als zijn over de een vertex .             
             cross_no_vertex = _get_cross_section_vertex(cross_section_point, channels_gdf)
@@ -887,28 +894,27 @@ def _get_cross_section_vertex(cross_section_point, channels_gdf):
     # add geometry to de dataframe
     vertices_buffer = gpd.GeoDataFrame(coordinates_dataframe, geometry =gpd.points_from_xy(coordinates_dataframe.x, coordinates_dataframe.y, crs="EPSG:28992"))
     #create buffer.
-    vertices_buffer["geometry"] = vertices_buffer.buffer(0.001)
+    vertices_buffer["geometry"] = vertices_buffer.buffer(0.1)
     vertices_buffer.rename({"geometry": "geometry_line"}, axis=1, inplace=True)
-    cross_section_point.rename({"geometry": "geometry_point"}, axis=1, inplace=True)
+    # cross_section_point.rename({"geometry": "geometry"}, axis=1, inplace=True)
     # merge cross section and channel vertices on channels.
     vertices_cross_merge = pd.merge(vertices_buffer, cross_section_point, left_on="channel_id", right_on="channel_id", how="left")
     #Check if the cross section is within the buffered distance of a vertex
-    vertices_cross_intersect=vertices_cross_merge[gpd.GeoSeries.intersects(gpd.GeoSeries(vertices_cross_merge["geometry_line"]), gpd.GeoSeries(vertices_cross_merge["geometry_point"]))]
+    vertices_cross_intersect=vertices_cross_merge[gpd.GeoSeries.intersects(gpd.GeoSeries(vertices_cross_merge["geometry_line"]), gpd.GeoDataFrame(vertices_cross_merge["geometry"]))]
     #Select cross sections that do not have a vertex within buffered distance
     cross_no_vertex = cross_section_point[~cross_section_point["cross_loc_id"].isin(vertices_cross_intersect["cross_loc_id"].values)]
-    cross_no_vertex = gpd.GeoDataFrame(cross_no_vertex, geometry="geometry_point")
+    cross_no_vertex = gpd.GeoDataFrame(cross_no_vertex, geometry="geometry")
     return cross_no_vertex
 # %%
 
 if __name__=="__main__":
 
-    TEST_MODEL = r"E:\02.modellen\model_test_v2"
+    TEST_MODEL = r"\\corp.hhnk.nl\data\Hydrologen_data\Data\02.modellen\model_test_v2"
 
     folder = Folders(TEST_MODEL)
     self = SqliteCheck(folder=folder)
 
-    self.run_cross_section_vertex()
+    # self.run_cross_section_vertex()
     self.run_cross_section()
 
-
-# %%
+    # %%
