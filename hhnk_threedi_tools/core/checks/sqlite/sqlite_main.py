@@ -507,23 +507,13 @@ class SqliteCheck:
                 output_path=os.path.join(output_folder, f"{i}.gpkg"),
             )
 
-    def run_cross_section(self):
+    def run_cross_section(self, database):
         """Deze functie een loop maken over het cross sections om een of meer intersect punten (cross_sections) vinden
            Het ga een foutmelding geven als 1 of meer punten vinden"""
         try:
-            #Selecteren het sqlite volgen de conditie 
-            if self.name == 'model_test':
-                schema = ModelSchematisations(folder)
-                schema.create_schematisation(name='basis_modify')
-                database_path = folder.model.schema_basis_modify.database_path
-            else:
-                database_path = self.sqlite.database_path
-
-            #Selecteren vanaf de sqlite het cross_section een df maken over deze selectie
-            cross_section_point = hrt.sqlite_table_to_gdf(
-            query = cross_section_location_query , id_col = 'cross_loc_id', database_path=database_path
-            )            
-
+           
+            cross_section_point = database.execute_sql_selection(query= cross_section_location_query)
+        
             # gebruik het functie _get_intersected_ points om de snijpunten te krijgen. 
             intersected_points = _get_intersected_points(cross_section_point)
             
@@ -539,27 +529,18 @@ class SqliteCheck:
             raise e from None
 
 
-    def run_cross_section_vertex(self):
+    def run_cross_section_vertex(self, database):
         
         """Deze functie vind de punten/cross_sections dat niet in het vertex van en lijn/channel liggen.  
            Het ga een foutmelding geven als 1 of meer punten vinden"""
         #Selecteren het sqlite volgen de conditie 
         try:
-            if self.name == 'model_test':
-                schema = ModelSchematisations(folder)
-                schema.create_schematisation(name='basis_modify')
-                database_path = folder.model.schema_basis_modify.database_path
-            else:
-                database_path = self.sqlite
             
             #Selecteren vanaf de sqlite het cross_section een channels om df over deze selectie te maken
-            cross_section_point = hrt.sqlite_table_to_gdf(
-            query = cross_section_location_query , id_col = 'cross_loc_id', database_path=database_path
-            ) 
+            cross_section_point = database.execute_sql_selection(query= cross_section_location_query)
+
             # cross_section_point = database_path.execute_sql_selection(query=cross_section_location_query)
-            channels_gdf = hrt.sqlite_table_to_gdf(    
-            query =channels_query , id_col = 'channel_id', database_path=database_path
-            )   
+            channels_gdf = database.execute_sql_selection(query= channels_query)
 
             # gebruik het functie _get_cross_section_vertex  om de punten selecteren als zijn over de een vertex .             
             cross_no_vertex = _get_cross_section_vertex(cross_section_point, channels_gdf)
@@ -913,8 +894,8 @@ if __name__=="__main__":
 
     folder = Folders(TEST_MODEL)
     self = SqliteCheck(folder=folder)
-
+    database=folder.model.schema_base.database
     # self.run_cross_section_vertex()
-    self.run_cross_section()
+    self.run_cross_section_vertex(database)
 
     # %%
