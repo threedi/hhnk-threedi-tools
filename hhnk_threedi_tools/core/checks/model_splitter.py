@@ -25,10 +25,12 @@ RASTER_FILES = [
 ]
 
 class ModelSchematisations:
-    def __init__(self, folder, modelsettings_path):
+    def __init__(self, folder, modelsettings_path=None):
         self.folder = folder
         self.settings_loaded = False
 
+        if modelsettings_path is None:
+            modelsettings_path=folder.model.settings.path
 
         if os.path.exists(modelsettings_path):
             self.settings_df = pd.read_excel(modelsettings_path, engine="openpyxl")
@@ -41,9 +43,7 @@ class ModelSchematisations:
         if self.folder.model.settings_default.exists:
             self.settings_default_series = pd.read_excel(
                 self.folder.model.settings_default.path, engine="openpyxl"
-            ).iloc[
-                0
-            ]  # Series, only has one row.
+            ).iloc[0]  # Series, only has one row.
         else:
             self.settings_default_series = None
             self.settings_loaded = False
@@ -57,9 +57,7 @@ class ModelSchematisations:
 
     def _sanity_check(self):
         """Sanity check settings tables"""
-        inter = self.settings_df.keys().intersection(
-            self.settings_default_series.keys()
-        )
+        inter = self.settings_df.keys().intersection(self.settings_default_series.keys())
         if len(inter) > 0:
             print(
                 f"""Er staan kolommen zowel in de defaut als in de andere modelsettings.
@@ -103,7 +101,6 @@ class ModelSchematisations:
         schema_new = getattr(self.folder.model, f"schema_{name}")
 
         database_base = schema_base.database
-        database_new = schema_new.database
 
         # Write the sqlite and rasters to new folders.
 
@@ -111,6 +108,8 @@ class ModelSchematisations:
         dst = os.path.join(schema_new.path, database_base.pl.name)
         shutil.copyfile(src=database_base.path, dst=dst)
 
+        #If database_new is defined before sqlite exists, it will not work properly
+        database_new = schema_new.database 
 
         schema_new.rasters.create(parents=False)
         # Copy rasters that are defined in the settings file
@@ -123,7 +122,6 @@ class ModelSchematisations:
                 else:
                     # TODO raise error?
                     print(f"Couldnt find raster:\t{row[raster_file]}")
-
 
         # Edit the SQLITE
         table_names = ["v2_global_settings", "v2_simple_infiltration"]

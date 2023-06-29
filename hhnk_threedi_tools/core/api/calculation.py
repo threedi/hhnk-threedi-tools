@@ -238,7 +238,15 @@ class SimulationData:
                 action_table = []
                 action_type = row["action_type"]
                 for entry in action_table_string.split("#"):
-                    measurement = [float(entry.split(";")[0])]
+                    try:
+                        measurement = [float(entry.split(";")[0])]
+                    except ValueError as e:
+                        #Problem with action table 
+                        print(f"""Problem with '{entry}' at index {action_table_string.index(entry)} of the action_table_string for
+{row}
+""")
+                        raise e
+
                     if action_type in ["set_crest_level", "set_pump_capacity"]:
                         action = [float(entry.split(";")[1])]
                     elif action_type == "set_discharge_coefficients":

@@ -9,25 +9,39 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@v2
-    - uses: conda-incubator/setup-miniconda@v2
-      with:
-        python-version: 3.9
-        # miniconda-version: "latest"
-        mamba-version: "*"
-        channels: conda-forge,defaults
-        channel-priority: true
-        activate-environment: hhnk_threedi
-        environment-file: envs\environment_test.yml
-    - name: Test
-      shell: pwsh
-      run: |
-        conda info
-        conda list
-        pip install -e .
-        pytest --cov-report term-missing --cov=hhnk_threedi_tools --cov-report=xml tests/
-    - name: Upload coverage
-      uses: codecov/codecov-action@v2
+      - uses: actions/checkout@v3
+
+      - name: Setup Mambaforge
+        uses: conda-incubator/setup-miniconda@v2
+        with:
+            miniforge-variant: Mambaforge
+            miniforge-version: latest
+            activate-environment: my-env
+            use-mamba: true
+
+      - name: Set cache date
+        run: echo "DATE=$(date +'%Y%m%d')" >> $GITHUB_ENV
+
+      - uses: actions/cache@v3
+        with:
+          path: ${{ matrix.prefix }}
+          key: ${{ matrix.label }}-conda-${{ hashFiles('envs\environment_test.yml') }}-${{ env.CACHE_NUMBER }}
+        id: cache
+
+      - name: Update environment
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: mamba env update -n my-env -f envs\environment_test.yml
+
+      - name: Test
+        shell: pwsh
+        run: |
+          conda info
+          conda list
+          pip install -e .
+          pytest --cov-report term-missing --cov=hhnk_threedi_tools --cov-report=xml tests/
+      
+      - name: Upload coverage
+        uses: codecov/codecov-action@v3
 
   fail_if_pull_request_is_draft:
     if: github.event.pull_request.draft == true

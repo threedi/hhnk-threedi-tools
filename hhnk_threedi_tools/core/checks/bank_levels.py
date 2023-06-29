@@ -423,10 +423,12 @@ def get_manholes_to_add_to_model(all_manholes):
     """
     try:
         # Nodes with no manhole id need new manholes. Do not create manhole at fixeddrainage.
+
         new_manholes_df = all_manholes[
             (all_manholes[a_man_id].isna())
             & (all_manholes[type_col] != one_d_two_d_crosses_fixed)
         ].drop(df_geo_col, axis=1)
+
         new_manholes_for_model = dataframe_from_new_manholes(new_manholes_df)
         return new_manholes_for_model
     except Exception as e:
@@ -563,13 +565,11 @@ def dataframe_from_new_manholes(new_manholes):
         new_manholes_model_df[width_col] = 1
         new_manholes_model_df[manhole_indicator_col] = 0
         new_manholes_model_df[calculation_type_col] = np.where(
-            np.isnan(new_manholes[drain_level_col]), 1, 2
+            new_manholes[drain_level_col].isna(), 1, 2
         )
-        new_manholes_model_df[drain_level_col] = np.where(
-            np.isnan(new_manholes[drain_level_col]),
-            "null",
-            new_manholes[drain_level_col],
-        )
+        new_manholes_model_df[drain_level_col] = new_manholes[drain_level_col]
+        new_manholes_model_df.loc[new_manholes_model_df[drain_level_col].isna(), drain_level_col] = "null"
+
         new_manholes_model_df[bottom_lvl_col] = -10
         new_manholes_model_df[surface_lvl_col] = new_manholes[initial_waterlevel_col]
         new_manholes_model_df[zoom_cat_col] = 0

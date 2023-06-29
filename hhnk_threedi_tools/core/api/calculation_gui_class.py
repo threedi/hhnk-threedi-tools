@@ -20,6 +20,7 @@ from hhnk_threedi_tools.core.api import downloader as dl
 
 # local imports
 import hhnk_threedi_tools as htt
+import hhnk_research_tools as hrt
 from hhnk_threedi_tools import Folders
 
 from hhnk_threedi_tools.core.api.calculation import Simulation
@@ -1066,7 +1067,7 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
             self.add_feedback("ERROR", "No output subfolder selected.")
             
         else:
-            self.output.folder_value_batch.value = self.vars.folder.threedi_results.batch.full_path(output_folder)
+            self.output.folder_value_batch.value = str(self.vars.folder.threedi_results.batch.full_path(output_folder))
             if os.path.exists(self.vars.folder.threedi_results.batch.full_path(output_folder)):
                 self.add_feedback("Warning", "Output folder map already exists!")
 
@@ -1166,7 +1167,7 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
 
 
     def update_api_keys(self, api_keys_path):
-        self.vars.api_keys = htt.read_api_file(api_keys_path)
+        self.vars.api_keys = hrt.read_api_file(api_keys_path)
         self.login.lizard_apikey_widget.value=self.vars.api_keys["lizard"]
         self.login.threedi_apikey_widget.value=self.vars.api_keys["threedi"]
         self.login.button.click()
