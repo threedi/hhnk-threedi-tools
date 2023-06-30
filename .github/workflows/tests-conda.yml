@@ -2,12 +2,40 @@ name: tests
 
 on:
   pull_request:
+    branches: 
+      - main
+
+  push:    
+    branches:      
+      - main
+
+
+env:
+  CACHE_NUMBER: 0  # increase to reset cache manually
+
 
 jobs:
   run-pytests:
-    if: github.event.pull_request.draft == false
-    runs-on: windows-latest
+    if: |
+      github.event_name == 'push' ||
+      github.event.pull_request.draft == false
+    strategy:
+      matrix:
+        include:
+          # - os: ubuntu-latest
+          #   label: linux-64
+          #   prefix: /usr/share/miniconda3/envs/my-env
 
+          # - os: macos-latest
+          #   label: osx-64
+          #   prefix: /Users/runner/miniconda3/envs/my-env
+
+          - os: windows-latest
+            label: win-64
+            prefix: C:\Miniconda3\envs\my-env
+
+    name: ${{ matrix.label }}
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
 
@@ -32,6 +60,10 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
         run: mamba env update -n my-env -f envs\environment_test.yml
 
+      - name: Install hhnk-research_tools
+        shell: pwsh
+        run: pip install git+https://github.com/HHNK/hhnk-research-tools.git@master
+
       - name: Test
         shell: pwsh
         run: |
@@ -43,9 +75,15 @@ jobs:
       - name: Upload coverage
         uses: codecov/codecov-action@v3
 
-  fail_if_pull_request_is_draft:
-    if: github.event.pull_request.draft == true
-    runs-on: windows-latest
-    steps:
-    - name: Fails in order to indicate that pull request needs to be marked as ready to review and unit tests workflow needs to pass.
-      run: exit 1
+      #Hopefully reduces run time; see https://github.com/conda-incubator/setup-miniconda/issues/277
+      - name: Rename conda package cache
+        if: steps.cache.outputs.cache-hit != 'true' #Doesnt work when cache is used.
+        shell: bash
+        run: mv "${CONDA_PKGS_DIR}" "${CONDA_PKGS_DIR}_do_not_cache"
+
+    # fail_if_pull_request_is_draft:
+    #   if: github.event.pull_request.draft == true
+    #   runs-on: windows-latest
+    #   steps:
+    #   - name: Fails in order to indicate that pull request needs to be marked as ready to review and unit tests workflow needs to pass.
+    #     run: exit 1
