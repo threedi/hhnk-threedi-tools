@@ -7,7 +7,7 @@ def calculate_rain_days(rain):
     """
     Calculates days dry before and after rain
     """
-    detected_rain = [i for i, e in enumerate(rain) if e > 0.0001]
+    detected_rain = [i for i, e in enumerate(rain) if e > 1e-5]
     # Collect indexes of items in rain where rain falls (every index represents an hour)
     if detected_rain:
         # Detected rain[0] is the first index where rain occurs, so the last dry
@@ -46,9 +46,14 @@ def get_rain_properties(results):
         rain_1d = [x[0] for x in rain_1d_list]
         i = 0
         # if the first node we picked has no rain, we try others until we find one that does
-        while (not any(rain_1d)) and (i < len(rain_1d_list)):
+        while ((not any(rain_1d)) and (i < len(rain_1d_list))) or (np.all(np.array(rain_1d) <= 1e-5)):
             rain_1d = [x[i] for x in rain_1d_list]
             i += 1
+
+            if i == len(rain_1d_list[0]):
+                rain_1d = []
+                break
+
         # Check if there is 2d rain info
         try:
             rain_2d = [x[0] for x in rain_2d_list]
