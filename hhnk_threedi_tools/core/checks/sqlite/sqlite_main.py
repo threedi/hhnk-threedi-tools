@@ -158,7 +158,7 @@ class SqliteCheck:
         self.sqlite = self.fenv.model.schema_base.database_path
         self.sqlite_modify =hrt.ThreediSchematisation(base = self.fenv.model.path, name ="basis_modify", create=False)
         self.layer_fixeddrainage = self.fenv.source_data.datachecker.layers.fixeddrainagelevelarea
-        self.model_settings = self.fenv.model.settings.path
+
         self.results = {}
 
 
@@ -875,22 +875,22 @@ def _get_cross_section_vertex(cross_section_point, channels_gdf):
     # add geometry to de dataframe
     vertices_buffer = gpd.GeoDataFrame(coordinates_dataframe, geometry =gpd.points_from_xy(coordinates_dataframe.x, coordinates_dataframe.y, crs="EPSG:28992"))
     #create buffer.
-    vertices_buffer["geometry"] = vertices_buffer.buffer(0.1)
+    vertices_buffer["geometry"] = vertices_buffer.buffer(0.001)
     vertices_buffer.rename({"geometry": "geometry_line"}, axis=1, inplace=True)
-    # cross_section_point.rename({"geometry": "geometry"}, axis=1, inplace=True)
+    cross_section_point.rename({"geometry": "geometry_point"}, axis=1, inplace=True)
     # merge cross section and channel vertices on channels.
     vertices_cross_merge = pd.merge(vertices_buffer, cross_section_point, left_on="channel_id", right_on="channel_id", how="left")
     #Check if the cross section is within the buffered distance of a vertex
-    vertices_cross_intersect=vertices_cross_merge[gpd.GeoSeries.intersects(gpd.GeoSeries(vertices_cross_merge["geometry_line"]), gpd.GeoDataFrame(vertices_cross_merge["geometry"]))]
+    vertices_cross_intersect=vertices_cross_merge[gpd.GeoSeries.intersects(gpd.GeoSeries(vertices_cross_merge["geometry_line"]), gpd.GeoSeries(vertices_cross_merge["geometry_point"]))]
     #Select cross sections that do not have a vertex within buffered distance
     cross_no_vertex = cross_section_point[~cross_section_point["cross_loc_id"].isin(vertices_cross_intersect["cross_loc_id"].values)]
-    cross_no_vertex = gpd.GeoDataFrame(cross_no_vertex, geometry="geometry")
+    cross_no_vertex = gpd.GeoDataFrame(cross_no_vertex, geometry="geometry_point")
     return cross_no_vertex
 # %%
 
 if __name__=="__main__":
 
-    TEST_MODEL = r"\\corp.hhnk.nl\data\Hydrologen_data\Data\02.modellen\model_test_v2"
+    TEST_MODEL = r"E:\02.modellen\model_test_v2"
 
     folder = Folders(TEST_MODEL)
     self = SqliteCheck(folder=folder)
@@ -898,4 +898,5 @@ if __name__=="__main__":
     # self.run_cross_section_vertex()
     self.run_cross_section_vertex(database)
 
-    # %%
+
+# %%
