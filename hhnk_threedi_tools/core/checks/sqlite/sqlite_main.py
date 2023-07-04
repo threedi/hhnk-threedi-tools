@@ -24,7 +24,7 @@ from hhnk_threedi_tools.core.folders import Folders
 from threedigrid_builder import make_gridadmin
 
 from hhnk_threedi_tools.core.checks.sqlite.structure_control import StructureControl
-from hhnk_threedi_tools.core.checks.model_splitter import ModelSchematisations
+
 # queries
 from hhnk_threedi_tools.utils.queries import (
     controlled_structures_query,
