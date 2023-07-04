@@ -55,7 +55,6 @@ dependencies:
     - threedi-api-client==4.1.2
     - threedigrid_builder==1.11.4 #ThreediToolbox 2.5.3
     - threedigrid==2.0.5
-
     - threedidepth==0.5 #ThreediToolbox 2.5.2
     - cached_property==1.5.2 #threedi_raster_edits dep
     - rtree==1.0.1 #threedi_raster_edits dep 
