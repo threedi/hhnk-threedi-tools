@@ -34,7 +34,7 @@ dem.metadata.bounds_dl
 
 # %%
 
-if not v3_raster.pl.exists():
+if not v3_raster.exists():
     dl_old.download_maximum_waterdepth_raster(scenario_uuid=uuid, 
         target_srs="EPSG:28992", 
         resolution=resolution, 
@@ -42,7 +42,7 @@ if not v3_raster.pl.exists():
         bounds_srs=None, 
         pathname=v3_raster.path)
 
-if not v4_raster.pl.exists():
+if not v4_raster.exists():
     dl_new.download_maximum_waterdepth_raster(scenario_uuid=uuid, 
         projection=None, 
         resolution=resolution, 

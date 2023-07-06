@@ -66,7 +66,7 @@ class ThreediGrid:
         gdf = None
         if self.panden_path is None:
             if self.folder is not None:
-                if self.folder.source_data.panden.exists:
+                if self.folder.source_data.panden.exists():
                     gdf = self.folder.source_data.panden.load(layer=self.panden_layer)
             
         elif self.panden_path is not None:
@@ -95,9 +95,9 @@ class ThreediGrid:
 
 
         #Check required files
-        # if not self.folder.source_data.damo.exists:
+        # if not self.folder.source_data.damo.exists():
         #     raise Exception(f"{self.folder.source_data.damo} - doesnt exist")
-        # if not self.folder.source_data.panden.exists:
+        # if not self.folder.source_data.panden.exists():
         #     raise Exception(f"{self.folder.source_data.panden} - doesnt exist")
 
         grid_gdf = gpd.GeoDataFrame()

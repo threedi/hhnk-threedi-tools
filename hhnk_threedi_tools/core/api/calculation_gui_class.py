@@ -1554,7 +1554,7 @@ class GuiVariables:
     def sqlite_dropdown_viewlist(self):
         self.folder.model.set_modelsplitter_paths() #set all paths in model_settings.xlsx
         for schema in self.folder.model.schema_list:
-            if getattr(self.folder.model, schema).database.exists:
+            if getattr(self.folder.model, schema).database.exists():
                 schemafolder=  getattr(self.folder.model, schema)
                 viewname = f"{schemafolder.pl.name}/{schemafolder.database.pl.name}" 
                 self.sqlite_dropdown_options[viewname] =schemafolder

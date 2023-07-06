@@ -128,7 +128,7 @@ if __name__ == "__main__":
     for i in range(1,5):
         TEST_MODEL = Path(__file__).parents[i].absolute() / "tests/data/model_test/"
         folder = Folders(TEST_MODEL)
-        if folder.exists:
+        if folder.exists():
             break
 
     filename_orig = folder.full_path("bwn_test_pre_migration.sqlite")

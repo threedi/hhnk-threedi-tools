@@ -187,7 +187,7 @@ class BaseCalculatorGPKG:
 
     def create_nodeid_raster(self):
         """Create raster of nodeids with same res as dem."""
-        if not self.nodeid_raster.exists:
+        if not self.nodeid_raster.exists():
             hrt.gdf_to_raster(gdf=self.grid_gdf,
                 value_field="id",
                 raster_out=self.nodeid_raster.source_path,
@@ -202,7 +202,7 @@ class BaseCalculatorGPKG:
         self.nodeid_raster = hrt.Raster(output_file.parent/"nodeid.tif")
         self.output_raster = hrt.Raster(output_file)
 
-        if self.output_raster.exists:
+        if self.output_raster.exists():
             if overwrite is False:
                 # print(f"Output exists: {self.output_raster.source_path}")
                 return

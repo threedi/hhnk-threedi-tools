@@ -136,7 +136,7 @@ def main_interpolate_rasters(
     """Interpoleer 18 rasters samen met de frequentietabel tot 3 rasters met de T10, T100 en T1000 kans.
     Dit wordt gedaan voor de waterdiepterasters en de schaderasters"""
 
-    if not output_file.exists:
+    if not output_file.exists():
         dem_raster = hrt.Raster(dem_path)
 
         # Inladen rasters als class

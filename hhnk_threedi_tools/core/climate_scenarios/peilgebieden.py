@@ -13,7 +13,7 @@ def rasterize_peilgebieden(
     overwrite=False,
 ):
     # Rasterize regions
-    if not output_file.exists:
+    if not output_file.exists():
         create = True
     else:
         create = False

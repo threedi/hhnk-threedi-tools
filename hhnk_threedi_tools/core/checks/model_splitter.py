@@ -40,7 +40,7 @@ class ModelSchematisations:
         else:
             self.settings_df = None
 
-        if self.folder.model.settings_default.exists:
+        if self.folder.model.settings_default.exists():
             self.settings_default_series = pd.read_excel(
                 self.folder.model.settings_default.path, engine="openpyxl"
             ).iloc[0]  # Series, only has one row.
@@ -227,7 +227,7 @@ class ModelSchematisations:
             # hrt.execute_sql_changes(query=query, database=database_path_new)
 
         #execute additional SQL code that is stored in 02_schematisation/model_sql.json.
-        if self.folder.model.model_sql.pl.exists():
+        if self.folder.model.model_sql.exists():
             with open(self.folder.model.model_sql.path) as f:
                 model_sql = json.loads(f.read())
 

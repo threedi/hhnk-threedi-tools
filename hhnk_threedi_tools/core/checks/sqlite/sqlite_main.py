@@ -215,7 +215,7 @@ class SqliteCheck:
             wlvl_raster = self.output_fd.streefpeil
             drooglegging_raster = self.output_fd.drooglegging
 
-            if drooglegging_raster.pl.exists():
+            if drooglegging_raster.exists():
                 if overwrite is False:
                     return
                 else:

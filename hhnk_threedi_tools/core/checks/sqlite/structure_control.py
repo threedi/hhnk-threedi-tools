@@ -61,7 +61,7 @@ class StructureControl:
         self.l.conn_nodes = self.model.read_table("v2_connection_nodes")
         self.l.conn_nodes.rename({"id":"node_id"}, axis=1, inplace=True)
 
-        if self.hdb_control_layer.parent.pl.exists():
+        if self.hdb_control_layer.parent.exists():
             self.l.hdb_control = self.hdb_control_layer.load()[["CODE", "STREEFPEIL", "MIN_KRUINHOOGTE", "MAX_KRUINHOOGTE"]]
             self.l.hdb_control.rename(columns={
                     "CODE": "code",
@@ -172,7 +172,7 @@ if __name__ == "__main__":
     for i in range(1,5):
         TEST_MODEL = Path(__file__).parents[i].absolute() / "tests/data/model_test/"
         folder = Folders(TEST_MODEL)
-        if folder.exists:
+        if folder.exists():
             break
 
 

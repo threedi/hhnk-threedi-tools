@@ -33,12 +33,12 @@ class TestFolder:
 
     def test_create_revision(self):
         """tests if a new revision folder can be made"""
-        if FOLDER_NEW.threedi_results.zero_d_one_d["new"].exists:
+        if FOLDER_NEW.threedi_results.zero_d_one_d["new"].exists():
             shutil.rmtree(FOLDER_NEW.threedi_results.zero_d_one_d["new"].path)
 
         FOLDER_NEW.threedi_results.zero_d_one_d["new"].create()
 
-        assert FOLDER_NEW.threedi_results.zero_d_one_d["new"].exists is True
+        assert FOLDER_NEW.threedi_results.zero_d_one_d["new"].exists() is True
 
         
     def test_find_dem(self):

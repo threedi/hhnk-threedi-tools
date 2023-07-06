@@ -289,7 +289,7 @@ class SourceDir(Folder):
             super().__init__(os.path.join(base, "peilgebieden"), create=create)
 
             # Find peilgebieden shapefile in folder.
-            if self.exists:
+            if self.exists():
                 shape_name = [
                     x
                     for x in self.content
@@ -334,9 +334,9 @@ class SchemaDirParent(Folder):
 
     def set_modelsplitter_paths(self):
         """Call this to set the individual schematisations for the splitter."""
-        if self.settings.exists:
+        if self.settings.exists():
             if not self.settings_loaded: #only read once. #FIXME test this, might cause issues.
-                    self.settings_df = pd.read_excel(self.settings.path, engine="openpyxl")
+                    self.settings_df = pd.read_excel(self.settings.base, engine="openpyxl")
                     self.settings_df = self.settings_df[self.settings_df['name'].notna()]
                     self.settings_df.set_index("name", drop=False, inplace=True)
                     self.settings_loaded = True
@@ -345,7 +345,7 @@ class SchemaDirParent(Folder):
                         if not pd.isnull(row["name"]):
                             self._add_modelpath(name=item_name)
         else:
-            print(f"Tried to load {self.settings.path}, but it doesnt exist.")
+            print(f"Tried to load {self.settings.base}, but it doesnt exist.")
 
        
     def create_readme(self):

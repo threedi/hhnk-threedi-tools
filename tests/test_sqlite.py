@@ -18,7 +18,7 @@ class TestSqlite:
         self.sqlite_check.run_controlled_structures()
 
         output_file = self.sqlite_check.output_fd.gestuurde_kunstwerken
-        assert output_file.exists
+        assert output_file.exists()
 
         output_df = output_file.load()
         assert output_df["hdb_kruin_max"][0] == -0.25
@@ -31,7 +31,7 @@ class TestSqlite:
 
     def test_run_dewatering_depth(self):           
         self.sqlite_check.run_dewatering_depth()
-        assert self.sqlite_check.output_fd.drooglegging.pl.exists
+        assert self.sqlite_check.output_fd.drooglegging.exists()
 
         assert self.sqlite_check.output_fd.drooglegging.statistics(approve_ok=False
                     ) == {'min': -0.76, 

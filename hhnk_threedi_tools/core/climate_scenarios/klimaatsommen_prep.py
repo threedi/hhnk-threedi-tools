@@ -39,14 +39,14 @@ class KlimaatsommenPrep:
 
     def verify_input(self):
         """Verify if we can run"""
-        if not self.batch_fd.exists:
+        if not self.batch_fd.exists():
             raise Exception(f"INPUTERROR - {self.batch_fd.name} missing")
         
-        netcdf_missing = [name for name in self.batch_fd.downloads.names if not getattr(self.batch_fd.downloads,name).netcdf.grid_path.exists]
+        netcdf_missing = [name for name in self.batch_fd.downloads.names if not getattr(self.batch_fd.downloads,name).netcdf.grid_path.exists()]
         if any(netcdf_missing):
             raise Exception(f"INPUTERROR - netcdf missing for scenarios; {netcdf_missing}")
         
-        h5_missing = [name for name in self.batch_fd.downloads.names if not getattr(self.batch_fd.downloads,name).netcdf.admin_path.exists]
+        h5_missing = [name for name in self.batch_fd.downloads.names if not getattr(self.batch_fd.downloads,name).netcdf.admin_path.exists()]
         if any(h5_missing):
             raise Exception(f"INPUTERROR - h5 missing for scenarios; {h5_missing}")
         return True
@@ -167,7 +167,7 @@ class KlimaatsommenPrep:
                             'cfg_file':self.cfg_file,
                             'dmg_type':'gem'}
 
-            if output_raster.exists and not overwrite:
+            if output_raster.exists() and not overwrite:
                 return
 
             #Calculation
