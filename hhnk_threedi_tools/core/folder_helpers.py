@@ -58,7 +58,6 @@ class ClimateResult(hrt.Folder):
             return f"""{self.name} @ {self.path}
                         Folders:\t{self.structure}
                         Files:\t{list(self.files.keys())}
-                        Layers:\t{list(self.olayers.keys())}
                         Groups:\t{list(self.names)}
                     """
         
@@ -83,7 +82,6 @@ class ClimateResult(hrt.Folder):
                 return f"""{self.name} @ {self.path}
                             Folders:\t{self.structure_extra}
                             Files:\t{list(self.files.keys())}
-                            Layers:\t{list(self.olayers.keys())}
                         """
 
     class ClimateResultOutput(hrt.Folder):

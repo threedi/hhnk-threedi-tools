@@ -247,14 +247,6 @@ class SourceDir(Folder):
         self.add_file("polder_polygon", POLDER_POLY)
         self.add_file("panden", "panden.gpkg", ftype="gpkg")
 
-        # Layers
-        # self.add_layer("datachecker_fixed_drainage", "fixeddrainagelevelarea")
-        # self.add_layer("datachecker_culvert", "culvert")
-        # self.add_layer("hdb_sturing_3di_layer", "Sturing_3Di")
-        # self.add_layer("damo_duiker_sifon_layer", "DuikerSifonHevel")
-        # self.add_layer("damo_waterdeel_layer", "waterdeel")
-        # self.add_layer("init_waterlevel_val_field", "streefpeil_bwn2")
-        # self.add_layer("init_water_level_filename", "initieel_water_level")
 
     def create_readme(self):
         readme_txt = (
@@ -372,7 +364,6 @@ class SchemaDirParent(Folder):
         return f"""{self.name} @ {self.path}
                     Folders:\t{self.structure}
                     Files:\t{list(self.files.keys())}
-                    Layers:\t{list(self.olayers.keys())}
                     Model schemas:\t{self.schema_list}
                 """
 
