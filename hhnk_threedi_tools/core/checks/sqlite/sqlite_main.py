@@ -149,16 +149,15 @@ class SqliteCheck:
         self.fenv = folder
 
         self.output_fd = self.fenv.output.sqlite_tests
-        self.name = self.fenv.name
+        
         self.model = self.fenv.model.schema_base.database
         self.dem = hrt.Raster(self.fenv.model.schema_base.rasters.dem)
         self.datachecker = self.fenv.source_data.datachecker
         self.damo = self.fenv.source_data.damo.path
         self.channels_from_profiles = self.fenv.source_data.modelbuilder.channel_from_profiles
-        self.sqlite = self.fenv.model.schema_base.database_path
-        self.sqlite_modify =hrt.ThreediSchematisation(base = self.fenv.model.path, name ="basis_modify", create=False)
+        
         self.layer_fixeddrainage = self.fenv.source_data.datachecker.layers.fixeddrainagelevelarea
-
+        
         self.results = {}
 
 
@@ -378,20 +377,6 @@ class SqliteCheck:
         datachecker_culvert_layer = self.fenv.source_data.datachecker.layers.culvert
         damo_duiker_sifon_layer = self.fenv.source_data.damo.layers.DuikerSifonHevel
 
-
-        import csv
-
-        # open the file in the write mode
-        with open(r'E:\02.modellen\model_test_v2\t.txt', 'w') as f:
-            # create the csv writer
-            writer = csv.writer(f)
-
-            # write a row to the csv file
-            writer.writerow([f"{self.fenv.source_data}"])
-            writer.writerow([f"{datachecker_culvert_layer.parent}"])
-            writer.writerow([f"{damo_duiker_sifon_layer.parent}"])
-
-
         try:
             below_ref_query = struct_channel_bed_query
             gdf_below_ref = self.model.execute_sql_selection(query=below_ref_query)
@@ -415,11 +400,13 @@ class SqliteCheck:
 
     def run_watersurface_area(self):
         """
-        Deze test controleert per peilgebied in het model hoe groot het gebied is dat het oppervlaktewater beslaat in het
-        model. Dit totaal is opgebouwd uit de ```storage_area``` uit de ```v2_connection_nodes``` tafel opgeteld bij het
-        oppervlak van de watergangen (uitgelezen uit de ```channel_surface_from_profiles```) shapefile. Vervolgens worden de
-        totalen per peilgebied vergeleken met diezelfde totalen uit de DAMO database.
-
+        Deze test controleert per peilgebied in het model hoe groot het gebied 
+        is dat het oppervlaktewater beslaat in het model. Dit totaal is opgebouwd 
+        uit de kolom `storage_area` uit de `v2_connection_nodes` in de sqlite opgeteld
+        bij het oppervlak van de watergangen (uitgelezen uit `channel_surface_from_profiles`)
+        shapefile. Vervolgens worden de totalen per peilgebied vergeleken met diezelfde
+        totalen uit de waterdelen in DAMO.
+        
         De kolom namen in het resultaat zijn als volgt:
         From v2_connection_nodes -> area_nodes_m2
         From channel_surface_from_profiles -> area_channels_m2
@@ -452,7 +439,7 @@ class SqliteCheck:
             return fixeddrainage, result_txt
         except Exception as e:
             raise e from None
-
+        
     def run_weir_floor_level(self):
         """
         Check whether minimum crest height of weir is under reference level found in the v2_cross_section_location layer.
