@@ -6,6 +6,3 @@ model_test/test_migration.sqlite
 _backup/
 temp/
 dl
-model_test/02_schematisation/model_settings.xlsx
-model_test/02_schematisation/model_settings_default.xlsx
-model_test/02_schematisation/model_sql.json
