@@ -55,7 +55,7 @@ class ClimateResult(hrt.Folder):
 
 
         def __repr__(self):
-            return f"""{self.name} @ {self.path}
+            return f"""{self.name} @ {self.base}
                         Folders:\t{self.structure}
                         Files:\t{list(self.files.keys())}
                         Groups:\t{list(self.names)}
@@ -79,7 +79,7 @@ class ClimateResult(hrt.Folder):
                 self.structure_extra = ["netcdf"]
 
             def __repr__(self):
-                return f"""{self.name} @ {self.path}
+                return f"""{self.name} @ {self.base}
                             Folders:\t{self.structure_extra}
                             Files:\t{list(self.files.keys())}
                         """

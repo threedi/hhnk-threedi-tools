@@ -361,7 +361,7 @@ class SchemaDirParent(Folder):
 
 
     def __repr__(self):
-        return f"""{self.name} @ {self.path}
+        return f"""{self.name} @ {self.base}
                     Folders:\t{self.structure}
                     Files:\t{list(self.files.keys())}
                     Model schemas:\t{self.schema_list}

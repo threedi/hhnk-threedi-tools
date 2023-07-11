@@ -608,7 +608,10 @@ class DownloadWidgetsInteraction(DownloadWidgets):
 
 
                 if self.download.use_dem_button.value:
-                    dem = hrt.Raster(self.vars.folder.model.schema_base.rasters.dem.path)
+                    #TODO does this still work?
+                    # dem = hrt.Raster(self.vars.folder.model.schema_base.rasters.dem.path)
+                    dem = self.vars.folder.model.schema_base.rasters.dem
+
                     class dlRasterPreset(dlRaster):
                         def __init__(self, 
                                         uuid=scenario["uuid"], 
@@ -769,7 +772,7 @@ class DownloadWidgetsInteraction(DownloadWidgets):
             # Get raster size of dem, max depth rasters are downloaded on this resolution.
             # print(self.vars.folder)
             # print(self.vars.folder.model.schema_base.rasters.full_path(self.download_batch.dem_path_dropdown.value))
-            dem = hrt.Raster(self.vars.folder.model.schema_base.rasters.dem.path)
+            dem = self.vars.folder.model.schema_base.rasters.dem
 
 
             #Init empty raster settings.
@@ -794,7 +797,7 @@ class DownloadWidgetsInteraction(DownloadWidgets):
                     # Start downloading of the files
                     download_functions.start_download(
                         download_urls,
-                        output_folder.path,
+                        output_folder.base,
                         api_key=dl.get_api_key(),
                         automatic_download=1,
                     )
@@ -816,21 +819,21 @@ class DownloadWidgetsInteraction(DownloadWidgets):
                 wlvl_max = getattr(self.vars.batch_fd.downloads, row["dl_name"]).wlvl_max
                 raster_max_wlvl = dlRasterPreset(code="s1-max-dtri",
                                         resolution=dem.metadata["pixel_width"],
-                                        output_path=wlvl_max.path, 
+                                        output_path=wlvl_max.base, 
                                         button=self.outputtypes.max_wlvl_button,
                                         name="max waterlvl",                                        
                 )
                 depth_max = getattr(self.vars.batch_fd.downloads, row["dl_name"]).depth_max
                 raster_max_depth = dlRasterPreset(code="depth-max-dtri",
                                         resolution=dem.metadata["pixel_width"],
-                                        output_path=depth_max.path, 
+                                        output_path=depth_max.base, 
                                         button=self.outputtypes.max_depth_button,
                                         name="max waterdepth",
                 )
                 damage_total = getattr(self.vars.batch_fd.downloads, row["dl_name"]).damage_total
                 raster_total_damage = dlRasterPreset(code="total-damage",
                                         resolution=0.5, #FIXME 0.5 res
-                                        output_path=damage_total.path, 
+                                        output_path=damage_total.base, 
                                         button=self.outputtypes.total_damage_button,
                                         name="total damge",
                 )
@@ -884,7 +887,7 @@ class DownloadWidgetsInteraction(DownloadWidgets):
         """when main folder changes, we update some values"""
 
         #Output folder string
-        self.output.folder_value.value = self.vars.folder.threedi_results.path
+        self.output.folder_value.value = self.vars.folder.threedi_results.base
 
 
     # --------------------------------------------------------------------------------------------------
@@ -1069,7 +1072,7 @@ class DownloadWidgetsInteraction(DownloadWidgets):
         #     ]
         # else:
         self.download_batch.dem_path_dropdown.options = [
-            self.vars.folder.model.schema_base.rasters.dem.path
+            self.vars.folder.model.schema_base.rasters.dem.base
         ]
 
 

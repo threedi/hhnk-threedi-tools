@@ -30,10 +30,12 @@ class ModelSchematisations:
         self.settings_loaded = False
 
         if modelsettings_path is None:
-            modelsettings_path=folder.model.settings.path
+            modelsettings_path=folder.model.settings
+        else:
+            modelsettings_path=hrt.File(modelsettings_path)
 
-        if os.path.exists(modelsettings_path):
-            self.settings_df = pd.read_excel(modelsettings_path, engine="openpyxl")
+        if modelsettings_path.exists():
+            self.settings_df = pd.read_excel(modelsettings_path.base, engine="openpyxl")
             self.settings_df = self.settings_df[self.settings_df['name'].notna()]
             self.settings_df.set_index("name", drop=False, inplace=True)
             self.settings_loaded = True
@@ -42,7 +44,7 @@ class ModelSchematisations:
 
         if self.folder.model.settings_default.exists():
             self.settings_default_series = pd.read_excel(
-                self.folder.model.settings_default.path, engine="openpyxl"
+                self.folder.model.settings_default.base, engine="openpyxl"
             ).iloc[0]  # Series, only has one row.
         else:
             self.settings_default_series = None
@@ -105,8 +107,8 @@ class ModelSchematisations:
         # Write the sqlite and rasters to new folders.
 
         # Copy sqlite
-        dst = os.path.join(schema_new.path, database_base.pl.name)
-        shutil.copyfile(src=database_base.path, dst=dst)
+        dst = schema_new.full_path(database_base.name)
+        shutil.copyfile(src=database_base.base, dst=dst.base)
 
         #If database_new is defined before sqlite exists, it will not work properly
         database_new = schema_new.database 
@@ -115,10 +117,10 @@ class ModelSchematisations:
         # Copy rasters that are defined in the settings file
         for raster_file in RASTER_FILES:
             if not pd.isnull(row[raster_file]):
-                src = os.path.join(schema_base.path, row[raster_file])
-                if os.path.exists(src):
-                    dst = os.path.join(schema_new.path, row[raster_file])
-                    shutil.copyfile(src=src, dst=dst)
+                src = schema_base.full_path(row[raster_file])
+                if src.exists():
+                    dst = schema_new.full_file(row[raster_file])
+                    shutil.copyfile(src=src.base, dst=dst.base)
                 else:
                     # TODO raise error?
                     print(f"Couldnt find raster:\t{row[raster_file]}")
@@ -228,8 +230,7 @@ class ModelSchematisations:
 
         #execute additional SQL code that is stored in 02_schematisation/model_sql.json.
         if self.folder.model.model_sql.exists():
-            with open(self.folder.model.model_sql.path) as f:
-                model_sql = json.loads(f.read())
+            model_sql = self.folder.model.model_sql.read_json()
 
             if name in model_sql.keys():
                 for _, query in model_sql[name].items():
@@ -259,7 +260,7 @@ class ModelSchematisations:
             "max_infiltration_capacity_file": schema_new.rasters.storage.path_if_exists,
         }
 
-        sqlite_path = schema_new.database.path
+        sqlite_path = schema_new.database.base
         schematisation_name = row["schematisation_name"]
         tags = [schematisation_name, self.folder.name]
         # organisation_uuid="48dac75bef8a42ebbb52e8f89bbdb9f2"
@@ -316,7 +317,7 @@ if __name__ == "__main__":
     name = "0d1d_test"
 
     self = ModelSchematisations(
-        folder=folder, modelsettings_path=folder.model.settings.path
+        folder=folder, modelsettings_path=folder.model.settings
     )
     self.create_schematisation(name=name)
     self.upload_schematisation(

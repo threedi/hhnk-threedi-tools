@@ -3,6 +3,7 @@
 from datetime import datetime
 from urllib.parse import urlparse
 from urllib.error import HTTPError
+from pathlib import Path
 from time import sleep
 import logging
 import os
@@ -283,7 +284,8 @@ def download_task(task_uuid, pathname=None):
 
             logging.debug("download_url: {}".format(download_url))
             logging.debug("urlparse(download_url): {}".format(urlparse(download_url)))
-            pathname = os.path.basename(urlparse(download_url).path)
+            #TODO check if this path works??
+            pathname = Path(urlparse(download_url).path).name
             logging.debug(pathname)
         download_file(download_url, pathname)
 

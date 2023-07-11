@@ -1207,8 +1207,8 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
         """when main folder changes, we update some values"""
 
         #Output folder string
-        self.output.folder_value.value = self.vars.folder.threedi_results.path
-        self.output.folder_value_batch.value = self.vars.folder.threedi_results.batch.path
+        self.output.folder_value.value = self.vars.folder.threedi_results.base
+        self.output.folder_value_batch.value = self.vars.folder.threedi_results.batch.base
 
 
     def update_simulation_feedback(self, sim):

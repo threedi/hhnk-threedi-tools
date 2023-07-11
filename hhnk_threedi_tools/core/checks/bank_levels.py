@@ -129,15 +129,15 @@ class BankLevelTest:
         """
         self.model_path = model_path
         if model_path == None:
-            self.model_path = self.fenv.model.schema_base.database.path
+            self.model_path = self.fenv.model.schema_base.database.base
 
         self.datachecker_path = datachecker_path
         if self.datachecker_path == None:
-            self.datachecker_path = self.fenv.source_data.datachecker.path
+            self.datachecker_path = self.fenv.source_data.datachecker.base
 
         self.grid = Grid(
             sqlite_path=self.fenv.model.schema_base.sqlite_paths[0],
-            dem_path=self.fenv.model.schema_base.rasters.dem.path,
+            dem_path=self.fenv.model.schema_base.rasters.dem.base,
         )
 
         self.imports = import_information(
