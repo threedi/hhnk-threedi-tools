@@ -31,6 +31,11 @@ def test_simulationdata():
     boundaries = simdata.boundaries
     assert boundaries == []
 
+    #Aggregation settings
+    aggregation = simdata.aggregation
+    assert len(aggregation) == 11
 
+
+# %%
 if __name__ == "__main__":
     test_simulationdata()
