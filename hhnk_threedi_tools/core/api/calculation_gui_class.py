@@ -524,12 +524,16 @@ class StartCalculationWidgets:
             self.laterals = widgets.ToggleButton(
                     value=True, description="laterals", layout=item_layout(grid_area="calc_settings_laterals"), icon="check"
                 )
+            self.aggregation = widgets.ToggleButton(
+                    value=False, description="aggregated netcdf", layout=item_layout(grid_area="calc_settings_aggregation"), icon="check"
+                )
 
             self.children = [self.basic_processing, 
                             self.damage_processing, 
                             self.arrival_processing, 
                             self.structure_control, 
-                            self.laterals]
+                            self.laterals,
+                            self.aggregation]
 
 
     class FeedbackWidgets():
@@ -821,6 +825,7 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
             use_basic_processing=self.calc_settings.basic_processing.value,
             use_damage_processing=self.calc_settings.damage_processing.value,
             use_arrival_processing=self.calc_settings.arrival_processing.value,
+            use_aggregation=self.calc_settings.aggregation.value,
 
             #Add data to simulation
             self.sim.add_default_settings()
@@ -837,7 +842,8 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
                 self.sim.add_damage_post_processing()
             if use_arrival_processing:
                 self.sim.add_arrival_post_processing()
-
+            if use_aggregation:
+                self.sim.add_aggregation_post_processing()
 
             self.update_simulation_feedback(sim=self.sim)
             self.update_create_simulation_button()
@@ -1177,23 +1183,26 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
         self.model.organisation_box.options = self.vars.organisations_viewlist 
 
 
-    def update_dropdowns(self, batch=False, **kwargs):
+    def update_dropdowns(self, batch=False, schema=False, threedimodel=False, revision=False):
+        """Update dropdowns if True is passed for that variable. 
+        Works differently for batch and normal calculation
+        e.g. schema=True will update the schema dropdown viewlist"""
         if not batch:
-            if 'schema' in kwargs:
+            if schema:
                 self.model.schema_dropdown.options = self.vars.schema_dropdown_viewlist
-            if 'threedimodel' in kwargs: #Needs to be defined before revision because we observe that box.
+            if threedimodel: #Needs to be defined before revision because we observe that box.
                 self.model.threedimodel_dropdown.options = self.vars.threedimodel_dropdown_viewlist
-            if 'revision' in kwargs:
+            if revision:
                 self.model.revision_dropdown.options = self.vars.revision_dropdown_viewlist
         
         else:
-            if 'schema' in kwargs:
+            if schema:
                 for gxg in GROUNDWATER:
                     getattr(self.model, f"schema_dropdown_{gxg}").options = self.vars.schema_dropdown_viewlist
-            if 'threedimodel' in kwargs: #Needs to be defined before revision because we observe that box.
+            if threedimodel: #Needs to be defined before revision because we observe that box.
                 for gxg in GROUNDWATER:
                     getattr(self.model, f"threedimodel_dropdown_{gxg}").options = self.vars.threedimodel_dropdown_viewlist_gxg[gxg]
-            if 'revision' in kwargs:
+            if revision:
                 for gxg in GROUNDWATER:
                     getattr(self.model, f"revision_dropdown_{gxg}").options = self.vars.revision_dropdown_viewlist_gxg[gxg]
         # if 'sqlite' in kwargs:
@@ -1640,6 +1649,7 @@ class StartCalculationGui:
                 self.w.calc_settings.arrival_processing,
                 self.w.calc_settings.structure_control,
                 self.w.calc_settings.laterals,
+                self.w.calc_settings.aggregation,
                 self.w.feedback.label,
                 self.w.feedback.widget,
                 self.w.start.label,
@@ -1666,7 +1676,7 @@ class StartCalculationGui:
 '. rain_box rain_box rain_box rain_box . output_subfolder_label output_subfolder_box output_subfolder_box '
 '. rain_box rain_box rain_box rain_box . calc_settings_label calc_settings_label calc_settings_label'
 '. rain_box rain_box rain_box rain_box . calc_settings_basic_processing calc_settings_damage_processing calc_settings_arrival_processing'
-'. rain_box rain_box rain_box rain_box . calc_settings_structure_control calc_settings_laterals .'
+'. rain_box rain_box rain_box rain_box . calc_settings_structure_control calc_settings_laterals calc_settings_aggregation'
 '. rain_box rain_box rain_box rain_box . start_label start_label start_label'
 '. rain_box rain_box rain_box rain_box . simulation_name_label simulation_name_widget simulation_name_widget'
 '. rain_box rain_box rain_box rain_box . . simulation_name_view_widget simulation_name_view_widget'

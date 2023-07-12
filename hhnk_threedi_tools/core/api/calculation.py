@@ -154,6 +154,7 @@ class SimulationData:
 
         self.structure_control = self._get_control_from_sqlite(sim_duration=sim_duration)
         self.laterals = self._get_laterals_from_sqlite(sim_duration=sim_duration)
+        self.aggregation = self._get_aggregation_from_sqlite()
         self.boundaries = self._get_boundary_data()
 
         
@@ -337,7 +338,6 @@ class SimulationData:
         return control_data
     
 
-
     def _get_laterals_from_sqlite(self, sim_duration):
         """
         Read 1D laterals from the Sqlite and use them in the initialisation of the simulation
@@ -369,6 +369,39 @@ class SimulationData:
             laterals_data.append(data)
         return laterals_data
                     
+
+    def _get_aggregation_from_sqlite(self) -> list:
+        """
+        Read aggregation settings from sqlite
+        """
+        aggregation_data = []
+
+            # flow_variable options [ water_level, flow_velocity, discharge, volume, pump_discharge, wet_cross_section, lateral_discharge, wet_surface, rain, simple_infiltration, leakage, interception, surface_source_sink_discharge ]
+            # method options [ min, max, avg, cum, cum_positive, cum_negative, current, sum ]
+
+        method_translate_dict = {
+            "minimum" : "min", 
+            "maximum" : "max", 
+            "average" : "avg", 
+            "cumulative" : "cum", 
+            "cumulative_positive" : "cum_positive", 
+            "cumulative_negative" : "cum_negative", 
+            "current" : "current", 
+            "sum" : "sum",
+        }
+
+        for index, row in hrt.sqlite_table_to_df(
+            database_path=self.sqlite_path, table_name="v2_aggregation_settings"
+        ).iterrows():
+            data = {
+                "name": row['var_name'], #string
+                "flow_variable": row['flow_variable'], #string
+                "method": row['aggregation_method'], #string
+                "interval": int(row['timestep']), #int
+            }
+            aggregation_data.append(data)
+        return aggregation_data
+
 
     def _get_boundary_data(self):
         boundary_types =   {1: 'water_level', 
@@ -686,6 +719,13 @@ class Simulation:
         self._add_to_simulation(self.threedi_api.simulations_results_post_processing_lizard_arrival_create,
                 simulation_pk=self.id, data=self.data.arrival_processing
             )
+        
+    def add_aggregation_post_processing(self):
+        """If  empty wont add."""
+        for aggregation in self.data.aggregation:
+            self._add_to_simulation(self.threedi_api.simulations_settings_aggregation_create,
+                    simulation_pk=self.id, data=aggregation
+                )
 
     def _add_to_simulation(self, func, **kwargs):
         """add something to simulation, if apiexcetion is raised sleep on it and try again."""
