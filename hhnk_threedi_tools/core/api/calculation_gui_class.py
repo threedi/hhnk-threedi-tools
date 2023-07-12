@@ -525,7 +525,9 @@ class StartCalculationWidgets:
                     value=True, description="laterals", layout=item_layout(grid_area="calc_settings_laterals"), icon="check"
                 )
             self.aggregation = widgets.ToggleButton(
-                    value=False, description="aggregated netcdf", layout=item_layout(grid_area="calc_settings_aggregation"), icon="check"
+                    value=True, description="aggregation netcdf",
+                    tooltip="Adds aggregation settings to simulation if available in sqlite",
+                    layout=item_layout(grid_area="calc_settings_aggregation"), icon="check"
                 )
 
             self.children = [self.basic_processing, 
@@ -820,12 +822,12 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
             #Load data from sqlite
             self.sim.get_data(rain_data=self.rain.rain_settings)
 
-            use_structure_control=self.calc_settings.structure_control.value,
-            use_laterals=self.calc_settings.laterals.value,
-            use_basic_processing=self.calc_settings.basic_processing.value,
-            use_damage_processing=self.calc_settings.damage_processing.value,
-            use_arrival_processing=self.calc_settings.arrival_processing.value,
-            use_aggregation=self.calc_settings.aggregation.value,
+            use_structure_control=self.calc_settings.structure_control.value
+            use_laterals=self.calc_settings.laterals.value
+            use_basic_processing=self.calc_settings.basic_processing.value
+            use_damage_processing=self.calc_settings.damage_processing.value
+            use_arrival_processing=self.calc_settings.arrival_processing.value
+            use_aggregation=self.calc_settings.aggregation.value
 
             #Add data to simulation
             self.sim.add_default_settings()
@@ -860,7 +862,7 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
             with self.feedback.widget:
                 print(f"{self.vars.time_now} - Simulation (hopefully) started or queued.\n\
                     (check self.vars.sim.start_feedback)\n\
-                    stop broken simulation with self.vars.sim.shutdown(simulation_pk=)")
+                    stop broken simulation with self.vars.sim.shutdown(simulation_pk={self.vars.sim.id})")
                 display(
                     HTML(
                         "<a href={} target='_blank'>Check progress on 3di</a>".format(
@@ -1009,6 +1011,7 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
                 sim.add_basic_post_processing()
                 sim.add_damage_post_processing()
                 #sim.add_arrival_post_processing()   -  Gebruiken bij BWN simulaties
+                sim.add_aggregation_post_processing()
 
                 self.update_simulation_feedback(sim=sim)
 
