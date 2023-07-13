@@ -137,7 +137,7 @@ class SimulationData:
                 sim_name, 
                 sim_duration, 
                 rain_data=[{}],
-                iw_raster_name=None,):
+                iwlvl_raster_id=None,):
         
         self.caller = caller
         self.sqlite_path = sqlite_path
@@ -159,8 +159,12 @@ class SimulationData:
         self.laterals = self._get_laterals_from_sqlite(sim_duration=sim_duration)
         self.aggregation = self._get_aggregation_from_sqlite()
         self.boundaries = self._get_boundary_data()
-        self.iw_rasters_available, self.iw_raster = self._get_iw_raster(iw_raster_name=iw_raster_name)
+        self.iwlvl_rasters_available = self.get_iwlvl_rasters_dict(model_id=self.caller.model_id)
         
+        if iwlvl_raster_id is not None:
+            self.iwlvl_raster = self.iwlvl_rasters_available[iwlvl_raster_id]
+        else:
+            self.iwlvl_raster = None
 
     @property
     def _numerical_settings_raw(self):
@@ -418,23 +422,22 @@ class SimulationData:
             data.append(data_singleboundary)
         return data
 
-
-    def _get_iw_rasters(self, iw_raster_id):
+   
+    def get_iwlvl_rasters_dict(self, model_id):
         """
         get 2d waterlevel from  (example from threedi_models_and_simulations\workers.py)
         id can be found from url
         https://api.3di.live/v3/threedimodels/{model_id}/initial_waterlevels/
         """
-        iw_rasters_available = self.caller.tc.fetch_3di_model_initial_waterlevels(self.caller.model_id)
-        for iw in iw_rasters_available:
-            if iw.source_raster is not None:
-                iw_raster = iw
-                break #TODO dropdown maken in start gui
+        #Get iwlvl rasters
+        iwlvl_rasters_all = self.caller.threedi_api.threedimodels_initial_waterlevels_list(threedimodel_pk=model_id).results
 
-            # if iw.source_raster_id == initial_wl_raster_2d_id:
-            #     initial_conditions.online_raster_2d = iw
-            #     break
-        return iw_rasters_available
+        iwlvl_rasters = {}
+        for iwlvl in iwlvl_rasters_all:
+            if iwlvl.source_raster is not None:
+                iwlvl_rasters[iwlvl.source_raster_id] = iwlvl
+        return iwlvl_rasters
+
 
     @property
     def basic_processing(self):
@@ -461,7 +464,8 @@ class SimulationTracker:
         self.structure_control = False
         self.laterals = False
         self.aggregation = False
-        self.iw_raster = None
+        self.iwlvl_raster_id = None
+        self.iwlvl_raster_url = None
 
 
 class Simulation:
@@ -627,12 +631,14 @@ class Simulation:
             data=self.data.physical_settings,
         )
 
-        if self.data.iw_raster is not None:
-            self.tracker.iw_raster = self.data.iw_raster.url
+        if self.data.iwlvl_raster is not None:
+            self.tracker.iwlvl_raster_id = self.data.iwlvl_raster.source_raster_id
+            self.tracker.iwlvl_raster_url = self.data.iwlvl_raster.url
+
             self.tc.create_simulation_initial_2d_water_level_raster(
                 simulation_pk=self.id,
                 aggregation_method="max", #options: ["max", "min", "mean"]
-                initial_waterlevel=self.data.iw_raster.url,
+                initial_waterlevel=self.data.iwlvl_raster.url,
             )
 
     def add_constant_rain(self):
@@ -863,14 +869,14 @@ class Simulation:
         self.sqlite_path = [i for i in output_path.with_suffix('').glob('*.sqlite')][0]
 
 
-    def get_data(self, rain_data, iw_raster_name=None):
+    def get_data(self, rain_data, iwlvl_raster_id=None):
         """Load all data that should be added to the simulation"""
         self.data=SimulationData(caller=self,
                 sqlite_path=self.sqlite_path, #set  by calling .create (which calls .download_sqlite)
                 sim_name=self.simulation.name, #set by calling .create
                 sim_duration=self.sim_duration, #set by calling .create
                 rain_data=rain_data,
-                iw_raster_name=iw_raster_name,
+                iwlvl_raster_id=iwlvl_raster_id,
             )
 
 
@@ -898,21 +904,39 @@ class Simulation:
         sim=self.simulation
         if str_type=="text":
             newline = "\n"
-            return f"Simulation: {sim.url}{newline}Scenario name: {sim.name}\
-            {newline}Organisation name: {sim.organisation_name}{newline}Duration: {sim.duration}s ({sim.duration/3600}h)\
-            {newline}Rain events: {self.data.rain}{newline}Control structures count: {len(self.data.structure_control)}"
+            return f"Simulation: {sim.url}\
+                    {newline}Scenario name: {sim.name}\
+                    {newline}Organisation name: {sim.organisation_name}\
+                    {newline}Duration: {sim.duration}s ({sim.duration/3600}h)\
+                    {newline}Rain events: {self.data.rain}\
+                    {newline}Control structures count: {len(self.data.structure_control)}\t(used={self.tracker.structure_control})\
+                    {newline}Laterals count: {len(self.data.laterals)}\t(used={self.tracker.laterals})\
+                    {newline}2d inital wlvl raster: {self.tracker.iwlvl_raster_url}\
+                    {newline}\
+                    {newline}Post processing\
+                    {newline}Aggregation settings count: {len(self.data.aggregation)}\t(used={self.tracker.aggregation})\
+                    {newline}Basic processing lizard: {self.tracker.basic_processing}\
+                    {newline}Damage processing lizard: {self.tracker.damage_processing}\
+                    {newline}Arrival processing lizard: {self.tracker.arrival_processing}"
+
+        if self.tracker.iwlvl_raster_id is not None:
+            iwlvl_text = f"<a href={self.tracker.iwlvl_raster_url}>{self.tracker.iwlvl_raster_id}</a>"
+        else:
+            iwlvl_text = ""
 
         if str_type=="html":
             newline = "<br>"
-            return HTML(f"Simulation id: <a href={sim.url}>{sim.id}</a>{newline}Scenario name: {sim.name}\
-                    {newline}Organisation name: {sim.organisation_name}{newline}Duration: {sim.duration}s ({sim.duration/3600}h)\
+            return HTML(f"Simulation id: <a href={sim.url}>{sim.id}</a>\
+                    {newline}Scenario name: {sim.name}\
+                    {newline}Organisation name: {sim.organisation_name}\
+                    {newline}Duration: {sim.duration}s ({sim.duration/3600}h)\
                     {newline}Rain events: {self.data.rain}\
-                    {newline}Control structures count: {len(self.data.structure_control)}     (used={self.tracker.structure_control})\
-                    {newline}Laterals count: {len(self.data.laterals)}     (used={self.tracker.laterals})\
-                    {newline}2d iw raster: {self.tracker.iw_raster}\
+                    {newline}Control structures count: {len(self.data.structure_control)}\t(used={self.tracker.structure_control})\
+                    {newline}Laterals count: {len(self.data.laterals)}\t(used={self.tracker.laterals})\
+                    {newline}2d inital wlvl raster: {iwlvl_text}\
                     {newline}\
                     {newline}Post processing\
-                    {newline}Aggregation settings count: {len(self.data.aggregation)}     (used={self.tracker.aggregation})\
+                    {newline}Aggregation settings count: {len(self.data.aggregation)}\t(used={self.tracker.aggregation})\
                     {newline}Basic processing lizard: {self.tracker.basic_processing}\
                     {newline}Damage processing lizard: {self.tracker.damage_processing}\
                     {newline}Arrival processing lizard: {self.tracker.arrival_processing}")
@@ -973,3 +997,4 @@ if __name__ == "__main__":
     #             sim_duration=self.sim_duration, #set by calling .create
     #             rain_data=rain_data
     #         )
+# %%

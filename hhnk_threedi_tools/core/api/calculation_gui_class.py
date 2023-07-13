@@ -175,6 +175,11 @@ class StartCalculationWidgets:
                         layout=item_layout(grid_area=f"threedimodel_dropdown_{gxg}")
                         )
                     )
+                setattr(self, f"iwlvl_2d_dropdown_{gxg}", 
+                    widgets.Dropdown(
+                        layout=item_layout(grid_area=f"iwlvl_2d_dropdown_{gxg}")
+                        )
+                    )
 
             # self.sqlite_label = widgets.Label(
             #         "Select sqlite containing structure control rules",
@@ -530,6 +535,14 @@ class StartCalculationWidgets:
                     layout=item_layout(grid_area="calc_settings_aggregation"), icon="check"
                 )
 
+            self.iwlvl_2d_label = widgets.Label(
+                    "Initial wlvl 2d:", layout=item_layout(grid_area="iwlvl_2d_label")
+                )
+            self.iwlvl_2d_dropdown = widgets.Dropdown(
+                    layout=item_layout(grid_area="iwlvl_2d_dropdown")
+                )
+
+            #Combine buttons in children group
             self.children = [self.basic_processing, 
                             self.damage_processing, 
                             self.arrival_processing, 
@@ -627,6 +640,13 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
             #TODO add check of available calc cores. self.vars.sim.threedi_api.statuses_statistics(simulation__organisation__unique_id='48dac75bef8a42ebbb52e8f89bbdb9f2', simulation__type__live=True)
 
             self.update_dropdowns(batch=False, schema=True)
+
+            #After searching select first available results
+            if len(self.vars.schema_dropdown_viewlist)>0:
+                self.model.schema_dropdown.value = self.vars.schema_dropdown_viewlist[0]
+            if len(self.vars.revision_dropdown_viewlist)>0:
+                self.model.revision_dropdown.value = self.vars.revision_dropdown_viewlist[0]
+
             self.update_organisations()
 
 
@@ -634,17 +654,23 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
         #Search revisions
         def on_select_schematisation(selected_schematisation):
             """Update revisions options when repository/schematisation is selected"""
-            revisions = self.sim.threedi_api.schematisations_revisions_list(
-                    schematisation_pk=self.selected_schema_id, limit=RESULT_LIMIT #selected_schematisation['new'].split(' -')[0]
-                ).results
+            if selected_schematisation['new'] is not None:
+                revisions = self.sim.threedi_api.schematisations_revisions_list(
+                        schematisation_pk=self.selected_schema_id, limit=RESULT_LIMIT #selected_schematisation['new'].split(' -')[0]
+                    ).results
+            else:
+                revisions=[]
 
             self.vars.revisions = {}
             for revision in revisions:  
                 self.vars.revisions[revision.id] = revision #vars.schema_results is empty dict
 
-            threedimodels = self.sim.threedi_api.threedimodels_list(
-                    revision__schematisation__id=self.selected_schema_id, limit=RESULT_LIMIT
-                ).results
+            if selected_schematisation['new'] is not None:
+                threedimodels = self.sim.threedi_api.threedimodels_list(
+                        revision__schematisation__id=self.selected_schema_id, limit=RESULT_LIMIT
+                    ).results
+            else:
+                threedimodels=[]
 
             self.vars.threedimodels = {}
             for threedimodel in threedimodels:  
@@ -655,10 +681,27 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
         self.model.schema_dropdown.observe(on_select_schematisation, names="value")
 
 
+
         #Search model with revision
         def on_select_revision(selected_revision):
             """Update revisions options when repository/schematisation is selected"""
-            self.model.threedimodel_dropdown.value = self.vars.threedimodel_dropdown_viewlist[self.vars.revision_dropdown_viewlist.index(selected_revision['new'])]
+            #Select model (if available)
+            if selected_revision["new"] is not None:
+                self.model.threedimodel_dropdown.value = self.vars.threedimodel_dropdown_viewlist[self.vars.revision_dropdown_viewlist.index(selected_revision['new'])]
+
+            #Retrieve available 2d initial wlvl rasters
+            self.vars.iwlvl_2d_rasters = {}
+            self.vars.iwlvl_2d_raster_names = {}
+            
+            if self.selected_threedimodel_id is not None:
+                iwlvl_rasters, iwlvl_raster_names = self._get_iwlvl_rasters(self.selected_threedimodel_id)
+                for iwlvl_raster, name in zip(iwlvl_rasters, iwlvl_raster_names):
+                    self.vars.iwlvl_2d_rasters[iwlvl_raster.source_raster_id] = iwlvl_rasters
+                    self.vars.iwlvl_2d_raster_names[iwlvl_raster.source_raster_id] = name
+
+            #Fill dropdown with values and select first.
+            self.update_dropdowns(batch=False, iwlvl_2d=True)
+
             self.update_simulation_name_widget()
 
         self.model.revision_dropdown.observe(on_select_revision, names="value")
@@ -821,7 +864,7 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
 
             #Load data from sqlite
             self.sim.get_data(rain_data=self.rain.rain_settings,
-                              iw_raster_name=None) #TODO add iwraster
+                              iwlvl_raster_id=self.selected_iwlvl_2d_raster_id) 
 
             use_structure_control=self.calc_settings.structure_control.value
             use_laterals=self.calc_settings.laterals.value
@@ -880,6 +923,21 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
             self.search_models()
 
             self.update_dropdowns(batch=True, schema=True)
+
+            #After searching select first available result if gxg in the name
+            def analyze_options(options, search_str):
+                """if string not found, return None"""
+                for option in options:
+                    if search_str in option:
+                        return option
+                return None
+            
+            for gxg in GROUNDWATER:
+                selection = analyze_options(options=self.vars.schema_dropdown_viewlist, search_str=gxg)
+                if selection:
+                    getattr(self.model, f"schema_dropdown_{gxg}").value = selection
+                    getattr(self.model, f"revision_dropdown_{gxg}").value = self.vars.revision_dropdown_viewlist_gxg[gxg][0]
+
             self.update_organisations()
 
 
@@ -925,7 +983,24 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
         #Search model with revision
         def on_select_revision_gxg(selected_revision, gxg):
             """Update revisions options when repository/schematisation is selected"""
-            getattr(self.model, f"threedimodel_dropdown_{gxg}").value = self.vars.threedimodel_dropdown_viewlist_gxg[gxg][self.vars.revision_dropdown_viewlist_gxg[gxg].index(selected_revision['new'])]
+            if selected_revision["new"] is not None:
+                getattr(self.model, f"threedimodel_dropdown_{gxg}").value = self.vars.threedimodel_dropdown_viewlist_gxg[gxg][self.vars.revision_dropdown_viewlist_gxg[gxg].index(selected_revision['new'])]
+
+
+            #Retrieve available 2d initial wlvl rasters
+            self.vars.iwlvl_2d_rasters_gxg[gxg] = {}
+            self.vars.iwlvl_2d_raster_names_gxg[gxg] = {}
+            
+            if self.selected_threedimodel_id_gxg(gxg) is not None:
+                iwlvl_rasters, iwlvl_raster_names = self._get_iwlvl_rasters(self.selected_threedimodel_id_gxg(gxg))
+                for iwlvl_raster, name in zip(iwlvl_rasters, iwlvl_raster_names):
+                    self.vars.iwlvl_2d_rasters_gxg[gxg][iwlvl_raster.source_raster_id] = iwlvl_rasters
+                    self.vars.iwlvl_2d_raster_names_gxg[gxg][iwlvl_raster.source_raster_id] = name
+
+            #Fill dropdown with values and select first.
+            getattr(self.model, f"iwlvl_2d_dropdown_{gxg}").options = self.vars.iwlvl_2d_dropdown_viewlist_gxg[gxg]
+            getattr(self.model, f"iwlvl_2d_dropdown_{gxg}").value = self.vars.iwlvl_2d_dropdown_viewlist_gxg[gxg][0]
+
 
         self.model.revision_dropdown_glg.observe(lambda change: on_select_revision_gxg(change, "glg"), 'value', type='change')
         self.model.revision_dropdown_ggg.observe(lambda change: on_select_revision_gxg(change, "ggg"), 'value', type='change')
@@ -998,7 +1073,8 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
                                     "duration": int(eval(RAIN_SETTINGS[rt]["rain_duration"])),
                                     "value": eval(RAIN_INTENSITY[rt][rs])/(1000*3600), #mm/hour -> m/s
                                     "units": "m/s",
-                                }])
+                                }],
+                                iwlvl_raster_id=self.selected_iwlvl_2d_raster_id_gxg(gxg)) 
 
                 #Add data to simulation
                 sim.add_default_settings()
@@ -1036,6 +1112,27 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
 
 
     #-- #%%^^%%# --# end of __init__ #-- #%%^^%%# --#
+    def _get_iwlvl_rasters(self, model_id):
+        """
+        get 2d waterlevel from  (example from threedi_models_and_simulations\workers.py)
+        id can be found from url
+        https://api.3di.live/v3/threedimodels/{model_id}/initial_waterlevels/
+        """
+        #Get iwlvl rasters
+        # iwlvl_rasters_all = self.caller.tc.fetch_3di_model_initial_waterlevels(model_id)
+        iwlvl_rasters_all = self.sim.threedi_api.threedimodels_initial_waterlevels_list(threedimodel_pk=model_id).results
+
+        iwlvl_rasters = []
+        iwlvl_rasters_names = []
+        for iwlvl in iwlvl_rasters_all:
+            if iwlvl.source_raster is not None:
+                #The iwlvl raster doesnt have the name, so we need to get that elsewhere with the id.
+                raster = self.sim.threedi_api.threedimodels_rasters_read(id=iwlvl.source_raster_id, threedimodel_pk=model_id)
+                iwlvl_rasters.append(iwlvl)
+                iwlvl_rasters_names.append(raster.file.filename)
+        return iwlvl_rasters, iwlvl_rasters_names
+
+
     def check_create_simulation(self):
         """check if we can create a simulation"""
         if "ERROR" in self.rain.rain_settings:
@@ -1184,20 +1281,28 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
 
 
     def update_organisations(self):
-        self.model.organisation_box.options = self.vars.organisations_viewlist 
+        self.model.organisation_box.options = self.vars.organisations_viewlist
+        self.model.organisation_box.value = self.model.organisation_box.options[0]
 
 
-    def update_dropdowns(self, batch=False, schema=False, threedimodel=False, revision=False):
+    def update_dropdowns(self, batch=False, schema=False, threedimodel=False, revision=False, iwlvl_2d=False):
         """Update dropdowns if True is passed for that variable. 
         Works differently for batch and normal calculation
         e.g. schema=True will update the schema dropdown viewlist"""
         if not batch:
             if schema:
                 self.model.schema_dropdown.options = self.vars.schema_dropdown_viewlist
+
             if threedimodel: #Needs to be defined before revision because we observe that box.
                 self.model.threedimodel_dropdown.options = self.vars.threedimodel_dropdown_viewlist
+
+            if iwlvl_2d:
+                self.calc_settings.iwlvl_2d_dropdown.options = self.vars.iwlvl_2d_dropdown_viewlist
+                self.calc_settings.iwlvl_2d_dropdown.value = self.vars.iwlvl_2d_dropdown_viewlist[0]
+
             if revision:
                 self.model.revision_dropdown.options = self.vars.revision_dropdown_viewlist
+
         
         else:
             if schema:
@@ -1404,7 +1509,7 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
 
     def selected_revision_gxg(self, gxg):
         try:
-            return self.vars.revisions_gxg[gxg][int(self.selected_revision_id_gxg(gxg))]
+            return self.vars.revisions_gxg[gxg][self.selected_revision_id_gxg(gxg)]
         except:
             return None
 
@@ -1412,7 +1517,7 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
     def selected_revision_id_gxg(self, gxg):
         """id of selected revision"""
         try:
-            return getattr(self.model, f"revision_dropdown_{gxg}").value.split(' - ')[0]
+            return int(getattr(self.model, f"revision_dropdown_{gxg}").value.split(' - ')[0])
         except:
             return None
 
@@ -1420,7 +1525,7 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
     def selected_threedimodel_id_gxg(self, gxg):
         """id of selected model"""
         try:
-            return getattr(self.model, f"threedimodel_dropdown_{gxg}").value
+            return int(getattr(self.model, f"threedimodel_dropdown_{gxg}").value)
         except:
             return None     
 
@@ -1429,7 +1534,7 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
     def selected_revision_id(self):
         """id of selected revision"""
         try:
-            return self.model.revision_dropdown.value.split(' - ')[0]
+            return int(self.model.revision_dropdown.value.split(' - ')[0])
         except:
             return None
 
@@ -1438,15 +1543,32 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
     def selected_threedimodel_id(self):
         """id of selected model"""
         try:
-            return self.model.threedimodel_dropdown.value
+            return int(self.model.threedimodel_dropdown.value)
         except:
             return None         
 
 
     @property
+    def selected_iwlvl_2d_raster_id(self):
+        """id of selected iwlvl 2d raster"""
+        try:
+            return int(self.calc_settings.iwlvl_2d_dropdown.value.split(' - ')[0])
+        except:
+            return None   
+        
+
+    def selected_iwlvl_2d_raster_id_gxg(self, gxg):
+        """id of selected iwlvl 2d raster"""
+        try:
+            return int(getattr(self.calc_settings, f"iwlvl_2d_dropdown_{gxg}").value.split(' - ')[0])
+        except:
+            return None     
+
+
+    @property
     def selected_revision(self):
         try:
-            return self.vars.revisions[int(self.selected_revision_id)]
+            return self.vars.revisions[self.selected_revision_id]
         except:
             return None
 
@@ -1481,6 +1603,10 @@ class GuiVariables:
         self.revisions_gxg = {"glg":{}, "ggg":{}, "ghg":{}}
         self.threedimodels = {}
         self.threedimodels_gxg = {"glg":{}, "ggg":{}, "ghg":{}}
+        self.iwlvl_2d_rasters = {}
+        self.iwlvl_2d_rasters_gxg = {"glg":{}, "ggg":{}, "ghg":{}}
+        self.iwlvl_2d_raster_names = {}
+        self.iwlvl_2d_raster_names_gxg = {"glg":{}, "ggg":{}, "ghg":{}}
         self.sqlite_dropdown_options = {}
         self.sqlite_path = None #Sqlite is downloaded and placed here.
         self.sqlite_path_batch = {} #Sqlite is downloaded and placed here.
@@ -1562,6 +1688,36 @@ class GuiVariables:
                     threedimodel_list.append(f"Revision has no model")
             threedimodel_dict[gxg]=threedimodel_list
         return threedimodel_dict
+
+
+    @property
+    def iwlvl_2d_dropdown_viewlist(self):
+        iwlvl_2d_list = []
+        for iwlvl_raster_id in self.iwlvl_2d_rasters.keys():
+            iwlvl_2d_list.append(f"{iwlvl_raster_id} - {self.iwlvl_2d_raster_names[iwlvl_raster_id]}")
+        
+        if iwlvl_2d_list != []:
+            iwlvl_2d_list.append(f"Do not use initial 2d wlvl raster")
+        else:
+            iwlvl_2d_list.append(f"Model has no inital 2d wlvl raster")
+        return iwlvl_2d_list
+    
+
+    @property
+    def iwlvl_2d_dropdown_viewlist_gxg(self):
+        iwlvl_2d_dict = {}
+        for gxg in GROUNDWATER:
+            iwlvl_2d_list = []
+            for iwlvl_raster_id in self.iwlvl_2d_rasters_gxg[gxg].keys():
+                iwlvl_2d_list.append(f"{iwlvl_raster_id} - {self.iwlvl_2d_raster_names_gxg[gxg][iwlvl_raster_id]}")
+            
+            if iwlvl_2d_list != []:
+                iwlvl_2d_list.append(f"Do not use initial 2d wlvl raster")
+            else:
+                iwlvl_2d_list.append(f"Model has no inital 2d wlvl raster")
+            iwlvl_2d_dict[gxg]=iwlvl_2d_list
+        return iwlvl_2d_dict
+    
 
     @property
     def sqlite_dropdown_viewlist(self):
@@ -1654,6 +1810,8 @@ class StartCalculationGui:
                 self.w.calc_settings.structure_control,
                 self.w.calc_settings.laterals,
                 self.w.calc_settings.aggregation,
+                self.w.calc_settings.iwlvl_2d_label,
+                self.w.calc_settings.iwlvl_2d_dropdown,
                 self.w.feedback.label,
                 self.w.feedback.widget,
                 self.w.start.label,
@@ -1681,6 +1839,7 @@ class StartCalculationGui:
 '. rain_box rain_box rain_box rain_box . calc_settings_label calc_settings_label calc_settings_label'
 '. rain_box rain_box rain_box rain_box . calc_settings_basic_processing calc_settings_damage_processing calc_settings_arrival_processing'
 '. rain_box rain_box rain_box rain_box . calc_settings_structure_control calc_settings_laterals calc_settings_aggregation'
+'. rain_box rain_box rain_box rain_box . iwlvl_2d_label iwlvl_2d_dropdown iwlvl_2d_dropdown'
 '. rain_box rain_box rain_box rain_box . start_label start_label start_label'
 '. rain_box rain_box rain_box rain_box . simulation_name_label simulation_name_widget simulation_name_widget'
 '. rain_box rain_box rain_box rain_box . . simulation_name_view_widget simulation_name_view_widget'
@@ -1725,6 +1884,11 @@ class StartCalculationGui:
                 self.w.model.threedimodel_dropdown_glg,
                 self.w.model.threedimodel_dropdown_ggg,
                 self.w.model.threedimodel_dropdown_ghg,
+                self.w.calc_settings.iwlvl_2d_label,
+                # self.w.model.threedimodel_dropdown,
+                self.w.model.iwlvl_2d_dropdown_glg,
+                self.w.model.iwlvl_2d_dropdown_ggg,
+                self.w.model.iwlvl_2d_dropdown_ghg,
                 self.w.model.organisation_label,
                 self.w.model.organisation_box,
                 # self.w.model.sqlite_label,
@@ -1783,6 +1947,7 @@ class StartCalculationGui:
 '. schema_label schema_dropdown_glg schema_dropdown_ggg schema_dropdown_ghg . simulation_name_label simulation_batch_name_widget simulation_batch_name_widget'
 '. revision_label revision_dropdown_glg revision_dropdown_ggg revision_dropdown_ghg . . check_batch_input_button check_batch_input_button'
 '. threedimodel_label threedimodel_dropdown_glg threedimodel_dropdown_ggg threedimodel_dropdown_ghg . . start_batch_button start_batch_button'
+'. iwlvl_2d_label iwlvl_2d_dropdown_glg iwlvl_2d_dropdown_ggg iwlvl_2d_dropdown_ghg . . . .'
 '. feedback_label . . . . . . .'
 '. feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget'
 '. feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget'
