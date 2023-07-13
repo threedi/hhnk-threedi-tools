@@ -26,8 +26,33 @@ resolution=10
 v3_raster = hrt.Raster(TEST_DIRECTORY/f"dl/maxdepth_old_res{resolution}.tif")
 v4_raster = hrt.Raster(TEST_DIRECTORY/f"dl/maxdepth_new_res{resolution}.tif")
 
-# %%
+# %% 2d wlvl testing
+from hhnk_threedi_tools.core.api.upload_model.threedi_calls import ThreediCalls
+from threedi_api_client import ThreediApi
 
+class Dum:
+    def __init__(self):
+        host="https://api.3di.live"
+        api_key=api_keys["threedi"]
+        config = {
+            "THREEDI_API_HOST": host,
+            "THREEDI_API_PERSONAL_API_TOKEN": api_key,
+        }
+        self.threedi_api = ThreediApi(config=config)
+        self.threedi_api_beta = ThreediApi(config=config, version="v3-beta")
+        self.tc = ThreediCalls(threedi_api=self.threedi_api)
+
+self=Dum()
+
+initial_waterlevels = self.tc.fetch_3di_model_initial_waterlevels(58163)
+
+
+
+
+
+
+
+# %%
 dem = hrt.Raster(FOLDER_TEST.model.schema_base.rasters.dem)
 dem.metadata.bounds_dl
 
