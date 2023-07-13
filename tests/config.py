@@ -15,7 +15,7 @@ PATH_TEST_MODEL = TEST_DIRECTORY / "model_test"
 TEMP_DIR = hrt.Folder(TEST_DIRECTORY/r"temp", create=True)
 
 TEMP_DIR.unlink_contents()
-TEMP_DIR = TEMP_DIR.pl
+TEMP_DIR = TEMP_DIR.path
 for i in TEMP_DIR.iterdir():
     if i.is_dir:
         if "batch_test" in str(i):

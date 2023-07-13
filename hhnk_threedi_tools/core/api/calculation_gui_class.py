@@ -1556,7 +1556,7 @@ class GuiVariables:
         for schema in self.folder.model.schema_list:
             if getattr(self.folder.model, schema).database.exists():
                 schemafolder=  getattr(self.folder.model, schema)
-                viewname = f"{schemafolder.pl.name}/{schemafolder.database.pl.name}" 
+                viewname = f"{schemafolder.name}/{schemafolder.database.name}" 
                 self.sqlite_dropdown_options[viewname] =schemafolder
 
         return self.sqlite_dropdown_options.keys()

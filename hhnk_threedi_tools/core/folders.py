@@ -213,7 +213,7 @@ class Folders(Folder):
     def is_valid(self):
         """Check if folder stucture is available in input folder."""
         SUB_FOLDERS = ["01_source_data", "02_schematisation", "03_3di_results", "04_test_results"]
-        return all([self.pl.joinpath(i).exists() for i in SUB_FOLDERS])
+        return all([self.full_path(i).exists() for i in SUB_FOLDERS])
 
 
 class SourceDir(Folder):

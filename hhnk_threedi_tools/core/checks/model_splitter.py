@@ -274,7 +274,7 @@ class ModelSchematisations:
         )
 
         revision_parent_folder = self.folder.model.revisions
-        list_of_files = [i for i in revision_parent_folder.pl.glob('*')]
+        list_of_files = [i for i in revision_parent_folder.path.glob('*')]
 
         count = len(list_of_files)
         schema_str = str(schema_new)

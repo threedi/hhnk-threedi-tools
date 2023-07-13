@@ -207,7 +207,7 @@ class BaseCalculatorGPKG:
                 # print(f"Output exists: {self.output_raster.source_path}")
                 return
             else:
-                self.output_raster.pl.unlink()
+                self.output_raster.path.unlink()
 
 
         #Create rasters
@@ -255,8 +255,8 @@ if __name__ == "__main__":
     threedi_result = folder.threedi_results.one_d_two_d['ghg_blok_t1000']
  
 
-    # grid_gdf = gpd.read_file(threedi_result.pl/"grid_raw.gpkg", driver="GPKG")
-    grid_gdf = gpd.read_file(threedi_result.full_path("grid_corr.gpkg"), driver="GPKG")
+    # grid_gdf = gpd.read_file(threedi_result.path/"grid_raw.gpkg", driver="GPKG")
+    grid_gdf = threedi_result.full_path("grid_corr.gpkg").load()
 
 
     calculator_kwargs = {"dem_path":folder.model.schema_base.rasters.dem.base,
@@ -265,8 +265,7 @@ if __name__ == "__main__":
 
     #Init calculator
     with BaseCalculatorGPKG(**calculator_kwargs) as self:
-        # self.run(output_folder=threedi_result.pl,  
-        #             output_raster_name="wlvl_corr.tif",
+        # self.run(output_file=threedi_result.full_path("wlvl_orig.tif")
         #             mode="MODE_WLVL",
         #             overwrite=OVERWRITE)
                    

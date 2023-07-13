@@ -110,13 +110,13 @@ class KlimaatsommenPrep:
                          overwrite=False,
                          ):
         """mode options are: "MODE_WDEPTH", "MODE_WLVL" """
-        grid_gdf = gpd.read_file(threedi_result.pl/grid_filename, driver="GPKG")
+        grid_gdf = threedi_result.full_path(grid_filename).load()
 
-        calculator_kwargs = {"dem_path":self.dem.source_path,
+        calculator_kwargs = {"dem_path":self.dem.base,
                                 "grid_gdf":grid_gdf, 
                                 "wlvl_column":wlvl_col_name}
 
-        output_file = scenario_raster.pl
+        output_file = scenario_raster
 
         #Init calculator
         with BaseCalculatorGPKG(**calculator_kwargs) as basecalc:

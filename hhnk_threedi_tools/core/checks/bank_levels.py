@@ -258,8 +258,8 @@ class BankLevelTest:
 
     def write_output(self, name):
         """writes to output folder"""
-        new_folder = self.fenv.output.bank_levels.pl / name
-        new_folder.mkdir(parents=True, exist_ok=True)
+        new_folder = self.fenv.output.bank_levels.full_path(name)
+        new_folder.path.mkdir(parents=True, exist_ok=True)
         self.write(str(new_folder), str(new_folder))
 
 

@@ -18,8 +18,8 @@ def rasterize_peilgebieden(
     else:
         create = False
         # Check edit times. To see if raster needs to be updated.
-        raster_mtime = output_file.pl.stat().st_mtime
-        shape_mtime = input_peilgebieden.pl.stat().st_mtime
+        raster_mtime = output_file.path.stat().st_mtime
+        shape_mtime = input_peilgebieden.path.stat().st_mtime
 
         if shape_mtime > raster_mtime:
             create = True

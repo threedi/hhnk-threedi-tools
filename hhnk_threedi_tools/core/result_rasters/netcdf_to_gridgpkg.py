@@ -33,8 +33,8 @@ class ThreediGrid:
         self.panden_path = panden_path     
         self.panden_layer = panden_layer   
 
-        self.grid_path = self.threedi_result.pl/grid_raw_filename
-        self.grid_corr_path = self.threedi_result.pl/grid_corr_filename
+        self.grid_path = self.threedi_result.full_path(grid_raw_filename)
+        self.grid_corr_path = self.threedi_result.full_path(grid_corr_filename)
 
 
     @property
