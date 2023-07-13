@@ -154,6 +154,7 @@ class SimulationData:
 
         self.structure_control = self._get_control_from_sqlite(sim_duration=sim_duration)
         self.laterals = self._get_laterals_from_sqlite(sim_duration=sim_duration)
+        self.aggregation = self._get_aggregation_from_sqlite()
         self.boundaries = self._get_boundary_data()
 
         
@@ -337,7 +338,6 @@ class SimulationData:
         return control_data
     
 
-
     def _get_laterals_from_sqlite(self, sim_duration):
         """
         Read 1D laterals from the Sqlite and use them in the initialisation of the simulation
@@ -369,6 +369,28 @@ class SimulationData:
             laterals_data.append(data)
         return laterals_data
                     
+
+    def _get_aggregation_from_sqlite(self) -> list:
+        """
+        Read aggregation settings from sqlite
+        """
+        aggregation_data = []
+
+            # flow_variable options [ water_level, flow_velocity, discharge, volume, pump_discharge, wet_cross_section, lateral_discharge, wet_surface, rain, simple_infiltration, leakage, interception, surface_source_sink_discharge ]
+            # method options [ min, max, avg, cum, cum_positive, cum_negative, current, sum ]
+
+        for index, row in hrt.sqlite_table_to_df(
+            database_path=self.sqlite_path, table_name="v2_aggregation_settings"
+        ).iterrows():
+            data = {
+                "name": row['var_name'], #string
+                "flow_variable": row['flow_variable'], #string
+                "method": row['aggregation_method'], #string
+                "interval": int(row['timestep']), #int
+            }
+            aggregation_data.append(data)
+        return aggregation_data
+
 
     def _get_boundary_data(self):
         boundary_types =   {1: 'water_level', 
@@ -408,6 +430,17 @@ class SimulationData:
     def arrival_processing(self):
         return {"arrival_time": True} #TODO check if works? was: {"basic_post_processing": True}
     
+
+
+class SimulationTracker:
+    def __init__(self):
+        self.basic_processing = False
+        self.damage_processing = False
+        self.arrival_processing = False
+        self.structure_control = False
+        self.laterals = False
+        self.aggregation = False
+
 
 class Simulation:
     """
@@ -449,6 +482,7 @@ class Simulation:
         self.data=None #set by calling .set_data()
         self.simulation=None
         self.simulation_created = False
+        self.tracker = SimulationTracker() #tracks what is added to simulation
 
     # @property
     # def end_time(self):
@@ -614,6 +648,8 @@ class Simulation:
             self._add_to_simulation(self.threedi_api.simulations_events_structure_control_table_create,
                         simulation_pk=self.id, data=control_data
                     )
+        self.tracker.structure_control = True
+
 
     def add_laterals(self):
         """If  empty wont add."""
@@ -621,6 +657,7 @@ class Simulation:
             self._add_to_simulation(self.threedi_api.simulations_events_lateral_timeseries_create,
                             simulation_pk=self.id, data=lateral, async_req=False
                         )
+        self.tracker.laterals = True
 
 
     def add_boundaries(self):
@@ -676,16 +713,27 @@ class Simulation:
         self._add_to_simulation(self.threedi_api.simulations_results_post_processing_lizard_basic_create,
                 simulation_pk=self.id, data=self.data.basic_processing
             )
+        self.tracker.basic_processing = True
 
     def add_damage_post_processing(self):
         self._add_to_simulation(self.threedi_api.simulations_results_post_processing_lizard_damage_create,
                 simulation_pk=self.id, data=self.data.damage_processing
             )
+        self.tracker.damage_processing = True
 
     def add_arrival_post_processing(self):
         self._add_to_simulation(self.threedi_api.simulations_results_post_processing_lizard_arrival_create,
                 simulation_pk=self.id, data=self.data.arrival_processing
             )
+        self.tracker.arrival_processing = True
+        
+    def add_aggregation_post_processing(self):
+        """If  empty wont add."""
+        for aggregation in self.data.aggregation:
+            self._add_to_simulation(self.threedi_api.simulations_settings_aggregation_create,
+                    simulation_pk=self.id, data=aggregation
+                )
+        self.tracker.aggregation = True
 
     def _add_to_simulation(self, func, **kwargs):
         """add something to simulation, if apiexcetion is raised sleep on it and try again."""
@@ -827,10 +875,16 @@ class Simulation:
             newline = "<br>"
             return HTML(f"Simulation id: <a href={sim.url}>{sim.id}</a>{newline}Scenario name: {sim.name}\
                     {newline}Organisation name: {sim.organisation_name}{newline}Duration: {sim.duration}s ({sim.duration/3600}h)\
-                    {newline}Rain events: {self.data.rain}{newline}Control structures count: {len(self.data.structure_control)} {newline}")
+                    {newline}Rain events: {self.data.rain}\
+                    {newline}Control structures count: {len(self.data.structure_control)}     (used={self.tracker.structure_control})\
+                    {newline}Laterals count: {len(self.data.laterals)}     (used={self.tracker.laterals})\
+                    {newline}Aggregation settings count: {len(self.data.aggregation)}     (used={self.tracker.aggregation})\
+                    {newline}Basic processing lizard: {self.tracker.basic_processing}\
+                    {newline}Damage processing lizard: {self.tracker.damage_processing}\
+                    {newline}Arrival processing lizard: {self.tracker.arrival_processing}")
 
 
-    def example_use(self, basic_processing=False, damage_processing=False, arrival_processing=False):
+    def example_use(self, basic_processing=False, damage_processing=False, arrival_processing=False, aggregation=False):
         
         if self.data is not None:
             self.add_default_settings()
@@ -838,13 +892,14 @@ class Simulation:
             self.add_structure_control()
             self.add_laterals()
             self.add_boundaries()
+            if aggregation:
+                self.add_aggregation_post_processing()
             if basic_processing:
                 self.add_basic_post_processing()
             if damage_processing:
                 self.add_damage_post_processing()
             if arrival_processing:
                 self.add_arrival_post_processing()
-                #TODO aggregation
 
         else:
             print("Tried to add data to simulation that doesnt have data loaded yet.")

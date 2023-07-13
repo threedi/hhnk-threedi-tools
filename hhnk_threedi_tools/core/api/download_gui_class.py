@@ -3,14 +3,10 @@
 import os
 import datetime
 import re
-from pathlib import Path
 
 # Third-party imports
-import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 import ipywidgets as widgets
-from IPython.core.display import HTML
 from traitlets import Unicode
 # from apscheduler.schedulers.blocking import BlockingScheduler
 import requests
@@ -22,11 +18,9 @@ from hhnk_threedi_tools.core.api import downloader as dl
 import hhnk_threedi_tools.core.api.download_functions as download_functions
 
 # local imports
-import hhnk_threedi_tools as htt
 import hhnk_research_tools as hrt
 from hhnk_threedi_tools import Folders
 
-from hhnk_threedi_tools.core.api.calculation import Simulation
 
 # Globals
 from hhnk_threedi_tools.variables.api_settings import (
@@ -1267,3 +1261,4 @@ if __name__ == "__main__":
         self = DownloadGui(data=data); 
         display(self.tab)
  
+# %%
