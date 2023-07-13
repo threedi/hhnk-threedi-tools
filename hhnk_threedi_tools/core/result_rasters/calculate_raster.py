@@ -256,10 +256,10 @@ if __name__ == "__main__":
  
 
     # grid_gdf = gpd.read_file(threedi_result.pl/"grid_raw.gpkg", driver="GPKG")
-    grid_gdf = gpd.read_file(threedi_result.pl/"grid_corr.gpkg", driver="GPKG")
+    grid_gdf = gpd.read_file(threedi_result.full_path("grid_corr.gpkg"), driver="GPKG")
 
 
-    calculator_kwargs = {"dem_path":folder.model.schema_base.rasters.dem.path,
+    calculator_kwargs = {"dem_path":folder.model.schema_base.rasters.dem.base,
                             "grid_gdf":grid_gdf, 
                             "wlvl_column":"wlvl_max_orig"}
 
@@ -270,7 +270,7 @@ if __name__ == "__main__":
         #             mode="MODE_WLVL",
         #             overwrite=OVERWRITE)
                    
-        self.run(output_file=threedi_result.pl/"wdepth_orig.tif",  
+        self.run(output_file=threedi_result.full_path("wdepth_orig.tif"),  
                     mode="MODE_WDEPTH",
                     overwrite=OVERWRITE)
         print("Done.")

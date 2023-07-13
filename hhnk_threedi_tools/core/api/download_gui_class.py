@@ -608,8 +608,6 @@ class DownloadWidgetsInteraction(DownloadWidgets):
 
 
                 if self.download.use_dem_button.value:
-                    #TODO does this still work?
-                    # dem = hrt.Raster(self.vars.folder.model.schema_base.rasters.dem.path)
                     dem = self.vars.folder.model.schema_base.rasters.dem
 
                     class dlRasterPreset(dlRaster):

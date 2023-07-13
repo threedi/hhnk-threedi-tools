@@ -10,7 +10,7 @@ from tqdm.notebook import trange
 
 
 def maak_schade_polygon(
-    peilgebiedenbestand,
+    peilgebieden_file,
     schade_raster_file,
     pixel_factor,
     output_schade_file,
@@ -19,7 +19,7 @@ def maak_schade_polygon(
     """Aggregeer de schaderasters van overlast en plasvorming naar peilgebiedniveau."""
 
     def bereken_schade_per_peilgebied(
-        peilgebiedenbestand, schade_raster_file, pixel_factor
+        peilgebieden_file, schade_raster_file, pixel_factor
     ):
         """"""
         # importeer schaderasters
@@ -37,7 +37,7 @@ def maak_schade_polygon(
         # Op deze coordinaten zat een heel klein polygon zonder peil en met opmerking dat het een heel kleine polygon was, deze is verwijderd
         # dit kan vaker voorkomen doordat er fouten zitten in de peilgebieden bestanden
         # oplossing: coordinaten in GIS opzoeken en fouten lijnen of hele kleine peilgebieden verwijderen
-        peilgebieden = gpd.read_file(peilgebiedenbestand)
+        peilgebieden = peilgebieden_file.load()
         # Selecteer de peilgebieden die intersecten met de bounding box van de rasters
         boundingbox = shapely.geometry.box(*meta["bounds"])
         peilgebieden = peilgebieden.loc[peilgebieden.intersects(boundingbox)]
@@ -77,7 +77,7 @@ def maak_schade_polygon(
 
     # Bereken de schade per peilgebied
     peilgebieden = bereken_schade_per_peilgebied(
-        peilgebiedenbestand, schade_raster_file, pixel_factor
+        peilgebieden_file, schade_raster_file, pixel_factor
     )
 
     # Tabel opschonen

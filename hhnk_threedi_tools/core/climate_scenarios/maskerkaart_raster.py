@@ -3,7 +3,7 @@ from osgeo import gdal
 import hhnk_research_tools as hrt
 import os
 
-def rasterize_maskerkaart(input_file, mask_plas_path, mask_overlast_path, meta):
+def rasterize_maskerkaart(input_file, mask_plas_raster, mask_overlast_raster, meta):
     """Aanmaken van de masker rasters, die gemaakt worden vanuit de maskerkaart, voor plasvorminge en wateroverlast.
     rasterize_maskerkaart(input_file=batch_fd['02_output_rasters']['maskerkaart'],
                       mask_plas_path=batch_fd['02_output_rasters']['mask_plas'],
@@ -16,11 +16,11 @@ def rasterize_maskerkaart(input_file, mask_plas_path, mask_overlast_path, meta):
     mask = {}
 
     mask_path = {}
-    mask_path["plas"] = mask_plas_path
-    mask_path["overlast"] = mask_overlast_path
+    mask_path["plas"] = mask_plas_raster
+    mask_path["overlast"] = mask_overlast_raster
 
     for mask_type in ["plas", "overlast"]:
-        if not os.path.exists(mask_path[mask_type]):
+        if not mask_path[mask_type].exists():
             # Repareer geometry
             temp_geom = (
                 maskerkaart_gdf.buffer(0.1)

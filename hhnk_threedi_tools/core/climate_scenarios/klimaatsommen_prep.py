@@ -56,12 +56,11 @@ class KlimaatsommenPrep:
         """Update dem resolution to 0.5m
         #Get the dem. If dem doesnt have correct resolution it will be reprojected to 0.5m
         """
-        dem_path = self.folder.model.schema_base.rasters.dem.path
-        dem = hrt.Raster(dem_path)
+        dem = self.folder.model.schema_base.rasters.dem
 
         if dem.metadata.pixel_width != 0.5:
             #Reproject to 0.5m if necessary
-            new_dem_path = self.batch_fd.downloads.pl/f"{dem.pl.stem}_05m.tif"
+            new_dem_path = self.batch_fd.downloads.full_path(f"{dem.stem}_05m.tif")
             if not new_dem_path.exists():
                 hrt.reproject(src = dem, 
                             target_res = 0.5,
@@ -171,7 +170,7 @@ class KlimaatsommenPrep:
                 return
 
             #Calculation
-            wss = hrt.Waterschadeschatter(depth_file=depth_file.path, 
+            wss = hrt.Waterschadeschatter(depth_file=depth_file, 
                                     landuse_file=self.landuse_file, 
                                     wss_settings=wss_settings)
 

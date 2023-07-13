@@ -16,11 +16,11 @@ class TestModelSplitter():
     def splitter(self):
 
         FOLDER_NEW = Folders(PATH_NEW_FOLDER, create=True)
-        shutil.copytree(FOLDER_TEST.model.schema_base.path, 
-                        FOLDER_NEW.model.schema_base.path, 
+        shutil.copytree(FOLDER_TEST.model.schema_base.base, 
+                        FOLDER_NEW.model.schema_base.base, 
                         dirs_exist_ok=True)
-        shutil.copy(FOLDER_TEST.model.settings.path, FOLDER_NEW.model.settings.path)
-        shutil.copy(FOLDER_TEST.model.settings_default.path, FOLDER_NEW.model.settings_default.path)
+        shutil.copy(FOLDER_TEST.model.settings.base, FOLDER_NEW.model.settings.base)
+        shutil.copy(FOLDER_TEST.model.settings_default.base, FOLDER_NEW.model.settings_default.base)
         self.folder=FOLDER_TEST
         spl = ModelSchematisations(folder=FOLDER_NEW)
         return spl

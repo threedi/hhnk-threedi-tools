@@ -9,7 +9,7 @@ def rasterize_peilgebieden(
     output_file,
     input_peilgebieden,
     output_peilgebieden,
-    mask_path,
+    mask_file,
     overwrite=False,
 ):
     # Rasterize regions
@@ -28,7 +28,7 @@ def rasterize_peilgebieden(
 
     if create:
         # TODO dit is niet goed voor het geheugen... Is het wel nodig?
-        pgb_gdf = gpd.read_file(input_peilgebieden.path)
+        pgb_gdf = input_peilgebieden.load()
         pgb_gdf.reset_index(drop=False, inplace=True)
 
         # Rasterize areas, giving each region a unique id.
@@ -41,7 +41,7 @@ def rasterize_peilgebieden(
             driver="MEM",
         )
 
-        mask_gdf = gpd.read_file(mask_path)
+        mask_gdf = mask_file.load()
         mask_gdf["val"] = 1
         mask_array = hrt.gdf_to_raster(
             gdf=mask_gdf,

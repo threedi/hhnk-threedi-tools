@@ -86,7 +86,7 @@ class OneDTwoDTest:
         if dem_path:
             self.dem = hrt.Raster(dem_path)
         else:
-            self.dem = hrt.Raster(self.fenv.model.schema_base.rasters.dem.path)
+            self.dem = self.fenv.model.schema_base.rasters.dem
 
 
         self.iresults = {}

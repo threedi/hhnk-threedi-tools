@@ -40,14 +40,14 @@ if not v3_raster.exists():
         resolution=resolution, 
         bounds=None, 
         bounds_srs=None, 
-        pathname=v3_raster.path)
+        pathname=v3_raster.base)
 
 if not v4_raster.exists():
     dl_new.download_maximum_waterdepth_raster(scenario_uuid=uuid, 
         projection=None, 
         resolution=resolution, 
         bbox=None, 
-        pathname=v4_raster.path,
+        pathname=v4_raster.base,
     )
 
 

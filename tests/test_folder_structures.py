@@ -34,7 +34,7 @@ class TestFolder:
     def test_create_revision(self):
         """tests if a new revision folder can be made"""
         if FOLDER_NEW.threedi_results.zero_d_one_d["new"].exists():
-            shutil.rmtree(FOLDER_NEW.threedi_results.zero_d_one_d["new"].path)
+            shutil.rmtree(FOLDER_NEW.threedi_results.zero_d_one_d["new"].base)
 
         FOLDER_NEW.threedi_results.zero_d_one_d["new"].create()
 
@@ -42,7 +42,7 @@ class TestFolder:
 
         
     def test_find_dem(self):
-        dem_path = PATH_TEST_MODEL / r"02_schematisation/00_basis/rasters/dem_hoekje.tif"
+        dem_path = PATH_TEST_MODEL.full_file(r"02_schematisation/00_basis/rasters/dem_hoekje.tif")
         assert Path(FOLDER_TEST.model.schema_base.rasters.dem.path) == Path(
             dem_path
         )

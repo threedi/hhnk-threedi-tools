@@ -130,15 +130,13 @@ def main_interpolate_rasters(
     rasters,
     frequenties,
     output_nodata,
-    dem_path,
+    dem_raster,
     extra_nodata_value=None,
 ):
     """Interpoleer 18 rasters samen met de frequentietabel tot 3 rasters met de T10, T100 en T1000 kans.
     Dit wordt gedaan voor de waterdiepterasters en de schaderasters"""
 
     if not output_file.exists():
-        dem_raster = hrt.Raster(dem_path)
-
         # Inladen rasters als class
         raster_classes = [hrt.Raster(r) for r in rasters]
 
@@ -171,7 +169,7 @@ def main_interpolate_rasters(
             nodata=output_nodata,
             metadata=depth_raster.metadata,
         )
-        print(f"{output_file.path} created")
+        print(f"{output_file.base} created")
 
     else:
-        print(f"{output_file.path} already exists")
+        print(f"{output_file.base} already exists")

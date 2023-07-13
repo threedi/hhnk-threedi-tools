@@ -151,9 +151,9 @@ class SqliteCheck:
         self.output_fd = self.fenv.output.sqlite_tests
 
         self.model = self.fenv.model.schema_base.database
-        self.dem = hrt.Raster(self.fenv.model.schema_base.rasters.dem)
+        self.dem = self.fenv.model.schema_base.rasters.dem
         self.datachecker = self.fenv.source_data.datachecker
-        self.damo = self.fenv.source_data.damo.path
+        self.damo = self.fenv.source_data.damo
         self.channels_from_profiles = self.fenv.source_data.modelbuilder.channel_from_profiles
 
         self.layer_fixeddrainage = self.fenv.source_data.datachecker.layers.fixeddrainagelevelarea
@@ -296,7 +296,7 @@ class SqliteCheck:
             imp_surface_db.set_index("id",inplace=True)
 
             
-            polygon_imp_surface = gpd.read_file(self.fenv.source_data.polder_polygon.path)
+            polygon_imp_surface = self.fenv.source_data.polder_polygon.load()
             
             db_surface, polygon_surface, area_diff = calc_surfaces_diff(
                 imp_surface_db, polygon_imp_surface
@@ -421,7 +421,7 @@ class SqliteCheck:
                 conn_nodes_geo,
             ) = read_input(
                 model=self.model,
-                channel_profile_path=self.channels_from_profiles.path,
+                channel_profile_file=self.channels_from_profiles,
                 fixeddrainage_layer=self.fenv.source_data.datachecker.layers.fixeddrainagelevelarea,
                 damo_layer=self.fenv.source_data.damo.layers.waterdeel,
             )
@@ -711,7 +711,7 @@ def expand_multipolygon(df):
 
 def read_input(
     model,
-    channel_profile_path,
+    channel_profile_file,
     fixeddrainage_layer,
     damo_layer,
 ):
@@ -719,7 +719,7 @@ def read_input(
         fixeddrainage = fixeddrainage_layer.load(
                             )[[peil_id_col, code_col, COL_STREEFPEIL_BWN, geometry_col]]
         fixeddrainage = expand_multipolygon(fixeddrainage)
-        modelbuilder_waterdeel = gpd.read_file(channel_profile_path, driver=ESRI_DRIVER)
+        modelbuilder_waterdeel = channel_profile_file.load()
         damo_waterdeel = damo_layer.load()
         conn_nodes_geo = model.execute_sql_selection(query=watersurface_conn_node_query)
         conn_nodes_geo.set_index(a_watersurf_conn_id, inplace=True)
