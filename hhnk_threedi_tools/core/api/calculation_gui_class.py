@@ -1076,6 +1076,11 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
                                 }],
                                 iwlvl_raster_id=self.selected_iwlvl_2d_raster_id_gxg(gxg)) 
 
+
+                use_basic_processing=self.calc_settings.basic_processing.value
+                use_damage_processing=self.calc_settings.damage_processing.value
+                use_aggregation=self.calc_settings.aggregation.value
+
                 #Add data to simulation
                 sim.add_default_settings()
                 sim.add_constant_rain()
@@ -1084,11 +1089,16 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
                 sim.add_structure_control()
                 sim.add_laterals()
 
+
                 #Postprocessing are enabled.
-                sim.add_basic_post_processing()
-                sim.add_damage_post_processing()
+                if use_basic_processing:
+                    sim.add_basic_post_processing()
+                if use_damage_processing:
+                    sim.add_damage_post_processing()
                 #sim.add_arrival_post_processing()   -  Gebruiken bij BWN simulaties
-                sim.add_aggregation_post_processing()
+                
+                if use_aggregation:
+                    sim.add_aggregation_post_processing()
 
                 self.update_simulation_feedback(sim=sim)
 
@@ -1228,7 +1238,8 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
             self.vars.available_batch_results = [b for b in batch_scenario_names.values() if b.lower() in self.vars.available_results]
 
             self.add_feedback("INFO", f"Ready to start simulations ({len(batch_scenario_names)} total)")
-            self.add_feedback("INFO", f"{len(self.vars.available_batch_results)} simulations already have results on lizard and wont be started")
+            if len(self.vars.available_batch_results) > 0:
+                self.add_feedback("INFO", f"{len(self.vars.available_batch_results)} simulations already have results on lizard and wont be started")
 
             for key in batch_scenario_names:
                 name = batch_scenario_names[key]
@@ -1909,12 +1920,13 @@ class StartCalculationGui:
                 self.w.output.subfolder_batch_value,
                 # self.w.output.subfolder_label,
                 # self.w.output.subfolder_box,
-                # self.w.calc_settings.label,
-                # self.w.calc_settings.basic_processing,
-                # self.w.calc_settings.damage_processing,
+                self.w.calc_settings.label,
+                self.w.calc_settings.basic_processing,
+                self.w.calc_settings.damage_processing,
                 # self.w.calc_settings.arrival_processing,
                 # self.w.calc_settings.structure_control,
                 # self.w.calc_settings.laterals,
+                self.w.calc_settings.aggregation,
                 self.w.feedback.label,
                 self.w.feedback.widget,
                 self.w.start.label,
@@ -1931,7 +1943,7 @@ class StartCalculationGui:
                 grid_row_gap="200px 200px 200px 200px",
                 #             grid_template_rows='auto auto auto 50px auto 40px auto 20px 40px',
                 grid_template_rows="auto auto auto",
-                grid_template_columns="1% 10% 10% 10% 10% 2% 14% 15% 28%",
+                grid_template_columns="1% 10% 10% 10% 10% 2% 19% 19% 19%",
                 grid_template_areas="""
 '. login_label login_label model_label model_label . schema_select_label schema_select_label schema_select_label'
 '. lizard_apikey_widget lizard_apikey_widget . . . schema_label_glg schema_view_glg schema_view_glg'
@@ -1941,8 +1953,9 @@ class StartCalculationGui:
 '. batch_scenario_label batch_scenario_label batch_scenario_label batch_scenario_label . output_label output_label output_label'
 '. . batch_rain_type_box batch_rain_type_box batch_rain_type_box . output_folder_label output_folder_value_batch output_folder_value_batch'
 '. . gxg_label_box gxg_label_box gxg_label_box . output_subfolder_batch_label output_subfolder_batch_value output_subfolder_batch_value'
-'. rain_label_box batch_scenario_box batch_scenario_box batch_scenario_box . . . .'
-'. rain_label_box batch_scenario_box batch_scenario_box batch_scenario_box . . . .'
+'. rain_label_box batch_scenario_box batch_scenario_box batch_scenario_box . calc_settings_label calc_settings_label calc_settings_label'
+'. rain_label_box batch_scenario_box batch_scenario_box batch_scenario_box . calc_settings_basic_processing calc_settings_damage_processing .'
+'. rain_label_box batch_scenario_box batch_scenario_box batch_scenario_box . . . calc_settings_aggregation'
 '. rain_label_box batch_scenario_box batch_scenario_box batch_scenario_box . start_label start_label start_label'
 '. schema_label schema_dropdown_glg schema_dropdown_ggg schema_dropdown_ghg . simulation_name_label simulation_batch_name_widget simulation_batch_name_widget'
 '. revision_label revision_dropdown_glg revision_dropdown_ggg revision_dropdown_ghg . . check_batch_input_button check_batch_input_button'
