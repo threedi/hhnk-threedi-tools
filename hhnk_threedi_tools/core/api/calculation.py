@@ -132,11 +132,14 @@ class NumericalSettings:
 
 class SimulationData:
     
-    def __init__(self, sqlite_path, 
-                        sim_name, 
-                        sim_duration, 
-                        rain_data=[{}],):
+    def __init__(self, caller,
+                sqlite_path, 
+                sim_name, 
+                sim_duration, 
+                rain_data=[{}],
+                iw_raster_name=None,):
         
+        self.caller = caller
         self.sqlite_path = sqlite_path
         self.sim_name = sim_name
 
@@ -156,7 +159,7 @@ class SimulationData:
         self.laterals = self._get_laterals_from_sqlite(sim_duration=sim_duration)
         self.aggregation = self._get_aggregation_from_sqlite()
         self.boundaries = self._get_boundary_data()
-
+        self.iw_rasters_available, self.iw_raster = self._get_iw_raster(iw_raster_name=iw_raster_name)
         
 
     @property
@@ -415,6 +418,24 @@ class SimulationData:
             data.append(data_singleboundary)
         return data
 
+
+    def _get_iw_rasters(self, iw_raster_id):
+        """
+        get 2d waterlevel from  (example from threedi_models_and_simulations\workers.py)
+        id can be found from url
+        https://api.3di.live/v3/threedimodels/{model_id}/initial_waterlevels/
+        """
+        iw_rasters_available = self.caller.tc.fetch_3di_model_initial_waterlevels(self.caller.model_id)
+        for iw in iw_rasters_available:
+            if iw.source_raster is not None:
+                iw_raster = iw
+                break #TODO dropdown maken in start gui
+
+            # if iw.source_raster_id == initial_wl_raster_2d_id:
+            #     initial_conditions.online_raster_2d = iw
+            #     break
+        return iw_rasters_available
+
     @property
     def basic_processing(self):
         return {
@@ -440,6 +461,7 @@ class SimulationTracker:
         self.structure_control = False
         self.laterals = False
         self.aggregation = False
+        self.iw_raster = None
 
 
 class Simulation:
@@ -478,11 +500,13 @@ class Simulation:
 
         self.threedi_api = ThreediApi(config=config)
         self.threedi_api_beta = ThreediApi(config=config, version="v3-beta")
+        self.tc = ThreediCalls(threedi_api=self.threedi_api)
 
         self.data=None #set by calling .set_data()
         self.simulation=None
         self.simulation_created = False
         self.tracker = SimulationTracker() #tracks what is added to simulation
+
 
     # @property
     # def end_time(self):
@@ -589,18 +613,27 @@ class Simulation:
             data=self.data.time_step_settings,
         )
 
+        #Numerical settings
         self._add_to_simulation(
             self.threedi_api.simulations_settings_numerical_create,
             simulation_pk=self.id,
             data=self.data.numerical_settings,
         )
 
+        #Physical settings
         self._add_to_simulation(
             self.threedi_api.simulations_settings_physical_create,
             simulation_pk=self.id,
             data=self.data.physical_settings,
         )
 
+        if self.data.iw_raster is not None:
+            self.tracker.iw_raster = self.data.iw_raster.url
+            self.tc.create_simulation_initial_2d_water_level_raster(
+                simulation_pk=self.id,
+                aggregation_method="max", #options: ["max", "min", "mean"]
+                initial_waterlevel=self.data.iw_raster.url,
+            )
 
     def add_constant_rain(self):
         for rain_data in self.data.rain:
@@ -638,9 +671,6 @@ class Simulation:
         else:
             print("this shouldnt happen..")
             return False    
-           
-            
-
 
 
     def add_structure_control(self):
@@ -686,7 +716,6 @@ class Simulation:
             print("Info: Boundary file is empty, file not uploaded")
             return "Info: Boundary file is empty, file not uploaded"
 
-        tc = ThreediCalls(threedi_api=self.threedi_api)
 
         UPLOAD_TIMEOUT = 45
         valid_states = ["processed", "valid"]
@@ -700,7 +729,7 @@ class Simulation:
             upload_json(bc_upload, output_path)
             print(f"create: {output_path}")
             for ti in range(int(UPLOAD_TIMEOUT // 2)):
-                uploaded_bc = tc.fetch_boundarycondition_files(self.id)[0]
+                uploaded_bc = self.tc.fetch_boundarycondition_files(self.id)[0]
                 if uploaded_bc.state in valid_states:
                     print('\nUpload success')
                     break
@@ -834,12 +863,14 @@ class Simulation:
         self.sqlite_path = [i for i in output_path.with_suffix('').glob('*.sqlite')][0]
 
 
-    def get_data(self, rain_data):
+    def get_data(self, rain_data, iw_raster_name=None):
         """Load all data that should be added to the simulation"""
-        self.data=SimulationData(sqlite_path=self.sqlite_path, #set  by calling .create (which calls .download_sqlite)
+        self.data=SimulationData(caller=self,
+                sqlite_path=self.sqlite_path, #set  by calling .create (which calls .download_sqlite)
                 sim_name=self.simulation.name, #set by calling .create
                 sim_duration=self.sim_duration, #set by calling .create
-                rain_data=rain_data
+                rain_data=rain_data,
+                iw_raster_name=iw_raster_name,
             )
 
 
@@ -878,6 +909,9 @@ class Simulation:
                     {newline}Rain events: {self.data.rain}\
                     {newline}Control structures count: {len(self.data.structure_control)}     (used={self.tracker.structure_control})\
                     {newline}Laterals count: {len(self.data.laterals)}     (used={self.tracker.laterals})\
+                    {newline}2d iw raster: {self.tracker.iw_raster}\
+                    {newline}\
+                    {newline}Post processing\
                     {newline}Aggregation settings count: {len(self.data.aggregation)}     (used={self.tracker.aggregation})\
                     {newline}Basic processing lizard: {self.tracker.basic_processing}\
                     {newline}Damage processing lizard: {self.tracker.damage_processing}\

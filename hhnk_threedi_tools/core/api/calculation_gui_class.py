@@ -820,7 +820,8 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
                 )
 
             #Load data from sqlite
-            self.sim.get_data(rain_data=self.rain.rain_settings)
+            self.sim.get_data(rain_data=self.rain.rain_settings,
+                              iw_raster_name=None) #TODO add iwraster
 
             use_structure_control=self.calc_settings.structure_control.value
             use_laterals=self.calc_settings.laterals.value
