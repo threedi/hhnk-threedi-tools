@@ -25,7 +25,8 @@ class TestSqlite:
     
     @pytest.fixture(scope="class")
     def folder_new(self):
-
+        """Copy folder structure and sqlite and then run splitter so we 
+        get the correct sqlite (with errors) to run tests on."""
         FOLDER_NEW = Folders(PATH_NEW_FOLDER, create=True)
         shutil.copytree(FOLDER_TEST.model.schema_base.path, 
                         FOLDER_NEW.model.schema_base.path, 
@@ -35,7 +36,7 @@ class TestSqlite:
         shutil.copy(FOLDER_TEST.model.model_sql.path, FOLDER_NEW.model.model_sql.path)
         self.folder=FOLDER_TEST
         spl = ModelSchematisations(folder=FOLDER_NEW)
-        spl.create_schematisation(name='basis_modify')
+        spl.create_schematisation(name='basis_errors')
         
         return FOLDER_NEW
     
@@ -92,13 +93,13 @@ class TestSqlite:
 
 
     def test_run_cross_section(self, folder_new):
-        database= folder_new.model.schema_basis_modify.database
+        database= folder_new.model.schema_basis_errors.database
         output = self.sqlite_check.run_cross_section(database=database)
         assert output["cross_loc_id"].to_list() == [1186, 99999]
 
 
     def test_run_cross_section_vertex(self, folder_new):
-        database= folder_new.model.schema_basis_modify.database
+        database= folder_new.model.schema_basis_errors.database
         output = self.sqlite_check.run_cross_section_vertex(database=database)
         assert output["cross_loc_id"].to_list() == [1287]
 
@@ -138,6 +139,6 @@ if __name__ == "__main__":
     self.test_run_cross_section_vertex(folder_new=folder_new)
 
 # %%
-    database= folder_new.model.schema_basis_modify.database
+    database= folder_new.model.schema_basis_errors.database
     output = self.sqlite_check.run_cross_section_vertex()
 # %%
