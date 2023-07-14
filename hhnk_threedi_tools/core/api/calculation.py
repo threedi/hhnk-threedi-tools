@@ -182,8 +182,10 @@ class SimulationData:
             self.iwlvl_rasters_available = self.get_iwlvl_rasters_dict(threedi_api=threedi_api,
                                                                     model_id=model_id)
             self.iwlvl_raster = self.iwlvl_rasters_available[iwlvl_raster_id]
+            self.iwlvl_raster_aggmethod = self.get_iwlvl_raster_aggmethod_from_sqlite()
         else:
             self.iwlvl_raster = None
+            self.iwlvl_raster_aggmethod = None
 
     @property
     def _numerical_settings_raw(self):
@@ -458,6 +460,21 @@ class SimulationData:
         return iwlvl_rasters
 
 
+    def get_iwlvl_raster_aggmethod_from_sqlite(self):
+        """
+        options in API are ["max", "min", "mean"], in sqlite these are ints
+        agg method determines which value is chosen when in a calculation cell 
+        multiple values are found for the initial waterlevel.
+        """
+        agg_translate = {0 : "max",
+                         1 : "min",
+                         2 : "mean"}
+        global_df = hrt.sqlite_table_to_df(
+                    database_path=self.sqlite_path, table_name="v2_global_settings"
+                )
+        return agg_translate[global_df.iloc[0]["water_level_ini_type"]]
+    
+
     @property
     def basic_processing(self):
         return {
@@ -656,7 +673,7 @@ class Simulation:
 
             self.tc.create_simulation_initial_2d_water_level_raster(
                 simulation_pk=self.id,
-                aggregation_method="max", #options: ["max", "min", "mean"]
+                aggregation_method=self.data.iwlvl_raster_aggmethod,
                 initial_waterlevel=self.data.iwlvl_raster.url,
             )
 
@@ -937,7 +954,7 @@ class Simulation:
                     {newline}Aggregation settings count: {len(self.data.aggregation)}\t(used={self.tracker.aggregation})\
                     {newline}Basic processing lizard: {self.tracker.basic_processing}\
                     {newline}Damage processing lizard: {self.tracker.damage_processing}\
-                    {newline}Arrival processing lizard: {self.tracker.arrival_processing}"
+                    {newline}Arrival processing lizard: {self.tracker.arrival_processing}\t(aggmethod={self.data.iwlvl_raster_aggmethod})"
 
         if self.tracker.iwlvl_raster_id is not None:
             iwlvl_text = f"<a href={self.tracker.iwlvl_raster_url}>{self.tracker.iwlvl_raster_id}</a>"
@@ -953,7 +970,7 @@ class Simulation:
                     {newline}Rain events: {self.data.rain}\
                     {newline}Control structures count: {len(self.data.structure_control)}\t(used={self.tracker.structure_control})\
                     {newline}Laterals count: {len(self.data.laterals)}\t(used={self.tracker.laterals})\
-                    {newline}2d inital wlvl raster: {iwlvl_text}\
+                    {newline}2d inital wlvl raster: {iwlvl_text}\t(aggmethod={self.data.iwlvl_raster_aggmethod})\
                     {newline}\
                     {newline}Post processing\
                     {newline}Aggregation settings count: {len(self.data.aggregation)}\t(used={self.tracker.aggregation})\
