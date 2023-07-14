@@ -133,7 +133,6 @@ class NumericalSettings:
 
 
 class SimulationData:
-    
     def __init__(self,
                 sqlite_path: Path, 
                 sim_name: str, 
@@ -891,12 +890,13 @@ class Simulation:
 
     def get_data(self, rain_data, iwlvl_raster_id=None):
         """Load all data that should be added to the simulation"""
-        self.data=SimulationData(caller=self,
-                sqlite_path=self.sqlite_path, #set  by calling .create (which calls .download_sqlite)
+        self.data=SimulationData(sqlite_path=self.sqlite_path, #set  by calling .create (which calls .download_sqlite)
                 sim_name=self.simulation.name, #set by calling .create
                 sim_duration=self.sim_duration, #set by calling .create
                 rain_data=rain_data,
                 iwlvl_raster_id=iwlvl_raster_id,
+                threedi_api=self.threedi_api,
+                model_id=self.model_id,
             )
 
 

@@ -1571,7 +1571,7 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
     def selected_iwlvl_2d_raster_id_gxg(self, gxg):
         """id of selected iwlvl 2d raster"""
         try:
-            return int(getattr(self.calc_settings, f"iwlvl_2d_dropdown_{gxg}").value.split(' - ')[0])
+            return int(getattr(self.model, f"iwlvl_2d_dropdown_{gxg}").value.split(' - ')[0])
         except:
             return None     
 
