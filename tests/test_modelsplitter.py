@@ -12,7 +12,7 @@ from tests.config import FOLDER_TEST, PATH_NEW_FOLDER
 
 class TestModelSplitter():
     
-    # @pytest.fixture(scope="class")
+    @pytest.fixture(scope="class")
     def splitter(self):
 
         FOLDER_NEW = Folders(PATH_NEW_FOLDER, create=True)

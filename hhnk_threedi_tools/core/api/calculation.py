@@ -36,7 +36,9 @@ TIMEZONE = "Europe/Amsterdam"
 #TODO move to hrt
 def update_dict_keys(mydict, translate_dict={}, remove_keys=[]) -> dict:
     """Rename dict keys and/or remove.
-    trannslate_dict is of the format -> old:new"""
+    mydict (dict): dict that needs updated keys
+    translate_dict (dict): has format -> old:new
+    remove_keys (list): remove some keys while we're at it."""
     for key_old in translate_dict:
         key_new = translate_dict[key_old]
         if key_old in mydict:
@@ -132,14 +134,31 @@ class NumericalSettings:
 
 class SimulationData:
     
-    def __init__(self, caller,
-                sqlite_path, 
-                sim_name, 
-                sim_duration, 
-                rain_data=[{}],
-                iwlvl_raster_id=None,):
-        
-        self.caller = caller
+    def __init__(self,
+                sqlite_path: Path, 
+                sim_name: str, 
+                sim_duration: int, 
+                rain_data:list=[{}],
+                iwlvl_raster_id:int = None,
+                threedi_api: ThreediApi = None,
+                model_id:int = None):
+        """
+        Prepare simulation data from the sqlite and get the available rasters from 3Di.
+        sqlite_path (Path): Path to the sqlite.
+        sim_name (str): Name of the simulation.
+        sim_duration (int): Simulation duration in seconds
+        rain_data (list): list with dicts that describe the rain. offset/duration in s:
+                            [{'offset': 3600,
+                            'duration': 7200,
+                            'value': 4.930555555555556e-06,
+                            'units': 'm/s'}]
+        iwlvl_raster_id (int): Id on 3Di API of the iwlvl raster. This raster should be
+            uploaded to the revision beforehand.
+        threedi_api (ThreediApi): Optional, required when iwlvl_raster_id is not None.
+                                    should already be initiated with api_key.
+        model_id (int): Optional, required when iwlvl_raster_id is not None.
+        """
+
         self.sqlite_path = sqlite_path
         self.sim_name = sim_name
 
@@ -159,9 +178,10 @@ class SimulationData:
         self.laterals = self._get_laterals_from_sqlite(sim_duration=sim_duration)
         self.aggregation = self._get_aggregation_from_sqlite()
         self.boundaries = self._get_boundary_data()
-        self.iwlvl_rasters_available = self.get_iwlvl_rasters_dict(model_id=self.caller.model_id)
         
         if iwlvl_raster_id is not None:
+            self.iwlvl_rasters_available = self.get_iwlvl_rasters_dict(threedi_api=threedi_api,
+                                                                    model_id=model_id)
             self.iwlvl_raster = self.iwlvl_rasters_available[iwlvl_raster_id]
         else:
             self.iwlvl_raster = None
@@ -423,14 +443,14 @@ class SimulationData:
         return data
 
    
-    def get_iwlvl_rasters_dict(self, model_id):
+    def get_iwlvl_rasters_dict(self, threedi_api, model_id):
         """
         get 2d waterlevel from  (example from threedi_models_and_simulations\workers.py)
         id can be found from url
         https://api.3di.live/v3/threedimodels/{model_id}/initial_waterlevels/
         """
         #Get iwlvl rasters
-        iwlvl_rasters_all = self.caller.threedi_api.threedimodels_initial_waterlevels_list(threedimodel_pk=model_id).results
+        iwlvl_rasters_all = threedi_api.threedimodels_initial_waterlevels_list(threedimodel_pk=model_id).results
 
         iwlvl_rasters = {}
         for iwlvl in iwlvl_rasters_all:
@@ -457,6 +477,7 @@ class SimulationData:
 
 
 class SimulationTracker:
+    """Track the options that have been added to the simulation"""
     def __init__(self):
         self.basic_processing = False
         self.damage_processing = False
@@ -471,7 +492,6 @@ class SimulationTracker:
 class Simulation:
     """
     Usage:
-
         sim = Simulation(CONFIG)
         sim.model =  "BWN Schermer interflow referentie #2"
         sim.template = "Referentie"
@@ -649,7 +669,7 @@ class Simulation:
                 data=rain_data,
             )
     def check_structure_control(self, max_retries=10):
-        
+        """Check if structure control in simulation is valid."""
         i=0
         valid = False
 
@@ -892,7 +912,7 @@ class Simulation:
             with open(apicall_txt, "a") as t:
                 t.write(self.simulation_info(str_type="text"))
         else:
-            self.start_feedback="simulation_did not start"            
+            self.start_feedback="Simulation_did not start (structure control not valid)"            
 
 
     def shutdown(self, simulation_pk):
