@@ -26,8 +26,8 @@ resolution=10
 v3_raster = hrt.Raster(TEST_DIRECTORY/f"dl/maxdepth_old_res{resolution}.tif")
 v4_raster = hrt.Raster(TEST_DIRECTORY/f"dl/maxdepth_new_res{resolution}.tif")
 
-# %%
 
+# %%
 dem = hrt.Raster(FOLDER_TEST.model.schema_base.rasters.dem)
 dem.metadata.bounds_dl
 
