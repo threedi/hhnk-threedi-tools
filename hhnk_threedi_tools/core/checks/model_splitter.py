@@ -5,6 +5,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import os
 import json
+import re
 
 import hhnk_research_tools as hrt
 import hhnk_threedi_tools.core.api.upload_model.upload as upload
@@ -272,21 +273,54 @@ class ModelSchematisations:
             commit_message=commit_message,
         )
 
-        revision_parent_folder = self.folder.model.revisions
-        list_of_files = [i for i in revision_parent_folder.pl.glob('*')]
-
-        count = len(list_of_files)
-        schema_str = str(schema_new)
 
 
-        target_file = revision_parent_folder.full_path(f"rev_{count+1} - {commit_message[:25]}")
-        if list_of_files == []:
-            shutil.copytree(schema_str, target_file)
 
-        if list_of_files != []:
-            latest_file = max(list_of_files, key=os.path.getctime) 
-            if revision_parent_folder.full_path(f"rev_{count} - {commit_message[:25]}") != str(latest_file): 
-                shutil.copytree(schema_str, target_file)
+    def sqlite_revision(self, commit_message):
+        
+        commit_message = re.sub('[^a-zA-Z0-9\n\.]', '', commit_message)
+
+        if len(self.folder.model.schema_base.sqlite_names) != 1:
+            return print(">1 .sqlite files in 00_basis")
+        
+        if len(self.folder.model.schema_base.sqlite_names) == 1:
+            rev_count = len(self.folder.model.revisions.content)
+            sqlite_path = self.folder.model.schema_base.sqlite_paths[0]
+
+            target_file = os.path.join(self.folder.model.revisions.full_path(f"rev_{rev_count+1}-{commit_message[:25]}"))     
+            if os.path.exists(target_file) == False:
+                os.mkdir(target_file)
+                shutil.copy(sqlite_path, target_file)
+                return print("succes mkdir and copy " + target_file)
+
+            else:
+                shutil.copy(sqlite_path, target_file)
+                return print("succes copy " + target_file)
+
+            
+
+          
+                                     
+
+        # sqlite_path = getattr(self.folder.model, f"schema_{name}")
+        # row = self.settings_df.loc[name]
+       
+        # sqlite_path = schema_new.database.path
+        # schematisation_name = row["schematisation_name"]
+        # tags = [schematisation_name, self.folder.name]
+
+
+
+
+
+        # target_file = revision_parent_folder.full_path(f"rev_{count+1} - {commit_message[:25]}")
+        # if list_of_files == []:
+        #     shutil.copytree(schema_str, target_file)
+
+        # if list_of_files != []:
+        #     latest_file = max(list_of_files, key=os.path.getctime) 
+        #     if revision_parent_folder.full_path(f"rev_{count} - {commit_message[:25]}") != str(latest_file): 
+        #         shutil.copytree(schema_str, target_file)
 
 
 
@@ -302,6 +336,9 @@ class ModelSchematisations:
         # #target_file = str(self.folder.model) + "\\revisions\\rev" + str(count+1) + "_" + str(commit_message)
 
         # shutil.copytree(schema_str, revision_folder)
+# %%
+
+
 
 
         
@@ -322,6 +359,6 @@ if __name__ == "__main__":
     self.upload_schematisation(
         name=name,
         commit_message="testtest",
-        api_key="",
+        api_key="wXtfxOG5.41WxS7JZjMyHqYvS8WlZx7WKD6SKsngB",
     )
 
