@@ -7,11 +7,8 @@ Created on Fri Aug 20 16:09:34 2021
 # Third-party imports
 import pandas as pd
 import hhnk_research_tools as hrt
-# from hhnk_research_tools.threedi.construct_rain_scenario import threedi_timesteps
 
-# from hhnk_research_tools.threedi.construct_rain_scenario_dataframe import (
-#     create_results_dataframe,
-# )
+
 from hhnk_research_tools.threedi.geometry_functions import coordinates_to_points
 import hhnk_threedi_tools.core.checks.grid_result_metadata as grid_result_metadata
 

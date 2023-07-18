@@ -293,9 +293,7 @@ def upload_and_process(
     # # Rasters
     for raster_type, raster_path in raster_paths.items():
         print(raster_path)
-        if (
-            raster_path is not None
-        ):  # all rasters are passed but are not always used in every model. It is None when thats the case
+        if raster_path is not None:  # all rasters are passed but are not always used in every model. It is None when thats the case
             upload_raster(
                 rev_id=revision.id,
                 schema_id=schematisation.id,

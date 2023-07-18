@@ -22,6 +22,7 @@ RASTER_FILES = [
     "frict_coef_file",
     "infiltration_rate_file",
     "max_infiltration_capacity_file",
+    "initial_waterlevel_file",
 ]
 
 class ModelSchematisations:
@@ -257,6 +258,7 @@ class ModelSchematisations:
             "frict_coef_file": schema_new.rasters.friction.path_if_exists,
             "infiltration_rate_file": schema_new.rasters.infiltration.path_if_exists,
             "max_infiltration_capacity_file": schema_new.rasters.storage.path_if_exists,
+            "initial_waterlevel_file": schema_new.rasters.initial_wlvl_2d.path_if_exists,
         }
 
         sqlite_path = schema_new.database.path
@@ -315,13 +317,13 @@ if __name__ == "__main__":
     folder = Folders(path)
     name = "0d1d_test"
 
-    self = ModelSchematisations(
-        folder=folder, modelsettings_path=folder.model.settings.path
-    )
-    self.create_schematisation(name=name)
-    self.upload_schematisation(
-        name=name,
-        commit_message="testtest",
-        api_key="",
-    )
+    # self = ModelSchematisations(
+    #     folder=folder, modelsettings_path=folder.model.settings.path
+    # )
+    # self.create_schematisation(name=name)
+    # self.upload_schematisation(
+    #     name=name,
+    #     commit_message="testtest",
+    #     api_key="",
+    # )
 
