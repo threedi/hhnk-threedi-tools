@@ -278,7 +278,7 @@ class ModelSchematisations:
 
     def sqlite_revision(self, commit_message):
         
-        commit_message = re.sub('[^a-zA-Z0-9\n\.]', '', commit_message)
+        commit_message = re.sub('[^a-zA-Z0-9() \n\.]', '', commit_message)
 
         if len(self.folder.model.schema_base.sqlite_names) != 1:
             return print(">1 .sqlite files in 00_basis")
