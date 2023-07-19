@@ -29,8 +29,9 @@ class TestModelSplitter():
     def test_create_schematisation(self, splitter):
         """tests if the import of information works, if the correct amount is imported"""
 
-        splitter.create_schematisation(name="0d1d_test")
+        splitter.create_schematisation(name="1d2d_glg")
 
+        assert splitter.folder.model.schema_1d2d_glg.rasters.initial_wlvl_2d.pl.exists()
 # %%
 if __name__=="__main__":
     selftest = TestModelSplitter()
