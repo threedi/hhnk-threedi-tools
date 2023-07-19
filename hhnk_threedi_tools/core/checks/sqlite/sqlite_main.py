@@ -509,7 +509,6 @@ class SqliteCheck:
                 print('No intersected points')
             else:
                 print('Intersected Points:')
-                print(intersected_points)
             return intersected_points
         
         except Exception as e:
@@ -537,7 +536,6 @@ class SqliteCheck:
                 print('All the points have vertex')
             else:
                 print('Points with no vertex:')
-                print(cross_no_vertex)
             return cross_no_vertex
             
         except Exception as e:
