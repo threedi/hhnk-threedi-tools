@@ -505,6 +505,10 @@ class SimulationTracker:
         self.iwlvl_raster_url = None
 
 
+
+
+
+
 class Simulation:
     """
     Usage:
@@ -564,9 +568,11 @@ class Simulation:
 
     @property
     def logged_in(self):
-        call = self.threedi_api.auth_users_list()
-        result = self._api_result(call, "Cannot login")
-        return result
+        """return user"""
+        try:
+            return self.threedi_api.auth_profile_list()
+        except:
+            return "Cannot login" 
 
     @property
     def id(self):
@@ -831,7 +837,8 @@ class Simulation:
             break
 
     def _api_result(self,
-        result: tac.openapi.models.inline_response20062.InlineResponse20062, message: str
+        result: tac.openapi.models.inline_response20062.InlineResponse20062, 
+        message: str
     ) -> tac.openapi.models.threedi_model.ThreediModel:
         """Raises an error if no results"""
         if len(result.results) == 0:

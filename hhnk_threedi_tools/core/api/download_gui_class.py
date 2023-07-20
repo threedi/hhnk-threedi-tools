@@ -7,6 +7,7 @@ import re
 # Third-party imports
 import pandas as pd
 import ipywidgets as widgets
+
 from traitlets import Unicode
 # from apscheduler.schedulers.blocking import BlockingScheduler
 import requests
@@ -16,6 +17,7 @@ import requests
 # from threedi_scenario_downloader import downloader as dl #FIXME local changes, push to threedi_scenario_downloader?
 from hhnk_threedi_tools.core.api import downloader as dl
 import hhnk_threedi_tools.core.api.download_functions as download_functions
+from hhnk_threedi_tools.core.api.calculation import Simulation
 
 # local imports
 import hhnk_research_tools as hrt
@@ -98,26 +100,31 @@ class DownloadWidgets:
 
             #Label
             self.label = widgets.HTML(
-                "<b>1. Login with API keys</b>",
+                '<b>1. Login with API keys\
+                    (<a href=https://hhnk.lizard.net/management/personal_api_keys target target="_blank">lizard</a>,\
+                    <a href=https://management.3di.live/personal_api_keys target target="_blank">3di</a>) </b>',
                 layout=item_layout(grid_area="login_label"),
             )
 
             # Api key widgets
             self.lizard_apikey_widget = ApikeyWidget(
                 description="Lizard key:",
-                disabled=True,
                 layout=item_layout(grid_area="lizard_apikey_widget"),
             )
 
-            # self.threedi_apikey_widget = ApikeyWidget(
-            #     description="Threedi key:",
-            #     layout=item_layout(grid_area="threedi_apikey_widget"),
-            # )
+            self.threedi_apikey_widget = ApikeyWidget(
+                description="Threedi key:",
+                layout=item_layout(grid_area="threedi_apikey_widget"),
+            )
 
             # Login button, after login create threedi api client
             self.get_api_key_widget = widgets.HTML(
                 'Get key <a href=https://hhnk.lizard.net/management/personal_api_keys target target="_blank">here</a>',
                 layout=item_layout(grid_area="get_api_key_widget"),
+            )
+            self.button = widgets.Button(
+                description="Login",
+                layout=item_layout(height="30px", width="95%", grid_area="login_button", justify_self='center'),
             )
 
 
@@ -155,11 +162,15 @@ class DownloadWidgets:
                 layout=item_layout(grid_area="search_limit_widget")
             )
 
-            self.search_button = widgets.Button(
-                description="Search",
-                layout=item_layout(height="100%", grid_area="sim_search_button"),
+            self.search_button_lizard = widgets.Button(
+                description="Search Lizard",
+                layout=item_layout(height="100%", grid_area="sim_search_button_lizard"),
             )
 
+            self.search_button_threedi = widgets.Button(
+                description="Search 3Di",
+                layout=item_layout(height="100%", grid_area="sim_search_button_threedi"),
+            )
 
     class SelectWidgets:
         """Output box with available results for simulation"""
@@ -175,6 +186,7 @@ class DownloadWidgets:
             self.dl_select_box = widgets.SelectMultiple(
                 rows=20, layout=item_layout(grid_area="dl_select_box")
             )
+            
 
             # Subset the list in the download selection box
             self.show_0d1d_button = widgets.Button(
@@ -425,28 +437,30 @@ class DownloadWidgetsInteraction(DownloadWidgets):
         # --------------------------------------------------------------------------------------------------
         # 1. Login with API key
         # --------------------------------------------------------------------------------------------------
-        def set_apikey(value):
-            if value["new"] is not None:
-                dl.set_api_key(value["new"])
-            # try:
-            #     # Login success
-            #     self.login.button.style.button_color = "lightgreen"
-            #     self.login.button.description = "Logged in"
-            # except:
-            #     # Login failed
-            #     self.login.button.style.button_color = "red"
-            #     self.login.button.description = "Invalid API key"
-        self.login.lizard_apikey_widget.observe(set_apikey, names="value")
+        @self.login.button.on_click
+        def login(action): 
+            self.vars.sim = Simulation(api_key=self.vars.api_keys["threedi"]) 
+            dl.set_api_key(self.vars.api_keys['lizard'])
+            try:
+                if self.vars.sim.logged_in == "Cannot login":
+                    raise
+                # Login success
+                self.login.button.style.button_color = "lightgreen"
+                self.login.button.description = "Logged in"
+            except:
+                # Login failed
+                self.login.button.style.button_color = "red"
+                self.login.button.description = "Invalid API key"
 
 
         # --------------------------------------------------------------------------------------------------
         # 2. Select polder (and show revision)
         # --------------------------------------------------------------------------------------------------
-        @self.search.search_button.on_click
+        @self.search.search_button_lizard.on_click
         def find(action):
 
-            self.search.search_button.style.button_color = "orange"
-            self.search.search_button.description = "Searching..."
+            self.search.search_button_lizard.style.button_color = "orange"
+            self.search.search_button_lizard.description = "Searching..."
             
 
             self.vars.scenarios = dl.find_scenarios(
@@ -454,17 +468,39 @@ class DownloadWidgetsInteraction(DownloadWidgets):
                 model_revision=self.search.sim_rev_widget.value,
                 limit=self.search.limit_widget.value,
             )
+
             # Reset/initialize results
             self.vars.scenario_results = {}
+            self.vars.scenario_result_type = "lizard"
 
             # Update selection box
-            self.select.dl_select_box.options = self.vars.scenario_names
+            self.select.dl_select_box.options = self.vars.scenario_view_names
 
-            self.search.search_button.style.button_color = "lightgreen"
-            self.search.search_button.description = "Search"
+            self.search.search_button_lizard.style.button_color = "lightgreen"
+            self.search.search_button_lizard.description = "Search"
 
             
+        @self.search.search_button_threedi.on_click
+        def find(action):
+
+            self.search.search_button_threedi.style.button_color = "orange"
+            self.search.search_button_threedi.description = "Searching..."
             
+
+            self.vars.scenarios = self.vars.sim.threedi_api.simulations_list(
+                name__icontains=self.search.sim_name_widget.value,
+                limit=self.search.limit_widget.value,
+            ).results
+
+            # Reset/initialize results
+            self.vars.scenario_results = {}
+            self.vars.scenario_result_type = "threedi"
+
+            # Update selection box
+            self.select.dl_select_box.options = self.vars.scenario_view_names
+
+            self.search.search_button_threedi.style.button_color = "lightgreen"
+            self.search.search_button_threedi.description = "Search"      
 
 
         # --------------------------------------------------------------------------------------------------
@@ -472,24 +508,24 @@ class DownloadWidgetsInteraction(DownloadWidgets):
         # --------------------------------------------------------------------------------------------------
         @self.select.show_0d1d_button.on_click
         def show(action):
-            self.select.dl_select_box.options = [a for a in self.vars.scenario_names if "0D1D" in a]
+            self.select.dl_select_box.options = [a for a in self.vars.scenario_view_names if "0d1d" in a.lower()]
 
 
         @self.select.show_all_button.on_click
         def show(action):
-            self.select.dl_select_box.options = self.vars.scenario_names
+            self.select.dl_select_box.options = self.vars.scenario_view_names
 
 
         def on_text_change(search_input):
             self.select.dl_select_box.options = [
-                a for a in self.vars.scenario_names if search_input["new"] in a
+                a for a in self.vars.scenario_view_names if search_input["new"] in a
             ]
         self.select.search_results_widget.observe(on_text_change, names="value")
 
 
         def get_scenarios_selected_result(value):
             
-            self.select.dl_select_label.value = self.select.dl_select_label_text.format(len(self.select.dl_select_box.value))
+            self.select.dl_select_label.value = self.select.dl_select_label_text.format(len(self.select.dl_select_box.value)) #show how many selected
             self.get_scenario_results() #Get available results for selected scenarios.
             self.update_buttons()  # Change button state based on selected scenarios
             self.update_time_pick_dropdown()  # change button state and dropdown based on selected scenarios
@@ -547,13 +583,11 @@ class DownloadWidgetsInteraction(DownloadWidgets):
             for scenario_id in self.scenario_selected_ids:
                 scenario = self.vars.scenarios[scenario_id]
                 download_urls = self.scenario_raw_download_urls[scenario_id]
-                scenario_name = scenario["name"]
+                scenario_name = scenario.name
                 # Print download URLs
 
                 print(
-                    "\n\033[1m\033[31mDownloading files for {} (uuid={}):\033[0m".format(
-                        scenario_name, scenario["uuid"]
-                    )
+                    f"\n\033[1m\033[31mDownloading files for {scenario_name} (uuid={scenario.uuid}):\033[0m"
                 )
                 for index, url in enumerate(download_urls):
                     print("{}: {}".format(index + 1, url))
@@ -577,7 +611,7 @@ class DownloadWidgetsInteraction(DownloadWidgets):
                 self.vars.output_df = self.vars.output_df.append({
                                 "id":scenario_id,
                                 "name": scenario_name,
-                                "uuid": scenario["uuid"],
+                                "uuid": scenario.uuid,
                                 "scenario_download_url": download_urls,
                                 "output_folder": output_folder}, 
                             ignore_index=True)
@@ -605,7 +639,7 @@ class DownloadWidgetsInteraction(DownloadWidgets):
                     dem = hrt.Raster(self.vars.folder.model.schema_base.rasters.dem.path)
                     class dlRasterPreset(dlRaster):
                         def __init__(self, 
-                                        uuid=scenario["uuid"], 
+                                        uuid=scenario.uuid, 
                                         resolution=self.outputtypes.resolution_dropdown.value,
                                         bounds=dem.metadata["bounds_dl"],
                                         bounds_srs="EPSG:28992",
@@ -614,7 +648,7 @@ class DownloadWidgetsInteraction(DownloadWidgets):
                 else:
                     class dlRasterPreset(dlRaster):
                         def __init__(self, 
-                                        uuid=scenario["uuid"], 
+                                        uuid=scenario.uuid, 
                                         resolution=self.outputtypes.resolution_dropdown.value,
                                         **kwargs):
                             super().__init__(uuid=uuid, resolution=resolution, **kwargs)
@@ -735,7 +769,7 @@ class DownloadWidgetsInteraction(DownloadWidgets):
                         for rain_scenario in RAIN_SCENARIOS:
                             rain_scenario = rain_scenario.strip("T")  # strip 'T' because its not used in older versions.
 
-                            scenario_id = self.vars.scenario_names.index(name)
+                            scenario_id = self.vars.scenario_view_names.index(name)
                             scenario = self.vars.scenarios[scenario_id]
 
                             #Scenario should have nameformat piek/blok_gxg_Txx
@@ -750,7 +784,7 @@ class DownloadWidgetsInteraction(DownloadWidgets):
                                     if len(name) > (a.start() + len(rain_scenario))
                                 ]:  # filters this: BWN Hoekje [#10] GLG blok 100 (10)
                                     df.loc[index, "dl_name"] = f"{rain_type}_{groundwater}_T{rain_scenario}"
-                                    df.loc[index, "uuid"] = scenario["uuid"]
+                                    df.loc[index, "uuid"] = scenario.uuid
 
 
             df.set_index("name", inplace=True)
@@ -771,11 +805,11 @@ class DownloadWidgetsInteraction(DownloadWidgets):
 
             # Start download of selected files (if any are selected) ------------------------------------------------
             for name, row in df.iterrows():
-                scenario_id = self.vars.scenario_names.index(name)
+                scenario_id = self.vars.scenario_view_names.index(name)
                 scenario = self.vars.scenarios[scenario_id]
                 download_urls = self.scenario_raw_download_urls[scenario_id]
 
-                print(f"\n\033[1m\033[31mDownloading files for {name} (uuid={scenario['uuid']}):\033[0m")
+                print(f"\n\033[1m\033[31mDownloading files for {name} (uuid={scenario.uuid}):\033[0m")
 
 
                 #Download netcdf of all results.
@@ -796,7 +830,7 @@ class DownloadWidgetsInteraction(DownloadWidgets):
                 # Donwload max depth and damage rasters
                 class dlRasterPreset(dlRaster):
                     def __init__(self, 
-                                    uuid=scenario["uuid"], 
+                                    uuid=scenario.uuid, 
                                     code=None, 
                                     resolution=None, 
                                     timelist=None, 
@@ -886,8 +920,8 @@ class DownloadWidgetsInteraction(DownloadWidgets):
     # --------------------------------------------------------------------------------------------------
     def get_scenario_results(self):
 
-        #TODO zou in threedi_scenario_downloader moeten staan.
-        def find_scenario_results(scenario_url):
+        def find_scenario_results_lizard(scenario_url):
+            #TODO zou in threedi_scenario_downloader moeten staan.
             """results under scenario (raw results / rasters)"""
             payload = {"limit": 20} #Always want to see all available results.
 
@@ -899,14 +933,34 @@ class DownloadWidgetsInteraction(DownloadWidgets):
         #Search for available results per scenario
         for index, scenario_id in enumerate(self.scenario_selected_ids):
             scenario = self.vars.scenarios[scenario_id]
-
+            
             #Every result will be placed in dict per scenario with key=code (e.g. s1-max-dtri)
             self.vars.scenario_results[scenario_id]= {}
 
-            r = find_scenario_results(scenario_url=scenario['url'])
-            #Loop individual results and add to dict
-            for result in r:
-                self.vars.scenario_results[scenario_id][result["code"]]=result
+            if self.vars.scenario_result_type == "lizard":
+                results = find_scenario_results_lizard(scenario_url=scenario.url)
+                #Loop individual results and add to dict
+                for result in results:
+                    self.vars.scenario_results[scenario_id][result["code"]]=result
+
+            if self.vars.scenario_result_type == "threedi":
+                results = self.vars.sim.threedi_api.simulations_results_files_list(simulation_pk=scenario.id).results
+
+                #Add available results to scenario_results. Give them the same keys as the lizard ones
+                for result in results:
+                    if result.file.filename.startswith("log"):
+                        code = "logfiles"
+                    if result.file.filename == 'results_3di.nc':
+                        code="results-3di"
+                    if result.file.filename == "aggregate_results_3di.nc":
+                        code="aggregate-results-3di"
+
+                    #Uploaded files only, if they have been removed they get the state 'removed'
+                    if result.state == "uploaded":
+                        self.vars.scenario_results[scenario_id][code]=result.file
+                if results != []:
+                    self.vars.scenario_results[scenario_id]["grid-admin"] = True
+
 
     # --------------------------------------------------------------------------------------------------
     # 4. Result layers selection
@@ -1008,9 +1062,6 @@ class DownloadWidgetsInteraction(DownloadWidgets):
 
         # we now know which results are available for all selected models. Only these buttons will be available for download.
         # Enable or disable buttons based on their availability in the results
-
-
-
         for code in self.button_codes:
             if code in result_codes:
                 if code in ["results-3di", "grid-admin", "logfiles", "aggregate-results-3di"]:
@@ -1031,13 +1082,10 @@ class DownloadWidgetsInteraction(DownloadWidgets):
         # Depends on how the function is called. If it was called with observe use the first try, otherwise use the except
         try:
             selected_download_new = selected_download["new"]
-            selected_download_old = selected_download["old"]
         except:
-            selected_download_old = ""
             selected_download_new = selected_download
 
-        # Remove the previous selected records from the list
-        #         output_select_box.options = [x for x in output_select_box.options if x not in selected_download_old]
+        
         self.output.output_select_box.options = (
             self.vars.folder.threedi_results[self.output.subfolder_box.value].revisions
         )
@@ -1048,12 +1096,19 @@ class DownloadWidgetsInteraction(DownloadWidgets):
         )
 
         # Add the newly selected records to the list
+        selected_download_newer=[]
         for new_selected in selected_download_new:
+            #New_selected is the viewname. We only want the name without dates and stuff as output folder.
+            selected_id = self.vars.scenario_view_names.index(new_selected)
+            new_selected = self.vars.scenario_names[selected_id]
+            selected_download_newer.append(new_selected)
+
+
             if new_selected not in self.output.output_select_box.options:
                 self.output.output_select_box.options = self.output.output_select_box.options + (new_selected,)
 
         # Select these new records.
-        self.output.output_select_box.value = selected_download_new
+        self.output.output_select_box.value = selected_download_newer
 
         # Set Dem path for batch
         # if scenarios["folder"].model.rasters.find_dem() == "":
@@ -1070,8 +1125,8 @@ class DownloadWidgetsInteraction(DownloadWidgets):
     def update_api_keys(self, api_keys_path):
         self.vars.api_keys = hrt.read_api_file(api_keys_path)
         self.login.lizard_apikey_widget.value=self.vars.api_keys["lizard"]
-        # self.login.threedi_apikey_widget.value=self.vars.api_keys["threedi"]
-        # self.login.button.click()
+        self.login.threedi_apikey_widget.value=self.vars.api_keys["threedi"]
+        self.login.button.click()
 
     @property
     def button_codes(self):
@@ -1089,11 +1144,10 @@ class DownloadWidgetsInteraction(DownloadWidgets):
                         }
 
 
-
-
     @property
     def scenario_selected_ids(self):
-        return  [self.vars.scenario_names.index(a) for a in self.select.dl_select_box.value]  # id's of selected models to download
+        return  [self.vars.scenario_view_names.index(a) for a in self.select.dl_select_box.value]  # id's of selected models to download
+
 
     @property
     def scenario_raw_download_urls(self):
@@ -1105,7 +1159,11 @@ class DownloadWidgetsInteraction(DownloadWidgets):
 
             for code in ["results-3di", "grid-admin", "logfiles", "aggregate-results-3di"]:
                 if self.button_codes[code].value:
-                    download_urls.append(scenario_result[code]["attachment_url"])
+
+                    if self.vars.scenario_result_type == "lizard":
+                        download_urls.append(scenario_result[code].attachment_url)
+                    elif self.vars.scenario_result_type == "threedi":
+                        download_urls.append(scenario_result[code].attachment_url)
             scenario_download_urls[scenario_id] = download_urls
         return scenario_download_urls
 
@@ -1118,12 +1176,13 @@ class GuiVariables:
     def __init__(self) -> None:
         self._folder = None
 
-        self.scenarios = None #filled when clicking search
         self.scenario_results = None #Filled when selecting a scenario, reset when clicking search
+        self.scenario_result_type = None #Filled when searching (lizard/threedi)
+
         self.dl_raster_settings = None #filled when clicking download
 
         self.api_keys = {"lizard":"", "threedi":""}
-        self.scenarios = {}
+        self._scenarios = []  #filled when clicking search
 
     @property
     def folder(self):
@@ -1135,9 +1194,29 @@ class GuiVariables:
 
 
     @property
-    def scenario_names(self):
-        return [a["name"] for a in self.scenarios]
+    def scenarios(self):
+        return self._scenarios
+    
+    @scenarios.setter
+    def scenarios(self, scenarios):
+        """scenarios from lizard are of type dict, from threedi its;
+        threedi_api_client.openapi.models.simulation.Simulation.
+        Turn all results into classes so we can access them equally."""
+        self._scenarios = []
+        for scenario in scenarios:
+            if type(scenario) == dict:
+                scenario = hrt.dict_to_class(scenario)
+            self._scenarios.append(scenario)
 
+
+    @property
+    def scenario_names(self):
+        return [f"{scenario.name} test" for scenario in self.scenarios]
+
+
+    @property
+    def scenario_view_names(self):
+        return [f"{scenario.name.ljust(50,' ')} -- ({scenario.created[:10]})" for scenario in self.scenarios]
 
     @property
     def time_now(self):
@@ -1147,8 +1226,11 @@ class GuiVariables:
 
 class DownloadGui:
     def __init__(
-        self, data=None, base_scenario_name=None, 
-        lizard_api_key=None, main_folder=None, 
+        self, data=None, 
+        base_scenario_name=None, 
+        lizard_api_key=None, 
+        threedi_api_key=None,
+        main_folder=None, 
     ):
 
         self.vars = GuiVariables()
@@ -1159,6 +1241,7 @@ class DownloadGui:
             self.vars.main_folder = data["polder_folder"]
         else:
             self.vars.api_keys["lizard"] = lizard_api_key
+            self.vars.api_keys["threedi"] = threedi_api_key
             self.vars.main_folder = main_folder
 
         self.widgets.update_folder()
@@ -1180,7 +1263,8 @@ class DownloadGui:
             children=[
                 self.w.login.label,
                 self.w.login.lizard_apikey_widget,
-                self.w.login.get_api_key_widget,
+                self.w.login.threedi_apikey_widget,
+                self.w.login.button,
                 self.w.search.label,
                 self.w.search.sim_name_label,
                 self.w.search.sim_name_widget,
@@ -1188,7 +1272,8 @@ class DownloadGui:
                 self.w.search.sim_rev_widget,
                 self.w.search.limit_label,
                 self.w.search.limit_widget,
-                self.w.search.search_button,
+                self.w.search.search_button_lizard,
+                self.w.search.search_button_threedi,
                 self.w.select.dl_select_label,
                 self.w.select.dl_select_box,
                 self.w.select.show_0d1d_button,
@@ -1224,9 +1309,9 @@ class DownloadGui:
                 grid_template_columns="20% 10% 10% 15% 15% 10% 10% 10%",
                 grid_template_areas="""
                     'login_label login_label search_label search_label . . . .'
-                    'lizard_apikey_widget lizard_apikey_widget sim_name_label sim_name_widget sim_search_button . . .'
-                    'get_api_key_widget get_api_key_widget sim_rev_label sim_rev_widget sim_search_button . . .'
-                    '. . search_limit_label search_limit_widget sim_search_button . . .'
+                    'lizard_apikey_widget lizard_apikey_widget sim_name_label sim_name_widget sim_search_button_lizard sim_search_button_threedi . .'
+                    'threedi_apikey_widget threedi_apikey_widget sim_rev_label sim_rev_widget sim_search_button_lizard sim_search_button_threedi . .'
+                    'login_button login_button search_limit_label search_limit_widget sim_search_button_lizard sim_search_button_threedi . .'
                     'dl_select_label dl_select_label . outputtypes_label outputtypes_label output_label output_label output_label'
                     'dl_select_box dl_select_box dl_select_box file_buttons_label file_buttons_label output_folder_label output_folder_value output_folder_value'
                     'dl_select_box dl_select_box dl_select_box file_buttons_box file_buttons_box output_subfolder_label output_subfolder_box output_subfolder_box'
@@ -1257,8 +1342,32 @@ class DownloadGui:
 
 if __name__ == "__main__":
         data = {'polder_folder': 'E:\\02.modellen\\model_test_v2',
-    'api_keys_path': 'C:\\Users\\wvangerwen\\AppData\\Roaming\\3Di\\QGIS3\\profiles\\default\\python\\plugins\\hhnk_threedi_plugin\\api_key.txt'}
+    'api_keys_path': r"C:/Users/wvangerwen/AppData/Roaming/3Di/QGIS3/profiles/default/python/plugins/hhnk_threedi_plugin/api_key.txt"}
         self = DownloadGui(data=data); 
         display(self.tab)
- 
+        
+        self.w.search.sim_name_widget.value = "model_test"
+
+
+        # %%
+        scenario = self.vars.scenarios[0]
+        self.vars.sim.threedi_api.simulations_results_files_list(simulation_pk=scenario.id)
+
+# %%
+
+for index, scenario_id in enumerate(self.w.scenario_selected_ids):
+    scenario = self.vars.scenarios[scenario_id]
+
+r = self.vars.sim.threedi_api.simulations_results_files_list(simulation_pk=scenario.id).results
+# %%
+
+# %%
+{0: {'grid-admin': {'url': 'https://demo.lizard.net/api/v4/scenarios/68ed32e3-6607-4b45-9346-6b505a6d9280/results/383960/',
+   'id': 383960,
+   'name': 'Grid administration',
+   'code': 'grid-admin',
+   'description': None,
+   'family': 'Raw',
+   'raster': None,
+   'attachment_url': 'https://demo.lizard.net/api/v4/scenario-results/383960/gridadmin.h5'},
 # %%

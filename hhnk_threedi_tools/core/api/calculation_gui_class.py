@@ -622,7 +622,8 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
             self.vars.sim = Simulation(api_key=self.vars.api_keys["threedi"]) 
             dl.set_api_key(self.vars.api_keys['lizard'])
             try:
-                self.sim.logged_in
+                if self.vars.sim.logged_in == "Cannot login":
+                    raise
                 # Login success
                 self.login.button.style.button_color = "lightgreen"
                 self.login.button.description = "Logged in"
