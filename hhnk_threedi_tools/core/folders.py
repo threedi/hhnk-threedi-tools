@@ -233,19 +233,19 @@ class SourceDir(Folder):
             self.create_readme()
 
         # Files
-        self.add_file("damo", "DAMO.gpkg", ftype="gpkg")
+        self.add_file("damo", "DAMO.gpkg")
         self.damo.add_layers(["DuikerSifonHevel", 
                              "waterdeel"])
         
-        self.add_file("hdb", "HDB.gpkg", ftype="gpkg")
+        self.add_file("hdb", "HDB.gpkg")
         self.hdb.add_layer("sturing_3di")
 
-        self.add_file("datachecker", "datachecker_output.gpkg", ftype="gpkg")
+        self.add_file("datachecker", "datachecker_output.gpkg")
         self.datachecker.add_layers(["fixeddrainagelevelarea",
                                     "culvert"])
 
         self.add_file("polder_polygon", POLDER_POLY)
-        self.add_file("panden", "panden.gpkg", ftype="gpkg")
+        self.add_file("panden", "panden.gpkg")
 
 
     def create_readme(self):
@@ -318,8 +318,8 @@ class SchemaDirParent(Folder):
         if create:
             self.create_readme()
         
-        self.add_file("settings", "model_settings.xlsx", ftype="file")
-        self.add_file("settings_default", "model_settings_default.xlsx", ftype="file")
+        self.add_file("settings", "model_settings.xlsx")
+        self.add_file("settings_default", "model_settings_default.xlsx")
 
 
         #Load settings excel

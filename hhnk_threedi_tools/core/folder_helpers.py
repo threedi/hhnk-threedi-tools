@@ -71,7 +71,7 @@ class ClimateResult(hrt.Folder):
                 #Add rasters to main downloadfolder
                 raster_types = ["depth_max", "damage_total", "wlvl_max"]
                 for rastertype in raster_types:
-                    self.add_file(rastertype, f"{rastertype}_{name}.tif", ftype="raster")
+                    self.add_file(rastertype, f"{rastertype}_{name}.tif")
                 self.structure_extra = []
 
                 #Add netcdf to subfolders for scenario
@@ -120,7 +120,6 @@ class ClimateResult(hrt.Folder):
                         self.add_file(
                             objectname=f"{type_raster}_T{return_period}_{masker}",
                             filename=f"{type_raster_name}_T{str(return_period).zfill(4)}{masker_name}.tif",
-                            ftype="raster",
                         )
 
             for masker, masker_name in zip(
@@ -129,13 +128,11 @@ class ClimateResult(hrt.Folder):
                 self.add_file(
                     objectname=f"cw_schade_{masker}",
                     filename=f"cw_schade{masker_name}.tif",
-                    ftype="raster",
                 )
 
                 self.add_file(
                     objectname=f"cw_schade_{masker}_corr",
                     filename=f"cw_schade{masker_name}_correctie.tif",
-                    ftype="raster",
                 )
 
         @property
