@@ -67,6 +67,18 @@ def md5(fname):
     return hash_md5.hexdigest()
 
 
+def get_organisation_uuid(api_key):
+    threedi.set_api_key(api_key)
+    result_list = threedi.api.contracts_list().results
+    uuid_list = []
+    for i in result_list:
+        uuid = i.organisation_name
+        uuid_list.append(uuid)
+        
+    return (uuid_list)
+
+
+
 def get_revision_info(revision__schematisation__name:str):
     threedimodel = threedi.api.threedimodels_list("model_test_v2__0d1d_test")
     if threedimodel.results == []:
