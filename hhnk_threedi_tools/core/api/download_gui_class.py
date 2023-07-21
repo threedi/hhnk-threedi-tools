@@ -612,8 +612,8 @@ class DownloadWidgetsInteraction(DownloadWidgets):
 
                 # Print download URLs
                 display(HTML(f"\n<font color='#ff4d4d'>Downloading files for {scenario_name} (uuid={scenario.uuid}, <a href={self.get_scenario_management_link(scenario_id)}>management page</a>):</font>"))
-                for index, key in enumerate(download_urls):
-                    print("{}: {}".format(index + 1, download_urls[key]))
+                # for index, key in enumerate(download_urls):
+                #     print("{}: {}".format(index + 1, download_urls[key]))
                 print(f"\nThey will be placed in:\n{output_folder}\n")
 
                 # Create destination folder
