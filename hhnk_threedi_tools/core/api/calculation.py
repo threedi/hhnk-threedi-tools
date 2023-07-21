@@ -50,6 +50,8 @@ def update_dict_keys(mydict, translate_dict={}, remove_keys=[]) -> dict:
 
     return mydict
 def apply_translate_dict(value, translate_dict):
+    """Use replaced value if it is in keys of translate dict
+    otherwise return the value."""
     if value in translate_dict.keys():
         return translate_dict[value]
     else:

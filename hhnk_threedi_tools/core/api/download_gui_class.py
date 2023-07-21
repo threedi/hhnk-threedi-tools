@@ -11,7 +11,7 @@ import ipywidgets as widgets
 from traitlets import Unicode
 # from apscheduler.schedulers.blocking import BlockingScheduler
 import requests
-
+from IPython.core.display import HTML
 
 # threedi
 # from threedi_scenario_downloader import downloader as dl #FIXME local changes, push to threedi_scenario_downloader?
@@ -124,11 +124,13 @@ class DownloadWidgets:
             # Api key widgets
             self.lizard_apikey_widget = ApikeyWidget(
                 description="Lizard key:",
+                disabled=True,
                 layout=item_layout(grid_area="lizard_apikey_widget"),
             )
 
             self.threedi_apikey_widget = ApikeyWidget(
                 description="Threedi key:",
+                disabled=True,
                 layout=item_layout(grid_area="threedi_apikey_widget"),
             )
 
@@ -139,6 +141,7 @@ class DownloadWidgets:
             )
             self.button = widgets.Button(
                 description="Login",
+                disabled=True,
                 layout=item_layout(height="30px", width="95%", grid_area="login_button", justify_self='center'),
             )
 
@@ -571,7 +574,8 @@ class DownloadWidgetsInteraction(DownloadWidgets):
         # If a new value is selected in the download selection folder, update the output folder
         self.select.dl_select_box.observe(self.update_output_selectbox, names="value")
 
-
+        #If batch folder selected, update batch download button
+        self.download_batch.batch_folder_dropdown.observe(self.change_dowloadbutton_state, "value")
 
         # --------------------------------------------------------------------------------------------------
         # 6. Download
@@ -581,9 +585,6 @@ class DownloadWidgetsInteraction(DownloadWidgets):
         @self.download.button.on_click
         def download(action):
             """Download the selected models to the output folders"""
-            
-            
-
             self.vars.output_df = pd.DataFrame()
 
             #Temporary disable download button
@@ -610,8 +611,7 @@ class DownloadWidgetsInteraction(DownloadWidgets):
 
 
                 # Print download URLs
-                # print(f"\n\033[1m\033[31mDownloading files for {scenario_name} (uuid={scenario.uuid}):\033[0m")
-                display(HTML(f"\n<font color='#ff4d4d'>Downloading files for <a href={self.get_scenario_management_link(scenario_id)}>{scenario_name}</a> (uuid={scenario.uuid}):</font>"))
+                display(HTML(f"\n<font color='#ff4d4d'>Downloading files for {scenario_name} (uuid={scenario.uuid}, <a href={self.get_scenario_management_link(scenario_id)}>management page</a>):</font>"))
                 for index, key in enumerate(download_urls):
                     print("{}: {}".format(index + 1, download_urls[key]))
                 print(f"\nThey will be placed in:\n{output_folder}\n")
@@ -657,7 +657,6 @@ class DownloadWidgetsInteraction(DownloadWidgets):
                                                         overwrite=False)
                             
                             if download_succes:
-                                # from IPython.core.display import HTML
                                 # display(HTML(f'{index}. File created at <a href={output_file}>{output_file}</a>')) #link doesnt work in vs code
                                 print(f'{index}. File created at {output_file}')
                             else:
@@ -803,14 +802,16 @@ class DownloadWidgetsInteraction(DownloadWidgets):
             # Link selected files to scenarios. e.g: BWN Hoekje [#30] GLG blok 10 (10) 	 blok_GLG_T10
             df = pd.DataFrame(self.select.dl_select_box.value, columns=["name"])
             for index, row in df.iterrows():
+                scenario_id = self.vars.scenario_view_names.index(row["name"])
+                scenario = self.vars.scenarios[scenario_id]
+
+                #overwrite viewname with normal name
+                df.loc[index, "name"] = self.vars.scenario_names[scenario_id] 
                 name = row["name"]
                 for rain_type in RAIN_TYPES:
                     for groundwater in GROUNDWATER:
                         for rain_scenario in RAIN_SCENARIOS:
                             rain_scenario = rain_scenario.strip("T")  # strip 'T' because its not used in older versions.
-
-                            scenario_id = self.vars.scenario_view_names.index(name)
-                            scenario = self.vars.scenarios[scenario_id]
 
                             #Scenario should have nameformat piek/blok_gxg_Txx
                             if (
@@ -825,124 +826,155 @@ class DownloadWidgetsInteraction(DownloadWidgets):
                                 ]:  # filters this: BWN Hoekje [#10] GLG blok 100 (10)
                                     df.loc[index, "dl_name"] = f"{rain_type}_{groundwater}_T{rain_scenario}"
                                     df.loc[index, "uuid"] = scenario.uuid
-
+                df.loc[index, "management_link"] = self.get_scenario_management_link(scenario_id=scenario_id)
 
             df.set_index("name", inplace=True)
             # display(df)
-            df.to_csv(str(
-                self.vars.batch_fd.downloads.full_path("download_netcdf_batch_{}.csv".format(datetime.datetime.now().strftime("%Y-%m-%d %Hh%M")))
+
+            if "uuid" not in df.keys():
+                print("None of selected scenarios can be linked to one of the 18 scenario's (blok_gxg_T10 not in name)")
+            else:
+                df.to_csv(str(
+                    self.vars.batch_fd.downloads.full_path("download_netcdf_batch_{}.csv".format(datetime.datetime.now().strftime("%Y-%m-%d %Hh%M")))
+                    )
                 )
-            )
 
-            # Get raster size of dem, max depth rasters are downloaded on this resolution.
-            # print(self.vars.folder)
-            # print(self.vars.folder.model.schema_base.rasters.full_path(self.download_batch.dem_path_dropdown.value))
-            dem = hrt.Raster(self.vars.folder.model.schema_base.rasters.dem.path)
-
-
-            #Init empty raster settings.
-            dl_raster_settings = dlRasterSettings()
-
-            # Start download of selected files (if any are selected) ------------------------------------------------
-            self.scenario_raw_download_urls = self.create_scenario_raw_download_urls()
-            for name, row in df.iterrows():
-                scenario_id = self.vars.scenario_view_names.index(name)
-                scenario = self.vars.scenarios[scenario_id]
-                download_urls = self.scenario_raw_download_urls[scenario_id]
-
-                print(f"\n\033[1m\033[31mDownloading files for {name} (uuid={scenario.uuid}):\033[0m")
+                # Get raster size of dem, max depth rasters are downloaded on this resolution.
+                # print(self.vars.folder)
+                # print(self.vars.folder.model.schema_base.rasters.full_path(self.download_batch.dem_path_dropdown.value))
+                dem = hrt.Raster(self.vars.folder.model.schema_base.rasters.dem.path)
 
 
-                #Download netcdf of all results.
-                if True:
+                #Init empty raster settings.
+                dl_raster_settings = dlRasterSettings()
+
+                # Start download of selected files (if any are selected) ------------------------------------------------
+                self.scenario_raw_download_urls = self.create_scenario_raw_download_urls()
+                for name, row in df.iterrows():
+                    scenario_id = self.vars.scenario_names.index(name)
+                    scenario = self.vars.scenarios[scenario_id]
+                    scenario_result = self.vars.scenario_results[scenario_id]
+                    download_urls = self.scenario_raw_download_urls[scenario_id]
+
+                    # print(f"\n\033[1m\033[31mDownloading files for {name} (uuid={scenario.uuid}):\033[0m")
+                    display(HTML(f"\n<font color='#ff4d4d'>Downloading files for {scenario.name} (uuid={scenario.uuid}, <a href={self.get_scenario_management_link(scenario_id)}>management page</a>):</font>"))
+
+
+                    #Download netcdf of all results.
                     output_folder = getattr(self.vars.batch_fd.downloads, row["dl_name"]).netcdf
 
                     # Create destination folder
                     output_folder.create()
+                    output_folder = output_folder.path
 
                     # Start downloading of the files
-                    download_functions.start_download(
-                        download_urls,
-                        output_folder.path,
-                        api_key=dl.get_api_key(),
-                        automatic_download=1,
+                    if self.vars.scenario_result_type == "lizard":
+                        download_functions.start_download(
+                            download_urls.values(),
+                            output_folder,
+                            api_key=dl.get_api_key(),
+                            automatic_download=1,
+                        )
+
+                    elif self.vars.scenario_result_type == "threedi":
+                        for index, key in enumerate(download_urls):
+                            try:
+                                if key=="grid-admin":
+                                    download = self.vars.sim.threedi_api.threedimodels_gridadmin_download(scenario.threedimodel_id)
+                                    filename = "gridadmin.h5"
+                                else:
+                                    download = self.vars.sim.threedi_api.simulations_results_files_download(id=scenario_result[key].id, simulation_pk=scenario.id)
+                                    filename = scenario_result[key].file.filename
+
+                                output_file = os.path.join(output_folder, filename)
+
+                                download_succes = get_threedi_download_file(download = download, 
+                                                            output_file = output_file,
+                                                            overwrite=False)
+                                
+                                if download_succes:
+                                    # display(HTML(f'{index}. File created at <a href={output_file}>{output_file}</a>')) #link doesnt work in vs code
+                                    print(f'{index}. File created at {output_file}')
+                                else:
+                                    print(f"{index}. File {filename} is already on the system")
+                            except Exception as e:
+                                print(f"{index}. Couldnt download {key} of {scenario.name}. Errormessage;\n {e}")
+
+                    # Donwload max depth and damage rasters
+                    class dlRasterPreset(dlRaster):
+                        def __init__(self, 
+                                        uuid=scenario.uuid, 
+                                        code=None, 
+                                        resolution=None, 
+                                        timelist=None, 
+                                        output_path=None, 
+                                        button=None, 
+                                        name=None,
+                                        bounds=dem.metadata["bounds_dl"],
+                                        bounds_srs="EPSG:28992"):
+                            super().__init__(uuid, code, resolution, timelist, output_path, button, name, bounds, bounds_srs)
+
+                    wlvl_max = getattr(self.vars.batch_fd.downloads, row["dl_name"]).wlvl_max
+                    raster_max_wlvl = dlRasterPreset(code="s1-max-dtri",
+                                            resolution=dem.metadata["pixel_width"],
+                                            output_path=wlvl_max.path, 
+                                            button=self.outputtypes.max_wlvl_button,
+                                            name="max waterlvl",                                        
+                    )
+                    depth_max = getattr(self.vars.batch_fd.downloads, row["dl_name"]).depth_max
+                    raster_max_depth = dlRasterPreset(code="depth-max-dtri",
+                                            resolution=dem.metadata["pixel_width"],
+                                            output_path=depth_max.path, 
+                                            button=self.outputtypes.max_depth_button,
+                                            name="max waterdepth",
+                    )
+                    damage_total = getattr(self.vars.batch_fd.downloads, row["dl_name"]).damage_total
+                    raster_total_damage = dlRasterPreset(code="total-damage",
+                                            resolution=0.5, #FIXME 0.5 res
+                                            output_path=damage_total.path, 
+                                            button=self.outputtypes.total_damage_button,
+                                            name="total damge",
+                    )
+                    
+
+                    for r in [raster_max_wlvl, raster_max_depth, raster_total_damage]:
+                        if r.button.value == True:
+                            if not os.path.exists(r.output_path):
+                                dl_raster_settings.add_raster(r)
+
+                #To vars so we can inspect.
+                self.vars.dl_raster_settings = dl_raster_settings
+
+                if len(dl_raster_settings.uuid_list)==0:
+                    print("\nNo rasters will be downloaded")
+                else:
+                    print("\nStarting download of rasters")
+                    print(f"uuid_list: {dl_raster_settings.uuid_list}")
+                    print(f"code_list: {dl_raster_settings.code_list}")
+                    print(f"target_srs_list: {dl_raster_settings.target_srs_list}")
+                    print(f"resolution_list: {dl_raster_settings.resolution_list}")
+                    print(f"bounds_list: {dl_raster_settings.bounds_list}")
+                    print(f"bounds_srs_list: {dl_raster_settings.bounds_srs_list}")
+                    print(f"pathname_list: {dl_raster_settings.pathname_list}")
+                    print(f"Wait until download is finished")
+                    
+
+                    logging_batch_path = self.vars.batch_fd.downloads.full_path(
+                        "download_raster_batch_{}.csv".format(datetime.datetime.now().strftime("%Y-%m-%d %Hh%M")),
                     )
 
-                # Donwload max depth and damage rasters
-                class dlRasterPreset(dlRaster):
-                    def __init__(self, 
-                                    uuid=scenario.uuid, 
-                                    code=None, 
-                                    resolution=None, 
-                                    timelist=None, 
-                                    output_path=None, 
-                                    button=None, 
-                                    name=None,
-                                    bounds=dem.metadata["bounds_dl"],
-                                    bounds_srs="EPSG:28992"):
-                        super().__init__(uuid, code, resolution, timelist, output_path, button, name, bounds, bounds_srs)
+                    dl.download_raster(
+                        scenario=dl_raster_settings.uuid_list,
+                        raster_code=dl_raster_settings.code_list,
+                        target_srs=dl_raster_settings.target_srs_list,
+                        resolution=dl_raster_settings.resolution_list,
+                        bounds=dl_raster_settings.bounds_list,
+                        bounds_srs=dl_raster_settings.bounds_srs_list,
+                        pathname=dl_raster_settings.pathname_list,
+                        export_task_csv=logging_batch_path,
+                    )
 
-                wlvl_max = getattr(self.vars.batch_fd.downloads, row["dl_name"]).wlvl_max
-                raster_max_wlvl = dlRasterPreset(code="s1-max-dtri",
-                                        resolution=dem.metadata["pixel_width"],
-                                        output_path=wlvl_max.path, 
-                                        button=self.outputtypes.max_wlvl_button,
-                                        name="max waterlvl",                                        
-                )
-                depth_max = getattr(self.vars.batch_fd.downloads, row["dl_name"]).depth_max
-                raster_max_depth = dlRasterPreset(code="depth-max-dtri",
-                                        resolution=dem.metadata["pixel_width"],
-                                        output_path=depth_max.path, 
-                                        button=self.outputtypes.max_depth_button,
-                                        name="max waterdepth",
-                )
-                damage_total = getattr(self.vars.batch_fd.downloads, row["dl_name"]).damage_total
-                raster_total_damage = dlRasterPreset(code="total-damage",
-                                        resolution=0.5, #FIXME 0.5 res
-                                        output_path=damage_total.path, 
-                                        button=self.outputtypes.total_damage_button,
-                                        name="total damge",
-                )
-                
-
-                for r in [raster_max_wlvl, raster_max_depth, raster_total_damage]:
-                    if r.button.value == True:
-                        if not os.path.exists(r.output_path):
-                            dl_raster_settings.add_raster(r)
-
-            #To vars so we can inspect.
-            self.vars.dl_raster_settings = dl_raster_settings
-
-            if len(dl_raster_settings.uuid_list)==0:
-                print("\nNo rasters will be downloaded")
-            else:
-                print("\nStarting download of rasters")
-                print(f"uuid_list: {dl_raster_settings.uuid_list}")
-                print(f"code_list: {dl_raster_settings.code_list}")
-                print(f"target_srs_list: {dl_raster_settings.target_srs_list}")
-                print(f"resolution_list: {dl_raster_settings.resolution_list}")
-                print(f"bounds_list: {dl_raster_settings.bounds_list}")
-                print(f"bounds_srs_list: {dl_raster_settings.bounds_srs_list}")
-                print(f"pathname_list: {dl_raster_settings.pathname_list}")
-                print(f"Wait until download is finished")
-                
-
-                logging_batch_path = self.vars.batch_fd.downloads.full_path(
-                    "download_raster_batch_{}.csv".format(datetime.datetime.now().strftime("%Y-%m-%d %Hh%M")),
-                )
-
-                dl.download_raster(
-                    scenario=dl_raster_settings.uuid_list,
-                    raster_code=dl_raster_settings.code_list,
-                    target_srs=dl_raster_settings.target_srs_list,
-                    resolution=dl_raster_settings.resolution_list,
-                    bounds=dl_raster_settings.bounds_list,
-                    bounds_srs=dl_raster_settings.bounds_srs_list,
-                    pathname=dl_raster_settings.pathname_list,
-                    export_task_csv=logging_batch_path,
-                )
-
-                print("Download of rasters finished")
+                    print("Download of rasters finished")
 
             self.download_batch.button.style.button_color = "lightgreen"
             self.download_batch.button.description = "Download batch"
@@ -1075,18 +1107,30 @@ class DownloadWidgetsInteraction(DownloadWidgets):
             if button.value == True:
                 button.icon = "check"  # https://fontawesome.com/icons?d=gallery
 
-
-        def change_dowloadbutton_state():
-            """Change color and disabled for download button."""
-            if any([a.value for a in self.outputtypes.file_buttons + self.outputtypes.raster_buttons]):
-                self.download.button.disabled = False
-                self.download.button.style.button_color = "lightgreen"
-            else:
-                self.download.button.disabled = True
-                self.download.button.style.button_color = "red"
-
         # Depening on the button values, change the download button color
-        change_dowloadbutton_state()  
+        self.change_dowloadbutton_state()  
+
+
+    def change_dowloadbutton_state(self, *args):
+        """Change color and disabled for download button."""
+        #Download button
+        if any([a.value for a in self.outputtypes.file_buttons + self.outputtypes.raster_buttons]):
+            self.download.button.disabled = False
+            self.download.button.style.button_color = "lightgreen"
+        else:
+            self.download.button.disabled = True
+            self.download.button.style.button_color = "red"
+
+        #Download batch button
+        if all([self.outputtypes.netcdf_button.value is True,
+            self.download_batch.batch_folder_dropdown.value is not None
+        ]):
+            self.download_batch.button.disabled = False
+            self.download_batch.button.style.button_color = "lightgreen"
+        else:
+            self.download_batch.button.disabled = True
+            self.download_batch.button.style.button_color = "red"
+
 
 
     def change_button_state(self, button, button_disabled=False, button_value=False):
@@ -1094,6 +1138,7 @@ class DownloadWidgetsInteraction(DownloadWidgets):
         button.disabled = button_disabled  # Disable button based on input
         button.value = button_value
         self._update_button_icon(button)
+
 
 
     def update_buttons(self):
@@ -1286,9 +1331,8 @@ class GuiVariables:
 
 
 class DownloadGui:
-    def __init__(
-        self, data=None, 
-        base_scenario_name=None, 
+    def __init__(self, 
+        data=None, 
         lizard_api_key=None, 
         threedi_api_key=None,
         main_folder=None, 
@@ -1403,32 +1447,8 @@ class DownloadGui:
 
 if __name__ == "__main__":
         data = {'polder_folder': 'E:\\02.modellen\\model_test_v2',
-    'api_keys_path': r"C:/Users/wvangerwen/AppData/Roaming/3Di/QGIS3/profiles/default/python/plugins/hhnk_threedi_plugin/api_key.txt"}
+    'api_keys_path': fr"C:/Users/{os.getlogin()}/AppData/Roaming/3Di/QGIS3/profiles/default/python/plugins/hhnk_threedi_plugin/api_key.txt"}
         self = DownloadGui(data=data); 
         display(self.tab)
         
         self.w.search.sim_name_widget.value = "model_test"
-
-
-        # %%
-        scenario = self.vars.scenarios[0]
-        self.vars.sim.threedi_api.simulations_results_files_list(simulation_pk=scenario.id)
-
-# %%
-
-for index, scenario_id in enumerate(self.w.scenario_selected_ids):
-    scenario = self.vars.scenarios[scenario_id]
-
-r = self.vars.sim.threedi_api.simulations_results_files_list(simulation_pk=scenario.id).results
-# %%
-
-# %%
-{0: {'grid-admin': {'url': 'https://demo.lizard.net/api/v4/scenarios/68ed32e3-6607-4b45-9346-6b505a6d9280/results/383960/',
-   'id': 383960,
-   'name': 'Grid administration',
-   'code': 'grid-admin',
-   'description': None,
-   'family': 'Raw',
-   'raster': None,
-   'attachment_url': 'https://demo.lizard.net/api/v4/scenario-results/383960/gridadmin.h5'},
-# %%
