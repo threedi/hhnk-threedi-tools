@@ -134,11 +134,6 @@ class DownloadWidgets:
                 layout=item_layout(grid_area="threedi_apikey_widget"),
             )
 
-            # Login button, after login create threedi api client
-            self.get_api_key_widget = widgets.HTML(
-                'Get key <a href=https://hhnk.lizard.net/management/personal_api_keys target target="_blank">here</a>',
-                layout=item_layout(grid_area="get_api_key_widget"),
-            )
             self.button = widgets.Button(
                 description="Login",
                 disabled=True,
