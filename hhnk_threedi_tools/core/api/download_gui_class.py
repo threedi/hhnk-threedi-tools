@@ -35,6 +35,7 @@ from hhnk_threedi_tools.variables.api_settings import (
 dl.LIZARD_URL = "https://hhnk.lizard.net/api/v3/"
 # THREEDI_API_HOST = "https://api.3di.live/v3"
 RESULT_LIMIT = 50 #Results on search
+CHUNK_SIZE = 1024**2
 
 
 def item_layout(width="95%", grid_area="", **kwargs):
@@ -43,6 +44,20 @@ def item_layout(width="95%", grid_area="", **kwargs):
     )  # override the default width of the button to 'auto' to let the button grow
 
 
+def get_threedi_download_file(download, 
+                      output_file,
+                      overwrite=False) -> bool:
+    """Getting file from threedi download object and write it under given path."""
+    if hrt.check_create_new_file(output_file=output_file, overwrite=overwrite):
+        r = requests.get(download.get_url, stream=True, timeout=15)
+        with open(output_file, "wb") as f:
+            for chunk in r.iter_content(chunk_size=CHUNK_SIZE):
+                if chunk:
+                    f.write(chunk)
+        return True
+    else:
+        return False
+    
 
 class dlRaster():
     """Helper for input of download_functions."""
@@ -184,9 +199,8 @@ class DownloadWidgets:
 
             # selection box with names of model results
             self.dl_select_box = widgets.SelectMultiple(
-                rows=20, layout=item_layout(grid_area="dl_select_box")
+                rows=20, layout=item_layout(width="98%", grid_area="dl_select_box")
             )
-            
 
             # Subset the list in the download selection box
             self.show_0d1d_button = widgets.Button(
@@ -214,7 +228,6 @@ class DownloadWidgets:
             self.file_buttons_label = widgets.HTML(
                 "File results", layout=item_layout(grid_area="file_buttons_label")
             )
-
             self.netcdf_button = widgets.ToggleButton(
                 value=True,
                 description="raw 3Di output (.nc)",
@@ -477,7 +490,8 @@ class DownloadWidgetsInteraction(DownloadWidgets):
             self.select.dl_select_box.options = self.vars.scenario_view_names
 
             self.search.search_button_lizard.style.button_color = "lightgreen"
-            self.search.search_button_lizard.description = "Search"
+            self.search.search_button_threedi.style.button_color = None
+            self.search.search_button_lizard.description = "Search Lizard"
 
             
         @self.search.search_button_threedi.on_click
@@ -500,7 +514,8 @@ class DownloadWidgetsInteraction(DownloadWidgets):
             self.select.dl_select_box.options = self.vars.scenario_view_names
 
             self.search.search_button_threedi.style.button_color = "lightgreen"
-            self.search.search_button_threedi.description = "Search"      
+            self.search.search_button_lizard.style.button_color = None
+            self.search.search_button_threedi.description = "Search 3Di"      
 
 
         # --------------------------------------------------------------------------------------------------
@@ -580,52 +595,78 @@ class DownloadWidgetsInteraction(DownloadWidgets):
             dl_raster_settings = dlRasterSettings()
 
             # Start download of selected files (if any are selected) ------------------------------------------------
+            self.vars.scenario_raw_download_urls = self.create_scenario_raw_download_urls()
             for scenario_id in self.scenario_selected_ids:
                 scenario = self.vars.scenarios[scenario_id]
-                download_urls = self.scenario_raw_download_urls[scenario_id]
+                scenario_result = self.vars.scenario_results[scenario_id]
+                download_urls = self.vars.scenario_raw_download_urls[scenario_id]
                 scenario_name = scenario.name
-                # Print download URLs
 
-                print(
-                    f"\n\033[1m\033[31mDownloading files for {scenario_name} (uuid={scenario.uuid}):\033[0m"
-                )
-                for index, url in enumerate(download_urls):
-                    print("{}: {}".format(index + 1, url))
-
-                # Print destination folder
                 output_folder = str(self.vars.folder.threedi_results[self.output.subfolder_box.value][scenario_name])
 
                 # De 3Di plugin kan geen '[' en ']' aan.
                 output_folder = output_folder.replace("[", "")
                 output_folder = output_folder.replace("]", "")
 
-                print("\nThey will be placed in:\n" + output_folder + "\n")
+
+                # Print download URLs
+                # print(f"\n\033[1m\033[31mDownloading files for {scenario_name} (uuid={scenario.uuid}):\033[0m")
+                display(HTML(f"\n<font color='#ff4d4d'>Downloading files for <a href={self.get_scenario_management_link(scenario_id)}>{scenario_name}</a> (uuid={scenario.uuid}):</font>"))
+                for index, key in enumerate(download_urls):
+                    print("{}: {}".format(index + 1, download_urls[key]))
+                print(f"\nThey will be placed in:\n{output_folder}\n")
 
                 # Create destination folder
                 if not os.path.exists(output_folder) and output_folder != "":
                     os.mkdir(output_folder)
                 #             print('Created folder: ' + output_folder.rsplit('/')[-1])
 
+                #add some variables to overview
+                for index, key in enumerate(download_urls):
+                    self.vars.output_df = self.vars.output_df.append({
+                                    "id":scenario_id,
+                                    "name": scenario_name,
+                                    "uuid": scenario.uuid,
+                                    "scenario_download_url": download_urls[key],
+                                    "output_folder": output_folder}, 
+                                ignore_index=True)
 
-                #add somee variables to overview
-                self.vars.output_df = self.vars.output_df.append({
-                                "id":scenario_id,
-                                "name": scenario_name,
-                                "uuid": scenario.uuid,
-                                "scenario_download_url": download_urls,
-                                "output_folder": output_folder}, 
-                            ignore_index=True)
+                #Download files
+                if self.vars.scenario_result_type == "lizard":
+                    download_functions.start_download(
+                        download_urls.values(),
+                        output_folder,
+                        api_key=dl.get_api_key(),
+                        automatic_download=1,
+                    )
 
+                elif self.vars.scenario_result_type == "threedi":
+                    for index, key in enumerate(download_urls):
+                        try:
+                            if key=="grid-admin":
+                                download = self.vars.sim.threedi_api.threedimodels_gridadmin_download(scenario.threedimodel_id)
+                                filename = "gridadmin.h5"
+                            else:
+                                download = self.vars.sim.threedi_api.simulations_results_files_download(id=scenario_result[key].id, simulation_pk=scenario.id)
+                                filename = scenario_result[key].file.filename
 
-                # Start downloading of the files
-                download_functions.start_download(
-                    download_urls,
-                    output_folder,
-                    api_key=dl.get_api_key(),
-                    automatic_download=1,
-                )
+                            output_file = os.path.join(output_folder, filename)
 
-                # Start download of selected rasters (if any are selected) -----------------------------------------------
+                            download_succes = get_threedi_download_file(download = download, 
+                                                        output_file = output_file,
+                                                        overwrite=False)
+                            
+                            if download_succes:
+                                # from IPython.core.display import HTML
+                                # display(HTML(f'{index}. File created at <a href={output_file}>{output_file}</a>')) #link doesnt work in vs code
+                                print(f'{index}. File created at {output_file}')
+                            else:
+                                print(f"{index}. File {filename} is already on the system")
+                        except Exception as e:
+                            print(f"{index}. Couldnt download {key} of {scenario.name}. Errormessage;\n {e}")
+                    
+
+                # Start download of selected lizard rasters (if any are selected) -----------------------------------------------
                 time = self.outputtypes.time_pick_dropdown.value
                 if time is not None:
                     time = time.replace("-", "_")
@@ -633,9 +674,8 @@ class DownloadWidgetsInteraction(DownloadWidgets):
                     
                 res = str(self.outputtypes.resolution_dropdown.value).replace(".", "_")
 
-
-
                 if self.download.use_dem_button.value:
+                    #This button makes sure we always get  the same bounding box as the dem that is used in the model
                     dem = hrt.Raster(self.vars.folder.model.schema_base.rasters.dem.path)
                     class dlRasterPreset(dlRaster):
                         def __init__(self, 
@@ -804,6 +844,7 @@ class DownloadWidgetsInteraction(DownloadWidgets):
             dl_raster_settings = dlRasterSettings()
 
             # Start download of selected files (if any are selected) ------------------------------------------------
+            self.scenario_raw_download_urls = self.create_scenario_raw_download_urls()
             for name, row in df.iterrows():
                 scenario_id = self.vars.scenario_view_names.index(name)
                 scenario = self.vars.scenarios[scenario_id]
@@ -942,6 +983,11 @@ class DownloadWidgetsInteraction(DownloadWidgets):
                 #Loop individual results and add to dict
                 for result in results:
                     self.vars.scenario_results[scenario_id][result["code"]]=result
+                
+                #Provide link to management page
+                if index==0:
+                    self.outputtypes.file_buttons_label.value = f'File results (<a href={self.get_scenario_management_link(scenario_id)} target="_blank">management page</a>)'
+
 
             if self.vars.scenario_result_type == "threedi":
                 results = self.vars.sim.threedi_api.simulations_results_files_list(simulation_pk=scenario.id).results
@@ -956,10 +1002,17 @@ class DownloadWidgetsInteraction(DownloadWidgets):
                         code="aggregate-results-3di"
 
                     #Uploaded files only, if they have been removed they get the state 'removed'
-                    if result.state == "uploaded":
-                        self.vars.scenario_results[scenario_id][code]=result.file
+                    if result.file.state == "uploaded":
+                        self.vars.scenario_results[scenario_id][code]=result
                 if results != []:
                     self.vars.scenario_results[scenario_id]["grid-admin"] = True
+
+                #Provide link to management page
+                if index==0:
+                    self.outputtypes.file_buttons_label.value = f'File results (<a href={self.get_scenario_management_link(scenario_id)} target="_blank">management page</a>)'
+
+        if self.scenario_selected_ids == []:
+            self.outputtypes.file_buttons_label.value = f'File results'
 
 
     # --------------------------------------------------------------------------------------------------
@@ -1149,23 +1202,31 @@ class DownloadWidgetsInteraction(DownloadWidgets):
         return  [self.vars.scenario_view_names.index(a) for a in self.select.dl_select_box.value]  # id's of selected models to download
 
 
-    @property
-    def scenario_raw_download_urls(self):
+    def create_scenario_raw_download_urls(self):
         """Retrieve urls from scenario raw results of selected results"""
         scenario_download_urls = {}
         for scenario_id in self.scenario_selected_ids:
             scenario_result = self.vars.scenario_results[scenario_id]
-            download_urls = []
+            download_urls = {}
 
             for code in ["results-3di", "grid-admin", "logfiles", "aggregate-results-3di"]:
                 if self.button_codes[code].value:
 
                     if self.vars.scenario_result_type == "lizard":
-                        download_urls.append(scenario_result[code].attachment_url)
+                        download_urls[code] = scenario_result[code]["attachment_url"]
                     elif self.vars.scenario_result_type == "threedi":
-                        download_urls.append(scenario_result[code].attachment_url)
+                        download_urls[code] = code
             scenario_download_urls[scenario_id] = download_urls
         return scenario_download_urls
+
+    def get_scenario_management_link(self, scenario_id):
+        scenario = self.vars.scenarios[scenario_id]
+        
+        if self.vars.scenario_result_type =="lizard":
+            return f"https://hhnk.lizard.net/management/data_management/scenarios/scenarios/{scenario.uuid}"
+        elif self.vars.scenario_result_type =="threedi":
+            return f"https://management.3di.live/simulations/{scenario.id}"
+    
 
     @property
     def vars(self):
@@ -1216,7 +1277,7 @@ class GuiVariables:
 
     @property
     def scenario_view_names(self):
-        return [f"{scenario.name.ljust(50,' ')} -- ({scenario.created[:10]})" for scenario in self.scenarios]
+        return [f"{scenario.created[:10]}   |   {scenario.name}" for scenario in self.scenarios]
 
     @property
     def time_now(self):
