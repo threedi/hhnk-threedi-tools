@@ -48,6 +48,7 @@ def item_layout(width="95%", grid_area="", **kwargs):
 
 
 
+
 class StartCalculationWidgets:
     def __init__(self):
         # --------------------------------------------------------------------------------------------------
@@ -70,7 +71,9 @@ class StartCalculationWidgets:
 
             #Label
             self.label = widgets.HTML(
-                "<b>1. Login with API keys</b>",
+                '<b>1. Login with API keys\
+                    (<a href=https://hhnk.lizard.net/management/personal_api_keys target target="_blank">lizard</a>,\
+                    <a href=https://management.3di.live/personal_api_keys target target="_blank">3di</a>) </b>',
                 layout=item_layout(grid_area="login_label"),
             )
 
