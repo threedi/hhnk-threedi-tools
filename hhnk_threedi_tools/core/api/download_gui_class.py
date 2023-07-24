@@ -1117,7 +1117,9 @@ class DownloadWidgetsInteraction(DownloadWidgets):
             self.download.button.style.button_color = "red"
 
         #Download batch button
-        if all([self.outputtypes.netcdf_button.value is True,
+        if all([
+                any([self.outputtypes.netcdf_button.value is True,
+                self.outputtypes.agg_netcdf_button.value is True]),
             self.download_batch.batch_folder_dropdown.value is not None
         ]):
             self.download_batch.button.disabled = False
