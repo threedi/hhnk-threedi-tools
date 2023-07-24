@@ -92,9 +92,9 @@ class TestSqlite:
         assert output["width_at_wlvl"][0] == 2
 
 
-    def test_run_cross_section(self, folder_new):
+    def test_cross_section_duplicate_chk(self, folder_new):
         database= folder_new.model.schema_basis_errors.database
-        output = self.sqlite_check.run_cross_section(database=database)
+        output = self.sqlite_check.cross_section_duplicate_chk(database=database)
         assert output["cross_loc_id"].to_list() == [1186, 99999]
 
 

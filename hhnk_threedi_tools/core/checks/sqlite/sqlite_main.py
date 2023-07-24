@@ -494,7 +494,7 @@ class SqliteCheck:
                 output_path=os.path.join(output_folder, f"{i}.gpkg"),
             )
 
-    def run_cross_section(self, database):
+    def cross_section_duplicate_chk(self, database):
         """Deze functie een loop maken over het cross sections om een of meer intersect punten (cross_sections) vinden
            Het ga een foutmelding geven als 1 of meer punten vinden"""
         try:
