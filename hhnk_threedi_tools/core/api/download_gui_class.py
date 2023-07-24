@@ -439,7 +439,7 @@ class DownloadWidgets:
                 layout=item_layout(grid_area="batch_folder_dropdown"),
             )
 
-            # Select DEM file to use to determine which resolution to download depth rasters on
+            # Select DEM file to use as reference resolution and extent for raster download
             self.dem_path_label = widgets.Label(
                 "DEM path:", layout=item_layout(grid_area="dem_path_label")
             )
@@ -585,7 +585,9 @@ class DownloadWidgetsInteraction(DownloadWidgets):
         # Set resolution options
         def update_resolution_options(value):
             self.outputtypes.resolution_dropdown.options = self.resolution_view_list
-            self.outputtypes.resolution_dropdown.value = self.selected_dem.metadata.pixel_width
+            self.outputtypes.resolution_dropdown.value = self.resolution_view_list[
+                        self.vars.resolution_list.index(self.selected_dem.metadata.pixel_width)
+            ]
         self.download_batch.dem_path_dropdown.observe(update_resolution_options, "value")
 
         # --------------------------------------------------------------------------------------------------
@@ -687,21 +689,14 @@ class DownloadWidgetsInteraction(DownloadWidgets):
                             print(f"{index}. Couldnt download {key} of {scenario.name}. Errormessage;\n {e}")
                     
 
-                # Start download of selected lizard rasters (if any are selected) -----------------------------------------------
-                time = self.outputtypes.time_pick_dropdown.value
-                if time is not None:
-                    time = time.replace("-", "_")
-                    time = time.replace(":", "_")
-                    
-                res = str(self.outputtypes.resolution_dropdown.value).replace(".", "_")
-
+                # Start download of selected lizard rasters (if any are selected) -----------------------------------------------                    
                 if self.download.custom_extent_button.value:
 
                     #This button makes sure we always get the same bounding box as the dem that is used in the model
                     class dlRasterPreset(dlRaster):
                         def __init__(self, 
                                         scenario_uuid=scenario.uuid, 
-                                        resolution=self.outputtypes.resolution_dropdown.value,
+                                        resolution=self.selected_resolution,
                                         bbox=self.download.custom_extent_widget.value,
                                         **kwargs):
                             super().__init__(scenario_uuid=scenario_uuid, 
@@ -712,7 +707,7 @@ class DownloadWidgetsInteraction(DownloadWidgets):
                     class dlRasterPreset(dlRaster):
                         def __init__(self, 
                                         scenario_uuid=scenario.uuid, 
-                                        resolution=self.outputtypes.resolution_dropdown.value,
+                                        resolution=self.selected_resolution,
                                         **kwargs):
                             super().__init__(scenario_uuid=scenario_uuid, 
                                              resolution=resolution, 
@@ -721,37 +716,37 @@ class DownloadWidgetsInteraction(DownloadWidgets):
 
                 raster_max_wlvl = dlRasterPreset(raster_code="s1-max-dtri",
                                         timelist=None,
-                                        output_path=os.path.join(output_folder, f"max_wlvl_res{res}m.tif"), 
+                                        output_path=os.path.join(output_folder, f"max_wlvl_res{self.selected_resolution_view}m.tif"), 
                                         button=self.outputtypes.max_wlvl_button,
                                         name="max waterlevel",
                 )
                 raster_max_depth = dlRasterPreset(raster_code="depth-max-dtri",
                                         timelist=None,
-                                        output_path=os.path.join(output_folder, f"max_depth_res{res}m.tif"), 
+                                        output_path=os.path.join(output_folder, f"max_depth_res{self.selected_resolution_view}m.tif"), 
                                         button=self.outputtypes.max_depth_button,
                                         name="max waterdepth",
                 )
                 raster_total_damage = dlRasterPreset(raster_code="total-damage",
                                         timelist=None,
-                                        output_path=os.path.join(output_folder, f"total_damage_res{res}m.tif"), 
+                                        output_path=os.path.join(output_folder, f"total_damage_res{self.selected_resolution_view}m.tif"), 
                                         button=self.outputtypes.total_damage_button,
                                         name="total damge",
                 )
                 raster_wlvl = dlRasterPreset(raster_code="s1-dtri",
-                                        timelist=time,
-                                        output_path=os.path.join(output_folder, f"wlvl_{time}_res{res}m.tif"), 
+                                        timelist=self.selected_time,
+                                        output_path=os.path.join(output_folder, f"wlvl_{self.selected_time_view}_res{self.selected_resolution_view}m.tif"), 
                                         button=self.outputtypes.wlvl_button,
                                         name="waterlevel at timestep {time}",
                 )
                 raster_wdepth = dlRasterPreset(raster_code="depth-dtri",
-                                        timelist=time,
-                                        output_path=os.path.join(output_folder, f"depth_{time}_res{res}m.tif"), 
+                                        timelist=self.selected_time,
+                                        output_path=os.path.join(output_folder, f"depth_{self.selected_time_view}_res{self.selected_resolution_view}m.tif"), 
                                         button=self.outputtypes.depth_button,
                                         name="waterdepth at timestep {time}",
                 )
                 raster_depth_dmg = dlRasterPreset(raster_code="dmge-depth",
                                         timelist=None,
-                                        output_path=os.path.join(output_folder, f"depth_for_lizard_dmg_res{res}m.tif"), 
+                                        output_path=os.path.join(output_folder, f"depth_for_lizard_dmg_res{self.selected_resolution_view}m.tif"), 
                                         button=self.outputtypes.depth_damage_button,
                                         name="waterdepth for lizard damage calc",
                 )
@@ -925,7 +920,7 @@ class DownloadWidgetsInteraction(DownloadWidgets):
                         class dlRasterPreset(dlRaster):
                             def __init__(self, 
                                             scenario_uuid=scenario.uuid, 
-                                            resolution=self.outputtypes.resolution_dropdown.value,
+                                            resolution=self.selected_resolution,
                                             bbox=self.download.custom_extent_widget.value,
                                             **kwargs):
                                 super().__init__(scenario_uuid=scenario_uuid, 
@@ -936,7 +931,7 @@ class DownloadWidgetsInteraction(DownloadWidgets):
                         class dlRasterPreset(dlRaster):
                             def __init__(self, 
                                             scenario_uuid=scenario.uuid, 
-                                            resolution=self.outputtypes.resolution_dropdown.value,
+                                            resolution=self.selected_resolution,
                                             **kwargs):
                                 super().__init__(scenario_uuid=scenario_uuid, 
                                                 resolution=resolution, 
@@ -1085,7 +1080,7 @@ class DownloadWidgetsInteraction(DownloadWidgets):
                 Tend = datetime.datetime.strptime(selected_result["simulation_end"], "%Y-%m-%dT%H:%M:%SZ")
 
                 dates = pd.date_range(Tstart, Tend, freq="H")
-                time_pick_options = [(date.strftime("%Y-%m-%dT%H:%M:%S")) for date in dates]
+                time_pick_options = [(date.strftime("%Y-%m-%dT%H:%M")) for date in dates]
                 return time_pick_options
             except:
                 return None
@@ -1302,7 +1297,11 @@ class DownloadWidgetsInteraction(DownloadWidgets):
 
     @property
     def selected_resolution(self):
-        return self.vars.resolution[self.resolution_view_list.index(self.model.resolution_dropdown.value)]
+        return self.vars.resolution_list[self.resolution_view_list.index(self.outputtypes.resolution_dropdown.value)]
+
+    @property
+    def selected_resolution_view(self):
+        return str(self.selected_resolution).replace(".", "_")
 
     @property
     def selected_dem(self):
@@ -1311,6 +1310,18 @@ class DownloadWidgetsInteraction(DownloadWidgets):
             return hrt.Raster(dem_path)
         else:
             return None
+
+    @property
+    def selected_time(self):
+        return self.outputtypes.time_pick_dropdown.value
+
+    @property
+    def selected_time_view(self):
+        timestr = self.outputtypes.time_pick_dropdown.value
+        if timestr is not None:
+            timestr = timestr.replace("-", "_")
+            timestr = timestr.replace(":", "_")
+        return timestr
 
     @property
     def vars(self):
