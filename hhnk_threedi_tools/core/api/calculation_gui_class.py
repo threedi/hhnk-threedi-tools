@@ -48,6 +48,7 @@ def item_layout(width="95%", grid_area="", **kwargs):
 
 
 
+
 class StartCalculationWidgets:
     def __init__(self):
         # --------------------------------------------------------------------------------------------------
@@ -70,24 +71,29 @@ class StartCalculationWidgets:
 
             #Label
             self.label = widgets.HTML(
-                "<b>1. Login with API keys</b>",
+                '<b>1. Login with API keys\
+                    (<a href=https://hhnk.lizard.net/management/personal_api_keys target target="_blank">lizard</a>,\
+                    <a href=https://management.3di.live/personal_api_keys target target="_blank">3di</a>) </b>',
                 layout=item_layout(grid_area="login_label"),
             )
 
             # Api key widgets
             self.lizard_apikey_widget = ApikeyWidget(
                 description="Lizard key:",
+                disabled=True,
                 layout=item_layout(grid_area="lizard_apikey_widget"),
             )
 
             self.threedi_apikey_widget = ApikeyWidget(
                 description="Threedi key:",
+                disabled=True,
                 layout=item_layout(grid_area="threedi_apikey_widget"),
             )
 
             # Login button, after login create threedi api client
             self.button = widgets.Button(
                 description="Login",
+                disabled=True,
                 layout=item_layout(height="30px", grid_area="login_button"),
             )
 
@@ -622,7 +628,8 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
             self.vars.sim = Simulation(api_key=self.vars.api_keys["threedi"]) 
             dl.set_api_key(self.vars.api_keys['lizard'])
             try:
-                self.sim.logged_in
+                if self.vars.sim.logged_in == "Cannot login":
+                    raise
                 # Login success
                 self.login.button.style.button_color = "lightgreen"
                 self.login.button.description = "Logged in"
@@ -1751,9 +1758,11 @@ class GuiVariables:
 
 
 class StartCalculationGui:
-    def __init__(
-        self, data=None, base_scenario_name=None, 
-        lizard_api_key=None, threedi_api_key=None, main_folder=None, 
+    def __init__(self, 
+                 data=None,
+                 lizard_api_key=None, 
+                 threedi_api_key=None, 
+                 main_folder=None, 
     ):
 
         self.vars = GuiVariables()
