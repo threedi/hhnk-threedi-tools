@@ -12,10 +12,11 @@ from traitlets import Unicode
 # from apscheduler.schedulers.blocking import BlockingScheduler
 import requests
 from IPython.core.display import HTML
+from pathlib import Path
 
 # threedi
-# from threedi_scenario_downloader import downloader as dl #FIXME local changes, push to threedi_scenario_downloader?
-from hhnk_threedi_tools.core.api import downloader as dl
+from threedi_scenario_downloader import downloader as dl #FIXME local changes, push to threedi_scenario_downloader?
+# from hhnk_threedi_tools.core.api import downloader as dl
 import hhnk_threedi_tools.core.api.download_functions as download_functions
 from hhnk_threedi_tools.core.api.calculation import Simulation
 
@@ -32,7 +33,7 @@ from hhnk_threedi_tools.variables.api_settings import (
 )
 
 
-dl.LIZARD_URL = "https://hhnk.lizard.net/api/v3/"
+dl.LIZARD_URL = "https://hhnk.lizard.net/api/v4/"
 # THREEDI_API_HOST = "https://api.3di.live/v3"
 RESULT_LIMIT = 50 #Results on search
 CHUNK_SIZE = 1024**2
@@ -61,37 +62,46 @@ def get_threedi_download_file(download,
 
 class dlRaster():
     """Helper for input of download_functions."""
-    def __init__(self, uuid, code, resolution, timelist, output_path, button, name, bounds=None, bounds_srs=None):
-        self.uuid = uuid
-        self.code = code
+    def __init__(self, scenario_uuid, raster_code, resolution, timelist, output_path, button, name, bbox=None):
+        #Api variables
+        self.scenario_uuid = scenario_uuid
+        self.raster_code = raster_code
         self.resolution = resolution
+        self.bbox = bbox
         self.timelist = timelist
         self.output_path = output_path
+
+        #local use
         self.button = button
         self.name = name
-        self.bounds = bounds
-        self.bounds_srs = bounds_srs
 
-class dlRasterSettings():
-    def __init__(self, target_srs = "EPSG:28992") -> None:
-        self.uuid_list = []
-        self.code_list = []
-        self.target_srs_list = target_srs
+class dlRasterSettingsV4():
+    def __init__(self, projection = "EPSG:28992") -> None:
+        self.scenario_uuid_list = []
+        self.raster_code_list = []
+        self.projection_list = projection
         self.resolution_list = []
+        self.bbox_list = []
         self.time_list = []
         self.pathname_list = []
-        self.bounds_list = []
-        self.bounds_srs_list = []
 
     def add_raster(self, r: dlRaster):
-        self.uuid_list.append(r.uuid)
-        self.code_list.append(r.code)
+        """Add single raster to the settings"""
+        self.scenario_uuid_list.append(r.scenario_uuid)
+        self.raster_code_list.append(r.raster_code)
         self.resolution_list.append(r.resolution)
+        self.bbox_list.append(r.bbox)
         self.time_list.append(r.timelist)
-        self.pathname_list.append(r.output_path)
-        self.bounds_list.append(r.bounds)
-        self.bounds_srs_list.append(r.bounds_srs)
+        self.pathname_list.append(Path(r.output_path).as_posix())
 
+    def print(self):
+        print(f"scenario_uuid_list: {self.scenario_uuid_list}")
+        print(f"raster_code_list: {self.raster_code_list}")
+        print(f"projection_list: {self.projection_list}")
+        print(f"resolution_list: {self.resolution_list}")
+        print(f"bbox_list: {self.bbox_list}")
+        print(f"time_list: {self.time_list}")
+        print(f"pathname_list: {self.pathname_list}")
 
 
 class DownloadWidgets:
@@ -588,7 +598,7 @@ class DownloadWidgetsInteraction(DownloadWidgets):
             self.download.button.disabled = True
             
             #Init empty raster settings.
-            dl_raster_settings = dlRasterSettings()
+            dl_raster_settings = dlRasterSettingsV4()
 
             # Start download of selected files (if any are selected) ------------------------------------------------
             self.vars.scenario_raw_download_urls = self.create_scenario_raw_download_urls()
@@ -669,56 +679,60 @@ class DownloadWidgetsInteraction(DownloadWidgets):
                 res = str(self.outputtypes.resolution_dropdown.value).replace(".", "_")
 
                 if self.download.use_dem_button.value:
-                    #This button makes sure we always get  the same bounding box as the dem that is used in the model
+                    #This button makes sure we always get the same bounding box as the dem that is used in the model
                     dem = hrt.Raster(self.vars.folder.model.schema_base.rasters.dem.path)
                     class dlRasterPreset(dlRaster):
                         def __init__(self, 
-                                        uuid=scenario.uuid, 
+                                        scenario_uuid=scenario.uuid, 
                                         resolution=self.outputtypes.resolution_dropdown.value,
-                                        bounds=dem.metadata["bounds_dl"],
-                                        bounds_srs="EPSG:28992",
+                                        bbox=dem.metadata.bbox,
                                         **kwargs):
-                            super().__init__(uuid=uuid, resolution=resolution, bounds=bounds, bounds_srs=bounds_srs, **kwargs)
+                            super().__init__(scenario_uuid=scenario_uuid, 
+                                             resolution=resolution, 
+                                             bbox=bbox, 
+                                             **kwargs)
                 else:
                     class dlRasterPreset(dlRaster):
                         def __init__(self, 
-                                        uuid=scenario.uuid, 
+                                        scenario_uuid=scenario.uuid, 
                                         resolution=self.outputtypes.resolution_dropdown.value,
                                         **kwargs):
-                            super().__init__(uuid=uuid, resolution=resolution, **kwargs)
+                            super().__init__(scenario_uuid=scenario_uuid, 
+                                             resolution=resolution, 
+                                             **kwargs)
 
 
-                raster_max_wlvl = dlRasterPreset(code="s1-max-dtri",
+                raster_max_wlvl = dlRasterPreset(raster_code="s1-max-dtri",
                                         timelist=None,
                                         output_path=os.path.join(output_folder, f"max_wlvl_res{res}m.tif"), 
                                         button=self.outputtypes.max_wlvl_button,
                                         name="max waterlevel",
                 )
-                raster_max_depth = dlRasterPreset(code="depth-max-dtri",
+                raster_max_depth = dlRasterPreset(raster_code="depth-max-dtri",
                                         timelist=None,
                                         output_path=os.path.join(output_folder, f"max_depth_res{res}m.tif"), 
                                         button=self.outputtypes.max_depth_button,
                                         name="max waterdepth",
                 )
-                raster_total_damage = dlRasterPreset(code="total-damage",
+                raster_total_damage = dlRasterPreset(raster_code="total-damage",
                                         timelist=None,
                                         output_path=os.path.join(output_folder, f"total_damage_res{res}m.tif"), 
                                         button=self.outputtypes.total_damage_button,
                                         name="total damge",
                 )
-                raster_wlvl = dlRasterPreset(code="s1-dtri",
+                raster_wlvl = dlRasterPreset(raster_code="s1-dtri",
                                         timelist=time,
                                         output_path=os.path.join(output_folder, f"wlvl_{time}_res{res}m.tif"), 
                                         button=self.outputtypes.wlvl_button,
                                         name="waterlevel at timestep {time}",
                 )
-                raster_wdepth = dlRasterPreset(code="depth-dtri",
+                raster_wdepth = dlRasterPreset(raster_code="depth-dtri",
                                         timelist=time,
                                         output_path=os.path.join(output_folder, f"depth_{time}_res{res}m.tif"), 
                                         button=self.outputtypes.depth_button,
                                         name="waterdepth at timestep {time}",
                 )
-                raster_depth_dmg = dlRasterPreset(code="dmge-depth",
+                raster_depth_dmg = dlRasterPreset(raster_code="dmge-depth",
                                         timelist=None,
                                         output_path=os.path.join(output_folder, f"depth_for_lizard_dmg_res{res}m.tif"), 
                                         button=self.outputtypes.depth_damage_button,
@@ -734,17 +748,11 @@ class DownloadWidgetsInteraction(DownloadWidgets):
                             print("{} already on system".format(r.output_path.split("/")[-1]))
 
 
-            if len(dl_raster_settings.uuid_list)==0:
+            if len(dl_raster_settings.scenario_uuid_list)==0:
                 print("\nNo rasters will be downloaded")
             else:
                 print("\nStarting download of rasters")
-                print(f"uuid_list: {dl_raster_settings.uuid_list}")
-                print(f"code_list: {dl_raster_settings.code_list}")
-                print(f"target_srs_list: {dl_raster_settings.target_srs_list}")
-                print(f"resolution_list: {dl_raster_settings.resolution_list}")
-                print(f"bounds_list: {dl_raster_settings.bounds_list}")
-                print(f"bounds_srs_list: {dl_raster_settings.bounds_srs_list}")
-                print(f"pathname_list: {dl_raster_settings.pathname_list}")
+                dl_raster_settings.print()
                 print(f"Wait until download is finished")
                 
                 self.vars.dl_raster_settings=dl_raster_settings
@@ -754,12 +762,11 @@ class DownloadWidgetsInteraction(DownloadWidgets):
                 )
 
                 dl.download_raster(
-                    scenario=dl_raster_settings.uuid_list,
-                    raster_code=dl_raster_settings.code_list,
-                    target_srs=dl_raster_settings.target_srs_list,
+                    scenario=dl_raster_settings.scenario_uuid_list,
+                    raster_code=dl_raster_settings.raster_code_list,
+                    projection=dl_raster_settings.projection_list,
                     resolution=dl_raster_settings.resolution_list,
-                    bounds=dl_raster_settings.bounds_list,
-                    bounds_srs=dl_raster_settings.bounds_srs_list,
+                    bbox=dl_raster_settings.bbox_list,
                     time=dl_raster_settings.time_list,
                     pathname=dl_raster_settings.pathname_list,
                     export_task_csv=logging_batch_path,
@@ -841,7 +848,7 @@ class DownloadWidgetsInteraction(DownloadWidgets):
 
 
                 #Init empty raster settings.
-                dl_raster_settings = dlRasterSettings()
+                dl_raster_settings = dlRasterSettingsV4()
 
                 # Start download of selected files (if any are selected) ------------------------------------------------
                 self.scenario_raw_download_urls = self.create_scenario_raw_download_urls()
@@ -895,36 +902,47 @@ class DownloadWidgetsInteraction(DownloadWidgets):
                             except Exception as e:
                                 print(f"{index}. Couldnt download {key} of {scenario.name}. Errormessage;\n {e}")
 
-                    # Donwload max depth and damage rasters
-                    class dlRasterPreset(dlRaster):
-                        def __init__(self, 
-                                        uuid=scenario.uuid, 
-                                        code=None, 
-                                        resolution=None, 
-                                        timelist=None, 
-                                        output_path=None, 
-                                        button=None, 
-                                        name=None,
-                                        bounds=dem.metadata["bounds_dl"],
-                                        bounds_srs="EPSG:28992"):
-                            super().__init__(uuid, code, resolution, timelist, output_path, button, name, bounds, bounds_srs)
+
+                    if self.download.use_dem_button.value:
+                        #This button makes sure we always get the same bounding box as the dem that is used in the model
+                        dem = hrt.Raster(self.vars.folder.model.schema_base.rasters.dem.path)
+                        class dlRasterPreset(dlRaster):
+                            def __init__(self, 
+                                            scenario_uuid=scenario.uuid, 
+                                            resolution=self.outputtypes.resolution_dropdown.value,
+                                            bbox=dem.metadata.bbox,
+                                            **kwargs):
+                                super().__init__(scenario_uuid=scenario_uuid, 
+                                                resolution=resolution, 
+                                                bbox=bbox, 
+                                                **kwargs)
+                    else:
+                        class dlRasterPreset(dlRaster):
+                            def __init__(self, 
+                                            scenario_uuid=scenario.uuid, 
+                                            resolution=self.outputtypes.resolution_dropdown.value,
+                                            **kwargs):
+                                super().__init__(scenario_uuid=scenario_uuid, 
+                                                resolution=resolution, 
+                                                **kwargs)
+
 
                     wlvl_max = getattr(self.vars.batch_fd.downloads, row["dl_name"]).wlvl_max
-                    raster_max_wlvl = dlRasterPreset(code="s1-max-dtri",
+                    raster_max_wlvl = dlRasterPreset(raster_code="s1-max-dtri",
                                             resolution=dem.metadata["pixel_width"],
                                             output_path=wlvl_max.path, 
                                             button=self.outputtypes.max_wlvl_button,
                                             name="max waterlvl",                                        
                     )
                     depth_max = getattr(self.vars.batch_fd.downloads, row["dl_name"]).depth_max
-                    raster_max_depth = dlRasterPreset(code="depth-max-dtri",
+                    raster_max_depth = dlRasterPreset(raster_code="depth-max-dtri",
                                             resolution=dem.metadata["pixel_width"],
                                             output_path=depth_max.path, 
                                             button=self.outputtypes.max_depth_button,
                                             name="max waterdepth",
                     )
                     damage_total = getattr(self.vars.batch_fd.downloads, row["dl_name"]).damage_total
-                    raster_total_damage = dlRasterPreset(code="total-damage",
+                    raster_total_damage = dlRasterPreset(raster_code="total-damage",
                                             resolution=0.5, #FIXME 0.5 res
                                             output_path=damage_total.path, 
                                             button=self.outputtypes.total_damage_button,
@@ -940,35 +958,26 @@ class DownloadWidgetsInteraction(DownloadWidgets):
                 #To vars so we can inspect.
                 self.vars.dl_raster_settings = dl_raster_settings
 
-                if len(dl_raster_settings.uuid_list)==0:
+                if len(dl_raster_settings.scenario_uuid_list)==0:
                     print("\nNo rasters will be downloaded")
                 else:
                     print("\nStarting download of rasters")
-                    print(f"uuid_list: {dl_raster_settings.uuid_list}")
-                    print(f"code_list: {dl_raster_settings.code_list}")
-                    print(f"target_srs_list: {dl_raster_settings.target_srs_list}")
-                    print(f"resolution_list: {dl_raster_settings.resolution_list}")
-                    print(f"bounds_list: {dl_raster_settings.bounds_list}")
-                    print(f"bounds_srs_list: {dl_raster_settings.bounds_srs_list}")
-                    print(f"pathname_list: {dl_raster_settings.pathname_list}")
+                    dl_raster_settings.print()
                     print(f"Wait until download is finished")
-                    
 
                     logging_batch_path = self.vars.batch_fd.downloads.full_path(
                         "download_raster_batch_{}.csv".format(datetime.datetime.now().strftime("%Y-%m-%d %Hh%M")),
                     )
 
                     dl.download_raster(
-                        scenario=dl_raster_settings.uuid_list,
-                        raster_code=dl_raster_settings.code_list,
-                        target_srs=dl_raster_settings.target_srs_list,
+                        scenario=dl_raster_settings.scenario_uuid_list,
+                        raster_code=dl_raster_settings.raster_code_list,
+                        projection=dl_raster_settings.projection_list,
                         resolution=dl_raster_settings.resolution_list,
-                        bounds=dl_raster_settings.bounds_list,
-                        bounds_srs=dl_raster_settings.bounds_srs_list,
+                        bbox=dl_raster_settings.bbox_list,
                         pathname=dl_raster_settings.pathname_list,
                         export_task_csv=logging_batch_path,
                     )
-
                     print("Download of rasters finished")
 
             self.download_batch.button.style.button_color = "lightgreen"
