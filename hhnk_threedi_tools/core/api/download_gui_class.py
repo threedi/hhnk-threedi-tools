@@ -15,8 +15,7 @@ from IPython.core.display import HTML
 from pathlib import Path
 
 # threedi
-from threedi_scenario_downloader import downloader as dl #FIXME local changes, push to threedi_scenario_downloader?
-# from hhnk_threedi_tools.core.api import downloader as dl
+from threedi_scenario_downloader import downloader as dl
 import hhnk_threedi_tools.core.api.download_functions as download_functions
 from hhnk_threedi_tools.core.api.calculation import Simulation
 

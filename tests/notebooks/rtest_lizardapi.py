@@ -11,7 +11,7 @@ from hhnk_threedi_tools.utils.notebooks.notebook_setup import setup_notebook
 notebook_data = setup_notebook()
 
 from threedi_scenario_downloader import downloader as dl_new
-from hhnk_threedi_tools.core.api import downloader as dl_old
+from deprecated.core.api import downloader as dl_old
 
 dl_old.LIZARD_URL = "https://hhnk.lizard.net/api/v3/"
 dl_new.LIZARD_URL = "https://hhnk.lizard.net/api/v4/"

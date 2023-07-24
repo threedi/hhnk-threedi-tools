@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+
+"""2023-07-24 threedi_scenario_downloader v1.2 works properly with v4 API. This isnt needed anymore."""
 """The downloader part of the threedi_scenario_downloader supplies the user with often used functionality to look up and export 3Di results using the Lizard API"""
 from datetime import datetime
 from urllib.parse import urlparse
