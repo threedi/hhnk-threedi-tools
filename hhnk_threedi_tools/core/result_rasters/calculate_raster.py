@@ -190,7 +190,7 @@ class BaseCalculatorGPKG:
         if not self.nodeid_raster.exists():
             hrt.gdf_to_raster(gdf=self.grid_gdf,
                 value_field="id",
-                raster_out=self.nodeid_raster.source_path,
+                raster_out=self.nodeid_raster.path,
                 nodata=0,
                 metadata=self.dem_raster.metadata,
                 datatype=gdal.GDT_Int32,
@@ -214,7 +214,7 @@ class BaseCalculatorGPKG:
 
             
             #Open outputraster
-            target_ds=gdal.Open(str(self.output_raster.source_path), gdal.GA_Update)
+            target_ds= self.output_raster.open_gdal_source_write()
             target_band = target_ds.GetRasterBand(1)
 
 
