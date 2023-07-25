@@ -167,10 +167,6 @@ class Folders(Folder):
     def full_structure(self):
         return print(FOLDER_STRUCTURE)
 
-    @property
-    def all_files(self):
-        return all_files_in_folders(self)
-
 
     def to_file_dict(self):
         """
@@ -291,9 +287,9 @@ class SourceDir(Folder):
             # Find peilgebieden shapefile in folder.
             if self.exists():
                 shape_name = [
-                    x
+                    x.name
                     for x in self.content
-                    if x.startswith("peilgebieden") and x.endswith(".shp")
+                    if x.stem.startswith("peilgebieden") and x.suffix==".shp"
                 ]
                 if len(shape_name) == 1:
                     self.add_file("peilgebieden", shape_name[0])
@@ -532,20 +528,20 @@ class OutputDirParent(Folder):
         def __init__(self, base, create):
             super().__init__(base, create=create)
 
-            self.add_file("bodemhoogte_kunstwerken", "bodemhoogte_kunstwerken.gpkg", "gpkg")
-            self.add_file("bodemhoogte_stuw", "bodemhoogte_stuw.gpkg", "gpkg")
-            self.add_file("gebruikte_profielen", "gebruikte_profielen.gpkg", "gpkg")
-            self.add_file("geisoleerde_watergangen", "geisoleerde_watergangen.gpkg", "gpkg")
-            self.add_file("gestuurde_kunstwerken", "gestuurde_kunstwerken.gpkg", "gpkg")
-            self.add_file("drooglegging", "drooglegging.tif", "raster")
-            self.add_file("geometry_check", "geometry_check.csv", "file")
-            self.add_file("general_sqlite_checks", "general_sqlite_checks.csv", "file")
-            self.add_file("overlappende_profielen", "overlappende_profielen.gpkg", "file")
-            self.add_file("profielen_geen_vertex", "profielen_geen_vertex.gpkg", "file")
-            self.add_file("wateroppervlak", "wateroppervlak.gpkg", "file")
+            self.add_file("bodemhoogte_kunstwerken", "bodemhoogte_kunstwerken.gpkg")
+            self.add_file("bodemhoogte_stuw", "bodemhoogte_stuw.gpkg")
+            self.add_file("gebruikte_profielen", "gebruikte_profielen.gpkg")
+            self.add_file("geisoleerde_watergangen", "geisoleerde_watergangen.gpkg")
+            self.add_file("gestuurde_kunstwerken", "gestuurde_kunstwerken.gpkg")
+            self.add_file("drooglegging", "drooglegging.tif")
+            self.add_file("geometry_check", "geometry_check.csv")
+            self.add_file("general_sqlite_checks", "general_sqlite_checks.csv")
+            self.add_file("overlappende_profielen", "overlappende_profielen.gpkg")
+            self.add_file("profielen_geen_vertex", "profielen_geen_vertex.gpkg")
+            self.add_file("wateroppervlak", "wateroppervlak.gpkg")
 
 
-            self.add_file("streefpeil", r"/temp/streefpeil.tif", "raster")
+            self.add_file("streefpeil", r"/temp/streefpeil.tif")
 
     class OutputDirBankLevel(Folder):
         def __init__(self, base, create):
@@ -577,16 +573,14 @@ class OutputDirParent(Folder):
             def __init__(self, base, create=False):
                 super().__init__(base, create=create)
 
-                self.add_file("nodes_0d1d_test", "nodes_0d1d_test.gpkg", "file")
+                self.add_file("nodes_0d1d_test", "nodes_0d1d_test.gpkg")
                 self.add_file(
                     "hydraulische_toets_kunstwerken",
                     "hydraulische_toets_kunstwerken.gpkg",
-                    "file",
                 )
                 self.add_file(
                     "hydraulische_toets_watergangen",
                     "hydraulische_toets_watergangen.gpkg",
-                    "file",
                 )
 
 
@@ -604,11 +598,11 @@ class OutputDirParent(Folder):
             def __init__(self, base, create=True):
                 super().__init__(base, create=create)
 
-                self.add_file("grid_nodes_2d", "grid_nodes_2d.gpkg", "file")
-                self.add_file("stroming_1d2d_test", "stroming_1d2d_test.gpkg", "file")
+                self.add_file("grid_nodes_2d", "grid_nodes_2d.gpkg")
+                self.add_file("stroming_1d2d_test", "stroming_1d2d_test.gpkg")
                 for T in [1, 3, 15]:
-                    self.add_file(f"waterstand_T{T}", f"waterstand_T{T}.tif", "raster")
-                    self.add_file(f"waterdiepte_T{T}", f"waterdiepte_T{T}.tif", "raster")
+                    self.add_file(f"waterstand_T{T}", f"waterstand_T{T}.tif")
+                    self.add_file(f"waterdiepte_T{T}", f"waterdiepte_T{T}.tif")
 
 
 
@@ -623,17 +617,6 @@ class OutputDirParent(Folder):
         def structure(self):
             return self.revision_structure("Climate")
 
-
-
-
-# class Layers(Folder):
-#     def __init__(self, base):
-#         super().__init__(base)
-
-
-# class Logs(Folder):
-#     def __init__(self, base):
-#         super().__init__(base)
 
 
 def create_tif_path(folder, filename):
@@ -666,53 +649,3 @@ def if_exists(path):
         return None
     else:
         return path if os.path.exists(path) else None
-
-
-def all_files_in_folders(_class):
-    """returns all files in folder objects"""
-
-    files = {}
-    folders, file_paths = find_files(_class)
-    has_subfolders = True
-
-    while has_subfolders:
-        _folder = folders[0]
-        found_folders, file_paths = find_files(_folder)
-        files.update(file_paths)
-        folders.extend(found_folders)
-        del folders[0]
-        has_subfolders = len(folders) > 0
-
-    return files
-
-
-def find_files(_class):
-    folders = []
-    file_paths = {}
-    for property_name in dir(_class):
-        # skip internal features
-        if "__" in property_name:
-            continue
-        # skip the structures
-        if property_name in ["show", "structure", "full_structure", "all_files"]:
-            continue
-        # skip opening grid and admin
-        if property_name in ["grid", "admin"]:
-            continue
-
-        if hasattr(_class, "isfolder"):
-            file_paths.update(_class.files)
-
-        _property = getattr(_class, property_name)
-        if hasattr(_property, "isfolder"):
-            file_paths.update(_property.files)
-            folders.append(_property)
-
-        if hasattr(_property, "isrevisions"):
-            for revision in _property.revisions:
-                _folders, revision_paths = find_files(_property[revision])
-
-                file_paths.update({revision: revision_paths})
-                folders.append(_folders)
-
-    return folders, file_paths
