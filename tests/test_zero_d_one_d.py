@@ -34,13 +34,6 @@ if __name__ == "__main__":
             print(i)
             getattr(selftest, i)()    
 # %%
-from pathlib import Path
-p = Path(r"C:\Users\wiets\Documents\GitHub\hhnk-threedi-plugin\readme.md")
-p = Path(r"C:\Users\wiets\Documents\GitHub\hhnk-threedi-tools\tests\notebook_data.json")
-p.read_json text(encoding="UTF-8")
 
-# import json
-# with open(p) as f:
-#                 model_sql = json.loads(f.read())
 
 

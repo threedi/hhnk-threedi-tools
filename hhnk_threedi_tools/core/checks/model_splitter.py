@@ -119,7 +119,7 @@ class ModelSchematisations:
             if not pd.isnull(row[raster_file]):
                 src = schema_base.full_path(row[raster_file])
                 if src.exists():
-                    dst = schema_new.full_file(row[raster_file])
+                    dst = schema_new.full_path(row[raster_file])
                     shutil.copyfile(src=src.base, dst=dst.base)
                 else:
                     # TODO raise error?

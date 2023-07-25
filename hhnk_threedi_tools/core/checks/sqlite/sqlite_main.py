@@ -213,7 +213,7 @@ class SqliteCheck:
             # Load layers
             drooglegging_raster = self.output_fd.drooglegging
 
-            create = hrt.check_create_new_file(output_file=self.drooglegging_raster.path,
+            create = hrt.check_create_new_file(output_file=drooglegging_raster.path,
                                     overwrite=overwrite)
             
             if create:

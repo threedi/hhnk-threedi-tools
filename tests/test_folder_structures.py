@@ -42,9 +42,9 @@ class TestFolder:
 
         
     def test_find_dem(self):
-        dem_path = PATH_TEST_MODEL.full_file(r"02_schematisation/00_basis/rasters/dem_hoekje.tif")
+        dem = FOLDER_TEST.full_path(r"02_schematisation/00_basis/rasters/dem_hoekje.tif")
         assert Path(FOLDER_TEST.model.schema_base.rasters.dem.path) == Path(
-            dem_path
+            dem.path
         )
 
     # TODO .find() is weg.
@@ -63,7 +63,6 @@ class TestFolder:
 if __name__ == "__main__":
     import inspect
     selftest = TestFolder()
-    self = selftest.folder
     #Run all testfunctions
     for i in dir(selftest):
         if i.startswith('test_') and hasattr(inspect.getattr_static(selftest,i), '__call__'):
