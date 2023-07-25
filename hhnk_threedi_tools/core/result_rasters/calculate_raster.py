@@ -202,37 +202,33 @@ class BaseCalculatorGPKG:
         self.nodeid_raster = hrt.Raster(output_file.parent/"nodeid.tif")
         self.output_raster = hrt.Raster(output_file)
 
-        if self.output_raster.exists():
-            if overwrite is False:
-                # print(f"Output exists: {self.output_raster.source_path}")
-                return
-            else:
-                self.output_raster.path.unlink()
-
-
-        #Create rasters
-        self.output_raster.create(metadata=self.dem_raster.metadata, nodata=NO_DATA_VALUE)
-        self.create_nodeid_raster() #Nodeid raster for calculation
-
-        self.wlvl_raw = np.array(self.grid_gdf[self.wlvl_column]).copy() #wlvl list
-
+        create = hrt.check_create_new_file(output_file=self.output_raster.path,
+                                  overwrite=overwrite)
         
-        #Open outputraster
-        target_ds=gdal.Open(str(self.output_raster.source_path), gdal.GA_Update)
-        target_band = target_ds.GetRasterBand(1)
+        if create:
+            #Create rasters
+            self.output_raster.create(metadata=self.dem_raster.metadata, nodata=NO_DATA_VALUE)
+            self.create_nodeid_raster() #Nodeid raster for calculation
+
+            self.wlvl_raw = np.array(self.grid_gdf[self.wlvl_column]).copy() #wlvl list
+
+            
+            #Open outputraster
+            target_ds=gdal.Open(str(self.output_raster.source_path), gdal.GA_Update)
+            target_band = target_ds.GetRasterBand(1)
 
 
-        #Do calculations per block
-        for idx, window, block_row in self.output_raster.iter_window(min_block_size=min_block_size):
-            if mode=="MODE_WLVL":
-                block_out = self.block_calculate_delauney_wlvl(window)
-            if mode=="MODE_WDEPTH":
-                block_out = self.block_calculate_delauney_wdepth(window)
+            #Do calculations per block
+            for idx, window, block_row in self.output_raster.iter_window(min_block_size=min_block_size):
+                if mode=="MODE_WLVL":
+                    block_out = self.block_calculate_delauney_wlvl(window)
+                if mode=="MODE_WDEPTH":
+                    block_out = self.block_calculate_delauney_wdepth(window)
 
-            target_band.WriteArray(block_out, xoff=window[0], yoff=window[1])
-        target_band.FlushCache()  # close file after writing
-        target_band = None
-        target_ds = None
+                target_band.WriteArray(block_out, xoff=window[0], yoff=window[1])
+            target_band.FlushCache()  # close file after writing
+            target_band = None
+            target_ds = None
 
 
     def __enter__(self):

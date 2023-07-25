@@ -12,19 +12,9 @@ def rasterize_peilgebieden(
     mask_file,
     overwrite=False,
 ):
-    # Rasterize regions
-    if not output_file.exists():
-        create = True
-    else:
-        create = False
-        # Check edit times. To see if raster needs to be updated.
-        raster_mtime = output_file.path.stat().st_mtime
-        shape_mtime = input_peilgebieden.path.stat().st_mtime
-
-        if shape_mtime > raster_mtime:
-            create = True
-    if overwrite:
-        create = True
+    create = hrt.check_create_new_file(output_file=output_file.path, 
+                              overwrite=overwrite, 
+                              input_files=[input_peilgebieden.path])
 
     if create:
         # TODO dit is niet goed voor het geheugen... Is het wel nodig?

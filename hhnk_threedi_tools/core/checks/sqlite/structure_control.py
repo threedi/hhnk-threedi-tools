@@ -127,44 +127,41 @@ class StructureControl:
 
 
     def run(self, overwrite=False):
-
         #Check overwrite
-        if Path(self.output_file).exists():
-            if overwrite is False:
-                return None
+        create = hrt.check_create_new_file(output_file=self.output_file,
+                                  overwrite=overwrite)
+        
+        if create:
+            #Load layers from sqlite
+            self.load_layers()
+
+            #merge the different control tables
+            self.merge_control()
+
+            #Add linestring geometry
+            for target_type, control_merge_structure in self.l.control_merge.items():
+                self.l.control_merge[target_type] = self.create_geometry_start_end(target_type, control_merge_structure)
+
+            #Combine structure tables
+            if self.l.control_merge:
+                control_df = pd.concat(self.l.control_merge.values())
             else:
-                Path(self.output_file).unlink()
+                control_df = None
 
-        #Load layers from sqlite
-        self.load_layers()
-
-        #merge the different control tables
-        self.merge_control()
-
-        #Add linestring geometry
-        for target_type, control_merge_structure in self.l.control_merge.items():
-            self.l.control_merge[target_type] = self.create_geometry_start_end(target_type, control_merge_structure)
-
-        #Combine structure tables
-        if self.l.control_merge:
-            control_df = pd.concat(self.l.control_merge.values())
-        else:
-            control_df = None
-
-        #Create empty df, so we always have a result, then add the controls
-        self.out_df = pd.DataFrame(columns=["control_id","action_table","target_type","target_id","code", "initial_wlvl", "geometry"])
-        self.out_df = pd.concat([self.out_df, control_df], join="inner")
+            #Create empty df, so we always have a result, then add the controls
+            self.out_df = pd.DataFrame(columns=["control_id","action_table","target_type","target_id","code", "initial_wlvl", "geometry"])
+            self.out_df = pd.concat([self.out_df, control_df], join="inner")
 
 
-        #add action values
-        self.out_df[["start_action_value","min_action_value","max_action_value"]] \
-            = self.out_df.apply(self.get_action_values, axis=1, result_type="expand")
+            #add action values
+            self.out_df[["start_action_value","min_action_value","max_action_value"]] \
+                = self.out_df.apply(self.get_action_values, axis=1, result_type="expand")
 
-        #append_hdb_layer
-        self.out_df = self.append_hdb_layer()
+            #append_hdb_layer
+            self.out_df = self.append_hdb_layer()
 
-        self.save()
-        return self.out_df
+            self.save()
+            return self.out_df
 
 
 # %%

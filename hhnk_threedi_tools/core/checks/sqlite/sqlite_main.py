@@ -211,41 +211,38 @@ class SqliteCheck:
 
         try:
             # Load layers
-            fixeddrainage_gdf = self.layer_fixeddrainage.load()
-            wlvl_raster = self.output_fd.streefpeil
             drooglegging_raster = self.output_fd.drooglegging
 
-            if drooglegging_raster.exists():
-                if overwrite is False:
-                    return
-                else:
-                    drooglegging_raster.unlink(missing_ok=True)
+            create = hrt.check_create_new_file(output_file=self.drooglegging_raster.path,
+                                    overwrite=overwrite)
+            
+            if create:
+                fixeddrainage_gdf = self.layer_fixeddrainage.load()
+                wlvl_raster = self.output_fd.streefpeil   # Rasterize fixeddrainage
+                hrt.gdf_to_raster(
+                    gdf=fixeddrainage_gdf,
+                    value_field=COL_STREEFPEIL_BWN,
+                    raster_out=wlvl_raster,
+                    nodata=self.dem.nodata,
+                    metadata=self.dem.metadata,
+                    read_array=False,
+                    overwrite=overwrite,
+                )
 
-            # Rasterize fixeddrainage
-            hrt.gdf_to_raster(
-                gdf=fixeddrainage_gdf,
-                value_field=COL_STREEFPEIL_BWN,
-                raster_out=wlvl_raster,
-                nodata=self.dem.nodata,
-                metadata=self.dem.metadata,
-                read_array=False,
-                overwrite=overwrite,
-            )
+                #Calculate drooglegging raster
+                drooglegging_calculator = hrt.RasterCalculator(
+                                raster1=self.dem, 
+                                raster2=wlvl_raster, 
+                                raster_out=drooglegging_raster, 
+                                custom_run_window_function=_create_drooglegging_raster,
+                                output_nodata=self.dem.nodata,
+                                verbose=False)
 
-            #Calculate drooglegging raster
-            drooglegging_calculator = hrt.RasterCalculator(
-                            raster1=self.dem, 
-                            raster2=wlvl_raster, 
-                            raster_out=drooglegging_raster, 
-                            custom_run_window_function=_create_drooglegging_raster,
-                            output_nodata=self.dem.nodata,
-                            verbose=False)
+                drooglegging_calculator.run(overwrite=overwrite)
 
-            drooglegging_calculator.run(overwrite=overwrite)
-
-            #remove temp files
-            wlvl_raster.unlink(missing_ok=True)
-            # self.results["dewatering_depth"] = output_file
+                #remove temp files
+                wlvl_raster.unlink(missing_ok=True)
+                # self.results["dewatering_depth"] = output_file
         except Exception as e:
             raise e from None
     
