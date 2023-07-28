@@ -61,7 +61,7 @@ def get_threedi_download_file(download,
 
 class dlRaster():
     """Helper for input of download_functions."""
-    def __init__(self, scenario_uuid, raster_code, resolution, timelist, output_path, button, name, bbox=None):
+    def __init__(self, scenario_uuid, raster_code, resolution, output_path, button, name, timelist=None, bbox=None):
         #Api variables
         self.scenario_uuid = scenario_uuid
         self.raster_code = raster_code
@@ -714,19 +714,16 @@ class DownloadWidgetsInteraction(DownloadWidgets):
 
 
                 raster_max_wlvl = dlRasterPreset(raster_code="s1-max-dtri",
-                                        timelist=None,
                                         output_path=os.path.join(output_folder, f"max_wlvl_res{self.selected_resolution_view}m.tif"), 
                                         button=self.outputtypes.max_wlvl_button,
                                         name="max waterlevel",
                 )
                 raster_max_depth = dlRasterPreset(raster_code="depth-max-dtri",
-                                        timelist=None,
                                         output_path=os.path.join(output_folder, f"max_depth_res{self.selected_resolution_view}m.tif"), 
                                         button=self.outputtypes.max_depth_button,
                                         name="max waterdepth",
                 )
                 raster_total_damage = dlRasterPreset(raster_code="total-damage",
-                                        timelist=None,
                                         output_path=os.path.join(output_folder, f"total_damage_res{self.selected_resolution_view}m.tif"), 
                                         button=self.outputtypes.total_damage_button,
                                         name="total damge",
@@ -744,7 +741,6 @@ class DownloadWidgetsInteraction(DownloadWidgets):
                                         name="waterdepth at timestep {time}",
                 )
                 raster_depth_dmg = dlRasterPreset(raster_code="dmge-depth",
-                                        timelist=None,
                                         output_path=os.path.join(output_folder, f"depth_for_lizard_dmg_res{self.selected_resolution_view}m.tif"), 
                                         button=self.outputtypes.depth_damage_button,
                                         name="waterdepth for lizard damage calc",
@@ -1367,7 +1363,7 @@ class GuiVariables:
 
     @property
     def scenario_names(self):
-        return [f"{scenario.name} test" for scenario in self.scenarios]
+        return [f"{scenario.name}" for scenario in self.scenarios]
 
     @property
     def scenario_view_names(self):
@@ -1506,3 +1502,4 @@ if __name__ == "__main__":
         display(self.tab)
         
         self.w.search.sim_name_widget.value = "model_test"
+# %%
