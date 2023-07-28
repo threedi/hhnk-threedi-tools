@@ -51,8 +51,8 @@ dependencies:
     - threedi_modelchecker==2.2.4 #ThreediToolbox 2.5.3
     - threedi_scenario_downloader==1.2 #Lizard API v4 only
     - threedi_schema==0.217.6 #ThreediToolbox 2.5.4
-    - threedi_raster_edits==0.26
-    - threedi-api-client==4.1.4
+    # - threedi_raster_edits==0.26 #deprecate?
+    - threedi-api-client==4.1.2 #3Di Models and Simulations 3.5.2
     - threedigrid_builder==1.11.4 #ThreediToolbox 2.5.3
     - threedigrid==2.0.6 #ThreediToolbox 2.5.4
     - threedidepth==0.6.1 #ThreediToolbox 2.5.4
