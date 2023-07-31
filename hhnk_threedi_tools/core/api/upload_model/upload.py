@@ -122,18 +122,22 @@ def get_or_create_schematisation():
 
 def get_and_create_schematisation(
     schematisation_name: str,
-    organisation_uuid="48dac75bef8a42ebbb52e8f89bbdb9f2",
+    organisation_uuid= str,
     tags: List = None,
 ) -> Schematisation:
     tags = [] if not tags else tags
     resp = threedi.api.schematisations_list(
-        name=schematisation_name, owner__unique_id=organisation_uuid
+        name=schematisation_name
     )
+
     if resp.count == 1:
+        uuid_id = threedi.api.organisations_list(unique_id=resp.results[0].owner)
+        uuid_name = resp.results[0].name
         print(
-            f"Schematisation '{schematisation_name}' already exists, skipping creation."
+            f"Schematisation '{schematisation_name}' already exists, skipping creation. uuid: {uuid_name}"
         )
         return resp.results[0]
+    
     elif resp.count > 1:
         raise ValueError(f"Found > 1 schematisations named'{schematisation_name}!")
 
