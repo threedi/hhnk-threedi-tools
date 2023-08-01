@@ -25,7 +25,7 @@ class KlimaatsommenPrep:
         if type(cfg_file) == str:
             cfg_file = hrt.get_pkg_resource_path(package_resource=hrt.waterschadeschatter.resources, 
                                 name=cfg_file)
-            if not os.path.exists(cfg_file):
+            if not cfg_file.exists():
                 raise Exception(f"{cfg_file} doesnt exist.")            
 
         self.folder = folder
@@ -58,8 +58,8 @@ class KlimaatsommenPrep:
         """
         dem = self.folder.model.schema_base.rasters.dem
 
+        #Reproject to 0.5m if necessary
         if dem.metadata.pixel_width != 0.5:
-            #Reproject to 0.5m if necessary
             new_dem_path = self.batch_fd.downloads.full_path(f"{dem.stem}_05m.tif")
             if not new_dem_path.exists():
                 hrt.reproject(src = dem, 
@@ -81,7 +81,7 @@ class KlimaatsommenPrep:
 
     def netcdf_to_grid(self, 
                        threedi_result, 
-                       corrected_col_name="wlvl_max_replaced", 
+                       corrected_col_name = "wlvl_max_replaced", 
                        grid_raw_filename = "grid_raw.gpkg",
                        grid_corr_filename = "grid_corr.gpkg", 
                        overwrite=False,
