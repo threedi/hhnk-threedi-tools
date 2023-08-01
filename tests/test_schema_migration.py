@@ -3,7 +3,7 @@
 import shutil
 
 # Local imports
-from hhnk_threedi_tools.core.migrate_schematisation import MigrateSchema
+from hhnk_threedi_tools.core.schematisation.migrate import MigrateSchema
 
 
 import hhnk_research_tools as hrt

@@ -15,15 +15,13 @@ from threedi_api_client.openapi import Schematisation
 from threedi_api_client.files import upload_file
 from threedi_api_client.openapi import ApiException
 
-from hhnk_threedi_tools.core.api.upload_model.constants import (
-    THREEDI_API_HOST,
-    ORGANISATION_UUID,
-    BUIEN,
-    RADAR_ID,
-    SCHEMATISATIONS,
-    UPLOAD_TIMEOUT,
-)
-from hhnk_threedi_tools.core.api.upload_model.login import get_login_details
+
+
+import urllib3
+UPLOAD_TIMEOUT = urllib3.Timeout(connect=60, read=600)
+THREEDI_API_HOST = "https://api.3di.live"
+
+
 
 # %%
 
@@ -32,8 +30,6 @@ class ThreediApiLocal:
     def __init__(self):
         self.CONFIG = {
             "THREEDI_API_HOST": THREEDI_API_HOST,
-            # "THREEDI_API_USERNAME": get_login_details(option='username'),
-            # "THREEDI_API_PASSWORD": get_login_details(option='password'),
             "THREEDI_API_PERSONAL_API_TOKEN": "",
         }
 

@@ -8,14 +8,14 @@ import pytz
 from threedi_api_client.openapi import ApiException
 from threedi_api_client.api import ThreediApi
 
-from hhnk_threedi_tools.core.api.upload_model.constants import (
+from deprecated.core.api.upload_model.constants import (
     THREEDI_API_HOST,
     ORGANISATION_UUID,
     BUIEN,
     RADAR_ID,
     SCHEMATISATIONS,
 )
-from hhnk_threedi_tools.core.api.upload_model.login import get_login_details
+from deprecated.core.api.upload_model.login import get_login_details
 
 CONFIG = {
     "THREEDI_API_HOST": THREEDI_API_HOST,

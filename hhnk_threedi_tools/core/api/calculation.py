@@ -1,13 +1,4 @@
-# -*- coding: utf-8 -*-
 # %%
-"""
-Created on Tue Apr 12 14:40:28 2022
-
-@author: chris.kerklaan
-
-note, this was not needed
-"""
-
 # First-party imports
 import datetime
 import time
@@ -27,11 +18,10 @@ from IPython.core.display import HTML
 # Local
 import hhnk_research_tools as hrt
 from hhnk_threedi_tools.variables.api_settings import API_SETTINGS
-from hhnk_threedi_tools.core.api.upload_model.threedi_calls import ThreediCalls
+from hhnk_threedi_tools.external.threedi_calls import ThreediCalls
 
 # Globals
-TIMEZONE = "Europe/Amsterdam"
-
+THREEDI_API_HOST = "https://api.3di.live/v3"
 
 #TODO move to hrt
 def update_dict_keys(mydict, translate_dict={}, remove_keys=[]) -> dict:
@@ -423,7 +413,7 @@ class Simulation:
         self,
         api_key: str,
         start_time: datetime.datetime = datetime.datetime(2022, 1, 1, 0, 0),
-        host="https://api.3di.live",
+        host=THREEDI_API_HOST,
     ):
 
         self.start_time = start_time

@@ -7,7 +7,7 @@ import os
 import json
 
 import hhnk_research_tools as hrt
-import hhnk_threedi_tools.core.api.upload_model.upload as upload
+import hhnk_threedi_tools.core.schematisation.upload as upload
 
 INFILTRATION_COLS = [
     "infiltration_rate",

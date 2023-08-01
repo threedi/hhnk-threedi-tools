@@ -3,7 +3,7 @@ import os
 import time
 import requests
 from datetime import datetime, timedelta
-from hhnk_threedi_tools.core.api.upload_model.threedi_calls import ThreediCalls
+from hhnk_threedi_tools.external.threedi_calls import ThreediCalls
 
 
 # Third-party imports

@@ -1,11 +1,11 @@
 import os
 import re
-from login import get_login_details
+from  deprecated.core.api.upload_model.login import get_login_details
 
 from threedi_scenario_downloader import downloader as dl
 
 from batch_simulaties import get_model_and_simulation_name
-from constants import *
+from deprecated.core.api.upload_model.constants import *
 
 lizard_username = get_login_details(option="username")
 api_key = get_login_details(section="lizard", option="api_key")
