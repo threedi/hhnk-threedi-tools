@@ -178,7 +178,7 @@ class ThreediGrid:
 
 
             #Save to file
-            grid_gdf.to_file(self.grid_path, driver="GPKG")
+            grid_gdf.to_file(self.grid_path.base, driver="GPKG")
 
 
     def waterlevel_correction(self, output_col="wlvl_max_replaced", overwrite=False):
@@ -186,7 +186,7 @@ class ThreediGrid:
                                   overwrite=overwrite)
         
         if create:
-            grid_gdf = gpd.read_file(self.grid_path, driver="GPKG")
+            grid_gdf = self.grid_path.load()
             
             grid_gdf[output_col] = grid_gdf["wlvl_max_orig"]
             replace_idx = grid_gdf["replace_all"]!= '0'
@@ -208,7 +208,7 @@ class ThreediGrid:
             grid_gdf["diff"] = grid_gdf[output_col] - grid_gdf["wlvl_max_orig"]
 
             #Save to file
-            grid_gdf.to_file(self.grid_corr_path, driver="GPKG")
+            grid_gdf.to_file(self.grid_corr_path.base, driver="GPKG")
 
 
 

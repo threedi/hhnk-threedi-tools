@@ -43,7 +43,7 @@ def test_klimaatsommenprep():
 
     #check results
     for raster_type in ["depth_max", "damage_total"]:
-        scenario_metadata = pd.read_csv(klimaatsommenprep.info_file[raster_type], sep=";")
+        scenario_metadata = pd.read_csv(klimaatsommenprep.info_file[raster_type].path, sep=";")
         assertion_metadata = pd.read_csv(TEST_DIRECTORY/fr"test_klimaatsommen/{raster_type}_info_expected.csv", sep=";")
         # scenario_metadata = damage_data.drop(['Unnamed: 0'], axis=1)
         # damage_data.set_index(['file name'], inplace = True)

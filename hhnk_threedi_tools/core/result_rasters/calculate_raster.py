@@ -5,10 +5,9 @@ Modified to have more flexibility in input and calculation
 """
 
 # -*- coding: utf-8 -*-
-
-
 import numpy as np
 from scipy.spatial import qhull
+from pathlib import Path
 
 from osgeo import gdal
 from threedigrid.admin.constants import NO_DATA_VALUE
@@ -16,9 +15,6 @@ from threedidepth import morton
 
 
 import hhnk_research_tools as hrt
-import os
-
-import geopandas as gpd
 
 
 class BaseCalculatorGPKG:
@@ -199,7 +195,7 @@ class BaseCalculatorGPKG:
 
     def run(self, output_file, mode="MODE_WLVL", min_block_size=1024, overwrite=False):
         #Init rasters
-        self.nodeid_raster = hrt.Raster(output_file.parent/"nodeid.tif")
+        self.nodeid_raster = hrt.Raster(Path(str(output_file)).parent/"nodeid.tif")
         self.output_raster = hrt.Raster(output_file)
 
         create = hrt.check_create_new_file(output_file=self.output_raster.path,

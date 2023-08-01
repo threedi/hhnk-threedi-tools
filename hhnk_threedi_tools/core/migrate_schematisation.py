@@ -29,7 +29,7 @@ def backup_sqlite(filename, clear_folder=False):
         backup_folder.unlink_contents() 
 
     backup_sqlite_path = backup_folder.full_path(f"{hrt.get_uuid()}_{os.path.basename(filename)}")
-    shutil.copyfile(filename, backup_sqlite_path)
+    shutil.copyfile(str(filename), str(backup_sqlite_path))
     return backup_sqlite_path
 
 
@@ -114,7 +114,6 @@ class MigrateSchema():
             self.overwrite_original()
 
             print(f"Upgraded database from version {old_version} to {new_version}")
-            # self.schema_backup.unlink_if_exists()
 
         except errors.UpgradeFailedError:
             print("UpgradeFailedError")

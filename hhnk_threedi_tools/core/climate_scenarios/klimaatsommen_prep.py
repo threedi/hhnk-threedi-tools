@@ -252,7 +252,7 @@ class KlimaatsommenPrep:
             #Write to file
 
             info_df.set_index(['filename'], inplace=True)
-            info_df.to_csv(self.info_file[raster_type], sep=';')
+            info_df.to_csv(self.info_file[raster_type].path, sep=';')
         
 
     def _scenario_metadata_row(self, scenario, raster_type) -> pd.Series:
@@ -263,7 +263,7 @@ class KlimaatsommenPrep:
 
         #Fill row data
         info_row = pd.Series(dtype=object)
-        info_row['filename']  = raster.name
+        info_row['filename']  = raster.stem
         info_row['min'] = stats["min"]
         info_row['max'] = stats["max"]
         info_row['mean'] = stats["mean"]

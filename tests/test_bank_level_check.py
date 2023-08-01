@@ -19,8 +19,6 @@ from tests.config import FOLDER_TEST
 import time
 
 
-# %%
-
 class TestBankLevel():
     
     @pytest.fixture(scope="class")
@@ -121,9 +119,9 @@ class TestBankLevel():
 if __name__ == "__main__":
     import inspect
     selftest = TestBankLevel()
-    self = selftest.bl_test
+    bl_test = selftest.bl_test()
     #Run all testfunctions
     for i in dir(selftest):
         if i.startswith('test_') and hasattr(inspect.getattr_static(selftest,i), '__call__'):
             print(i)
-            getattr(selftest, i)()    
+            getattr(selftest, i)(bl_test)    

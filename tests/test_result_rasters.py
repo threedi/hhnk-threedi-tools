@@ -32,7 +32,7 @@ class TestBaseCalculatorGPKG:
       
 
     def test_wlvl(self, basecalc):
-        output_file = TEMP_DIR.full_path(f"wlvl_corr_{hrt.get_uuid()}.tif")
+        output_file = hrt.Folder(TEMP_DIR).full_path(f"wlvl_corr_{hrt.get_uuid()}.tif")
         basecalc.run(output_file=output_file.path,  
                         mode="MODE_WLVL",
                         overwrite=True)
@@ -40,7 +40,7 @@ class TestBaseCalculatorGPKG:
         assert output_file.sum() == 43.918495178222656
 
     def test_wdepth(self, basecalc):
-        output_file = TEMP_DIR.full_path(f"wdepth_corr_{hrt.get_uuid()}.tif")
+        output_file = hrt.Folder(TEMP_DIR).full_path(f"wdepth_corr_{hrt.get_uuid()}.tif")
         basecalc.run(output_file=output_file.path,  
                     mode="MODE_WDEPTH",
                     overwrite=True)

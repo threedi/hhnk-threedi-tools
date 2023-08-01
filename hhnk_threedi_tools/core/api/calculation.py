@@ -36,7 +36,7 @@ TIMEZONE = "Europe/Amsterdam"
 #TODO move to hrt
 def update_dict_keys(mydict, translate_dict={}, remove_keys=[]) -> dict:
     """Rename dict keys and/or remove.
-    trannslate_dict is of the format -> old:new"""
+    translate_dict is of the format -> old:new"""
     for key_old in translate_dict:
         key_new = translate_dict[key_old]
         if key_old in mydict:
@@ -53,7 +53,7 @@ class NumericalSettings:
     def __init__(self, database_path, settings_id):
         """
         database_path: path to sqlite.
-        settings id: as defined in the global_settings (global_setting["numerical_settings_id"])
+        settings_id: as defined in the global_settings (global_setting["numerical_settings_id"])
         """
 
         self.translate_dict_numerical = {
@@ -131,7 +131,6 @@ class NumericalSettings:
 
 
 class SimulationData:
-    
     def __init__(self, sqlite_path, 
                         sim_name, 
                         sim_duration, 

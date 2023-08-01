@@ -93,13 +93,13 @@ class ClimateResult(hrt.Folder):
 
             # Files
             self.add_file("maskerkaart", "maskerkaart.shp")
-            self.add_file("maskerkaart_diepte_tif", "maskerkaart_diepte.tif", "raster")
-            self.add_file("maskerkaart_schade_tif", "maskerkaart_schade.tif", "raster")
-            self.add_file("geen_schade_tif", "geen_schade.tif", "raster")
-            self.add_file("mask_diepte_plas", "mask_diepte_plas.tif", "raster")
-            self.add_file("mask_schade_plas", "mask_schade_plas.tif", "raster")
-            self.add_file("mask_diepte_overlast", "mask_diepte_overlast.tif", "raster")
-            self.add_file("mask_schade_overlast", "mask_schade_overlast.tif", "raster")
+            self.add_file("maskerkaart_diepte_tif", "maskerkaart_diepte.tif")
+            self.add_file("maskerkaart_schade_tif", "maskerkaart_schade.tif")
+            self.add_file("geen_schade_tif", "geen_schade.tif")
+            self.add_file("mask_diepte_plas", "mask_diepte_plas.tif")
+            self.add_file("mask_schade_plas", "mask_schade_plas.tif")
+            self.add_file("mask_diepte_overlast", "mask_diepte_overlast.tif")
+            self.add_file("mask_schade_overlast", "mask_schade_overlast.tif")
             self.add_file("ruimtekaart", "ruimtekaart.shp")
             self.add_file("schade_peilgebied", "schade_per_peilgebied.shp")
             self.add_file("schade_peilgebied_corr", "schade_per_peilgebied_correctie.shp")
@@ -147,8 +147,8 @@ class ClimateResult(hrt.Folder):
             def __init__(self, base, create):
                 super().__init__(os.path.join(base, "temp"), create=create)
 
-                self.add_file("peilgebieden_diepte", "peilgebieden_diepte.tif", "raster")
-                self.add_file("peilgebieden_schade", "peilgebieden_schade.tif", "raster")
+                self.add_file("peilgebieden_diepte", "peilgebieden_diepte.tif")
+                self.add_file("peilgebieden_schade", "peilgebieden_schade.tif")
                 self.add_file("peilgebieden", "peilgebieden_clipped.shp")
 
 
