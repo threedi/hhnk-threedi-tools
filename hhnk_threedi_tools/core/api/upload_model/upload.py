@@ -9,6 +9,7 @@ import time
 from typing import Union, Dict, List
 from pathlib import Path
 from zipfile import ZipFile
+import hhnk_research_tools as hrt
 
 from threedi_api_client.api import ThreediApi
 from threedi_api_client.openapi import Schematisation
@@ -98,9 +99,9 @@ def get_schematisation(
     tags: List = None,
 ) -> Schematisation:
     tags = [] if not tags else tags
-    resp = threedi.api.schematisations_list(
+    resp = hrt._call_threedi_api(func=threedi.api.schematisations_list(
         name=schematisation_name, owner__unique_id=organisation_uuid
-    )
+    ))
     if resp.count == 1:
         print(
             f"Schematisation '{schematisation_name}' already exists, skipping creation."
@@ -134,7 +135,7 @@ def get_and_create_schematisation(
         uuid_id = threedi.api.organisations_list(unique_id=resp.results[0].owner)
         uuid_name = resp.results[0].name
         print(
-            f"Schematisation '{schematisation_name}' already exists, skipping creation. uuid: {uuid_name}"
+            f"Schematisation '{schematisation_name}' already exists, skipping creation. uuid: {uuid_id}"
         )
         return resp.results[0]
     
@@ -144,7 +145,7 @@ def get_and_create_schematisation(
     # if not found -> create
     # cont = input(f"Create new schematisation? [y/n] - {schematisation_name}")
     # if cont == "y":
-    schematisation = threedi.api.schematisations_create(
+    schematisation = hrt._call_threedi_api(func=threedi.api.schematisations_create,
         data={
             "owner": organisation_uuid,
             "name": schematisation_name,
@@ -156,14 +157,14 @@ def get_and_create_schematisation(
     #     return None
 
 
-def upload_sqlite(schematisation, revision, sqlite_path: Union[str, Path]):
+def upload_sqlite( schematisation, revision, sqlite_path: Union[str, Path]):
     sqlite_path = Path(sqlite_path)
     sqlite_zip_path = sqlite_path.with_suffix(".zip")
     print(f"sqlite_zip_path = {sqlite_zip_path}")
     ZipFile(sqlite_zip_path, mode="w").write(
         str(sqlite_path), arcname=str(sqlite_path.name)
     )
-    upload = threedi.api.schematisations_revisions_sqlite_upload(
+    upload = hrt._call_threedi_api(threedi.api.schematisations_revisions_sqlite_upload,
         id=revision.id,
         schematisation_pk=schematisation.id,
         data={"filename": str(sqlite_zip_path.name)},
@@ -186,8 +187,8 @@ def upload_raster(
         str(raster_path)
     )  # TODO check if raster changed, download from API, then upload.
     data = {"name": raster_path.name, "type": raster_type, "md5sum": md5sum}
-    raster_create = threedi.api.schematisations_revisions_rasters_create(
-        rev_id, schema_id, data
+    raster_create = hrt._call_threedi_api(func=threedi.api.schematisations_revisions_rasters_create,
+        revision_pk=rev_id, schematisation_pk=schema_id, data=data
     )
     if raster_create.file:
         if raster_create.file.state == "uploaded":
@@ -196,8 +197,8 @@ def upload_raster(
 
     print(f"Uploading '{raster_path}'...")
     data = {"filename": raster_path.name}
-    upload = threedi.api.schematisations_revisions_rasters_upload(
-        raster_create.id, rev_id, schema_id, data
+    upload = hrt._call_threedi_api(func=threedi.api.schematisations_revisions_rasters_upload,
+        id=raster_create.id, revision_pk=rev_id, schematisation_pk=schema_id, data=data
     )
 
     upload_file(upload.put_url, raster_path, timeout=UPLOAD_TIMEOUT)
@@ -209,7 +210,7 @@ def upload_raster(
 def commit_revision(rev_id: int, schema_id: int, commit_message):
     # First wait for all files to have turned to 'uploaded'
     for wait_time in [0.5, 1.0, 2.0, 10.0, 30.0, 60.0, 120.0, 300.0]:
-        revision = threedi.api.schematisations_revisions_read(rev_id, schema_id)
+        revision = hrt._call_threedi_api(func=threedi.api.schematisations_revisions_read, id=rev_id, schematisation_pk=schema_id)
         states = [revision.sqlite.file.state]
         states.extend([raster.file.state for raster in revision.rasters])
 
@@ -226,19 +227,19 @@ def commit_revision(rev_id: int, schema_id: int, commit_message):
     else:
         raise RuntimeError("Some files are still in 'created' state")
 
-    schematisation_revision = threedi.api.schematisations_revisions_commit(
-        rev_id, schema_id, {"commit_message": commit_message}
+    schematisation_revision =hrt._call_threedi_api(func=threedi.api.schematisations_revisions_commit,
+        id=rev_id, schematisation_pk=schema_id, data={"commit_message": commit_message}
     )
 
     print(f"Committed revision {revision.number}.")
     return schematisation_revision
 
 
-def create_threedimodel(
+def create_threedimodel( 
     schematisation,
     revision,
     max_retries_creation=60,
-    wait_time_creation=5,
+    wait_time_creation=10,
     # max_retries_processing=60,
     # wait_time_processing=5,
 ):
@@ -246,7 +247,7 @@ def create_threedimodel(
     for i in range(max_retries_creation):
         try:
             #Check number of models, if more than 2, delete oldest.
-            threedimodels = threedi.api.threedimodels_list(revision__schematisation__name=schematisation.name)
+            threedimodels = hrt._call_threedi_api( func=threedi.api.threedimodels_list, revision__schematisation__name=schematisation.name)
             models = threedimodels.to_dict()['results']
             print(f'Found {len(models)} existing models')
             if len(models)> 2:
@@ -255,10 +256,10 @@ def create_threedimodel(
                 #time.sleep(wait_time_creation)
 
             #Create model
-            threedimodel = threedi.api.schematisations_revisions_create_threedimodel(
+            threedimodel = hrt._call_threedi_api(func=threedi.api.schematisations_revisions_create_threedimodel,
                 id=revision.id, schematisation_pk=schematisation.id
             )
-            print(f"Creating threedimodel with id {threedimodel.id}...")
+            print(f"Creating threedimodel with id {threedimodel.id}..., retry:{max_retries_creation}")
             break
         except ApiException as e:
             print(e)
@@ -284,14 +285,16 @@ def create_threedimodel(
 
 def upload_and_process(
     schematisation_name: str,
+    organisation_uuid: str,
     sqlite_path: Union[str, Path],
     raster_paths: Dict[str, str],
     schematisation_create_tags: List[str] = None,
-    commit_message: str = "auto-commit",
+    commit_message: str = "auto-commit"
+    
 ):
     # Schematisatie maken als die nog niet bestaat
     schematisation = get_and_create_schematisation(
-        schematisation_name, tags=schematisation_create_tags
+        schematisation_name, organisation_uuid, tags=schematisation_create_tags
     )
 
     # Nieuwe (lege) revisie aanmaken
