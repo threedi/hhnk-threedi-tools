@@ -12,10 +12,10 @@ from traitlets import Unicode
 # from apscheduler.schedulers.blocking import BlockingScheduler
 import requests
 from IPython.core.display import HTML
+from pathlib import Path
 
 # threedi
-# from threedi_scenario_downloader import downloader as dl #FIXME local changes, push to threedi_scenario_downloader?
-from hhnk_threedi_tools.core.api import downloader as dl
+from threedi_scenario_downloader import downloader as dl
 import hhnk_threedi_tools.core.api.download_functions as download_functions
 from hhnk_threedi_tools.core.api.calculation import Simulation
 
@@ -32,7 +32,7 @@ from hhnk_threedi_tools.variables.api_settings import (
 )
 
 
-dl.LIZARD_URL = "https://hhnk.lizard.net/api/v3/"
+dl.LIZARD_URL = "https://hhnk.lizard.net/api/v4/"
 # THREEDI_API_HOST = "https://api.3di.live/v3"
 RESULT_LIMIT = 50 #Results on search
 CHUNK_SIZE = 1024**2
@@ -61,37 +61,46 @@ def get_threedi_download_file(download,
 
 class dlRaster():
     """Helper for input of download_functions."""
-    def __init__(self, uuid, code, resolution, timelist, output_path, button, name, bounds=None, bounds_srs=None):
-        self.uuid = uuid
-        self.code = code
+    def __init__(self, scenario_uuid, raster_code, resolution, output_path, button, name, timelist=None, bbox=None):
+        #Api variables
+        self.scenario_uuid = scenario_uuid
+        self.raster_code = raster_code
         self.resolution = resolution
+        self.bbox = bbox
         self.timelist = timelist
         self.output_path = output_path
+
+        #local use
         self.button = button
         self.name = name
-        self.bounds = bounds
-        self.bounds_srs = bounds_srs
 
-class dlRasterSettings():
-    def __init__(self, target_srs = "EPSG:28992") -> None:
-        self.uuid_list = []
-        self.code_list = []
-        self.target_srs_list = target_srs
+class dlRasterSettingsV4():
+    def __init__(self, projection = "EPSG:28992") -> None:
+        self.scenario_uuid_list = []
+        self.raster_code_list = []
+        self.projection_list = projection
         self.resolution_list = []
+        self.bbox_list = []
         self.time_list = []
         self.pathname_list = []
-        self.bounds_list = []
-        self.bounds_srs_list = []
 
     def add_raster(self, r: dlRaster):
-        self.uuid_list.append(r.uuid)
-        self.code_list.append(r.code)
+        """Add single raster to the settings"""
+        self.scenario_uuid_list.append(r.scenario_uuid)
+        self.raster_code_list.append(r.raster_code)
         self.resolution_list.append(r.resolution)
+        self.bbox_list.append(r.bbox)
         self.time_list.append(r.timelist)
-        self.pathname_list.append(r.output_path)
-        self.bounds_list.append(r.bounds)
-        self.bounds_srs_list.append(r.bounds_srs)
+        self.pathname_list.append(Path(r.output_path).as_posix())
 
+    def print(self):
+        print(f"scenario_uuid_list: {self.scenario_uuid_list}")
+        print(f"raster_code_list: {self.raster_code_list}")
+        print(f"projection_list: {self.projection_list}")
+        print(f"resolution_list: {self.resolution_list}")
+        print(f"bbox_list: {self.bbox_list}")
+        print(f"time_list: {self.time_list}")
+        print(f"pathname_list: {self.pathname_list}")
 
 
 class DownloadWidgets:
@@ -318,13 +327,10 @@ class DownloadWidgets:
             )
 
             # dropdown to pick resolution ----------------------------------------------------------------------
-            resolution_options = [0.5, 1, 2, 5, 10, 25]
             self.resolution_label = widgets.Label(
                 "Resolution [m]:", layout=item_layout(grid_area="resolution_label")
             )
             self.resolution_dropdown = widgets.Dropdown(
-                options=resolution_options,
-                value=10,
                 layout=item_layout(
                     grid_area="resolution_dropdown", description_width="initial"
                 ),
@@ -387,13 +393,16 @@ class DownloadWidgets:
                 "<b>6. Download selected</b>",
                 layout=item_layout(grid_area="download_button_label"),
             )
-            self.use_dem_label = widgets.Label(
-                "DEM extent:", layout=item_layout(grid_area="use_dem_label")
+            self.custom_extent_button = widgets.ToggleButton(
+                value=True,
+                description="Use custom extent",
+                tooltip="Format should be x1,y1,x2,y2. Value is filled with the dem extent when selecting the option.",
+                layout=item_layout(grid_area="custom_extent_button"),
             )
-            self.use_dem_button = widgets.ToggleButton(
-                value=False,
-                description="use",
-                layout=item_layout(grid_area="use_dem_button"),
+            self.custom_extent_widget = widgets.Text(
+                value="x1,y1,x2,y2", 
+                tooltip="Format should be x1,y1,x2,y2. Value is filled with the dem extent when selecting the option.",
+                layout=item_layout(grid_area="custom_extent_widget")
             )
             self.button = widgets.Button(
                 description="Download",
@@ -420,7 +429,7 @@ class DownloadWidgets:
 
             # Select folder to download batch to
             self.batch_folder_label = widgets.Label(
-                "Naam van batch folder (maak aan als niet bestaat!):",
+                "Batch folder naam (maak aan als niet bestaat!):",
                 layout=item_layout(grid_area="batch_folder_label"),
             )
             self.batch_folder_dropdown = widgets.Dropdown(
@@ -429,9 +438,9 @@ class DownloadWidgets:
                 layout=item_layout(grid_area="batch_folder_dropdown"),
             )
 
-            # Select DEM file to use to determine which resolution to download depth rasters on
+            # Select DEM file to use as reference resolution and extent for raster download
             self.dem_path_label = widgets.Label(
-                "Locatie DEM:", layout=item_layout(grid_area="dem_path_label")
+                "DEM path:", layout=item_layout(grid_area="dem_path_label")
             )
             self.dem_path_dropdown = widgets.Dropdown(
                 options="",
@@ -546,7 +555,6 @@ class DownloadWidgetsInteraction(DownloadWidgets):
         self.select.dl_select_box.observe(get_scenarios_selected_result, "value")
 
 
-
         # --------------------------------------------------------------------------------------------------
         # 4. Result layers selection
         # --------------------------------------------------------------------------------------------------
@@ -569,13 +577,33 @@ class DownloadWidgetsInteraction(DownloadWidgets):
         # If a new value is selected in the download selection folder, update the output folder
         self.select.dl_select_box.observe(self.update_output_selectbox, names="value")
 
-        #If batch folder selected, update batch download button
+        # If batch folder selected, update batch download button
         self.download_batch.batch_folder_dropdown.observe(self.change_dowloadbutton_state, "value")
+
+
+        # Set resolution options
+        def update_resolution_options(value):
+            self.outputtypes.resolution_dropdown.options = self.resolution_view_list
+            self.outputtypes.resolution_dropdown.value = self.resolution_view_list[
+                        self.vars.resolution_list.index(self.selected_dem.metadata.pixel_width)
+            ]
+        self.download_batch.dem_path_dropdown.observe(update_resolution_options, "value")
 
         # --------------------------------------------------------------------------------------------------
         # 6. Download
         # --------------------------------------------------------------------------------------------------
-        self.download.use_dem_button.observe(self._update_button_icon, "value")
+        def update_custom_extent_widget(value):
+            """Allow for custom extent when button is clicked"""
+            if self.download.custom_extent_button.value is True:
+                if self.selected_dem is not None:
+                    self.download.custom_extent_widget.value = self.selected_dem.metadata.bbox
+                self.download.custom_extent_widget.disabled = False
+            else:
+                self.download.custom_extent_widget.value = "x1, y1, x2, y2"
+                self.download.custom_extent_widget.disabled = True
+        self.download.custom_extent_button.observe(self._update_button_icon, "value")
+        self.download.custom_extent_button.observe(update_custom_extent_widget, "value")
+
 
         @self.download.button.on_click
         def download(action):
@@ -588,7 +616,7 @@ class DownloadWidgetsInteraction(DownloadWidgets):
             self.download.button.disabled = True
             
             #Init empty raster settings.
-            dl_raster_settings = dlRasterSettings()
+            dl_raster_settings = dlRasterSettingsV4()
 
             # Start download of selected files (if any are selected) ------------------------------------------------
             self.vars.scenario_raw_download_urls = self.create_scenario_raw_download_urls()
@@ -660,67 +688,60 @@ class DownloadWidgetsInteraction(DownloadWidgets):
                             print(f"{index}. Couldnt download {key} of {scenario.name}. Errormessage;\n {e}")
                     
 
-                # Start download of selected lizard rasters (if any are selected) -----------------------------------------------
-                time = self.outputtypes.time_pick_dropdown.value
-                if time is not None:
-                    time = time.replace("-", "_")
-                    time = time.replace(":", "_")
-                    
-                res = str(self.outputtypes.resolution_dropdown.value).replace(".", "_")
+                # Start download of selected lizard rasters (if any are selected) -----------------------------------------------                    
+                if self.download.custom_extent_button.value:
 
-                if self.download.use_dem_button.value:
-                    #This button makes sure we always get  the same bounding box as the dem that is used in the model
-                    dem = hrt.Raster(self.vars.folder.model.schema_base.rasters.dem.path)
+                    #This button makes sure we always get the same bounding box as the dem that is used in the model
                     class dlRasterPreset(dlRaster):
                         def __init__(self, 
-                                        uuid=scenario.uuid, 
-                                        resolution=self.outputtypes.resolution_dropdown.value,
-                                        bounds=dem.metadata["bounds_dl"],
-                                        bounds_srs="EPSG:28992",
+                                        scenario_uuid=scenario.uuid, 
+                                        resolution=self.selected_resolution,
+                                        bbox=self.download.custom_extent_widget.value,
                                         **kwargs):
-                            super().__init__(uuid=uuid, resolution=resolution, bounds=bounds, bounds_srs=bounds_srs, **kwargs)
+                            super().__init__(scenario_uuid=scenario_uuid, 
+                                             resolution=resolution, 
+                                             bbox=bbox, 
+                                             **kwargs)
                 else:
                     class dlRasterPreset(dlRaster):
                         def __init__(self, 
-                                        uuid=scenario.uuid, 
-                                        resolution=self.outputtypes.resolution_dropdown.value,
+                                        scenario_uuid=scenario.uuid, 
+                                        resolution=self.selected_resolution,
                                         **kwargs):
-                            super().__init__(uuid=uuid, resolution=resolution, **kwargs)
+                            super().__init__(scenario_uuid=scenario_uuid, 
+                                             resolution=resolution, 
+                                             **kwargs)
 
 
-                raster_max_wlvl = dlRasterPreset(code="s1-max-dtri",
-                                        timelist=None,
-                                        output_path=os.path.join(output_folder, f"max_wlvl_res{res}m.tif"), 
+                raster_max_wlvl = dlRasterPreset(raster_code="s1-max-dtri",
+                                        output_path=os.path.join(output_folder, f"max_wlvl_res{self.selected_resolution_view}m.tif"), 
                                         button=self.outputtypes.max_wlvl_button,
                                         name="max waterlevel",
                 )
-                raster_max_depth = dlRasterPreset(code="depth-max-dtri",
-                                        timelist=None,
-                                        output_path=os.path.join(output_folder, f"max_depth_res{res}m.tif"), 
+                raster_max_depth = dlRasterPreset(raster_code="depth-max-dtri",
+                                        output_path=os.path.join(output_folder, f"max_depth_res{self.selected_resolution_view}m.tif"), 
                                         button=self.outputtypes.max_depth_button,
                                         name="max waterdepth",
                 )
-                raster_total_damage = dlRasterPreset(code="total-damage",
-                                        timelist=None,
-                                        output_path=os.path.join(output_folder, f"total_damage_res{res}m.tif"), 
+                raster_total_damage = dlRasterPreset(raster_code="total-damage",
+                                        output_path=os.path.join(output_folder, f"total_damage_res{self.selected_resolution_view}m.tif"), 
                                         button=self.outputtypes.total_damage_button,
                                         name="total damge",
                 )
-                raster_wlvl = dlRasterPreset(code="s1-dtri",
-                                        timelist=time,
-                                        output_path=os.path.join(output_folder, f"wlvl_{time}_res{res}m.tif"), 
+                raster_wlvl = dlRasterPreset(raster_code="s1-dtri",
+                                        timelist=self.selected_time,
+                                        output_path=os.path.join(output_folder, f"wlvl_{self.selected_time_view}_res{self.selected_resolution_view}m.tif"), 
                                         button=self.outputtypes.wlvl_button,
                                         name="waterlevel at timestep {time}",
                 )
-                raster_wdepth = dlRasterPreset(code="depth-dtri",
-                                        timelist=time,
-                                        output_path=os.path.join(output_folder, f"depth_{time}_res{res}m.tif"), 
+                raster_wdepth = dlRasterPreset(raster_code="depth-dtri",
+                                        timelist=self.selected_time,
+                                        output_path=os.path.join(output_folder, f"depth_{self.selected_time_view}_res{self.selected_resolution_view}m.tif"), 
                                         button=self.outputtypes.depth_button,
                                         name="waterdepth at timestep {time}",
                 )
-                raster_depth_dmg = dlRasterPreset(code="dmge-depth",
-                                        timelist=None,
-                                        output_path=os.path.join(output_folder, f"depth_for_lizard_dmg_res{res}m.tif"), 
+                raster_depth_dmg = dlRasterPreset(raster_code="dmge-depth",
+                                        output_path=os.path.join(output_folder, f"depth_for_lizard_dmg_res{self.selected_resolution_view}m.tif"), 
                                         button=self.outputtypes.depth_damage_button,
                                         name="waterdepth for lizard damage calc",
                 )
@@ -734,17 +755,11 @@ class DownloadWidgetsInteraction(DownloadWidgets):
                             print("{} already on system".format(r.output_path.split("/")[-1]))
 
 
-            if len(dl_raster_settings.uuid_list)==0:
+            if len(dl_raster_settings.scenario_uuid_list)==0:
                 print("\nNo rasters will be downloaded")
             else:
                 print("\nStarting download of rasters")
-                print(f"uuid_list: {dl_raster_settings.uuid_list}")
-                print(f"code_list: {dl_raster_settings.code_list}")
-                print(f"target_srs_list: {dl_raster_settings.target_srs_list}")
-                print(f"resolution_list: {dl_raster_settings.resolution_list}")
-                print(f"bounds_list: {dl_raster_settings.bounds_list}")
-                print(f"bounds_srs_list: {dl_raster_settings.bounds_srs_list}")
-                print(f"pathname_list: {dl_raster_settings.pathname_list}")
+                dl_raster_settings.print()
                 print(f"Wait until download is finished")
                 
                 self.vars.dl_raster_settings=dl_raster_settings
@@ -754,12 +769,11 @@ class DownloadWidgetsInteraction(DownloadWidgets):
                 )
 
                 dl.download_raster(
-                    scenario=dl_raster_settings.uuid_list,
-                    raster_code=dl_raster_settings.code_list,
-                    target_srs=dl_raster_settings.target_srs_list,
+                    scenario=dl_raster_settings.scenario_uuid_list,
+                    raster_code=dl_raster_settings.raster_code_list,
+                    projection=dl_raster_settings.projection_list,
                     resolution=dl_raster_settings.resolution_list,
-                    bounds=dl_raster_settings.bounds_list,
-                    bounds_srs=dl_raster_settings.bounds_srs_list,
+                    bbox=dl_raster_settings.bbox_list,
                     time=dl_raster_settings.time_list,
                     pathname=dl_raster_settings.pathname_list,
                     export_task_csv=logging_batch_path,
@@ -841,7 +855,7 @@ class DownloadWidgetsInteraction(DownloadWidgets):
 
 
                 #Init empty raster settings.
-                dl_raster_settings = dlRasterSettings()
+                dl_raster_settings = dlRasterSettingsV4()
 
                 # Start download of selected files (if any are selected) ------------------------------------------------
                 self.scenario_raw_download_urls = self.create_scenario_raw_download_urls()
@@ -895,37 +909,44 @@ class DownloadWidgetsInteraction(DownloadWidgets):
                             except Exception as e:
                                 print(f"{index}. Couldnt download {key} of {scenario.name}. Errormessage;\n {e}")
 
-                    # Donwload max depth and damage rasters
-                    class dlRasterPreset(dlRaster):
-                        def __init__(self, 
-                                        uuid=scenario.uuid, 
-                                        code=None, 
-                                        resolution=None, 
-                                        timelist=None, 
-                                        output_path=None, 
-                                        button=None, 
-                                        name=None,
-                                        bounds=dem.metadata["bounds_dl"],
-                                        bounds_srs="EPSG:28992"):
-                            super().__init__(uuid, code, resolution, timelist, output_path, button, name, bounds, bounds_srs)
+
+                    if self.download.custom_extent_button.value:
+                        #This button makes sure we always get the same bounding box as the dem that is used in the model
+                        class dlRasterPreset(dlRaster):
+                            def __init__(self, 
+                                            scenario_uuid=scenario.uuid, 
+                                            resolution=self.selected_resolution,
+                                            bbox=self.download.custom_extent_widget.value,
+                                            **kwargs):
+                                super().__init__(scenario_uuid=scenario_uuid, 
+                                                resolution=resolution, 
+                                                bbox=bbox, 
+                                                **kwargs)
+                    else:
+                        class dlRasterPreset(dlRaster):
+                            def __init__(self, 
+                                            scenario_uuid=scenario.uuid, 
+                                            resolution=self.selected_resolution,
+                                            **kwargs):
+                                super().__init__(scenario_uuid=scenario_uuid, 
+                                                resolution=resolution, 
+                                                **kwargs)
+
 
                     wlvl_max = getattr(self.vars.batch_fd.downloads, row["dl_name"]).wlvl_max
-                    raster_max_wlvl = dlRasterPreset(code="s1-max-dtri",
-                                            resolution=dem.metadata["pixel_width"],
+                    raster_max_wlvl = dlRasterPreset(raster_code="s1-max-dtri",
                                             output_path=wlvl_max.path, 
                                             button=self.outputtypes.max_wlvl_button,
                                             name="max waterlvl",                                        
                     )
                     depth_max = getattr(self.vars.batch_fd.downloads, row["dl_name"]).depth_max
-                    raster_max_depth = dlRasterPreset(code="depth-max-dtri",
-                                            resolution=dem.metadata["pixel_width"],
+                    raster_max_depth = dlRasterPreset(raster_code="depth-max-dtri",
                                             output_path=depth_max.path, 
                                             button=self.outputtypes.max_depth_button,
                                             name="max waterdepth",
                     )
                     damage_total = getattr(self.vars.batch_fd.downloads, row["dl_name"]).damage_total
-                    raster_total_damage = dlRasterPreset(code="total-damage",
-                                            resolution=0.5, #FIXME 0.5 res
+                    raster_total_damage = dlRasterPreset(raster_code="total-damage",
                                             output_path=damage_total.path, 
                                             button=self.outputtypes.total_damage_button,
                                             name="total damge",
@@ -940,35 +961,26 @@ class DownloadWidgetsInteraction(DownloadWidgets):
                 #To vars so we can inspect.
                 self.vars.dl_raster_settings = dl_raster_settings
 
-                if len(dl_raster_settings.uuid_list)==0:
+                if len(dl_raster_settings.scenario_uuid_list)==0:
                     print("\nNo rasters will be downloaded")
                 else:
                     print("\nStarting download of rasters")
-                    print(f"uuid_list: {dl_raster_settings.uuid_list}")
-                    print(f"code_list: {dl_raster_settings.code_list}")
-                    print(f"target_srs_list: {dl_raster_settings.target_srs_list}")
-                    print(f"resolution_list: {dl_raster_settings.resolution_list}")
-                    print(f"bounds_list: {dl_raster_settings.bounds_list}")
-                    print(f"bounds_srs_list: {dl_raster_settings.bounds_srs_list}")
-                    print(f"pathname_list: {dl_raster_settings.pathname_list}")
+                    dl_raster_settings.print()
                     print(f"Wait until download is finished")
-                    
 
                     logging_batch_path = self.vars.batch_fd.downloads.full_path(
                         "download_raster_batch_{}.csv".format(datetime.datetime.now().strftime("%Y-%m-%d %Hh%M")),
                     )
 
                     dl.download_raster(
-                        scenario=dl_raster_settings.uuid_list,
-                        raster_code=dl_raster_settings.code_list,
-                        target_srs=dl_raster_settings.target_srs_list,
+                        scenario=dl_raster_settings.scenario_uuid_list,
+                        raster_code=dl_raster_settings.raster_code_list,
+                        projection=dl_raster_settings.projection_list,
                         resolution=dl_raster_settings.resolution_list,
-                        bounds=dl_raster_settings.bounds_list,
-                        bounds_srs=dl_raster_settings.bounds_srs_list,
+                        bbox=dl_raster_settings.bbox_list,
                         pathname=dl_raster_settings.pathname_list,
                         export_task_csv=logging_batch_path,
                     )
-
                     print("Download of rasters finished")
 
             self.download_batch.button.style.button_color = "lightgreen"
@@ -981,6 +993,10 @@ class DownloadWidgetsInteraction(DownloadWidgets):
 
         #Output folder string
         self.output.folder_value.value = self.vars.folder.threedi_results.path
+
+        # Set dem options
+        self.download_batch.dem_path_dropdown.options = [self.vars.folder.model.schema_base.rasters.dem.path]
+        self.download_batch.dem_path_dropdown.value = self.vars.folder.model.schema_base.rasters.dem.path
 
 
     # --------------------------------------------------------------------------------------------------
@@ -1059,7 +1075,7 @@ class DownloadWidgetsInteraction(DownloadWidgets):
                 Tend = datetime.datetime.strptime(selected_result["simulation_end"], "%Y-%m-%dT%H:%M:%SZ")
 
                 dates = pd.date_range(Tstart, Tend, freq="H")
-                time_pick_options = [(date.strftime("%Y-%m-%dT%H:%M:%S")) for date in dates]
+                time_pick_options = [(date.strftime("%Y-%m-%dT%H:%M")) for date in dates]
                 return time_pick_options
             except:
                 return None
@@ -1205,16 +1221,6 @@ class DownloadWidgetsInteraction(DownloadWidgets):
         # Select these new records.
         self.output.output_select_box.value = selected_download_newer
 
-        # Set Dem path for batch
-        # if scenarios["folder"].model.rasters.find_dem() == "":
-        #     dem_path_dropdown.options = [
-        #         i.split(os.sep)[-1]
-        #         for i in scenarios["folder"].model.rasters.find_ext("tif")
-        #     ]
-        # else:
-        self.download_batch.dem_path_dropdown.options = [
-            self.vars.folder.model.schema_base.rasters.dem.path
-        ]
 
 
     def update_api_keys(self, api_keys_path):
@@ -1271,6 +1277,48 @@ class DownloadWidgetsInteraction(DownloadWidgets):
     
 
     @property
+    def resolution_view_list(self):
+        l = []
+        if self.selected_dem is not None:
+            dem_pixelwidth = self.selected_dem.metadata.pixel_width
+        else:
+            dem_pixelwidth = 0
+        for i in self.vars.resolution_list:
+            if i==dem_pixelwidth:
+                l.append(f"{i} (dem resolution)")
+            else:
+                l.append(i)
+        return l
+
+    @property
+    def selected_resolution(self):
+        return self.vars.resolution_list[self.resolution_view_list.index(self.outputtypes.resolution_dropdown.value)]
+
+    @property
+    def selected_resolution_view(self):
+        return str(self.selected_resolution).replace(".", "_")
+
+    @property
+    def selected_dem(self):
+        dem_path = self.download_batch.dem_path_dropdown.value
+        if dem_path is not None:
+            return hrt.Raster(dem_path)
+        else:
+            return None
+
+    @property
+    def selected_time(self):
+        return self.outputtypes.time_pick_dropdown.value
+
+    @property
+    def selected_time_view(self):
+        timestr = self.outputtypes.time_pick_dropdown.value
+        if timestr is not None:
+            timestr = timestr.replace("-", "_")
+            timestr = timestr.replace(":", "_")
+        return timestr
+
+    @property
     def vars(self):
         return self.caller.vars
 
@@ -1286,6 +1334,7 @@ class GuiVariables:
 
         self.api_keys = {"lizard":"", "threedi":""}
         self._scenarios = []  #filled when clicking search
+
 
     @property
     def folder(self):
@@ -1314,12 +1363,17 @@ class GuiVariables:
 
     @property
     def scenario_names(self):
-        return [f"{scenario.name} test" for scenario in self.scenarios]
-
+        return [f"{scenario.name}" for scenario in self.scenarios]
 
     @property
     def scenario_view_names(self):
         return [f"{scenario.created[:10]}   |   {scenario.name}" for scenario in self.scenarios]
+    
+
+    @property
+    def resolution_list(self):
+        return [0.5, 1, 2, 5, 10, 25]
+    
 
     @property
     def time_now(self):
@@ -1339,19 +1393,18 @@ class DownloadGui:
         self.widgets = DownloadWidgetsInteraction(self)
 
         if data:
-            self.widgets.update_api_keys(api_keys_path=data["api_keys_path"])
+            self.w.update_api_keys(api_keys_path=data["api_keys_path"])
             self.vars.main_folder = data["polder_folder"]
         else:
             self.vars.api_keys["lizard"] = lizard_api_key
             self.vars.api_keys["threedi"] = threedi_api_key
             self.vars.main_folder = main_folder
 
-        self.widgets.update_folder()
-        self.widgets.update_buttons() #disable filetype buttons
-        self.widgets.download.use_dem_button.value = True
-        self.widgets.output.subfolder_box.value = "1d2d_results"
-        self.widgets.search.sim_name_widget.value = ""  #hopefully prevents cursor from going to api key field.
-
+        self.w.update_folder()
+        self.w.update_buttons() #disable filetype buttons
+        self.w.output.subfolder_box.value = "1d2d_results"
+        self.w.search.sim_name_widget.value = ""  #hopefully prevents cursor from going to api key field.
+        self.w.download.custom_extent_button.value = False
 
         if not self.vars.main_folder:
             self.vars.main_folder = os.getcwd()
@@ -1394,8 +1447,8 @@ class DownloadGui:
                 self.w.output.subfolder_box,
                 self.w.output.output_select_box,
                 self.w.download.label,
-                self.w.download.use_dem_label,
-                self.w.download.use_dem_button,
+                self.w.download.custom_extent_button,
+                self.w.download.custom_extent_widget,
                 self.w.download.button,
                 self.w.download_batch.label,
                 self.w.download_batch.button,
@@ -1421,11 +1474,11 @@ class DownloadGui:
                     'dl_select_box dl_select_box dl_select_box raster_buttons_label raster_buttons_label output_select_box output_select_box output_select_box'
                     'dl_select_box dl_select_box dl_select_box raster_buttons_box raster_buttons_box output_select_box output_select_box output_select_box'
                     'search_results button_0d1d all_button raster_buttons_box raster_buttons_box  output_select_box output_select_box output_select_box'
-                    '. . use_dem_label time_resolution_box time_resolution_box time_resolution_box download_button_label download_button_label'
-                    '. . use_dem_button time_resolution_box time_resolution_box time_resolution_box download_button download_button'
-                    '. . . . . . download_batch_button_label download_batch_button_label'
-                    '. . dem_path_label dem_path_label batch_folder_label batch_folder_label download_batch_button download_batch_button'
-                    '. . dem_path_dropdown dem_path_dropdown batch_folder_dropdown batch_folder_dropdown download_batch_button download_batch_button'
+                    '. . . time_resolution_box time_resolution_box time_resolution_box download_button_label download_button_label'
+                    '. . . time_resolution_box time_resolution_box time_resolution_box download_button download_button'
+                    '. . . custom_extent_button custom_extent_widget custom_extent_widget download_batch_button_label download_batch_button_label'
+                    'dem_path_label dem_path_label dem_path_label dem_path_label batch_folder_label batch_folder_label download_batch_button download_batch_button'
+                    'dem_path_dropdown dem_path_dropdown dem_path_dropdown dem_path_dropdown batch_folder_dropdown batch_folder_dropdown download_batch_button download_batch_button'
                     """,
             ),
         )
@@ -1449,3 +1502,4 @@ if __name__ == "__main__":
         display(self.tab)
         
         self.w.search.sim_name_widget.value = "model_test"
+# %%
