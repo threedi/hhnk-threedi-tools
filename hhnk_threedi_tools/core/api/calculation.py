@@ -709,7 +709,7 @@ class Simulation:
         return result.results[0]
 
 
-    def create(self, output_folder, simulation_name, model_id, organisation_uuid, sim_duration):
+    def create(self, output_folder, simulation_name, model_id, organisation_uuid, sim_duration, output_folder_sqlite=None):
         # data = {
         #     "template": self.template.id,
         #     "name": simulation_name,
@@ -727,7 +727,7 @@ class Simulation:
         self.set_model(model_id=model_id)
 
         #Download the sqlite so we can retrieve some settings
-        self.download_sqlite()
+        self.sqlite_path = self.download_sqlite(output_folder_sqlite=output_folder_sqlite)
 
         #Create simulation on API
         data={  "name":simulation_name,
@@ -742,20 +742,19 @@ class Simulation:
         self.simulation_created = True
 
 
-    def download_sqlite(self, output_folder=None):
+    def download_sqlite(self, output_folder_sqlite=None):
         """Download sqlite of selected model to temporary folder"""
-        if output_folder is None:
-            output_folder = self.output_folder
-        else:
-            self.output_folder = output_folder
+        if output_folder_sqlite is None:
+            output_folder_sqlite = self.output_folder
 
-        if output_folder is None:
+
+        if output_folder_sqlite is None:
             return "define self.output_folder first"
 
         if self.model is None:
             return "define self.model_id first"
 
-        output_path = Path(os.path.join(output_folder, "tempfiles", f"model_{self.model_id}.zip"))
+        output_path = Path(os.path.join(output_folder_sqlite, "tempfiles", f"model_{self.model_id}.zip"))
         output_path.parent.parent.mkdir(exist_ok=True)
         output_path.parent.mkdir(exist_ok=True) #Create parent folder
         if not output_path.with_suffix('').exists():
@@ -772,7 +771,7 @@ class Simulation:
             zip_ref.extractall(output_path.with_suffix(''))
             zip_ref.close()
 
-        self.sqlite_path = [i for i in output_path.with_suffix('').glob('*.sqlite')][0]
+        return [i for i in output_path.with_suffix('').glob('*.sqlite')][0]
 
 
     def get_data(self, rain_data):
