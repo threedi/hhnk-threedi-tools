@@ -15,8 +15,8 @@ from traitlets import Unicode
 # from apscheduler.schedulers.blocking import BlockingScheduler
 
 # threedi
-# from threedi_scenario_downloader import downloader as dl
-from hhnk_threedi_tools.core.api import downloader as dl
+from threedi_scenario_downloader import downloader as dl
+# from deprecated.core.api import downloader as dl
 
 # local imports
 import hhnk_threedi_tools as htt
@@ -35,7 +35,7 @@ from hhnk_threedi_tools.variables.api_settings import (
 )
 
 
-dl.LIZARD_URL = "https://hhnk.lizard.net/api/v3/"
+dl.LIZARD_URL = "https://hhnk.lizard.net/api/v4/"
 DL_RESULT_LIMIT = 1000
 THREEDI_API_HOST = "https://api.3di.live/v3"
 RESULT_LIMIT = 20
