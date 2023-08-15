@@ -43,12 +43,12 @@ HDB = f"HDB{file_types_dict[GDB]}"
 POLDER_POLY = f"polder_polygon{file_types_dict[SHAPE]}"
 CHANNEL_FROM_PROFILES = f"channel_surface_from_profiles{file_types_dict[SHAPE]}"
 
-DAMO_DUIKER_SIFON_HEVEL = "DuikerSifonHevel"
-DAMO_WATERDEEL = "waterdeel"
-DATACHECKER_CULVERT = "culvert"
-DATACHECKER_FIXED_DRAINAGE = "fixeddrainagelevelarea"
-HDB_STURING_3DI = "Sturing_3Di"
-WATERLEVEL_VAL_FIELD = "streefpeil_bwn2"
+
+
+
+
+
+
 
 FOLDER_STRUCTURE = """
     Main Folders object
@@ -129,7 +129,6 @@ class Folders(Folder):
                                				└── modelbuilder
                                
                                     Files:	['damo', 'hdb', 'datachecker', ...]
-                                    Layers:	['datachecker_fixed_drainage', ...]
             
             
         {FOLDER_STRUCTURE}
@@ -182,13 +181,6 @@ class Folders(Folder):
             "hdb": self.source_data.hdb.path_if_exists,
             "polder_shapefile": self.source_data.polder_polygon.path_if_exists,
             "channels_shapefile": self.source_data.modelbuilder.channel_from_profiles.path_if_exists,
-            # Layer names source data
-            "damo_duiker_sifon_layer": DAMO_DUIKER_SIFON_HEVEL,
-            "damo_waterdeel_layer": DAMO_WATERDEEL,
-            "datachecker_culvert_layer": DATACHECKER_CULVERT,
-            "datachecker_fixed_drainage": DATACHECKER_FIXED_DRAINAGE,
-            "hdb_sturing_3di_layer": HDB_STURING_3DI,
-            "init_waterlevel_val_field": WATERLEVEL_VAL_FIELD,
             # model folder
             "model": self.model.schema_base.database.path_if_exists,
             "dem": self.model.schema_base.rasters.dem.path_if_exists,

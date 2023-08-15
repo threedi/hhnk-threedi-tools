@@ -500,7 +500,7 @@ class DownloadWidgetsInteraction(DownloadWidgets):
             self.update_buttons()  # Change button state based on selected scenarios
             self.update_time_pick_dropdown()  # change button state and dropdown based on selected scenarios
 
-        self.select.dl_select_box.observe(get_scenarios_selected_result, "value")
+        self.select.dl_select_box.observe(get_scenarios_selected_result, names="value")
 
 
 
@@ -508,7 +508,7 @@ class DownloadWidgetsInteraction(DownloadWidgets):
         # 4. Result layers selection
         # --------------------------------------------------------------------------------------------------
         for button in self.outputtypes.file_buttons + self.outputtypes.raster_buttons:
-            button.observe(self._update_button_icon, "value")
+            button.observe(self._update_button_icon, names="value")
 
 
         # --------------------------------------------------------------------------------------------------
@@ -531,7 +531,7 @@ class DownloadWidgetsInteraction(DownloadWidgets):
         # --------------------------------------------------------------------------------------------------
         # 6. Download
         # --------------------------------------------------------------------------------------------------
-        self.download.use_dem_button.observe(self._update_button_icon, "value")
+        self.download.use_dem_button.observe(self._update_button_icon, names="value")
 
         @self.download.button.on_click
         def download(action):
@@ -1263,8 +1263,8 @@ class DownloadGui:
 
 
 if __name__ == "__main__":
-        data = {'polder_folder': 'E:\\02.modellen\\model_test_v2',
-    'api_keys_path': 'C:\\Users\\wvangerwen\\AppData\\Roaming\\3Di\\QGIS3\\profiles\\default\\python\\plugins\\hhnk_threedi_plugin\\api_key.txt'}
+        data = {'polder_folder': r'E:\02.modellen\model_test_v2',
+              'api_keys_path': fr"{os.getenv('APPDATA')}\3Di\QGIS3\profiles\default\python\plugins\hhnk_threedi_plugin\api_key.txt"}
         self = DownloadGui(data=data); 
         display(self.tab)
  

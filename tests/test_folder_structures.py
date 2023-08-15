@@ -27,7 +27,6 @@ class TestFolder:
     def test_to_file_dict(self):
         """tests if a base path dictionary can be generated"""
         files_dict = FOLDER_NEW.to_file_dict()
-        assert files_dict["hdb_sturing_3di_layer"] == "Sturing_3Di"
         assert files_dict["0d1d_results_dir"] == str(PATH_NEW_FOLDER / "03_3di_results" / "0d1d_results")
 
 
@@ -69,3 +68,4 @@ if __name__ == "__main__":
             print(i)
             getattr(selftest, i)()    
 # %%
+FOLDER_NEW.to_file_dict()

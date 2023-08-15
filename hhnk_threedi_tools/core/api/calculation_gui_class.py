@@ -773,7 +773,7 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
 
         # Observe all calculation settings buttons
         for button in self.calc_settings.children:
-            button.observe(self._update_button_icon, "value")
+            button.observe(self._update_button_icon, names="value")
 
 
         self.start.simulation_name_widget.observe(lambda change: self.update_simulation_name_widget(model_type=None), 'value', type='change')
@@ -1812,7 +1812,7 @@ class StartCalculationGui:
 
 if __name__ == '__main__':
     data = {'polder_folder': 'E:\\02.modellen\\model_test_v2',
- 'api_keys_path': 'C:\\Users\\wvangerwen\\AppData\\Roaming\\3Di\\QGIS3\\profiles\\default\\python\\plugins\\hhnk_threedi_plugin\\api_key.txt'}
+            'api_keys_path': fr"{os.getenv('APPDATA')}\3Di\QGIS3\profiles\default\python\plugins\hhnk_threedi_plugin\api_key.txt"}
     self = StartCalculationGui(data=data); 
     display(self.tab)
     # display(self.start_calculation_tab)
