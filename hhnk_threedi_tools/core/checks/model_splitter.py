@@ -309,14 +309,20 @@ class ModelSchematisations:
                 shutil.copy(sqlite_path, target_file)
                 shutil.copy(mod_settings_file, target_file)
                 shutil.copy(settings_df, target_file)
-                shutil.copy(model_sql, target_file)
+                try:
+                    shutil.copy(model_sql, target_file)
+                except:
+                    print("sql_file not found")
                 return print(f"succes mkdir and copy {Path(sqlite_path).name} + {Path(mod_settings_file).name} + {Path(settings_df).name} + {Path(model_sql).name} to: {target_file}")
 
             else:
                 shutil.copy(sqlite_path, target_file)
                 shutil.copy(mod_settings_file, target_file)
                 shutil.copy(settings_df, target_file)
-                shutil.copy(model_sql, target_file)
+                try:
+                    shutil.copy(model_sql, target_file)
+                except:
+                    print("sql_file not found")
                 return print(f"succes copy {Path(sqlite_path).name} + {Path(mod_settings_file).name} + {Path(settings_df).name} + {Path(model_sql).name} to: {target_file}")
             
 
@@ -368,10 +374,10 @@ class ModelSchematisations:
 if __name__ == "__main__":
     from hhnk_threedi_tools.core.folders import Folders
 
-    path = r"E:\02.modellen\callantsoog"
+    path = r"E:\02.modellen\Wieringermeer_hoekvaart"
 
     folder = Folders(path)
-    name = "0d1d_test"
+    name = "1d2d_glg"
 
     self = ModelSchematisations(
         folder=folder, modelsettings_path=folder.model.settings.path
