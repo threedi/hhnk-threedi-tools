@@ -1,13 +1,7 @@
 # %%
-# -*- coding: utf-8 -*-
 """
-Created on Fri Aug 13 13:18:54 2021
-
-@author: chris.kerklaan
-
 Each class has a file as its attributes and a file as a new class. 
 self.base is the directory in which it is located
-
 """
 # First-party imports
 import os
@@ -15,7 +9,7 @@ import os
 
 import hhnk_research_tools as hrt
 
-from hhnk_research_tools import Folder, Raster, File, FileGDB, Sqlite
+from hhnk_research_tools import Folder
 
 from hhnk_research_tools.variables import (
     file_types_dict,
@@ -24,14 +18,6 @@ from hhnk_research_tools.variables import (
 )
 
 # Local imports
-from hhnk_threedi_tools.variables.model_state import (
-    hydraulic_test_state,
-    one_d_two_d_state,
-    undefined_state,
-    invalid_path,
-)
-
-
 from hhnk_threedi_tools.core.folder_helpers import ClimateResult
 
 import pandas as pd

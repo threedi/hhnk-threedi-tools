@@ -5,7 +5,7 @@
 [![PyPI version](https://badge.fury.io/py/hhnk-threedi-tools.svg)](https://badge.fury.io/py/hhnk-threedi-tools)
 ---
 
-Tools used for analyses of 3Di-models.
+Tools used for analysing 3Di-models.
 
 Used in qgis with this interface:
 https://github.com/threedi/hhnk-threedi-plugin
