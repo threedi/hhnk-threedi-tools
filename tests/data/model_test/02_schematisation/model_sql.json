@@ -1,4 +1,4 @@
 {
-    "basis_modify": {"query1": "CREATE TEMPORARY TABLE tmp AS SELECT * FROM v2_cross_section_definition WHERE id = 50023; UPDATE tmp SET id = 99999; INSERT INTO v2_cross_section_definition SELECT * FROM tmp; DROP TABLE tmp; INSERT INTO v2_cross_section_location (id, code, reference_level, friction_type, friction_value, bank_level, the_geom, channel_id, definition_id) SELECT 99999, code, reference_level, friction_type, friction_value, bank_level, the_geom, channel_id, 99999 FROM v2_cross_section_location WHERE definition_id = 50023; UPDATE v2_cross_section_location SET the_geom = ST_project(the_geom, 1, radians(0)) where definition_id = 50124;"}
+    "basis_errors": {"duplicate_cross_loc": "INSERT INTO v2_cross_section_location (id, code, reference_level, friction_type, friction_value, bank_level, the_geom, channel_id, definition_id) SELECT 99999, code, reference_level, friction_type, friction_value, bank_level, the_geom, channel_id, definition_id FROM v2_cross_section_location WHERE id = 282; ",
+                    "cross_loc_not_on_vertex": "UPDATE v2_cross_section_location SET the_geom = ST_project(the_geom, 1, radians(0)) where id = 320;"}
 }
- 

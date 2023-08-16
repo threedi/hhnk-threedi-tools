@@ -1,8 +1,5 @@
 # %% 
 # First-party imports
-# import sys
-# sys.path.insert(0, r"E:\github\jacostabarragan\hhnk-threedi-tools")
-
 import inspect
 
 # Local imports
@@ -34,7 +31,7 @@ class TestSqlite:
         shutil.copy(FOLDER_TEST.model.settings.path, FOLDER_NEW.model.settings.path)
         shutil.copy(FOLDER_TEST.model.settings_default.path, FOLDER_NEW.model.settings_default.path)
         shutil.copy(FOLDER_TEST.model.model_sql.path, FOLDER_NEW.model.model_sql.path)
-        self.folder=FOLDER_TEST
+        # self.folder=FOLDER_TEST
         spl = ModelSchematisations(folder=FOLDER_NEW)
         spl.create_schematisation(name='basis_errors')
         
@@ -95,13 +92,13 @@ class TestSqlite:
     def test_cross_section_duplicate_chk(self, folder_new):
         database= folder_new.model.schema_basis_errors.database
         output = self.sqlite_check.cross_section_duplicate_chk(database=database)
-        assert output["cross_loc_id"].to_list() == [1186, 99999]
+        assert output["cross_loc_id"].to_list() == [282, 99999]
 
 
     def test_run_cross_section_vertex(self, folder_new):
         database= folder_new.model.schema_basis_errors.database
         output = self.sqlite_check.run_cross_section_vertex(database=database)
-        assert output["cross_loc_id"].to_list() == [1287]
+        assert output["cross_loc_id"].to_list() == [320]
 
 
     def test_run_struct_channel_bed_level(self):
@@ -136,9 +133,5 @@ if __name__ == "__main__":
     #         print(i)
     #         getattr(selftest, i)()
     folder_new = self.folder_new()
+    self.test_cross_section_duplicate_chk(folder_new=folder_new)
     self.test_run_cross_section_vertex(folder_new=folder_new)
-
-# %%
-    database= folder_new.model.schema_basis_errors.database
-    output = self.sqlite_check.run_cross_section_vertex()
-# %%
