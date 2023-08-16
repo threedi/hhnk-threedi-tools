@@ -171,16 +171,13 @@ class SqliteCheck:
 
 
     def run_dem_max_value(self):
-        try:
-            stats = self.dem.statistics(approve_ok=False, force=True)
-            if stats['max'] > DEM_MAX_VALUE:
-                result = f"Maximale waarde DEM: {stats['max']} is te hoog"
-            else:
-                result = f"Maximale waarde DEM: {stats['max']} voldoet aan de norm"
-            self.results["dem_max_value"] = result
-            return result
-        except Exception as e:
-            raise e from None
+        stats = self.dem.statistics(approve_ok=False, force=True)
+        if stats['max'] > DEM_MAX_VALUE:
+            result = f"Maximale waarde DEM: {stats['max']} is te hoog"
+        else:
+            result = f"Maximale waarde DEM: {stats['max']} voldoet aan de norm"
+        self.results["dem_max_value"] = result
+        return result
 
 
     def run_dewatering_depth(self, overwrite=False):
@@ -256,61 +253,54 @@ class SqliteCheck:
         Collects all queries that are part of general model checks (see general_checks_queries file)
         and executes them
         """
-        try:
-            queries_lst = [item for item in vars(ModelCheck()).values()]
-            query = "UNION ALL\n".join(queries_lst)
-            db = self.model.execute_sql_selection(query=query)
+        queries_lst = [item for item in vars(ModelCheck()).values()]
+        query = "UNION ALL\n".join(queries_lst)
+        db = self.model.execute_sql_selection(query=query)
 
-            self.results["model_checks"] = db
-            return db
-        except Exception as e:
-            raise e from None
+        self.results["model_checks"] = db
+        return db
+
 
     def run_geometry_checks(self):
         """
         Deze test checkt of de geometrie van een object in het model correspondeert met de start- of end node in de
         v2_connection_nodes tafel. Als de verkeerde ids worden gebruikt geeft dit fouten in het model.
         """
-        try:
-            gdf = self.model.execute_sql_selection(query=geometry_check_query,)
+        gdf = self.model.execute_sql_selection(query=geometry_check_query,)
 
-            gdf["start_check"] = gdf[a_geo_start_node] == gdf[a_geo_start_coord]
-            gdf["end_check"] = gdf[a_geo_end_node] == gdf[a_geo_end_coord]
-            add_distance_checks(gdf)
-            # Only rows where at least one of start_dist_ok and end_dist_ok is false
-            result_db = gdf[~gdf[["start_dist_ok", "end_dist_ok"]].all(axis=1)]
-            if not result_db.empty:
-                result_db["error"] = "Error: mismatched geometry"
-            self.results["geometry_checks"] = result_db
-            return result_db
-        except Exception as e:
-            raise e from None
+        gdf["start_check"] = gdf[a_geo_start_node] == gdf[a_geo_start_coord]
+        gdf["end_check"] = gdf[a_geo_end_node] == gdf[a_geo_end_coord]
+        add_distance_checks(gdf)
+        # Only rows where at least one of start_dist_ok and end_dist_ok is false
+        result_db = gdf[~gdf[["start_dist_ok", "end_dist_ok"]].all(axis=1)]
+        if not result_db.empty:
+            result_db["error"] = "Error: mismatched geometry"
+        self.results["geometry_checks"] = result_db
+        return result_db
+
 
     def run_imp_surface_area(self):
         """
         Calculates the impervious surface area (in the model), the area of the polder (based on the polder shapefile) and
         the difference between the two.
         """
+        imp_surface_db = self.model.execute_sql_selection(impervious_surface_query)
+        imp_surface_db.set_index("id",inplace=True)
 
-        try:
-            imp_surface_db = self.model.execute_sql_selection(impervious_surface_query)
-            imp_surface_db.set_index("id",inplace=True)
+        
+        polygon_imp_surface = gpd.read_file(self.fenv.source_data.polder_polygon.path)
+        
+        db_surface, polygon_surface, area_diff = calc_surfaces_diff(
+            imp_surface_db, polygon_imp_surface
+        )
+        result_txt = (
+            f"Totaal ondoorlatend oppervlak: {db_surface} ha\n"
+            f"Gebied polder: {polygon_surface} ha\n"
+            f"Verschil: {area_diff} ha\n"
+        )
+        self.results["imp_surface_area"] = result_txt
+        return result_txt
 
-            
-            polygon_imp_surface = gpd.read_file(self.fenv.source_data.polder_polygon.path)
-            
-            db_surface, polygon_surface, area_diff = calc_surfaces_diff(
-                imp_surface_db, polygon_imp_surface
-            )
-            result_txt = (
-                f"Totaal ondoorlatend oppervlak: {db_surface} ha\n"
-                f"Gebied polder: {polygon_surface} ha\n"
-                f"Verschil: {area_diff} ha\n"
-            )
-            self.results["imp_surface_area"] = result_txt
-            return result_txt
-        except Exception as e:
-            raise e from None
 
     def run_isolated_channels(self):
         """
@@ -318,29 +308,27 @@ class SqliteCheck:
         meegenomen in de uitwisseling in het watersysteem. De test berekent tevens de totale lengte van watergangen en welk
         deel daarvan geïsoleerd is.
         """
-        try:
-            channels_gdf = self.model.execute_sql_selection(query=isolated_channels_query)
-            channels_gdf[length_in_meters_col] = round(
-                channels_gdf[df_geo_col].length, 2
-            )
-            (
-                isolated_channels_gdf,
-                isolated_length,
-                total_length,
-                percentage,
-            ) = calc_len_percentage(channels_gdf)
-            result = (
-                f"Totale lengte watergangen {total_length} km\n"
-                f"Totale lengte geïsoleerde watergangen {isolated_length} km\n"
-                f"Percentage geïsoleerde watergangen {percentage}%\n"
-            )
-            self.results["isolated_channels"] = {
-                "gdf": isolated_channels_gdf,
-                "result": result,
-            }
-            return isolated_channels_gdf, result
-        except Exception as e:
-            raise e from None
+        channels_gdf = self.model.execute_sql_selection(query=isolated_channels_query)
+        channels_gdf[length_in_meters_col] = round(
+            channels_gdf[df_geo_col].length, 2
+        )
+        (
+            isolated_channels_gdf,
+            isolated_length,
+            total_length,
+            percentage,
+        ) = calc_len_percentage(channels_gdf)
+        result = (
+            f"Totale lengte watergangen {total_length} km\n"
+            f"Totale lengte geïsoleerde watergangen {isolated_length} km\n"
+            f"Percentage geïsoleerde watergangen {percentage}%\n"
+        )
+        self.results["isolated_channels"] = {
+            "gdf": isolated_channels_gdf,
+            "result": result,
+        }
+        return isolated_channels_gdf, result
+
 
     def run_used_profiles(self):
         """
@@ -348,27 +336,24 @@ class SqliteCheck:
         watergangen) aan de v2_channel laag (informatie over watergangen in het model). Het resultaat van deze toets is een
         weergave van de breedtes en dieptes van watergangen in het model ter controle.
         """
-        try:
+        # TODO use hrt.sqlite_table_to_gdf instead?
+        channels_gdf = self.model.execute_sql_selection(query=profiles_used_query)
+        # If zoom category is 4, channel is considered primary
+        channels_gdf[primary_col] = channels_gdf[a_zoom_cat].apply(
+            lambda zoom_cat: zoom_cat == 4
+        )
+        channels_gdf[width_col] = channels_gdf[width_col].apply(split_round)
+        channels_gdf[height_col] = channels_gdf[height_col].apply(split_round)
+        channels_gdf[water_level_width_col] = channels_gdf.apply(
+            func=calc_width_at_waterlevel, axis=1
+        )
+        channels_gdf[max_depth_col] = channels_gdf.apply(func=get_max_depth, axis=1)
+        # Conversion to string because lists are not valid for storing in gpkg
+        channels_gdf[width_col] = channels_gdf[width_col].astype(str)
+        channels_gdf[height_col] = channels_gdf[height_col].astype(str)
+        self.results["used_profiles"] = channels_gdf
+        return channels_gdf
 
-            # TODO use hrt.sqlite_table_to_gdf instead?
-            channels_gdf = self.model.execute_sql_selection(query=profiles_used_query)
-            # If zoom category is 4, channel is considered primary
-            channels_gdf[primary_col] = channels_gdf[a_zoom_cat].apply(
-                lambda zoom_cat: zoom_cat == 4
-            )
-            channels_gdf[width_col] = channels_gdf[width_col].apply(split_round)
-            channels_gdf[height_col] = channels_gdf[height_col].apply(split_round)
-            channels_gdf[water_level_width_col] = channels_gdf.apply(
-                func=calc_width_at_waterlevel, axis=1
-            )
-            channels_gdf[max_depth_col] = channels_gdf.apply(func=get_max_depth, axis=1)
-            # Conversion to string because lists are not valid for storing in gpkg
-            channels_gdf[width_col] = channels_gdf[width_col].astype(str)
-            channels_gdf[height_col] = channels_gdf[height_col].astype(str)
-            self.results["used_profiles"] = channels_gdf
-            return channels_gdf
-        except Exception as e:
-            raise e from None
 
     def run_struct_channel_bed_level(self):
         """
@@ -378,26 +363,25 @@ class SqliteCheck:
         datachecker_culvert_layer = self.fenv.source_data.datachecker.layers.culvert
         damo_duiker_sifon_layer = self.fenv.source_data.damo.layers.DuikerSifonHevel
 
-        try:
-            below_ref_query = struct_channel_bed_query
-            gdf_below_ref = self.model.execute_sql_selection(query=below_ref_query)
-            gdf_below_ref.rename(columns={'id':a_chan_bed_struct_id},inplace=True)
 
-            # See git issue about below statements
-            gdf_with_damo = add_damo_info(layer=damo_duiker_sifon_layer, gdf=gdf_below_ref
-            )
-            gdf_with_datacheck = add_datacheck_info(datachecker_culvert_layer, gdf_with_damo
-            )
-            gdf_with_datacheck.loc[:, down_has_assumption] = gdf_with_datacheck[
-                height_inner_lower_down
-            ].isna()
-            gdf_with_datacheck.loc[:, up_has_assumption] = gdf_with_datacheck[
-                height_inner_lower_up
-            ].isna()
-            self.results["struct_channel_bed_level"] = gdf_with_datacheck
-            return gdf_with_datacheck
-        except Exception as e:
-            raise e from None
+        below_ref_query = struct_channel_bed_query
+        gdf_below_ref = self.model.execute_sql_selection(query=below_ref_query)
+        gdf_below_ref.rename(columns={'id':a_chan_bed_struct_id},inplace=True)
+
+        # See git issue about below statements
+        gdf_with_damo = add_damo_info(layer=damo_duiker_sifon_layer, gdf=gdf_below_ref
+        )
+        gdf_with_datacheck = add_datacheck_info(datachecker_culvert_layer, gdf_with_damo
+        )
+        gdf_with_datacheck.loc[:, down_has_assumption] = gdf_with_datacheck[
+            height_inner_lower_down
+        ].isna()
+        gdf_with_datacheck.loc[:, up_has_assumption] = gdf_with_datacheck[
+            height_inner_lower_up
+        ].isna()
+        self.results["struct_channel_bed_level"] = gdf_with_datacheck
+        return gdf_with_datacheck
+
 
     def run_watersurface_area(self):
         """
@@ -413,74 +397,69 @@ class SqliteCheck:
         From channel_surface_from_profiles -> area_channels_m2
         From DAMO -> area_waterdeel_m2
         """
+        (
+            fixeddrainage,
+            modelbuilder_waterdeel,
+            damo_waterdeel,
+            conn_nodes_geo,
+        ) = read_input(
+            model=self.model,
+            channel_profile_path=self.channels_from_profiles.path,
+            fixeddrainage_layer=self.fenv.source_data.datachecker.layers.fixeddrainagelevelarea,
+            damo_layer=self.fenv.source_data.damo.layers.waterdeel,
+        )
+        fixeddrainage = calc_area(
+            fixeddrainage, modelbuilder_waterdeel, damo_waterdeel, conn_nodes_geo
+        )
+        result_txt = """Gebied open water BGT: {} ha\nGebied open water model: {} ha""".format(
+            round(fixeddrainage.sum()[watersurface_waterdeel_area] / 10000, 2),
+            round(fixeddrainage.sum()[watersurface_model_area] / 10000, 2),
+        )
+        self.results["watersurface_area"] = {
+            "fixeddrainage": fixeddrainage,
+            "result_txt": result_txt,
+        }
+        return fixeddrainage, result_txt
 
-        try:
-            (
-                fixeddrainage,
-                modelbuilder_waterdeel,
-                damo_waterdeel,
-                conn_nodes_geo,
-            ) = read_input(
-                model=self.model,
-                channel_profile_path=self.channels_from_profiles.path,
-                fixeddrainage_layer=self.fenv.source_data.datachecker.layers.fixeddrainagelevelarea,
-                damo_layer=self.fenv.source_data.damo.layers.waterdeel,
-            )
-            fixeddrainage = calc_area(
-                fixeddrainage, modelbuilder_waterdeel, damo_waterdeel, conn_nodes_geo
-            )
-            result_txt = """Gebied open water BGT: {} ha\nGebied open water model: {} ha""".format(
-                round(fixeddrainage.sum()[watersurface_waterdeel_area] / 10000, 2),
-                round(fixeddrainage.sum()[watersurface_model_area] / 10000, 2),
-            )
-            self.results["watersurface_area"] = {
-                "fixeddrainage": fixeddrainage,
-                "result_txt": result_txt,
-            }
-            return fixeddrainage, result_txt
-        except Exception as e:
-            raise e from None
-        
+
     def run_weir_floor_level(self):
         """
         Check whether minimum crest height of weir is under reference level found in the v2_cross_section_location layer.
         This is not allowed, so if this is the case, we have to update the reference level.
         """
-        try:
-            # TODO use hrt.sqlite_table_to_gdf instead?
-            weirs_gdf = self.model.execute_sql_selection(query=weir_height_query)
-            # Bepaal de minimale kruinhoogte uit de action table
-            weirs_gdf[min_crest_height] = [
-                min([float(b.split(";")[1]) for b in a.split("#")])
-                for a in weirs_gdf[action_col]
-            ]
-            # Bepaal het verschil tussen de minimale kruinhoogte en reference level.
-            weirs_gdf[diff_crest_ref] = (
-                weirs_gdf[min_crest_height] - weirs_gdf[reference_level_col]
-            )
-            # Als dit verschil negatief is, betekent dit dat de bodem hoger ligt dan de minimale hoogte van de stuw.
-            # Dit mag niet, en daarom moet er iets aan het bodemprofiel gebeuren.
-            weirs_gdf[wrong_profile] = weirs_gdf[diff_crest_ref] < 0
-            # Add proposed new reference levels
-            weirs_gdf.loc[weirs_gdf[wrong_profile] == 1, new_ref_lvl] = round(
-                weirs_gdf.loc[weirs_gdf[wrong_profile] == 1, min_crest_height] - 0.01, 2
-            )
-            wrong_profiles_gdf = weirs_gdf[weirs_gdf[wrong_profile]][OUTPUT_COLS]
-            update_query = hrt.sql_create_update_case_statement(
-                df=wrong_profiles_gdf,
-                layer=cross_sec_loc_layer,
-                df_id_col=a_weir_cross_loc_id,
-                db_id_col=id_col,
-                new_val_col=new_ref_lvl,
-                old_val_col=reference_level_col,
-            )
-            self.results["weir_floor_level"] = {
-                "wrong_profiles_gdf": wrong_profiles_gdf,
-                "update_query": update_query,
-            }
-            return wrong_profiles_gdf, update_query
-        except Exception as e:
-            raise e from None
+        # TODO use hrt.sqlite_table_to_gdf instead?
+        weirs_gdf = self.model.execute_sql_selection(query=weir_height_query)
+        # Bepaal de minimale kruinhoogte uit de action table
+        weirs_gdf[min_crest_height] = [
+            min([float(b.split(";")[1]) for b in a.split("#")])
+            for a in weirs_gdf[action_col]
+        ]
+        # Bepaal het verschil tussen de minimale kruinhoogte en reference level.
+        weirs_gdf[diff_crest_ref] = (
+            weirs_gdf[min_crest_height] - weirs_gdf[reference_level_col]
+        )
+        # Als dit verschil negatief is, betekent dit dat de bodem hoger ligt dan de minimale hoogte van de stuw.
+        # Dit mag niet, en daarom moet er iets aan het bodemprofiel gebeuren.
+        weirs_gdf[wrong_profile] = weirs_gdf[diff_crest_ref] < 0
+        # Add proposed new reference levels
+        weirs_gdf.loc[weirs_gdf[wrong_profile] == 1, new_ref_lvl] = round(
+            weirs_gdf.loc[weirs_gdf[wrong_profile] == 1, min_crest_height] - 0.01, 2
+        )
+        wrong_profiles_gdf = weirs_gdf[weirs_gdf[wrong_profile]][OUTPUT_COLS]
+        update_query = hrt.sql_create_update_case_statement(
+            df=wrong_profiles_gdf,
+            layer=cross_sec_loc_layer,
+            df_id_col=a_weir_cross_loc_id,
+            db_id_col=id_col,
+            new_val_col=new_ref_lvl,
+            old_val_col=reference_level_col,
+        )
+        self.results["weir_floor_level"] = {
+            "wrong_profiles_gdf": wrong_profiles_gdf,
+            "update_query": update_query,
+        }
+        return wrong_profiles_gdf, update_query
+
 
     def create_grid_from_sqlite(self, sqlite_path, dem_path, output_folder):
         """Create grid from sqlite, this includes cells, lines and nodes."""
@@ -495,67 +474,58 @@ class SqliteCheck:
                 output_path=os.path.join(output_folder, f"{i}.gpkg"),
             )
 
+
     def run_cross_section_duplicates(self, database):
-        """Check for duplicate geometries in cross_section_locations."""
-        try:
-           
-            cross_section_point = database.execute_sql_selection(query= cross_section_location_query)
-        
-            # Make buffer of the points to identify if we have cross setion overlapping each other.
-            cross_section_buffer_gdf = cross_section_point.copy()
-            cross_section_buffer_gdf["geometry"] = cross_section_buffer_gdf.buffer(0.5) 
+        """
+        Check for duplicate geometries in cross_section_locations.
+        """
+        cross_section_point = database.execute_sql_selection(query= cross_section_location_query)
+    
+        # Make buffer of the points to identify if we have cross setion overlapping each other.
+        cross_section_buffer_gdf = cross_section_point.copy()
+        cross_section_buffer_gdf["geometry"] = cross_section_buffer_gdf.buffer(0.5) 
 
-            #make spatial join between the buffer and the cross section point
-            cross_section_join =  gpd.sjoin(cross_section_buffer_gdf, cross_section_point,
-                                how="inner", op="intersects")
+        #make spatial join between the buffer and the cross section point
+        cross_section_join =  gpd.sjoin(cross_section_buffer_gdf, cross_section_point,
+                            how="inner", op="intersects")
 
-            #duplicates in cross_loc in this join are duplicated cross_section_locations
-            index_duplicates = cross_section_join[cross_section_join["cross_loc_id_left"].duplicated()].index
-            intersected_points = cross_section_point.loc[index_duplicates]
+        #duplicates in cross_loc in this join are duplicated cross_section_locations
+        index_duplicates = cross_section_join[cross_section_join["cross_loc_id_left"].duplicated()].index
+        intersected_points = cross_section_point.loc[index_duplicates]
 
-            return intersected_points
-        
-        except Exception as e:
-            raise e from None
+        return intersected_points
 
 
     def run_cross_section_no_vertex(self, database):
+        """
+        Check for cross_sections that are not located on the  vertex of a channel.  
+        """
+        #load cross locs and channels from sqlite
+        cross_section_point = database.execute_sql_selection(query = cross_section_location_query)
+        cross_section_point.rename({"geometry_point":"geometry"}, axis=1, inplace=True)
+
+        channels_gdf = database.execute_sql_selection(query = channels_query)
+
+        #Create gdf of all channel vertices and buffer them
+        channels_gdf["points"] = channels_gdf["geometry"].apply(lambda x: [Point(coord) for coord in x.coords])
+        vertices_gdf = gpd.GeoDataFrame([(idx, item) for idx, sublist in zip(channels_gdf["channel_id"], channels_gdf["points"]) for item in sublist], 
+                                        columns = ["channel_id", "geometry"], 
+                                        geometry="geometry", 
+                                        crs="EPSG:28992")
+        vertices_gdf["geometry"] = vertices_gdf.buffer(0.001)
+
+        #Join cross section points and buffered vertices.
+        v_cs = gpd.sjoin(cross_section_point, vertices_gdf, how="inner", predicate="intersects")
         
-        """Deze functie vind de punten/cross_sections dat niet in het vertex van en lijn/channel liggen.  
-           Het ga een foutmelding geven als 1 of meer punten vinden"""
-        #Selecteren het sqlite volgen de conditie 
-        try:
-            
-            #load cross locs and channels from sqlite
-            cross_section_point = database.execute_sql_selection(query = cross_section_location_query)
-            cross_section_point.rename({"geometry_point":"geometry"}, axis=1, inplace=True)
+        # Error cross loc op verkeerde channel
+        # TODO error loggen/raise?
+        v_cs_channel_mismatch = v_cs[v_cs["channel_id_left"]!=v_cs["channel_id_right"]]
+        if len(v_cs_channel_mismatch) > 0:
+            print(f"cross loc ids {v_cs_channel_mismatch['cross_loc_id'].values} are located on a vertex of a different channel")
 
-            channels_gdf = database.execute_sql_selection(query = channels_query)
-
-            #Create gdf of all channel vertices and buffer them
-            channels_gdf["points"] = channels_gdf["geometry"].apply(lambda x: [Point(coord) for coord in x.coords])
-            vertices_gdf = gpd.GeoDataFrame([(idx, item) for idx, sublist in zip(channels_gdf["channel_id"], channels_gdf["points"]) for item in sublist], 
-                                            columns = ["channel_id", "geometry"], 
-                                            geometry="geometry", 
-                                            crs="EPSG:28992")
-            vertices_gdf["geometry"] = vertices_gdf.buffer(0.001)
-
-            #Join cross section points and buffered vertices.
-            v_cs = gpd.sjoin(cross_section_point, vertices_gdf, how="inner", predicate="intersects")
-            
-            # Error cross loc op verkeerde channel
-            # TODO geen raise maar gewoon error loggen?
-            v_cs_channel_mismatch = v_cs[v_cs["channel_id_left"]!=v_cs["channel_id_right"]]
-            if len(v_cs_channel_mismatch) > 0:
-                print(v_cs_channel_mismatch)
-                raise Exception(f"cross loc ids {v_cs_channel_mismatch['cross_loc_id'].values} are located on a vertex of a different channel")
-
-            #cross sections that didnt get joined are missing a vertex.
-            cross_no_vertex = cross_section_point[~cross_section_point["cross_loc_id"].isin(v_cs["cross_loc_id"].values)].copy()
-            return cross_no_vertex
-            
-        except Exception as e:
-                raise e from None
+        #cross sections that didnt get joined are missing a vertex.
+        cross_no_vertex = cross_section_point[~cross_section_point["cross_loc_id"].isin(v_cs["cross_loc_id"].values)].copy()
+        return cross_no_vertex
 
 
 ## helper functions

@@ -20,7 +20,7 @@ class TestSqlite:
     sqlite_check = SqliteCheck(folder=FOLDER_TEST)
     sqlite_check.output_fd.create(parents=True)
     
-    # @pytest.fixture(scope="class")
+    @pytest.fixture(scope="class")
     def folder_new(self):
         """Copy folder structure and sqlite and then run splitter so we 
         get the correct sqlite (with errors) to run tests on."""
