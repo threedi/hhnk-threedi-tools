@@ -49,7 +49,13 @@ def update_dict_keys(mydict, translate_dict={}, remove_keys=[]) -> dict:
             mydict.pop(key)
 
     return mydict
-
+def apply_translate_dict(value, translate_dict):
+    """Use replaced value if it is in keys of translate dict
+    otherwise return the value."""
+    if value in translate_dict.keys():
+        return translate_dict[value]
+    else:
+        return value
 
 class NumericalSettings:
     def __init__(self, database_path, settings_id):
@@ -406,13 +412,16 @@ class SimulationData:
 
             # flow_variable options [ water_level, flow_velocity, discharge, volume, pump_discharge, wet_cross_section, lateral_discharge, wet_surface, rain, simple_infiltration, leakage, interception, surface_source_sink_discharge ]
             # method options [ min, max, avg, cum, cum_positive, cum_negative, current, sum ]
+        translate_dict_flow_variable = {"waterlevel" : "water_level",
+                                    "wet_cross-section" : "wet_cross_section",
+                                    }
 
         for index, row in hrt.sqlite_table_to_df(
             database_path=self.sqlite_path, table_name="v2_aggregation_settings"
         ).iterrows():
             data = {
                 "name": row['var_name'], #string
-                "flow_variable": row['flow_variable'], #string
+                "flow_variable": apply_translate_dict(row['flow_variable'], translate_dict=translate_dict_flow_variable), #string
                 "method": row['aggregation_method'], #string
                 "interval": int(row['timestep']), #int
             }
@@ -466,13 +475,13 @@ class SimulationData:
         agg method determines which value is chosen when in a calculation cell 
         multiple values are found for the initial waterlevel.
         """
-        agg_translate = {0 : "max",
+        translate_dict_agg = {0 : "max",
                          1 : "min",
                          2 : "mean"}
         global_df = hrt.sqlite_table_to_df(
                     database_path=self.sqlite_path, table_name="v2_global_settings"
                 )
-        return agg_translate[global_df.iloc[0]["water_level_ini_type"]]
+        return translate_dict_agg[global_df.iloc[0]["water_level_ini_type"]]
     
 
     @property
@@ -503,6 +512,10 @@ class SimulationTracker:
         self.aggregation = False
         self.iwlvl_raster_id = None
         self.iwlvl_raster_url = None
+
+
+
+
 
 
 class Simulation:
@@ -564,9 +577,11 @@ class Simulation:
 
     @property
     def logged_in(self):
-        call = self.threedi_api.auth_users_list()
-        result = self._api_result(call, "Cannot login")
-        return result
+        """return user"""
+        try:
+            return self.threedi_api.auth_profile_list()
+        except:
+            return "Cannot login" 
 
     @property
     def id(self):
@@ -828,10 +843,10 @@ class Simulation:
                 else: #TODO add error code of API overload
                     time.sleep(10)
                     continue
-            break
 
     def _api_result(self,
-        result: tac.openapi.models.inline_response20062.InlineResponse20062, message: str
+        result: tac.openapi.models.inline_response20062.InlineResponse20062, 
+        message: str
     ) -> tac.openapi.models.threedi_model.ThreediModel:
         """Raises an error if no results"""
         if len(result.results) == 0:
