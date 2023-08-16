@@ -20,7 +20,7 @@ class TestSqlite:
     sqlite_check = SqliteCheck(folder=FOLDER_TEST)
     sqlite_check.output_fd.create(parents=True)
     
-    @pytest.fixture(scope="class")
+    # @pytest.fixture(scope="class")
     def folder_new(self):
         """Copy folder structure and sqlite and then run splitter so we 
         get the correct sqlite (with errors) to run tests on."""
@@ -89,15 +89,15 @@ class TestSqlite:
         assert output["width_at_wlvl"][0] == 2
 
 
-    def test_cross_section_duplicate_chk(self, folder_new):
+    def test_run_cross_section_duplicates(self, folder_new):
         database= folder_new.model.schema_basis_errors.database
-        output = self.sqlite_check.cross_section_duplicate_chk(database=database)
+        output = self.sqlite_check.run_cross_section_duplicates(database=database)
         assert output["cross_loc_id"].to_list() == [282, 99999]
 
 
-    def test_run_cross_section_vertex(self, folder_new):
+    def test_run_cross_section_no_vertex(self, folder_new):
         database= folder_new.model.schema_basis_errors.database
-        output = self.sqlite_check.run_cross_section_vertex(database=database)
+        output = self.sqlite_check.run_cross_section_no_vertex(database=database)
         assert output["cross_loc_id"].to_list() == [320]
 
 
@@ -133,5 +133,5 @@ if __name__ == "__main__":
     #         print(i)
     #         getattr(selftest, i)()
     folder_new = self.folder_new()
-    self.test_cross_section_duplicate_chk(folder_new=folder_new)
-    self.test_run_cross_section_vertex(folder_new=folder_new)
+    # self.test_run_cross_section_duplicates(folder_new=folder_new)
+    # self.test_run_cross_section_no_vertex(folder_new=folder_new)
