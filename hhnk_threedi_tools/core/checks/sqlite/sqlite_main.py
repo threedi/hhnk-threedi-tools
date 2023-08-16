@@ -525,6 +525,14 @@ class SqliteCheck:
 
         #cross sections that didnt get joined are missing a vertex.
         cross_no_vertex = cross_section_point[~cross_section_point["cross_loc_id"].isin(v_cs["cross_loc_id"].values)].copy()
+        
+        #Find distance to nearest vertex
+        nearest_point=cross_no_vertex.sjoin_nearest(vertices_gdf)
+        def get_distance(row):
+            dist = row.geometry.distance(vertices_gdf.loc[row.index_right, "geometry"])
+            return round(dist,2)
+        cross_no_vertex["distance_to_vertex"] = nearest_point.apply(get_distance, axis=1)
+        
         return cross_no_vertex
 
 

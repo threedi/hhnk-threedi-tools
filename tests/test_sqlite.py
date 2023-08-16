@@ -99,6 +99,7 @@ class TestSqlite:
         database= folder_new.model.schema_basis_errors.database
         output = self.sqlite_check.run_cross_section_no_vertex(database=database)
         assert output["cross_loc_id"].to_list() == [320]
+        assert output["distance_to_vertex"].to_list() == [1.0]
 
 
     def test_run_struct_channel_bed_level(self):
