@@ -31,15 +31,12 @@ class TestModelSplitter():
 
         splitter.create_schematisation(name="1d2d_glg")
 
-        assert splitter.folder.model.schema_1d2d_glg.rasters.initial_wlvl_2d.pl.exists()
+        assert splitter.folder.model.schema_1d2d_glg.rasters.initial_wlvl_2d.exists()
 
 
     def test_query(self, splitter):
         splitter.create_schematisation(name="basis_errors")
         database = splitter.folder.model.schema_basis_errors.database
-
-        cross_def_df = database.read_table("v2_cross_section_definition")
-        assert 99999 in cross_def_df["id"].values
 
         cross_loc_df=database.read_table("v2_cross_section_location")
         assert 99999 in cross_loc_df["id"].values

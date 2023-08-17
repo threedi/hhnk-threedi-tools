@@ -11,7 +11,7 @@ import pytest
 
 import hhnk_research_tools as hrt
 from hhnk_threedi_tools.core.folders import Folders
-from hhnk_threedi_tools.core.checks.model_splitter import ModelSchematisations
+from hhnk_threedi_tools.core.schematisation.model_splitter import ModelSchematisations
 from tests.config import FOLDER_TEST, PATH_NEW_FOLDER
 
 class TestSqlite:
@@ -102,6 +102,10 @@ class TestSqlite:
         assert output["distance_to_vertex"].to_list() == [1.0]
 
 
+    def test_create_grid_from_sqlite(self, folder_new):
+        self.sqlite_check.create_grid_from_sqlite(output_folder=folder_new.output.sqlite_tests.path)
+        assert folder_new.output.sqlite_tests.full_path("cells.gpkg").exists()
+
     def test_run_struct_channel_bed_level(self):
         """TODO empty check"""
         output = self.sqlite_check.run_struct_channel_bed_level()
@@ -136,3 +140,4 @@ if __name__ == "__main__":
     folder_new = self.folder_new()
     # self.test_run_cross_section_duplicates(folder_new=folder_new)
     # self.test_run_cross_section_no_vertex(folder_new=folder_new)
+    self.test_create_grid_from_sqlite(folder_new)
