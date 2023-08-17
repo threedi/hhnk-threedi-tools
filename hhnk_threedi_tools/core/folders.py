@@ -514,7 +514,7 @@ class OutputDirParent(Folder):
             self.add_file("drooglegging", "drooglegging.tif")
             self.add_file("geometry_check", "geometry_check.csv")
             self.add_file("general_sqlite_checks", "general_sqlite_checks.csv")
-            self.add_file("overlappende_profielen", "overlappende_profielen.gpkg")
+            self.add_file("cross_section_duplicates", "cross_section_duplicates.gpkg")
             self.add_file("profielen_geen_vertex", "profielen_geen_vertex.gpkg")
             self.add_file("wateroppervlak", "wateroppervlak.gpkg")
 
