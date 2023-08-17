@@ -374,7 +374,7 @@ class ModelSchematisations:
 if __name__ == "__main__":
     from hhnk_threedi_tools.core.folders import Folders
 
-    path = r"E:\02.modellen\Wieringermeer_hoekvaart"
+    path = r"E:\02.modellen\LangeWeere_NS"
 
     folder = Folders(path)
     name = "1d2d_glg"
@@ -387,7 +387,7 @@ if __name__ == "__main__":
         organisation_uuid="48dac75bef8a42ebbb52e8f89bbdb9f2",
         name=name,
         commit_message="testtest",
-        api_key="wXtfxOG5.41WxS7JZjMyHqYvS8WlZx7WKD6SKsngB",
+        api_key="",
     )
 
 
