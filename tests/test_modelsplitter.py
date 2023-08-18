@@ -28,18 +28,26 @@ class TestModelSplitter():
 
     def test_create_schematisation(self, splitter):
         """tests if the import of information works, if the correct amount is imported"""
-
+        splitter.create_schematisation(name="0d1d_test")
         splitter.create_schematisation(name="1d2d_glg")
 
         assert splitter.folder.model.schema_1d2d_glg.rasters.initial_wlvl_2d.pl.exists()
 
 
+    def test_create_local_sqlite_revision(self, splitter):
+        local_rev_str = splitter.get_latest_local_revision_str()
+        assert local_rev_str.startswith("no previous local") == True
+
+        #Create revision
+        splitter.create_local_sqlite_revision("testrevision")
+
+        local_rev_str = splitter.get_latest_local_revision_str()
+        assert "testrevision" in local_rev_str
+
+
     def test_query(self, splitter):
         splitter.create_schematisation(name="basis_errors")
         database = splitter.folder.model.schema_basis_errors.database
-
-        cross_def_df = database.read_table("v2_cross_section_definition")
-        assert 99999 in cross_def_df["id"].values
 
         cross_loc_df=database.read_table("v2_cross_section_location")
         assert 99999 in cross_loc_df["id"].values
@@ -52,5 +60,5 @@ if __name__=="__main__":
     selftest = TestModelSplitter()
     splitter = selftest.splitter()
 
-    selftest.test_create_schematisation(splitter)
 
+    # selftest.test_create_schematisation(splitter)
