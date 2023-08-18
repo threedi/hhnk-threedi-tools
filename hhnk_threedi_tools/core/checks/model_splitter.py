@@ -58,6 +58,7 @@ class ModelSchematisations:
         if self.settings_loaded:
             self._sanity_check()
 
+
     def _sanity_check(self):
         """Sanity check settings tables"""
         inter = self.settings_df.keys().intersection(self.settings_default_series.keys())
@@ -67,19 +68,18 @@ class ModelSchematisations:
         Dat lijkt me een slecht plan. Kolommen: {inter.values}"""
             )
 
-    def get_local_revision_info(self, name, api_key):  
-        if self.folder.model.revisions.exists == False:
-            no_local_rev = ("no previous local revision for:      "+ self.folder.name)
-            return no_local_rev
+
+    def get_latest_local_revision_str(self) -> str:
+        """Str with most recent revision"""
+        folder_list = [x for x in self.folder.model.revisions.pl.glob("*/")] #TODO pl in path vervangen na merge
+        if folder_list == []:
+            local_rev_str = f"no previous local revision for:      {self.folder.name}"
         else:
-            folder_list = []
-            for dirpath, dirnames, filenames in os.walk(self.folder.model.revisions.path):
-                folder_list.append(os.path.join(str(dirpath)))
             file = max(folder_list, key=os.path.getctime)
-            recent_file = datetime.datetime.fromtimestamp(os.path.getmtime(file))
-            local_rev = str(f"Most recent local revision:    {os.path.basename(file)} ({recent_file.day}/{recent_file.month}/{recent_file.year} - {recent_file.hour}:{recent_file.minute}:{recent_file.second})" )
-            return local_rev
-        
+            file_modify_date = datetime.datetime.fromtimestamp(file.lstat().st_mtime)
+            local_rev_str = str(f"Most recent local revision:    {file.name} ({file_modify_date.strftime('%y-%m-%d %H:%M:%S')})" )
+        return local_rev_str
+    
 
     def get_model_revision_info(self, name, api_key):
         upload.threedi.set_api_key(api_key)
@@ -89,14 +89,14 @@ class ModelSchematisations:
         threedimodel = upload.threedi.api.threedimodels_list(revision__schematisation__name=schematisation)
 
         if threedimodel.results == []:
-            no_model_revision = str("No previous model(s) available for: " + schematisation)
-            return no_model_revision
+            model_revision_str = f"No previous model(s) available for: {schematisation}"
         else:
             schema_id = threedimodel.to_dict()['results'][0]['schematisation_id']
             latest_revision = upload.threedi.api.schematisations_latest_revision(schema_id)
             rev_model = threedimodel.to_dict()['results'][0]['name']
-            model_revision = str("Most recent model revision:      " + rev_model + " - " + latest_revision.commit_message)
-            return model_revision
+            model_revision_str = f"Most recent model revision:      {rev_model} - {latest_revision.commit_message}"
+        return model_revision_str
+
 
     def create_schematisation(self, name):
         """Create a schematisation based on the modelsettings.
@@ -131,8 +131,7 @@ class ModelSchematisations:
                     dst = os.path.join(schema_new.path, row[raster_file])
                     shutil.copyfile(src=src, dst=dst)
                 else:
-                    # TODO raise error?
-                    print(f"Couldnt find raster:\t{row[raster_file]}")
+                    print(f"Couldnt find     raster:\t{row[raster_file]}")
                     raise TypeError(f"No {raster_file} in base schematisation")
 
         # Edit the SQLITE
@@ -287,10 +286,9 @@ class ModelSchematisations:
         )
 
 
-
-
-    def sqlite_revision(self, commit_message):
-        
+    def create_local_sqlite_revision(self, commit_message):
+        """Create local revision of sqlite. Will both be made when splitting and 
+        uploading a model through the plugin"""
         commit_message = re.sub('[^a-zA-Z0-9() \n\.]', '', commit_message)
 
         if len(self.folder.model.schema_base.sqlite_names) != 1:
@@ -300,74 +298,23 @@ class ModelSchematisations:
             rev_count = len(self.folder.model.revisions.content)
             sqlite_path = self.folder.model.schema_base.sqlite_paths[0]
             mod_settings_file = self.folder.model.settings.path_if_exists 
-            settings_df = self.folder.model.settings_default.path_if_exists 
+            mod_settings_default = self.folder.model.settings_default.path_if_exists 
             model_sql = self.folder.model.model_sql.path_if_exists 
 
-            target_file = os.path.join(self.folder.model.revisions.full_path(f"rev_{rev_count+1} - {commit_message[:25]}"))     
-            if os.path.exists(target_file) == False:
-                os.mkdir(target_file)
-                shutil.copy(sqlite_path, target_file)
-                shutil.copy(mod_settings_file, target_file)
-                shutil.copy(settings_df, target_file)
-                try:
-                    shutil.copy(model_sql, target_file)
-                except:
-                    print("sql_file not found")
-                return print(f"succes mkdir and copy {Path(sqlite_path).name} + {Path(mod_settings_file).name} + {Path(settings_df).name} + {Path(model_sql).name} to: {target_file}")
+            target_path = os.path.join(self.folder.model.revisions.full_path(f"rev_{rev_count+1} - {commit_message[:25]}"))     
+            if os.path.exists(target_path) == False: #TODO target_file.exists
+                os.mkdir(target_path)
 
-            else:
-                shutil.copy(sqlite_path, target_file)
-                shutil.copy(mod_settings_file, target_file)
-                shutil.copy(settings_df, target_file)
-                try:
-                    shutil.copy(model_sql, target_file)
-                except:
-                    print("sql_file not found")
-                return print(f"succes copy {Path(sqlite_path).name} + {Path(mod_settings_file).name} + {Path(settings_df).name} + {Path(model_sql).name} to: {target_file}")
-            
+            for f in [sqlite_path, mod_settings_file, mod_settings_default]:
+                    shutil.copy(f, target_path)
+            try:
+                shutil.copy(model_sql, target_path)
+            except:
+                print("sql_file not found")
+                #TODO path hier weg tijdens merge.
+            return print(f"succes copy {Path(sqlite_path).name} + {Path(mod_settings_file).name} + {Path(mod_settings_default).name} + {Path(model_sql).name} to: {target_path}")
 
-          
-                                     
-
-        # sqlite_path = getattr(self.folder.model, f"schema_{name}")
-        # row = self.settings_df.loc[name]
        
-        # sqlite_path = schema_new.database.path
-        # schematisation_name = row["schematisation_name"]
-        # tags = [schematisation_name, self.folder.name]
-
-
-
-
-
-        # target_file = revision_parent_folder.full_path(f"rev_{count+1} - {commit_message[:25]}")
-        # if list_of_files == []:
-        #     shutil.copytree(schema_str, target_file)
-
-        # if list_of_files != []:
-        #     latest_file = max(list_of_files, key=os.path.getctime) 
-        #     if revision_parent_folder.full_path(f"rev_{count} - {commit_message[:25]}") != str(latest_file): 
-        #         shutil.copytree(schema_str, target_file)
-
-
-
-
-        
-        # revision_folder = os.path.join(revision_parent_folder, f"rev_{count+1} " + str(commit_message))
-        
-
-        # if not os.path.exists(revision_folder):
-        #     os.makedirs(revision_folder)
-        
-        
-        # #target_file = str(self.folder.model) + "\\revisions\\rev" + str(count+1) + "_" + str(commit_message)
-
-        # shutil.copytree(schema_str, revision_folder)
-# %%
-
-
-
-
         
 # %%
 
