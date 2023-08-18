@@ -66,7 +66,7 @@ def md5(fname):
 
 def get_organisation_names(api_key):
     threedi.set_api_key(api_key)
-    organisations = threedi.api.contracts_list().results
+    organisations = hrt.call_threedi_api(threedi.api.contracts_list).results
     organisation_names = [i.organisation_name for i in organisations]
     return organisation_names
 
@@ -77,10 +77,12 @@ def get_and_create_schematisation(
     tags: list = None,
 ) -> Schematisation:
     tags = [] if not tags else tags
-    schematisations = threedi.api.schematisations_list(name=schematisation_name)
+    schematisations = hrt.call_threedi_api(threedi.api.schematisations_list,
+                                           name=schematisation_name)
 
     if schematisations.count == 1:
-        uuid_id = threedi.api.organisations_list(unique_id=schematisations.results[0].owner)
+        uuid_id = hrt.call_threedi_api(threedi.api.organisations_list,
+                                       unique_id=schematisations.results[0].owner)
         print(
             f"Schematisation '{schematisation_name}' already exists, skipping creation. owner_uuid: {uuid_id}"
         )

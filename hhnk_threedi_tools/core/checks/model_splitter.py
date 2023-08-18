@@ -73,7 +73,7 @@ class ModelSchematisations:
 
     def get_latest_local_revision_str(self) -> str:
         """Str with most recent revision"""
-        folder_list = [x for x in self.folder.model.revisions.pl.glob("*/")] #TODO pl in path vervangen na merge
+        folder_list = [x for x in self.folder.model.revisions.path.glob("*/")]
         if folder_list == []:
             local_rev_str = f"no previous local revision for:      {self.folder.name}"
         else:
