@@ -21,7 +21,7 @@ from hhnk_threedi_tools.variables.api_settings import API_SETTINGS
 from hhnk_threedi_tools.external.threedi_calls import ThreediCalls
 
 # Globals
-THREEDI_API_HOST = "https://api.3di.live/v3"
+THREEDI_API_HOST = "https://api.3di.live"
 
 #TODO move to hrt
 def update_dict_keys(mydict, translate_dict={}, remove_keys=[]) -> dict:

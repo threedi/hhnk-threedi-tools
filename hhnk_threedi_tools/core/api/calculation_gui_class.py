@@ -37,7 +37,7 @@ from hhnk_threedi_tools.variables.api_settings import (
 
 dl.LIZARD_URL = "https://hhnk.lizard.net/api/v4/"
 DL_RESULT_LIMIT = 1000
-THREEDI_API_HOST = "https://api.3di.live/v3"
+THREEDI_API_HOST = "https://api.3di.live"
 RESULT_LIMIT = 20
 
 
