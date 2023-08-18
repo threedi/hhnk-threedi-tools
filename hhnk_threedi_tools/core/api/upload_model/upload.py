@@ -32,8 +32,6 @@ class ThreediApiLocal:
     def __init__(self):
         self.CONFIG = {
             "THREEDI_API_HOST": THREEDI_API_HOST,
-            # "THREEDI_API_USERNAME": get_login_details(option='username'),
-            # "THREEDI_API_PASSWORD": get_login_details(option='password'),
             "THREEDI_API_PERSONAL_API_TOKEN": "",
         }
 
@@ -110,7 +108,7 @@ def get_and_create_schematisation(
     #     return None
 
 
-def upload_sqlite( schematisation, revision, sqlite_path: Union[str, Path]):
+def upload_sqlite(schematisation, revision, sqlite_path: Union[str, Path]):
     sqlite_path = Path(sqlite_path)
     sqlite_zip_path = sqlite_path.with_suffix(".zip")
     print(f"sqlite_zip_path = {sqlite_zip_path}")
@@ -157,9 +155,6 @@ def upload_raster(
     upload_file(upload.put_url, raster_path, timeout=UPLOAD_TIMEOUT)
 
 
-#%
-
-
 def commit_revision(rev_id: int, schema_id: int, commit_message):
     # First wait for all files to have turned to 'uploaded'
     for wait_time in [0.5, 1.0, 2.0, 10.0, 30.0, 60.0, 120.0, 300.0]:
@@ -189,6 +184,19 @@ def commit_revision(rev_id: int, schema_id: int, commit_message):
 
 
 def create_threedimodel(schematisation, revision):
+    #Check if revision is valid
+    for i in range(10):
+        rev = hrt.call_threedi_api(func=threedi.api.schematisations_revisions_read, 
+                                         id=revision.id, schematisation_pk=schematisation.id)
+        if rev.is_valid:
+            break
+        else:
+            if i == 9:
+                raise Exception(f"revision did not become valid after {(i+1)*5}s; {rev}")
+            else:
+                time.sleep(5)
+                print(f"waiting for revision to become valid ({(i+1)*5}s)")
+
     #Check number of models, if more than 2, delete oldest.
     threedimodels = hrt.call_threedi_api(func=threedi.api.threedimodels_list, 
                                             revision__schematisation__name=schematisation.name)
@@ -201,8 +209,8 @@ def create_threedimodel(schematisation, revision):
 
     #Create model
     threedimodel = hrt.call_threedi_api(func=threedi.api.schematisations_revisions_create_threedimodel,
-        id=revision.id, schematisation_pk=schematisation.id
-    )
+            id=revision.id, schematisation_pk=schematisation.id
+        )
     print(f"Creating threedimodel with id {threedimodel.id}")
 
     return threedimodel.id
@@ -226,6 +234,7 @@ def upload_and_process(
     revision = threedi.api.schematisations_revisions_create(
         schematisation.id, data={"empty": True}
     )
+    print(f"created empty revision with id {revision.id}")
 
     # Data uploaden
     # # Spatialite
@@ -246,11 +255,13 @@ def upload_and_process(
             )
 
     # Commit revision
+    print(f"commit revision {revision.id}")
     commit_revision(
         rev_id=revision.id, schema_id=schematisation.id, commit_message=commit_message
     )
 
     # 3Di model en simulation template genereren
+    print(f"create threedimodel with schema_id {schematisation.id} and rev_id {revision.id}")
     threedimodel = create_threedimodel(schematisation, revision)
     return threedimodel
 
