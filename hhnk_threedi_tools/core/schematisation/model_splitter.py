@@ -5,7 +5,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import os
 import json
-
+import re
+import datetime
+from pathlib import Path
 import hhnk_research_tools as hrt
 import hhnk_threedi_tools.core.schematisation.upload as upload
 
@@ -58,6 +60,7 @@ class ModelSchematisations:
         if self.settings_loaded:
             self._sanity_check()
 
+
     def _sanity_check(self):
         """Sanity check settings tables"""
         inter = self.settings_df.keys().intersection(self.settings_default_series.keys())
@@ -67,27 +70,34 @@ class ModelSchematisations:
         Dat lijkt me een slecht plan. Kolommen: {inter.values}"""
             )
 
-    def get_revision_info(self, name, api_key):
+
+    def get_latest_local_revision_str(self) -> str:
+        """Str with most recent revision"""
+        folder_list = [x for x in self.folder.model.revisions.path.glob("*/")]
+        if folder_list == []:
+            local_rev_str = f"no previous local revision for:      {self.folder.name}"
+        else:
+            file = max(folder_list, key=os.path.getctime)
+            file_modify_date = datetime.datetime.fromtimestamp(file.lstat().st_mtime)
+            local_rev_str = str(f"Most recent local revision:    {file.name} ({file_modify_date.strftime('%y-%m-%d %H:%M:%S')})" )
+        return local_rev_str
+    
+
+    def get_model_revision_info(self, name, api_key):
         upload.threedi.set_api_key(api_key)
         name=name        
         row = self.settings_df.loc[name]
-        schema_folder = os.path.join(str(self.folder.model))
-        if not os.path.exists(schema_folder + "\\revisions"):
-            os.makedirs(schema_folder + "\\revisions")
-            count = len(os.listdir(str(self.folder.model)+"\\revisions"))
-            return str("Latest local revision:      rev" + str(count))
-
         schematisation = row["schematisation_name"]
         threedimodel = upload.threedi.api.threedimodels_list(revision__schematisation__name=schematisation)
 
         if threedimodel.results == []:
-            return str("No previous model(s) available for: " + schematisation)
-    
-        if threedimodel.results != []:
+            model_revision_str = f"No previous model(s) available for: {schematisation}"
+        else:
             schema_id = threedimodel.to_dict()['results'][0]['schematisation_id']
             latest_revision = upload.threedi.api.schematisations_latest_revision(schema_id)
             rev_model = threedimodel.to_dict()['results'][0]['name']
-            return str("Latest model revision:      " + rev_model + " - " + latest_revision.commit_message)
+            model_revision_str = f"Most recent model revision:      {rev_model} - {latest_revision.commit_message}"
+        return model_revision_str
 
 
     def create_schematisation(self, name):
@@ -123,8 +133,8 @@ class ModelSchematisations:
                     dst = schema_new.full_path(row[raster_file])
                     shutil.copyfile(src=src.base, dst=dst.base)
                 else:
-                    # TODO raise error?
-                    print(f"Couldnt find raster:\t{row[raster_file]}")
+                    print(f"Couldnt find     raster:\t{row[raster_file]}")
+                    raise TypeError(f"No {raster_file} in base schematisation")
 
         # Edit the SQLITE
         table_names = ["v2_global_settings", "v2_simple_infiltration"]
@@ -239,7 +249,7 @@ class ModelSchematisations:
                     print(f"executed additional query on {name}: {query}")
 
 
-    def upload_schematisation(self, name, commit_message, api_key):             
+    def upload_schematisation(self, name, commit_message, api_key, organisation_uuid):             
         """
         possible raster_names
         [ dem_file, equilibrium_infiltration_rate_file, frict_coef_file,
@@ -248,7 +258,7 @@ class ModelSchematisations:
         leakage_file, phreatic_storage_capacity_file, hydraulic_conductivity_file, porosity_file, infiltration_rate_file,
         max_infiltration_capacity_file, interception_file ]
         """
-
+    
         schema_new = getattr(self.folder.model, f"schema_{name}")
         row = self.settings_df.loc[name]
 
@@ -269,62 +279,62 @@ class ModelSchematisations:
 
         upload.upload_and_process(
             schematisation_name=schematisation_name,
+            organisation_uuid=organisation_uuid,
             sqlite_path=sqlite_path,
             raster_paths=raster_names,
             schematisation_create_tags=tags,
             commit_message=commit_message,
         )
 
-        revision_parent_folder = self.folder.model.revisions
-        list_of_files = [i for i in revision_parent_folder.path.glob('*')]
 
-        count = len(list_of_files)
-        schema_str = str(schema_new)
+    def create_local_sqlite_revision(self, commit_message):
+        """Create local revision of sqlite. Will both be made when splitting and 
+        uploading a model through the plugin"""
+        commit_message = re.sub('[^a-zA-Z0-9() \n\.]', '', commit_message)
 
-
-        target_file = revision_parent_folder.full_path(f"rev_{count+1} - {commit_message[:25]}")
-        if list_of_files == []:
-            shutil.copytree(schema_str, target_file)
-
-        if list_of_files != []:
-            latest_file = max(list_of_files, key=os.path.getctime) 
-            if revision_parent_folder.full_path(f"rev_{count} - {commit_message[:25]}") != str(latest_file): 
-                shutil.copytree(schema_str, target_file)
-
-
-
-
+        if len(self.folder.model.schema_base.sqlite_names) != 1:
+            return print("0 or >1 .sqlite file in 00_basis")
         
-        # revision_folder = os.path.join(revision_parent_folder, f"rev_{count+1} " + str(commit_message))
-        
+        if len(self.folder.model.schema_base.sqlite_names) == 1:
+            rev_count = len(self.folder.model.revisions.content)
+            sqlite_path = self.folder.model.schema_base.sqlite_paths[0]
+            mod_settings_file = self.folder.model.settings.path_if_exists 
+            mod_settings_default = self.folder.model.settings_default.path_if_exists 
+            model_sql = self.folder.model.model_sql.path_if_exists 
 
-        # if not os.path.exists(revision_folder):
-        #     os.makedirs(revision_folder)
-        
-        
-        # #target_file = str(self.folder.model) + "\\revisions\\rev" + str(count+1) + "_" + str(commit_message)
+            target_path = self.folder.model.revisions.full_path(f"rev_{rev_count+1} - {commit_message[:25]}")
+            target_path.create()
 
-        # shutil.copytree(schema_str, revision_folder)
+            for f in [sqlite_path, mod_settings_file, mod_settings_default, model_sql]:
+                try:
+                    shutil.copy(f, target_path.base)
+                except:
+                    print(f"{f} not found")
 
+            return print(f"succes copy {sqlite_path.name} + {mod_settings_file.name} + {mod_settings_default.name} + {model_sql.name} to: {target_path.base}")
 
+       
         
 # %%
 
 if __name__ == "__main__":
     from hhnk_threedi_tools.core.folders import Folders
 
-    path = r"E:\02.modellen\model_test_v2"
+    path = r"E:\02.modellen\LangeWeere_NS"
 
     folder = Folders(path)
-    name = "0d1d_test"
+    name = "1d2d_glg"
 
-    # self = ModelSchematisations(
-    #     folder=folder, modelsettings_path=folder.model.settings
-    # )
-    # self.create_schematisation(name=name)
-    # self.upload_schematisation(
-    #     name=name,
-    #     commit_message="testtest",
-    #     api_key="",
-    # )
+    self = ModelSchematisations(
+        folder=folder, modelsettings_path=folder.model.settings.path
+    )
+    self.create_schematisation(name=name)
+    self.upload_schematisation(
+        organisation_uuid="48dac75bef8a42ebbb52e8f89bbdb9f2",
+        name=name,
+        commit_message="testtest",
+        api_key="",
+    )
 
+
+# %%
