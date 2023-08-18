@@ -112,7 +112,8 @@ class ModelSchematisations:
         # This menas rasters that are not defined are not added to the schematisation.
         schema_base = self.folder.model.schema_base
         schema_new = getattr(self.folder.model, f"schema_{name}")
-
+        schema_new.create()
+        
         database_base = schema_base.database
 
         # Write the sqlite and rasters to new folders.
@@ -311,7 +312,7 @@ class ModelSchematisations:
                 except:
                     print(f"{f} not found")
 
-            return print(f"succes copy {sqlite_path.name} + {mod_settings_file.name} + {mod_settings_default.name} + {model_sql.name} to: {target_path.base}")
+            return print(f"succes copy {Path(sqlite_path).name} + {Path(mod_settings_file).name} + {Path(mod_settings_default).name} + {Path(model_sql).name} to: {target_path.base}")
 
        
         

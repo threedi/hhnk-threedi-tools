@@ -301,7 +301,7 @@ class SchemaDirParent(Folder):
         self.settings_df = None
 
     def _add_modelpath(self, name):
-        setattr(self, f"schema_{name}", hrt.ThreediSchematisation(base=self.base, name=name))
+        setattr(self, f"schema_{name}", hrt.ThreediSchematisation(base=self.base, name=name, create=False))
         self.schema_list.append(f"schema_{name}")
         return f"schema_{name}"
 

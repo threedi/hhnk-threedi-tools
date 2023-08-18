@@ -60,5 +60,4 @@ if __name__=="__main__":
     selftest = TestModelSplitter()
     splitter = selftest.splitter()
 
-
-    # selftest.test_create_schematisation(splitter)
+    selftest.test_create_local_sqlite_revision(splitter)
