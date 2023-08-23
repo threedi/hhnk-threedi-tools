@@ -16,11 +16,9 @@ import hhnk_research_tools as hrt
 
 
 import importlib
-import folders
-importlib.reload(folders)
 
-import functions_bodemberging
-importlib.reload(functions_bodemberging)
+import hhnk_threedi_tools.core.raster_creation.storage_lookup as storage_lookup
+importlib.reload(storage_lookup)
 
 import csv
 import os
@@ -30,11 +28,6 @@ from math import ceil, floor
 import geopandas as gpd
 import numpy as np
 import pandas as pd
-
-#from threedi_scenario_downloader import downloader as dl
-import hhnk_threedi_tools.core.api.downloader as dl #FIXME deze vervangen voor threedi_scenario_downloader als het niet meer werkt.
-dl.set_api_key('')
-
 
 import hhnk_research_tools as hrt
 # import functions.select_polder_revision_globals as gl_var
@@ -60,18 +53,80 @@ update_storage_lookup = False
 
 #Init folderstruct
 basepath = r'G:\02_Werkplaatsen\06_HYD\Projecten\HKC22014 Vergelijking GxG en bodemvochtproducten\02. Gegevens'
-folder = folders.Folders(basepath)
 
 # if not folder.input.exists():
 #     os.mkdir(r'input\\input222')
+class Folders(hrt.Folder):
+    """base; r'G:\02_Werkplaatsen\06_HYD\Projecten\HKC22014 Vergelijking GxG en bodemvochtproducten\02. Gegevens'"""
+    def __init__(self, base, create=False):
+        super().__init__(base, create=create)
+
+        # self.gxg = self.GxGDir(self.base, create=create)
+        # self.storage = self.StorageDir(self.base, create=create)
 
 
-folder.input.add_file("storage_lookup_csv", f'storage_lookup_rz{rootzone_thickness}.csv', ftype="file")
-folder.input.add_file("glg_lowres",gxg_name,ftype='raster')
-folder.input.add_file("area",r'Beheergebied.gpkg',ftype='gpkg')
-folder.input.add_file("downloader_log", f'downloader_log.csv', ftype="file")
-folder.input.add_file("glg",gxg_name[:-4]+"50cm.tif",ftype='raster')
-folder.input.add_file("soil","grondsoort.tif",ftype='raster')
+    # class GxGDir(Folder):
+    #     """    """
+    #     def __init__(self, base, create):
+    #         super().__init__(os.path.join(base, "01.GxG"), create)
+    #         self.wdm = self.WDMDir(self.base, create=create)
+
+    #     class WDMDir(Folder):
+    #         def __init__(self, base, create):
+    #             super().__init__(os.path.join(base, "01.WDM"), create)
+    #             self.add_file("glg", "glg-mediaan.tif")
+    #             self.add_file("ghg", "ghg-mediaan.tif")
+
+
+    # class StorageDir(Folder):
+    #     """    """
+    #     def __init__(self, base, create):
+    #         super().__init__(os.path.join(base, "02.Bodemvocht of Bodemberging"), create)
+    #         self.wdm = self.WDMDir(self.base, create=create)
+
+
+    #     class WDMDir(Folder):
+    #         def __init__(self, base, create):
+    #             super().__init__(os.path.join(base, "01.WDM"), create)
+    #             self.add_file("glg", "storage_glg.tif")
+    #             self.add_file("ghg", "storage_ghg.tif")
+
+        self.input = self.InputDir(self.base, create=create)
+        self.output = self.OutputDir(self.base, create=create)
+
+        self.dem = hrt.Raster(r"G:\02_Werkplaatsen\06_HYD\Projecten\HKC16015 Wateropgave 2.0\11. DCMB\hhnk-modelbuilder-master\data\fixed_data\DEM\DEM_AHN4_int.vrt")
+
+
+    class InputDir(hrt.Folder):
+        """    """
+        def __init__(self, base, create):
+            super().__init__(os.path.join(base, "input"), create)
+
+
+            self.add_file("test_area", "test_area.gpkg")
+
+            self.add_file("unsa_sim", "unsa_sim.csv")
+
+            #Rasters
+            self.add_file("glg_lowres", "glg-mediaan_clip.tif")
+            self.add_file("glg", "glg-mediaan_50cm.tif")
+            self.add_file("soil", "pawn_soil.tif")
+
+    class OutputDir(hrt.Folder):
+        """    """
+        def __init__(self, base, create):
+            super().__init__(os.path.join(base, "output"), create)
+
+            self.add_file("glg", "storage_glg.tif")
+
+folder = Folders(basepath)
+
+folder.input.add_file("storage_lookup_csv", f'storage_lookup_rz{rootzone_thickness}.csv')
+folder.input.add_file("glg_lowres",gxg_name)
+folder.input.add_file("area",r'Beheergebied.gpkg')
+folder.input.add_file("downloader_log", f'downloader_log.csv')
+folder.input.add_file("glg",gxg_name[:-4]+"50cm.tif")
+folder.input.add_file("soil","grondsoort.tif")
 
 #GXG omzetten in juiste resolutie.
 if not folder.input.glg.pl.exists():
@@ -84,6 +139,10 @@ if not folder.input.glg.pl.exists():
 #Get metadata from area
 area_gdf = folder.input.area.load()
 meta = hrt.create_meta_from_gdf(area_gdf, res=0.5)
+
+# %%
+
+# %%
 
 #%%
 #Download rasters for area
@@ -274,9 +333,9 @@ nodata = -9999
 gxg_names = ["GLG_WDM_Cut.tif","GLG_ALT_Cut.tif","GLG_ACA_Cut.tif","GHG_WDM_Cut.tif","GHG_ALT_Cut.tif","GHG_ACA_Cut.tif"]
 
 for i in range(len(gxg_names)):
-    folder.input.add_file("glg_lowres",gxg_names[i],ftype='raster')
-    folder.input.add_file("glg",gxg_names[i][:-4]+"50cm.tif",ftype='raster')
-    folder.output.add_file("glg",gxg_names[i][:-4]+"_storage.tif",ftype='raster')
+    folder.input.add_file("glg_lowres",gxg_names[i])
+    folder.input.add_file("glg",gxg_names[i][:-4]+"50cm.tif")
+    folder.output.add_file("glg",gxg_names[i][:-4]+"_storage.tif")
     # if not folder.input.glg.pl.exists():
     #     hrt.reproject(folder.input.glg_lowres, 
     #                 target_res=0.5,
