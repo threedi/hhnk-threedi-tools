@@ -1,3 +1,4 @@
+# %%
 """
 #FIXME 
 In ontwikkeling. Kopie van
@@ -8,28 +9,19 @@ Dit script rekent grondwaterstand rasters om in een beschikbare bodemberging.
 
 """
 
-# %%
-import sys
-sys.path.insert(0, r"E:\github\wvangerwen\hhnk-research-tools")
-
 import hhnk_research_tools as hrt
-
-
+import hhnk_threedi_tools as htt
 import importlib
 
 import hhnk_threedi_tools.core.raster_creation.storage_lookup as storage_lookup
 importlib.reload(storage_lookup)
 
-import csv
 import os
-import sys
-from math import ceil, floor
 
 import geopandas as gpd
 import numpy as np
 import pandas as pd
 
-import hhnk_research_tools as hrt
 # import functions.select_polder_revision_globals as gl_var
 #from functions.create_folders_dict_poldermodellen import create_folders_dict
 #import functions.wsa_tools as wsa
@@ -39,17 +31,15 @@ import hhnk_research_tools as hrt
 # ghg_input_filename = 'ghg-mediaan.tif'
 # glg_input_filename = 'glg-mediaan.tif'
 
-gxg_name = f'GHG_ALT_Cut.tif'
+from tests.config import FOLDER_TEST, TEMP_DIR
+
+
 
 unit_factor_to_m = 100
 rootzone_thickness = 20 #cm
 building_dh = 0.1 #m. Soil starts 0.1m under building footprint. TODO Wordt dit wel gebruikt? En zou dat moeten?
 update_storage_lookup = False
 
-#TODO how to process, per polder, of heel hhnk? te grote bestanden?
-#TODO afstemmen rasers met verschillende extent etc
-#%%
-##########################################################
 
 #Init folderstruct
 basepath = r'G:\02_Werkplaatsen\06_HYD\Projecten\HKC22014 Vergelijking GxG en bodemvochtproducten\02. Gegevens'
@@ -61,40 +51,12 @@ class Folders(hrt.Folder):
     def __init__(self, base, create=False):
         super().__init__(base, create=create)
 
-        # self.gxg = self.GxGDir(self.base, create=create)
-        # self.storage = self.StorageDir(self.base, create=create)
-
-
-    # class GxGDir(Folder):
-    #     """    """
-    #     def __init__(self, base, create):
-    #         super().__init__(os.path.join(base, "01.GxG"), create)
-    #         self.wdm = self.WDMDir(self.base, create=create)
-
-    #     class WDMDir(Folder):
-    #         def __init__(self, base, create):
-    #             super().__init__(os.path.join(base, "01.WDM"), create)
-    #             self.add_file("glg", "glg-mediaan.tif")
-    #             self.add_file("ghg", "ghg-mediaan.tif")
-
-
-    # class StorageDir(Folder):
-    #     """    """
-    #     def __init__(self, base, create):
-    #         super().__init__(os.path.join(base, "02.Bodemvocht of Bodemberging"), create)
-    #         self.wdm = self.WDMDir(self.base, create=create)
-
-
-    #     class WDMDir(Folder):
-    #         def __init__(self, base, create):
-    #             super().__init__(os.path.join(base, "01.WDM"), create)
-    #             self.add_file("glg", "storage_glg.tif")
-    #             self.add_file("ghg", "storage_ghg.tif")
-
         self.input = self.InputDir(self.base, create=create)
-        self.output = self.OutputDir(self.base, create=create)
 
         self.dem = hrt.Raster(r"G:\02_Werkplaatsen\06_HYD\Projecten\HKC16015 Wateropgave 2.0\11. DCMB\hhnk-modelbuilder-master\data\fixed_data\DEM\DEM_AHN4_int.vrt")
+
+        #Output
+        self.add_file("storage", "storage.tif")
 
 
     class InputDir(hrt.Folder):
@@ -105,112 +67,49 @@ class Folders(hrt.Folder):
 
             self.add_file("test_area", "test_area.gpkg")
 
-            self.add_file("unsa_sim", "unsa_sim.csv")
 
             #Rasters
             self.add_file("glg_lowres", "glg-mediaan_clip.tif")
             self.add_file("glg", "glg-mediaan_50cm.tif")
             self.add_file("soil", "pawn_soil.tif")
 
-    class OutputDir(hrt.Folder):
-        """    """
-        def __init__(self, base, create):
-            super().__init__(os.path.join(base, "output"), create)
 
-            self.add_file("glg", "storage_glg.tif")
+folder = Folders(TEMP_DIR/f"storage_{hrt.get_uuid()}", create=True)
 
-folder = Folders(basepath)
-
-folder.input.add_file("storage_lookup_csv", f'storage_lookup_rz{rootzone_thickness}.csv')
-folder.input.add_file("glg_lowres",gxg_name)
 folder.input.add_file("area",r'Beheergebied.gpkg')
-folder.input.add_file("downloader_log", f'downloader_log.csv')
-folder.input.add_file("glg",gxg_name[:-4]+"50cm.tif")
 folder.input.add_file("soil","grondsoort.tif")
 
-#GXG omzetten in juiste resolutie.
-if not folder.input.glg.pl.exists():
-    hrt.reproject(folder.input.glg_lowres, 
-                target_res=0.5,
-                output_path=folder.input.glg.path)
-
-
-
-#Get metadata from area
-area_gdf = folder.input.area.load()
-meta = hrt.create_meta_from_gdf(area_gdf, res=0.5)
 
 # %%
-
-# %%
-
-#%%
-#Download rasters for area
-uuids= {}
-uuids['soil'] = '9e3534b7-b5d4-46ab-be35-4a0990379f76'
-uuids['building'] = '98b5155d-dbc4-4a0c-a407-a9620741d308'
-
-# Download rasters that are not on system yet.
-
-dl.download_raster(scenario=uuids['soil'],
-                            raster_code = "",
-                            target_srs  = "EPSG:28992",
-                            resolution  = meta.pixel_width,
-                            bounds      = meta.bounds_dl,
-                            bounds_srs  = "EPSG:28992",
-                            pathname    = folder.input.soil.path,
-                            is_threedi_scenario = False,
-                            export_task_csv=folder.input.downloader_log.path)
-
-# functions_bodemberging.download_lizard_rasters(uuid=uuids["soil"],
-#                         output_path=folder.input.soil.path, 
-#                         resolution=meta.pixel_width, 
-#                         bounds=meta.bounds_dl)
-# %%
-# open cvs unsa sim
-storage_df = pd.read_csv(folder.input.unsa_sim.path, sep=';')
-storage_df.rename({'soil type':'soil_type',
-                'rootzone thickness (cm)': 'rootzone_thickness',
-                'groundwater level (meter below surface)': 'dewatering_depth',
-                'storage coefficient (m/m)': 'storage_coefficient',
-                }, axis=1, inplace=True)
+unsa_sim = hrt.get_pkg_resource_path(package_resource=htt.resources, name="unsa_sim.csv")
 
 #Create/load Storage lookup df
-if update_storage_lookup == True:
-    functions_bodemberging.create_storage_lookup(storage_df=storage_df, 
-                                        rootzone_thickness=rootzone_thickness, 
-                                        output_file=folder.input.storage_lookup_csv.path)
-storage_lookup_df = pd.read_csv(folder.input.storage_lookup_csv.path)
-
-
-# %%
-
+storage_lookup_df = storage_lookup.create_storage_lookup(storage_unsa_sim_path=unsa_sim, 
+                                        rootzone_thickness=rootzone_thickness)
 
 
 # compute storage 
 def compute_storage_block(storage_lookup_df, 
-                    roothzone, 
-                    block_gxg,
+                    block_dewa,
                     block_soil, 
                     nodatamask, 
                     nodatavalue, 
                     zeromask):
     
-    block_coeff_storage = np.zeros(block_gxg.shape)
+    block_coeff_storage = np.zeros(block_dewa.shape)
     #Iterate over all soil types
     for soil_type in np.unique(storage_lookup_df['Soil Type']):
         soil_mask = block_soil == soil_type
 
         #Create list of dewateringdepths, corresponding total storage from capsim table.
-        xlist = np.round(storage_lookup_df.loc[(storage_lookup_df['Soil Type']==soil_type) & 
-                                        (storage_lookup_df['Rootzone Thickness (cm)']==roothzone), 
-                                        'Dewathering Depth (m)'].tolist(),5) # x = ontwateringsdiepte 
-        ylist = np.round(storage_lookup_df.loc[(storage_lookup_df['Soil Type']==soil_type) & 
-                                        (storage_lookup_df['Rootzone Thickness (cm)']==roothzone), 
-                                        'Total Available Storage (m)'].tolist(),5) # y = bergingscoefficient
+        #ontwateringsdiepte
+        xlist = np.round(storage_lookup_df.loc[storage_lookup_df['Soil Type']==soil_type, 
+                                                'Dewathering Depth (m)'].tolist(),5) # x = ontwateringsdiepte 
+        ylist = np.round(storage_lookup_df.loc[storage_lookup_df['Soil Type']==soil_type, 
+                                                'Total Available Storage (m)'].tolist(),5) # y = bergingscoefficient
         #Determine the storage coefficient per pixel using the actual dewatering depth (dewadepth_arr[soil_mask])
         #and the corresponding storage coefficient (ylist). Find values by interpolation. 
-        block_coeff_storage[soil_mask] = np.interp(x=block_gxg[soil_mask], xp=xlist, fp=ylist)
+        block_coeff_storage[soil_mask] = np.interp(x=block_dewa[soil_mask], xp=xlist, fp=ylist)
     
     #Calculate storage
 #     storage_arr = sto_coeff_arr * dewadepth_arr
@@ -224,8 +123,9 @@ def compute_storage_block(storage_lookup_df,
 # %%
 def calculate_storage_raster(output_raster, 
                              meta_raster, #FIXME moet anders,
-                             gxg_raster,
-                             unit_factor_to_m=1,
+                             groundwlvl_raster,
+                             dem_raster,
+                             soil_raster,
                              nodata = -9999,
                              overwrite=False):
 
@@ -233,28 +133,13 @@ def calculate_storage_raster(output_raster,
     #de verschillen berekenen.
     dx_min={}
     dy_min={}
-    for rtype, rpath in zip(["soil", "dem", "gxg"], [folder.input.soil, folder.dem, gxg_raster]):
+    for rtype, rpath in zip(["soil", "dem", "gwlvl"], [soil_raster, dem_raster, groundwlvl_raster]):
         dx_min[rtype], dy_min[rtype], _, _ = hrt.dx_dy_between_rasters(meta_big=rpath.metadata, 
                                                                 meta_small=meta_raster.metadata)
 
-    cont = True
 
     #Controle of we door moeten gaan met berekening.
-    if output_raster.pl.exists():
-        if overwrite is False:
-            cont=False
-        else:
-            try:
-                output_raster.pl.unlink()
-            except:
-                #Filelocks tijdens testen...
-                i=0
-                stem = output_raster.pl.stem
-                while i<10:
-                    output_raster = hrt.Raster(output_raster.pl.with_stem(f"{stem}_{i}"))
-                    if not output_raster.pl.exists():
-                        break
-                    i+=1
+    cont = hrt.check_create_new_file(output_file=output_raster, overwrite=overwrite)
 
     if cont:
         #Create output raster
@@ -264,7 +149,7 @@ def calculate_storage_raster(output_raster,
                                 overwrite=overwrite)
 
 
-        #Load raster so we can edit it.
+        #Load output raster so we can edit it.
         target_ds=output_raster.open_gdal_source_write()
         out_band = target_ds.GetRasterBand(1)
 
@@ -277,36 +162,38 @@ def calculate_storage_raster(output_raster,
             window=block_row['window_readarray']
 
             windows = {}
-            for rtype in ["soil", "dem", "gxg"]:
+            for rtype in ["soil", "dem", "gwlvl"]:
                 windows[rtype] = window.copy()
                 windows[rtype][0] += dx_min[rtype]
                 windows[rtype][1] += dy_min[rtype]
             
 
             #Load blocks
-            block_soil = folder.input.soil._read_array(window=windows["soil"])
-            block_dem = folder.dem._read_array(window=windows["dem"])
-            block_gxg = gxg_raster._read_array(window=windows["gxg"])
+            block_soil = soil_raster._read_array(window=windows["soil"])
+            block_dem = dem_raster._read_array(window=windows["dem"])
+            block_gwlvl = groundwlvl_raster._read_array(window=windows["gwlvl"])
 
+            #Calc dewatering depth
+            block_dewa = block_dem-block_dewa
 
             # create global no data masker
-            nodatamask_dem = block_dem == folder.dem.nodata
-            nodatamask_soil =  block_soil == folder.input.soil.nodata
-            nodatamask_gxg =  block_gxg == gxg_raster.nodata
+            masks = {}
+            masks["dem"] = block_dem == dem_raster.nodata
+            masks["soil"] =  block_soil == soil_raster.nodata
+            masks["gwlvl"] =  block_gwlvl == groundwlvl_raster.nodata
+            mask = np.any([masks[i] for i in masks],0)
 
-            nodatamask = nodatamask_dem | nodatamask_soil | nodatamask_gxg
-
-            zeromask = (block_dem == 10)
-
-            #Convert to m
-            block_gxg = np.divide(block_gxg,unit_factor_to_m)
+            # mask where out storage should be zero
+            zeromasks = {}
+            zeromasks["dem_water"] = block_dem == 10
+            zeromasks["negative_dewa"] = block_dewa < 0
+            zeromask = np.any([masks[i] for i in masks],0)
 
             #Calculate storage
             block_storage = compute_storage_block(storage_lookup_df=storage_lookup_df, 
-                                                roothzone=rootzone_thickness, 
-                                                block_gxg=block_gxg, 
+                                                block_dewa=block_dewa, 
                                                 block_soil=block_soil, 
-                                                nodatamask=nodatamask, 
+                                                nodatamask=mask, 
                                                 nodatavalue=nodata, 
                                                 zeromask=zeromask)
 
@@ -320,9 +207,8 @@ def calculate_storage_raster(output_raster,
         target_ds = None
 
 # %%
+output_raster = folder.storage
 overwrite=True
-output_raster = folder.output.glg
-
 # gxg_raster = folder.input.glg
 # meta_raster = folder.input.glg #Use extent of this raster for calc
 gxg_raster = hrt.Raster(r"G:\02_Werkplaatsen\06_HYD\Projecten\HKC22014 Vergelijking GxG en bodemvochtproducten\02. Gegevens\input\\"+gxg_name[:-4]+"50cm.tif")
@@ -353,13 +239,3 @@ for i in range(len(gxg_names)):
                                 unit_factor_to_m=unit_factor_to_m,
                                 nodata = nodata,
                                 overwrite=overwrite)
-
-# %%
-
-df = meta_raster.generate_blocks_geometry()
-
-df[["geometry"]].to_file(folder.output.pl/"blocks.gpkg", driver="GPKG")
-    
-# create additional zero's mask
- #| (dem_list == 10)
-# %%
