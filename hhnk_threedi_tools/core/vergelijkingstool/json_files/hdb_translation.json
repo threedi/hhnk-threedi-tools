@@ -1,0 +1,18 @@
+{
+	"stuwen_op_peilgrens": {
+		"name": "stuwen_op_peilgrens",
+		"columns": {
+			"CODE": "code",
+			"WS_CATEGORIE": "ws_categorie",
+			"geometry": "geometry"
+		}
+	},
+    "duikers_op_peilgrens": {
+		"name": "duikers_op_peilgrens",
+		"columns": {
+			"CODE": "code",
+			"modelleren_als": "modelleren_als",
+			"geometry": "geometry"
+		}
+	}
+}
