@@ -3,14 +3,23 @@
 
 
 from threedi_scenario_downloader import downloader as dl
-dl.set_api_key('')
+import hhnk_research_tools as hrt
+import os
+import hhnk_threedi_tools as htt
 
+from tests.config import FOLDER_TEST, TEMP_DIR
 
+api_keys_path = fr"{os.getenv('APPDATA')}\3Di\QGIS3\profiles\default\python\plugins\hhnk_threedi_plugin\api_key.txt"}
+api_keys = hrt.read_api_file(api_keys_path)
+
+dl.set_api_key(api_key=api_keys["lizard"])
+
+FOLDER_TEST.model.schema_base.rasters.dem
 
 #Download rasters for area
 uuids= {}
 uuids['soil'] = '9e3534b7-b5d4-46ab-be35-4a0990379f76'
-uuids['building'] = '98b5155d-dbc4-4a0c-a407-a9620741d308'
+# uuids['building'] = '98b5155d-dbc4-4a0c-a407-a9620741d308'
 
 # Download rasters that are not on system yet.
 

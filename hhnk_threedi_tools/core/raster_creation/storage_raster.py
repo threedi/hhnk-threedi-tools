@@ -186,7 +186,10 @@ folder_schema =FOLDER_TEST
 output_raster = folder.storage
 overwrite=True
 nodata = -9999
+
+groundwlvl_raster = folder_schema.model.schema_base.rasters.gwlvl_glg
 dem_raster = folder_schema.model.schema_base.rasters.dem
+soil_raster = folder_schema.model.schema_base.rasters.soil
 meta_raster = dem_raster
 
 # %%
