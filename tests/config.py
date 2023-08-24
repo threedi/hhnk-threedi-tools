@@ -18,6 +18,7 @@ TEMP_DIR.unlink_contents()
 TEMP_DIR = TEMP_DIR.path
 for i in TEMP_DIR.iterdir():
     if i.is_dir:
+        cont=False
         for dirname in ["batch_test", "test_project_", "storage_"]:
             if dirname in str(i):
                 cont=True

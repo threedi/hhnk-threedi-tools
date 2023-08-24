@@ -61,7 +61,16 @@ def get_threedi_download_file(download,
 
 class dlRaster():
     """Helper for input of download_functions."""
-    def __init__(self, scenario_uuid, raster_code, resolution, output_path, button, name, timelist=None, bbox=None):
+    def __init__(self,
+                 scenario_uuid,
+                 raster_code,
+                 resolution,
+                 output_path,
+                 is_threedi_scenario=True,
+                 button = None,
+                 name = None,
+                 timelist=None,
+                 bbox=None):
         #Api variables
         self.scenario_uuid = scenario_uuid
         self.raster_code = raster_code
@@ -69,6 +78,7 @@ class dlRaster():
         self.bbox = bbox
         self.timelist = timelist
         self.output_path = output_path
+        self.is_threedi_scenario = is_threedi_scenario
 
         #local use
         self.button = button
@@ -80,6 +90,7 @@ class dlRasterSettingsV4():
         self.raster_code_list = []
         self.projection_list = projection
         self.resolution_list = []
+        self.is_threedi_scenario_list = []
         self.bbox_list = []
         self.time_list = []
         self.pathname_list = []
@@ -92,6 +103,7 @@ class dlRasterSettingsV4():
         self.bbox_list.append(r.bbox)
         self.time_list.append(r.timelist)
         self.pathname_list.append(Path(r.output_path).as_posix())
+        self.is_threedi_scenario_list.append(r.is_threedi_scenario)
 
     def print(self):
         print(f"scenario_uuid_list: {self.scenario_uuid_list}")
@@ -101,6 +113,7 @@ class dlRasterSettingsV4():
         print(f"bbox_list: {self.bbox_list}")
         print(f"time_list: {self.time_list}")
         print(f"pathname_list: {self.pathname_list}")
+        print(f"is_threedi_scenario_list: {self.is_threedi_scenario_list}")
 
 
 class DownloadWidgets:
