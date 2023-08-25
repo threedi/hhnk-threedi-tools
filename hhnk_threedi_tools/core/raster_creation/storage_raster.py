@@ -145,7 +145,7 @@ def calculate_storage_raster(output_raster,
             zeromasks = {}
             zeromasks["dem_water"] = block_dem == 10
             zeromasks["negative_dewa"] = block_dewa < 0
-            zeromask = np.any([masks[i] for i in masks],0)
+            zeromask = np.any([zeromasks[i] for i in zeromasks],0)
 
             #Calculate storage
             block_storage = compute_storage_block(storage_lookup_df=storage_lookup_df, 
