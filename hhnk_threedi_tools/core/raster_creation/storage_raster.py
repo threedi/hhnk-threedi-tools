@@ -25,8 +25,7 @@ import pandas as pd
 
 from tests.config import FOLDER_TEST, TEMP_DIR
 
-rootzone_thickness = 20 #cm
-building_dh = 0.1 #m. Soil starts 0.1m under building footprint. TODO Wordt dit wel gebruikt? En zou dat moeten?
+building_dh = 0.1 #m. Soil starts 0.1m under building footprint. #TODO Wordt dit wel gebruikt? En zou dat moeten?
 
 
 class Folders(hrt.Folder):
@@ -34,10 +33,6 @@ class Folders(hrt.Folder):
     def __init__(self, base, create=False):
         super().__init__(base, create=create)
 
-        #input
-        self.dem = hrt.Raster(r"G:\02_Werkplaatsen\06_HYD\Projecten\HKC16015 Wateropgave 2.0\11. DCMB\hhnk-modelbuilder-master\data\fixed_data\DEM\DEM_AHN4_int.vrt")
-
-        #Output
         self.add_file("storage", "storage.tif")
 
 # compute storage 
@@ -59,7 +54,11 @@ def compute_storage_block(storage_lookup_df,
     """
     block_storage = np.zeros(block_dewa.shape)
     #Iterate over all soil types
-    for soil_type in np.unique(storage_lookup_df['Soil Type']):
+    # for soil_type in np.unique(storage_lookup_df['Soil Type']):
+    for soil_type in np.unique(block_soil):
+        if soil_type not in np.unique(storage_lookup_df['Soil Type']):
+            continue
+        
         soil_mask = block_soil == soil_type
 
         #Create list of dewateringdepths, corresponding total storage from capsim table.
@@ -74,8 +73,8 @@ def compute_storage_block(storage_lookup_df,
         block_storage[soil_mask] = np.interp(x=block_dewa[soil_mask], xp=xlist, fp=ylist)
         
     #Apply nodata and zero values
-    block_storage[nodatamask] = nodatavalue
     block_storage[zeromask] = 0
+    block_storage[nodatamask] = nodatavalue
     return block_storage
 
 
@@ -84,29 +83,30 @@ def calculate_storage_raster(output_raster,
                              groundwlvl_raster,
                              dem_raster,
                              soil_raster,
+                             storage_lookup_df,
                              nodata = -9999,
                              overwrite=False):
-
-    #Rasters kunnen verschillende extent hebben, om dezelfde block in te laden
-    #de verschillen berekenen.
-    dx_min={}
-    dy_min={}
-    for rtype, rpath in zip(["soil", "dem", "gwlvl"], [soil_raster, dem_raster, groundwlvl_raster]):
-        dx_min[rtype], dy_min[rtype], _, _ = hrt.dx_dy_between_rasters(meta_big=rpath.metadata, 
-                                                                meta_small=meta_raster.metadata)
-
 
     #Controle of we door moeten gaan met berekening.
     cont = hrt.check_create_new_file(output_file=output_raster, overwrite=overwrite)
 
     if cont:
+        print(f"creating {output_raster.name}")
+
         #Create output raster
         output_raster.create(metadata=meta_raster.metadata,
                                 nodata=nodata, 
                                 verbose=False, 
                                 overwrite=overwrite)
 
-
+        #Rasters kunnen verschillende extent hebben, om dezelfde block in te laden
+        #de verschillen berekenen.
+        dx_min={}
+        dy_min={}
+        for rtype, rpath in zip(["soil", "dem", "gwlvl"], [soil_raster, dem_raster, groundwlvl_raster]):
+            dx_min[rtype], dy_min[rtype], _, _ = hrt.dx_dy_between_rasters(meta_big=rpath.metadata, 
+                                                                meta_small=meta_raster.metadata)
+        
         #Load output raster so we can edit it.
         target_ds=output_raster.open_gdal_source_write()
         out_band = target_ds.GetRasterBand(1)
@@ -169,11 +169,11 @@ if __name__ == "__main__":
 
     folder = Folders(TEMP_DIR/f"storage_{hrt.get_uuid()}", create=True)
 
-    unsa_sim = hrt.get_pkg_resource_path(package_resource=htt.resources, name="unsa_sim.csv")
+    rootzone_thickness_cm = 20 #cm
 
     #Create/load Storage lookup df
-    storage_lookup_df = storage_lookup.create_storage_lookup(storage_unsa_sim_path=unsa_sim, 
-                                            rootzone_thickness=rootzone_thickness)
+    storage_lookup_df = storage_lookup.create_storage_lookup(rootzone_thickness_cm=rootzone_thickness_cm,
+                                                                storage_unsa_sim_path=None)
 
     folder_schema =FOLDER_TEST
 
@@ -193,6 +193,7 @@ if __name__ == "__main__":
                                 groundwlvl_raster = groundwlvl_raster,
                                 dem_raster = dem_raster,
                                 soil_raster = soil_raster,
+                                storage_lookup_df = storage_lookup_df,
                                 nodata = nodata,
                                 overwrite = overwrite)
 

@@ -2,10 +2,15 @@
 import numpy as np
 import pandas as pd
 import os
+import hhnk_threedi_tools as htt
+import hhnk_research_tools as hrt
 
 
-def create_storage_lookup(storage_unsa_sim_path, rootzone_thickness) -> pd.DataFrame:
+def create_storage_lookup(rootzone_thickness_cm, storage_unsa_sim_path=None) -> pd.DataFrame:
     """function creates a list of available storage for given rootzone thickness"""
+
+    if storage_unsa_sim_path is None:
+        storage_unsa_sim_path = hrt.get_pkg_resource_path(package_resource=htt.resources, name="unsa_sim.csv")
 
     storage_df = pd.read_csv(str(storage_unsa_sim_path), sep=';')
     storage_df.rename({'soil type':'soil_type',
@@ -14,7 +19,7 @@ def create_storage_lookup(storage_unsa_sim_path, rootzone_thickness) -> pd.DataF
                     'storage coefficient (m/m)': 'storage_coefficient',
                     }, axis=1, inplace=True)
 
-    storage_df = storage_df[storage_df['rootzone_thickness']==rootzone_thickness]
+    storage_df = storage_df[storage_df['rootzone_thickness']==rootzone_thickness_cm]
 
     # Compute total available storage at all depths
     dstep = 0.01
@@ -59,7 +64,7 @@ def create_storage_lookup(storage_unsa_sim_path, rootzone_thickness) -> pd.DataF
             storage_lookup_dict.append(
                 {
                     'Soil Type': soil_type,
-                    'Rootzone Thickness (cm)': rootzone_thickness,
+                    'Rootzone Thickness (cm)': rootzone_thickness_cm,
                     'Dewathering Depth (m)': d,
                     'Storage Coefficient (m/m)': local_coef,
                     'Local Storage (mm)': local_storage,

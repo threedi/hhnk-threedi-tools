@@ -7,7 +7,6 @@ import hhnk_research_tools as hrt
 import os
 import hhnk_threedi_tools as htt
 import hhnk_threedi_tools.core.api.download_gui_class as download_gui_class
-import hhnk_threedi_tools.core.raster_creation.storage_raster as storage_raster
 from tests.config import FOLDER_TEST, TEMP_DIR
 
 api_keys_path = fr"{os.getenv('APPDATA')}\3Di\QGIS3\profiles\default\python\plugins\hhnk_threedi_plugin\api_key.txt"
@@ -24,7 +23,7 @@ uuids['soil'] = '9e3534b7-b5d4-46ab-be35-4a0990379f76'
 
 # Download rasters that are not on system yet.
 
-folder = storage_raster.Folders(TEMP_DIR/f"storage_{hrt.get_uuid()}", create=True)
+folder = hrt.Folder(TEMP_DIR)
 
 # %%
 
