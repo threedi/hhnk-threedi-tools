@@ -78,7 +78,7 @@ def compute_storage_block(storage_lookup_df,
     block_storage[zeromask] = 0
     return block_storage
 
-# %%
+
 def calculate_storage_raster(output_raster, 
                              meta_raster, #FIXME moet anders,
                              groundwlvl_raster,
@@ -132,7 +132,7 @@ def calculate_storage_raster(output_raster,
             block_gwlvl = groundwlvl_raster._read_array(window=windows["gwlvl"])
 
             #Calc dewatering depth
-            block_dewa = block_dem-block_dewa
+            block_dewa = block_dem-block_gwlvl
 
             # create global no data masker
             masks = {}
@@ -167,24 +167,15 @@ def calculate_storage_raster(output_raster,
 # %%
 if __name__ == "__main__":
 
-
-
-
     folder = Folders(TEMP_DIR/f"storage_{hrt.get_uuid()}", create=True)
 
-
-
-    # %%
     unsa_sim = hrt.get_pkg_resource_path(package_resource=htt.resources, name="unsa_sim.csv")
 
     #Create/load Storage lookup df
     storage_lookup_df = storage_lookup.create_storage_lookup(storage_unsa_sim_path=unsa_sim, 
                                             rootzone_thickness=rootzone_thickness)
 
-
-
     folder_schema =FOLDER_TEST
-
 
     output_raster = folder.storage
     overwrite=True
@@ -197,10 +188,6 @@ if __name__ == "__main__":
 
     # %%
 
-
-
-
-
     calculate_storage_raster(output_raster = output_raster, 
                                 meta_raster = meta_raster,
                                 groundwlvl_raster = groundwlvl_raster,
@@ -208,3 +195,8 @@ if __name__ == "__main__":
                                 soil_raster = soil_raster,
                                 nodata = nodata,
                                 overwrite = overwrite)
+
+
+    # %%
+
+    assert output_raster.statistics(approve_ok=False) == {'min': 0.0, 'max': 0.14029, 'mean': 0.024702, 'std': 0.031965}

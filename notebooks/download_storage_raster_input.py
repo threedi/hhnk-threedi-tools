@@ -50,3 +50,26 @@ dl.download_raster(
     is_threedi_scenario=dl_raster_settings.is_threedi_scenario_list,
     export_task_csv=folder.full_path(f"download_log_{hrt.get_uuid()}.csv").path,
 )
+
+
+# %% create dummy gwlvl rasters
+# diff with dem: glg=-1, ggg=-0.7, ghg=-0.4
+folder_test = FOLDER_TEST
+
+for idx, gxg in enumerate(["glg", "ggg", "ghg"]):
+    gwlvl_raster = getattr(folder_test.model.schema_base.rasters, f"gwlvl_{gxg}")
+
+    if not gwlvl_raster.exists():
+        dem_array = dem._read_array()
+
+        gwlvl_array = dem_array - 1 + 0.3*idx #glg=-1, ggg=-0.7, ghg=-0.4
+        mask = dem_array == dem.nodata
+
+        gwlvl_array[mask] = dem.nodata
+        hrt.save_raster_array_to_tiff(
+            output_file = gwlvl_raster,
+            raster_array = gwlvl_array,
+            nodata = dem.nodata,
+            metadata = dem.metadata,
+            overwrite=True
+        )
