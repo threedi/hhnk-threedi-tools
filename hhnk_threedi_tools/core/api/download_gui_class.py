@@ -12,6 +12,7 @@ from traitlets import Unicode
 # from apscheduler.schedulers.blocking import BlockingScheduler
 import requests
 from IPython.core.display import HTML
+from IPython.display import display
 from pathlib import Path
 
 # threedi
@@ -552,14 +553,14 @@ class DownloadWidgetsInteraction(DownloadWidgets):
             self.update_buttons()  # Change button state based on selected scenarios
             self.update_time_pick_dropdown()  # change button state and dropdown based on selected scenarios
 
-        self.select.dl_select_box.observe(get_scenarios_selected_result, "value")
+        self.select.dl_select_box.observe(get_scenarios_selected_result, names="value")
 
 
         # --------------------------------------------------------------------------------------------------
         # 4. Result layers selection
         # --------------------------------------------------------------------------------------------------
         for button in self.outputtypes.file_buttons + self.outputtypes.raster_buttons:
-            button.observe(self._update_button_icon, "value")
+            button.observe(self._update_button_icon, names="value")
 
 
         # --------------------------------------------------------------------------------------------------
@@ -601,7 +602,7 @@ class DownloadWidgetsInteraction(DownloadWidgets):
             else:
                 self.download.custom_extent_widget.value = "x1, y1, x2, y2"
                 self.download.custom_extent_widget.disabled = True
-        self.download.custom_extent_button.observe(self._update_button_icon, "value")
+        self.download.custom_extent_button.observe(self._update_button_icon, names="value")
         self.download.custom_extent_button.observe(update_custom_extent_widget, "value")
 
 
@@ -851,7 +852,7 @@ class DownloadWidgetsInteraction(DownloadWidgets):
                 # Get raster size of dem, max depth rasters are downloaded on this resolution.
                 # print(self.vars.folder)
                 # print(self.vars.folder.model.schema_base.rasters.full_path(self.download_batch.dem_path_dropdown.value))
-                dem = hrt.Raster(self.vars.folder.model.schema_base.rasters.dem.path)
+                dem = self.vars.folder.model.schema_base.rasters.dem
 
 
                 #Init empty raster settings.
@@ -935,19 +936,19 @@ class DownloadWidgetsInteraction(DownloadWidgets):
 
                     wlvl_max = getattr(self.vars.batch_fd.downloads, row["dl_name"]).wlvl_max
                     raster_max_wlvl = dlRasterPreset(raster_code="s1-max-dtri",
-                                            output_path=wlvl_max.path, 
+                                            output_path=wlvl_max.base, 
                                             button=self.outputtypes.max_wlvl_button,
                                             name="max waterlvl",                                        
                     )
                     depth_max = getattr(self.vars.batch_fd.downloads, row["dl_name"]).depth_max
                     raster_max_depth = dlRasterPreset(raster_code="depth-max-dtri",
-                                            output_path=depth_max.path, 
+                                            output_path=depth_max.base, 
                                             button=self.outputtypes.max_depth_button,
                                             name="max waterdepth",
                     )
                     damage_total = getattr(self.vars.batch_fd.downloads, row["dl_name"]).damage_total
                     raster_total_damage = dlRasterPreset(raster_code="total-damage",
-                                            output_path=damage_total.path, 
+                                            output_path=damage_total.base, 
                                             button=self.outputtypes.total_damage_button,
                                             name="total damge",
                     )
@@ -992,7 +993,7 @@ class DownloadWidgetsInteraction(DownloadWidgets):
         """when main folder changes, we update some values"""
 
         #Output folder string
-        self.output.folder_value.value = self.vars.folder.threedi_results.path
+        self.output.folder_value.value = self.vars.folder.threedi_results.base
 
         # Set dem options
         self.download_batch.dem_path_dropdown.options = [self.vars.folder.model.schema_base.rasters.dem.path]
@@ -1496,10 +1497,9 @@ class DownloadGui:
 
 
 if __name__ == "__main__":
-        data = {'polder_folder': 'E:\\02.modellen\\model_test_v2',
-    'api_keys_path': fr"C:/Users/{os.getlogin()}/AppData/Roaming/3Di/QGIS3/profiles/default/python/plugins/hhnk_threedi_plugin/api_key.txt"}
+        data = {'polder_folder': r'E:\02.modellen\model_test_v2',
+              'api_keys_path': fr"{os.getenv('APPDATA')}\3Di\QGIS3\profiles\default\python\plugins\hhnk_threedi_plugin\api_key.txt"}
         self = DownloadGui(data=data); 
-        display(self.tab)
         
         self.w.search.sim_name_widget.value = "model_test"
 # %%

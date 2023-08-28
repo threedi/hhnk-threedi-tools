@@ -29,12 +29,12 @@ HDB = f"HDB{file_types_dict[GDB]}"
 POLDER_POLY = f"polder_polygon{file_types_dict[SHAPE]}"
 CHANNEL_FROM_PROFILES = f"channel_surface_from_profiles{file_types_dict[SHAPE]}"
 
-DAMO_DUIKER_SIFON_HEVEL = "DuikerSifonHevel"
-DAMO_WATERDEEL = "waterdeel"
-DATACHECKER_CULVERT = "culvert"
-DATACHECKER_FIXED_DRAINAGE = "fixeddrainagelevelarea"
-HDB_STURING_3DI = "Sturing_3Di"
-WATERLEVEL_VAL_FIELD = "streefpeil_bwn2"
+
+
+
+
+
+
 
 FOLDER_STRUCTURE = """
     Main Folders object
@@ -115,7 +115,6 @@ class Folders(Folder):
                                				└── modelbuilder
                                
                                     Files:	['damo', 'hdb', 'datachecker', ...]
-                                    Layers:	['datachecker_fixed_drainage', ...]
             
             
         {FOLDER_STRUCTURE}
@@ -153,10 +152,6 @@ class Folders(Folder):
     def full_structure(self):
         return print(FOLDER_STRUCTURE)
 
-    @property
-    def all_files(self):
-        return all_files_in_folders(self)
-
 
     def to_file_dict(self):
         """
@@ -172,13 +167,6 @@ class Folders(Folder):
             "hdb": self.source_data.hdb.path_if_exists,
             "polder_shapefile": self.source_data.polder_polygon.path_if_exists,
             "channels_shapefile": self.source_data.modelbuilder.channel_from_profiles.path_if_exists,
-            # Layer names source data
-            "damo_duiker_sifon_layer": DAMO_DUIKER_SIFON_HEVEL,
-            "damo_waterdeel_layer": DAMO_WATERDEEL,
-            "datachecker_culvert_layer": DATACHECKER_CULVERT,
-            "datachecker_fixed_drainage": DATACHECKER_FIXED_DRAINAGE,
-            "hdb_sturing_3di_layer": HDB_STURING_3DI,
-            "init_waterlevel_val_field": WATERLEVEL_VAL_FIELD,
             # model folder
             "model": self.model.schema_base.database.path_if_exists,
             "dem": self.model.schema_base.rasters.dem.path_if_exists,
@@ -199,7 +187,7 @@ class Folders(Folder):
     def is_valid(self):
         """Check if folder stucture is available in input folder."""
         SUB_FOLDERS = ["01_source_data", "02_schematisation", "03_3di_results", "04_test_results"]
-        return all([self.pl.joinpath(i).exists() for i in SUB_FOLDERS])
+        return all([self.full_path(i).exists() for i in SUB_FOLDERS])
 
 
 class SourceDir(Folder):
@@ -219,28 +207,20 @@ class SourceDir(Folder):
             self.create_readme()
 
         # Files
-        self.add_file("damo", "DAMO.gpkg", ftype="gpkg")
+        self.add_file("damo", "DAMO.gpkg")
         self.damo.add_layers(["DuikerSifonHevel", 
                              "waterdeel"])
         
-        self.add_file("hdb", "HDB.gpkg", ftype="gpkg")
+        self.add_file("hdb", "HDB.gpkg")
         self.hdb.add_layer("sturing_3di")
 
-        self.add_file("datachecker", "datachecker_output.gpkg", ftype="gpkg")
+        self.add_file("datachecker", "datachecker_output.gpkg")
         self.datachecker.add_layers(["fixeddrainagelevelarea",
                                     "culvert"])
 
         self.add_file("polder_polygon", POLDER_POLY)
-        self.add_file("panden", "panden.gpkg", ftype="gpkg")
+        self.add_file("panden", "panden.gpkg")
 
-        # Layers
-        # self.add_layer("datachecker_fixed_drainage", "fixeddrainagelevelarea")
-        # self.add_layer("datachecker_culvert", "culvert")
-        # self.add_layer("hdb_sturing_3di_layer", "Sturing_3Di")
-        # self.add_layer("damo_duiker_sifon_layer", "DuikerSifonHevel")
-        # self.add_layer("damo_waterdeel_layer", "waterdeel")
-        # self.add_layer("init_waterlevel_val_field", "streefpeil_bwn2")
-        # self.add_layer("init_water_level_filename", "initieel_water_level")
 
     def create_readme(self):
         readme_txt = (
@@ -283,11 +263,11 @@ class SourceDir(Folder):
             super().__init__(os.path.join(base, "peilgebieden"), create=create)
 
             # Find peilgebieden shapefile in folder.
-            if self.exists:
+            if self.exists():
                 shape_name = [
-                    x
+                    x.name
                     for x in self.content
-                    if x.startswith("peilgebieden") and x.endswith(".shp")
+                    if x.stem.startswith("peilgebieden") and x.suffix==".shp"
                 ]
                 if len(shape_name) == 1:
                     self.add_file("peilgebieden", shape_name[0])
@@ -312,8 +292,8 @@ class SchemaDirParent(Folder):
         if create:
             self.create_readme()
         
-        self.add_file("settings", "model_settings.xlsx", ftype="file")
-        self.add_file("settings_default", "model_settings_default.xlsx", ftype="file")
+        self.add_file("settings", "model_settings.xlsx")
+        self.add_file("settings_default", "model_settings_default.xlsx")
 
 
         #Load settings excel
@@ -321,16 +301,16 @@ class SchemaDirParent(Folder):
         self.settings_df = None
 
     def _add_modelpath(self, name):
-        setattr(self, f"schema_{name}", hrt.ThreediSchematisation(base=self.base, name=name))
+        setattr(self, f"schema_{name}", hrt.ThreediSchematisation(base=self.base, name=name, create=False))
         self.schema_list.append(f"schema_{name}")
         return f"schema_{name}"
 
 
     def set_modelsplitter_paths(self):
         """Call this to set the individual schematisations for the splitter."""
-        if self.settings.exists:
+        if self.settings.exists():
             if not self.settings_loaded: #only read once. #FIXME test this, might cause issues.
-                    self.settings_df = pd.read_excel(self.settings.path, engine="openpyxl")
+                    self.settings_df = pd.read_excel(self.settings.base, engine="openpyxl")
                     self.settings_df = self.settings_df[self.settings_df['name'].notna()]
                     self.settings_df.set_index("name", drop=False, inplace=True)
                     self.settings_loaded = True
@@ -339,7 +319,7 @@ class SchemaDirParent(Folder):
                         if not pd.isnull(row["name"]):
                             self._add_modelpath(name=item_name)
         else:
-            print(f"Tried to load {self.settings.path}, but it doesnt exist.")
+            print(f"Tried to load {self.settings.base}, but it doesnt exist.")
 
        
     def create_readme(self):
@@ -355,10 +335,9 @@ class SchemaDirParent(Folder):
 
 
     def __repr__(self):
-        return f"""{self.name} @ {self.path}
+        return f"""{self.name} @ {self.base}
                     Folders:\t{self.structure}
                     Files:\t{list(self.files.keys())}
-                    Layers:\t{list(self.olayers.keys())}
                     Model schemas:\t{self.schema_list}
                 """
 
@@ -527,20 +506,20 @@ class OutputDirParent(Folder):
         def __init__(self, base, create):
             super().__init__(base, create=create)
 
-            self.add_file("bodemhoogte_kunstwerken", "bodemhoogte_kunstwerken.gpkg", "gpkg")
-            self.add_file("bodemhoogte_stuw", "bodemhoogte_stuw.gpkg", "gpkg")
-            self.add_file("gebruikte_profielen", "gebruikte_profielen.gpkg", "gpkg")
-            self.add_file("geisoleerde_watergangen", "geisoleerde_watergangen.gpkg", "gpkg")
-            self.add_file("gestuurde_kunstwerken", "gestuurde_kunstwerken.gpkg", "gpkg")
-            self.add_file("drooglegging", "drooglegging.tif", "raster")
-            self.add_file("geometry_check", "geometry_check.csv", "file")
-            self.add_file("general_sqlite_checks", "general_sqlite_checks.csv", "file")
-            self.add_file("cross_section_duplicates", "cross_section_duplicates.gpkg", "file")
-            self.add_file("profielen_geen_vertex", "profielen_geen_vertex.gpkg", "file")
-            self.add_file("wateroppervlak", "wateroppervlak.gpkg", "file")
+            self.add_file("bodemhoogte_kunstwerken", "bodemhoogte_kunstwerken.gpkg")
+            self.add_file("bodemhoogte_stuw", "bodemhoogte_stuw.gpkg")
+            self.add_file("gebruikte_profielen", "gebruikte_profielen.gpkg")
+            self.add_file("geisoleerde_watergangen", "geisoleerde_watergangen.gpkg")
+            self.add_file("gestuurde_kunstwerken", "gestuurde_kunstwerken.gpkg")
+            self.add_file("drooglegging", "drooglegging.tif")
+            self.add_file("geometry_check", "geometry_check.csv")
+            self.add_file("general_sqlite_checks", "general_sqlite_checks.csv")
+            self.add_file("cross_section_duplicates", "cross_section_duplicates.gpkg")
+            self.add_file("profielen_geen_vertex", "profielen_geen_vertex.gpkg")
+            self.add_file("wateroppervlak", "wateroppervlak.gpkg")
 
 
-            self.add_file("streefpeil", r"/temp/streefpeil.tif", "raster")
+            self.add_file("streefpeil", r"/temp/streefpeil.tif")
 
     class OutputDirBankLevel(Folder):
         def __init__(self, base, create):
@@ -572,16 +551,14 @@ class OutputDirParent(Folder):
             def __init__(self, base, create=False):
                 super().__init__(base, create=create)
 
-                self.add_file("nodes_0d1d_test", "nodes_0d1d_test.gpkg", "file")
+                self.add_file("nodes_0d1d_test", "nodes_0d1d_test.gpkg")
                 self.add_file(
                     "hydraulische_toets_kunstwerken",
                     "hydraulische_toets_kunstwerken.gpkg",
-                    "file",
                 )
                 self.add_file(
                     "hydraulische_toets_watergangen",
                     "hydraulische_toets_watergangen.gpkg",
-                    "file",
                 )
 
 
@@ -599,11 +576,11 @@ class OutputDirParent(Folder):
             def __init__(self, base, create=True):
                 super().__init__(base, create=create)
 
-                self.add_file("grid_nodes_2d", "grid_nodes_2d.gpkg", "file")
-                self.add_file("stroming_1d2d_test", "stroming_1d2d_test.gpkg", "file")
+                self.add_file("grid_nodes_2d", "grid_nodes_2d.gpkg")
+                self.add_file("stroming_1d2d_test", "stroming_1d2d_test.gpkg")
                 for T in [1, 3, 15]:
-                    self.add_file(f"waterstand_T{T}", f"waterstand_T{T}.tif", "raster")
-                    self.add_file(f"waterdiepte_T{T}", f"waterdiepte_T{T}.tif", "raster")
+                    self.add_file(f"waterstand_T{T}", f"waterstand_T{T}.tif")
+                    self.add_file(f"waterdiepte_T{T}", f"waterdiepte_T{T}.tif")
 
 
 
@@ -618,17 +595,6 @@ class OutputDirParent(Folder):
         def structure(self):
             return self.revision_structure("Climate")
 
-
-
-
-# class Layers(Folder):
-#     def __init__(self, base):
-#         super().__init__(base)
-
-
-# class Logs(Folder):
-#     def __init__(self, base):
-#         super().__init__(base)
 
 
 def create_tif_path(folder, filename):
@@ -661,53 +627,3 @@ def if_exists(path):
         return None
     else:
         return path if os.path.exists(path) else None
-
-
-def all_files_in_folders(_class):
-    """returns all files in folder objects"""
-
-    files = {}
-    folders, file_paths = find_files(_class)
-    has_subfolders = True
-
-    while has_subfolders:
-        _folder = folders[0]
-        found_folders, file_paths = find_files(_folder)
-        files.update(file_paths)
-        folders.extend(found_folders)
-        del folders[0]
-        has_subfolders = len(folders) > 0
-
-    return files
-
-
-def find_files(_class):
-    folders = []
-    file_paths = {}
-    for property_name in dir(_class):
-        # skip internal features
-        if "__" in property_name:
-            continue
-        # skip the structures
-        if property_name in ["show", "structure", "full_structure", "all_files"]:
-            continue
-        # skip opening grid and admin
-        if property_name in ["grid", "admin"]:
-            continue
-
-        if hasattr(_class, "isfolder"):
-            file_paths.update(_class.files)
-
-        _property = getattr(_class, property_name)
-        if hasattr(_property, "isfolder"):
-            file_paths.update(_property.files)
-            folders.append(_property)
-
-        if hasattr(_property, "isrevisions"):
-            for revision in _property.revisions:
-                _folders, revision_paths = find_files(_property[revision])
-
-                file_paths.update({revision: revision_paths})
-                folders.append(_folders)
-
-    return folders, file_paths

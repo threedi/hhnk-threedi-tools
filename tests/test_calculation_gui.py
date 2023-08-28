@@ -7,11 +7,10 @@ import hhnk_research_tools as hrt
 from hhnk_threedi_tools.core.folders import Folders
 from hhnk_threedi_tools.core.api.calculation import SimulationData
 from tests.config import FOLDER_TEST, PATH_NEW_FOLDER
-
      
 
 def test_simulationdata():
-    simdata = SimulationData(sqlite_path=FOLDER_TEST.model.schema_base.database.path, 
+    simdata = SimulationData(sqlite_path=FOLDER_TEST.model.schema_base.database.base, 
                                     sim_name="test_simdata", 
                                     sim_duration=900, 
                                     rain_data=[{}],

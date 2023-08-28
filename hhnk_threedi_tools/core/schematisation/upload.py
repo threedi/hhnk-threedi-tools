@@ -14,16 +14,12 @@ import hhnk_research_tools as hrt
 from threedi_api_client.api import ThreediApi
 from threedi_api_client.openapi import Schematisation
 from threedi_api_client.files import upload_file
-from threedi_api_client.openapi import ApiException
 
-from hhnk_threedi_tools.core.api.upload_model.constants import (
-    THREEDI_API_HOST,
-    ORGANISATION_UUID,
-    BUIEN,
-    RADAR_ID,
-    SCHEMATISATIONS,
-    UPLOAD_TIMEOUT,
-)
+import urllib3
+UPLOAD_TIMEOUT = urllib3.Timeout(connect=60, read=600)
+THREEDI_API_HOST = "https://api.3di.live"
+
+
 
 # %%
 
@@ -67,7 +63,7 @@ def md5(fname):
 
 def get_organisation_names(api_key):
     threedi.set_api_key(api_key)
-    organisations = threedi.api.contracts_list().results
+    organisations = hrt.call_threedi_api(threedi.api.contracts_list).results
     organisation_names = [i.organisation_name for i in organisations]
     return organisation_names
 
@@ -78,24 +74,20 @@ def get_and_create_schematisation(
     tags: list = None,
 ) -> Schematisation:
     tags = [] if not tags else tags
-    resp = threedi.api.schematisations_list(
-        name=schematisation_name
-    )
+    schematisations = hrt.call_threedi_api(threedi.api.schematisations_list,
+                                           name=schematisation_name)
 
-    if resp.count == 1:
-        uuid_id = threedi.api.organisations_list(unique_id=resp.results[0].owner)
-        uuid_name = resp.results[0].name
+    if schematisations.count == 1:
+        uuid_id = hrt.call_threedi_api(threedi.api.organisations_list,
+                                       unique_id=schematisations.results[0].owner)
         print(
-            f"Schematisation '{schematisation_name}' already exists, skipping creation. uuid: {uuid_id}"
+            f"Schematisation '{schematisation_name}' already exists, skipping creation. owner_uuid: {uuid_id}"
         )
-        return resp.results[0]
+        return schematisations.results[0]
     
-    elif resp.count > 1:
+    elif schematisations.count > 1:
         raise ValueError(f"Found > 1 schematisations named'{schematisation_name}!")
 
-    # if not found -> create
-    # cont = input(f"Create new schematisation? [y/n] - {schematisation_name}")
-    # if cont == "y":
     schematisation = hrt.call_threedi_api(func=threedi.api.schematisations_create,
         data={
             "owner": organisation_uuid,
@@ -104,8 +96,6 @@ def get_and_create_schematisation(
         }
     )
     return schematisation
-    # else:
-    #     return None
 
 
 def upload_sqlite(schematisation, revision, sqlite_path: Union[str, Path]):

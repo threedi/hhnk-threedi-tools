@@ -5,20 +5,16 @@ Created on Tue Aug 24 14:11:45 2021
 
 @author: chris.kerklaan
 """
-# First-party imports
-import os
-
 # Third-party imports
 import numpy as np
 import geopandas as gpd
 import pandas as pd
 from shapely import wkt
 from shapely.geometry import Point
+from pathlib import Path
 
 # research-tools
 import hhnk_research_tools as hrt
-from hhnk_research_tools.variables import ESRI_DRIVER
-from pathlib import Path
 
 # Local imports
 from hhnk_threedi_tools.core.folders import Folders
@@ -28,7 +24,6 @@ from hhnk_threedi_tools.core.checks.sqlite.structure_control import StructureCon
 
 # queries
 from hhnk_threedi_tools.utils.queries import (
-    controlled_structures_query,
     geometry_check_query,
     impervious_surface_query,
     isolated_channels_query,
@@ -78,11 +73,9 @@ from hhnk_threedi_tools.variables.database_variables import (
     height_col,
     initial_waterlevel_col,
     storage_area_col,
-    target_type_col,
     reference_level_col,
     cross_sec_loc_layer,
     action_col,
-    weir_layer,
     code_col,
 )
 
@@ -152,9 +145,9 @@ class SqliteCheck:
         self.output_fd = self.fenv.output.sqlite_tests
         
         self.model = self.fenv.model.schema_base.database
-        self.dem = hrt.Raster(self.fenv.model.schema_base.rasters.dem)
+        self.dem = self.fenv.model.schema_base.rasters.dem
         self.datachecker = self.fenv.source_data.datachecker
-        self.damo = self.fenv.source_data.damo.path
+        self.damo = self.fenv.source_data.damo
         self.channels_from_profiles = self.fenv.source_data.modelbuilder.channel_from_profiles
         
         self.layer_fixeddrainage = self.fenv.source_data.datachecker.layers.fixeddrainagelevelarea
@@ -166,7 +159,7 @@ class SqliteCheck:
         """Create leayer with structure control in schematisation"""
         self.structure_control = StructureControl(model=self.fenv.model.schema_base.database, 
                             hdb_control_layer=self.fenv.source_data.hdb.layers.sturing_3di,
-                            output_file=self.fenv.output.sqlite_tests.gestuurde_kunstwerken.pl)
+                            output_file=self.output_fd.gestuurde_kunstwerken.base)
         self.structure_control.run(overwrite=overwrite)
 
 
@@ -209,41 +202,38 @@ class SqliteCheck:
 
         try:
             # Load layers
-            fixeddrainage_gdf = self.layer_fixeddrainage.load()
-            wlvl_raster = self.output_fd.streefpeil
             drooglegging_raster = self.output_fd.drooglegging
 
-            if drooglegging_raster.pl.exists():
-                if overwrite is False:
-                    return
-                else:
-                    drooglegging_raster.unlink_if_exists()
+            create = hrt.check_create_new_file(output_file=drooglegging_raster.path,
+                                    overwrite=overwrite)
+            
+            if create:
+                fixeddrainage_gdf = self.layer_fixeddrainage.load()
+                wlvl_raster = self.output_fd.streefpeil   # Rasterize fixeddrainage
+                hrt.gdf_to_raster(
+                    gdf=fixeddrainage_gdf,
+                    value_field=COL_STREEFPEIL_BWN,
+                    raster_out=wlvl_raster,
+                    nodata=self.dem.nodata,
+                    metadata=self.dem.metadata,
+                    read_array=False,
+                    overwrite=overwrite,
+                )
 
-            # Rasterize fixeddrainage
-            hrt.gdf_to_raster(
-                gdf=fixeddrainage_gdf,
-                value_field=COL_STREEFPEIL_BWN,
-                raster_out=wlvl_raster,
-                nodata=self.dem.nodata,
-                metadata=self.dem.metadata,
-                read_array=False,
-                overwrite=overwrite,
-            )
+                #Calculate drooglegging raster
+                drooglegging_calculator = hrt.RasterCalculator(
+                                raster1=self.dem, 
+                                raster2=wlvl_raster, 
+                                raster_out=drooglegging_raster, 
+                                custom_run_window_function=_create_drooglegging_raster,
+                                output_nodata=self.dem.nodata,
+                                verbose=False)
 
-            #Calculate drooglegging raster
-            drooglegging_calculator = hrt.RasterCalculator(
-                            raster1=self.dem, 
-                            raster2=wlvl_raster, 
-                            raster_out=drooglegging_raster, 
-                            custom_run_window_function=_create_drooglegging_raster,
-                            output_nodata=self.dem.nodata,
-                            verbose=False)
+                drooglegging_calculator.run(overwrite=overwrite)
 
-            drooglegging_calculator.run(overwrite=overwrite)
-
-            #remove temp files
-            wlvl_raster.unlink_if_exists()
-            # self.results["dewatering_depth"] = output_file
+                #remove temp files
+                wlvl_raster.unlink(missing_ok=True)
+                # self.results["dewatering_depth"] = output_file
         except Exception as e:
             raise e from None
     
@@ -288,7 +278,7 @@ class SqliteCheck:
         imp_surface_db.set_index("id",inplace=True)
 
         
-        polygon_imp_surface = gpd.read_file(self.fenv.source_data.polder_polygon.path)
+        polygon_imp_surface = self.fenv.source_data.polder_polygon.load()
         
         db_surface, polygon_surface, area_diff = calc_surfaces_diff(
             imp_surface_db, polygon_imp_surface
@@ -404,7 +394,7 @@ class SqliteCheck:
             conn_nodes_geo,
         ) = read_input(
             model=self.model,
-            channel_profile_path=self.channels_from_profiles.path,
+            channel_profile_file=self.channels_from_profiles,
             fixeddrainage_layer=self.fenv.source_data.datachecker.layers.fixeddrainagelevelarea,
             damo_layer=self.fenv.source_data.damo.layers.waterdeel,
         )
@@ -461,18 +451,17 @@ class SqliteCheck:
         return wrong_profiles_gdf, update_query
 
 
-    def create_grid_from_sqlite(self, sqlite_path, dem_path, output_folder):
-        """Create grid from sqlite, this includes cells, lines and nodes."""
-        grid = make_gridadmin(
-            sqlite_path, dem_path
-        )  # using output here results in error, so we use the returned dict
 
-        for i in ["cells", "lines", "nodes"]:
-            _write_grid_to_file(
-                grid=grid,
-                grid_type=i,
-                output_path=os.path.join(output_folder, f"{i}.gpkg"),
-            )
+    def create_grid_from_sqlite(self, output_folder):
+        """Create grid from sqlite, this includes cells, lines and nodes."""
+        grid = make_gridadmin(self.model.base, self.dem.base)  
+        
+        # using output here results in error, so we use the returned dict
+        for grid_type in ["cells", "lines", "nodes"]:
+            df = pd.DataFrame(grid[grid_type])
+            gdf = hrt.df_convert_to_gdf(df, geom_col_type="wkb", src_crs="28992")
+            hrt.gdf_write_to_geopackage(gdf, filepath=Path(output_folder) / f"{grid_type}.gpkg")
+
 
 
     def run_cross_section_duplicates(self, database):
@@ -676,7 +665,7 @@ def expand_multipolygon(df):
 
 def read_input(
     model,
-    channel_profile_path,
+    channel_profile_file,
     fixeddrainage_layer,
     damo_layer,
 ):
@@ -684,7 +673,7 @@ def read_input(
         fixeddrainage = fixeddrainage_layer.load(
                             )[[peil_id_col, code_col, COL_STREEFPEIL_BWN, geometry_col]]
         fixeddrainage = expand_multipolygon(fixeddrainage)
-        modelbuilder_waterdeel = gpd.read_file(channel_profile_path, driver=ESRI_DRIVER)
+        modelbuilder_waterdeel = channel_profile_file.load()
         damo_waterdeel = damo_layer.load()
         conn_nodes_geo = model.execute_sql_selection(query=watersurface_conn_node_query)
         conn_nodes_geo.set_index(a_watersurf_conn_id, inplace=True)
@@ -776,10 +765,6 @@ def calc_area(fixeddrainage, modelbuilder_waterdeel, damo_waterdeel, conn_nodes_
         raise e from None
 
 
-def _write_grid_to_file(grid, grid_type, output_path):
-    df = pd.DataFrame(grid[grid_type])
-    gdf = hrt.df_convert_to_gdf(df, geom_col_type="wkb", src_crs="28992")
-    hrt.gdf_write_to_geopackage(gdf, filepath=output_path)
 
 
 # %%

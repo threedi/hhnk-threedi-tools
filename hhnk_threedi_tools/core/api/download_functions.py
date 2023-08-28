@@ -1,4 +1,4 @@
-import os, sys
+import os
 import requests  # API call
 import math
 from tqdm import tqdm  # progressbar
@@ -19,7 +19,7 @@ def start_download(download_url, output_folder, api_key, automatic_download):
             if not os.path.exists(download_path):
                 # Start writing the file
                 with open(download_path, "wb") as file:
-                    print(str(index + 1) + ". Downloading to {}".format(download_path))
+                    print(f"{str(index + 1)}. Downloading to {download_path}")
                     response = requests.get(url, auth=("__key__", api_key), stream=True)
                     response.raise_for_status()
 

@@ -26,11 +26,11 @@ NOTEBOOK_DIRECTORY = str(pathlib.Path(__file__).parent.absolute())
 
 class TempCopy:
     def __init__(self, original_path):
-        self.original_path = original_path
+        self.original_path = Path(original_path)
 
     def __enter__(self):
         temp_dir = tempfile.gettempdir()
-        base_path = os.path.basename(self.original_path)
+        base_path = self.original_path.name
         self.path = os.path.join(temp_dir, base_path)
         shutil.copy2(self.original_path, self.path)
         return self.path

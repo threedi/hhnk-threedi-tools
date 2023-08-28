@@ -1,18 +1,8 @@
-# -*- coding: utf-8 -*-
 # %%
-"""
-Created on Tue Apr 12 14:40:28 2022
-
-@author: chris.kerklaan
-
-note, this was not needed
-"""
-
 # First-party imports
 import datetime
 import time
 import numpy as np
-import os
 import requests
 from pathlib import Path
 import zipfile
@@ -27,11 +17,10 @@ from IPython.core.display import HTML
 # Local
 import hhnk_research_tools as hrt
 from hhnk_threedi_tools.variables.api_settings import API_SETTINGS
-from hhnk_threedi_tools.core.api.upload_model.threedi_calls import ThreediCalls
+from hhnk_threedi_tools.external.threedi_calls import ThreediCalls
 
 # Globals
-TIMEZONE = "Europe/Amsterdam"
-
+THREEDI_API_HOST = "https://api.3di.live"
 
 #TODO move to hrt
 def update_dict_keys(mydict, translate_dict={}, remove_keys=[]) -> dict:
@@ -61,7 +50,7 @@ class NumericalSettings:
     def __init__(self, database_path, settings_id):
         """
         database_path: path to sqlite.
-        settings id: as defined in the global_settings (global_setting["numerical_settings_id"])
+        settings_id: as defined in the global_settings (global_setting["numerical_settings_id"])
         """
 
         self.translate_dict_numerical = {
@@ -532,7 +521,7 @@ class Simulation:
         self,
         api_key: str,
         start_time: datetime.datetime = datetime.datetime(2022, 1, 1, 0, 0),
-        host="https://api.3di.live",
+        host=THREEDI_API_HOST,
     ):
 
         self.start_time = start_time
@@ -762,7 +751,7 @@ class Simulation:
        
         filename = f"boundaryconditions_{self.model_id}.json"
 
-        output_path = Path(os.path.join(self.output_folder, "tempfiles", filename))
+        output_path = Path(self.output_folder).joinpath( "tempfiles", filename)
         output_path.parent.parent.mkdir(exist_ok=True)
         output_path.parent.mkdir(exist_ok=True) #Create parent folder
 
@@ -854,7 +843,7 @@ class Simulation:
         return result.results[0]
 
 
-    def create(self, output_folder, simulation_name, model_id, organisation_uuid, sim_duration):
+    def create(self, output_folder, simulation_name, model_id, organisation_uuid, sim_duration, output_folder_sqlite=None):
         # data = {
         #     "template": self.template.id,
         #     "name": simulation_name,
@@ -872,7 +861,7 @@ class Simulation:
         self.set_model(model_id=model_id)
 
         #Download the sqlite so we can retrieve some settings
-        self.download_sqlite()
+        self.sqlite_path = self.download_sqlite(output_folder_sqlite=output_folder_sqlite)
 
         #Create simulation on API
         data={  "name":simulation_name,
@@ -887,20 +876,19 @@ class Simulation:
         self.simulation_created = True
 
 
-    def download_sqlite(self, output_folder=None):
+    def download_sqlite(self, output_folder_sqlite=None):
         """Download sqlite of selected model to temporary folder"""
-        if output_folder is None:
-            output_folder = self.output_folder
-        else:
-            self.output_folder = output_folder
+        if output_folder_sqlite is None:
+            output_folder_sqlite = self.output_folder
 
-        if output_folder is None:
+
+        if output_folder_sqlite is None:
             return "define self.output_folder first"
 
         if self.model is None:
             return "define self.model_id first"
 
-        output_path = Path(os.path.join(output_folder, "tempfiles", f"model_{self.model_id}.zip"))
+        output_path = Path(output_folder_sqlite).joinpath("tempfiles", f"model_{self.model_id}.zip")
         output_path.parent.parent.mkdir(exist_ok=True)
         output_path.parent.mkdir(exist_ok=True) #Create parent folder
         if not output_path.with_suffix('').exists():
@@ -917,7 +905,7 @@ class Simulation:
             zip_ref.extractall(output_path.with_suffix(''))
             zip_ref.close()
 
-        self.sqlite_path = [i for i in output_path.with_suffix('').glob('*.sqlite')][0]
+        return [i for i in output_path.with_suffix('').glob('*.sqlite')][0]
 
 
     def get_data(self, rain_data, iwlvl_raster_id=None):
@@ -940,7 +928,7 @@ class Simulation:
             )
 
             # Create APIcall.txt file
-            apicall_txt = os.path.join(self.output_folder, f"apicall{extra_name}_simid{self.simulation.id}_date{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.txt")
+            apicall_txt = Path(self.output_folder) / f"apicall{extra_name}_simid{self.simulation.id}_date{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
             with open(apicall_txt, "a") as t:
                 t.write(self.simulation_info(str_type="text"))
         else:

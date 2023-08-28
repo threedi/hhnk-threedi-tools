@@ -19,10 +19,10 @@ class StructureControl:
     def __init__(self,
                  model:hrt.Sqlite, 
                  hdb_control_layer:hrt.FileGDBLayer,
-                 output_file:Path):
+                 output_file:str):
         self.model = model #folder.model.schema_base.database
         self.hdb_control_layer = hdb_control_layer #folder.source_data.hdb.layers.sturing_3di
-        self.output_file=output_file #folder.output.sqlite_tests.gestuurde_kunstwerken.path
+        self.output_file=Path(output_file) #folder.output.sqlite_tests.gestuurde_kunstwerken.base
 
         self.layers = self.Layers()
 
@@ -61,7 +61,7 @@ class StructureControl:
         self.l.conn_nodes = self.model.read_table("v2_connection_nodes")
         self.l.conn_nodes.rename({"id":"node_id"}, axis=1, inplace=True)
 
-        if self.hdb_control_layer.parent.pl.exists():
+        if self.hdb_control_layer.parent.exists():
             self.l.hdb_control = self.hdb_control_layer.load()[["CODE", "STREEFPEIL", "MIN_KRUINHOOGTE", "MAX_KRUINHOOGTE"]]
             self.l.hdb_control.rename(columns={
                     "CODE": "code",
@@ -127,44 +127,41 @@ class StructureControl:
 
 
     def run(self, overwrite=False):
-
         #Check overwrite
-        if Path(self.output_file).exists():
-            if overwrite is False:
-                return None
+        create = hrt.check_create_new_file(output_file=self.output_file,
+                                  overwrite=overwrite)
+        
+        if create:
+            #Load layers from sqlite
+            self.load_layers()
+
+            #merge the different control tables
+            self.merge_control()
+
+            #Add linestring geometry
+            for target_type, control_merge_structure in self.l.control_merge.items():
+                self.l.control_merge[target_type] = self.create_geometry_start_end(target_type, control_merge_structure)
+
+            #Combine structure tables
+            if self.l.control_merge:
+                control_df = pd.concat(self.l.control_merge.values())
             else:
-                Path(self.output_file).unlink()
+                control_df = None
 
-        #Load layers from sqlite
-        self.load_layers()
-
-        #merge the different control tables
-        self.merge_control()
-
-        #Add linestring geometry
-        for target_type, control_merge_structure in self.l.control_merge.items():
-            self.l.control_merge[target_type] = self.create_geometry_start_end(target_type, control_merge_structure)
-
-        #Combine structure tables
-        if self.l.control_merge:
-            control_df = pd.concat(self.l.control_merge.values())
-        else:
-            control_df = None
-
-        #Create empty df, so we always have a result, then add the controls
-        self.out_df = pd.DataFrame(columns=["control_id","action_table","target_type","target_id","code", "initial_wlvl", "geometry"])
-        self.out_df = pd.concat([self.out_df, control_df], join="inner")
+            #Create empty df, so we always have a result, then add the controls
+            self.out_df = pd.DataFrame(columns=["control_id","action_table","target_type","target_id","code", "initial_wlvl", "geometry"])
+            self.out_df = pd.concat([self.out_df, control_df], join="inner")
 
 
-        #add action values
-        self.out_df[["start_action_value","min_action_value","max_action_value"]] \
-            = self.out_df.apply(self.get_action_values, axis=1, result_type="expand")
+            #add action values
+            self.out_df[["start_action_value","min_action_value","max_action_value"]] \
+                = self.out_df.apply(self.get_action_values, axis=1, result_type="expand")
 
-        #append_hdb_layer
-        self.out_df = self.append_hdb_layer()
+            #append_hdb_layer
+            self.out_df = self.append_hdb_layer()
 
-        self.save()
-        return self.out_df
+            self.save()
+            return self.out_df
 
 
 # %%
@@ -172,11 +169,11 @@ if __name__ == "__main__":
     for i in range(1,5):
         TEST_MODEL = Path(__file__).parents[i].absolute() / "tests/data/model_test/"
         folder = Folders(TEST_MODEL)
-        if folder.exists:
+        if folder.exists():
             break
 
 
     self = StructureControl(model=folder.model.schema_base.database, 
                         hdb_control_layer=folder.source_data.hdb.layers.sturing_3di,
-                        output_file=folder.output.sqlite_tests.gestuurde_kunstwerken.pl)
+                        output_file=folder.output.sqlite_tests.gestuurde_kunstwerken.path)
     self.run(overwrite=True)

@@ -1,6 +1,4 @@
 import hhnk_research_tools as hrt
-import geopandas as gpd
-from osgeo import gdal
 import numpy as np
 
 
@@ -9,26 +7,16 @@ def rasterize_peilgebieden(
     output_file,
     input_peilgebieden,
     output_peilgebieden,
-    mask_path,
+    mask_file,
     overwrite=False,
 ):
-    # Rasterize regions
-    if not output_file.exists:
-        create = True
-    else:
-        create = False
-        # Check edit times. To see if raster needs to be updated.
-        raster_mtime = output_file.pl.stat().st_mtime
-        shape_mtime = input_peilgebieden.pl.stat().st_mtime
-
-        if shape_mtime > raster_mtime:
-            create = True
-    if overwrite:
-        create = True
+    create = hrt.check_create_new_file(output_file=output_file.path, 
+                              overwrite=overwrite, 
+                              input_files=[input_peilgebieden.path])
 
     if create:
         # TODO dit is niet goed voor het geheugen... Is het wel nodig?
-        pgb_gdf = gpd.read_file(input_peilgebieden.path)
+        pgb_gdf = input_peilgebieden.load()
         pgb_gdf.reset_index(drop=False, inplace=True)
 
         # Rasterize areas, giving each region a unique id.
@@ -41,7 +29,7 @@ def rasterize_peilgebieden(
             driver="MEM",
         )
 
-        mask_gdf = gpd.read_file(mask_path)
+        mask_gdf = mask_file.load()
         mask_gdf["val"] = 1
         mask_array = hrt.gdf_to_raster(
             gdf=mask_gdf,

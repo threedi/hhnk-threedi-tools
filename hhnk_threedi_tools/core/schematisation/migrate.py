@@ -21,14 +21,14 @@ def backup_sqlite(filename, clear_folder=False):
     u"""Make a backup of the sqlite database.
     direct copy of ThreeDiToolbox\\utils\\utils.py to reduce dependencies"""
 
-    backup_folder = hrt.Folder(os.path.join(os.path.dirname(os.path.dirname(filename)), "_backup"))
+    backup_folder = hrt.Folder(Path(filename).parents[1] / "_backup")
     backup_folder.create()
 
     if clear_folder:
         backup_folder.unlink_contents() 
 
     backup_sqlite_path = backup_folder.full_path(f"{hrt.get_uuid()}_{os.path.basename(filename)}")
-    shutil.copyfile(filename, backup_sqlite_path)
+    shutil.copyfile(str(filename), str(backup_sqlite_path))
     return backup_sqlite_path
 
 
@@ -59,7 +59,7 @@ class MigrateSchema():
 
     def backup(self, clear_folder=False) -> Sqlite:
         """create backup"""
-        backup_filepath = backup_sqlite(self.schema_raw.path, clear_folder=clear_folder)
+        backup_filepath = backup_sqlite(self.schema_raw.base, clear_folder=clear_folder)
         return Sqlite(backup_filepath)
     
 
@@ -68,15 +68,15 @@ class MigrateSchema():
 
         backup2 = self.backup()
         try:
-            self.schema_raw.unlink_if_exists()
+            self.schema_raw.unlink(missing_ok=True)
 
             #Write migrated sqlite to file
-            shutil.copy(self.schema_backup.path, self.schema_raw.path)
+            shutil.copy(self.schema_backup.base, self.schema_raw.base)
 
-            backup2.unlink_if_exists()
+            backup2.unlink(missing_ok=True)
 
         except Exception as e:
-            print(f"Backup of sqlite saved in {backup2.path}")
+            print(f"Backup of sqlite saved in {backup2.base}")
             raise e
         
 
@@ -85,7 +85,7 @@ class MigrateSchema():
         #Editing in the original file causes filelock issues
         self.schema_backup = self.backup(clear_folder=True)
 
-        self.schema = self.get_schema(filename=self.schema_backup.path)
+        self.schema = self.get_schema(filename=self.schema_backup.base)
         
         try:
             self.schema.validate_schema()
@@ -113,7 +113,6 @@ class MigrateSchema():
             self.overwrite_original()
 
             print(f"Upgraded database from version {old_version} to {new_version}")
-            # self.schema_backup.unlink_if_exists()
 
         except errors.UpgradeFailedError:
             print("UpgradeFailedError")
@@ -128,7 +127,7 @@ if __name__ == "__main__":
     for i in range(1,5):
         TEST_MODEL = Path(__file__).parents[i].absolute() / "tests/data/model_test/"
         folder = Folders(TEST_MODEL)
-        if folder.exists:
+        if folder.exists():
             break
 
     filename_orig = folder.full_path("bwn_test_pre_migration.sqlite")

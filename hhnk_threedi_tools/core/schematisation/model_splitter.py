@@ -1,15 +1,11 @@
-# %%
-import sys
 import shutil
 import pandas as pd
-import matplotlib.pyplot as plt
 import os
-import json
 import re
 import datetime
 from pathlib import Path
 import hhnk_research_tools as hrt
-import hhnk_threedi_tools.core.api.upload_model.upload as upload
+import hhnk_threedi_tools.core.schematisation.upload as upload
 
 INFILTRATION_COLS = [
     "infiltration_rate",
@@ -33,19 +29,21 @@ class ModelSchematisations:
         self.settings_loaded = False
 
         if modelsettings_path is None:
-            modelsettings_path=folder.model.settings.path
+            modelsettings_path=folder.model.settings
+        else:
+            modelsettings_path=hrt.File(modelsettings_path)
 
-        if os.path.exists(modelsettings_path):
-            self.settings_df = pd.read_excel(modelsettings_path, engine="openpyxl")
+        if modelsettings_path.exists():
+            self.settings_df = pd.read_excel(modelsettings_path.base, engine="openpyxl")
             self.settings_df = self.settings_df[self.settings_df['name'].notna()]
             self.settings_df.set_index("name", drop=False, inplace=True)
             self.settings_loaded = True
         else:
             self.settings_df = None
 
-        if self.folder.model.settings_default.exists:
+        if self.folder.model.settings_default.exists():
             self.settings_default_series = pd.read_excel(
-                self.folder.model.settings_default.path, engine="openpyxl"
+                self.folder.model.settings_default.base, engine="openpyxl"
             ).iloc[0]  # Series, only has one row.
         else:
             self.settings_default_series = None
@@ -71,7 +69,7 @@ class ModelSchematisations:
 
     def get_latest_local_revision_str(self) -> str:
         """Str with most recent revision"""
-        folder_list = [x for x in self.folder.model.revisions.pl.glob("*/")] #TODO pl in path vervangen na merge
+        folder_list = [x for x in self.folder.model.revisions.path.glob("*/")]
         if folder_list == []:
             local_rev_str = f"no previous local revision for:      {self.folder.name}"
         else:
@@ -110,14 +108,15 @@ class ModelSchematisations:
         # This menas rasters that are not defined are not added to the schematisation.
         schema_base = self.folder.model.schema_base
         schema_new = getattr(self.folder.model, f"schema_{name}")
-
+        schema_new.create()
+        
         database_base = schema_base.database
 
         # Write the sqlite and rasters to new folders.
 
         # Copy sqlite
-        dst = os.path.join(schema_new.path, database_base.pl.name)
-        shutil.copyfile(src=database_base.path, dst=dst)
+        dst = schema_new.full_path(database_base.name)
+        shutil.copyfile(src=database_base.base, dst=dst.base)
 
         #If database_new is defined before sqlite exists, it will not work properly
         database_new = schema_new.database 
@@ -126,10 +125,10 @@ class ModelSchematisations:
         # Copy rasters that are defined in the settings file
         for raster_file in RASTER_FILES:
             if not pd.isnull(row[raster_file]):
-                src = os.path.join(schema_base.path, row[raster_file])
-                if os.path.exists(src):
-                    dst = os.path.join(schema_new.path, row[raster_file])
-                    shutil.copyfile(src=src, dst=dst)
+                src = schema_base.full_path(row[raster_file])
+                if src.exists():
+                    dst = schema_new.full_path(row[raster_file])
+                    shutil.copyfile(src=src.base, dst=dst.base)
                 else:
                     print(f"Couldnt find     raster:\t{row[raster_file]}")
                     raise TypeError(f"No {raster_file} in base schematisation")
@@ -204,7 +203,7 @@ class ModelSchematisations:
 
             # Set controlled weirs to 10x width because we dont use controlled strcutures in hyd test.
             # To get the weir with we use the base database, so we cant accidentally run this twice.
-            controlled_weirs_selection_query = f"""
+            controlled_weirs_selection_query = """
                 SELECT
                 v2_weir.cross_section_definition_id as cross_def_id,
                 v2_weir.code as weir_code,
@@ -238,9 +237,8 @@ class ModelSchematisations:
             # hrt.execute_sql_changes(query=query, database=database_path_new)
 
         #execute additional SQL code that is stored in 02_schematisation/model_sql.json.
-        if self.folder.model.model_sql.pl.exists():
-            with open(self.folder.model.model_sql.path) as f:
-                model_sql = json.loads(f.read())
+        if self.folder.model.model_sql.exists():
+            model_sql = self.folder.model.model_sql.read_json()
 
             if name in model_sql.keys():
                 for _, query in model_sql[name].items():
@@ -271,7 +269,7 @@ class ModelSchematisations:
             "initial_waterlevel_file": schema_new.rasters.initial_wlvl_2d.path_if_exists,
         }
 
-        sqlite_path = schema_new.database.path
+        sqlite_path = schema_new.database.base
         schematisation_name = row["schematisation_name"]
         tags = [schematisation_name, self.folder.name]
         # organisation_uuid="48dac75bef8a42ebbb52e8f89bbdb9f2"
@@ -301,18 +299,16 @@ class ModelSchematisations:
             mod_settings_default = self.folder.model.settings_default.path_if_exists 
             model_sql = self.folder.model.model_sql.path_if_exists 
 
-            target_path = os.path.join(self.folder.model.revisions.full_path(f"rev_{rev_count+1} - {commit_message[:25]}"))     
-            if os.path.exists(target_path) == False: #TODO target_file.exists
-                os.mkdir(target_path)
+            target_path = self.folder.model.revisions.full_path(f"rev_{rev_count+1} - {commit_message[:25]}")
+            target_path.create()
 
-            for f in [sqlite_path, mod_settings_file, mod_settings_default]:
-                    shutil.copy(f, target_path)
-            try:
-                shutil.copy(model_sql, target_path)
-            except:
-                print("sql_file not found")
-                #TODO path hier weg tijdens merge.
-            return print(f"succes copy {Path(sqlite_path).name} + {Path(mod_settings_file).name} + {Path(mod_settings_default).name} + {Path(model_sql).name} to: {target_path}")
+            for f in [sqlite_path, mod_settings_file, mod_settings_default, model_sql]:
+                try:
+                    shutil.copy(f, target_path.base)
+                except:
+                    print(f"{f} not found")
+
+            return print(f"succes copy {Path(sqlite_path).name} + {Path(mod_settings_file).name} + {Path(mod_settings_default).name} + {Path(model_sql).name} to: {target_path.base}")
 
        
         

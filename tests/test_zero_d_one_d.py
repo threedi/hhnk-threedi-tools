@@ -1,5 +1,9 @@
 # %%
 # Local imports
+
+# from notebooks.notebook_setup import setup_notebook
+# notebook_data = setup_notebook()
+
 from hhnk_threedi_tools.core.checks.zero_d_one_d import ZeroDOneDTest
 from tests.config import FOLDER_TEST, PATH_TEST_MODEL
 
@@ -30,3 +34,6 @@ if __name__ == "__main__":
             print(i)
             getattr(selftest, i)()    
 # %%
+
+
+

@@ -3,14 +3,11 @@
 import os
 import datetime
 
-from pathlib import Path
-
 # Third-party imports
 import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
 import ipywidgets as widgets
 from IPython.core.display import HTML
+from IPython.display import display
 from traitlets import Unicode
 # from apscheduler.schedulers.blocking import BlockingScheduler
 
@@ -19,7 +16,6 @@ from threedi_scenario_downloader import downloader as dl
 # from deprecated.core.api import downloader as dl
 
 # local imports
-import hhnk_threedi_tools as htt
 import hhnk_research_tools as hrt
 from hhnk_threedi_tools import Folders
 
@@ -37,7 +33,7 @@ from hhnk_threedi_tools.variables.api_settings import (
 
 dl.LIZARD_URL = "https://hhnk.lizard.net/api/v4/"
 DL_RESULT_LIMIT = 1000
-THREEDI_API_HOST = "https://api.3di.live/v3"
+THREEDI_API_HOST = "https://api.3di.live"
 RESULT_LIMIT = 20
 
 
@@ -829,7 +825,7 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
 
         # Observe all calculation settings buttons
         for button in self.calc_settings.children:
-            button.observe(self._update_button_icon, "value")
+            button.observe(self._update_button_icon, names="value")
 
 
         self.start.simulation_name_widget.observe(lambda change: self.update_simulation_name_widget(model_type=None), 'value', type='change')
@@ -1343,8 +1339,8 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
         """when main folder changes, we update some values"""
 
         #Output folder string
-        self.output.folder_value.value = self.vars.folder.threedi_results.path
-        self.output.folder_value_batch.value = self.vars.folder.threedi_results.batch.path
+        self.output.folder_value.value = self.vars.folder.threedi_results.base
+        self.output.folder_value_batch.value = self.vars.folder.threedi_results.batch.base
 
 
     def update_simulation_feedback(self, sim):
@@ -1741,9 +1737,9 @@ class GuiVariables:
     def sqlite_dropdown_viewlist(self):
         self.folder.model.set_modelsplitter_paths() #set all paths in model_settings.xlsx
         for schema in self.folder.model.schema_list:
-            if getattr(self.folder.model, schema).database.exists:
+            if getattr(self.folder.model, schema).database.exists():
                 schemafolder=  getattr(self.folder.model, schema)
-                viewname = f"{schemafolder.pl.name}/{schemafolder.database.pl.name}" 
+                viewname = f"{schemafolder.name}/{schemafolder.database.name}" 
                 self.sqlite_dropdown_options[viewname] =schemafolder
 
         return self.sqlite_dropdown_options.keys()
@@ -2013,7 +2009,7 @@ class StartCalculationGui:
 
 if __name__ == '__main__':
     data = {'polder_folder': 'E:\\02.modellen\\model_test_v2',
- 'api_keys_path': 'C:\\Users\\wvangerwen\\AppData\\Roaming\\3Di\\QGIS3\\profiles\\default\\python\\plugins\\hhnk_threedi_plugin\\api_key.txt'}
+            'api_keys_path': fr"{os.getenv('APPDATA')}\3Di\QGIS3\profiles\default\python\plugins\hhnk_threedi_plugin\api_key.txt"}
     self = StartCalculationGui(data=data); 
     display(self.tab)
     # display(self.start_calculation_tab)
