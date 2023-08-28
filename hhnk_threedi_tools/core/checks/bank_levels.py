@@ -13,13 +13,12 @@ import geopandas as gpd
 import pandas as pd
 import numpy as np
 import hhnk_research_tools as hrt
-from hhnk_research_tools.variables import GPKG_DRIVER
 from hhnk_research_tools.threedi.grid import Grid
 from hhnk_research_tools.threedi.geometry_functions import extract_boundary_from_polygon
 
 # Local imports
 from hhnk_threedi_tools.core.folders import Folders
-from hhnk_threedi_tools.variables.default_variables import DEF_TRGT_CRS, DEF_SRC_CRS
+from hhnk_threedi_tools.variables.default_variables import DEF_TRGT_CRS
 from hhnk_threedi_tools.variables.datachecker_variables import (
     peil_id_col,
     COL_STREEFPEIL_BWN,
@@ -52,14 +51,9 @@ from hhnk_threedi_tools.variables.bank_levels import (
     already_manhole_col,
     unknown_val,
     node_in_wrong_fixed_area,
-    added_calc_val,
     node_geometry_col,
     levee_height_col,
-    init_wlevel_col,
     one_d_two_d_crosses_fixed,
-    levee_height_val,
-    ref_plus_10_val,
-    init_plus_10_val,
     new_bank_level_col,
     new_bank_level_source_col,
     bank_level_diff_col,
@@ -76,9 +70,7 @@ from hhnk_threedi_tools.variables.database_variables import (
     bottom_lvl_col,
     surface_lvl_col,
     zoom_cat_col,
-    initial_waterlevel_col,
-    reference_level_col,
-    bank_level_col,
+    initial_waterlevel_col
 )
 
 # Globals

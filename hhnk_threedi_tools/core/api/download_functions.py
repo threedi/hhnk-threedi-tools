@@ -1,4 +1,4 @@
-import os, sys
+import os
 import requests  # API call
 import math
 from tqdm import tqdm  # progressbar

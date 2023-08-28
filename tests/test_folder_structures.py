@@ -67,5 +67,4 @@ if __name__ == "__main__":
         if i.startswith('test_') and hasattr(inspect.getattr_static(selftest,i), '__call__'):
             print(i)
             getattr(selftest, i)()    
-# %%
-FOLDER_NEW.to_file_dict()
+

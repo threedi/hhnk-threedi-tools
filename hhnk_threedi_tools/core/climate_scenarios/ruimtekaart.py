@@ -8,10 +8,6 @@ the "ruimte-indicator". Optionally, a mask shapefile can be provided.
 import logging
 import numpy as np
 
-import hhnk_research_tools as hrt
-import geopandas as gpd
-
-
 logger = logging.getLogger(__name__)
 
 

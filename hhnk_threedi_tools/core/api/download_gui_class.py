@@ -12,6 +12,7 @@ from traitlets import Unicode
 # from apscheduler.schedulers.blocking import BlockingScheduler
 import requests
 from IPython.core.display import HTML
+from IPython.display import display
 from pathlib import Path
 
 # threedi

@@ -3,14 +3,11 @@
 import os
 import datetime
 
-from pathlib import Path
-
 # Third-party imports
 import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
 import ipywidgets as widgets
 from IPython.core.display import HTML
+from IPython.display import display
 from traitlets import Unicode
 # from apscheduler.schedulers.blocking import BlockingScheduler
 
@@ -19,7 +16,6 @@ from threedi_scenario_downloader import downloader as dl
 # from deprecated.core.api import downloader as dl
 
 # local imports
-import hhnk_threedi_tools as htt
 import hhnk_research_tools as hrt
 from hhnk_threedi_tools import Folders
 

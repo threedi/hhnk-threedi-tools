@@ -21,8 +21,7 @@ def backup_sqlite(filename, clear_folder=False):
     u"""Make a backup of the sqlite database.
     direct copy of ThreeDiToolbox\\utils\\utils.py to reduce dependencies"""
 
-    #TODO use path instead of os
-    backup_folder = hrt.Folder(os.path.join(os.path.dirname(os.path.dirname(filename)), "_backup"))
+    backup_folder = hrt.Folder(Path(filename).parents[1] / "_backup")
     backup_folder.create()
 
     if clear_folder:
