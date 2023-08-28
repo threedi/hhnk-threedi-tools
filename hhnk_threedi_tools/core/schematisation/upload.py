@@ -14,9 +14,6 @@ import hhnk_research_tools as hrt
 from threedi_api_client.api import ThreediApi
 from threedi_api_client.openapi import Schematisation
 from threedi_api_client.files import upload_file
-from threedi_api_client.openapi import ApiException
-
-
 
 import urllib3
 UPLOAD_TIMEOUT = urllib3.Timeout(connect=60, read=600)

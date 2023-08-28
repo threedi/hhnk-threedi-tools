@@ -5,20 +5,16 @@ Created on Tue Aug 24 14:11:45 2021
 
 @author: chris.kerklaan
 """
-# First-party imports
-import os
-
 # Third-party imports
 import numpy as np
 import geopandas as gpd
 import pandas as pd
 from shapely import wkt
 from shapely.geometry import Point
+from pathlib import Path
 
 # research-tools
 import hhnk_research_tools as hrt
-from hhnk_research_tools.variables import ESRI_DRIVER
-from pathlib import Path
 
 # Local imports
 from hhnk_threedi_tools.core.folders import Folders
@@ -28,7 +24,6 @@ from hhnk_threedi_tools.core.checks.sqlite.structure_control import StructureCon
 
 # queries
 from hhnk_threedi_tools.utils.queries import (
-    controlled_structures_query,
     geometry_check_query,
     impervious_surface_query,
     isolated_channels_query,
@@ -78,11 +73,9 @@ from hhnk_threedi_tools.variables.database_variables import (
     height_col,
     initial_waterlevel_col,
     storage_area_col,
-    target_type_col,
     reference_level_col,
     cross_sec_loc_layer,
     action_col,
-    weir_layer,
     code_col,
 )
 
@@ -467,7 +460,7 @@ class SqliteCheck:
         for grid_type in ["cells", "lines", "nodes"]:
             df = pd.DataFrame(grid[grid_type])
             gdf = hrt.df_convert_to_gdf(df, geom_col_type="wkb", src_crs="28992")
-            hrt.gdf_write_to_geopackage(gdf, filepath=output_folder.joinpath(f"{grid_type}.gpkg"))
+            hrt.gdf_write_to_geopackage(gdf, filepath=Path(output_folder) / f"{grid_type}.gpkg")
 
 
 

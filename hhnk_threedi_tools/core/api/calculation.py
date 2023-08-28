@@ -3,7 +3,6 @@
 import datetime
 import time
 import numpy as np
-import os
 import requests
 from pathlib import Path
 import zipfile
@@ -752,7 +751,7 @@ class Simulation:
        
         filename = f"boundaryconditions_{self.model_id}.json"
 
-        output_path = Path(os.path.join(self.output_folder, "tempfiles", filename))
+        output_path = Path(self.output_folder).joinpath( "tempfiles", filename)
         output_path.parent.parent.mkdir(exist_ok=True)
         output_path.parent.mkdir(exist_ok=True) #Create parent folder
 
@@ -889,7 +888,7 @@ class Simulation:
         if self.model is None:
             return "define self.model_id first"
 
-        output_path = Path(os.path.join(output_folder_sqlite, "tempfiles", f"model_{self.model_id}.zip"))
+        output_path = Path(output_folder_sqlite).joinpath("tempfiles", f"model_{self.model_id}.zip")
         output_path.parent.parent.mkdir(exist_ok=True)
         output_path.parent.mkdir(exist_ok=True) #Create parent folder
         if not output_path.with_suffix('').exists():
@@ -929,7 +928,7 @@ class Simulation:
             )
 
             # Create APIcall.txt file
-            apicall_txt = os.path.join(self.output_folder, f"apicall{extra_name}_simid{self.simulation.id}_date{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.txt")
+            apicall_txt = Path(self.output_folder) / f"apicall{extra_name}_simid{self.simulation.id}_date{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
             with open(apicall_txt, "a") as t:
                 t.write(self.simulation_info(str_type="text"))
         else:

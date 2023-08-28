@@ -1,6 +1,4 @@
 import hhnk_research_tools as hrt
-import geopandas as gpd
-from osgeo import gdal
 import numpy as np
 
 

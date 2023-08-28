@@ -68,4 +68,4 @@ if __name__ == "__main__":
             print(i)
             getattr(selftest, i)()    
 # %%
-FOLDER_NEW.to_file_dict()
+#FOLDER_NEW.to_file_dict()

@@ -1,7 +1,6 @@
 import geopandas as gpd
 from osgeo import gdal
 import hhnk_research_tools as hrt
-import os
 
 def rasterize_maskerkaart(input_file, mask_plas_raster, mask_overlast_raster, meta):
     """Aanmaken van de masker rasters, die gemaakt worden vanuit de maskerkaart, voor plasvorminge en wateroverlast.

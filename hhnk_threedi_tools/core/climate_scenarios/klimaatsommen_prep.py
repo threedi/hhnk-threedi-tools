@@ -1,5 +1,4 @@
 # %%
-import os
 from hhnk_threedi_tools import Folders
 import pandas as pd
 import geopandas as gpd
@@ -7,7 +6,6 @@ import hhnk_research_tools as hrt
 from hhnk_threedi_tools.core.result_rasters.netcdf_to_gridgpkg import ThreediGrid
 from hhnk_threedi_tools.core.result_rasters.calculate_raster import BaseCalculatorGPKG
 
-import sys
 from pathlib import Path
 
 class KlimaatsommenPrep:

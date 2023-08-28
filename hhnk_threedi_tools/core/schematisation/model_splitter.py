@@ -1,10 +1,6 @@
-# %%
-import sys
 import shutil
 import pandas as pd
-import matplotlib.pyplot as plt
 import os
-import json
 import re
 import datetime
 from pathlib import Path
@@ -207,7 +203,7 @@ class ModelSchematisations:
 
             # Set controlled weirs to 10x width because we dont use controlled strcutures in hyd test.
             # To get the weir with we use the base database, so we cant accidentally run this twice.
-            controlled_weirs_selection_query = f"""
+            controlled_weirs_selection_query = """
                 SELECT
                 v2_weir.cross_section_definition_id as cross_def_id,
                 v2_weir.code as weir_code,

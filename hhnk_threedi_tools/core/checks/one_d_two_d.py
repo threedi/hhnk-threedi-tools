@@ -1,7 +1,6 @@
 # %%
 # -*- coding: utf-8 -*-
 # Third-party imports
-import os
 import numpy as np
 import pandas as pd
 import geopandas as gpd
@@ -262,10 +261,6 @@ class OneDTwoDTest:
             return nodes_2d_gdf
         except Exception as e:
             raise e from None
-
-        # def write(self, filename, result, csv_path, gpkg_path):
-        #     hrt.gdf_write_to_csv(result, csv_path, filename)
-        #     hrt.gdf_write_to_geopackage(result, gpkg_path, filename)
 
     # TODO staat dit niet al in hhnk_research_tools
     def _2d_nodes_to_grid(self, nodes_wlvl):
