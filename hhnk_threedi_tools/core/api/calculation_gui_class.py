@@ -858,7 +858,7 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
             self.vars.sqlite_path = self.sim.download_sqlite()
 
             #Creating will set sim.simulation_created to True.
-            self.sim.create(output_folder=self.vars.output_folder,
+            self.sim.create(output_folder=str(self.vars.output_folder),
                         simulation_name=self.start.simulation_name_view_widget.value,
                         model_id=self.selected_threedimodel_id,
                         organisation_uuid=self.selected_organisation_id,
@@ -1188,7 +1188,7 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
             
         else:
             self.output.folder_value_batch.value = str(self.vars.folder.threedi_results.batch.full_path(output_folder))
-            if os.path.exists(self.vars.folder.threedi_results.batch.full_path(output_folder)):
+            if os.path.exists(self.vars.folder.threedi_results.batch.full_path(output_folder).path):
                 self.add_feedback("Warning", "Output folder map already exists!")
 
         # output_folder = self.start.simulation_batch_name_widget.value.replace("{rt}_{gxg}_{rs}","")
