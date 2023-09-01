@@ -126,12 +126,19 @@ class ModelSchematisations:
         for raster_file in RASTER_FILES:
             if not pd.isnull(row[raster_file]):
                 src = schema_base.full_path(row[raster_file])
+
                 if src.exists():
                     dst = schema_new.full_path(row[raster_file])
                     shutil.copyfile(src=src.base, dst=dst.base)
                 else:
-                    print(f"Couldnt find     raster:\t{row[raster_file]}")
-                    raise TypeError(f"No {raster_file} in base schematisation")
+                    print(f"Couldnt find     raster:\t{src}")
+                    raise FileNotFoundError(
+f"""
+The '{raster_file}' used in run-name '{name}' is missing in the base-schematization.
+It is expected at {src}. Please provide the file, change your model-settings file
+or do not use this run in the modelsplitter.
+"""
+)
 
         # Edit the SQLITE
         table_names = ["v2_global_settings", "v2_simple_infiltration"]
