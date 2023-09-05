@@ -126,12 +126,19 @@ class ModelSchematisations:
         for raster_file in RASTER_FILES:
             if not pd.isnull(row[raster_file]):
                 src = schema_base.full_path(row[raster_file])
+
                 if src.exists():
                     dst = schema_new.full_path(row[raster_file])
                     shutil.copyfile(src=src.base, dst=dst.base)
                 else:
-                    print(f"Couldnt find     raster:\t{row[raster_file]}")
-                    raise TypeError(f"No {raster_file} in base schematisation")
+                    print(f"Couldnt find     raster:\t{src}")
+                    raise FileNotFoundError(
+f"""
+The '{raster_file}' used in run-name '{name}' is missing in the base-schematization.
+It is expected at {src}. Please provide the file, change your model-settings file
+or do not use this run in the modelsplitter.
+"""
+)
 
         # Edit the SQLITE
         table_names = ["v2_global_settings", "v2_simple_infiltration"]
@@ -290,7 +297,7 @@ class ModelSchematisations:
         commit_message = re.sub('[^a-zA-Z0-9() \n\.]', '', commit_message)
 
         if len(self.folder.model.schema_base.sqlite_names) != 1:
-            return print("0 or >1 .sqlite file in 00_basis")
+            response = "0 or >1 .sqlite file in 00_basis"
         
         if len(self.folder.model.schema_base.sqlite_names) == 1:
             rev_count = len(self.folder.model.revisions.content)
@@ -300,15 +307,19 @@ class ModelSchematisations:
             model_sql = self.folder.model.model_sql.path_if_exists 
 
             target_path = self.folder.model.revisions.full_path(f"rev_{rev_count+1} - {commit_message[:25]}")
-            target_path.create()
+            target_path.create(parents=True)
 
+            files_copied = []
             for f in [sqlite_path, mod_settings_file, mod_settings_default, model_sql]:
                 try:
                     shutil.copy(f, target_path.base)
-                except:
-                    print(f"{f} not found")
+                    files_copied  += [Path(f).name]
+                except Exception as e:
+                    print(f"{e}")
 
-            return print(f"succes copy {Path(sqlite_path).name} + {Path(mod_settings_file).name} + {Path(mod_settings_default).name} + {Path(model_sql).name} to: {target_path.base}")
+            response = f"successfully copied {' + '.join(files_copied)} to: {target_path.base}"
+        print(response)
+        return response
 
        
         
@@ -326,6 +337,7 @@ if __name__ == "__main__":
         folder=folder, modelsettings_path=folder.model.settings.path
     )
     self.create_schematisation(name=name)
+    response = self.create_local_sqlite_revision(commit_message=str(" (local split revision)" ))
     self.upload_schematisation(
         organisation_uuid="48dac75bef8a42ebbb52e8f89bbdb9f2",
         name=name,
