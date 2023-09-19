@@ -463,7 +463,6 @@ class SqliteCheck:
             hrt.gdf_write_to_geopackage(gdf, filepath=Path(output_folder) / f"{grid_type}.gpkg")
 
 
-
     def run_cross_section_duplicates(self, database):
         """
         Check for duplicate geometries in cross_section_locations.
