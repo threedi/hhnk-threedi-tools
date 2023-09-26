@@ -8,6 +8,7 @@ import numpy as np
 from pathlib import Path
 import sys
 import ipywidgets as widgets
+import importlib.resources as resources
 
 import hhnk_threedi_tools as htt
 import hhnk_research_tools as hrt
@@ -39,10 +40,18 @@ class KlimaatsommenSettings():
         self.caller = caller
         self.folder = folder
 
-        self.freqs = self.load_freqs()
+        self.df_freqs_raw = self.load_freqs()
 
         #Note that this in theory can be not the dem used in the gxg model.
         self.dem = self.folder.model.schema_base.rasters.dem_50cm
+
+        #Peilgebieden
+        self.pgb = self.folder.source_data.peilgebieden.peilgebieden
+        #Create from datachecker if not available.
+        if not self.pgb.exists():
+            fixeddrainage = self.folder.source_data.datachecker.load("fixeddrainagelevelarea")
+            fixeddrainage.to_file(self.pgb.base)
+
 
     # @property
     # def dem(self):
@@ -56,11 +65,13 @@ class KlimaatsommenSettings():
     @property
     def batch_fd(self):
         """folder class of batch fd, needs to be selected in widget"""
-        selected_batch = self.caller.widgets.output_folder_box.value
+        selected_batch = self.get_full_path(self.caller.widgets.batch_folder_box.value)
         if selected_batch != "":
             return self.folder.threedi_results.batch[selected_batch]
         else:
             raise Exception("Select batch folder")
+        
+
     @property
     def precipitation_zone(self) -> str:
         """hevig or debilt. Needs to be selected in widget"""
@@ -69,6 +80,7 @@ class KlimaatsommenSettings():
             return selected_zone.split(" ")[0]
         else:
             raise Exception("Select neerslagzone") 
+
 
     def load_freqs(self):
         freqs_xlsx = hrt.get_pkg_resource_path(package_resource=htt.resources, 
@@ -86,7 +98,7 @@ class KlimaatsommenSettings():
             df.loc[df["dl_name"] == dl_name, "depth_max"] = getattr(downloads, dl_name).depth_max.base
             df.loc[df["dl_name"] == dl_name, "damage_total"] = getattr(downloads, dl_name).damage_total.base
 
-        freqs = self.freqs[["dl_name", "freq_{}_jaar".format(self.precipitation_zone)]].copy()
+        freqs = self.df_freqs_raw[["dl_name", "freq_{}_jaar".format(self.precipitation_zone)]].copy()
         freqs.rename(
             {"freq_{}_jaar".format(self.precipitation_zone): "freq_jaar"},
             axis=1,
@@ -95,8 +107,19 @@ class KlimaatsommenSettings():
         return df.merge(freqs, on="dl_name")
 
     
-    def update_settings_after_selection():
+    def update_settings_after_selection(self, val):
         self.df_freqs = self.create_df_freqs()
+
+    def get_full_path(self, tail):
+        fullpath = Path(str(hrt.Folder(self.caller.widgets.folder_path_text.value).full_path(tail)))
+        if fullpath.exists():
+            return fullpath
+        else:
+            return tail
+        
+    @property
+    def landuse(self):
+        return self.get_full_path(self.caller.widgets.wss_landuse_text.value)
 
 
 class KlimaatsommenWidgets():
@@ -106,24 +129,31 @@ class KlimaatsommenWidgets():
         self.folder = self.caller.settings.folder
 
         #Output folder
-        output_folder_options = [""] + self.folder.threedi_results.batch.revisions
-        self.output_folder_label = widgets.Label('Selecteer batch folder:', 
-                                                 layout=self.item_layout(grid_area='output_folder_label'))
-        self.output_folder_box = widgets.Select(
-                                    options=output_folder_options,
-                                    rows=len(output_folder_options),
+        self.folder_path_label = widgets.Label('Geselecteerde folder:', 
+                                                 layout=self.item_layout(grid_area='folder_path_label'))
+        self.folder_path_text = widgets.Text(self.folder.base,
+                                             disabled=True,
+                                                 layout=self.item_layout(grid_area='folder_path_text'))
+                                    
+
+        batch_folder_options = [""] + [hrt.File(i).view_name_with_parents(2) for i in self.folder.threedi_results.batch.revisions]
+        self.batch_folder_label = widgets.HTML('<b>Selecteer batch folder:</b>', 
+                                                 layout=self.item_layout(grid_area='batch_folder_label'))
+        self.batch_folder_box = widgets.Select(
+                                    options=batch_folder_options,
+                                    rows=len(batch_folder_options),
                                     disabled=False,
-                                    layout=self.item_layout(grid_area="output_folder_box"),
+                                    layout=self.item_layout(grid_area="batch_folder_box"),
                                 )
         
         #Neerslagzone
-        self.precipitation_zone_label = widgets.Label('Selecteer neerslagzone:', 
+        self.precipitation_zone_label = widgets.HTML('<b>Selecteer neerslagzone:</b>', 
                                                  layout=self.item_layout(grid_area='precipitation_zone_label'))
  
         self.precipitation_zone_box = widgets.Select(
                                     options=["hevig (blauw)", "debilt (groen)"],
                                     rows=2,
-                                    disabled=False,
+                                    disabled=True,
                                     value=None,
                                     layout=self.item_layout(grid_area="precipitation_zone_box"),
                                 )
@@ -131,9 +161,34 @@ class KlimaatsommenWidgets():
         self.dem_label = widgets.Label("DEM:",
                                     layout=self.item_layout(grid_area="dem_label"),)
 
-        self.dem_text = widgets.Text(self.caller.settings.dem.view_name_with_parents(4),
+        self.dem_text = widgets.Text(self.caller.settings.dem.view_name_with_parents(3),
                                      disabled=True,
                                      layout=self.item_layout(grid_area="dem_text"),)
+
+
+        self.pgb_label = widgets.Label("Peilgebieden:",
+                                    layout=self.item_layout(grid_area="pgb_label"),)
+
+        self.pgb_text = widgets.Text(self.caller.settings.pgb.view_name_with_parents(2),
+                                     disabled=True,
+                                     layout=self.item_layout(grid_area="pgb_text"),)
+
+        self.wss_label = widgets.HTML("Waterschadeschatter instellingen",
+                                       layout=self.item_layout(grid_area="wss_label"))
+        
+        self.wss_cfg_label = widgets.Label("Config (default='cfg_lizard.cfg'):",
+                                    layout=self.item_layout(grid_area="wss_cfg_label"),)
+        cfg_dropdown_options = [i.name for i in resources.files(hrt.waterschadeschatter.resources).glob("*.cfg")]
+        self.wss_cfg_dropdown = widgets.Dropdown(value="cfg_lizard.cfg",
+                                                 options=cfg_dropdown_options,
+                                    layout=self.item_layout(grid_area="wss_cfg_dropdown"))
+
+        self.wss_landuse_label = widgets.Label("Landuse:",
+                                    layout=self.item_layout(grid_area="wss_landuse_label"),)
+        
+        landuse_path = folder.model.schema_base.rasters.landuse.view_name_with_parents(3)
+        self.wss_landuse_text = widgets.Text(value=landuse_path,
+                                    layout=self.item_layout(grid_area="wss_landuse_text"))
 
 
         self.precip_figure = widgets.Output(layout=self.item_layout(grid_area="precip_figure"))
@@ -167,60 +222,113 @@ class KlimaatsommenWidgets():
         return widgets.GridBox(
             children=[
                 self.precip_figure,
-                self.output_folder_label,
-                self.output_folder_box,
+                self.folder_path_label,
+                self.folder_path_text,
+                self.batch_folder_label,
+                self.batch_folder_box,
                 self.precipitation_zone_label,
                 self.precipitation_zone_box,
                 self.dem_label,
                 self.dem_text,
+                self.pgb_label,
+                self.pgb_text,
+                self.wss_label,
+                self.wss_cfg_label,
+                self.wss_cfg_dropdown,
+                self.wss_landuse_label,
+                self.wss_landuse_text,
             ],
             layout=widgets.Layout(
                 width="100%",
                 grid_row_gap="200px 200px 200px 200px",
                 grid_template_rows="auto auto auto auto",
-                grid_template_columns="20% 80%",
+                grid_template_columns="30% 70%",
                 grid_template_areas="""
                     'precip_figure precip_figure'
-                    'output_folder_label .'
-                    'output_folder_box output_folder_box'
+                    'folder_path_label folder_path_text'
+                    'batch_folder_label batch_folder_box'
                     'precipitation_zone_label precipitation_zone_box'
                     'dem_label dem_text'
+                    'pgb_label pgb_text'
+                    'wss_label wss_label'
+                    'wss_cfg_label wss_cfg_dropdown'
+                    'wss_landuse_label wss_landuse_text'
                     """,
             ),
         )
 
 
 class KlimaatsommenMain():
-    def __init__(self, folder:htt.Folders):
+    def __init__(self, folder:htt.Folders, testing=False):
+        #For pytests we disable a couple loops to speed up the test.
+        self.testing = testing
+
         self.settings = KlimaatsommenSettings(self, folder)
         self.widgets = KlimaatsommenWidgets(self)
 
+        #widget Interaction
+        self.widgets.precipitation_zone_box.observe(self.settings.update_settings_after_selection, "value")
 
-self = KlimaatsommenMain(folder=folder)
-self.widgets.gui()
+        def enable_neerslagzone(val):
+            if val["new"] != "":
+                self.widgets.precipitation_zone_box.disabled = False
+            else:
+                self.widgets.precipitation_zone_box.disabled = True
+        self.widgets.batch_folder_box.observe(enable_neerslagzone, "value")
+
+    @property
+    def batch_fd(self):
+        return self.settings.batch_fd
+
+    def step1_maskerkaart(self):
+        maskerkaart.command(
+            path_piek=self.batch_fd.downloads.piek_ghg_T1000.netcdf.base,
+            path_blok=self.batch_fd.downloads.blok_ghg_T1000.netcdf.base,
+            path_out=self.batch_fd.output.maskerkaart.base,
+        )
+
+        # Omzetten polygon in raster voor diepte en schaderaster
+        # (kan verschillen van diepte met andere resolutie)
+        for rtype, rname in zip(
+            ["depth_max", "damage_total"], 
+            ["depth", "damage"]
+        ):
+            masker = rasterize_maskerkaart(
+                input_file=self.batch_fd.output.maskerkaart.base,
+                mask_plas_raster=getattr(self.batch_fd.output, f"mask_{rname}_plas"),
+                mask_overlast_raster=getattr(self.batch_fd.output, f"mask_{rname}_overlast"),
+                meta=getattr(self.batch_fd.downloads.piek_glg_T10, rtype).metadata,
+            )
+            if self.testing:
+                break
+    
+    def step2_rasterize_pgb(self):
+        """Peilgebieden rasterizen"""
+        for raster_type, raster_name in zip(
+            ["depth_max", "damage_total"], 
+            ["depth", "damage"]
+        ):
+            peilgebieden.rasterize_peilgebieden(
+                input_raster=hrt.Raster(df.iloc[0][raster_type]),
+                output_file=getattr(self.batch_fd.output.temp, f"peilgebieden_{raster_name}"),
+                input_peilgebieden=folder.source_data.peilgebieden.peilgebieden,
+                output_peilgebieden=self.batch_fd.output.temp.peilgebieden,
+                mask_file=self.batch_fd.output.maskerkaart,
+                overwrite=False,
+            )
+
+if __name__ == "__main__": 
+    self = KlimaatsommenMain(folder=folder)
+    display(self.widgets.gui())
 
 
-# %%
-
-# %%
-
-
+    #FIXME Voor testen standaard selecteren
+    self.widgets.batch_folder_box.value = self.widgets.batch_folder_box.options[1]
+    self.widgets.precipitation_zone_box.value = self.widgets.precipitation_zone_box.options[1]
 
 
+# %% Aanmaken polygon van maskerkaart
 
 
-# %%
-## %% Aanmaken of laden peilgebieden polygon
-if not folder.source_data.peilgebieden.peilgebieden.exists():
-    fixeddrainage = folder.source_data.datachecker.load("fixeddrainagelevelarea")
-    fixeddrainage.to_file(folder.source_data.peilgebieden.peilgebieden.base)
-    print(
-        f"Peilgebieden shapefile aangemaakt: {folder.source_data.peilgebieden.peilgebieden.name}.shp"
-    )
-else:
-    print(
-        f"Peilgebieden shapefile gevonden: {folder.source_data.peilgebieden.peilgebieden.name}.shp"
-    )
 
 
-# %%
