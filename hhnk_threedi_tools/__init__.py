@@ -37,4 +37,4 @@ from hhnk_threedi_tools.core.schematisation.model_backup import (
 )
 
 
-__version__ = '2023.3.2'
+__version__ = '2023.4'
