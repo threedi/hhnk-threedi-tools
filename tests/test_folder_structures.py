@@ -46,6 +46,9 @@ class TestFolder:
             dem.path
         )
 
+
+    def test_find_threediresult(self):
+        assert FOLDER_TEST.threedi_results.zero_d_one_d[0].base == FOLDER_TEST.threedi_results.zero_d_one_d["BWN bwn_test #7 0d1d_test"].base
     # TODO .find() is weg.
     # def test_find_threedi_sources(self):
     #     results_path = TEST_DIRECTORY / r"model_test/03_3di_results/0d1d_results/BWN bwn_test #7 0d1d_test"
