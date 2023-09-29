@@ -243,12 +243,11 @@ class SqliteCheck:
         Collects all queries that are part of general model checks (see general_checks_queries file)
         and executes them
         """
-        queries_lst = [item for item in vars(ModelCheck()).values()]
-        query = "UNION ALL\n".join(queries_lst)
-        db = self.model.execute_sql_selection(query=query)
 
-        self.results["model_checks"] = db
-        return db
+        df = self.model.execute_sql_selection(query=ModelCheck.get_query())
+
+        self.results["model_checks"] = df
+        return df
 
 
     def run_geometry_checks(self):
@@ -772,11 +771,12 @@ def calc_area(fixeddrainage, modelbuilder_waterdeel, damo_waterdeel, conn_nodes_
 if __name__=="__main__":
 
     TEST_MODEL = r"E:\02.modellen\model_test_v2"
+    TEST_MODEL = r"d:\projecten\D2301.HHNK.Ondersteuning_Python\04.plugin_testdata\data\model_test"
 
     folder = Folders(TEST_MODEL)
     self = SqliteCheck(folder=folder)
-    database=folder.model.schema_basis_errors.database
-    self.run_cross_section_no_vertex(database)
+    #database=folder.model.schema_basis_errors.database
+   # self.run_cross_section_no_vertex(database)
 
 
 # %%
