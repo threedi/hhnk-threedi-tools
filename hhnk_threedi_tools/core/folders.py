@@ -5,7 +5,7 @@ self.base is the directory in which it is located
 """
 # First-party imports
 import os
-
+from pathlib import Path
 
 import hhnk_research_tools as hrt
 
@@ -183,11 +183,11 @@ class Folders(Folder):
             "polder_folder": self.path_if_exists,
         }
 
-
-    def is_valid(self):
+    @classmethod
+    def is_valid(self, folderpath):
         """Check if folder stucture is available in input folder."""
         SUB_FOLDERS = ["01_source_data", "02_schematisation", "03_3di_results", "04_test_results"]
-        return all([self.full_path(i).exists() for i in SUB_FOLDERS])
+        return all([Path(folderpath).joinpath(i).exists() for i in SUB_FOLDERS])
 
 
 class SourceDir(Folder):
@@ -515,7 +515,7 @@ class OutputDirParent(Folder):
             self.add_file("geometry_check", "geometry_check.csv")
             self.add_file("general_sqlite_checks", "general_sqlite_checks.csv")
             self.add_file("cross_section_duplicates", "cross_section_duplicates.gpkg")
-            self.add_file("profielen_geen_vertex", "profielen_geen_vertex.gpkg")
+            self.add_file("cross_section_no_vertex", "cross_section_no_vertex.gpkg")
             self.add_file("wateroppervlak", "wateroppervlak.gpkg")
 
 
@@ -627,3 +627,4 @@ def if_exists(path):
         return None
     else:
         return path if os.path.exists(path) else None
+# %%
