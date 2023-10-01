@@ -1862,7 +1862,7 @@ class StartCalculationGui:
 '. rain_box rain_box rain_box rain_box . simulation_name_label simulation_name_widget simulation_name_widget'
 '. rain_box rain_box rain_box rain_box . . simulation_name_view_widget simulation_name_view_widget'
 '. rain_box rain_box rain_box rain_box . . create_simulation_button create_simulation_button'
-'. feedback_label . . . . . start_button start_button'
+'. feedback_label feedback_label feedback_label . . . start_button start_button'
 '. feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget'
 '. feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget'
 '. feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget'
