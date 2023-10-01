@@ -1038,6 +1038,7 @@ class DownloadWidgetsInteraction(DownloadWidgets):
 
                 #Add available results to scenario_results. Give them the same keys as the lizard ones
                 for result in results:
+                    code = None
                     if result.file.filename.startswith("log"):
                         code = "logfiles"
                     if result.file.filename == 'results_3di.nc':
@@ -1046,7 +1047,7 @@ class DownloadWidgetsInteraction(DownloadWidgets):
                         code="aggregate-results-3di"
 
                     #Uploaded files only, if they have been removed they get the state 'removed'
-                    if result.file.state == "uploaded":
+                    if result.file.state == "uploaded" and code is not None:
                         self.vars.scenario_results[scenario_id][code]=result
                 if results != []:
                     self.vars.scenario_results[scenario_id]["grid-admin"] = True
@@ -1502,4 +1503,5 @@ if __name__ == "__main__":
         self = DownloadGui(data=data); 
         
         self.w.search.sim_name_widget.value = "model_test"
+        display(self.tab)
 # %%
