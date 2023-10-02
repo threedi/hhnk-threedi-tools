@@ -111,10 +111,12 @@ class ClimateResult(hrt.Folder):
 
         def set_scenario_files(self):
             for type_raster, type_raster_name in zip(
-                ["depth", "damage"], ["inundatiediepte", "schade"]
+                ["wlvl", "depth", "damage"], 
+                ["wlvl", "inundatiediepte", "schade"]
             ):
                 for masker, masker_name in zip(
-                    ["totaal", "plas", "overlast"], ["", "_plas", "_overlast"]
+                    ["totaal", "plas", "overlast"], 
+                    ["", "_plas", "_overlast"]
                 ):
                     for return_period in [10, 25, 100, 1000]:
                         self.add_file(
