@@ -216,12 +216,14 @@ class DownloadWidgets:
                 layout=item_layout(grid_area="button_0d1d", justify_self="end"),
             )
 
-            self.show_all_button = widgets.Button(
-                description="Show all", layout=item_layout(grid_area="all_button")
+            self.filter_button = widgets.Button(
+                description="Filter", layout=item_layout(grid_area="filter_button")
             )
 
             # Create search box
-            self.search_results_widget = widgets.Text(layout=item_layout(grid_area="search_results"))
+            self.search_results_widget = widgets.Text(
+                placeholder="Filter results by starting with: -",
+                layout=item_layout(grid_area="search_results"))
 
 
     class OutputTypesWidgets:
@@ -533,9 +535,9 @@ class DownloadWidgetsInteraction(DownloadWidgets):
         def show(action):
             self.select.search_results_widget.value = "0d1d"
 
-        @self.select.show_all_button.on_click
+        @self.select.filter_button.on_click
         def show(action):
-            self.select.dl_select_box.options = self.vars.scenario_view_names
+            self.select.search_results_widget.value = "-"
 
 
         def on_text_change(search_input):
@@ -1450,7 +1452,7 @@ class DownloadGui:
                 self.w.select.dl_select_label,
                 self.w.select.dl_select_box,
                 self.w.select.show_0d1d_button,
-                self.w.select.show_all_button,
+                self.w.select.filter_button,
                 self.w.select.search_results_widget,
                 self.w.outputtypes.label,
                 self.w.outputtypes.file_buttons_label,
@@ -1491,7 +1493,7 @@ class DownloadGui:
                     'dl_select_box dl_select_box dl_select_box file_buttons_box file_buttons_box output_select_box output_select_box output_select_box'
                     'dl_select_box dl_select_box dl_select_box raster_buttons_label raster_buttons_label output_select_box output_select_box output_select_box'
                     'dl_select_box dl_select_box dl_select_box raster_buttons_box raster_buttons_box output_select_box output_select_box output_select_box'
-                    'search_results button_0d1d all_button raster_buttons_box raster_buttons_box  output_select_box output_select_box output_select_box'
+                    'search_results button_0d1d filter_button raster_buttons_box raster_buttons_box  output_select_box output_select_box output_select_box'
                     '. . . time_resolution_box time_resolution_box time_resolution_box download_button_label download_button_label'
                     '. . . time_resolution_box time_resolution_box time_resolution_box download_button download_button'
                     '. . . custom_extent_button custom_extent_widget custom_extent_widget download_batch_button_label download_batch_button_label'
