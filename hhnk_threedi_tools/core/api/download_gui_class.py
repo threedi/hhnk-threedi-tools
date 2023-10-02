@@ -531,8 +531,7 @@ class DownloadWidgetsInteraction(DownloadWidgets):
         # --------------------------------------------------------------------------------------------------
         @self.select.show_0d1d_button.on_click
         def show(action):
-            self.select.dl_select_box.options = [a for a in self.vars.scenario_view_names if "0d1d" in a.lower()]
-
+            self.select.search_results_widget.value = "0d1d"
 
         @self.select.show_all_button.on_click
         def show(action):
@@ -540,9 +539,19 @@ class DownloadWidgetsInteraction(DownloadWidgets):
 
 
         def on_text_change(search_input):
-            self.select.dl_select_box.options = [
-                a for a in self.vars.scenario_view_names if search_input["new"] in a
-            ]
+            search_str = search_input["new"]
+
+            if search_str.startswith("-"):
+                #exclude search results
+                self.select.dl_select_box.options = [
+                    a for a in self.vars.scenario_view_names if search_str[1:] not in a
+                ]
+            else:
+                self.select.dl_select_box.options = [
+                    a for a in self.vars.scenario_view_names if search_str in a
+                ]
+
+
         self.select.search_results_widget.observe(on_text_change, names="value")
 
 
@@ -552,6 +561,13 @@ class DownloadWidgetsInteraction(DownloadWidgets):
             self.get_scenario_results() #Get available results for selected scenarios.
             self.update_buttons()  # Change button state based on selected scenarios
             self.update_time_pick_dropdown()  # change button state and dropdown based on selected scenarios
+
+            #update output folder if 0d1d selected.
+            if all(["0d1d_" in x for x in self.select.dl_select_box.value]):
+                self.output.subfolder_box.value =self.output.subfolder_box.options[0]
+            else:
+                self.output.subfolder_box.value =self.output.subfolder_box.options[1]
+
 
         self.select.dl_select_box.observe(get_scenarios_selected_result, names="value")
 
