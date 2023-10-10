@@ -36,6 +36,7 @@ dl.LIZARD_URL = "https://hhnk.lizard.net/api/v4/"
 DL_RESULT_LIMIT = 1000
 THREEDI_API_HOST = "https://api.3di.live"
 RESULT_LIMIT = 20
+CEST = pytz.timezone("Europe/Amsterdam")
 
 
 def item_layout(width="95%", grid_area="", **kwargs):
@@ -1654,8 +1655,7 @@ class GuiVariables:
         for idx in self.revisions:
             rev = self.revisions[idx]
             try:
-                cest = pytz.timezone("Europe/Amsterdam")
-                commit_date = rev.commit_date.astimezone(cest).strftime('%y/%m/%d-%H:%M:%S') or None
+                commit_date = rev.commit_date.astimezone(CEST).strftime('%y/%m/%d-%H:%M:%S') or None
             except:
                 commit_date=None
             # if rev.is_valid:
@@ -1672,7 +1672,7 @@ class GuiVariables:
             for idx in self.revisions_gxg[gxg]:
                 rev = self.revisions_gxg[gxg][idx]
                 try:
-                    commit_date = rev.commit_date.strftime('%y/%m/%d-%H:%M:%S') or None
+                    commit_date = rev.commit_date.astimezone(CEST).strftime('%y/%m/%d-%H:%M:%S') or None
                 except:
                     commit_date=None
                 # if rev.is_valid:
