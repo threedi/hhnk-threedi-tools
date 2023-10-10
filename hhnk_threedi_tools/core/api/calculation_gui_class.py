@@ -9,6 +9,7 @@ import ipywidgets as widgets
 from IPython.core.display import HTML
 from IPython.display import display
 from traitlets import Unicode
+import pytz
 # from apscheduler.schedulers.blocking import BlockingScheduler
 
 # threedi
@@ -1653,7 +1654,8 @@ class GuiVariables:
         for idx in self.revisions:
             rev = self.revisions[idx]
             try:
-                commit_date = rev.commit_date.strftime('%y/%m/%d-%H:%M:%S') or None
+                cest = pytz.timezone("Europe/Amsterdam")
+                commit_date = rev.commit_date.astimezone(cest).strftime('%y/%m/%d-%H:%M:%S') or None
             except:
                 commit_date=None
             # if rev.is_valid:
@@ -1860,7 +1862,7 @@ class StartCalculationGui:
 '. rain_box rain_box rain_box rain_box . simulation_name_label simulation_name_widget simulation_name_widget'
 '. rain_box rain_box rain_box rain_box . . simulation_name_view_widget simulation_name_view_widget'
 '. rain_box rain_box rain_box rain_box . . create_simulation_button create_simulation_button'
-'. feedback_label . . . . . start_button start_button'
+'. feedback_label feedback_label feedback_label . . . start_button start_button'
 '. feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget'
 '. feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget'
 '. feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget'
@@ -1966,7 +1968,7 @@ class StartCalculationGui:
 '. revision_label revision_dropdown_glg revision_dropdown_ggg revision_dropdown_ghg . . check_batch_input_button check_batch_input_button'
 '. threedimodel_label threedimodel_dropdown_glg threedimodel_dropdown_ggg threedimodel_dropdown_ghg . . start_batch_button start_batch_button'
 '. iwlvl_2d_label iwlvl_2d_dropdown_glg iwlvl_2d_dropdown_ggg iwlvl_2d_dropdown_ghg . . . .'
-'. feedback_label . . . . . . .'
+'. feedback_label feedback_label feedback_label feedback_label feedback_label feedback_label feedback_label feedback_label'
 '. feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget'
 '. feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget feedback_widget'
 """,

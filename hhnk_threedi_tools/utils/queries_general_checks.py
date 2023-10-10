@@ -612,3 +612,9 @@ class ModelCheck:
         ]
         self.impervious_surface_perc = model_checks["imp_surface_perc"]
         self.action_table_too_many_chars = model_checks["action_table_char_count"]
+
+    @classmethod
+    def get_query(cls):
+        """Get a all variables as query to execute on model"""
+        queries_lst = [item for item in vars(cls()).values()]
+        return "UNION ALL\n".join(queries_lst)

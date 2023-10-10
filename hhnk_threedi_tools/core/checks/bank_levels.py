@@ -245,7 +245,7 @@ class BankLevelTest:
         )
 
         hrt.gdf_write_to_csv(
-            self.results["new_manholes_df"], FLOW_1D2D_MANHOLES_NAME, csv_path
+            gdf=self.results["new_manholes_df"], filename=FLOW_1D2D_MANHOLES_NAME, path=csv_path
         )
 
     def write_output(self, name):

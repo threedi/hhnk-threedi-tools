@@ -8,6 +8,7 @@ Created on Tue Aug 24 14:11:45 2021
 # Third-party imports
 import numpy as np
 import geopandas as gpd
+import fiona
 import pandas as pd
 from shapely import wkt
 from shapely.geometry import Point
@@ -152,8 +153,31 @@ class SqliteCheck:
         
         self.layer_fixeddrainage = self.fenv.source_data.datachecker.layers.fixeddrainagelevelarea
         
+        # this dict we can populate with files and layers we can check using verify_inputs
+        self.inputs = {
+            "run_imp_surface_area": [{"file": self.fenv.source_data.polder_polygon.path, "layer": None}],
+            "run_struct_channel_bed_level": [{"file": self.fenv.source_data.damo.path}]
+            }
+
         self.results = {}
 
+    def verify_inputs(self, function):
+        """Check if the input of a function (if defined in self.inputs) exists."""
+        exist = True
+        # if function does not exist in self.inputs we can totally ignore this function
+        if function in self.inputs.keys():
+            for layer_input in self.inputs[function]:
+
+                # check if file doesn't exist
+                if not layer_input["file"].exists():
+                    exist = False
+
+                # optionally check if layer exists in file
+                elif "layer" in layer_input.keys():
+                    if layer_input["layer"] is not None:
+                        if layer_input["layer"] not in fiona.listlayers(layer_input["file"]):
+                            exist = False
+        return exist
 
     def run_controlled_structures(self, overwrite=False):
         """Create leayer with structure control in schematisation"""
@@ -243,12 +267,11 @@ class SqliteCheck:
         Collects all queries that are part of general model checks (see general_checks_queries file)
         and executes them
         """
-        queries_lst = [item for item in vars(ModelCheck()).values()]
-        query = "UNION ALL\n".join(queries_lst)
-        db = self.model.execute_sql_selection(query=query)
 
-        self.results["model_checks"] = db
-        return db
+        df = self.model.execute_sql_selection(query=ModelCheck.get_query())
+
+        self.results["model_checks"] = df
+        return df
 
 
     def run_geometry_checks(self):
@@ -520,7 +543,7 @@ class SqliteCheck:
         def get_distance(row):
             dist = row.geometry.distance(vertices_gdf.loc[row.index_right, "geometry"])
             return round(dist,2)
-        cross_no_vertex["distance_to_vertex"] = nearest_point.apply(get_distance, axis=1)
+        cross_no_vertex.loc[:, ["distance_to_vertex"]] = nearest_point.apply(get_distance, axis=1)
         
         return cross_no_vertex
 
@@ -772,11 +795,13 @@ def calc_area(fixeddrainage, modelbuilder_waterdeel, damo_waterdeel, conn_nodes_
 if __name__=="__main__":
 
     TEST_MODEL = r"E:\02.modellen\model_test_v2"
+    TEST_MODEL = r"d:\projecten\D2301.HHNK.Ondersteuning_Python\04.plugin_testdata\data\model_test"
 
     folder = Folders(TEST_MODEL)
     self = SqliteCheck(folder=folder)
-    database=folder.model.schema_basis_errors.database
+    database=folder.model.schema_base.database
     self.run_cross_section_no_vertex(database)
+    self.verify_inputs("run_imp_surface_area")
 
 
 # %%

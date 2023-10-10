@@ -216,12 +216,14 @@ class DownloadWidgets:
                 layout=item_layout(grid_area="button_0d1d", justify_self="end"),
             )
 
-            self.show_all_button = widgets.Button(
-                description="Show all", layout=item_layout(grid_area="all_button")
+            self.filter_button = widgets.Button(
+                description="Filter", layout=item_layout(grid_area="filter_button")
             )
 
             # Create search box
-            self.search_results_widget = widgets.Text(layout=item_layout(grid_area="search_results"))
+            self.search_results_widget = widgets.Text(
+                placeholder="Filter results by starting with: -",
+                layout=item_layout(grid_area="search_results"))
 
 
     class OutputTypesWidgets:
@@ -531,18 +533,27 @@ class DownloadWidgetsInteraction(DownloadWidgets):
         # --------------------------------------------------------------------------------------------------
         @self.select.show_0d1d_button.on_click
         def show(action):
-            self.select.dl_select_box.options = [a for a in self.vars.scenario_view_names if "0d1d" in a.lower()]
+            self.select.search_results_widget.value = "0d1d"
 
-
-        @self.select.show_all_button.on_click
+        @self.select.filter_button.on_click
         def show(action):
-            self.select.dl_select_box.options = self.vars.scenario_view_names
+            self.select.search_results_widget.value = "-"
 
 
         def on_text_change(search_input):
-            self.select.dl_select_box.options = [
-                a for a in self.vars.scenario_view_names if search_input["new"] in a
-            ]
+            search_str = search_input["new"]
+
+            if search_str.startswith("-"):
+                #exclude search results
+                self.select.dl_select_box.options = [
+                    a for a in self.vars.scenario_view_names if search_str[1:] not in a
+                ]
+            else:
+                self.select.dl_select_box.options = [
+                    a for a in self.vars.scenario_view_names if search_str in a
+                ]
+
+
         self.select.search_results_widget.observe(on_text_change, names="value")
 
 
@@ -552,6 +563,13 @@ class DownloadWidgetsInteraction(DownloadWidgets):
             self.get_scenario_results() #Get available results for selected scenarios.
             self.update_buttons()  # Change button state based on selected scenarios
             self.update_time_pick_dropdown()  # change button state and dropdown based on selected scenarios
+
+            #update output folder if 0d1d selected.
+            if all(["0d1d_" in x for x in self.select.dl_select_box.value]):
+                self.output.subfolder_box.value =self.output.subfolder_box.options[0]
+            else:
+                self.output.subfolder_box.value =self.output.subfolder_box.options[1]
+
 
         self.select.dl_select_box.observe(get_scenarios_selected_result, names="value")
 
@@ -1038,6 +1056,7 @@ class DownloadWidgetsInteraction(DownloadWidgets):
 
                 #Add available results to scenario_results. Give them the same keys as the lizard ones
                 for result in results:
+                    code = None
                     if result.file.filename.startswith("log"):
                         code = "logfiles"
                     if result.file.filename == 'results_3di.nc':
@@ -1046,7 +1065,7 @@ class DownloadWidgetsInteraction(DownloadWidgets):
                         code="aggregate-results-3di"
 
                     #Uploaded files only, if they have been removed they get the state 'removed'
-                    if result.file.state == "uploaded":
+                    if result.file.state == "uploaded" and code is not None:
                         self.vars.scenario_results[scenario_id][code]=result
                 if results != []:
                     self.vars.scenario_results[scenario_id]["grid-admin"] = True
@@ -1433,7 +1452,7 @@ class DownloadGui:
                 self.w.select.dl_select_label,
                 self.w.select.dl_select_box,
                 self.w.select.show_0d1d_button,
-                self.w.select.show_all_button,
+                self.w.select.filter_button,
                 self.w.select.search_results_widget,
                 self.w.outputtypes.label,
                 self.w.outputtypes.file_buttons_label,
@@ -1474,7 +1493,7 @@ class DownloadGui:
                     'dl_select_box dl_select_box dl_select_box file_buttons_box file_buttons_box output_select_box output_select_box output_select_box'
                     'dl_select_box dl_select_box dl_select_box raster_buttons_label raster_buttons_label output_select_box output_select_box output_select_box'
                     'dl_select_box dl_select_box dl_select_box raster_buttons_box raster_buttons_box output_select_box output_select_box output_select_box'
-                    'search_results button_0d1d all_button raster_buttons_box raster_buttons_box  output_select_box output_select_box output_select_box'
+                    'search_results button_0d1d filter_button raster_buttons_box raster_buttons_box  output_select_box output_select_box output_select_box'
                     '. . . time_resolution_box time_resolution_box time_resolution_box download_button_label download_button_label'
                     '. . . time_resolution_box time_resolution_box time_resolution_box download_button download_button'
                     '. . . custom_extent_button custom_extent_widget custom_extent_widget download_batch_button_label download_batch_button_label'
@@ -1502,4 +1521,5 @@ if __name__ == "__main__":
         self = DownloadGui(data=data); 
         
         self.w.search.sim_name_widget.value = "model_test"
+        display(self.tab)
 # %%
