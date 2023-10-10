@@ -14,7 +14,6 @@ import pytz
 
 # threedi
 from threedi_scenario_downloader import downloader as dl
-# from deprecated.core.api import downloader as dl
 
 # local imports
 import hhnk_research_tools as hrt
