@@ -107,7 +107,6 @@ class ClimateResult(hrt.Folder):
             self.add_file("schade_polder_corr", "schade_per_polder_correctie.csv")
 
             self.set_scenario_files()
-            self.create(parents=False)  # create outputfolder if parent exists
 
         def set_scenario_files(self):
             for type_raster, type_raster_name in zip(
