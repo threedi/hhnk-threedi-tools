@@ -14,10 +14,25 @@ class ClimateResult(hrt.Folder):
 
     def __init__(self, base, create=False):
         super().__init__(base, create=create)
+        self.create_bool = create
 
-        self.downloads = self.ClimateResultDownloads(self.base, create=create)
-        self.output = self.ClimateResultOutput(self.base, create=create)
+        self._downloads = None
+        self._output = None
 
+
+    @property
+    def downloads(self):
+        if self._downloads is None:
+            self._downloads = self.ClimateResultDownloads(self.base, create=self.create_bool)
+        return self._downloads
+    
+
+    @property
+    def output(self):
+        if self._output is None:
+            self._output = self.ClimateResultDownloads(self.base, create=self.create_bool)
+        return self._output
+    
 
     @property
     def structure(self):
@@ -32,26 +47,26 @@ class ClimateResult(hrt.Folder):
         def __init__(self, base, create=False):
             super().__init__(os.path.join(base, "01_downloads"), create=create)
 
+            self.create_bool = create
             # Files
-            self.names = []  # Initializes names.setter
-
-            for name in self.names:
-                setattr(self, name, self.ClimateResultScenario(self.base, name, create=create))
-
+            self._names = None
 
         @property
         def names(self):
+            if self._names is None:
+                self._names = self.get_names()
             return self._names
 
-
-        @names.setter
-        def names(self, dummy):
+        def get_names(self):
             names = []
             for rain_type in RAIN_TYPES:
                 for groundwater in GROUNDWATER:
                     for rain_scenario in RAIN_SCENARIOS:
                         names.append(f"{rain_type}_{groundwater}_{rain_scenario}")
-            self._names = names
+
+            for name in names:
+                setattr(self, name, self.ClimateResultScenario(self.base, name, create=self.create_bool))
+            return names
 
 
         def __repr__(self):
