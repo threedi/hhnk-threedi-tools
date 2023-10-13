@@ -1,0 +1,278 @@
+# %%
+"""
+Layer structure is de basis voor een qgisproject om automatisch
+lagen toe te voegen.
+Deze staan in een csv gedefineerd (vb: tests_hrt\data\layer_structure.csv)
+en worden hier uitgelezen om ze aan het project toe te voegen.
+"""
+import pandas as pd
+import numpy as np
+from dataclasses import dataclass
+import os
+
+import hhnk_research_tools as hrt
+HHNK_THREEDI_PLUGIN_DIR = "HIERSTAANQMLS"
+
+
+@dataclass
+class QgisLayer:
+    """Base settings for a qgis layer.
+    provide either:
+        - file with optionally filters
+        - wms_source -> wms source url."""
+    name: str
+    file: str = None
+    filters: str = None
+    wms_source: str = None
+    qml_lst: list = None
+    group_lst: list = None
+    # theme_lst: list = None
+
+
+    def __post_init__(self):
+        self.ftype = self.get_ftype()
+
+        #set source
+        self.source = self.get_source()
+
+
+    def get_ftype(self):
+        """Get ftype based on file suffix or source"""
+        #Get ftype from file suffix
+        if self.file and self.wms_source:
+            print(f"file: {self.file}")
+            print(f"wms_source: {self.wms_source}")
+            raise Exception("Cannot provide both file and wms_source")
+
+        ftype=None
+        if self.file:
+            try:
+                if self.file.suffix in  ['.shp', '.gdb', '.gpkg']:
+                    ftype = "vector"
+                elif ".tif" in self.file.suffix:
+                    ftype = "raster"
+            except:
+                #Filetype unknown.
+                pass
+
+        #Get ftype from (wms)source
+        if self.wms_source:
+            if ("MapServer" in self.wms_source) and ("/arcgis/rest/" in self.wms_source):
+                ftype = "arcgismapserver"
+            elif ("FeatureServer" in self.wms_source) and ("/arcgis/rest/" in self.wms_source):
+                ftype = "arcgisfeatureserver"
+            else:
+                ftype = "wms"
+        return ftype
+
+    def get_source(self):
+        source = None
+        if self.file:
+            if self.filters is not None:
+                source = f"{self.file}|{self.filters}"
+            else:
+                source = f"{self.file}"
+        if self.wms_source:
+            source = self.wms_source
+        return source
+    
+    @property
+    def id(self):
+        """Layer names are net necessarily unique in qgis. 
+        The combination of of name and group_lst is however"""
+        return f"{self.name}__{self.group_lst}"
+
+
+    def __repr__(self):
+        return f"""<class {self.__class__.__name__}>: {self.name}
+    variables: .{" .".join(hrt.get_variables(self, stringify=False))}"""
+
+
+@dataclass
+class QgisTheme:
+    """QgisTheme has a name and layers.
+    layer should be of type htt.QgisLayer
+    """
+    def __init__(self, 
+                 name:str,
+                 layer_ids:list = []):
+        self.name = name
+        self.layer_ids = []
+        self.add_layers(layer_ids=layer_ids)
+
+
+    def add_layer(self, layer):
+        if layer not in self.layer_ids:
+            self.layer_ids.append(layer)
+
+
+    def add_layers(self, layer_ids):
+        for layer in layer_ids:
+            self.add_layer(layer=layer)
+            
+
+    def __repr__(self):
+        return f"""{self.__class__}:
+    name={self.name}
+    layer_ids ({len(self.layer_ids)}x)={self.layer_ids}"""
+
+
+# class QgisThemes:
+#     name: str
+#     layer_names: list
+
+#     def __init__(self):
+#         pass
+
+#     @property
+#     def theme_col_names(self):
+#         return [i for i in self.df_full.keys() if i.startswith('theme_')]
+
+
+@dataclass
+class Revisions:
+     check_0d1d: str = ''
+     check_1d2d: str = ''
+     klimaatsommen: str = ''
+
+
+class LayerStructure:
+    """
+    Contruct layer structure from a source csv. 
+
+    Themes can be added using new columns in the csv that start with 'theme_'
+    All layers that you want to add to a theme should be 'True' in that column."""
+    def __init__(self, layer_structure_path=None, 
+                 subjects=None, 
+                 revisions: Revisions = Revisions(),
+                 folder=None,
+                 plugin_dir=HHNK_THREEDI_PLUGIN_DIR
+                 ):
+        #init variables
+        self.file = hrt.File(layer_structure_path)
+        self.subjects = subjects
+        self.revisions = revisions
+
+        self.folder = folder
+        self.plugin_dir = plugin_dir
+
+
+    def load_df(self, subjects):
+        """load csv as dataframe and filter the subjects."""
+        if self.file.exists():
+            self.df_full = pd.read_csv(self.file.path, sep=';') #Read csv with configuration for the available layers.
+            self.df_full = self.df_full.where(pd.notnull(self.df_full), None) #nan to none
+
+            #FIXME subjcets op andere manier. We laden nu altijd alles.
+            if subjects is not None:
+                self.df = self.df_full[self.df_full['subject'].isin(subjects)] #Filter on selected subjects.
+            else: 
+                self.df = self.df_full
+        self._verify_input()
+
+
+    def _verify_input(self):
+        """Verify input. Needs to be done after loading df."""
+        #If wrong structure path raise
+        if (self.file._base is not None) and (not self.file.exists()):
+            raise Exception(f"File does not exist: {self.file}")
+
+        #Check all subjects in df
+        if self.subjects is not None:
+            if not all([s in np.unique(self.df_full["subject"].values) for s in self.subjects]):
+                raise Exception(f"Not all subjects are in df: {self.subjects}")
+
+
+    def get_layers_from_df(self) -> list:
+        """Get a list of all layers"""
+        layers = []
+        for index, row in self.df_full.iterrows():
+            layers.append(self._get_layer_from_row(row))
+        return layers
+    
+
+    def get_themes_from_df(self) -> pd.Series:
+        """Get a series with themes. 
+        First read the layers with self.get_layers_from_df"""
+        theme_col_names = [i for i in self.df_full.keys() if i.startswith('theme_')]
+        themes = {}
+        for theme_col_name in theme_col_names:
+            theme_filter = self.df_full[theme_col_name]==True
+            
+            layer_ids = self.df_full.loc[theme_filter, 'layer'].apply(lambda x: x.id).tolist()
+            name = theme_col_name[6:] #remove str theme_
+            themes[name] = QgisTheme(name=name, layer_ids=layer_ids)
+        return pd.Series(themes)
+
+
+    def _get_layer_from_row(self, row):
+        """Evalualte df row and create a QgisLayer instance"""
+
+
+        def eval_filenames(name, suffix, folder, revisions):
+            """some filenames are variables"""
+            if '.' in name:
+                return eval(name)
+            else:
+                return f"{name}.{suffix}"
+            
+            
+        def eval_qml(qmldir, qmlnames, HHNK_THREEDI_PLUGIN_DIR):
+            """create list of qmlpaths with row.qmldir and row.qmlnames"""
+            qmldir = eval(qmldir)
+            if qmlnames.startswith("["):
+                #Already a list
+                qmlnames = eval(qmlnames)
+            else: #Set single qml name to list
+                qmlnames = [qmlnames]
+            qmlpaths=[]
+            for name in qmlnames:
+                qmlpaths.append(hrt.Folder(qmldir).full_path(name))
+            return qmlpaths
+        
+
+        #required for eval
+        folder = self.folder
+        revisions = self.revisions 
+        HHNK_THREEDI_PLUGIN_DIR = self.plugin_dir
+
+        #Voor wms staat de volledige link die nodig is in row.wms_source.
+        file = None
+        if row.filename:
+            file = hrt.Folder(eval(str(row.filedir))
+                    ).full_path(eval_filenames(row.filename, 
+                                                row.suffix, 
+                                                folder=folder, 
+                                                revisions=self.revisions))
+
+        group_lst = None
+        if row.group_lst:
+            group_lst = eval(row.group_lst)
+
+        qml_lst = None
+        if row.qmlnames:
+            qml_lst = eval_qml(qmldir=row.qmldir, 
+                               qmlnames=row.qmlnames, 
+                               HHNK_THREEDI_PLUGIN_DIR=HHNK_THREEDI_PLUGIN_DIR)
+
+        l = QgisLayer(name=row.qgis_name,
+                              file=file,
+                              filters=row.filters,
+                              wms_source=row.wms_source,
+                              qml_lst = qml_lst,
+                              group_lst= group_lst,
+        )
+        return l
+    
+
+    def run(self):
+        #Load df
+        self.load_df(self.subjects)
+        #Load layers in df and add them as extra column
+        self.df_full["layer"] = self.get_layers_from_df()
+        #Get the themes and their layer ids.
+        self.themes = self.get_themes_from_df()
+
+
+if __name__ == "__main__":
+    pass
