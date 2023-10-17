@@ -15,11 +15,14 @@ HHNK_THREEDI_PLUGIN_DIR = "HIERSTAANQMLS"
 
 
 @dataclass
-class QgisLayer:
+class QgisLayerSettings:
     """Base settings for a qgis layer.
     provide either:
         - file with optionally filters
-        - wms_source -> wms source url."""
+        - wms_source -> wms source url.
+        
+        qml_lst (list):
+            list of hrt.File objects"""
     name: str
     file: str = None
     filters: str = None
@@ -37,7 +40,10 @@ class QgisLayer:
 
 
     def get_ftype(self):
-        """Get ftype based on file suffix or source"""
+        """Get ftype based on file suffix or source
+        get available ftypes from; QgsProviderRegistry.instance().providerList()
+        they are input in QgsVectorLayer and QgsRasterLayer
+        """
         #Get ftype from file suffix
         if self.file and self.wms_source:
             print(f"file: {self.file}")
@@ -48,9 +54,9 @@ class QgisLayer:
         if self.file:
             try:
                 if self.file.suffix in  ['.shp', '.gdb', '.gpkg']:
-                    ftype = "vector"
+                    ftype = "ogr"
                 elif ".tif" in self.file.suffix:
-                    ftype = "raster"
+                    ftype = "gdal" #raster
             except:
                 #Filetype unknown.
                 pass
@@ -65,6 +71,7 @@ class QgisLayer:
                 ftype = "wms"
         return ftype
 
+
     def get_source(self):
         source = None
         if self.file:
@@ -75,6 +82,7 @@ class QgisLayer:
         if self.wms_source:
             source = self.wms_source
         return source
+    
     
     @property
     def id(self):
@@ -89,9 +97,11 @@ class QgisLayer:
 
 
 @dataclass
-class QgisTheme:
+class QgisThemeSettings:
     """QgisTheme has a name and layers.
-    layer should be of type htt.QgisLayer
+    name (str): name of theme
+    layer_ids (list): list of htt.QgisLayerSettings items
+
     """
     def __init__(self, 
                  name:str,
@@ -130,7 +140,8 @@ class QgisTheme:
 
 
 @dataclass
-class Revisions:
+class SelectedRevisions:
+     """Names of selected revisions to use in LayerStructure"""
      check_0d1d: str = ''
      check_1d2d: str = ''
      klimaatsommen: str = ''
@@ -144,7 +155,7 @@ class LayerStructure:
     All layers that you want to add to a theme should be 'True' in that column."""
     def __init__(self, layer_structure_path=None, 
                  subjects=None, 
-                 revisions: Revisions = Revisions(),
+                 revisions: SelectedRevisions = SelectedRevisions(),
                  folder=None,
                  plugin_dir=HHNK_THREEDI_PLUGIN_DIR
                  ):
@@ -201,7 +212,7 @@ class LayerStructure:
             
             layer_ids = self.df_full.loc[theme_filter, 'layer'].apply(lambda x: x.id).tolist()
             name = theme_col_name[6:] #remove str theme_
-            themes[name] = QgisTheme(name=name, layer_ids=layer_ids)
+            themes[name] = QgisThemeSettings(name=name, layer_ids=layer_ids)
         return pd.Series(themes)
 
 
@@ -218,7 +229,8 @@ class LayerStructure:
             
             
         def eval_qml(qmldir, qmlnames, HHNK_THREEDI_PLUGIN_DIR):
-            """create list of qmlpaths with row.qmldir and row.qmlnames"""
+            """create list of qmlpaths with row.qmldir and row.qmlnames
+            """
             qmldir = eval(qmldir)
             if qmlnames.startswith("["):
                 #Already a list
@@ -255,7 +267,7 @@ class LayerStructure:
                                qmlnames=row.qmlnames, 
                                HHNK_THREEDI_PLUGIN_DIR=HHNK_THREEDI_PLUGIN_DIR)
 
-        l = QgisLayer(name=row.qgis_name,
+        l = QgisLayerSettings(name=row.qgis_name,
                               file=file,
                               filters=row.filters,
                               wms_source=row.wms_source,

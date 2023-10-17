@@ -14,8 +14,9 @@ from tests.config import FOLDER_TEST, TEST_DIRECTORY, TEMP_DIR
 LAYER_STRUCTURE_PATH = r"E:\github\wvangerwen\hhnk-threedi-tools\tests\data\layer_structure.csv"
 # LAYER_STRUCTURE_PATH = r"\\corp.hhnk.nl\data\hydrologen_data\Data\github\wvangerwen\hhnk-threedi-plugin\hhnk_threedi_plugin\qgis_interaction\layer_structure\testprotocol.csv"
 
-
+# %%
 def test_layer_structure():
+    # %%
     #Check if we get exception with bogus input.
     with pytest.raises(Exception):
         ls = layer_structure.LayerStructure(layer_structure_path=r"givemeanexception.csv",
@@ -38,3 +39,37 @@ def test_layer_structure():
     assert self.themes.example1.layer_ids == ["waterstand_einde_regen_vs_begin_regen__['05. Hydraulische Toets en 0d1d tests[]', 'Kaart 3: Streefpeilhandhaving']"]
 
 
+# %%
+
+if __name__=="__main__":
+    self = layer_structure.LayerStructure(layer_structure_path=LAYER_STRUCTURE_PATH,
+                                        subjects=['test_0d1d'],
+                                        folder=FOLDER_TEST)
+    self.run()
+    
+    l = self.df_full.loc[0, "layer"]
+    class QgisLayer:
+        def __init__(self, 
+                     settings:layer_structure.QgisLayerSettings,
+                     t=None):
+            self.settings = settings
+            self.t = t
+
+
+        # #FIXME is dit de beste manier om de child class opnieuw 
+        # # aan te roepen met dezelfde input?
+        # @classmethod
+        # def from_parent(cls, QgisLayer:layer_structure.QgisLayer, **kwargs):
+        #     return cls(name = QgisLayer.name,
+        #                 file = QgisLayer.file,
+        #                 filters = QgisLayer.filters,
+        #                 wms_source = QgisLayer.wms_source,
+        #                 qml_lst = QgisLayer.qml_lst,
+        #                 group_lst = QgisLayer.group_lst,
+        #                 **kwargs,
+        #             )
+        
+        def dummy(self):
+            return self.t
+    a=QgisLayer(settings=l, t="hel")
+    print(a.dummy())

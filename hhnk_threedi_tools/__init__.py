@@ -29,6 +29,8 @@ from hhnk_threedi_tools.utils.notebooks.run import open_server
 from hhnk_threedi_tools.utils.notebooks.run import copy_notebooks
 
 
+import hhnk_threedi_tools.qgis
+
 # backup
 from hhnk_threedi_tools.core.schematisation.model_backup import (
     create_backups,
