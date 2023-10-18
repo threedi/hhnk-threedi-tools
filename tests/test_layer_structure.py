@@ -5,6 +5,7 @@ import pandas as pd
 import os
 import hhnk_threedi_tools.qgis.layer_structure as layer_structure
 import pytest
+import numpy as np
 
 if __name__ == "__main__":
     importlib.reload(layer_structure)
@@ -53,21 +54,3 @@ self.layers
 
 
 # %%
-group_lst = self.layers.iloc[0].group_lst
-
-parent_found=0 #If no parent the whole group_lst should be created
-for i in range(len(group_lst),0,-1):
-    # print(group_lst[:i])
-    # group = self.get_group(group_lst[:i])
-    group=False
-    if group:
-        # print(f'group {group.name()} found')
-        parent_found=1 #group exists, now lets makee the children that didnt exist.
-        break
-
-#Continue loop where broken to start building the groups
-if group is None:
-    group = self.root
-
-for j in range(i-1+parent_found, len(group_lst)): #some magic with index required to create the correct group.
-    print(j)

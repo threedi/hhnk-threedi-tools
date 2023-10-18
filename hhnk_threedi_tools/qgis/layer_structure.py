@@ -127,22 +127,88 @@ class QgisThemeSettings:
     layer_ids ({len(self.layer_ids)}x)={self.layer_ids}"""
 
 
-# @dataclass
-# class QgisGroupSettings:
-#     def __init__(self, group_lst):
-#         self.group_lst = group_lst
+class QgisGroupSettings:
+    def __init__(self, name, lvl):
+        self.name = name
+        self.lvl = lvl
+        self.children={}
 
 
-#         self.df = self.create_group_df()
+    def add_child(self, name, lvl):
+        if (name not in self.children.keys()) and (name is not None):
+            self.children[name] = QgisGroupSettings(name=name, lvl=lvl)
+        return self.children[name]
 
-#     def create_group_df(self) -> pd.DataFrame:
+
+    def get_children(self):
+        for child in self.children.values():
+            yield child
+    
+
+    def tabstr(self, amount):
+        return '\t'*self.lvl
 
 
-#         return 
+    def get_all_children(self):
+        """recursively yield all children."""
+        yield self
+        for child in self.get_children():
+            yield from child.get_all_children()
 
-#     @property
-#     def id(self):
-#         return self.group_lst
+
+    def __repr__(self):
+        """
+        should view self and all children indented like this:
+        group_lvl1
+            group_lvl2a
+                group_lvl3
+            group_lvl2b
+            group_lvl2c
+                group_lvl3
+             """
+        reprstr = f"{self.__class__}\n"
+        for node in self.get_all_children():
+            tabstr = '\t'*node.lvl #+ '└'+ '─'*node.lvl
+            reprstr += f"{tabstr} {node.name}\n"
+
+        return reprstr
+
+
+class QgisAllGroupsSettings:
+    def __init__(self, layers):
+        self.df = self.create_groups_df(layers)
+
+        self.groups = self.generate_groups()
+
+
+    def create_groups_df(self, layers):
+        df_group = pd.DataFrame(layers.apply(lambda x: x.group_lst).values.tolist()).add_prefix('lvl_')
+        df_group["id"] = layers.apply(lambda x: x.id.split("____")[-1]).reset_index(drop=True)
+        df_group = df_group.drop_duplicates().set_index("id", drop=True)
+        return df_group
+    
+
+    def generate_groups(self):
+        """generate_groups from dataframe"""
+        groups = QgisGroupSettings("qgis_main", lvl=0)
+        
+        for idx, row in self.df.iterrows():
+            for col in self.df.keys():
+                name = row[col]
+                lvl = int(col.split("_")[-1])+1
+                if name is not None:
+                    if lvl == 1:
+                        child = groups.add_child(name=name, lvl=lvl)
+                    else:
+                        child = child.add_child(name=name, lvl=lvl)
+            else:
+                continue
+            break
+        return groups
+
+    def __iter__(self):
+        for child in self.groups.get_all_children():
+            yield child
 
 
 @dataclass
@@ -300,6 +366,8 @@ class LayerStructure:
         #Load layers in df and add them as extra column
         self.layers = self.get_layers_from_df()
         self.df_full["layer"] = self.layers.reset_index(drop=True)
+
+        self.groups = QgisAllGroupsSettings(layers=self.layers)
         #Get the themes and their layer ids.
         self.themes = self.get_themes_from_df()
 
