@@ -36,7 +36,7 @@ def test_layer_structure():
     assert len(self.df_full) == 4
     assert len(self.df) == 1
     assert "layer" in self.df_full.keys()
-    assert self.themes.example1.layer_ids == ["waterstand_einde_regen_vs_begin_regen__['05. Hydraulische Toets en 0d1d tests[]', 'Kaart 3: Streefpeilhandhaving']"]
+    assert self.themes.example1.layer_ids == ["waterstand_einde_regen_vs_begin_regen____05. Hydraulische Toets en 0d1d tests[]__Kaart 3: Streefpeilhandhaving"]
 
 
 # %%
@@ -48,28 +48,26 @@ if __name__=="__main__":
     self.run()
     
     l = self.df_full.loc[0, "layer"]
-    class QgisLayer:
-        def __init__(self, 
-                     settings:layer_structure.QgisLayerSettings,
-                     t=None):
-            self.settings = settings
-            self.t = t
+
+self.layers
 
 
-        # #FIXME is dit de beste manier om de child class opnieuw 
-        # # aan te roepen met dezelfde input?
-        # @classmethod
-        # def from_parent(cls, QgisLayer:layer_structure.QgisLayer, **kwargs):
-        #     return cls(name = QgisLayer.name,
-        #                 file = QgisLayer.file,
-        #                 filters = QgisLayer.filters,
-        #                 wms_source = QgisLayer.wms_source,
-        #                 qml_lst = QgisLayer.qml_lst,
-        #                 group_lst = QgisLayer.group_lst,
-        #                 **kwargs,
-        #             )
-        
-        def dummy(self):
-            return self.t
-    a=QgisLayer(settings=l, t="hel")
-    print(a.dummy())
+# %%
+group_lst = self.layers.iloc[0].group_lst
+
+parent_found=0 #If no parent the whole group_lst should be created
+for i in range(len(group_lst),0,-1):
+    # print(group_lst[:i])
+    # group = self.get_group(group_lst[:i])
+    group=False
+    if group:
+        # print(f'group {group.name()} found')
+        parent_found=1 #group exists, now lets makee the children that didnt exist.
+        break
+
+#Continue loop where broken to start building the groups
+if group is None:
+    group = self.root
+
+for j in range(i-1+parent_found, len(group_lst)): #some magic with index required to create the correct group.
+    print(j)

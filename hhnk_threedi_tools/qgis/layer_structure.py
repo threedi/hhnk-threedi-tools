@@ -11,7 +11,7 @@ from dataclasses import dataclass
 import os
 
 import hhnk_research_tools as hrt
-HHNK_THREEDI_PLUGIN_DIR = "HIERSTAANQMLS"
+HHNK_THREEDI_PLUGIN_DIR = r"C:\Users\wvangerwen\AppData\Roaming\3Di\QGIS3\profiles\default\python\plugins\hhnk_threedi_plugin"
 
 
 @dataclass
@@ -88,7 +88,8 @@ class QgisLayerSettings:
     def id(self):
         """Layer names are net necessarily unique in qgis. 
         The combination of of name and group_lst is however"""
-        return f"{self.name}__{self.group_lst}"
+        #TODO test group_lst = None
+        return f"{self.name}____{'__'.join(self.group_lst)}"
 
 
     def __repr__(self):
@@ -122,21 +123,26 @@ class QgisThemeSettings:
             
 
     def __repr__(self):
-        return f"""{self.__class__}:
-    name={self.name}
+        return f"""<class {self.__class__.__name__}>: {self.name}
     layer_ids ({len(self.layer_ids)}x)={self.layer_ids}"""
 
 
-# class QgisThemes:
-#     name: str
-#     layer_names: list
+# @dataclass
+# class QgisGroupSettings:
+#     def __init__(self, group_lst):
+#         self.group_lst = group_lst
 
-#     def __init__(self):
-#         pass
+
+#         self.df = self.create_group_df()
+
+#     def create_group_df(self) -> pd.DataFrame:
+
+
+#         return 
 
 #     @property
-#     def theme_col_names(self):
-#         return [i for i in self.df_full.keys() if i.startswith('theme_')]
+#     def id(self):
+#         return self.group_lst
 
 
 @dataclass
@@ -152,13 +158,23 @@ class LayerStructure:
     Contruct layer structure from a source csv. 
 
     Themes can be added using new columns in the csv that start with 'theme_'
-    All layers that you want to add to a theme should be 'True' in that column."""
-    def __init__(self, layer_structure_path=None, 
+    All layers that you want to add to a theme should be 'True' in that column.
+    
+    Most notable attributes of this structure are:
+    .layers (pd.Series): layers as QgisLayerSettings
+    .themes (pd.Series): themes as QgisThemeSettings
+
+    a layer has groups and possibly themes. All are recored in these series.
+    """
+    def __init__(self, 
+                 layer_structure_path=None, 
                  subjects=None, 
                  revisions: SelectedRevisions = SelectedRevisions(),
                  folder=None,
                  plugin_dir=HHNK_THREEDI_PLUGIN_DIR
                  ):
+        
+        #FIXME meeste input naar kwargs. Deze zijn specifiek nodig voor de bijhoordende xls. 
         #init variables
         self.file = hrt.File(layer_structure_path)
         self.subjects = subjects
@@ -194,12 +210,13 @@ class LayerStructure:
                 raise Exception(f"Not all subjects are in df: {self.subjects}")
 
 
-    def get_layers_from_df(self) -> list:
+    def get_layers_from_df(self) -> pd.Series:
         """Get a list of all layers"""
-        layers = []
+        layers = {}
         for index, row in self.df_full.iterrows():
-            layers.append(self._get_layer_from_row(row))
-        return layers
+            layer = self._get_layer_from_row(row)
+            layers[layer.id] = layer
+        return pd.Series(layers)
     
 
     def get_themes_from_df(self) -> pd.Series:
@@ -216,7 +233,7 @@ class LayerStructure:
         return pd.Series(themes)
 
 
-    def _get_layer_from_row(self, row):
+    def _get_layer_from_row(self, row) -> QgisLayerSettings:
         """Evalualte df row and create a QgisLayer instance"""
 
 
@@ -281,7 +298,8 @@ class LayerStructure:
         #Load df
         self.load_df(self.subjects)
         #Load layers in df and add them as extra column
-        self.df_full["layer"] = self.get_layers_from_df()
+        self.layers = self.get_layers_from_df()
+        self.df_full["layer"] = self.layers.reset_index(drop=True)
         #Get the themes and their layer ids.
         self.themes = self.get_themes_from_df()
 
