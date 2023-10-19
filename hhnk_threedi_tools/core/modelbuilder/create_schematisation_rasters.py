@@ -4,6 +4,17 @@ import hhnk_research_tools as hrt
 from dataclasses import dataclass
 import geopandas as gpd
 import numpy as np
+import os
+
+if __name__ == "__main__":
+    from pathlib import Path
+    TEST_DIRECTORY = Path(__file__).parents[3].absolute() / "tests" / "data"
+
+    PATH_TEST_MODEL = TEST_DIRECTORY / "model_test"
+    TEMP_DIR = hrt.Folder(TEST_DIRECTORY/r"temp", create=True)
+    TEMP_DIR.unlink_contents()
+
+# %%
 
 
 @dataclass
@@ -28,8 +39,8 @@ class SourcePaths:
 
 
 class TempPaths(hrt.Folder):
-    def __init__(self):
-        super().__init__(base="tmp")
+    def __init__(self, base):
+        super().__init__(base=os.path.join(base, ""))
 
         self.dem = self.full_path("dem.vrt")
         self.glg = self.full_path("glg.vrt")
@@ -40,14 +51,18 @@ class TempPaths(hrt.Folder):
 
 
 class DestPaths:
-    tmp = TempPaths()
+    def __init__(self, base):
+        self.tmp = TempPaths(base)
 
 
 class Folders:
-    src = SourcePaths()
-    dst = DestPaths()
+    def __init__(self, base):
+        self.src = SourcePaths()
+        self.dst = DestPaths(base)
 
-folder = Folders()
+folder = Folders(base = TEMP_DIR.base)
+
+# %%
 
 resolution=0.5
 nodata=-9999
@@ -104,12 +119,11 @@ output_file.build_vrt(overwrite=False,
 
 
 # %%
-
-
-
 blocks_df = folder.dst.tmp.polder.generate_blocks()
 
 hist = {}
+
+
 
 @dataclass
 class Blocks:
@@ -148,8 +162,116 @@ if True:
         block = Blocks(window=block_row['window_readarray'])
 
         if block.cont:
-            mask_nodata = {}
-            mask_nodata["dem"] = block
+            pass
+
+# %%
+from dataclasses import field
+# class BaseDataclass:
+#     """see https://stackoverflow.com/questions/55099243/python3-dataclass-with-kwargsasterisk"""
+#     rest: dict = None#field(default_factory=dict)
+
+#     @classmethod
+#     def from_kwargs(cls, **kwargs: dict):
+#         #TODO python 3.10 use cls.__match_args__ instead of __dataclass_fields__
+#         init_kw = {k: kwargs.pop(k) for k in dict(kwargs) if k in cls.__dataclass_fields__}
+#         return cls(**init_kw, rest=kwargs)
+    
+
+class BlockArrays():
+    def __init__(self, **kwargs):
+        self.__dict__.update(kwargs)
+
+
+b=BlockArrays(hi="hafdsi")
+b.hi
+
+# %%
+
+
+
+class BlockArrays():
+    """Empty class that can take arguments"""
+    def __init__(self, **kwargs):
+        self.__dict__.update(kwargs)
+
+
+@dataclass
+class Blocks:
+    window: list
+    raster_paths_dict: dict
+    nodata_keys: list = None
+    mask_keys: list = None
+
+    """
+    general function to load blocks of selected files.
+    
+    input parameters
+    window (list): [xmin, ymin, xmax, ymax]; same as row['windows_readarray']
+    raster_paths_dict (dict): {key:hrt.Raster}, path items should be of type
+        hrt.Raster.
+    nodata_keys (list): the keys in raster_paths to check for all nodata values
+        wont load other rasters if all values are nodata.
+    mask_keys (list): list of keys to create a nodata mask for
+    """
+    #TODO check if raster exists otherwise break.. is extra overhead though, maybe check
+    #during loop.
+    def __post_init__(self):
+        self.cont = True
+        self.blocks = {}
+        self.masks = {}
+
+        for key in self.nodata_keys:
+            self.blocks[key] = self.read_array_window(key)
+            self.masks[key] = self.blocks[key]==self.raster_paths_dict[key].nodata
+
+            if np.all(self.masks[key]):
+                """if all values in masks are nodata then we can break loading"""
+                self.cont = False
+                break
+        
+        #Load other rasters
+        if self.cont:
+            for key in self.raster_paths_dict:
+                if key not in self.blocks.keys():
+                    self.blocks[key] = self.read_array_window(key)
+                if (key in self.mask_keys) and (key not in self.masks.keys()):
+                    self.masks[key] = self.blocks[key]==self.raster_paths_dict[key].nodata
+
+
+    def read_array_window(self, key):
+        return self.raster_paths_dict[key]._read_array(window=self.window)
+
+
+    @property
+    def masks_all(self):
+        """Combine nodata masks"""
+        return np.any([self.masks[i] for i in self.masks],0)
+
+
+
+
+
+# if True:
+def t():
+    folder.dst.tmp.polder.min_block_size = 2048
+    blocks_df = folder.dst.tmp.polder.generate_blocks()
+
+    for idx, block_row in blocks_df.iterrows():
+        block = Blocks(window=block_row['window_readarray'],
+                       raster_paths_dict={
+                                "dem" : folder.dst.tmp.dem,
+                                "polder" : folder.dst.tmp.polder,
+                                "watervlakken" : folder.dst.tmp.watervlakken,},
+                       nodata_keys=["polder"],
+                       mask_keys=["polder", "dem"],
+                       )
+
+        if block.cont:
+            pass
+
+
+
+
 
 
 
