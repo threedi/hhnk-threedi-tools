@@ -1,1 +1,5 @@
-from .layer_structure import LayerStructure, QgisLayerSettings, SelectedRevisions
+from .layer_structure import (LayerStructure,
+                                QgisLayerSettings,
+                                SelectedRevisions,
+                                QgisGroupSettings,
+                                QgisAllGroupsSettings)

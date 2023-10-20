@@ -7,7 +7,7 @@ en worden hier uitgelezen om ze aan het project toe te voegen.
 """
 import pandas as pd
 import numpy as np
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import os
 
 import hhnk_research_tools as hrt
@@ -27,8 +27,8 @@ class QgisLayerSettings:
     file: str = None
     filters: str = None
     wms_source: str = None
-    qml_lst: list = None
-    group_lst: list = None
+    qml_lst: list = field(default_factory=list)
+    group_lst: list = field(default_factory=list)
     # theme_lst: list = None
 
 
@@ -76,9 +76,9 @@ class QgisLayerSettings:
         source = None
         if self.file:
             if self.filters is not None:
-                source = f"{self.file}|{self.filters}"
+                source = fr"{self.file}|{self.filters}"
             else:
-                source = f"{self.file}"
+                source = fr"{self.file}"
         if self.wms_source:
             source = self.wms_source
         return source
@@ -90,6 +90,10 @@ class QgisLayerSettings:
         The combination of of name and group_lst is however"""
         #TODO test group_lst = None
         return f"{self.name}____{'__'.join(self.group_lst)}"
+
+    @property
+    def group_id(self):
+        return f"{'__'.join(self.group_lst)}"
 
 
     def __repr__(self):
@@ -128,15 +132,23 @@ class QgisThemeSettings:
 
 
 class QgisGroupSettings:
-    def __init__(self, name, lvl):
+    def __init__(self, lvl, name="qgis_main", parent_group_lst=[]):
         self.name = name
         self.lvl = lvl
+        self.parent_group_lst = parent_group_lst
         self.children={}
 
 
     def add_child(self, name, lvl):
         if (name not in self.children.keys()) and (name is not None):
-            self.children[name] = QgisGroupSettings(name=name, lvl=lvl)
+            if self.name!="qgis_main":
+                parent_group_lst = self.parent_group_lst + [self.name]
+            else:
+                parent_group_lst = []
+
+            self.children[name] = self.__class__(name=name, 
+                                                 lvl=lvl,
+                                                 parent_group_lst=parent_group_lst)
         return self.children[name]
 
 
@@ -144,16 +156,30 @@ class QgisGroupSettings:
         for child in self.children.values():
             yield child
     
-
-    def tabstr(self, amount):
-        return '\t'*self.lvl
-
-
+    
     def get_all_children(self):
         """recursively yield all children."""
-        yield self
+        if self.name !="qgis_main":
+            yield self
         for child in self.get_children():
             yield from child.get_all_children()
+
+
+    @property
+    def id(self):
+        return f"{'__'.join(self.parent_group_lst + [self.name])}"
+
+
+    @property
+    def parent_id(self): #id of parent group
+        return f"{'__'.join(self.parent_group_lst)}"
+    
+    @property
+    def parent_name(self):
+        if len(self.parent_group_lst) > 0:
+            return self.parent_group_lst[-1]
+        else:
+            return ""
 
 
     def __repr__(self):
@@ -177,38 +203,35 @@ class QgisGroupSettings:
 class QgisAllGroupsSettings:
     def __init__(self, layers):
         self.df = self.create_groups_df(layers)
-
         self.groups = self.generate_groups()
 
 
     def create_groups_df(self, layers):
         df_group = pd.DataFrame(layers.apply(lambda x: x.group_lst).values.tolist()).add_prefix('lvl_')
         df_group["id"] = layers.apply(lambda x: x.id.split("____")[-1]).reset_index(drop=True)
-        df_group = df_group.drop_duplicates().set_index("id", drop=True)
+        df_group = df_group.drop_duplicates(["id"]).set_index("id", drop=True)
         return df_group
     
 
     def generate_groups(self):
         """generate_groups from dataframe"""
-        groups = QgisGroupSettings("qgis_main", lvl=0)
+        groups = QgisGroupSettings(lvl=0, parent_group_lst=[])
         
         for idx, row in self.df.iterrows():
             for col in self.df.keys():
-                name = row[col]
-                lvl = int(col.split("_")[-1])+1
-                if name is not None:
-                    if lvl == 1:
-                        child = groups.add_child(name=name, lvl=lvl)
-                    else:
-                        child = child.add_child(name=name, lvl=lvl)
+                if col.startswith("lvl_"):
+                    name = row[col]
+                    lvl = int(col.split("lvl_")[-1])+1
+                    if name is not None:
+                        if lvl == 1:
+                            child = groups.add_child(name=name, lvl=lvl)
+                        else:
+                            child = child.add_child(name=name, lvl=lvl)
             else:
                 continue
             break
         return groups
 
-    def __iter__(self):
-        for child in self.groups.get_all_children():
-            yield child
 
 
 @dataclass
@@ -340,11 +363,11 @@ class LayerStructure:
                                                 folder=folder, 
                                                 revisions=self.revisions))
 
-        group_lst = None
+        group_lst = []
         if row.group_lst:
             group_lst = eval(row.group_lst)
 
-        qml_lst = None
+        qml_lst = []
         if row.qmlnames:
             qml_lst = eval_qml(qmldir=row.qmldir, 
                                qmlnames=row.qmlnames, 
