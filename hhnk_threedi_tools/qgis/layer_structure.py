@@ -29,6 +29,7 @@ class QgisLayerSettings:
     wms_source: str = None
     qml_lst: list = field(default_factory=list)
     group_lst: list = field(default_factory=list)
+    load_layer: bool = True
     # theme_lst: list = None
 
 
@@ -132,23 +133,26 @@ class QgisThemeSettings:
 
 
 class QgisGroupSettings:
-    def __init__(self, lvl, name="qgis_main", parent_group_lst=[]):
+    def __init__(self, lvl, name="qgis_main", parent_group_lst=[], load_group=True):
         self.name = name
         self.lvl = lvl
         self.parent_group_lst = parent_group_lst
+        self.load_group = load_group
         self.children={}
 
 
-    def add_child(self, name, lvl):
+    def add_child(self, name, lvl, load_group):
         if (name not in self.children.keys()) and (name is not None):
             if self.name!="qgis_main":
                 parent_group_lst = self.parent_group_lst + [self.name]
             else:
                 parent_group_lst = []
 
+            #Create child class
             self.children[name] = self.__class__(name=name, 
                                                  lvl=lvl,
-                                                 parent_group_lst=parent_group_lst)
+                                                 parent_group_lst=parent_group_lst,
+                                                 load_group=load_group)
         return self.children[name]
 
 
@@ -209,6 +213,7 @@ class QgisAllGroupsSettings:
     def create_groups_df(self, layers):
         df_group = pd.DataFrame(layers.apply(lambda x: x.group_lst).values.tolist()).add_prefix('lvl_')
         df_group["id"] = layers.apply(lambda x: x.id.split("____")[-1]).reset_index(drop=True)
+        df_group["load_group"] = layers.apply(lambda x: x.load_layer).reset_index(drop=True)
         df_group = df_group.drop_duplicates(["id"]).set_index("id", drop=True)
         return df_group
     
@@ -224,9 +229,9 @@ class QgisAllGroupsSettings:
                     lvl = int(col.split("lvl_")[-1])+1
                     if name is not None:
                         if lvl == 1:
-                            child = groups.add_child(name=name, lvl=lvl)
+                            child = groups.add_child(name=name, lvl=lvl, load_group=row['load_group'])
                         else:
-                            child = child.add_child(name=name, lvl=lvl)
+                            child = child.add_child(name=name, lvl=lvl, load_group=row['load_group'])
             else:
                 continue
             break
@@ -279,11 +284,12 @@ class LayerStructure:
             self.df_full = pd.read_csv(self.file.path, sep=';') #Read csv with configuration for the available layers.
             self.df_full = self.df_full.where(pd.notnull(self.df_full), None) #nan to none
 
-            #FIXME subjcets op andere manier. We laden nu altijd alles.
+            #FIXME subjects op andere manier. We laden nu altijd alles.
             if subjects is not None:
                 self.df = self.df_full[self.df_full['subject'].isin(subjects)] #Filter on selected subjects.
             else: 
                 self.df = self.df_full
+                self.subjects = np.unique(self.df["subject"].values)
         self._verify_input()
 
 
@@ -379,6 +385,7 @@ class LayerStructure:
                               wms_source=row.wms_source,
                               qml_lst = qml_lst,
                               group_lst= group_lst,
+                              load_layer=row.subject in self.subjects
         )
         return l
     
