@@ -16,49 +16,55 @@ if __name__ == "__main__":
 
 # %%
 
-
-@dataclass
-class SourcePaths:
-    path = hrt.Folder(r"C:\Users\wiets\Documents\HHNK\07.Poldermodellen\10.tHoekje\02. Sqlite modeldatabase\rasters")
-
-    dem = path.full_path("dem_thoekje.tif")
-    glg = path.full_path("storage_glg_thoekje.tif")
-    ggg = path.full_path("storage_ggg_thoekje.tif")
-    ghg = path.full_path("storage_ghg_thoekje.tif")    
-    polder = hrt.File(r"C:\Users\wiets\Documents\GitHub\hhnk-threedi-tools\tests\data\model_test\01_source_data\polder_polygon.shp")
-    watervlakken = hrt.File(r"C:\Users\wiets\Documents\GitHub\hhnk-threedi-tools\tests\data\model_test\01_source_data\modelbuilder_output\channel_surface_from_profiles.shp")
-
-    def __init__(self):
-        self.verify()
-
-    def verify(self):
-        for f in [self.dem, self.glg, self.ggg, 
-                  self.ghg, self.polder, self.watervlakken]:
-            if not f.exists():
-                raise Exception(f"{f} not found")
-
-
-class TempPaths(hrt.Folder):
-    def __init__(self, base):
-        super().__init__(base=os.path.join(base, ""))
-
-        self.dem = self.full_path("dem.vrt")
-        self.glg = self.full_path("glg.vrt")
-        self.ggg = self.full_path("ggg.vrt")
-        self.ghg = self.full_path("ghg.vrt")    
-        self.polder = self.full_path("polder.tif")
-        self.watervlakken = self.full_path("watervlakken.tif")
-
-
-class DestPaths:
-    def __init__(self, base):
-        self.tmp = TempPaths(base)
-
-
 class Folders:
     def __init__(self, base):
-        self.src = SourcePaths()
-        self.dst = DestPaths(base)
+        self.src = self.SourcePaths()
+        self.dst = self.DestPaths(base)
+
+
+    @dataclass
+    class SourcePaths:
+        path = hrt.Folder(r"C:\Users\wiets\Documents\HHNK\07.Poldermodellen\10.tHoekje\02. Sqlite modeldatabase\rasters")
+
+        dem = path.full_path("dem_thoekje.tif")
+        glg = path.full_path("storage_glg_thoekje.tif")
+        ggg = path.full_path("storage_ggg_thoekje.tif")
+        ghg = path.full_path("storage_ghg_thoekje.tif")    
+        polder = hrt.File(r"C:\Users\wiets\Documents\GitHub\hhnk-threedi-tools\tests\data\model_test\01_source_data\polder_polygon.shp")
+        watervlakken = hrt.File(r"C:\Users\wiets\Documents\GitHub\hhnk-threedi-tools\tests\data\model_test\01_source_data\modelbuilder_output\channel_surface_from_profiles.shp")
+
+        def __init__(self):
+            self.verify()
+
+        def verify(self):
+            for f in [self.dem, self.glg, self.ggg, 
+                    self.ghg, self.polder, self.watervlakken]:
+                if not f.exists():
+                    raise Exception(f"{f} not found")
+
+    class DestPaths(hrt.Folder):
+        def __init__(self, base):
+            super().__init__(base=os.path.join(base, ""))
+            self.tmp = self.TempPaths(base)
+
+            self.dem = self.full_path("dem.tif")
+            self.glg = self.full_path("glg.tif")
+            self.ggg = self.full_path("ggg.tif")
+            self.ghg = self.full_path("ghg.tif")
+            
+        class TempPaths(hrt.Folder):
+            def __init__(self, base):
+                super().__init__(base=os.path.join(base, "tmp"))
+
+                self.dem = self.full_path("dem.vrt")
+                self.glg = self.full_path("glg.vrt")
+                self.ggg = self.full_path("ggg.vrt")
+                self.ghg = self.full_path("ghg.vrt")    
+                self.polder = self.full_path("polder.tif")
+                self.watervlakken = self.full_path("watervlakken.tif")
+
+
+
 
 folder = Folders(base = TEMP_DIR.base)
 
@@ -82,11 +88,9 @@ if not folder.dst.tmp.polder.exists():
     )
 #Rasterize watergangen
 if not folder.dst.tmp.watervlakken.exists():
-    gdf_polder = gpd.read_file(folder.src.polder.path)
-
     gdf = gpd.read_file(folder.src.watervlakken.path)
-    metadata = hrt.create_meta_from_gdf(gdf_polder, res=resolution)
-    gdf["value"] = 10
+    metadata = folder.dst.tmp.polder.metadata
+    gdf["value"] = 1
     hrt.gdf_to_raster(
         gdf=gdf,
         value_field="value",
@@ -98,18 +102,7 @@ if not folder.dst.tmp.watervlakken.exists():
     )
 
 
-if not folder.dst.tmp.dem.exists():
-    output_file = folder.dst.tmp.dem
-
-    output_file.build_vrt(overwrite=False, 
-                  bounds=eval(folder.dst.tmp.polder.metadata.bbox), 
-                  input_files=folder.src.dem, 
-                  resolution=0.5,
-    )
-
-
 output_file = folder.dst.tmp.dem
-
 output_file.build_vrt(overwrite=False, 
                 bounds=eval(folder.dst.tmp.polder.metadata.bbox), 
                 input_files=folder.src.dem, 
@@ -117,167 +110,162 @@ output_file.build_vrt(overwrite=False,
 )
 
 
-
 # %%
-blocks_df = folder.dst.tmp.polder.generate_blocks()
-
-hist = {}
-
-
-
-@dataclass
-class Blocks:
-    window: list
-    dem_path = folder.dst.tmp.dem
-    polder_path = folder.dst.tmp.polder
-    watervlakken_path = folder.dst.tmp.watervlakken
-
-    def __post_init__(self):
-        self.cont = False
-        self.polder = self.polder_path._read_array(window=self.window)
-
-        self.masks = {}
-
-        if not np.all(self.polder==self.polder_path.nodata):
-            self.cont = True #Continue the calculation          
-            self.dem = self.dem_path._read_array(window=self.window)
-            self.watervlakken = self.watervlakken_path._read_array(window=self.window)
-
-            self.masks["dem"] = self.dem==self.dem_path.nodata
-            self.masks["polder"] = self.polder==self.polder_path.nodata
-
-    @property
-    def all_masks(self):
-        """Combine masks"""
-        return np.any([self.masks[i] for i in self.masks],0)
-
-
-# %%
-# def t():
-if True:
-    folder.dst.tmp.polder.min_block_size = 2048
-    blocks_df = folder.dst.tmp.polder.generate_blocks()
-
-    for idx, block_row in blocks_df.iterrows():
-        block = Blocks(window=block_row['window_readarray'])
-
-        if block.cont:
-            pass
-
-# %%
-from dataclasses import field
-# class BaseDataclass:
-#     """see https://stackoverflow.com/questions/55099243/python3-dataclass-with-kwargsasterisk"""
-#     rest: dict = None#field(default_factory=dict)
-
-#     @classmethod
-#     def from_kwargs(cls, **kwargs: dict):
-#         #TODO python 3.10 use cls.__match_args__ instead of __dataclass_fields__
-#         init_kw = {k: kwargs.pop(k) for k in dict(kwargs) if k in cls.__dataclass_fields__}
-#         return cls(**init_kw, rest=kwargs)
-    
-
-class BlockArrays():
-    def __init__(self, **kwargs):
-        self.__dict__.update(kwargs)
-
-
-b=BlockArrays(hi="hafdsi")
-b.hi
-
-# %%
-
-
-
-class BlockArrays():
-    """Empty class that can take arguments"""
-    def __init__(self, **kwargs):
-        self.__dict__.update(kwargs)
-
-
-@dataclass
-class Blocks:
-    window: list
-    raster_paths_dict: dict
-    nodata_keys: list = None
-    mask_keys: list = None
-
-    """
-    general function to load blocks of selected files.
-    
-    input parameters
-    window (list): [xmin, ymin, xmax, ymax]; same as row['windows_readarray']
-    raster_paths_dict (dict): {key:hrt.Raster}, path items should be of type
-        hrt.Raster.
-    nodata_keys (list): the keys in raster_paths to check for all nodata values
-        wont load other rasters if all values are nodata.
-    mask_keys (list): list of keys to create a nodata mask for
-    """
-    #TODO check if raster exists otherwise break.. is extra overhead though, maybe check
-    #during loop.
-    def __post_init__(self):
-        self.cont = True
-        self.blocks = {}
-        self.masks = {}
-
-        for key in self.nodata_keys:
-            self.blocks[key] = self.read_array_window(key)
-            self.masks[key] = self.blocks[key]==self.raster_paths_dict[key].nodata
-
-            if np.all(self.masks[key]):
-                """if all values in masks are nodata then we can break loading"""
-                self.cont = False
-                break
-        
-        #Load other rasters
-        if self.cont:
-            for key in self.raster_paths_dict:
-                if key not in self.blocks.keys():
-                    self.blocks[key] = self.read_array_window(key)
-                if (key in self.mask_keys) and (key not in self.masks.keys()):
-                    self.masks[key] = self.blocks[key]==self.raster_paths_dict[key].nodata
-
-
-    def read_array_window(self, key):
-        return self.raster_paths_dict[key]._read_array(window=self.window)
-
-
-    @property
-    def masks_all(self):
-        """Combine nodata masks"""
-        return np.any([self.masks[i] for i in self.masks],0)
-
-
-
-
-
 # if True:
-def t():
-    folder.dst.tmp.polder.min_block_size = 2048
+def create_dem_raster():
+
+    folder.dst.tmp.polder.min_block_size = 4096
     blocks_df = folder.dst.tmp.polder.generate_blocks()
 
-    for idx, block_row in blocks_df.iterrows():
-        block = Blocks(window=block_row['window_readarray'],
-                       raster_paths_dict={
-                                "dem" : folder.dst.tmp.dem,
-                                "polder" : folder.dst.tmp.polder,
-                                "watervlakken" : folder.dst.tmp.watervlakken,},
-                       nodata_keys=["polder"],
-                       mask_keys=["polder", "dem"],
-                       )
+    raster_out = folder.dst.dem
 
-        if block.cont:
-            pass
+    raster_out.create(metadata=folder.dst.tmp.polder.metadata,
+                        nodata=nodata)
+    
+    try:
+        
+        gdal_src = raster_out.open_gdal_source_write()
+        band_out = gdal_src.GetRasterBand(1)
+        for idx, block_row in blocks_df.iterrows():
+            window = block_row['window_readarray']
+            block = hrt.RasterBlocks(window=window,
+                        raster_paths_dict={
+                                    "dem" : folder.dst.tmp.dem,
+                                    "polder" : folder.dst.tmp.polder,
+                                    "watervlakken" : folder.dst.tmp.watervlakken,},
+                        nodata_keys=["polder"],
+                        mask_keys=["polder", "dem"],
+                        )
+
+            if block.cont:
+                block_out = block.blocks['dem']
+
+                #Watervlakken ophogen naar +10mNAP
+                block_out[block.blocks['watervlakken']==1] = 10
+
+                block_out[block.masks_all] = nodata
+
+                #Wegschrijven block
+                raster_out.write_array(array=block_out, 
+                                       window=window, 
+                                       band=band_out)
+
+
+        # band_out.FlushCache()  # close file after writing
+        band_out = None
+    except Exception as e:
+        band_out = None
+        raster_out.unlink()
+        raise e
+
+
+def create_gxg():
 
 
 
+def create_dem_rasterv2():
+
+    folder.dst.tmp.polder.min_block_size = 4096
+    blocks_df = folder.dst.tmp.polder.generate_blocks()
+
+    raster_out = folder.dst.dem
+
+    raster_out.create(metadata=folder.dst.tmp.polder.metadata,
+                        nodata=nodata)
+    
+    try:
+        raster_paths_dict={
+                                    "dem" : folder.dst.tmp.dem,
+                                    "polder" : folder.dst.tmp.polder,
+                                    "watervlakken" : folder.dst.tmp.watervlakken,}
 
 
+        gdal_src = raster_out.open_gdal_source_write()
+        band_out = gdal_src.GetRasterBand(1)
+        for idx, block_row in blocks_df.iterrows():
+            window = block_row['window_readarray']
+            block = hrt.RasterBlocks(window=window,
+                        raster_paths_dict={
+                                    "dem" : folder.dst.tmp.dem,
+                                    "polder" : folder.dst.tmp.polder,
+                                    "watervlakken" : folder.dst.tmp.watervlakken,},
+                        nodata_keys=["polder"],
+                        mask_keys=["polder", "dem"],
+                        )
 
+            if block.cont:
+                block_out = block.blocks['dem']
+
+                #Watervlakken ophogen naar +10mNAP
+                block_out[block.blocks['watervlakken']==1] = 10
+
+                block_out[block.masks_all] = nodata
+
+                #Wegschrijven block
+                raster_out.write_array(array=block_out, 
+                                       window=window, 
+                                       band=band_out)
+
+
+        # band_out.FlushCache()  # close file after writing
+        band_out = None
+    except Exception as e:
+        band_out = None
+        raster_out.unlink()
+        raise e
 
 # %%
-%timeit -n1 -r1 t()
+import importlib
+import hhnk_research_tools.raster_functions as raster_functions
+importlib.reload(raster_functions)
+def run_dem_window(block):
+    block_out = block.blocks['dem']
+
+    #Watervlakken ophogen naar +10mNAP
+    block_out[block.blocks['watervlakken']==1] = 10
+
+    block_out[block.masks_all] = nodata
+    return block_out
+
+dem_calc = raster_functions.RasterCalculatorV2(
+    raster_out=folder.dst.dem,
+    raster_paths_dict={
+        "dem" : folder.dst.tmp.dem,
+        "polder" : folder.dst.tmp.polder,
+        "watervlakken" : folder.dst.tmp.watervlakken,},
+    nodata_keys=["polder"],
+    mask_keys=["polder", "dem"],
+    metadata_key="polder",
+    custom_run_window_function=run_dem_window,
+    output_nodata=nodata,
+    min_block_size=4096,
+    verbose=True,
+)
+
+folder.dst.dem.unlink()
+
+dem_calc.run(overwrite=True)
 # %%
+%timeit -r1 -n1 t()
+# %%
+%load_ext line_profiler
+# %%
+# %lprun -f hrt.Raster.write_array t()
+
+# %%
+%lprun -f t t()
+
+# %%
+import cProfile
+import cProfile, pstats
+profiler = cProfile.Profile()
+profiler.enable()
+t()
+profiler.disable()
+stats = pstats.Stats(profiler)
+# stats.strip_dirs()
+stats.sort_stats('tottime')
+stats.print_stats()
 #vrt van dem met juiste extent/resolutie
 #watergangen rasterizen
 #polder polygon rasterizen voor nodata doordruk
