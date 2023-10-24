@@ -58,7 +58,14 @@ class TestFolder:
     #         results_path / "results_3di.nc"
     #     )
 
+    def test_getatrr_batch_fd(self):
+        # %%
+        batch_fd = FOLDER_NEW.threedi_results.batch["test"]
 
+        #FIXME de names zitten niet onder de downloads zonder deze te initializen
+        #Dit kan wat onverwacht effecten hebben...
+        batch_fd.downloads.names
+        assert hasattr(batch_fd.downloads, "blok_ghg_T1000")
 
 
 # %%

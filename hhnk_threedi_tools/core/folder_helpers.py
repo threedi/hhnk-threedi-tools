@@ -30,7 +30,7 @@ class ClimateResult(hrt.Folder):
     @property
     def output(self):
         if self._output is None:
-            self._output = self.ClimateResultDownloads(self.base, create=self.create_bool)
+            self._output = self.ClimateResultOutput(self.base, create=self.create_bool)
         return self._output
     
 

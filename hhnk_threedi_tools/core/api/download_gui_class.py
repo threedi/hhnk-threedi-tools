@@ -889,6 +889,7 @@ class DownloadWidgetsInteraction(DownloadWidgets):
 
 
                     #Download netcdf of all results.
+                    self.vars.batch_fd.downloads.names #FIXME downloads.names need to be initialized first.
                     output_folder = getattr(self.vars.batch_fd.downloads, row["dl_name"]).netcdf
 
                     # Create destination folder
@@ -1516,10 +1517,9 @@ class DownloadGui:
 
 
 if __name__ == "__main__":
-        data = {'polder_folder': r'E:\02.modellen\model_test_v2',
+        data = {'polder_folder': r'E:\02.modellen\callantsoog',
               'api_keys_path': fr"{os.getenv('APPDATA')}\3Di\QGIS3\profiles\default\python\plugins\hhnk_threedi_plugin\api_key.txt"}
         self = DownloadGui(data=data); 
         
         self.w.search.sim_name_widget.value = "model_test"
         display(self.tab)
-# %%
