@@ -59,9 +59,9 @@ class TestFolder:
     #     )
 
     def test_getatrr_batch_fd(self):
-        # %%
         batch_fd = FOLDER_NEW.threedi_results.batch["test"]
 
+        assert not hasattr(batch_fd.downloads, "blok_ghg_T1000")
         #FIXME de names zitten niet onder de downloads zonder deze te initializen
         #Dit kan wat onverwacht effecten hebben...
         batch_fd.downloads.names

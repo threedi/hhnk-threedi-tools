@@ -117,12 +117,22 @@ class QgisThemeSettings:
         self.add_layers(layer_ids=layer_ids)
 
 
+    @property
+    def id(self):
+        return self.name
+
+
     def add_layer(self, layer):
+        """Add single layer to theme"""
         if layer not in self.layer_ids:
             self.layer_ids.append(layer)
 
 
-    def add_layers(self, layer_ids):
+    def add_layers(self, layer_ids:list):
+        """Add multiple layers to theme
+
+        layer_ids (list): list of layer ids.
+        """
         for layer in layer_ids:
             self.add_layer(layer=layer)
             
