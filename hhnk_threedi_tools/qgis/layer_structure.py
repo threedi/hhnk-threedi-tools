@@ -29,6 +29,7 @@ class QgisLayerSettings:
     wms_source: str = None
     qml_lst: list = field(default_factory=list)
     group_lst: list = field(default_factory=list)
+    subject: str = None
     load_layer: bool = True
     # theme_lst: list = None
 
@@ -102,7 +103,6 @@ class QgisLayerSettings:
     variables: .{" .".join(hrt.get_variables(self, stringify=False))}"""
 
 
-@dataclass
 class QgisThemeSettings:
     """QgisTheme has a name and layers.
     name (str): name of theme
@@ -143,15 +143,16 @@ class QgisThemeSettings:
 
 
 class QgisGroupSettings:
-    def __init__(self, lvl, name="qgis_main", parent_group_lst=[], load_group=True):
+    def __init__(self, lvl, name="qgis_main", parent_group_lst=[], load_group=True, subject=None):
         self.name = name
         self.lvl = lvl
         self.parent_group_lst = parent_group_lst
         self.load_group = load_group
+        self.subject = subject
+
         self.children={}
 
-
-    def add_child(self, name, lvl, load_group):
+    def add_child(self, name, lvl, load_group, subject):
         if (name not in self.children.keys()) and (name is not None):
             if self.name!="qgis_main":
                 parent_group_lst = self.parent_group_lst + [self.name]
@@ -162,7 +163,8 @@ class QgisGroupSettings:
             self.children[name] = self.__class__(name=name, 
                                                  lvl=lvl,
                                                  parent_group_lst=parent_group_lst,
-                                                 load_group=load_group)
+                                                 load_group=load_group,
+                                                 subject=subject)
         return self.children[name]
 
 
@@ -224,6 +226,7 @@ class QgisAllGroupsSettings:
         df_group = pd.DataFrame(layers.apply(lambda x: x.group_lst).values.tolist()).add_prefix('lvl_')
         df_group["id"] = layers.apply(lambda x: x.id.split("____")[-1]).reset_index(drop=True)
         df_group["load_group"] = layers.apply(lambda x: x.load_layer).reset_index(drop=True)
+        df_group["subject"] = layers.apply(lambda x: x.subject).reset_index(drop=True)
         df_group = df_group.drop_duplicates(["id"]).set_index("id", drop=True)
         return df_group
     
@@ -239,9 +242,15 @@ class QgisAllGroupsSettings:
                     lvl = int(col.split("lvl_")[-1])+1
                     if name is not None:
                         if lvl == 1:
-                            child = groups.add_child(name=name, lvl=lvl, load_group=row['load_group'])
+                            child = groups.add_child(name=name, 
+                                                     lvl=lvl, 
+                                                     load_group=row['load_group'],
+                                                     subject=row["subject"])
                         else:
-                            child = child.add_child(name=name, lvl=lvl, load_group=row['load_group'])
+                            child = child.add_child(name=name, 
+                                                    lvl=lvl, 
+                                                    load_group=row['load_group'],
+                                                    subject=row["subject"])
             else:
                 continue
             break
@@ -389,13 +398,14 @@ class LayerStructure:
                                qmlnames=row.qmlnames, 
                                HHNK_THREEDI_PLUGIN_DIR=HHNK_THREEDI_PLUGIN_DIR)
 
-        l = QgisLayerSettings(name=row.qgis_name,
-                              file=file,
-                              filters=row.filters,
-                              wms_source=row.wms_source,
+        l = QgisLayerSettings(name = row.qgis_name,
+                              file = file,
+                              filters = row.filters,
+                              wms_source = row.wms_source,
                               qml_lst = qml_lst,
-                              group_lst= group_lst,
-                              load_layer=row.subject in self.subjects
+                              group_lst = group_lst,
+                              load_layer = row.subject in self.subjects,
+                              subject = row.subject,
         )
         return l
     
