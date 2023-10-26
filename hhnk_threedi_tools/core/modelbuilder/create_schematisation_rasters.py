@@ -102,117 +102,43 @@ if not folder.dst.tmp.watervlakken.exists():
     )
 
 
-output_file = folder.dst.tmp.dem
-output_file.build_vrt(overwrite=False, 
-                bounds=eval(folder.dst.tmp.polder.metadata.bbox), 
-                input_files=folder.src.dem, 
-                resolution=0.5,
-)
+
+for key in ["dem", "glg", "ggg", "ghg"]:
+    output_file = getattr(folder.dst.tmp, key)
+    output_file.build_vrt(overwrite=False, 
+                    bounds=eval(folder.dst.tmp.polder.metadata.bbox), 
+                    input_files=getattr(folder.src, key), 
+                    resolution=0.5,
+    )
 
 
-# %%
-# if True:
-def create_dem_raster():
-
-    folder.dst.tmp.polder.min_block_size = 4096
-    blocks_df = folder.dst.tmp.polder.generate_blocks()
-
-    raster_out = folder.dst.dem
-
-    raster_out.create(metadata=folder.dst.tmp.polder.metadata,
-                        nodata=nodata)
-    
-    try:
-        
-        gdal_src = raster_out.open_gdal_source_write()
-        band_out = gdal_src.GetRasterBand(1)
-        for idx, block_row in blocks_df.iterrows():
-            window = block_row['window_readarray']
-            block = hrt.RasterBlocks(window=window,
-                        raster_paths_dict={
-                                    "dem" : folder.dst.tmp.dem,
-                                    "polder" : folder.dst.tmp.polder,
-                                    "watervlakken" : folder.dst.tmp.watervlakken,},
-                        nodata_keys=["polder"],
-                        mask_keys=["polder", "dem"],
-                        )
-
-            if block.cont:
-                block_out = block.blocks['dem']
-
-                #Watervlakken ophogen naar +10mNAP
-                block_out[block.blocks['watervlakken']==1] = 10
-
-                block_out[block.masks_all] = nodata
-
-                #Wegschrijven block
-                raster_out.write_array(array=block_out, 
-                                       window=window, 
-                                       band=band_out)
+# %% Create output rasters
 
 
-        # band_out.FlushCache()  # close file after writing
-        band_out = None
-    except Exception as e:
-        band_out = None
-        raster_out.unlink()
-        raise e
+def run_gxg_window(block):
+    block_out = block.blocks['gxg']
+
+    #Nodatamasks toepassen
+    block_out[block.masks_all] = nodata
+    return block_out
 
 
-def create_gxg():
-
-
-
-def create_dem_rasterv2():
-
-    folder.dst.tmp.polder.min_block_size = 4096
-    blocks_df = folder.dst.tmp.polder.generate_blocks()
-
-    raster_out = folder.dst.dem
-
-    raster_out.create(metadata=folder.dst.tmp.polder.metadata,
-                        nodata=nodata)
-    
-    try:
+for gxg in ["glg", "ggg", "ghg"]:
+    gxg_calc = raster_functions.RasterCalculatorV2(
+        raster_out=getattr(folder.dst, gxg),
         raster_paths_dict={
-                                    "dem" : folder.dst.tmp.dem,
-                                    "polder" : folder.dst.tmp.polder,
-                                    "watervlakken" : folder.dst.tmp.watervlakken,}
+            "gxg" : getattr(folder.dst.tmp, gxg),
+            "polder" : folder.dst.tmp.polder,},
+        nodata_keys=["polder"],
+        mask_keys=["polder", "gxg"],
+        metadata_key="polder",
+        custom_run_window_function=run_gxg_window,
+        output_nodata=nodata,
+        min_block_size=4096,
+        verbose=True,
+    )
 
-
-        gdal_src = raster_out.open_gdal_source_write()
-        band_out = gdal_src.GetRasterBand(1)
-        for idx, block_row in blocks_df.iterrows():
-            window = block_row['window_readarray']
-            block = hrt.RasterBlocks(window=window,
-                        raster_paths_dict={
-                                    "dem" : folder.dst.tmp.dem,
-                                    "polder" : folder.dst.tmp.polder,
-                                    "watervlakken" : folder.dst.tmp.watervlakken,},
-                        nodata_keys=["polder"],
-                        mask_keys=["polder", "dem"],
-                        )
-
-            if block.cont:
-                block_out = block.blocks['dem']
-
-                #Watervlakken ophogen naar +10mNAP
-                block_out[block.blocks['watervlakken']==1] = 10
-
-                block_out[block.masks_all] = nodata
-
-                #Wegschrijven block
-                raster_out.write_array(array=block_out, 
-                                       window=window, 
-                                       band=band_out)
-
-
-        # band_out.FlushCache()  # close file after writing
-        band_out = None
-    except Exception as e:
-        band_out = None
-        raster_out.unlink()
-        raise e
+    gxg_calc.run(overwrite=False)
 
 # %%
 import importlib
@@ -241,8 +167,6 @@ dem_calc = raster_functions.RasterCalculatorV2(
     min_block_size=4096,
     verbose=True,
 )
-
-folder.dst.dem.unlink()
 
 dem_calc.run(overwrite=True)
 # %%
