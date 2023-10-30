@@ -28,6 +28,12 @@ from hhnk_threedi_tools.utils.notebooks.run import read_notebook_json
 from hhnk_threedi_tools.utils.notebooks.run import open_server
 from hhnk_threedi_tools.utils.notebooks.run import copy_notebooks
 
+#
+from hhnk_threedi_tools.qgis.layer_structure import (LayerStructure,
+                                QgisLayerSettings,
+                                SelectedRevisions,
+                                QgisGroupSettings,
+                                QgisAllGroupsSettings)
 
 import hhnk_threedi_tools.qgis
 
@@ -37,6 +43,5 @@ from hhnk_threedi_tools.core.schematisation.model_backup import (
     select_values_to_update_from_backup,
     update_bank_levels_last_calc,
 )
-
 
 __version__ = '2023.4'
