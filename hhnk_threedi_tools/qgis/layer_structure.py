@@ -13,9 +13,6 @@ import numpy as np
 import pandas as pd
 from typing import Union
 from pathlib import Path
-HHNK_THREEDI_PLUGIN_DIR = (
-    r"C:\Users\wvangerwen\AppData\Roaming\3Di\QGIS3\profiles\default\python\plugins\hhnk_threedi_plugin"
-)
 
 
 @dataclass
@@ -278,7 +275,6 @@ class LayerStructure:
         subjects=None,
         revisions: SelectedRevisions = SelectedRevisions(),
         folder=None,
-        plugin_dir=HHNK_THREEDI_PLUGIN_DIR,
     ):
         # FIXME meeste input naar kwargs. Deze zijn specifiek nodig voor de bijhoordende xls.
         # init variables
@@ -287,7 +283,6 @@ class LayerStructure:
         self.revisions = revisions
 
         self.folder = folder
-        self.plugin_dir = plugin_dir
 
     def load_df(self, subjects):
         """load csv as dataframe and filter the subjects."""
@@ -347,7 +342,7 @@ class LayerStructure:
             else:
                 return f"{name}.{suffix}"
 
-        def eval_qml(qmldir, qmlnames, HHNK_THREEDI_PLUGIN_DIR):
+        def eval_qml(qmldir, qmlnames):
             """create list of qmlpaths with row.qmldir and row.qmlnames"""
             qmldir = eval(qmldir)
             if qmlnames.startswith("["):
@@ -363,7 +358,6 @@ class LayerStructure:
         # required for eval
         folder = self.folder
         revisions = self.revisions
-        HHNK_THREEDI_PLUGIN_DIR = self.plugin_dir
 
         # Voor wms staat de volledige link die nodig is in row.wms_source.
         file = None
@@ -378,9 +372,7 @@ class LayerStructure:
 
         qml_lst = []
         if row.qmlnames:
-            qml_lst = eval_qml(
-                qmldir=row.qmldir, qmlnames=row.qmlnames, HHNK_THREEDI_PLUGIN_DIR=HHNK_THREEDI_PLUGIN_DIR
-            )
+            qml_lst = eval_qml(qmldir=row.qmldir, qmlnames=row.qmlnames)
 
         l = QgisLayerSettings(
             name=row.qgis_name,
