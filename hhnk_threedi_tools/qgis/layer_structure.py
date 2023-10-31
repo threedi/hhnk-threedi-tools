@@ -19,13 +19,17 @@ HHNK_THREEDI_PLUGIN_DIR = (
 
 @dataclass
 class QgisLayerSettings:
-    """Base settings for a qgis layer.
+    """
+    Base settings for a qgis layer.
     provide either:
         - file with optionally filters
         - wms_source -> wms source url.
 
         qml_lst (list):
-            list of hrt.File objects"""
+            list of hrt.File objects
+            
+    TODO: match columns in csv-file with properties in data-class        
+    """
 
     name: str
     file: str = None
@@ -261,6 +265,10 @@ class LayerStructure:
     .themes (pd.Series): themes as QgisThemeSettings
 
     a layer has groups and possibly themes. All are recored in these series.
+
+    TODO:
+        - convert to dataclass
+        - consider integrating self.run() in self.__post_init__(), possibly only when debug=False
     """
 
     def __init__(
