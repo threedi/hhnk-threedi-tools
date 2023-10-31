@@ -253,7 +253,7 @@ class StartCalculationWidgets:
                     value="3600",
                     layout=item_layout(grid_area="rain_duration_widget")
                 )
-            self.rain_intensity_label = widgets.Label("Rain intensity [mm/hour]",
+            self.rain_intensity_label = widgets.Label("Rain intensity [mm/h]",
                     layout=item_layout(grid_area="rain_intensity_label")
                 )
             self.rain_intensity_widget = widgets.Text(
@@ -1841,7 +1841,6 @@ class StartCalculationGui:
             layout=widgets.Layout(
                 width="100%",
                 grid_row_gap="200px 200px 200px 200px",
-                #             grid_template_rows='auto auto auto 50px auto 40px auto 20px 40px',
                 grid_template_rows="auto auto auto",
                 grid_template_columns="1% 10% 10% 10% 10% 2% 19% 19% 19%",
                 grid_template_areas="""
