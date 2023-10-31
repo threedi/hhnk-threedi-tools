@@ -11,7 +11,8 @@ from dataclasses import dataclass, field
 import hhnk_research_tools as hrt
 import numpy as np
 import pandas as pd
-
+from typing import Union
+from pathlib import Path
 HHNK_THREEDI_PLUGIN_DIR = (
     r"C:\Users\wvangerwen\AppData\Roaming\3Di\QGIS3\profiles\default\python\plugins\hhnk_threedi_plugin"
 )
@@ -27,12 +28,12 @@ class QgisLayerSettings:
 
         qml_lst (list):
             list of hrt.File objects
-            
-    TODO: match columns in csv-file with properties in data-class        
+
+    TODO: match columns in csv-file with properties in data-class
     """
 
     name: str
-    file: str = None
+    file: Union[str, Path, hrt.File, None] = None
     filters: str = None
     wms_source: str = None
     qml_lst: list = field(default_factory=list)
