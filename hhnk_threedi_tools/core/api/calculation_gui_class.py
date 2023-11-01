@@ -821,7 +821,7 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
             self._activate_button_color(self.rain.custom_rain_button)
             self.output.subfolder_box.value =self.output.subfolder_box.options[0]
             self._update_calc_settings_buttons(structure_control=True, laterals=True)
-            self.update_simulation_name_widget(model_type="")
+            self.update_simulation_name_widget(model_type="custom_rain")
 
 
         # Observe all calculation settings buttons
@@ -854,9 +854,6 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
             self.vars.output_folder = self.vars.folder.threedi_results.full_path(
                     f"{self.output.subfolder_box.value}{os.sep}{self.start.simulation_name_view_widget.value}"
                 )
-
-
-            self.vars.sqlite_path = self.sim.download_sqlite()
 
             #Creating will set sim.simulation_created to True.
             self.sim.create(output_folder=str(self.vars.output_folder),
@@ -1460,7 +1457,7 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
                         schema_name=schema_name,
                         rev=rev,
                         model_type=model_type,
-                        )
+                        ).strip() #strip to remove leading and trailing whitespace
         except:
             pass
 
