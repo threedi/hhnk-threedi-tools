@@ -16,23 +16,8 @@ class ClimateResult(hrt.Folder):
         super().__init__(base, create=create)
         self.create_bool = create
 
-        self._downloads = None
-        self._output = None
-
-
-    @property
-    def downloads(self):
-        if self._downloads is None:
-            self._downloads = self.ClimateResultDownloads(self.base, create=self.create_bool)
-        return self._downloads
-    
-
-    @property
-    def output(self):
-        if self._output is None:
-            self._output = self.ClimateResultOutput(self.base, create=self.create_bool)
-        return self._output
-    
+        self.downloads = self.ClimateResultDownloads(self.base, create=self.create_bool)
+        self.output = self.ClimateResultOutput(self.base, create=self.create_bool)    
 
     @property
     def structure(self):
@@ -49,13 +34,7 @@ class ClimateResult(hrt.Folder):
 
             self.create_bool = create
             # Files
-            self._names = None
-
-        @property
-        def names(self):
-            if self._names is None:
-                self._names = self.get_names()
-            return self._names
+            self.names = self.get_names()
 
         def get_names(self):
             names = []
