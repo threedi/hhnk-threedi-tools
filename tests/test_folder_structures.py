@@ -27,26 +27,28 @@ class TestFolder:
     def test_to_file_dict(self):
         """tests if a base path dictionary can be generated"""
         files_dict = FOLDER_NEW.to_file_dict()
-        assert files_dict["hdb_sturing_3di_layer"] == "Sturing_3Di"
         assert files_dict["0d1d_results_dir"] == str(PATH_NEW_FOLDER / "03_3di_results" / "0d1d_results")
 
 
     def test_create_revision(self):
         """tests if a new revision folder can be made"""
-        if FOLDER_NEW.threedi_results.zero_d_one_d["new"].exists:
-            shutil.rmtree(FOLDER_NEW.threedi_results.zero_d_one_d["new"].path)
+        if FOLDER_NEW.threedi_results.zero_d_one_d["new"].exists():
+            shutil.rmtree(FOLDER_NEW.threedi_results.zero_d_one_d["new"].base)
 
         FOLDER_NEW.threedi_results.zero_d_one_d["new"].create()
 
-        assert FOLDER_NEW.threedi_results.zero_d_one_d["new"].exists is True
+        assert FOLDER_NEW.threedi_results.zero_d_one_d["new"].exists() is True
 
         
     def test_find_dem(self):
-        dem_path = PATH_TEST_MODEL / r"02_schematisation/00_basis/rasters/dem_hoekje.tif"
+        dem = FOLDER_TEST.full_path(r"02_schematisation/00_basis/rasters/dem_hoekje.tif")
         assert Path(FOLDER_TEST.model.schema_base.rasters.dem.path) == Path(
-            dem_path
+            dem.path
         )
 
+
+    def test_find_threediresult(self):
+        assert FOLDER_TEST.threedi_results.zero_d_one_d[0].base == FOLDER_TEST.threedi_results.zero_d_one_d["BWN bwn_test #7 0d1d_test"].base
     # TODO .find() is weg.
     # def test_find_threedi_sources(self):
     #     results_path = TEST_DIRECTORY / r"model_test/03_3di_results/0d1d_results/BWN bwn_test #7 0d1d_test"
@@ -63,10 +65,10 @@ class TestFolder:
 if __name__ == "__main__":
     import inspect
     selftest = TestFolder()
-    self = selftest.folder
     #Run all testfunctions
     for i in dir(selftest):
         if i.startswith('test_') and hasattr(inspect.getattr_static(selftest,i), '__call__'):
             print(i)
             getattr(selftest, i)()    
 # %%
+#FOLDER_NEW.to_file_dict()

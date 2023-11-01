@@ -21,7 +21,10 @@ def stack_raster_arrays(raster_classes, window):
     return stacked_array
 
 
-def interpoleer_deel(int_frequentie, waterdieptes, frequenties, min_value=0):
+def interpoleer_deel(int_frequentie, waterdieptes, frequenties, output_nodata, min_value=0):
+    """
+    min_value=0 voor inundatiediepte
+    """
     # zet de frequenties die horen bij de waterdieptes in dezelfde 3d array als de waterdieptes
     fr = np.array([l * f for l, f in zip(np.ones(waterdieptes.shape), frequenties)])
 
@@ -74,12 +77,12 @@ def interpoleer_deel(int_frequentie, waterdieptes, frequenties, min_value=0):
     )
 
     # Vul randwaarden aan
-    int_waterdiepte[geen_waarde] = 0.0
+    int_waterdiepte[geen_waarde] = output_nodata
     int_waterdiepte[maximale_waarde] = waterdieptes.max(axis=0)[maximale_waarde]
 
     # Zet waterstanden op nul waarbij de interpolatiefrequentie groter is dat de maximale frequentie
     # waarbij inundatie optreedt
-    int_waterdiepte[wlev_nul] = 0.0
+    int_waterdiepte[wlev_nul] = output_nodata
 
     return int_waterdiepte
 
@@ -93,6 +96,7 @@ def interpoleer_raster_window(
     frequenties,
     extra_nodata_value,
     output_nodata,
+    min_value,
 ):
     """Interpolatie van rasters voor een berekening over meerdere cores"""
     # Bepaal window
@@ -105,7 +109,11 @@ def interpoleer_raster_window(
 
     # Bepaal geïnterpoleerde waterdiepte
     int_raster_array = interpoleer_deel(
-        int_frequentie, stacked_raster_array, frequenties
+        int_frequentie = int_frequentie, 
+        waterdieptes = stacked_raster_array, 
+        frequenties = frequenties,
+        output_nodata = output_nodata,
+        min_value = min_value,
     )
 
     # Zet de gemaskeerde pixels op de nodata waarde (-9999.00)
@@ -130,15 +138,14 @@ def main_interpolate_rasters(
     rasters,
     frequenties,
     output_nodata,
-    dem_path,
+    dem_raster,
+    min_value,
     extra_nodata_value=None,
 ):
     """Interpoleer 18 rasters samen met de frequentietabel tot 3 rasters met de T10, T100 en T1000 kans.
     Dit wordt gedaan voor de waterdiepterasters en de schaderasters"""
 
-    if not output_file.exists:
-        dem_raster = hrt.Raster(dem_path)
-
+    if not output_file.exists():
         # Inladen rasters als class
         raster_classes = [hrt.Raster(r) for r in rasters]
 
@@ -159,6 +166,7 @@ def main_interpolate_rasters(
                 frequenties=frequenties,
                 extra_nodata_value=extra_nodata_value,
                 output_nodata=output_nodata,
+                min_value = min_value,
             )
 
             array_out[
@@ -171,7 +179,7 @@ def main_interpolate_rasters(
             nodata=output_nodata,
             metadata=depth_raster.metadata,
         )
-        print(f"{output_file.path} created")
+        print(f"{output_file.base} created")
 
     else:
-        print(f"{output_file.path} already exists")
+        print(f"{output_file.base} already exists")

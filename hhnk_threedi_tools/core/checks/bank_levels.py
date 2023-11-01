@@ -13,13 +13,12 @@ import geopandas as gpd
 import pandas as pd
 import numpy as np
 import hhnk_research_tools as hrt
-from hhnk_research_tools.variables import GPKG_DRIVER
 from hhnk_research_tools.threedi.grid import Grid
 from hhnk_research_tools.threedi.geometry_functions import extract_boundary_from_polygon
 
 # Local imports
 from hhnk_threedi_tools.core.folders import Folders
-from hhnk_threedi_tools.variables.default_variables import DEF_TRGT_CRS, DEF_SRC_CRS
+from hhnk_threedi_tools.variables.default_variables import DEF_TRGT_CRS
 from hhnk_threedi_tools.variables.datachecker_variables import (
     peil_id_col,
     COL_STREEFPEIL_BWN,
@@ -52,14 +51,9 @@ from hhnk_threedi_tools.variables.bank_levels import (
     already_manhole_col,
     unknown_val,
     node_in_wrong_fixed_area,
-    added_calc_val,
     node_geometry_col,
     levee_height_col,
-    init_wlevel_col,
     one_d_two_d_crosses_fixed,
-    levee_height_val,
-    ref_plus_10_val,
-    init_plus_10_val,
     new_bank_level_col,
     new_bank_level_source_col,
     bank_level_diff_col,
@@ -76,9 +70,7 @@ from hhnk_threedi_tools.variables.database_variables import (
     bottom_lvl_col,
     surface_lvl_col,
     zoom_cat_col,
-    initial_waterlevel_col,
-    reference_level_col,
-    bank_level_col,
+    initial_waterlevel_col
 )
 
 # Globals
@@ -129,15 +121,15 @@ class BankLevelTest:
         """
         self.model_path = model_path
         if model_path == None:
-            self.model_path = self.fenv.model.schema_base.database.path
+            self.model_path = self.fenv.model.schema_base.database.base
 
         self.datachecker_path = datachecker_path
         if self.datachecker_path == None:
-            self.datachecker_path = self.fenv.source_data.datachecker.path
+            self.datachecker_path = self.fenv.source_data.datachecker.base
 
         self.grid = Grid(
             sqlite_path=self.fenv.model.schema_base.sqlite_paths[0],
-            dem_path=self.fenv.model.schema_base.rasters.dem.path,
+            dem_path=self.fenv.model.schema_base.rasters.dem.base,
         )
 
         self.imports = import_information(
@@ -253,13 +245,13 @@ class BankLevelTest:
         )
 
         hrt.gdf_write_to_csv(
-            self.results["new_manholes_df"], FLOW_1D2D_MANHOLES_NAME, csv_path
+            gdf=self.results["new_manholes_df"], filename=FLOW_1D2D_MANHOLES_NAME, path=csv_path
         )
 
     def write_output(self, name):
         """writes to output folder"""
-        new_folder = self.fenv.output.bank_levels.pl / name
-        new_folder.mkdir(parents=True, exist_ok=True)
+        new_folder = self.fenv.output.bank_levels.full_path(name)
+        new_folder.path.mkdir(parents=True, exist_ok=True)
         self.write(str(new_folder), str(new_folder))
 
 

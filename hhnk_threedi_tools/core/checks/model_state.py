@@ -73,7 +73,7 @@ from hhnk_threedi_tools.variables.database_aliases import (
 from hhnk_threedi_tools.variables.definitions import proposed_value_col
 from hhnk_threedi_tools.variables.bank_levels import new_bank_level_col
 
-from hhnk_threedi_tools.core.checks.model_backup import (
+from hhnk_threedi_tools.core.schematisation.model_backup import (
     select_values_to_update_from_backup,
 )
 

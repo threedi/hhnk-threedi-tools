@@ -33,8 +33,8 @@ class ThreediGrid:
         self.panden_path = panden_path     
         self.panden_layer = panden_layer   
 
-        self.grid_path = self.threedi_result.pl/grid_raw_filename
-        self.grid_corr_path = self.threedi_result.pl/grid_corr_filename
+        self.grid_path = self.threedi_result.full_path(grid_raw_filename)
+        self.grid_corr_path = self.threedi_result.full_path(grid_corr_filename)
 
 
     @property
@@ -66,7 +66,7 @@ class ThreediGrid:
         gdf = None
         if self.panden_path is None:
             if self.folder is not None:
-                if self.folder.source_data.panden.exists:
+                if self.folder.source_data.panden.exists():
                     gdf = self.folder.source_data.panden.load(layer=self.panden_layer)
             
         elif self.panden_path is not None:
@@ -87,135 +87,128 @@ class ThreediGrid:
         create gpkg of grid with maximum wlvl
         """
 
-        if self.grid_path.exists():
-            if overwrite is False:
-                return
+        create = hrt.check_create_new_file(output_file=self.grid_path,
+                                  overwrite=overwrite)
+        if create:
+            #Check required files
+            # if not self.folder.source_data.damo.exists():
+            #     raise Exception(f"{self.folder.source_data.damo} - doesnt exist")
+            # if not self.folder.source_data.panden.exists():
+            #     raise Exception(f"{self.folder.source_data.panden} - doesnt exist")
+
+            grid_gdf = gpd.GeoDataFrame()
+
+            s1_all = self.grid.nodes.subset("2D_open_water").timeseries(indexes=slice(0, -1)).s1
+            vol_all = self.grid.nodes.subset("2D_open_water").timeseries(indexes=slice(0, -1)).vol
+
+            #Find index of max wlvl value in timeseries
+            s1_max_ind = s1_all.argmax(axis=0)
+
+            # * inputs every element from row as a new function argument.
+            grid_gdf["geometry"] = [box(*row) for row in self.grid.nodes.subset("2D_ALL").cell_coords.T]
+            grid_gdf.crs = "EPSG:28992"
+            # nodes_2d["geometry"] = [Point(*row) for row in gr.nodes.subset("2D_ALL").coordinates.T] #centerpoints.
+
+
+            grid_gdf["id"] = self.grid.cells.subset("2D_open_water").id
+
+            #Retrieve values when wlvl is max
+            grid_gdf["wlvl_max_orig"] = np.round([row[s1_max_ind[enum]] for enum, row in enumerate(s1_all.T)], 5)
+            grid_gdf["vol_netcdf_m3"] = np.round([row[s1_max_ind[enum]] for enum, row in enumerate(vol_all.T)], 5)
+
+
+            #Percentage of dem in a calculation cell
+            #so we can make a selection of cells on model edge that need to be ignored
+            grid_gdf["dem_area"] = self.grid.cells.subset("2D_open_water").sumax
+            #Percentage dem in calculation cell
+            grid_gdf["dem_perc"] = grid_gdf["dem_area"]  / grid_gdf.area *100 
+
+
+            #Check water surface area in a cell.
+            water_gdf = self._load_water_gdf()
+            if water_gdf is not None:
+                water_gdf["water"] = 1
+                water_cell = gpd.overlay(grid_gdf[["id", "geometry"]], water_gdf[["water", "geometry"]], how="union")
+                #Select only areas with the merged feature.
+                water_cell = water_cell[water_cell["water"]==1]
+
+                #Calculate sum of area per cell
+                water_cell["water_area"] = water_cell.area
+                water_cell_area = water_cell.groupby("id").agg("sum")
+
+                grid_gdf = pd.merge(grid_gdf, water_cell_area["water_area"], left_on="id", right_on="id", how="left")
+                grid_gdf["water_perc"] = grid_gdf["water_area"]  / grid_gdf.area *100
             else:
-                self.grid_path.unlink()
+                grid_gdf["water_perc"] = None
 
 
-        #Check required files
-        # if not self.folder.source_data.damo.exists:
-        #     raise Exception(f"{self.folder.source_data.damo} - doesnt exist")
-        # if not self.folder.source_data.panden.exists:
-        #     raise Exception(f"{self.folder.source_data.panden} - doesnt exist")
+            #Check building area in a cell
+            pand_gdf = self._load_pand_gdf()
+            if pand_gdf is not None:
+                pand_gdf["pand"] = 1
+                pand_cell = gpd.overlay(grid_gdf[["id", "geometry"]], pand_gdf[["pand", "geometry"]], how="union")
+                #Select only areas with the merged feature.
+                pand_cell = pand_cell[pand_cell["pand"]==1]
 
-        grid_gdf = gpd.GeoDataFrame()
+                #Calculate sum of area per cell
+                pand_cell["pand_area"] = pand_cell.area
+                pand_cell_area = pand_cell.groupby("id").agg("sum")
 
-        s1_all = self.grid.nodes.subset("2D_open_water").timeseries(indexes=slice(0, -1)).s1
-        vol_all = self.grid.nodes.subset("2D_open_water").timeseries(indexes=slice(0, -1)).vol
-
-        #Find index of max wlvl value in timeseries
-        s1_max_ind = s1_all.argmax(axis=0)
-
-        # * inputs every element from row as a new function argument.
-        grid_gdf["geometry"] = [box(*row) for row in self.grid.nodes.subset("2D_ALL").cell_coords.T]
-        grid_gdf.crs = "EPSG:28992"
-        # nodes_2d["geometry"] = [Point(*row) for row in gr.nodes.subset("2D_ALL").coordinates.T] #centerpoints.
+                grid_gdf = pd.merge(grid_gdf, pand_cell_area["pand_area"], left_on="id", right_on="id", how="left")
+                grid_gdf["pand_perc"] = grid_gdf["pand_area"]  / grid_gdf.area *100
+            else:
+                grid_gdf["pand_perc"] = None
 
 
-        grid_gdf["id"] = self.grid.cells.subset("2D_open_water").id
-
-        #Retrieve values when wlvl is max
-        grid_gdf["wlvl_max_orig"] = np.round([row[s1_max_ind[enum]] for enum, row in enumerate(s1_all.T)], 5)
-        grid_gdf["vol_netcdf_m3"] = np.round([row[s1_max_ind[enum]] for enum, row in enumerate(vol_all.T)], 5)
-
-
-        #Percentage of dem in a calculation cell
-        #so we can make a selection of cells on model edge that need to be ignored
-        grid_gdf["dem_area"] = self.grid.cells.subset("2D_open_water").sumax
-        #Percentage dem in calculation cell
-        grid_gdf["dem_perc"] = grid_gdf["dem_area"]  / grid_gdf.area *100 
+            #Select cells that need replacing of wlvl
+            grid_gdf["replace_dem"] = grid_gdf["dem_perc"] < replace_dem_below_perc
+            grid_gdf["replace_water"] = grid_gdf["water_perc"] > replace_water_above_perc
+            grid_gdf["replace_pand"] = grid_gdf["pand_perc"] > replace_pand_above_perc
 
 
-        #Check water surface area in a cell.
-        water_gdf = self._load_water_gdf()
-        if water_gdf is not None:
-            water_gdf["water"] = 1
-            water_cell = gpd.overlay(grid_gdf[["id", "geometry"]], water_gdf[["water", "geometry"]], how="union")
-            #Select only areas with the merged feature.
-            water_cell = water_cell[water_cell["water"]==1]
-
-            #Calculate sum of area per cell
-            water_cell["water_area"] = water_cell.area
-            water_cell_area = water_cell.groupby("id").agg("sum")
-
-            grid_gdf = pd.merge(grid_gdf, water_cell_area["water_area"], left_on="id", right_on="id", how="left")
-            grid_gdf["water_perc"] = grid_gdf["water_area"]  / grid_gdf.area *100
-        else:
-            grid_gdf["water_perc"] = None
+            grid_gdf["replace_all"] = 0
+            grid_gdf.loc[grid_gdf["replace_dem"]==True, "replace_all"] = "dem"
+            grid_gdf.loc[grid_gdf["replace_water"]==True, "replace_all"] = "water"
+            grid_gdf.loc[grid_gdf["replace_pand"]==True, "replace_all"] = "pand"
 
 
-        #Check building area in a cell
-        pand_gdf = self._load_pand_gdf()
-        if pand_gdf is not None:
-            pand_gdf["pand"] = 1
-            pand_cell = gpd.overlay(grid_gdf[["id", "geometry"]], pand_gdf[["pand", "geometry"]], how="union")
-            #Select only areas with the merged feature.
-            pand_cell = pand_cell[pand_cell["pand"]==1]
+            #grid_gdf["replace_all"] = grid_gdf["replace_dem"] | grid_gdf["replace_water"] | grid_gdf["replace_pand"]
 
-            #Calculate sum of area per cell
-            pand_cell["pand_area"] = pand_cell.area
-            pand_cell_area = pand_cell.groupby("id").agg("sum")
-
-            grid_gdf = pd.merge(grid_gdf, pand_cell_area["pand_area"], left_on="id", right_on="id", how="left")
-            grid_gdf["pand_perc"] = grid_gdf["pand_area"]  / grid_gdf.area *100
-        else:
-            grid_gdf["pand_perc"] = None
+            grid_gdf = gpd.GeoDataFrame(grid_gdf, geometry="geometry")
 
 
-        #Select cells that need replacing of wlvl
-        grid_gdf["replace_dem"] = grid_gdf["dem_perc"] < replace_dem_below_perc
-        grid_gdf["replace_water"] = grid_gdf["water_perc"] > replace_water_above_perc
-        grid_gdf["replace_pand"] = grid_gdf["pand_perc"] > replace_pand_above_perc
-
-
-        grid_gdf["replace_all"] = 0
-        grid_gdf.loc[grid_gdf["replace_dem"]==True, "replace_all"] = "dem"
-        grid_gdf.loc[grid_gdf["replace_water"]==True, "replace_all"] = "water"
-        grid_gdf.loc[grid_gdf["replace_pand"]==True, "replace_all"] = "pand"
-
-
-        #grid_gdf["replace_all"] = grid_gdf["replace_dem"] | grid_gdf["replace_water"] | grid_gdf["replace_pand"]
-
-        grid_gdf = gpd.GeoDataFrame(grid_gdf, geometry="geometry")
-
-
-        #Save to file
-        grid_gdf.to_file(self.grid_path, driver="GPKG")
+            #Save to file
+            grid_gdf.to_file(self.grid_path.base, driver="GPKG")
 
 
     def waterlevel_correction(self, output_col="wlvl_max_replaced", overwrite=False):
-
-        if self.grid_corr_path.exists():
-            if overwrite is False:
-                return
-            else:
-                self.grid_corr_path.unlink()
-
-        grid_gdf = gpd.read_file(self.grid_path, driver="GPKG")
+        create = hrt.check_create_new_file(output_file=self.grid_corr_path,
+                                  overwrite=overwrite)
         
-        grid_gdf[output_col] = grid_gdf["wlvl_max_orig"]
-        replace_idx = grid_gdf["replace_all"]!= '0'
-        grid_gdf.loc[replace_idx, output_col] = None #set values to none so they are not used in calculation of new values.
+        if create:
+            grid_gdf = self.grid_path.load()
+            
+            grid_gdf[output_col] = grid_gdf["wlvl_max_orig"]
+            replace_idx = grid_gdf["replace_all"]!= '0'
+            grid_gdf.loc[replace_idx, output_col] = None #set values to none so they are not used in calculation of new values.
 
-        for idx, row in grid_gdf.loc[replace_idx].iterrows():
-
-
-            #Find neighbour cells
-            neighbours_idx = grid_gdf[grid_gdf.geometry.touches(row.geometry)].index.tolist()
-            neighbours_id = [grid_gdf.loc[neighbour_idx].id for neighbour_idx in neighbours_idx if idx != neighbour_idx]
-            grid_gdf.at[idx, "neighbours"] = str(neighbours_id)
+            for idx, row in grid_gdf.loc[replace_idx].iterrows():
 
 
-            neighbour_avg_wlvl = np.round(grid_gdf.loc[neighbours_idx][output_col].mean(), 5)
-            grid_gdf.at[idx, output_col] = neighbour_avg_wlvl
+                #Find neighbour cells
+                neighbours_idx = grid_gdf[grid_gdf.geometry.touches(row.geometry)].index.tolist()
+                neighbours_id = [grid_gdf.loc[neighbour_idx].id for neighbour_idx in neighbours_idx if idx != neighbour_idx]
+                grid_gdf.at[idx, "neighbours"] = str(neighbours_id)
 
 
-        grid_gdf["diff"] = grid_gdf[output_col] - grid_gdf["wlvl_max_orig"]
+                neighbour_avg_wlvl = np.round(grid_gdf.loc[neighbours_idx][output_col].mean(), 5)
+                grid_gdf.at[idx, output_col] = neighbour_avg_wlvl
 
-        #Save to file
-        grid_gdf.to_file(self.grid_corr_path, driver="GPKG")
+
+            grid_gdf["diff"] = grid_gdf[output_col] - grid_gdf["wlvl_max_orig"]
+
+            #Save to file
+            grid_gdf.to_file(self.grid_corr_path.base, driver="GPKG")
 
 
 

@@ -15,11 +15,10 @@ from hhnk_threedi_tools.core.folders import Folders
 # Globals
 REVISION = "BWN bwn_test #6 1d2d_test"
 
-from tests.config import FOLDER_TEST
+from tests.config import FOLDER_TEST, FOLDER_NEW
 
 
 class TestOneDTwoD:
-
     #Remove previous output
     FOLDER_TEST.output.one_d_two_d.unlink_contents(rmdirs=True)
 
@@ -48,7 +47,7 @@ class TestOneDTwoD:
 
         check_1d2d.run_wlvl_depth_at_timesteps(overwrite=True)
 
-        assert "waterdiepte_T15.tif" in check_1d2d.fenv.output.one_d_two_d[check_1d2d.revision].content
+        assert "waterdiepte_T15.tif" in [i.name for i in check_1d2d.fenv.output.one_d_two_d[check_1d2d.revision].content]
         assert check_1d2d.fenv.output.one_d_two_d[check_1d2d.revision].waterdiepte_T1.shape == [787, 242]
         assert check_1d2d.fenv.output.one_d_two_d[check_1d2d.revision].waterdiepte_T15.sum() == 1576.087158203125
 
@@ -56,12 +55,12 @@ class TestOneDTwoD:
 # %%
 if __name__ == "__main__":
     import inspect
-    selftest = TestOneDTwoD()
-    check_1d2d = selftest.check_1d2d()
+    self = TestOneDTwoD()
+    check_1d2d = self.check_1d2d()
 
     # Run all testfunctions
-    for i in dir(selftest):
-        if i.startswith('test_') and hasattr(inspect.getattr_static(selftest,i), '__call__'):
+    for i in dir(self):
+        if i.startswith('test_') and hasattr(inspect.getattr_static(self,i), '__call__'):
             print(i)
-            getattr(selftest, i)(check_1d2d)  
+            getattr(self, i)(check_1d2d)  
 # %%

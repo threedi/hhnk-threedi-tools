@@ -55,10 +55,9 @@ class ClimateResult(hrt.Folder):
 
 
         def __repr__(self):
-            return f"""{self.name} @ {self.path}
+            return f"""{self.name} @ {self.base}
                         Folders:\t{self.structure}
                         Files:\t{list(self.files.keys())}
-                        Layers:\t{list(self.olayers.keys())}
                         Groups:\t{list(self.names)}
                     """
         
@@ -72,7 +71,7 @@ class ClimateResult(hrt.Folder):
                 #Add rasters to main downloadfolder
                 raster_types = ["depth_max", "damage_total", "wlvl_max"]
                 for rastertype in raster_types:
-                    self.add_file(rastertype, f"{rastertype}_{name}.tif", ftype="raster")
+                    self.add_file(rastertype, f"{rastertype}_{name}.tif")
                 self.structure_extra = []
 
                 #Add netcdf to subfolders for scenario
@@ -80,10 +79,9 @@ class ClimateResult(hrt.Folder):
                 self.structure_extra = ["netcdf"]
 
             def __repr__(self):
-                return f"""{self.name} @ {self.path}
+                return f"""{self.name} @ {self.base}
                             Folders:\t{self.structure_extra}
                             Files:\t{list(self.files.keys())}
-                            Layers:\t{list(self.olayers.keys())}
                         """
 
     class ClimateResultOutput(hrt.Folder):
@@ -95,13 +93,13 @@ class ClimateResult(hrt.Folder):
 
             # Files
             self.add_file("maskerkaart", "maskerkaart.shp")
-            self.add_file("maskerkaart_diepte_tif", "maskerkaart_diepte.tif", "raster")
-            self.add_file("maskerkaart_schade_tif", "maskerkaart_schade.tif", "raster")
-            self.add_file("geen_schade_tif", "geen_schade.tif", "raster")
-            self.add_file("mask_diepte_plas", "mask_diepte_plas.tif", "raster")
-            self.add_file("mask_schade_plas", "mask_schade_plas.tif", "raster")
-            self.add_file("mask_diepte_overlast", "mask_diepte_overlast.tif", "raster")
-            self.add_file("mask_schade_overlast", "mask_schade_overlast.tif", "raster")
+            self.add_file("maskerkaart_diepte_tif", "maskerkaart_diepte.tif")
+            self.add_file("maskerkaart_schade_tif", "maskerkaart_schade.tif")
+            self.add_file("geen_schade_tif", "geen_schade.tif")
+            self.add_file("mask_diepte_plas", "mask_diepte_plas.tif")
+            self.add_file("mask_schade_plas", "mask_schade_plas.tif")
+            self.add_file("mask_diepte_overlast", "mask_diepte_overlast.tif")
+            self.add_file("mask_schade_overlast", "mask_schade_overlast.tif")
             self.add_file("ruimtekaart", "ruimtekaart.shp")
             self.add_file("schade_peilgebied", "schade_per_peilgebied.shp")
             self.add_file("schade_peilgebied_corr", "schade_per_peilgebied_correctie.shp")
@@ -113,16 +111,17 @@ class ClimateResult(hrt.Folder):
 
         def set_scenario_files(self):
             for type_raster, type_raster_name in zip(
-                ["depth", "damage"], ["inundatiediepte", "schade"]
+                ["wlvl", "depth", "damage"], 
+                ["wlvl", "inundatiediepte", "schade"]
             ):
                 for masker, masker_name in zip(
-                    ["totaal", "plas", "overlast"], ["", "_plas", "_overlast"]
+                    ["totaal", "plas", "overlast"], 
+                    ["", "_plas", "_overlast"]
                 ):
                     for return_period in [10, 25, 100, 1000]:
                         self.add_file(
                             objectname=f"{type_raster}_T{return_period}_{masker}",
                             filename=f"{type_raster_name}_T{str(return_period).zfill(4)}{masker_name}.tif",
-                            ftype="raster",
                         )
 
             for masker, masker_name in zip(
@@ -131,13 +130,11 @@ class ClimateResult(hrt.Folder):
                 self.add_file(
                     objectname=f"cw_schade_{masker}",
                     filename=f"cw_schade{masker_name}.tif",
-                    ftype="raster",
                 )
 
                 self.add_file(
                     objectname=f"cw_schade_{masker}_corr",
                     filename=f"cw_schade{masker_name}_correctie.tif",
-                    ftype="raster",
                 )
 
         @property
@@ -152,8 +149,8 @@ class ClimateResult(hrt.Folder):
             def __init__(self, base, create):
                 super().__init__(os.path.join(base, "temp"), create=create)
 
-                self.add_file("peilgebieden_diepte", "peilgebieden_diepte.tif", "raster")
-                self.add_file("peilgebieden_schade", "peilgebieden_schade.tif", "raster")
+                self.add_file("peilgebieden_diepte", "peilgebieden_diepte.tif")
+                self.add_file("peilgebieden_schade", "peilgebieden_schade.tif")
                 self.add_file("peilgebieden", "peilgebieden_clipped.shp")
 
 

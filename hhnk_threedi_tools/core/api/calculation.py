@@ -1,18 +1,8 @@
-# -*- coding: utf-8 -*-
 # %%
-"""
-Created on Tue Apr 12 14:40:28 2022
-
-@author: chris.kerklaan
-
-note, this was not needed
-"""
-
 # First-party imports
 import datetime
 import time
 import numpy as np
-import os
 import requests
 from pathlib import Path
 import zipfile
@@ -27,16 +17,17 @@ from IPython.core.display import HTML
 # Local
 import hhnk_research_tools as hrt
 from hhnk_threedi_tools.variables.api_settings import API_SETTINGS
-from hhnk_threedi_tools.core.api.upload_model.threedi_calls import ThreediCalls
+from hhnk_threedi_tools.external.threedi_calls import ThreediCalls
 
 # Globals
-TIMEZONE = "Europe/Amsterdam"
-
+THREEDI_API_HOST = "https://api.3di.live"
 
 #TODO move to hrt
 def update_dict_keys(mydict, translate_dict={}, remove_keys=[]) -> dict:
     """Rename dict keys and/or remove.
-    trannslate_dict is of the format -> old:new"""
+    mydict (dict): dict that needs updated keys
+    translate_dict (dict): has format -> old:new
+    remove_keys (list): remove some keys while we're at it."""
     for key_old in translate_dict:
         key_new = translate_dict[key_old]
         if key_old in mydict:
@@ -47,13 +38,19 @@ def update_dict_keys(mydict, translate_dict={}, remove_keys=[]) -> dict:
             mydict.pop(key)
 
     return mydict
-
+def apply_translate_dict(value, translate_dict):
+    """Use replaced value if it is in keys of translate dict
+    otherwise return the value."""
+    if value in translate_dict.keys():
+        return translate_dict[value]
+    else:
+        return value
 
 class NumericalSettings:
     def __init__(self, database_path, settings_id):
         """
         database_path: path to sqlite.
-        settings id: as defined in the global_settings (global_setting["numerical_settings_id"])
+        settings_id: as defined in the global_settings (global_setting["numerical_settings_id"])
         """
 
         self.translate_dict_numerical = {
@@ -131,12 +128,31 @@ class NumericalSettings:
 
 
 class SimulationData:
-    
-    def __init__(self, sqlite_path, 
-                        sim_name, 
-                        sim_duration, 
-                        rain_data=[{}],):
-        
+    def __init__(self,
+                sqlite_path: Path, 
+                sim_name: str, 
+                sim_duration: int, 
+                rain_data:list=[{}],
+                iwlvl_raster_id:int = None,
+                threedi_api: ThreediApi = None,
+                model_id:int = None):
+        """
+        Prepare simulation data from the sqlite and get the available rasters from 3Di.
+        sqlite_path (Path): Path to the sqlite.
+        sim_name (str): Name of the simulation.
+        sim_duration (int): Simulation duration in seconds
+        rain_data (list): list with dicts that describe the rain. offset/duration in s:
+                            [{'offset': 3600,
+                            'duration': 7200,
+                            'value': 4.930555555555556e-06,
+                            'units': 'm/s'}]
+        iwlvl_raster_id (int): Id on 3Di API of the iwlvl raster. This raster should be
+            uploaded to the revision beforehand.
+        threedi_api (ThreediApi): Optional, required when iwlvl_raster_id is not None.
+                                    should already be initiated with api_key.
+        model_id (int): Optional, required when iwlvl_raster_id is not None.
+        """
+
         self.sqlite_path = sqlite_path
         self.sim_name = sim_name
 
@@ -154,9 +170,17 @@ class SimulationData:
 
         self.structure_control = self._get_control_from_sqlite(sim_duration=sim_duration)
         self.laterals = self._get_laterals_from_sqlite(sim_duration=sim_duration)
+        self.aggregation = self._get_aggregation_from_sqlite()
         self.boundaries = self._get_boundary_data()
-
         
+        if iwlvl_raster_id is not None:
+            self.iwlvl_rasters_available = self.get_iwlvl_rasters_dict(threedi_api=threedi_api,
+                                                                    model_id=model_id)
+            self.iwlvl_raster = self.iwlvl_rasters_available[iwlvl_raster_id]
+            self.iwlvl_raster_aggmethod = self.get_iwlvl_raster_aggmethod_from_sqlite()
+        else:
+            self.iwlvl_raster = None
+            self.iwlvl_raster_aggmethod = None
 
     @property
     def _numerical_settings_raw(self):
@@ -337,7 +361,6 @@ class SimulationData:
         return control_data
     
 
-
     def _get_laterals_from_sqlite(self, sim_duration):
         """
         Read 1D laterals from the Sqlite and use them in the initialisation of the simulation
@@ -370,6 +393,31 @@ class SimulationData:
         return laterals_data
                     
 
+    def _get_aggregation_from_sqlite(self) -> list:
+        """
+        Read aggregation settings from sqlite
+        """
+        aggregation_data = []
+
+            # flow_variable options [ water_level, flow_velocity, discharge, volume, pump_discharge, wet_cross_section, lateral_discharge, wet_surface, rain, simple_infiltration, leakage, interception, surface_source_sink_discharge ]
+            # method options [ min, max, avg, cum, cum_positive, cum_negative, current, sum ]
+        translate_dict_flow_variable = {"waterlevel" : "water_level",
+                                    "wet_cross-section" : "wet_cross_section",
+                                    }
+
+        for index, row in hrt.sqlite_table_to_df(
+            database_path=self.sqlite_path, table_name="v2_aggregation_settings"
+        ).iterrows():
+            data = {
+                "name": row['var_name'], #string
+                "flow_variable": apply_translate_dict(row['flow_variable'], translate_dict=translate_dict_flow_variable), #string
+                "method": row['aggregation_method'], #string
+                "interval": int(row['timestep']), #int
+            }
+            aggregation_data.append(data)
+        return aggregation_data
+
+
     def _get_boundary_data(self):
         boundary_types =   {1: 'water_level', 
                         2: 'velocity',
@@ -393,6 +441,38 @@ class SimulationData:
             data.append(data_singleboundary)
         return data
 
+   
+    def get_iwlvl_rasters_dict(self, threedi_api, model_id):
+        """
+        get 2d waterlevel from  (example from threedi_models_and_simulations\workers.py)
+        id can be found from url
+        https://api.3di.live/v3/threedimodels/{model_id}/initial_waterlevels/
+        """
+        #Get iwlvl rasters
+        iwlvl_rasters_all = threedi_api.threedimodels_initial_waterlevels_list(threedimodel_pk=model_id).results
+
+        iwlvl_rasters = {}
+        for iwlvl in iwlvl_rasters_all:
+            if iwlvl.source_raster is not None:
+                iwlvl_rasters[iwlvl.source_raster_id] = iwlvl
+        return iwlvl_rasters
+
+
+    def get_iwlvl_raster_aggmethod_from_sqlite(self):
+        """
+        options in API are ["max", "min", "mean"], in sqlite these are ints
+        agg method determines which value is chosen when in a calculation cell 
+        multiple values are found for the initial waterlevel.
+        """
+        translate_dict_agg = {0 : "max",
+                         1 : "min",
+                         2 : "mean"}
+        global_df = hrt.sqlite_table_to_df(
+                    database_path=self.sqlite_path, table_name="v2_global_settings"
+                )
+        return translate_dict_agg[global_df.iloc[0]["water_level_ini_type"]]
+    
+
     @property
     def basic_processing(self):
         return {
@@ -409,10 +489,27 @@ class SimulationData:
         return {"arrival_time": True} #TODO check if works? was: {"basic_post_processing": True}
     
 
+
+class SimulationTracker:
+    """Track the options that have been added to the simulation"""
+    def __init__(self):
+        self.basic_processing = False
+        self.damage_processing = False
+        self.arrival_processing = False
+        self.structure_control = False
+        self.laterals = False
+        self.aggregation = False
+        self.iwlvl_raster_id = None
+        self.iwlvl_raster_url = None
+
+
+
+
+
+
 class Simulation:
     """
     Usage:
-
         sim = Simulation(CONFIG)
         sim.model =  "BWN Schermer interflow referentie #2"
         sim.template = "Referentie"
@@ -424,7 +521,7 @@ class Simulation:
         self,
         api_key: str,
         start_time: datetime.datetime = datetime.datetime(2022, 1, 1, 0, 0),
-        host="https://api.3di.live",
+        host=THREEDI_API_HOST,
     ):
 
         self.start_time = start_time
@@ -445,10 +542,13 @@ class Simulation:
 
         self.threedi_api = ThreediApi(config=config)
         self.threedi_api_beta = ThreediApi(config=config, version="v3-beta")
+        self.tc = ThreediCalls(threedi_api=self.threedi_api)
 
         self.data=None #set by calling .set_data()
         self.simulation=None
         self.simulation_created = False
+        self.tracker = SimulationTracker() #tracks what is added to simulation
+
 
     # @property
     # def end_time(self):
@@ -466,9 +566,11 @@ class Simulation:
 
     @property
     def logged_in(self):
-        call = self.threedi_api.auth_users_list()
-        result = self._api_result(call, "Cannot login")
-        return result
+        """return user"""
+        try:
+            return self.threedi_api.auth_profile_list()
+        except:
+            return "Cannot login" 
 
     @property
     def id(self):
@@ -555,18 +657,29 @@ class Simulation:
             data=self.data.time_step_settings,
         )
 
+        #Numerical settings
         self._add_to_simulation(
             self.threedi_api.simulations_settings_numerical_create,
             simulation_pk=self.id,
             data=self.data.numerical_settings,
         )
 
+        #Physical settings
         self._add_to_simulation(
             self.threedi_api.simulations_settings_physical_create,
             simulation_pk=self.id,
             data=self.data.physical_settings,
         )
 
+        if self.data.iwlvl_raster is not None:
+            self.tracker.iwlvl_raster_id = self.data.iwlvl_raster.source_raster_id
+            self.tracker.iwlvl_raster_url = self.data.iwlvl_raster.url
+
+            self.tc.create_simulation_initial_2d_water_level_raster(
+                simulation_pk=self.id,
+                aggregation_method=self.data.iwlvl_raster_aggmethod,
+                initial_waterlevel=self.data.iwlvl_raster.url,
+            )
 
     def add_constant_rain(self):
         for rain_data in self.data.rain:
@@ -576,7 +689,7 @@ class Simulation:
                 data=rain_data,
             )
     def check_structure_control(self, max_retries=10):
-        
+        """Check if structure control in simulation is valid."""
         i=0
         valid = False
 
@@ -604,9 +717,6 @@ class Simulation:
         else:
             print("this shouldnt happen..")
             return False    
-           
-            
-
 
 
     def add_structure_control(self):
@@ -614,6 +724,8 @@ class Simulation:
             self._add_to_simulation(self.threedi_api.simulations_events_structure_control_table_create,
                         simulation_pk=self.id, data=control_data
                     )
+        self.tracker.structure_control = True
+
 
     def add_laterals(self):
         """If  empty wont add."""
@@ -621,6 +733,7 @@ class Simulation:
             self._add_to_simulation(self.threedi_api.simulations_events_lateral_timeseries_create,
                             simulation_pk=self.id, data=lateral, async_req=False
                         )
+        self.tracker.laterals = True
 
 
     def add_boundaries(self):
@@ -638,7 +751,7 @@ class Simulation:
        
         filename = f"boundaryconditions_{self.model_id}.json"
 
-        output_path = Path(os.path.join(self.output_folder, "tempfiles", filename))
+        output_path = Path(self.output_folder).joinpath( "tempfiles", filename)
         output_path.parent.parent.mkdir(exist_ok=True)
         output_path.parent.mkdir(exist_ok=True) #Create parent folder
 
@@ -649,7 +762,6 @@ class Simulation:
             print("Info: Boundary file is empty, file not uploaded")
             return "Info: Boundary file is empty, file not uploaded"
 
-        tc = ThreediCalls(threedi_api=self.threedi_api)
 
         UPLOAD_TIMEOUT = 45
         valid_states = ["processed", "valid"]
@@ -663,7 +775,7 @@ class Simulation:
             upload_json(bc_upload, output_path)
             print(f"create: {output_path}")
             for ti in range(int(UPLOAD_TIMEOUT // 2)):
-                uploaded_bc = tc.fetch_boundarycondition_files(self.id)[0]
+                uploaded_bc = self.tc.fetch_boundarycondition_files(self.id)[0]
                 if uploaded_bc.state in valid_states:
                     print('\nUpload success')
                     break
@@ -676,16 +788,27 @@ class Simulation:
         self._add_to_simulation(self.threedi_api.simulations_results_post_processing_lizard_basic_create,
                 simulation_pk=self.id, data=self.data.basic_processing
             )
+        self.tracker.basic_processing = True
 
     def add_damage_post_processing(self):
         self._add_to_simulation(self.threedi_api.simulations_results_post_processing_lizard_damage_create,
                 simulation_pk=self.id, data=self.data.damage_processing
             )
+        self.tracker.damage_processing = True
 
     def add_arrival_post_processing(self):
         self._add_to_simulation(self.threedi_api.simulations_results_post_processing_lizard_arrival_create,
                 simulation_pk=self.id, data=self.data.arrival_processing
             )
+        self.tracker.arrival_processing = True
+        
+    def add_aggregation_post_processing(self):
+        """If  empty wont add."""
+        for aggregation in self.data.aggregation:
+            self._add_to_simulation(self.threedi_api.simulations_settings_aggregation_create,
+                    simulation_pk=self.id, data=aggregation
+                )
+        self.tracker.aggregation = True
 
     def _add_to_simulation(self, func, **kwargs):
         """add something to simulation, if apiexcetion is raised sleep on it and try again."""
@@ -709,10 +832,10 @@ class Simulation:
                 else: #TODO add error code of API overload
                     time.sleep(10)
                     continue
-            break
 
     def _api_result(self,
-        result: tac.openapi.models.inline_response20062.InlineResponse20062, message: str
+        result: tac.openapi.models.inline_response20062.InlineResponse20062, 
+        message: str
     ) -> tac.openapi.models.threedi_model.ThreediModel:
         """Raises an error if no results"""
         if len(result.results) == 0:
@@ -720,7 +843,7 @@ class Simulation:
         return result.results[0]
 
 
-    def create(self, output_folder, simulation_name, model_id, organisation_uuid, sim_duration):
+    def create(self, output_folder, simulation_name, model_id, organisation_uuid, sim_duration, output_folder_sqlite=None):
         # data = {
         #     "template": self.template.id,
         #     "name": simulation_name,
@@ -738,7 +861,7 @@ class Simulation:
         self.set_model(model_id=model_id)
 
         #Download the sqlite so we can retrieve some settings
-        self.download_sqlite()
+        self.sqlite_path = self.download_sqlite(output_folder_sqlite=output_folder_sqlite)
 
         #Create simulation on API
         data={  "name":simulation_name,
@@ -753,20 +876,19 @@ class Simulation:
         self.simulation_created = True
 
 
-    def download_sqlite(self, output_folder=None):
+    def download_sqlite(self, output_folder_sqlite=None):
         """Download sqlite of selected model to temporary folder"""
-        if output_folder is None:
-            output_folder = self.output_folder
-        else:
-            self.output_folder = output_folder
+        if output_folder_sqlite is None:
+            output_folder_sqlite = self.output_folder
 
-        if output_folder is None:
+
+        if output_folder_sqlite is None:
             return "define self.output_folder first"
 
         if self.model is None:
             return "define self.model_id first"
 
-        output_path = Path(os.path.join(output_folder, "tempfiles", f"model_{self.model_id}.zip"))
+        output_path = Path(output_folder_sqlite).joinpath("tempfiles", f"model_{self.model_id}.zip")
         output_path.parent.parent.mkdir(exist_ok=True)
         output_path.parent.mkdir(exist_ok=True) #Create parent folder
         if not output_path.with_suffix('').exists():
@@ -783,15 +905,18 @@ class Simulation:
             zip_ref.extractall(output_path.with_suffix(''))
             zip_ref.close()
 
-        self.sqlite_path = [i for i in output_path.with_suffix('').glob('*.sqlite')][0]
+        return [i for i in output_path.with_suffix('').glob('*.sqlite')][0]
 
 
-    def get_data(self, rain_data):
+    def get_data(self, rain_data, iwlvl_raster_id=None):
         """Load all data that should be added to the simulation"""
         self.data=SimulationData(sqlite_path=self.sqlite_path, #set  by calling .create (which calls .download_sqlite)
                 sim_name=self.simulation.name, #set by calling .create
                 sim_duration=self.sim_duration, #set by calling .create
-                rain_data=rain_data
+                rain_data=rain_data,
+                iwlvl_raster_id=iwlvl_raster_id,
+                threedi_api=self.threedi_api,
+                model_id=self.model_id,
             )
 
 
@@ -803,11 +928,11 @@ class Simulation:
             )
 
             # Create APIcall.txt file
-            apicall_txt = os.path.join(self.output_folder, f"apicall{extra_name}_simid{self.simulation.id}_date{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.txt")
+            apicall_txt = Path(self.output_folder) / f"apicall{extra_name}_simid{self.simulation.id}_date{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
             with open(apicall_txt, "a") as t:
                 t.write(self.simulation_info(str_type="text"))
         else:
-            self.start_feedback="simulation_did not start"            
+            self.start_feedback="Simulation_did not start (structure control not valid)"            
 
 
     def shutdown(self, simulation_pk):
@@ -819,18 +944,45 @@ class Simulation:
         sim=self.simulation
         if str_type=="text":
             newline = "\n"
-            return f"Simulation: {sim.url}{newline}Scenario name: {sim.name}\
-            {newline}Organisation name: {sim.organisation_name}{newline}Duration: {sim.duration}s ({sim.duration/3600}h)\
-            {newline}Rain events: {self.data.rain}{newline}Control structures count: {len(self.data.structure_control)}"
+            return f"Simulation: {sim.url}\
+                    {newline}Scenario name: {sim.name}\
+                    {newline}Organisation name: {sim.organisation_name}\
+                    {newline}Duration: {sim.duration}s ({sim.duration/3600}h)\
+                    {newline}Rain events: {self.data.rain}\
+                    {newline}Control structures count: {len(self.data.structure_control)}\t(used={self.tracker.structure_control})\
+                    {newline}Laterals count: {len(self.data.laterals)}\t(used={self.tracker.laterals})\
+                    {newline}2d inital wlvl raster: {self.tracker.iwlvl_raster_url}\
+                    {newline}\
+                    {newline}Post processing\
+                    {newline}Aggregation settings count: {len(self.data.aggregation)}\t(used={self.tracker.aggregation})\
+                    {newline}Basic processing lizard: {self.tracker.basic_processing}\
+                    {newline}Damage processing lizard: {self.tracker.damage_processing}\
+                    {newline}Arrival processing lizard: {self.tracker.arrival_processing}\t(aggmethod={self.data.iwlvl_raster_aggmethod})"
+
+        if self.tracker.iwlvl_raster_id is not None:
+            iwlvl_text = f"<a href={self.tracker.iwlvl_raster_url}>{self.tracker.iwlvl_raster_id}</a>"
+        else:
+            iwlvl_text = ""
 
         if str_type=="html":
             newline = "<br>"
-            return HTML(f"Simulation id: <a href={sim.url}>{sim.id}</a>{newline}Scenario name: {sim.name}\
-                    {newline}Organisation name: {sim.organisation_name}{newline}Duration: {sim.duration}s ({sim.duration/3600}h)\
-                    {newline}Rain events: {self.data.rain}{newline}Control structures count: {len(self.data.structure_control)} {newline}")
+            return HTML(f"Simulation id: <a href={sim.url}>{sim.id}</a>\
+                    {newline}Scenario name: {sim.name}\
+                    {newline}Organisation name: {sim.organisation_name}\
+                    {newline}Duration: {sim.duration}s ({sim.duration/3600}h)\
+                    {newline}Rain events: {self.data.rain}\
+                    {newline}Control structures count: {len(self.data.structure_control)}\t(used={self.tracker.structure_control})\
+                    {newline}Laterals count: {len(self.data.laterals)}\t(used={self.tracker.laterals})\
+                    {newline}2d inital wlvl raster: {iwlvl_text}\t(aggmethod={self.data.iwlvl_raster_aggmethod})\
+                    {newline}\
+                    {newline}Post processing\
+                    {newline}Aggregation settings count: {len(self.data.aggregation)}\t(used={self.tracker.aggregation})\
+                    {newline}Basic processing lizard: {self.tracker.basic_processing}\
+                    {newline}Damage processing lizard: {self.tracker.damage_processing}\
+                    {newline}Arrival processing lizard: {self.tracker.arrival_processing}")
 
 
-    def example_use(self, basic_processing=False, damage_processing=False, arrival_processing=False):
+    def example_use(self, basic_processing=False, damage_processing=False, arrival_processing=False, aggregation=False):
         
         if self.data is not None:
             self.add_default_settings()
@@ -838,13 +990,14 @@ class Simulation:
             self.add_structure_control()
             self.add_laterals()
             self.add_boundaries()
+            if aggregation:
+                self.add_aggregation_post_processing()
             if basic_processing:
                 self.add_basic_post_processing()
             if damage_processing:
                 self.add_damage_post_processing()
             if arrival_processing:
                 self.add_arrival_post_processing()
-                #TODO aggregation
 
         else:
             print("Tried to add data to simulation that doesnt have data loaded yet.")
@@ -884,3 +1037,4 @@ if __name__ == "__main__":
     #             sim_duration=self.sim_duration, #set by calling .create
     #             rain_data=rain_data
     #         )
+# %%

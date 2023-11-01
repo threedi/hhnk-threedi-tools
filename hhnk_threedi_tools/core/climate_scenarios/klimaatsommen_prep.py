@@ -1,5 +1,4 @@
 # %%
-import os
 from hhnk_threedi_tools import Folders
 import pandas as pd
 import geopandas as gpd
@@ -7,7 +6,6 @@ import hhnk_research_tools as hrt
 from hhnk_threedi_tools.core.result_rasters.netcdf_to_gridgpkg import ThreediGrid
 from hhnk_threedi_tools.core.result_rasters.calculate_raster import BaseCalculatorGPKG
 
-import sys
 from pathlib import Path
 
 class KlimaatsommenPrep:
@@ -25,7 +23,7 @@ class KlimaatsommenPrep:
         if type(cfg_file) == str:
             cfg_file = hrt.get_pkg_resource_path(package_resource=hrt.waterschadeschatter.resources, 
                                 name=cfg_file)
-            if not os.path.exists(cfg_file):
+            if not cfg_file.exists():
                 raise Exception(f"{cfg_file} doesnt exist.")            
 
         self.folder = folder
@@ -39,14 +37,14 @@ class KlimaatsommenPrep:
 
     def verify_input(self):
         """Verify if we can run"""
-        if not self.batch_fd.exists:
+        if not self.batch_fd.exists():
             raise Exception(f"INPUTERROR - {self.batch_fd.name} missing")
         
-        netcdf_missing = [name for name in self.batch_fd.downloads.names if not getattr(self.batch_fd.downloads,name).netcdf.grid_path.exists]
+        netcdf_missing = [name for name in self.batch_fd.downloads.names if not getattr(self.batch_fd.downloads,name).netcdf.grid_path.exists()]
         if any(netcdf_missing):
             raise Exception(f"INPUTERROR - netcdf missing for scenarios; {netcdf_missing}")
         
-        h5_missing = [name for name in self.batch_fd.downloads.names if not getattr(self.batch_fd.downloads,name).netcdf.admin_path.exists]
+        h5_missing = [name for name in self.batch_fd.downloads.names if not getattr(self.batch_fd.downloads,name).netcdf.admin_path.exists()]
         if any(h5_missing):
             raise Exception(f"INPUTERROR - h5 missing for scenarios; {h5_missing}")
         return True
@@ -56,12 +54,11 @@ class KlimaatsommenPrep:
         """Update dem resolution to 0.5m
         #Get the dem. If dem doesnt have correct resolution it will be reprojected to 0.5m
         """
-        dem_path = self.folder.model.schema_base.rasters.dem.path
-        dem = hrt.Raster(dem_path)
+        dem = self.folder.model.schema_base.rasters.dem
 
+        #Reproject to 0.5m if necessary
         if dem.metadata.pixel_width != 0.5:
-            #Reproject to 0.5m if necessary
-            new_dem_path = self.batch_fd.downloads.pl/f"{dem.pl.stem}_05m.tif"
+            new_dem_path = self.batch_fd.downloads.full_path(f"{dem.stem}_05m.tif")
             if not new_dem_path.exists():
                 hrt.reproject(src = dem, 
                             target_res = 0.5,
@@ -82,7 +79,7 @@ class KlimaatsommenPrep:
 
     def netcdf_to_grid(self, 
                        threedi_result, 
-                       corrected_col_name="wlvl_max_replaced", 
+                       corrected_col_name = "wlvl_max_replaced", 
                        grid_raw_filename = "grid_raw.gpkg",
                        grid_corr_filename = "grid_corr.gpkg", 
                        overwrite=False,
@@ -111,13 +108,13 @@ class KlimaatsommenPrep:
                          overwrite=False,
                          ):
         """mode options are: "MODE_WDEPTH", "MODE_WLVL" """
-        grid_gdf = gpd.read_file(threedi_result.pl/grid_filename, driver="GPKG")
+        grid_gdf = threedi_result.full_path(grid_filename).load()
 
-        calculator_kwargs = {"dem_path":self.dem.source_path,
+        calculator_kwargs = {"dem_path":self.dem.base,
                                 "grid_gdf":grid_gdf, 
                                 "wlvl_column":wlvl_col_name}
 
-        output_file = scenario_raster.pl
+        output_file = scenario_raster
 
         #Init calculator
         with BaseCalculatorGPKG(**calculator_kwargs) as basecalc:
@@ -167,11 +164,11 @@ class KlimaatsommenPrep:
                             'cfg_file':self.cfg_file,
                             'dmg_type':'gem'}
 
-            if output_raster.exists and not overwrite:
+            if output_raster.exists() and not overwrite:
                 return
 
             #Calculation
-            wss = hrt.Waterschadeschatter(depth_file=depth_file.path, 
+            wss = hrt.Waterschadeschatter(depth_file=depth_file, 
                                     landuse_file=self.landuse_file, 
                                     wss_settings=wss_settings)
 
@@ -253,7 +250,7 @@ class KlimaatsommenPrep:
             #Write to file
 
             info_df.set_index(['filename'], inplace=True)
-            info_df.to_csv(self.info_file[raster_type], sep=';')
+            info_df.to_csv(self.info_file[raster_type].path, sep=';')
         
 
     def _scenario_metadata_row(self, scenario, raster_type) -> pd.Series:
@@ -264,7 +261,7 @@ class KlimaatsommenPrep:
 
         #Fill row data
         info_row = pd.Series(dtype=object)
-        info_row['filename']  = raster.name
+        info_row['filename']  = raster.stem
         info_row['min'] = stats["min"]
         info_row['max'] = stats["max"]
         info_row['mean'] = stats["mean"]
