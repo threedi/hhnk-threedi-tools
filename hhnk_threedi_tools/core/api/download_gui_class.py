@@ -889,7 +889,6 @@ class DownloadWidgetsInteraction(DownloadWidgets):
 
 
                     #Download netcdf of all results.
-                    self.vars.batch_fd.downloads.names #FIXME downloads.names need to be initialized first.
                     output_folder = getattr(self.vars.batch_fd.downloads, row["dl_name"]).netcdf
 
                     # Create destination folder
