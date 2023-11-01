@@ -7,12 +7,13 @@ en worden hier uitgelezen om ze aan het project toe te voegen.
 """
 import os
 from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Union
 
 import hhnk_research_tools as hrt
 import numpy as np
 import pandas as pd
-from typing import Union
-from pathlib import Path
+
 import hhnk_threedi_tools as htt
 
 
@@ -346,7 +347,10 @@ class LayerStructure:
         def eval_qml(qmldir, qmlnames):
             """create list of qmlpaths with row.qmldir and row.qmlnames"""
 
-            qgis_layer_styles_dir = os.path.join(htt.__file__, 'resources', 'qgis_layer_styles') #used in eval
+            qgis_layer_styles_dir = Path(htt.__file__).parent.joinpath(
+                'resources',
+                'qgis_layer_styles'
+                ) #used in eval
             qmldir = eval(qmldir)
             if qmlnames.startswith("["):
                 # Already a list
