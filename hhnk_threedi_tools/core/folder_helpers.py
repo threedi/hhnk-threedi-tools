@@ -29,22 +29,26 @@ class ClimateResult(hrt.Folder):
 
 
     class ClimateResultDownloads(hrt.Folder):
+        """Downloads folder with all scenarios in subfolders that will contain
+        their netcdf. """
         def __init__(self, base, create=False):
             super().__init__(os.path.join(base, "01_downloads"), create=create)
 
             self.create_bool = create
             # Files
-            self.names = self.get_names()
+            self.names = self.get_scenario_names()
 
-        def get_names(self):
+            #Set all scenarios as a ClimateResultScenario with their name 
+            for name in self.names:
+                setattr(self, name, self.ClimateResultScenario(self.base, name, create=self.create_bool))
+
+        def get_scenario_names(self) -> list:
+            """eg .blog_ghg_T10, .piek_glg_T100"""
             names = []
             for rain_type in RAIN_TYPES:
                 for groundwater in GROUNDWATER:
                     for rain_scenario in RAIN_SCENARIOS:
                         names.append(f"{rain_type}_{groundwater}_{rain_scenario}")
-
-            for name in names:
-                setattr(self, name, self.ClimateResultScenario(self.base, name, create=self.create_bool))
             return names
 
 

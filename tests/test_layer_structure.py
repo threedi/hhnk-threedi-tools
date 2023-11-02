@@ -12,8 +12,6 @@ if __name__ == "__main__":
 
 from tests.config import FOLDER_TEST, TEST_DIRECTORY, TEMP_DIR
 
-LAYER_STRUCTURE_PATH = r"E:\github\wvangerwen\hhnk-threedi-tools\tests\data\layer_structure.csv"
-# LAYER_STRUCTURE_PATH = r"\\corp.hhnk.nl\data\hydrologen_data\Data\github\wvangerwen\hhnk-threedi-plugin\hhnk_threedi_plugin\qgis_interaction\layer_structure\testprotocol.csv"
 
 # %%
 def test_layer_structure():
@@ -24,12 +22,12 @@ def test_layer_structure():
                                         subjects=None)
         ls.run()
     with pytest.raises(Exception):
-        ls = layer_structure.LayerStructure(layer_structure_path=LAYER_STRUCTURE_PATH,
+        ls = layer_structure.LayerStructure(layer_structure_path=TEST_DIRECTORY.joinpath("layer_structure.csv"),
                                         subjects=["thisisatypo"])
         ls.run()
 
     #Generate structure
-    self = layer_structure.LayerStructure(layer_structure_path=LAYER_STRUCTURE_PATH,
+    self = layer_structure.LayerStructure(layer_structure_path=TEST_DIRECTORY.joinpath("layer_structure.csv"),
                                         subjects=['test_0d1d'],
                                         folder=FOLDER_TEST)
     self.run()
@@ -53,8 +51,6 @@ if __name__=="__main__":
     self.run()
     
     l = self.df_full.loc[0, "layer"]
-
-self.layers
 
 
 # %%

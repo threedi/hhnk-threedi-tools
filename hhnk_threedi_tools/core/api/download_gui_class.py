@@ -16,7 +16,8 @@ from IPython.display import display
 from pathlib import Path
 
 # threedi
-from threedi_scenario_downloader import downloader as dl
+from hhnk_threedi_tools.external import downloader as dl 
+# from threedi_scenario_downloader import downloader as dl #FIXME Zie #77 wanneer weg
 import hhnk_threedi_tools.core.api.download_functions as download_functions
 from hhnk_threedi_tools.core.api.calculation import Simulation
 

@@ -13,7 +13,8 @@ import pytz
 # from apscheduler.schedulers.blocking import BlockingScheduler
 
 # threedi
-from threedi_scenario_downloader import downloader as dl
+from hhnk_threedi_tools.external import downloader as dl 
+# from threedi_scenario_downloader import downloader as dl #FIXME Zie #77 wanneer weg
 
 # local imports
 import hhnk_research_tools as hrt
