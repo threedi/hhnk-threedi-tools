@@ -10,7 +10,7 @@ import numpy as np
 if __name__ == "__main__":
     importlib.reload(layer_structure)
 
-from tests.config import FOLDER_TEST, TEST_DIRECTORY, TEMP_DIR
+from tests.config import FOLDER_TEST, TEST_DIRECTORY
 
 
 # %%
@@ -45,7 +45,7 @@ def test_layer_structure():
 # %%
 
 if __name__=="__main__":
-    self = layer_structure.LayerStructure(layer_structure_path=LAYER_STRUCTURE_PATH,
+    self = layer_structure.LayerStructure(layer_structure_path=TEST_DIRECTORY.joinpath("layer_structure.csv"),
                                         subjects=['test_0d1d'],
                                         folder=FOLDER_TEST)
     self.run()
