@@ -13,7 +13,8 @@ import pytz
 # from apscheduler.schedulers.blocking import BlockingScheduler
 
 # threedi
-from threedi_scenario_downloader import downloader as dl
+from hhnk_threedi_tools.external import downloader as dl 
+# from threedi_scenario_downloader import downloader as dl #FIXME Zie #77 wanneer weg
 
 # local imports
 import hhnk_research_tools as hrt
@@ -253,7 +254,7 @@ class StartCalculationWidgets:
                     value="3600",
                     layout=item_layout(grid_area="rain_duration_widget")
                 )
-            self.rain_intensity_label = widgets.Label("Rain intensity [mm/hour]",
+            self.rain_intensity_label = widgets.Label("Rain intensity [mm/h]",
                     layout=item_layout(grid_area="rain_intensity_label")
                 )
             self.rain_intensity_widget = widgets.Text(
@@ -821,7 +822,7 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
             self._activate_button_color(self.rain.custom_rain_button)
             self.output.subfolder_box.value =self.output.subfolder_box.options[0]
             self._update_calc_settings_buttons(structure_control=True, laterals=True)
-            self.update_simulation_name_widget(model_type="")
+            self.update_simulation_name_widget(model_type="custom_rain")
 
 
         # Observe all calculation settings buttons
@@ -854,9 +855,6 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
             self.vars.output_folder = self.vars.folder.threedi_results.full_path(
                     f"{self.output.subfolder_box.value}{os.sep}{self.start.simulation_name_view_widget.value}"
                 )
-
-
-            self.vars.sqlite_path = self.sim.download_sqlite()
 
             #Creating will set sim.simulation_created to True.
             self.sim.create(output_folder=str(self.vars.output_folder),
@@ -1460,7 +1458,7 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
                         schema_name=schema_name,
                         rev=rev,
                         model_type=model_type,
-                        )
+                        ).strip() #strip to remove leading and trailing whitespace
         except:
             pass
 
@@ -1841,7 +1839,6 @@ class StartCalculationGui:
             layout=widgets.Layout(
                 width="100%",
                 grid_row_gap="200px 200px 200px 200px",
-                #             grid_template_rows='auto auto auto 50px auto 40px auto 20px 40px',
                 grid_template_rows="auto auto auto",
                 grid_template_columns="1% 10% 10% 10% 10% 2% 19% 19% 19%",
                 grid_template_areas="""

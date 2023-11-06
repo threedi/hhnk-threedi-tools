@@ -58,7 +58,9 @@ class TestFolder:
     #         results_path / "results_3di.nc"
     #     )
 
-
+    def test_hasatrr_batch_fd(self):
+        batch_fd = FOLDER_NEW.threedi_results.batch["test"]
+        assert hasattr(batch_fd.downloads, "blok_ghg_T1000")
 
 
 # %%
@@ -69,6 +71,6 @@ if __name__ == "__main__":
     for i in dir(selftest):
         if i.startswith('test_') and hasattr(inspect.getattr_static(selftest,i), '__call__'):
             print(i)
-            getattr(selftest, i)()    
+            getattr(selftest, i)()
 # %%
 #FOLDER_NEW.to_file_dict()

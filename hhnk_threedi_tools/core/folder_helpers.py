@@ -14,10 +14,10 @@ class ClimateResult(hrt.Folder):
 
     def __init__(self, base, create=False):
         super().__init__(base, create=create)
+        self.create_bool = create
 
-        self.downloads = self.ClimateResultDownloads(self.base, create=create)
-        self.output = self.ClimateResultOutput(self.base, create=create)
-
+        self.downloads = self.ClimateResultDownloads(self.base, create=self.create_bool)
+        self.output = self.ClimateResultOutput(self.base, create=self.create_bool)    
 
     @property
     def structure(self):
@@ -29,29 +29,27 @@ class ClimateResult(hrt.Folder):
 
 
     class ClimateResultDownloads(hrt.Folder):
+        """Downloads folder with all scenarios in subfolders that will contain
+        their netcdf. """
         def __init__(self, base, create=False):
             super().__init__(os.path.join(base, "01_downloads"), create=create)
 
+            self.create_bool = create
             # Files
-            self.names = []  # Initializes names.setter
+            self.names = self.get_scenario_names()
 
+            #Set all scenarios as a ClimateResultScenario with their name 
             for name in self.names:
-                setattr(self, name, self.ClimateResultScenario(self.base, name, create=create))
+                setattr(self, name, self.ClimateResultScenario(self.base, name, create=self.create_bool))
 
-
-        @property
-        def names(self):
-            return self._names
-
-
-        @names.setter
-        def names(self, dummy):
+        def get_scenario_names(self) -> list:
+            """eg .blog_ghg_T10, .piek_glg_T100"""
             names = []
             for rain_type in RAIN_TYPES:
                 for groundwater in GROUNDWATER:
                     for rain_scenario in RAIN_SCENARIOS:
                         names.append(f"{rain_type}_{groundwater}_{rain_scenario}")
-            self._names = names
+            return names
 
 
         def __repr__(self):
@@ -107,7 +105,6 @@ class ClimateResult(hrt.Folder):
             self.add_file("schade_polder_corr", "schade_per_polder_correctie.csv")
 
             self.set_scenario_files()
-            self.create(parents=False)  # create outputfolder if parent exists
 
         def set_scenario_files(self):
             for type_raster, type_raster_name in zip(

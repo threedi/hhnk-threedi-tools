@@ -16,7 +16,8 @@ from IPython.display import display
 from pathlib import Path
 
 # threedi
-from threedi_scenario_downloader import downloader as dl
+from hhnk_threedi_tools.external import downloader as dl 
+# from threedi_scenario_downloader import downloader as dl #FIXME Zie #77 wanneer weg
 import hhnk_threedi_tools.core.api.download_functions as download_functions
 from hhnk_threedi_tools.core.api.calculation import Simulation
 
@@ -1516,10 +1517,9 @@ class DownloadGui:
 
 
 if __name__ == "__main__":
-        data = {'polder_folder': r'E:\02.modellen\model_test_v2',
+        data = {'polder_folder': r'E:\02.modellen\callantsoog',
               'api_keys_path': fr"{os.getenv('APPDATA')}\3Di\QGIS3\profiles\default\python\plugins\hhnk_threedi_plugin\api_key.txt"}
         self = DownloadGui(data=data); 
         
         self.w.search.sim_name_widget.value = "model_test"
         display(self.tab)
-# %%
