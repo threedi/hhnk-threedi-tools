@@ -1,6 +1,7 @@
 import geopandas as gpd
-from osgeo import gdal
 import hhnk_research_tools as hrt
+from osgeo import gdal
+
 
 def rasterize_maskerkaart(input_file, mask_plas_raster, mask_overlast_raster, meta):
     """Aanmaken van de masker rasters, die gemaakt worden vanuit de maskerkaart, voor plasvorminge en wateroverlast.
@@ -22,9 +23,7 @@ def rasterize_maskerkaart(input_file, mask_plas_raster, mask_overlast_raster, me
         if not mask_path[mask_type].exists():
             # Repareer geometry
             temp_geom = (
-                maskerkaart_gdf.buffer(0.1)
-                .loc[maskerkaart_gdf.case_final == mask_type]
-                .unary_union.buffer(-0.1)
+                maskerkaart_gdf.buffer(0.1).loc[maskerkaart_gdf.case_final == mask_type].unary_union.buffer(-0.1)
             )
             mask_gdf[mask_type] = gpd.GeoDataFrame(geometry=[temp_geom])
             # Voeg kolom toe aan gdf, deze waarden worden in het raster gezet.

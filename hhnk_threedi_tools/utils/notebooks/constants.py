@@ -9,6 +9,4 @@ import pathlib
 import sys
 
 NOTEBOOK_DIRECTORY = str(pathlib.Path(__file__).parent.absolute())
-PATHS = {
-    file: NOTEBOOK_DIRECTORY + "/" + file for file in os.listdir(NOTEBOOK_DIRECTORY)
-}
+PATHS = {file: NOTEBOOK_DIRECTORY + "/" + file for file in os.listdir(NOTEBOOK_DIRECTORY)}
