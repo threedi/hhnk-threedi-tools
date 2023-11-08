@@ -3,7 +3,7 @@ import sys
 # folder
 from osgeo import gdal
 from hhnk_threedi_tools.core.folders import Folders
-
+from hhnk_threedi_tools.core.folders_modelbuilder import FoldersModelbuilder
 
 import hhnk_threedi_tools.core
 import hhnk_threedi_tools.resources
