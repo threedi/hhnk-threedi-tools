@@ -1,15 +1,13 @@
-import numpy as np
-
 import hhnk_research_tools as hrt
-
+import numpy as np
 
 """Functies die de 18 water depth rasters inladen van een klimaatscenario en daarmee """
 
 
 def stack_raster_arrays(raster_classes, window):
     """Inladen waterdieptes van alle 18 diepte rasters voor het gegeven window"""
-    
-    window = list(map(int, window)) # make everything a integer for reading the array.
+
+    window = list(map(int, window))  # make everything a integer for reading the array.
     stacked_array = []
     for raster in raster_classes:
         depth_array = raster._read_array(window=window)
@@ -103,17 +101,15 @@ def interpoleer_raster_window(
     window = part["window_readarray"]
 
     # Laad waterdieptes
-    stacked_raster_array = stack_raster_arrays(
-        raster_classes, window=window
-    )  # laad 18 resultaten en zet in een array
+    stacked_raster_array = stack_raster_arrays(raster_classes, window=window)  # laad 18 resultaten en zet in een array
 
     # Bepaal geïnterpoleerde waterdiepte
     int_raster_array = interpoleer_deel(
-        int_frequentie = int_frequentie, 
-        waterdieptes = stacked_raster_array, 
-        frequenties = frequenties,
-        output_nodata = output_nodata,
-        min_value = min_value,
+        int_frequentie=int_frequentie,
+        waterdieptes=stacked_raster_array,
+        frequenties=frequenties,
+        output_nodata=output_nodata,
+        min_value=min_value,
     )
 
     # Zet de gemaskeerde pixels op de nodata waarde (-9999.00)
@@ -151,9 +147,7 @@ def main_interpolate_rasters(
 
         depth_raster = raster_classes[0]
         parts = depth_raster.generate_blocks()
-        array_out = (
-            np.ones([depth_raster.shape[0], depth_raster.shape[1]]) * output_nodata
-        )
+        array_out = np.ones([depth_raster.shape[0], depth_raster.shape[1]]) * output_nodata
 
         # #Loop over windows and calculate results
         for idx, part in parts.iterrows():
@@ -166,12 +160,10 @@ def main_interpolate_rasters(
                 frequenties=frequenties,
                 extra_nodata_value=extra_nodata_value,
                 output_nodata=output_nodata,
-                min_value = min_value,
+                min_value=min_value,
             )
 
-            array_out[
-                part.window[1] : part.window[3], part.window[0] : part.window[2]
-            ] = int_raster_array
+            array_out[part.window[1] : part.window[3], part.window[0] : part.window[2]] = int_raster_array
 
         hrt.save_raster_array_to_tiff(
             output_file=output_file.path,

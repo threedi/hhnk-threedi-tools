@@ -1,10 +1,10 @@
-
 import os
+
 import hhnk_research_tools as hrt
 
 from hhnk_threedi_tools.variables.api_settings import (
-    RAIN_SCENARIOS,
     GROUNDWATER,
+    RAIN_SCENARIOS,
     RAIN_TYPES,
 )
 
@@ -17,7 +17,7 @@ class ClimateResult(hrt.Folder):
         self.create_bool = create
 
         self.downloads = self.ClimateResultDownloads(self.base, create=self.create_bool)
-        self.output = self.ClimateResultOutput(self.base, create=self.create_bool)    
+        self.output = self.ClimateResultOutput(self.base, create=self.create_bool)
 
     @property
     def structure(self):
@@ -27,10 +27,10 @@ class ClimateResult(hrt.Folder):
             {self.space}└── output
                 """
 
-
     class ClimateResultDownloads(hrt.Folder):
         """Downloads folder with all scenarios in subfolders that will contain
-        their netcdf. """
+        their netcdf."""
+
         def __init__(self, base, create=False):
             super().__init__(os.path.join(base, "01_downloads"), create=create)
 
@@ -38,7 +38,7 @@ class ClimateResult(hrt.Folder):
             # Files
             self.names = self.get_scenario_names()
 
-            #Set all scenarios as a ClimateResultScenario with their name 
+            # Set all scenarios as a ClimateResultScenario with their name
             for name in self.names:
                 setattr(self, name, self.ClimateResultScenario(self.base, name, create=self.create_bool))
 
@@ -51,14 +51,12 @@ class ClimateResult(hrt.Folder):
                         names.append(f"{rain_type}_{groundwater}_{rain_scenario}")
             return names
 
-
         def __repr__(self):
             return f"""{self.name} @ {self.base}
                         Folders:\t{self.structure}
                         Files:\t{list(self.files.keys())}
                         Groups:\t{list(self.names)}
                     """
-        
 
         class ClimateResultScenario(hrt.Folder):
             """Single scenario with multiple results"""
@@ -66,13 +64,13 @@ class ClimateResult(hrt.Folder):
             def __init__(self, base, name, create=False):
                 super().__init__(base, create=create)
 
-                #Add rasters to main downloadfolder
+                # Add rasters to main downloadfolder
                 raster_types = ["depth_max", "damage_total", "wlvl_max"]
                 for rastertype in raster_types:
                     self.add_file(rastertype, f"{rastertype}_{name}.tif")
                 self.structure_extra = []
 
-                #Add netcdf to subfolders for scenario
+                # Add netcdf to subfolders for scenario
                 setattr(self, "netcdf", hrt.ThreediResult(self.full_path(name)))
                 self.structure_extra = ["netcdf"]
 
@@ -108,22 +106,16 @@ class ClimateResult(hrt.Folder):
 
         def set_scenario_files(self):
             for type_raster, type_raster_name in zip(
-                ["wlvl", "depth", "damage"], 
-                ["wlvl", "inundatiediepte", "schade"]
+                ["wlvl", "depth", "damage"], ["wlvl", "inundatiediepte", "schade"]
             ):
-                for masker, masker_name in zip(
-                    ["totaal", "plas", "overlast"], 
-                    ["", "_plas", "_overlast"]
-                ):
+                for masker, masker_name in zip(["totaal", "plas", "overlast"], ["", "_plas", "_overlast"]):
                     for return_period in [10, 25, 100, 1000]:
                         self.add_file(
                             objectname=f"{type_raster}_T{return_period}_{masker}",
                             filename=f"{type_raster_name}_T{str(return_period).zfill(4)}{masker_name}.tif",
                         )
 
-            for masker, masker_name in zip(
-                ["totaal", "plas", "overlast"], ["", "_plas", "_overlast"]
-            ):
+            for masker, masker_name in zip(["totaal", "plas", "overlast"], ["", "_plas", "_overlast"]):
                 self.add_file(
                     objectname=f"cw_schade_{masker}",
                     filename=f"cw_schade{masker_name}.tif",
@@ -141,7 +133,6 @@ class ClimateResult(hrt.Folder):
                 {self.space}├── temp
                     """
 
-
         class ClimateResultOutputTemp(hrt.Folder):
             def __init__(self, base, create):
                 super().__init__(os.path.join(base, "temp"), create=create)
@@ -149,5 +140,3 @@ class ClimateResult(hrt.Folder):
                 self.add_file("peilgebieden_diepte", "peilgebieden_diepte.tif")
                 self.add_file("peilgebieden_schade", "peilgebieden_schade.tif")
                 self.add_file("peilgebieden", "peilgebieden_clipped.shp")
-
-

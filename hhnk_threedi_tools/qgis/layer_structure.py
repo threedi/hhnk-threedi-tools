@@ -348,9 +348,8 @@ class LayerStructure:
             """create list of qmlpaths with row.qmldir and row.qmlnames"""
 
             qgis_layer_styles_dir = Path(htt.__file__).parent.joinpath(
-                'resources',
-                'qgis_layer_styles'
-                ) #used in eval
+                "resources", "qgis_layer_styles"
+            )  # used in eval
             qmldir = eval(qmldir)
             if qmlnames.startswith("["):
                 # Already a list

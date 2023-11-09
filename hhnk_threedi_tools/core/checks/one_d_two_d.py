@@ -1,54 +1,51 @@
 # %%
 # -*- coding: utf-8 -*-
 # Third-party imports
-import numpy as np
-import pandas as pd
 import geopandas as gpd
-from shapely.geometry import box
-from shapely.geometry import LineString
 
 # research tools
 import hhnk_research_tools as hrt
-
-
+import numpy as np
+import pandas as pd
 from hhnk_research_tools.variables import (
-    t_start_rain_col,
+    all_2d,
     t_end_rain_col,
     t_end_sum_col,
-    all_2d,
+    t_start_rain_col,
 )
+from shapely.geometry import LineString, box
 
 # Local imports
 import hhnk_threedi_tools.core.checks.grid_result_metadata as grid_result_metadata
 from hhnk_threedi_tools.core.folders import Folders
-from hhnk_threedi_tools.variables.default_variables import DEF_TRGT_CRS
 from hhnk_threedi_tools.variables.database_aliases import df_geo_col
+from hhnk_threedi_tools.variables.default_variables import DEF_TRGT_CRS
 from hhnk_threedi_tools.variables.one_d_two_d import (
-    wtrlvl_col,
-    one_d_two_d,
-    max_sfx,
-    suffixes_list,
-    pump_line,
-    id_col,
-    spatialite_id_col,
     content_type_col,
-    kcu_col,
-    q_m3_s_col,
-    vel_m_s_col,
-    pump_capacity_m3_s_col,
-    start_rain_sfx,
     end_rain_sfx,
-    twelve_hr_after_rain_sfx,
+    id_col,
+    kcu_col,
+    max_area_col,
+    max_sfx,
+    minimal_dem_col,
     node_type_col,
     one_d,
-    two_d,
     one_d_boundary_col,
-    max_area_col,
-    wtrlvl_m_col,
-    wet_area_m2_col,
-    minimal_dem_col,
-    volume_m3_col,
+    one_d_two_d,
+    pump_capacity_m3_s_col,
+    pump_line,
+    q_m3_s_col,
+    spatialite_id_col,
+    start_rain_sfx,
     storage_mm_col,
+    suffixes_list,
+    twelve_hr_after_rain_sfx,
+    two_d,
+    vel_m_s_col,
+    volume_m3_col,
+    wet_area_m2_col,
+    wtrlvl_col,
+    wtrlvl_m_col,
 )
 
 
@@ -58,10 +55,8 @@ class OneDTwoDTest:
         self.fenv = folder
         self.revision = revision
 
-
         self.result_fd = self.fenv.threedi_results.one_d_two_d[self.revision]
         self.output_fd = self.fenv.output.one_d_two_d[self.revision]
-
 
         self.grid_result = self.result_fd.grid
 
@@ -72,7 +67,7 @@ class OneDTwoDTest:
             days_dry_start,
             days_dry_end,
             self.timestep_df,
-                                ) = grid_result_metadata.construct_scenario(self.grid_result)
+        ) = grid_result_metadata.construct_scenario(self.grid_result)
 
         # if output_path:
         #     self.output_path = output_path
@@ -87,7 +82,6 @@ class OneDTwoDTest:
         else:
             self.dem = self.fenv.model.schema_base.rasters.dem
 
-
         self.iresults = {}
 
     @classmethod
@@ -97,7 +91,6 @@ class OneDTwoDTest:
     @property
     def results(self):
         return self.iresults
-
 
     def run_wlvl_depth_at_timesteps(self, overwrite=False):
         """
@@ -113,19 +106,18 @@ class OneDTwoDTest:
             block_dem = self.dem._read_array(window=windows["raster1"])
             block_wlvl = self.wlvl._read_array(window=windows["raster2"])
 
-            #Calculate output
+            # Calculate output
             block_depth = np.subtract(block_wlvl, block_dem)
 
-            #Mask output
+            # Mask output
             nodatamask = (block_dem == self.dem.nodata) | (block_dem == 10) | (block_depth < 0)
             block_depth[nodatamask] = self.raster_out.nodata
 
-            #Get the window of the small raster
-            window_small = windows[[k for k,v in self.raster_mapping.items() if v=="small"][0]]
+            # Get the window of the small raster
+            window_small = windows[[k for k, v in self.raster_mapping.items() if v == "small"][0]]
 
             # Write to file
             band_out.WriteArray(block_depth, xoff=window_small[0], yoff=window_small[1])
-
 
         try:
             timesteps_arr = [
@@ -134,19 +126,16 @@ class OneDTwoDTest:
                 self.timestep_df["t_end_sum"].value,
             ]
             # hours since start of calculation
-            timestrings = [
-                int(round(self.grid_result.nodes.timestamps[t] / 60 / 60, 0))
-                for t in timesteps_arr
-            ]
+            timestrings = [int(round(self.grid_result.nodes.timestamps[t] / 60 / 60, 0)) for t in timesteps_arr]
 
             assert timestrings == [1, 3, 15]
 
-            #For each timestring calculate wlvl and depth raster.
+            # For each timestring calculate wlvl and depth raster.
             for timestep, timestr in zip(timesteps_arr, timestrings):
                 wlvl_raster = getattr(self.output_fd, f"waterstand_T{timestr}")
                 depth_raster = getattr(self.output_fd, f"waterdiepte_T{timestr}")
 
-                #Calculate wlvl raster
+                # Calculate wlvl raster
                 nodes_2d_wlvl = self._read_2node_wlvl_at_timestep(timestep)
                 hrt.gdf_to_raster(
                     gdf=nodes_2d_wlvl,
@@ -158,34 +147,29 @@ class OneDTwoDTest:
                     overwrite=overwrite,
                 )
 
-                #Calculate depth raster
+                # Calculate depth raster
                 depth_calculator = hrt.RasterCalculator(
-                                raster1=self.dem, 
-                                raster2=wlvl_raster, 
-                                raster_out=depth_raster, 
-                                custom_run_window_function=_create_depth_raster,
-                                output_nodata=0,
-                                verbose=False)
+                    raster1=self.dem,
+                    raster2=wlvl_raster,
+                    raster_out=depth_raster,
+                    custom_run_window_function=_create_depth_raster,
+                    output_nodata=0,
+                    verbose=False,
+                )
 
                 depth_calculator.run(overwrite=overwrite)
         except Exception as e:
             raise e from None
-        
 
     def _read_2node_wlvl_at_timestep(self, timestep):
         """timesteps is the index of the time in the timeseries you want to use
         to calculate the wlvl and depth raster"""
         nodes_2d = gpd.GeoDataFrame()
         # * inputs every element from row as a new function argument.
-        nodes_2d[df_geo_col] = [
-            box(*row) for row in self.grid_result.cells.subset(all_2d).cell_coords.T
-        ]
+        nodes_2d[df_geo_col] = [box(*row) for row in self.grid_result.cells.subset(all_2d).cell_coords.T]
         # waterstand
-        nodes_2d[wtrlvl_col] = (
-            self.grid_result.nodes.subset(all_2d).timeseries(indexes=[timestep]).s1[0]
-        )
+        nodes_2d[wtrlvl_col] = self.grid_result.nodes.subset(all_2d).timeseries(indexes=[timestep]).s1[0]
         return nodes_2d
-
 
     def run_node_stats(self):
         """
@@ -207,9 +191,7 @@ class OneDTwoDTest:
             nodes_wlvl[spatialite_id_col] = self.grid_result.nodes.content_pk
             nodes_wlvl[node_type_col] = self.grid_result.nodes.node_type
             # Replace numbers with human readable values
-            nodes_wlvl[node_type_col].replace(
-                [1, 3, 7], [two_d, one_d, one_d_boundary_col], inplace=True
-            )
+            nodes_wlvl[node_type_col].replace([1, 3, 7], [two_d, one_d, one_d_boundary_col], inplace=True)
 
             # totaal oppervlak
             nodes_wlvl[max_area_col] = self.grid_result.nodes.sumax
@@ -268,12 +250,8 @@ class OneDTwoDTest:
         try:
             nodes_2d = nodes_wlvl[nodes_wlvl[node_type_col] == two_d].copy()
             # replace geometry with polygons of the cells
-            nodes_2d.loc[:, df_geo_col] = [
-                box(*row) for row in self.grid_result.cells.subset(all_2d).cell_coords.T
-            ]
-            nodes_2d.loc[:, minimal_dem_col] = self.grid_result.cells.subset(
-                all_2d
-            ).z_coordinate
+            nodes_2d.loc[:, df_geo_col] = [box(*row) for row in self.grid_result.cells.subset(all_2d).cell_coords.T]
+            nodes_2d.loc[:, minimal_dem_col] = self.grid_result.cells.subset(all_2d).z_coordinate
             return nodes_2d
         except Exception as e:
             raise e from None
@@ -293,12 +271,8 @@ class OneDTwoDTest:
         pumplines_gdf = self._read_pumpline_results()
 
         # combine to one table
-        lines_gdf = pd.concat(
-            [flowlines_gdf, pumplines_gdf], ignore_index=True, sort=False
-        )
-        lines_gdf = lines_gdf[
-            lines_gdf.geometry.length != 0
-        ]  # Drop weird values with -9999 geometries
+        lines_gdf = pd.concat([flowlines_gdf, pumplines_gdf], ignore_index=True, sort=False)
+        lines_gdf = lines_gdf[lines_gdf.geometry.length != 0]  # Drop weird values with -9999 geometries
 
         return lines_gdf
 
@@ -308,9 +282,7 @@ class OneDTwoDTest:
                 self.grid_result.lines.line_geometries
             )  # create gdf from node coords
 
-            flowlines_gdf = gpd.GeoDataFrame(
-                geometry=coords, crs=f"EPSG:{DEF_TRGT_CRS}"
-            )
+            flowlines_gdf = gpd.GeoDataFrame(geometry=coords, crs=f"EPSG:{DEF_TRGT_CRS}")
             flowlines_gdf[id_col] = self.grid_result.lines.id
             flowlines_gdf[spatialite_id_col] = self.grid_result.lines.content_pk
 
@@ -318,12 +290,8 @@ class OneDTwoDTest:
             flowlines_gdf[content_type_col] = content_type_list
 
             flowlines_gdf[kcu_col] = self.grid_result.lines.kcu
-            flowlines_gdf.loc[
-                flowlines_gdf[kcu_col].isin([51, 52]), content_type_col
-            ] = one_d_two_d
-            flowlines_gdf.loc[
-                flowlines_gdf[kcu_col].isin([100, 101]), content_type_col
-            ] = two_d
+            flowlines_gdf.loc[flowlines_gdf[kcu_col].isin([51, 52]), content_type_col] = one_d_two_d
+            flowlines_gdf.loc[flowlines_gdf[kcu_col].isin([100, 101]), content_type_col] = two_d
 
             q = self.grid_result.lines.timeseries(
                 indexes=[
@@ -381,9 +349,7 @@ class OneDTwoDTest:
                     vel_m_s_col + time_str,
                 )
 
-                flowlines_gdf.loc[filt] = flowlines_gdf.loc[filt].apply(
-                    lambda x: x * -1
-                )
+                flowlines_gdf.loc[filt] = flowlines_gdf.loc[filt].apply(lambda x: x * -1)
 
             return flowlines_gdf
         except Exception as e:
@@ -391,10 +357,7 @@ class OneDTwoDTest:
 
     def _read_pumpline_results(self):
         try:
-            coords = [
-                LineString([x[[0, 1]], x[[2, 3]]])
-                for x in self.grid_result.pumps.node_coordinates.T
-            ]
+            coords = [LineString([x[[0, 1]], x[[2, 3]]]) for x in self.grid_result.pumps.node_coordinates.T]
             pump_gdf = gpd.GeoDataFrame(geometry=coords, crs=f"EPSG:{DEF_TRGT_CRS}")
 
             pump_gdf[id_col] = self.grid_result.pumps.id
@@ -427,7 +390,9 @@ class OneDTwoDTest:
 # %%
 if __name__ == "__main__":
     from pathlib import Path
+
     from hhnk_threedi_tools import Folders
+
     TEST_MODEL = Path(__file__).parent.parent.parent.parent / "tests/data/model_test/"
     folder = Folders(TEST_MODEL)
     # %%

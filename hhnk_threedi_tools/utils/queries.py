@@ -9,35 +9,32 @@ All sqlite queries are stored within this script. Queries are listed per table.
 
 """
 # Third-part imports
-import numpy as np
 import hhnk_research_tools as hrt
+import numpy as np
+
+from hhnk_threedi_tools.variables.backups_table_names import (
+    BANK_LVLS_LAST_CALC,
+    CONTR_WEIR_WIDTH_BACKUP,
+    GLOBAL_SETTINGS_TABLE,
+)
+from hhnk_threedi_tools.variables.bank_levels import (
+    new_bank_level_col,
+)
+from hhnk_threedi_tools.variables.database_aliases import *
 
 # Local imports - starts
 # Note that this is not preffered due to ambiguity, however due to the large amount of queries it is practical
 from hhnk_threedi_tools.variables.database_variables import *
-from hhnk_threedi_tools.variables.database_aliases import *
-
-from hhnk_threedi_tools.variables.bank_levels import (
-    new_bank_level_col,
-)
-from hhnk_threedi_tools.variables.weirs import new_ref_lvl
-
 from hhnk_threedi_tools.variables.default_variables import DEF_TRGT_CRS
-
 from hhnk_threedi_tools.variables.model_state import (
-    hydraulic_test_state,
-    one_d_two_d_state,
-    manholes_new_calc_type,
-    weirs_new_width_col,
     channels_new_calc_type,
     global_settings_new_col_name,
+    hydraulic_test_state,
+    manholes_new_calc_type,
+    one_d_two_d_state,
+    weirs_new_width_col,
 )
-
-from hhnk_threedi_tools.variables.backups_table_names import (
-    BANK_LVLS_LAST_CALC,
-    GLOBAL_SETTINGS_TABLE,
-    CONTR_WEIR_WIDTH_BACKUP,
-)
+from hhnk_threedi_tools.variables.weirs import new_ref_lvl
 
 # Strings
 # Global settings
@@ -118,15 +115,9 @@ profiles_used_query = f"""
             LEFT JOIN {connection_nodes_layer} ON {connection_nodes_layer}.{id_col} = {channels_layer}.{conn_node_end_id_col}
             GROUP BY {channels_layer}.{id_col}
             """
-bank_lvls_source_creation_query = (
-    f"create table {BANK_LVLS_LAST_CALC}(id int PRIMARY KEY, dt datetime)"
-)
-bank_lvls_source_update_query = (
-    f"INSERT OR REPLACE INTO {BANK_LVLS_LAST_CALC}\nVALUES(1, current_timestamp)"
-)
-bank_lvls_last_changed = (
-    f"SELECT datetime(dt, 'localtime') AS dt FROM {BANK_LVLS_LAST_CALC} limit 1"
-)
+bank_lvls_source_creation_query = f"create table {BANK_LVLS_LAST_CALC}(id int PRIMARY KEY, dt datetime)"
+bank_lvls_source_update_query = f"INSERT OR REPLACE INTO {BANK_LVLS_LAST_CALC}\nVALUES(1, current_timestamp)"
+bank_lvls_last_changed = f"SELECT datetime(dt, 'localtime') AS dt FROM {BANK_LVLS_LAST_CALC} limit 1"
 
 isolated_channels_query = f"""
 SELECT {id_col},
@@ -237,9 +228,7 @@ def create_global_settings_from_backup_query(to_state):
     return query
 
 
-def create_global_settings_rows_update_query(
-    excluded_ids=[], ids_to_add=[], ids_to_delete=[]
-):
+def create_global_settings_rows_update_query(excluded_ids=[], ids_to_add=[], ids_to_delete=[]):
     """
     Add rows from backup, delete rows from model
     Once the correct rows are in the model, set model control
@@ -266,9 +255,7 @@ def create_global_settings_rows_update_query(
     return query
 
 
-def construct_global_settings_control_group_query(
-    global_settings_to_update_df, excluded_ids=[]
-):
+def construct_global_settings_control_group_query(global_settings_to_update_df, excluded_ids=[]):
     query = hrt.sql_create_update_case_statement(
         df=global_settings_to_update_df,
         layer=global_settings_layer,
@@ -330,16 +317,10 @@ def construct_manholes_update_query(manholes_to_update_df, excluded_ids=[]):
 
 def create_update_storage_area_sql(new_manholes_df, excluded_ids):
     update_storage_ids = []
-    update_storage_area_rows = new_manholes_df[
-        np.isnan(new_manholes_df[storage_area_col])
-    ]
-    update_storage_area_rows = update_storage_area_rows[
-        ~update_storage_area_rows[conn_node_id_col].isin(excluded_ids)
-    ]
+    update_storage_area_rows = new_manholes_df[np.isnan(new_manholes_df[storage_area_col])]
+    update_storage_area_rows = update_storage_area_rows[~update_storage_area_rows[conn_node_id_col].isin(excluded_ids)]
     if not update_storage_area_rows.empty:
-        update_storage_ids = [
-            item for item in update_storage_area_rows[conn_node_id_col].tolist()
-        ]
+        update_storage_ids = [item for item in update_storage_area_rows[conn_node_id_col].tolist()]
     update_storage_area_ids_string = ",".join(map(str, update_storage_ids))
     return f"""
     UPDATE {connection_nodes_layer}
@@ -516,13 +497,9 @@ controlled_structures_query = construct_controlled_structures_query()
 def construct_geometry_query(table_names, dst_crs=DEF_TRGT_CRS):
     queries_lst = []
     for table in table_names:
-        queries_lst.append(
-            geometry_check_query_base.format(table=table, projection=dst_crs)
-        )
+        queries_lst.append(geometry_check_query_base.format(table=table, projection=dst_crs))
     query = "\nUNION ALL\n".join(queries_lst)
     return query
 
 
-geometry_check_query = construct_geometry_query(
-    table_names=[channels_layer, culvert_layer]
-)
+geometry_check_query = construct_geometry_query(table_names=[channels_layer, culvert_layer])
