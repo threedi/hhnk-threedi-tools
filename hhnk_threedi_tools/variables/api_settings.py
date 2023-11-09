@@ -33,9 +33,7 @@ RAIN_SCENARIOS = ["T10", "T100", "T1000"]
 API_SETTINGS = {}
 API_SETTINGS["org_uuid"] = {}
 API_SETTINGS["org_uuid"]["BWN HHNK"] = "48dac75bef8a42ebbb52e8f89bbdb9f2"
-API_SETTINGS["org_uuid"][
-    "Hoogheemraadschap Hollands Noorderkwartier"
-] = "474afd212f2e4b4f82615142f1d67acb"
+API_SETTINGS["org_uuid"]["Hoogheemraadschap Hollands Noorderkwartier"] = "474afd212f2e4b4f82615142f1d67acb"
 API_SETTINGS["store_results"] = {
     "process_basic_results": True,
     "arrival_time": False,

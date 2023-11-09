@@ -1,3 +1,4 @@
+# %%
 import numpy as np
 import pandas as pd
 from threedigrid.admin.gridresultadmin import GridH5ResultAdmin
@@ -7,7 +8,7 @@ def calculate_rain_days(rain):
     """
     Calculates days dry before and after rain
     """
-    detected_rain = [i for i, e in enumerate(rain) if e > 0.0001]
+    detected_rain = [i for i, e in enumerate(rain) if e > 1e-5]
     # Collect indexes of items in rain where rain falls (every index represents an hour)
     if detected_rain:
         # Detected rain[0] is the first index where rain occurs, so the last dry
@@ -32,31 +33,32 @@ def get_rain_properties(results):
         timestep = results.nodes.timestamps / 60
         # Calculates rain per node between 0 and end of scenario at every step of size dt / 60 (so every hour)
         rain_1d_list = (
-            results.nodes.subset("1D_ALL")
-            .timeseries(indexes=slice(0, timestep.size, int(60 / dt)))
-            .rain.tolist()
+            results.nodes.subset("1D_ALL").timeseries(indexes=slice(0, timestep.size, int(60 / dt))).rain.tolist()
         )
         rain_2d_list = (
-            results.nodes.subset("2D_ALL")
-            .timeseries(indexes=slice(0, timestep.size, int(60 / dt)))
-            .rain.tolist()
+            results.nodes.subset("2D_ALL").timeseries(indexes=slice(0, timestep.size, int(60 / dt))).rain.tolist()
         )
         # Blijft raar in sublijsten staan ookal lezen we maar 1 node uit, dit haalt dat weg om er 1 list van te maken
         # We pick the index of the first node in the list of rain
         rain_1d = [x[0] for x in rain_1d_list]
         i = 0
         # if the first node we picked has no rain, we try others until we find one that does
-        while (not any(rain_1d)) and (i < len(rain_1d_list)):
+        while ((not any(rain_1d)) and (i < len(rain_1d_list))) or (np.all(np.array(rain_1d) <= 1e-5)):
             rain_1d = [x[i] for x in rain_1d_list]
             i += 1
+
+            if i == len(rain_1d_list[0]) - 1:
+                rain_1d = []
+                break
+
         # Check if there is 2d rain info
         try:
             rain_2d = [x[0] for x in rain_2d_list]
         except:
             rain_2d = [0]
-        if any(rain_1d):
+        if np.any(rain_1d):
             rain = rain_1d
-        elif any(rain_2d):
+        elif np.any(rain_2d):
             rain = rain_2d
         else:
             raise Exception(f"Geen regen gedetecteerd in 3di scenario")
@@ -81,9 +83,7 @@ def create_results_dataframe(timestep, days_dry_start, days_dry_end):
     # Index in timestep for start sum
     T0_values = np.argmax(timestep > 0)  # 0
     # Index of timestep where rain starts
-    T_rain_start_values = np.argmax(
-        timestep > days_dry_start * 24 * 60
-    )  # int(days_dry_start * 4 * 24)
+    T_rain_start_values = np.argmax(timestep > days_dry_start * 24 * 60)  # int(days_dry_start * 4 * 24)
     # Index of timestep one day before end of rain
     T_rain_end_min_one_values = (
         np.argmax(timestep > timestep[-1] - days_dry_end * 24 * 60 - 24 * 60) - 1
@@ -109,20 +109,16 @@ def create_results_dataframe(timestep, days_dry_start, days_dry_end):
         T_rain_end_values,
         T_end_sum_values,
     ]
-    timesteps_dataframe = pd.DataFrame(
-        data=[timesteps_df_values], columns=timesteps_df_columns, index=["value"]
-    )
+    timesteps_dataframe = pd.DataFrame(data=[timesteps_df_values], columns=timesteps_df_columns, index=["value"])
     return timesteps_dataframe
 
 
-def construct_scenario(grid_result:GridH5ResultAdmin):
+def construct_scenario(grid_result: GridH5ResultAdmin):
     """Get scenario properties from threedi result."""
     try:
         rain, dt, timestep = get_rain_properties(grid_result)
         detected_rain, days_dry_start, days_dry_end = calculate_rain_days(rain)
-        timesteps_dataframe = create_results_dataframe(
-            timestep, days_dry_start, days_dry_end
-        )
+        timesteps_dataframe = create_results_dataframe(timestep, days_dry_start, days_dry_end)
         return (
             rain,
             detected_rain,
@@ -133,3 +129,14 @@ def construct_scenario(grid_result:GridH5ResultAdmin):
         )
     except Exception as e:
         raise e from None
+
+
+# %%
+if __name__ == "__main__":
+    from hhnk_research_tools.folder_file_classes.threedi_schematisation import (
+        ThreediResult,
+    )
+
+    r = ThreediResult(r"E:\02.modellen\callantsoog\03_3di_results\1d2d_results\callantsoog #4 1d2d_test")
+
+    get_rain_properties(results=r.grid)

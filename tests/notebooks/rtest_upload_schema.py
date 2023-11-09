@@ -4,7 +4,7 @@ import hhnk_research_tools as hrt
 from hhnk_threedi_tools.utils.notebooks.notebook_setup import setup_notebook
 notebook_data = setup_notebook()
 
-import hhnk_threedi_tools.core.api.upload_model.upload as upload
+import hhnk_threedi_tools.core.schematisation.upload as upload
 
 
 api_keys = hrt.read_api_file(notebook_data["api_keys_path"])

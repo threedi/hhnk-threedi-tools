@@ -1,6 +1,5 @@
-import numpy as np
-
 import hhnk_research_tools as hrt
+import numpy as np
 
 
 def stack_raster_arrays(raster_classes, window):
@@ -26,9 +25,7 @@ def bereken_contante_schade_window(idx, window, raster_classes, frequencies, cw_
     De jaarlijkse schade wordt berekend door de schade voor een scenario te vermenigvuldigen met
     de jaarlijkse frequentie van dat scenario."""
     # Load raster
-    stacked_raster_array = stack_raster_arrays(
-        raster_classes, window=window
-    )  # laad 18 resultaten en zet in een array
+    stacked_raster_array = stack_raster_arrays(raster_classes, window=window)  # laad 18 resultaten en zet in een array
 
     # Bereken jaarlijkse schade
     stacked_raster_array = stacked_raster_array * frequencies[:, None, None]
@@ -42,9 +39,7 @@ def bereken_contante_schade_window(idx, window, raster_classes, frequencies, cw_
     return (window, stacked_raster_array)
 
 
-def main_maak_schadekaart(
-    output_raster, schade_rasters, frequencies, output_nodata, dv, n
-):
+def main_maak_schadekaart(output_raster, schade_rasters, frequencies, output_nodata, dv, n):
     """Maak de jaarlijkse schade contant door gebruik te maken van een discontovoet (dv) en investeringstermijn (n)
     Schades kleiner dan 1e-5 per pixel worden op 0 gezet. Dit heeft geen significant effect op de totale schade (tot enkele tientallen euros per peilgebied). Wel een aanzienlijk effect op de bestandsgrootte.
     """
@@ -53,17 +48,15 @@ def main_maak_schadekaart(
 
     damage_raster = raster_classes[0]
     parts = damage_raster.generate_blocks()
-    array_out = (
-        np.ones([damage_raster.shape[0], damage_raster.shape[1]]) * output_nodata
-    )
+    array_out = np.ones([damage_raster.shape[0], damage_raster.shape[1]]) * output_nodata
 
     cw_factor = (1 - (1 - dv) ** n) / dv
 
     # #Loop over windows and calculate results
     for idx, part in parts.iterrows():
         window = part["window_readarray"]
-        window_normal = part["window"] 
-        
+        window_normal = part["window"]
+
         window, schade_window_array = bereken_contante_schade_window(
             idx=idx,
             window=window,
@@ -72,8 +65,8 @@ def main_maak_schadekaart(
             cw_factor=cw_factor,
         )
 
-        array_out[window_normal[1] : window_normal[3], window_normal[0] : window_normal[2]] = schade_window_array 
-    
+        array_out[window_normal[1] : window_normal[3], window_normal[0] : window_normal[2]] = schade_window_array
+
     hrt.save_raster_array_to_tiff(
         output_file=output_raster.path,
         raster_array=array_out,

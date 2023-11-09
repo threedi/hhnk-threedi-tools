@@ -10,9 +10,9 @@ def rasterize_peilgebieden(
     mask_file,
     overwrite=False,
 ):
-    create = hrt.check_create_new_file(output_file=output_file.path, 
-                              overwrite=overwrite, 
-                              input_files=[input_peilgebieden.path])
+    create = hrt.check_create_new_file(
+        output_file=output_file.path, overwrite=overwrite, input_files=[input_peilgebieden.path]
+    )
 
     if create:
         # TODO dit is niet goed voor het geheugen... Is het wel nodig?
@@ -54,9 +54,7 @@ def rasterize_peilgebieden(
 
         unique_labels = np.unique(labels_array[labels_array != input_raster.nodata])
 
-        pgb_masked = pgb_gdf.loc[unique_labels][
-            ["index", "peil_id", "code", "name", "geometry"]
-        ]
+        pgb_masked = pgb_gdf.loc[unique_labels][["index", "peil_id", "code", "name", "geometry"]]
 
         # pgb_masked.drop('level_0', axis=1, inplace=True)
         pgb_masked.reset_index(drop=True, inplace=True)
