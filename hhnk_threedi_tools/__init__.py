@@ -8,9 +8,7 @@ import hhnk_threedi_tools.qgis
 import hhnk_threedi_tools.resources
 
 # checks
-from hhnk_threedi_tools.core.checks.bank_levels import (
-    BankLevelTest,
-)
+from hhnk_threedi_tools.core.checks.bank_levels import BankLevelTest
 
 # FIXME TypeError: metaclass conflict: the metaclass of a derived class must be a (non-strict) subclass of the metaclasses of all its bases
 from hhnk_threedi_tools.core.checks.one_d_two_d import OneDTwoDTest
@@ -51,4 +49,4 @@ from hhnk_threedi_tools.utils.notebooks.run import (
     write_notebook_json,
 )
 
-__version__ = "2023.4"
+__version__ = "2023.5"
