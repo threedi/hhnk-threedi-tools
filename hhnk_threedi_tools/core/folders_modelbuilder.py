@@ -15,6 +15,8 @@ class SourcePaths:
     glg_path: Union[str, Path, hrt.Raster]
     ggg_path: Union[str, Path, hrt.Raster]
     ghg_path: Union[str, Path, hrt.Raster]
+    infiltration_path: Union[str, Path, hrt.Raster]
+    friction_path: Union[str, Path, hrt.Raster]
     polder_path: str
     watervlakken_path: str
 
@@ -32,15 +34,34 @@ class SourcePaths:
         self.glg = hrt.Raster(self.glg_path)
         self.ggg = hrt.Raster(self.ggg_path)
         self.ghg = hrt.Raster(self.ghg_path)
+        self.infiltration = hrt.Raster(self.infiltration_path)
+        self.friction = hrt.Raster(self.friction_path)
         self.polder = hrt.File(self.polder_path)
         self.watervlakken = hrt.File(self.watervlakken_path)
         self.verify()
 
     def verify(self):
         """Verifiy check if inputs exist"""
-        for f in [self.dem, self.glg, self.ggg, self.ghg, self.polder, self.watervlakken]:
-            if not f.exists():
-                raise FileNotFoundError(f"{f} not found")
+        filesnotfound = []
+        for f in [
+            self.dem,
+            self.glg,
+            self.ggg,
+            self.ghg,
+            self.infiltration,
+            self.friction,
+            self.polder,
+            self.watervlakken,
+        ]:
+            try:
+                if not f.exists():
+                    filesnotfound.append(f.base)
+            except RuntimeError as e:
+                raise Exception(f"{f.base}") from e
+
+        if filesnotfound:
+            raise FileNotFoundError(f"{filesnotfound} not found")
+
         return True
 
 
@@ -66,16 +87,20 @@ class FoldersModelbuilder:
             self.glg = self.full_path("glg.tif")
             self.ggg = self.full_path("ggg.tif")
             self.ghg = self.full_path("ghg.tif")
+            self.infiltration = self.full_path("infiltration.tif")
+            self.friction = self.full_path("friction.tif")
 
         class TempPaths(hrt.Folder):
             """temp rasters allemaal met dezelfde extent."""
 
             def __init__(self, base):
-                super().__init__(base=os.path.join(base, "tmp"))
+                super().__init__(base=os.path.join(base, "tmp_rasters"))
 
                 self.dem = self.full_path("dem.vrt")
                 self.glg = self.full_path("glg.vrt")
                 self.ggg = self.full_path("ggg.vrt")
                 self.ghg = self.full_path("ghg.vrt")
+                self.infiltration = self.full_path("infiltration.vrt")
+                self.friction = self.full_path("friction.vrt")
                 self.polder = self.full_path("polder.tif")
                 self.watervlakken = self.full_path("watervlakken.tif")

@@ -1,56 +1,42 @@
 # %%
 """Aanmaken rasters voor model"""
-import os
-from dataclasses import dataclass
-
 import geopandas as gpd
 import hhnk_research_tools as hrt
-import hhnk_research_tools.raster_functions as raster_functions
-import numpy as np
 
 import hhnk_threedi_tools as htt
-import hhnk_threedi_tools.core.folders_modelbuilder as folders_modelbuilder
-
-if __name__ == "__main__":
-    from pathlib import Path
-
-    TEST_DIRECTORY = Path(__file__).parents[3].absolute() / "tests" / "data"
-
-    PATH_TEST_MODEL = TEST_DIRECTORY / "model_test"
-    TEMP_DIR = hrt.Folder(TEST_DIRECTORY / r"temp", create=True)
-    TEMP_DIR.unlink_contents()
-
-
-# %%
-import importlib
-
-importlib.reload(folders_modelbuilder)
-
-raster_path = hrt.Folder(
-    r"C:\Users\wiets\Documents\HHNK\07.Poldermodellen\10.tHoekje\02. Sqlite modeldatabase\rasters"
-)
-
-source_paths = folders_modelbuilder.SourcePaths(
-    dem_path=raster_path.full_path("dem_thoekje.tif"),
-    glg_path=raster_path.full_path("storage_glg_thoekje.tif"),
-    ggg_path=raster_path.full_path("storage_ggg_thoekje.tif"),
-    ghg_path=raster_path.full_path("storage_ghg_thoekje.tif"),
-    polder_path=r"C:\Users\wiets\Documents\GitHub\hhnk-threedi-tools\tests\data\model_test\01_source_data\polder_polygon.shp",
-    watervlakken_path=r"C:\Users\wiets\Documents\GitHub\hhnk-threedi-tools\tests\data\model_test\01_source_data\modelbuilder_output\channel_surface_from_profiles.shp",
-)
-
-folder = folders_modelbuilder.FoldersModelbuilder(dst_path=TEMP_DIR.base, source_paths=source_paths)
 
 
 # %%
 class ModelbuilderRasters:
+    """This class will create the rasters for a schematisation.
+    The folder attribute contains the links to the source files
+    that will be used to create these rasters."""
+
     def __init__(
-        self, folder: htt.FoldersModelBuilder, resolution: int = 0.5, nodata: int = -9999, overwrite: bool = False
+        self,
+        folder: htt.FoldersModelbuilder,
+        resolution: float = 0.5,
+        nodata: int = -9999,
+        overwrite: bool = False,
     ):
+        """
+        folder : htt.FoldersModelbuilder
+            folder structure of modelbuilder with src files and dst paths
+        resolution : float, optional, by default 0.5
+            resultion of output raster
+        nodata : int, optional, by default -9999
+            nodata value of output raster
+        overwrite : bool, optional, by default False
+            overwrite the output file if it already exists
+
+        """
         self.folder = folder
         self.resolution = resolution
         self.nodata = nodata
         self.overwrite = overwrite
+
+        # Assigned during function calls.
+        self.dem_calc = None
 
     def prepare_input(self):
         """
@@ -87,10 +73,10 @@ class ModelbuilderRasters:
             )
 
         # Build vrt with correct extents of input rasters
-        for key in ["dem", "glg", "ggg", "ghg"]:
+        for key in ["dem", "glg", "ggg", "ghg", "infiltration", "friction"]:
             output_file = getattr(self.folder.dst.tmp, key)
             output_file.build_vrt(
-                overwrite=False,
+                overwrite=True,
                 bounds=eval(self.folder.dst.tmp.polder.metadata.bbox),
                 input_files=getattr(self.folder.src, key),
                 resolution=0.5,
@@ -112,11 +98,11 @@ class ModelbuilderRasters:
 
         # init calculator
         self.dem_calc = hrt.RasterCalculatorV2(
-            raster_out=folder.dst.dem,
+            raster_out=self.folder.dst.dem,
             raster_paths_dict={
-                "dem": folder.dst.tmp.dem,
-                "polder": folder.dst.tmp.polder,
-                "watervlakken": folder.dst.tmp.watervlakken,
+                "dem": self.folder.dst.tmp.dem,
+                "polder": self.folder.dst.tmp.polder,
+                "watervlakken": self.folder.dst.tmp.watervlakken,
             },
             nodata_keys=["polder"],
             mask_keys=["polder", "dem"],
@@ -129,73 +115,66 @@ class ModelbuilderRasters:
         # Run calculation of output raster
         self.dem_calc.run(overwrite=True)
 
-        # gxg raster creation
-        def run_gxg_window(block):
+        # raster creation
+        def run_rtype_window(block):
             """custom calc function on blocks in hrt.RasterCalculatorV2"""
-            block_out = block.blocks["gxg"]
+            block_out = block.blocks["rtype"]
 
             # Nodatamasks toepassen
             block_out[block.masks_all] = self.nodata
             return block_out
 
-        for gxg in ["glg", "ggg", "ghg"]:
+        for rtype in ["glg", "ggg", "ghg", "infiltration", "friction"]:
             # init calculator
-            gxg_calc = hrt.RasterCalculatorV2(
-                raster_out=getattr(self.folder.dst, gxg),
+            raster_calc = hrt.RasterCalculatorV2(
+                raster_out=getattr(self.folder.dst, rtype),
                 raster_paths_dict={
-                    "gxg": getattr(self.folder.dst.tmp, gxg),
+                    "rtype": getattr(self.folder.dst.tmp, rtype),
                     "polder": self.folder.dst.tmp.polder,
                 },
                 nodata_keys=["polder"],
-                mask_keys=["polder", "gxg"],
+                mask_keys=["polder", "rtype"],
                 metadata_key="polder",
-                custom_run_window_function=run_gxg_window,
+                custom_run_window_function=run_rtype_window,
                 output_nodata=self.nodata,
                 min_block_size=4096,
                 verbose=True,
             )
             # Run calculation of output raster
-            gxg_calc.run(overwrite=False)
+            raster_calc.run(overwrite=False)
 
-
+    def run(self):
+        self.prepare_input()
+        self.create_rasters()
 
 
 # %%
-%timeit -r1 -n1 t()
-# %%
-%load_ext line_profiler
-# %%
-# %lprun -f hrt.Raster.write_array t()
+# import cProfile
+# import pstats
 
-# %%
-%lprun -f t t()
-
-# %%
-import cProfile
-import cProfile, pstats
-profiler = cProfile.Profile()
-profiler.enable()
-t()
-profiler.disable()
-stats = pstats.Stats(profiler)
-# stats.strip_dirs()
-stats.sort_stats('tottime')
-stats.print_stats()
-#vrt van dem met juiste extent/resolutie
-#watergangen rasterizen
-#polder polygon rasterizen voor nodata doordruk
+# profiler = cProfile.Profile()
+# profiler.enable()
+# t()
+# profiler.disable()
+# stats = pstats.Stats(profiler)
+# # stats.strip_dirs()
+# stats.sort_stats("tottime")
+# stats.print_stats()
+# vrt van dem met juiste extent/resolutie
+# watergangen rasterizen
+# polder polygon rasterizen voor nodata doordruk
 
 
-#vrt+
+# vrt+
 
 # %%
 
-# 
-#  rem De DEM wordt uitgeknipt uit de gebiedsdekkende DEM, de verrasterde watervlakken worden gebruikt om de DEM 
-# rem dicht te smeren. 
-# rem Een masker wordt gemaakt van de DEM om data/nodata pixels te onderscheiden. Gebiedsdekkende bodemberging 
-# rem (ghg, glg, ggg), frictie en infiltratie raster worden op dit masker geprojecteerd en gecomprimeerd. 
-# rem Rasters staat nu vast op 0.5 meter resolutie. 
+#
+#  rem De DEM wordt uitgeknipt uit de gebiedsdekkende DEM, de verrasterde watervlakken worden gebruikt om de DEM
+# rem dicht te smeren.
+# rem Een masker wordt gemaakt van de DEM om data/nodata pixels te onderscheiden. Gebiedsdekkende bodemberging
+# rem (ghg, glg, ggg), frictie en infiltratie raster worden op dit masker geprojecteerd en gecomprimeerd.
+# rem Rasters staat nu vast op 0.5 meter resolutie.
 
 # rem PS=$(python3 /code/modelbuilder/pixelsize.py "/code/tmp/rasters/tmp/channelsurface.tif")
 # rem echo $PS
@@ -223,16 +202,16 @@ stats.print_stats()
 # rem c:\OSGeo4W64\apps\Python37\python.exe c:\OSGeo4W64\apps\Python37\Scripts\gdal_calc.py --co="COMPRESS=DEFLATE" --NoDataValue -9999 -A \\corp.hhnk.nl\data\Hydrologen_data\Data\modelbuilder\data\tmp\rasters\dem_%2.tif --outfile \\corp.hhnk.nl\data\Hydrologen_data\Data\modelbuilder\data\tmp\rasters\tmp\vulrasternul.tif --calc="0" --quiet
 # C:\ProgramData\Anaconda3\envs\threedipy\python.exe C:\ProgramData\Anaconda3\envs\threedipy\Scripts\gdal_calc.py --co="COMPRESS=DEFLATE" --NoDataValue -9999 -A \\corp.hhnk.nl\data\Hydrologen_data\Data\modelbuilder\data\tmp\rasters\dem_%2.tif --outfile \\corp.hhnk.nl\data\Hydrologen_data\Data\modelbuilder\data\tmp\rasters\tmp\vulrasternul.tif --calc="0" --quiet
 
-# copy \\corp.hhnk.nl\data\Hydrologen_data\Data\modelbuilder\data\tmp\rasters\tmp\vulrasternul.tif \\corp.hhnk.nl\data\Hydrologen_data\Data\modelbuilder\data\tmp\rasters\tmp\vulraster_infiltration.tif 
-# copy \\corp.hhnk.nl\data\Hydrologen_data\Data\modelbuilder\data\tmp\rasters\tmp\vulrasternul.tif \\corp.hhnk.nl\data\Hydrologen_data\Data\modelbuilder\data\tmp\rasters\tmp\vulraster_berging.tif 
+# copy \\corp.hhnk.nl\data\Hydrologen_data\Data\modelbuilder\data\tmp\rasters\tmp\vulrasternul.tif \\corp.hhnk.nl\data\Hydrologen_data\Data\modelbuilder\data\tmp\rasters\tmp\vulraster_infiltration.tif
+# copy \\corp.hhnk.nl\data\Hydrologen_data\Data\modelbuilder\data\tmp\rasters\tmp\vulrasternul.tif \\corp.hhnk.nl\data\Hydrologen_data\Data\modelbuilder\data\tmp\rasters\tmp\vulraster_berging.tif
 
 # echo INFO plak eenmalig bodemberging verhard in het vulraster
-# gdalwarp "\\corp.hhnk.nl\data\Hydrologen_data\Data\01.basisgegevens\rasters\bodemberging\bodemberging_verhard_hhnk.tif" \\corp.hhnk.nl\data\Hydrologen_data\Data\modelbuilder\data\tmp\rasters\tmp\vulraster_berging.tif 
+# gdalwarp "\\corp.hhnk.nl\data\Hydrologen_data\Data\01.basisgegevens\rasters\bodemberging\bodemberging_verhard_hhnk.tif" \\corp.hhnk.nl\data\Hydrologen_data\Data\modelbuilder\data\tmp\rasters\tmp\vulraster_berging.tif
 
 # echo INFO maak drie vulrasters voor de berging
-# copy \\corp.hhnk.nl\data\Hydrologen_data\Data\modelbuilder\data\tmp\rasters\tmp\vulraster_berging.tif \\corp.hhnk.nl\data\Hydrologen_data\Data\modelbuilder\data\tmp\rasters\tmp\vulraster_ghg_ongec.tif 
-# copy \\corp.hhnk.nl\data\Hydrologen_data\Data\modelbuilder\data\tmp\rasters\tmp\vulraster_berging.tif \\corp.hhnk.nl\data\Hydrologen_data\Data\modelbuilder\data\tmp\rasters\tmp\vulraster_glg_ongec.tif 
-# copy \\corp.hhnk.nl\data\Hydrologen_data\Data\modelbuilder\data\tmp\rasters\tmp\vulraster_berging.tif \\corp.hhnk.nl\data\Hydrologen_data\Data\modelbuilder\data\tmp\rasters\tmp\vulraster_ggg_ongec.tif 
+# copy \\corp.hhnk.nl\data\Hydrologen_data\Data\modelbuilder\data\tmp\rasters\tmp\vulraster_berging.tif \\corp.hhnk.nl\data\Hydrologen_data\Data\modelbuilder\data\tmp\rasters\tmp\vulraster_ghg_ongec.tif
+# copy \\corp.hhnk.nl\data\Hydrologen_data\Data\modelbuilder\data\tmp\rasters\tmp\vulraster_berging.tif \\corp.hhnk.nl\data\Hydrologen_data\Data\modelbuilder\data\tmp\rasters\tmp\vulraster_glg_ongec.tif
+# copy \\corp.hhnk.nl\data\Hydrologen_data\Data\modelbuilder\data\tmp\rasters\tmp\vulraster_berging.tif \\corp.hhnk.nl\data\Hydrologen_data\Data\modelbuilder\data\tmp\rasters\tmp\vulraster_ggg_ongec.tif
 # rem c:\OSGeo4W64\apps\Python37\python.exe c:\OSGeo4W64\apps\Python37\Scripts\gdal_calc.py --co="COMPRESS=DEFLATE" --NoDataValue -9999 -A \\corp.hhnk.nl\data\Hydrologen_data\Data\modelbuilder\data\tmp\rasters\dem_%2.tif --outfile \\corp.hhnk.nl\data\Hydrologen_data\Data\modelbuilder\data\tmp\rasters\tmp\vulraster_friction.tif --calc="0.2" --quiet
 # C:\ProgramData\Anaconda3\envs\threedipy\python.exe C:\ProgramData\Anaconda3\envs\threedipy\Scripts\gdal_calc.py --co="COMPRESS=DEFLATE" --NoDataValue -9999 -A \\corp.hhnk.nl\data\Hydrologen_data\Data\modelbuilder\data\tmp\rasters\dem_%2.tif --outfile \\corp.hhnk.nl\data\Hydrologen_data\Data\modelbuilder\data\tmp\rasters\tmp\vulraster_friction.tif --calc="0.2" --quiet
 
