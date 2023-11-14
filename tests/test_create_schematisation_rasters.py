@@ -1,8 +1,5 @@
 # %%
 import importlib
-from pathlib import Path
-
-import hhnk_research_tools as hrt
 
 import hhnk_threedi_tools.core.folders_modelbuilder as folders_modelbuilder
 from hhnk_threedi_tools.core.modelbuilder.create_schematisation_rasters import (
@@ -27,12 +24,12 @@ def test_create_schematisation_rasters():
         watervlakken_path=FOLDER_TEST.source_data.modelbuilder.channel_from_profiles,
     )
 
-    folder = folders_modelbuilder.FoldersModelbuilder(dst_path=TEMP_DIR, source_paths=source_paths)
+    folder_rasters = folders_modelbuilder.FoldersModelbuilder(dst_path=TEMP_DIR, source_paths=source_paths)
 
-    assert folder.dst.dem.exists() is False
+    assert folder_rasters.dst.dem.exists() is False
 
     model_rasters = ModelbuilderRasters(
-        folder=folder,
+        folder=folder_rasters,
         resolution=0.5,
         nodata=-9999,
         overwrite=False,
@@ -40,8 +37,8 @@ def test_create_schematisation_rasters():
 
     model_rasters.run()
 
-    assert folder.dst.dem.exists() is True
-    assert folder.dst.dem.shape == [6962, 7686]
+    assert folder_rasters.dst.dem.exists() is True
+    assert folder_rasters.dst.dem.shape == [6962, 7686]
 
 
 # %%
