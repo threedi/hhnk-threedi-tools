@@ -16,7 +16,6 @@ class TestZeroDOneD:
         self.test_0d1d.run()
         assert self.test_0d1d.results["lvl_end"].count() == 157
 
-
     def test_run_hydraulic_test(self):
         """test of de hydraulische testen werken"""
         self.test_0d1d.run_hydraulic()
@@ -26,14 +25,12 @@ class TestZeroDOneD:
 # %%
 if __name__ == "__main__":
     import inspect
+
     selftest = TestZeroDOneD()
     self = selftest.test_0d1d
-    #Run all testfunctions
+    # Run all testfunctions
     for i in dir(selftest):
-        if i.startswith('test_') and hasattr(inspect.getattr_static(selftest,i), '__call__'):
+        if i.startswith("test_") and hasattr(inspect.getattr_static(selftest, i), "__call__"):
             print(i)
-            getattr(selftest, i)()    
+            getattr(selftest, i)()
 # %%
-
-
-
