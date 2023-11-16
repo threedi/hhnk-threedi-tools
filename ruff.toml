@@ -7,7 +7,7 @@ ignore = ["D1", "D202", "D205", "D400", "D404", "E501", "PD002", "PD901"]
 fixable = ["I"]
 
 #Exclude external packages in formatter
-extend-exclude = ["hhnk_threedi_plugin/patches/*.py"]
+extend-exclude = ["hhnk_threedi_tools/external/*.py"]
 
 line-length = 119
 
