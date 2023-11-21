@@ -10,7 +10,8 @@ import hhnk_threedi_tools as htt
 class ModelbuilderRasters:
     """This class will create the rasters for a schematisation.
     The folder attribute contains the links to the source files
-    that will be used to create these rasters."""
+    that will be used to create these rasters.
+    """
 
     def __init__(
         self,
@@ -73,14 +74,14 @@ class ModelbuilderRasters:
             )
 
         # Build vrt with correct extents of input rasters
-        for key in ["dem", "glg", "ggg", "ghg", "infiltration", "friction"]:
-            output_file = getattr(self.folder.dst.tmp, key)
-            output_file.build_vrt(
-                overwrite=True,
-                bounds=eval(self.folder.dst.tmp.polder.metadata.bbox),
-                input_files=getattr(self.folder.src, key),
-                resolution=0.5,
-            )
+        # for key in ["dem", "glg", "ggg", "ghg", "infiltration", "friction"]:
+        #     output_file = getattr(self.folder.dst.tmp, key)
+        #     output_file.build_vrt(
+        #         overwrite=True,
+        #         bounds=eval(self.folder.dst.tmp.polder.metadata.bbox),
+        #         input_files=getattr(self.folder.src, key),
+        #         resolution=0.5,
+        #     )
 
     def create_rasters(self):
         """Create output rasters dem and gxg"""

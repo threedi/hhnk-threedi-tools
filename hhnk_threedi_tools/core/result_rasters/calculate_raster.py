@@ -106,7 +106,8 @@ class BaseCalculatorGPKG:
           the interpolation.
 
         In all other cases, the waterlevel from the constant level method is
-        used."""
+        used.
+        """
         # start with the constant level result
         nodeid_block = self.nodeid_raster._read_array(window=window)
         # start with the constant level result
@@ -218,7 +219,7 @@ class BaseCalculatorGPKG:
             target_ds = None
 
     def __enter__(self):
-        "with BaseCalculatorGPKG(**args) as x. will call this func."
+        "With BaseCalculatorGPKG(**args) as x. will call this func."
         self.cache = {}
         return self
 
