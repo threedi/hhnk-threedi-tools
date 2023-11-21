@@ -263,6 +263,7 @@ class SchemaDirParent(Folder):
 
         self.revisions = self.ModelRevisionsParent(base=self.base, create=create)
         self.schema_base = hrt.ThreediSchematisation(base=self.base, name="00_basis", create=create)
+        self.manipulated_rasters = self.ManipulatedRasters(base=self.base, create=create)
         self.schema_list = ["schema_base"]
         self.add_file("model_sql", "model_sql.json")
 
@@ -319,6 +320,23 @@ class SchemaDirParent(Folder):
             super().__init__(os.path.join(base, "revisions"), create)
             if create:
                 self.create()
+
+    class ManipulatedRasters(Folder):
+        """sub-folder of SchemaDirParent with all manipulated rasters in it.
+        For now it holds a manipulated raster used for damage calculations.
+        """
+
+        def __init__(self, base, create):
+            super().__init__(os.path.join(base, "rasters_verwerkt"), create)
+
+            if create:
+                self.create()
+                self.create_readme()
+
+        def create_readme(self):
+            readme_txt = "Expected files are:\n\n" "damage_{dem.name}.tif used for damage-calculations"
+            with open(os.path.join(self.base, "read_me.txt"), mode="w") as f:
+                f.write(readme_txt)
 
 
 class ThreediResultsDir(Folder):
