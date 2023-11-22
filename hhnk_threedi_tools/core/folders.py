@@ -329,12 +329,21 @@ class SchemaDirParent(Folder):
         def __init__(self, base, create):
             super().__init__(os.path.join(base, "rasters_verwerkt"), create)
 
+            self.add_file("dem", "dem_05m.tif")
+            self.add_file("damage_dem", "damage_dem.tif")
+            self.add_file("panden", "panden.tif")
             if create:
                 self.create()
                 self.create_readme()
 
         def create_readme(self):
-            readme_txt = "Expected files are:\n\n" "damage_{dem.name}.tif used for damage-calculations"
+            readme_txt = (
+                "Expected files are:\n\n"
+                "dem_05m.tif used to create damage_dem.tif\n"
+                "panden.tif used to create damage_dem.tif\n"
+                "damage_dem.tif created by damage_05m.tif + panden.tif used fro damage calculations.\n\n"
+                "\tdamage_dem.tif = dem_05m.tif + panden.tif"
+            )
             with open(os.path.join(self.base, "read_me.txt"), mode="w") as f:
                 f.write(readme_txt)
 

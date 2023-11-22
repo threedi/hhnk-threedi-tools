@@ -1,18 +1,19 @@
-# %%
 """
 Most functions taken and edited from pip package: threedidepth.
 Modified to have more flexibility in input and calculation
 """
 
-# -*- coding: utf-8 -*-
 from pathlib import Path
 
 import hhnk_research_tools as hrt
 import numpy as np
+from geopandas import GeoDataFrame
 from osgeo import gdal
 from scipy.spatial import qhull
 from threedidepth import morton
 from threedigrid.admin.constants import NO_DATA_VALUE
+
+from hhnk_threedi_tools.core.folders import Folders
 
 
 class BaseCalculatorGPKG:
@@ -38,6 +39,96 @@ class BaseCalculatorGPKG:
 
         self.grid_gdf = grid_gdf
         self.wlvl_column = wlvl_column  # Column to use in calculation
+
+    @classmethod
+    def from_folders(cls, folders: Folders, grid_gdf: GeoDataFrame, wlvl_column: str):
+        """Init BaseCalculatorGPKG from a model folders. It will use the model-dem and source-data panden to create
+        a dem elevated +10cm at panden.
+
+        Parameters
+        ----------
+        folder : Folders
+            Model folders structure, including 'source_data' and 'model' sub-folders. To run this method
+            the following files should exist:
+             - folder.model.schema_base.rasters.dem
+             - folder.model.manipulated_rasters.panden
+        grid_gdf : GeoDataFrame
+            GeoDataFrame with 3Di grid and water levels
+        wlvl_column : str
+            column in grid_gdf to read to water level from
+
+        Returns
+        -------
+        BaseCalculatorGPKG
+        """
+        # check if damage dem needs to be updated
+        dem = folders.model.schema_base.rasters.dem
+        highres_dem = folders.model.manipulated_rasters.dem
+        damage_dem = folders.model.manipulated_rasters.damage_dem
+        panden = folders.source_data.panden
+        panden_raster = folders.model.manipulated_rasters.panden
+
+        # check if we need to overwrite damage_dem because it doesn't exist or panden or model-dem are newer
+        if not folders.model.manipulated_rasters.exists():  # if the folders doesn't exist we are to create it
+            folders.model.manipulated_rasters.create()
+            folders.model.manipulated_rasters.create_readme()
+            overwrite = True
+        else:
+            overwrite = hrt.check_create_new_file(
+                output_file=damage_dem,
+                input_files=[dem.base, panden.base],
+                overwrite=False,
+            )
+
+        # remove all files that do not have the correct pixel-size
+        for file in [highres_dem, panden_raster, damage_dem]:
+            if file.exists():
+                if overwrite or (file.metadata.pixel_width != 0.5):
+                    file.path.unlink()
+
+        # create panden_raster if it doesn't exist or is removed
+        if not highres_dem.exists():
+            hrt.reproject(src=dem, target_res=0.5, output_path=highres_dem.path)
+
+        # create panden_raster if it doesn't exist or is removed
+        if not panden_raster.exists():
+            panden_gdf = panden.load()
+            panden_gdf["base_height"] = 0.1
+            hrt.gdf_to_raster(
+                gdf=panden_gdf,
+                value_field="base_height",
+                raster_out=panden_raster,
+                nodata=0,
+                metadata=highres_dem.metadata,
+            )
+
+        # create damage_dem if it doen't exist or is removed
+        if not damage_dem.exists():
+
+            def elevate_dem_block(block):
+                block_out = block.blocks["dem"] + block.blocks["panden"]
+
+                block_out[block.masks_all] = highres_dem.nodata
+                return block_out
+
+            calc = hrt.RasterCalculatorV2(
+                raster_out=damage_dem,
+                raster_paths_dict={
+                    "dem": highres_dem,
+                    "panden": panden_raster,
+                },
+                nodata_keys=["dem"],
+                mask_keys=["dem"],
+                metadata_key="dem",
+                custom_run_window_function=elevate_dem_block,
+                output_nodata=highres_dem.nodata,
+                min_block_size=4096,
+                verbose=True,
+            )
+
+            calc.run(overwrite=False)
+
+        return cls(damage_dem.path, grid_gdf, wlvl_column)
 
     @property
     def lookup_wlvl(self):
@@ -252,4 +343,3 @@ if __name__ == "__main__":
 
         self.run(output_file=threedi_result.full_path("wdepth_orig.tif"), mode="MODE_WDEPTH", overwrite=OVERWRITE)
         print("Done.")
-# %%
