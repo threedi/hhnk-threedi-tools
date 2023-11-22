@@ -59,7 +59,7 @@ class SourcePaths:
             except RuntimeError as e:
                 raise Exception(f"{f.base}") from e
 
-        if filesnotfound:
+        if filesnotfound != []:
             raise FileNotFoundError(f"{filesnotfound} not found")
 
         return True

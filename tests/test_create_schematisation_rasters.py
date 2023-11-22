@@ -1,7 +1,7 @@
 # %%
 import importlib
 
-import hhnk_threedi_tools.core.folders_modelbuilder as folders_modelbuilder
+from hhnk_threedi_tools.core import folders_modelbuilder
 from hhnk_threedi_tools.core.modelbuilder.create_schematisation_rasters import (
     ModelbuilderRasters,
 )
@@ -11,7 +11,7 @@ importlib.reload(folders_modelbuilder)
 
 
 def test_create_schematisation_rasters():
-    """test creation of model rasters"""
+    """Test creation of model rasters"""
     # %%
     source_paths = folders_modelbuilder.SourcePaths(
         dem_path=FOLDER_TEST.model.schema_base.rasters.dem,

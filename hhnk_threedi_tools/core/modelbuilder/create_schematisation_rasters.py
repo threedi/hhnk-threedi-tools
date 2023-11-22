@@ -88,7 +88,7 @@ class ModelbuilderRasters:
 
         # Dem creation
         def run_dem_window(block):
-            """custom calc function on blocks in hrt.RasterCalculatorV2"""
+            """Custom calc function on blocks in hrt.RasterCalculatorV2"""
             block_out = block.blocks["dem"]
 
             # Watervlakken ophogen naar +10mNAP
@@ -118,7 +118,7 @@ class ModelbuilderRasters:
 
         # raster creation
         def run_rtype_window(block):
-            """custom calc function on blocks in hrt.RasterCalculatorV2"""
+            """Custom calc function on blocks in hrt.RasterCalculatorV2"""
             block_out = block.blocks["rtype"]
 
             # Nodatamasks toepassen
