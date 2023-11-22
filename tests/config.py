@@ -11,9 +11,6 @@ TEST_DIRECTORY = Path(__file__).parent.absolute() / "data"
 PATH_TEST_MODEL = TEST_DIRECTORY / "model_test"
 
 
-# TEMP_DIR = TEST_DIRECTORY/r"temp"
-# if TEMP_DIR.exists():
-#     shutil.rmtree(TEMP_DIR)
 TEMP_DIR = hrt.Folder(TEST_DIRECTORY / r"temp", create=True)
 
 TEMP_DIR.unlink_contents()
