@@ -41,7 +41,7 @@ class SourcePaths:
         self.verify()
 
     def verify(self):
-        """Verifiy check if inputs exist"""
+        """Verify check if inputs exist"""
         filesnotfound = []
         for f in [
             self.dem,
@@ -59,7 +59,7 @@ class SourcePaths:
             except RuntimeError as e:
                 raise Exception(f"{f.base}") from e
 
-        if filesnotfound != []:
+        if filesnotfound:
             raise FileNotFoundError(f"{filesnotfound} not found")
 
         return True
@@ -96,11 +96,5 @@ class FoldersModelbuilder:
             def __init__(self, base):
                 super().__init__(base=os.path.join(base, "tmp_rasters"))
 
-                self.dem = self.full_path("dem.vrt")
-                self.glg = self.full_path("glg.vrt")
-                self.ggg = self.full_path("ggg.vrt")
-                self.ghg = self.full_path("ghg.vrt")
-                self.infiltration = self.full_path("infiltration.vrt")
-                self.friction = self.full_path("friction.vrt")
                 self.polder = self.full_path("polder.tif")
                 self.watervlakken = self.full_path("watervlakken.tif")
