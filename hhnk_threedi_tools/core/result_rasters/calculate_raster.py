@@ -106,7 +106,8 @@ class BaseCalculatorGPKG:
           the interpolation.
 
         In all other cases, the waterlevel from the constant level method is
-        used."""
+        used.
+        """
         # start with the constant level result
         nodeid_block = self.nodeid_raster._read_array(window=window)
         # start with the constant level result
@@ -189,8 +190,8 @@ class BaseCalculatorGPKG:
 
     def run(self, output_file, mode="MODE_WLVL", min_block_size=1024, overwrite=False):
         # Init rasters
-        self.nodeid_raster = hrt.Raster(Path(str(output_file)).parent / "nodeid.tif")
         self.output_raster = hrt.Raster(output_file)
+        self.nodeid_raster = self.output_raster.parent.full_path("nodeid.tif")
 
         create = hrt.check_create_new_file(output_file=self.output_raster.path, overwrite=overwrite)
 
@@ -218,7 +219,7 @@ class BaseCalculatorGPKG:
             target_ds = None
 
     def __enter__(self):
-        "with BaseCalculatorGPKG(**args) as x. will call this func."
+        """With BaseCalculatorGPKG(**args) as x. will call this func."""
         self.cache = {}
         return self
 

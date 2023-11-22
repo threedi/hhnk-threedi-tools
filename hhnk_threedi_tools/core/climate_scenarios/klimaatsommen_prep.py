@@ -280,7 +280,6 @@ if __name__ == "__main__":
 
     from hhnk_threedi_tools import Folders
 
-    # TEST_MODEL = Path(__file__).parent.parent.parent.parent / "tests/data/model_test/"
     TEST_MODEL = r"E:\02.modellen\model_test_v2"
     folder = Folders(TEST_MODEL)
 

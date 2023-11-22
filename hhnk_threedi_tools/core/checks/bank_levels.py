@@ -608,9 +608,7 @@ def new_cross_loc_bank_levels(intersect_1d2d_all, channel_line_geo, cross_loc):
         cross_loc_new_all.loc[
             (cross_loc_new_all.index.isin(cross_loc_fixeddrainage.index)),
             "bank_level_source",
-        ] = (
-            cross_loc_new_all["bank_level_source"] + "_fixeddrainage"
-        )
+        ] = cross_loc_new_all["bank_level_source"] + "_fixeddrainage"
 
         # Calculate difference between new and old bank level
         cross_loc_new_all["bank_level_diff"] = np.round(
@@ -665,7 +663,7 @@ def get_updated_channels(channel_line_geo, cross_loc_new_all):
 if __name__ == "__main__":
     from pathlib import Path
 
-    TEST_MODEL = Path(__file__).parent.parent.parent.parent / "tests/data/model_test/"
+    TEST_MODEL = Path(__file__).parent.parent.parent.parent.full_path(r"tests/data/model_test/")
     if not TEST_MODEL.exists():
         raise Exception(f"{TEST_MODEL} doesnt exist")
 
