@@ -59,22 +59,6 @@ class KlimaatsommenPrep:
             raise Exception(f"INPUTERROR - h5 missing for scenarios; {h5_missing}")
         return True
 
-    def get_dem(self):
-        """Update dem resolution to 0.5m
-        #Get the dem. If dem doesnt have correct resolution it will be reprojected to 0.5m
-        """
-        dem = self.folder.model.schema_base.rasters.dem
-
-        # Reproject to 0.5m if necessary
-        if dem.metadata.pixel_width != 0.5:
-            new_dem_path = self.batch_fd.downloads.full_path(f"{dem.stem}_05m.tif")
-            if not new_dem_path.exists():
-                hrt.reproject(src=dem, target_res=0.5, output_path=new_dem_path)
-            dem = hrt.Raster(new_dem_path)
-            return dem
-        else:
-            return dem
-
     def get_scenario(self, name):
         """Get individual threediresult of a scenario.
         (e.g. netcdf folder of blok_gxg_T10)"""
@@ -116,13 +100,15 @@ class KlimaatsommenPrep:
         """mode options are: "MODE_WDEPTH", "MODE_WLVL" """
         grid_gdf = threedi_result.full_path(grid_filename).load()
 
-        calculator_kwargs = {"dem_path": self.dem.base, "grid_gdf": grid_gdf, "wlvl_column": wlvl_col_name}
+        # calculator_kwargs = {"dem_path": self.dem.base, "grid_gdf": grid_gdf, "wlvl_column": wlvl_col_name}
 
         output_file = scenario_raster
 
         # Init calculator
-        with BaseCalculatorGPKG(**calculator_kwargs) as basecalc:
+        with BaseCalculatorGPKG.from_folder(self.folder, grid_gdf=grid_gdf, wlvl_column=wlvl_col_name) as basecalc:
             basecalc.run(output_file=output_file, mode=mode, overwrite=overwrite)
+        # with BaseCalculatorGPKG(**calculator_kwargs) as basecalc:
+        #     basecalc.run(output_file=output_file, mode=mode, overwrite=overwrite)
 
     def calculate_depth(
         self,
@@ -184,8 +170,6 @@ class KlimaatsommenPrep:
 
     def run(self, gridgpkg=True, depth=True, dmg=True, wlvl=False, overwrite=False, testing=False):
         try:
-            self.dem = self.get_dem()
-
             for name in self.batch_fd.downloads.names:
                 scenario = self.get_scenario(name=name)
                 threedi_result = scenario.netcdf

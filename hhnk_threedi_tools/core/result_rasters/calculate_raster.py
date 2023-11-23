@@ -41,7 +41,7 @@ class BaseCalculatorGPKG:
         self.wlvl_column = wlvl_column  # Column to use in calculation
 
     @classmethod
-    def from_folders(cls, folders: Folders, grid_gdf: GeoDataFrame, wlvl_column: str):
+    def from_folder(cls, folder: Folders, grid_gdf: GeoDataFrame, wlvl_column: str):
         """Init BaseCalculatorGPKG from a model folders. It will use the model-dem and source-data panden to create
         a dem elevated +10cm at panden.
 
@@ -62,16 +62,16 @@ class BaseCalculatorGPKG:
         BaseCalculatorGPKG
         """
         # check if damage dem needs to be updated
-        dem = folders.model.schema_base.rasters.dem
-        highres_dem = folders.model.manipulated_rasters.dem
-        damage_dem = folders.model.manipulated_rasters.damage_dem
-        panden = folders.source_data.panden
-        panden_raster = folders.model.manipulated_rasters.panden
+        dem = folder.model.schema_base.rasters.dem
+        highres_dem = folder.model.manipulated_rasters.dem
+        damage_dem = folder.model.manipulated_rasters.damage_dem
+        panden = folder.source_data.panden
+        panden_raster = folder.model.manipulated_rasters.panden
 
         # check if we need to overwrite damage_dem because it doesn't exist or panden or model-dem are newer
-        if not folders.model.manipulated_rasters.exists():  # if the folders doesn't exist we are to create it
-            folders.model.manipulated_rasters.create()
-            folders.model.manipulated_rasters.create_readme()
+        if not folder.model.manipulated_rasters.exists():  # if the folders doesn't exist we are to create it
+            folder.model.manipulated_rasters.create()
+            folder.model.manipulated_rasters.create_readme()
             overwrite = True
         else:
             overwrite = hrt.check_create_new_file(
