@@ -734,8 +734,8 @@ class Simulation:
         filename = f"boundaryconditions_{self.model_id}.json"
 
         output_path = Path(self.output_folder).joinpath("tempfiles", filename)
-        output_path.parent.parent.mkdir(exist_ok=True)
-        output_path.parent.mkdir(exist_ok=True)  # Create parent folder
+        output_path.parent.parent.create()
+        output_path.parent.create()  # Create parent folder
 
         if not output_path.exists():
             save_json(output_path, self.data.boundaries)
@@ -874,8 +874,8 @@ class Simulation:
             return "define self.model_id first"
 
         output_path = Path(output_folder_sqlite).joinpath("tempfiles", f"model_{self.model_id}.zip")
-        output_path.parent.parent.mkdir(exist_ok=True)
-        output_path.parent.mkdir(exist_ok=True)  # Create parent folder
+        output_path.parent.parent.create()
+        output_path.parent.create()  # Create parent folder
         if not output_path.with_suffix("").exists():
             if not output_path.exists():
                 sqlite_dnwld = self._add_to_simulation(

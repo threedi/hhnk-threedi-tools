@@ -2,12 +2,12 @@
 # First-party imports
 import shutil
 
+import hhnk_research_tools as hrt
+
 # Local imports
 from hhnk_threedi_tools.core.schematisation.migrate import MigrateSchema
-
-
-import hhnk_research_tools as hrt
 from tests.config import FOLDER_TEST, TEMP_DIR
+
 
 def test_schema_migration():
     """test if an old sqlite can be migrated to the latest schema version"""

@@ -196,11 +196,11 @@ geometry_check_query_base = f"""\
         '{{table}}' as table_name,
         {{table}}.{conn_node_start_id_col},
         {{table}}.{conn_node_end_id_col},
-        {f_aswkt}({f_transform}({{table}}.{geo_col}, {{projection}})) as {df_geo_col},
-        {f_aswkt}({f_transform}({f_pointn}({{table}}.{geo_col}, 1), {{projection}})) as {a_geo_start_coord},
-        {f_aswkt}({f_transform}({f_pointn}({{table}}.{geo_col}, {f_numpoints}({{table}}.{geo_col})), {{projection}})) as {a_geo_end_coord},
-        {f_aswkt}({f_transform}(connection_nodes_start.{geo_col}, {{projection}})) as {a_geo_start_node},
-        {f_aswkt}({f_transform}(connection_nodes_end.{geo_col}, {{projection}})) as {a_geo_end_node}
+        {f_aswkt}({{table}}.{geo_col}) as {df_geo_col},
+        {f_aswkt}({f_pointn}({{table}}.{geo_col}, 1)) as {a_geo_start_coord},
+        {f_aswkt}({f_pointn}({{table}}.{geo_col}, {f_numpoints}({{table}}.{geo_col}))) as {a_geo_end_coord},
+        {f_aswkt}(connection_nodes_start.{geo_col}) as {a_geo_start_node},
+        {f_aswkt}(connection_nodes_end.{geo_col}) as {a_geo_end_node}
         FROM
         {{table}}
         LEFT JOIN
@@ -497,7 +497,7 @@ controlled_structures_query = construct_controlled_structures_query()
 def construct_geometry_query(table_names, dst_crs=DEF_TRGT_CRS):
     queries_lst = []
     for table in table_names:
-        queries_lst.append(geometry_check_query_base.format(table=table, projection=dst_crs))
+        queries_lst.append(geometry_check_query_base.format(table=table))
     query = "\nUNION ALL\n".join(queries_lst)
     return query
 

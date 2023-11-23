@@ -339,9 +339,7 @@ class OneDTwoDTest:
                 ] = flowlines_gdf.loc[
                     flowlines_gdf[content_type_col] == one_d_two_d,
                     q_m3_s_col + time_str,
-                ].apply(
-                    lambda x: x * -1
-                )
+                ].apply(lambda x: x * -1)
 
             for index, time_str in enumerate(suffixes_list):
                 filt = (
@@ -393,7 +391,7 @@ if __name__ == "__main__":
 
     from hhnk_threedi_tools import Folders
 
-    TEST_MODEL = Path(__file__).parent.parent.parent.parent / "tests/data/model_test/"
+    TEST_MODEL = Path(__file__).parent.parent.parent.parent.full_path(r"tests/data/model_test/")
     folder = Folders(TEST_MODEL)
     # %%
     self = OneDTwoDTest.from_path(TEST_MODEL)

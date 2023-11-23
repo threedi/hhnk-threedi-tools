@@ -57,12 +57,3 @@ if __name__ == "__main__":
             print(i)
             getattr(selftest, i)(basecalc)
 # %%
-from hhnk_threedi_tools import Folders
-from hhnk_threedi_tools.core.result_rasters.calculate_raster import BaseCalculatorGPKG
-from tests.config import FOLDER_TEST
-
-folders = Folders(FOLDER_TEST)
-
-basecalc = BaseCalculatorGPKG.from_folders(folders, None, None)
-
-# %%

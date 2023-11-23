@@ -21,6 +21,7 @@ from pathlib import Path
 CREATE_NEW_PROCESS_GROUP = 0x00000200
 DETACHED_PROCESS = 0x00000008
 
+# TODO variable also in constants.py
 NOTEBOOK_DIRECTORY = str(pathlib.Path(__file__).parent.absolute())
 
 
