@@ -23,10 +23,10 @@ class KlimaatsommenPrep:
         landuse_file: str = r"\\corp.hhnk.nl\data\Hydrologen_data\Data\01.basisgegevens\rasters\landgebruik\landuse2019_tiles\combined_rasters.vrt",
         verify=True,
     ):
-        if type(cfg_file) == str:
+        if isinstance(cfg_file, str):
             cfg_file = hrt.get_pkg_resource_path(package_resource=hrt.waterschadeschatter.resources, name=cfg_file)
             if not cfg_file.exists():
-                raise Exception(f"{cfg_file} doesnt exist.")
+                raise FileNotFoundError(f"{cfg_file} doesnt exist.")
 
         self.folder = folder
         self.batch_fd = self.folder.threedi_results.batch[batch_name]
@@ -40,7 +40,7 @@ class KlimaatsommenPrep:
     def verify_input(self):
         """Verify if we can run"""
         if not self.batch_fd.exists():
-            raise Exception(f"INPUTERROR - {self.batch_fd.name} missing")
+            raise FileNotFoundError(f"INPUTERROR - batchfolder {self.batch_fd.name} missing")
 
         netcdf_missing = [
             name
@@ -48,7 +48,7 @@ class KlimaatsommenPrep:
             if not getattr(self.batch_fd.downloads, name).netcdf.grid_path.exists()
         ]
         if any(netcdf_missing):
-            raise Exception(f"INPUTERROR - netcdf missing for scenarios; {netcdf_missing}")
+            raise FileNotFoundError(f"INPUTERROR - netcdf missing for scenarios; {netcdf_missing}")
 
         h5_missing = [
             name
@@ -56,7 +56,7 @@ class KlimaatsommenPrep:
             if not getattr(self.batch_fd.downloads, name).netcdf.admin_path.exists()
         ]
         if any(h5_missing):
-            raise Exception(f"INPUTERROR - h5 missing for scenarios; {h5_missing}")
+            raise FileNotFoundError(f"INPUTERROR - h5 missing for scenarios; {h5_missing}")
         return True
 
     def get_dem(self):
@@ -116,7 +116,11 @@ class KlimaatsommenPrep:
         """mode options are: "MODE_WDEPTH", "MODE_WLVL" """
         grid_gdf = threedi_result.full_path(grid_filename).load()
 
-        calculator_kwargs = {"dem_path": self.dem.base, "grid_gdf": grid_gdf, "wlvl_column": wlvl_col_name}
+        calculator_kwargs = {
+            "dem_path": self.dem.base,
+            "grid_gdf": grid_gdf,
+            "wlvl_column": wlvl_col_name,
+        }
 
         output_file = scenario_raster
 
