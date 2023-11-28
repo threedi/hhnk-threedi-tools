@@ -377,7 +377,7 @@ class NetcdfToGPKG:
             if wlvl_correction:
                 grid_gdf = self.correct_waterlevels(grid_gdf=grid_gdf, timesteps_seconds=timesteps_seconds)
             # Save to file
-            grid_gdf.to_file(output_file, driver="GPKG")
+            grid_gdf.to_file(str(output_file), driver="GPKG")
 
 
 if __name__ == "__main__":

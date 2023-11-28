@@ -23,7 +23,8 @@ class TestSqlite:
     @pytest.fixture(scope="class")
     def folder_new(self):
         """Copy folder structure and sqlite and then run splitter so we
-        get the correct sqlite (with errors) to run tests on."""
+        get the correct sqlite (with errors) to run tests on.
+        """
         FOLDER_NEW = Folders(PATH_NEW_FOLDER, create=True)
         shutil.copytree(FOLDER_TEST.model.schema_base.path, FOLDER_NEW.model.schema_base.path, dirs_exist_ok=True)
         shutil.copy(FOLDER_TEST.model.settings.path, FOLDER_NEW.model.settings.path)

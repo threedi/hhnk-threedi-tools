@@ -1,16 +1,10 @@
 # %%
-
 """Functional testing creating a grid.gpkg from a .nc"""
-import os
-import pathlib
-from dataclasses import dataclass
-from multiprocessing import Value
 
 import hhnk_research_tools as hrt
+import numpy as np
 import pytest
-from flask import g
 
-from hhnk_threedi_tools.core.checks.one_d_two_d import OneDTwoDTest
 from hhnk_threedi_tools.core.result_rasters import netcdf_to_gridgpkg
 from tests.config import FOLDER_TEST, TEMP_DIR
 
