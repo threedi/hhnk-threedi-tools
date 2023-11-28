@@ -153,10 +153,6 @@ class NetcdfToGPKG:
         if create:
             grid_gdf = gpd.GeoDataFrame()
 
-            # Waterlevel and volume at all timesteps
-            s1_all = self.grid.nodes.subset("2D_open_water").timeseries(indexes=slice(0, -1)).s1
-            vol_all = self.grid.nodes.subset("2D_open_water").timeseries(indexes=slice(0, -1)).vol
-
             # * inputs every element from row as a new function argument.
             grid_gdf["geometry"] = [box(*row) for row in self.grid.nodes.subset("2D_ALL").cell_coords.T]
             grid_gdf.crs = "EPSG:28992"
@@ -164,11 +160,21 @@ class NetcdfToGPKG:
 
             grid_gdf["id"] = self.grid.cells.subset("2D_open_water").id
 
+            grid_gdf = gpd.GeoDataFrame(grid_gdf, geometry="geometry")
+
+            # Save to file
+            grid_gdf.to_file(output_file, driver="GPKG")
+
+            # Waterlevel and volume at all timesteps
+            s1_all = self.grid.nodes.subset("2D_open_water").timeseries(indexes=slice(0, -1)).s1
+            vol_all = self.grid.nodes.subset("2D_open_water").timeseries(indexes=slice(0, -1)).vol
+
             # Retrieve values when wlvl is max
             s1_max_index = s1_all.argmax(axis=0)
             grid_gdf["wlvl_max_orig"] = np.round([row[s1_max_index[enum]] for enum, row in enumerate(s1_all.T)], 5)
             grid_gdf["vol_m3_max_orig"] = np.round([row[s1_max_index[enum]] for enum, row in enumerate(vol_all.T)], 5)
 
+        if correct_wlvl:
             # Percentage of dem in a calculation cell
             # so we can make a selection of cells on model edge that need to be ignored
             grid_gdf["dem_area"] = self.grid.cells.subset("2D_open_water").sumax
@@ -193,20 +199,15 @@ class NetcdfToGPKG:
             grid_gdf.loc[grid_gdf["replace_water"] == True, "replace_all"] = "water"
             grid_gdf.loc[grid_gdf["replace_pand"] == True, "replace_all"] = "pand"
 
-            grid_gdf = gpd.GeoDataFrame(grid_gdf, geometry="geometry")
+            # TODO add option for user to pass cell ids to replace as well.
 
-            # Save to file
-            grid_gdf.to_file(output_file, driver="GPKG")
-
-    def waterlevel_correction(
-        self, orig_col: str, corrected_col: str = None, gpkg_path=None, overwrite: bool = False
-    ):
+    def waterlevel_correction(self, orig_col: str, corrected_col: str = None, gpkg_path=None, overwrite: bool = False):
         """Correct the waterlevel for the input columns. Results are only corrected
         for cells where the 'replace_all' value is not False.
 
         This input needs to exist,
             create it first with self.netcdf_to_grid_gpkg.
-            
+
         ----------
         orig_col : str
             Column with waterlevels that need to be replaced.
@@ -222,21 +223,14 @@ class NetcdfToGPKG:
         if gpkg_path is None:
             output_file = self.output_default
 
-            if 
-
-        create = hrt.check_create_new_file(output_file=self.grid_corr_path, overwrite=overwrite)
-
-        # TODO correction needs to happen seperately from writing. Also neighbours
-        # only need to be calculated once for the whole gpkg.
         if create:
+            # Column names of output.
+            base_name = orig_col.split("_orig")[0]
+            diff_col = f"{base_name}_diff"
             if corrected_col is None:
-                # Create output column name if it was not passed
-                if orig_col.endswith("_orig"):
-                    corrected_col = orig_col.replace("_orig", "_corr")
-                else:
-                    corrected_col = f"{orig_col}_corr"
+                corrected_col = f"{base_name}_corr"
 
-            grid_gdf = self.grid_path.load()
+            grid_gdf = gpkg_path.load()
 
             grid_gdf[corrected_col] = grid_gdf[orig_col]
             replace_idx = grid_gdf["replace_all"] != "0"
@@ -256,10 +250,10 @@ class NetcdfToGPKG:
                 neighbour_avg_wlvl = np.round(grid_gdf.loc[neighbours_idx][corrected_col].mean(), 5)
                 grid_gdf.loc[idx, corrected_col] = neighbour_avg_wlvl
 
-            grid_gdf["diff"] = grid_gdf[corrected_col] - grid_gdf[orig_col]
+            grid_gdf[diff_col] = grid_gdf[corrected_col] - grid_gdf[orig_col]
 
             # Save to file
-            grid_gdf.to_file(self.grid_corr_path.base, driver="GPKG")
+            grid_gdf.to_file(output_file, driver="GPKG")
 
 
 if __name__ == "__main__":
