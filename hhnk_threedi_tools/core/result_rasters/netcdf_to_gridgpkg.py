@@ -13,7 +13,7 @@ from hhnk_threedi_tools import Folders
 
 
 class ThreediGrid:
-    """TODO deprecated, remove in later release."""
+    """TODO Deprecated, remove in later release."""
 
     def __init__(self, **kwargs):
         raise DeprecationWarning(
@@ -218,7 +218,7 @@ class NetcdfToGPKG:
         return np.nan
 
     def create_base_gdf(self):
-        """Create  of grid"""
+        """Create base grid from netcdf"""
         grid_gdf = gpd.GeoDataFrame()
 
         # * inputs every element from row as a new function argument, creating a (square) box.
@@ -279,7 +279,7 @@ class NetcdfToGPKG:
         grid_gdf["neighbour_ids"] = neighbours
         return grid_gdf
 
-    def get_waterlevels(self, grid_gdf, timesteps_seconds: list = None):
+    def get_waterlevels(self, grid_gdf, timesteps_seconds: list):
         """Retrieve waterlevels at given timesteps"""
         for timestep in timesteps_seconds:
             # Make pretty column names
@@ -290,13 +290,11 @@ class NetcdfToGPKG:
             )
         return grid_gdf
 
-    def correct_waterlevels(self, grid_gdf, timesteps_seconds):
+    def correct_waterlevels(self, grid_gdf, timesteps_seconds: list):
         """Correct the waterlevel for the given timesteps. Results are only corrected
         for cells where the 'replace_all' value is not False.
-
-        ----------
         """
-        # create copy and index the id field so we can use the neighbours_ids column easily
+        # Create copy and set_index the id field so we can use the neighbours_ids column easily
         grid_gdf_local = grid_gdf.copy()
         grid_gdf_local.set_index("id", inplace=True)
 
@@ -314,13 +312,12 @@ class NetcdfToGPKG:
 
             # Loop cells that need replacing.
             for row in grid_gdf_local.loc[replace_idx].itertuples():
-                # Calculate avg wlvl of neighbours
-
+                # Calculate avg wlvl of neighbours and update in table
                 neighbour_ids = [int(i) for i in row.neighbour_ids[1:-1].split(",")]  # str list to list
                 neighbour_avg_wlvl = np.round(grid_gdf_local.loc[neighbour_ids][wlvl_corr_col].mean(), 5)
-
                 grid_gdf_local.loc[row.Index, wlvl_corr_col] = neighbour_avg_wlvl
 
+            # Add diff col between corrected and original wlvl
             grid_gdf_local.insert(idx_col + 1, diff_col, grid_gdf_local[wlvl_corr_col] - grid_gdf_local[wlvl_col])
         return grid_gdf_local
 
