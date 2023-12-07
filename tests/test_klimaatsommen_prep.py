@@ -28,6 +28,8 @@ def test_klimaatsommenprep_verify():
 
 
 def test_klimaatsommenprep():
+    """Test creation of gpkg and rasters"""
+    # %%
     klimaatsommenprep = KlimaatsommenPrep(
         folder=FOLDER_TEST,
         batch_name="batch_test",

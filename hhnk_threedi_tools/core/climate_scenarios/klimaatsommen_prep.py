@@ -7,7 +7,7 @@ import pandas as pd
 
 from hhnk_threedi_tools import Folders
 from hhnk_threedi_tools.core.result_rasters.calculate_raster import BaseCalculatorGPKG
-from hhnk_threedi_tools.core.result_rasters.netcdf_to_gridgpkg import ThreediGrid
+from hhnk_threedi_tools.core.result_rasters.netcdf_to_gridgpkg import NetcdfToGPKG
 
 
 class KlimaatsommenPrep:
@@ -23,10 +23,10 @@ class KlimaatsommenPrep:
         landuse_file: str = r"\\corp.hhnk.nl\data\Hydrologen_data\Data\01.basisgegevens\rasters\landgebruik\landuse2019_tiles\combined_rasters.vrt",
         verify=True,
     ):
-        if type(cfg_file) == str:
+        if isinstance(cfg_file, str):
             cfg_file = hrt.get_pkg_resource_path(package_resource=hrt.waterschadeschatter.resources, name=cfg_file)
             if not cfg_file.exists():
-                raise Exception(f"{cfg_file} doesnt exist.")
+                raise FileNotFoundError(f"{cfg_file} doesnt exist.")
 
         self.folder = folder
         self.batch_fd = self.folder.threedi_results.batch[batch_name]
@@ -40,7 +40,7 @@ class KlimaatsommenPrep:
     def verify_input(self):
         """Verify if we can run"""
         if not self.batch_fd.exists():
-            raise Exception(f"INPUTERROR - {self.batch_fd.name} missing")
+            raise FileNotFoundError(f"INPUTERROR - batchfolder {self.batch_fd.name} missing")
 
         netcdf_missing = [
             name
@@ -48,7 +48,7 @@ class KlimaatsommenPrep:
             if not getattr(self.batch_fd.downloads, name).netcdf.grid_path.exists()
         ]
         if any(netcdf_missing):
-            raise Exception(f"INPUTERROR - netcdf missing for scenarios; {netcdf_missing}")
+            raise FileNotFoundError(f"INPUTERROR - netcdf missing for scenarios; {netcdf_missing}")
 
         h5_missing = [
             name
@@ -56,7 +56,7 @@ class KlimaatsommenPrep:
             if not getattr(self.batch_fd.downloads, name).netcdf.admin_path.exists()
         ]
         if any(h5_missing):
-            raise Exception(f"INPUTERROR - h5 missing for scenarios; {h5_missing}")
+            raise FileNotFoundError(f"INPUTERROR - h5 missing for scenarios; {h5_missing}")
         return True
 
     def get_dem(self):
@@ -77,46 +77,50 @@ class KlimaatsommenPrep:
 
     def get_scenario(self, name):
         """Get individual threediresult of a scenario.
-        (e.g. netcdf folder of blok_gxg_T10)"""
+        (e.g. netcdf folder of blok_gxg_T10)
+        """
         scenario = getattr((self.batch_fd.downloads), name)
         return scenario
 
     def netcdf_to_grid(
         self,
         threedi_result,
-        corrected_col_name="wlvl_max_replaced",
-        grid_raw_filename="grid_raw.gpkg",
-        grid_corr_filename="grid_corr.gpkg",
+        grid_filename="grid_wlvl.gpkg",
         overwrite=False,
     ):
-        """Transform netcdf to grid gpkg and apply wlvl correction"""
+        """Transform netcdf to grid gpkg and apply wlvl correction
+        output will be stored in wlvl_max_corr column
+        """
         # Select result
-        threedigrid = ThreediGrid(
+        netcdf_gpkg = NetcdfToGPKG.from_folder(
             folder=self.folder,
             threedi_result=threedi_result,
-            grid_raw_filename=grid_raw_filename,
-            grid_corr_filename=grid_corr_filename,
         )
 
         # Convert netcdf to grid gpkg
-        threedigrid.netcdf_to_grid_gpkg(overwrite=overwrite)
-
-        # Replace waterlevel of selected cells with avg of neighbours.
-        threedigrid.waterlevel_correction(output_col=corrected_col_name, overwrite=overwrite)
+        netcdf_gpkg.run(
+            output_file=threedi_result.full_path(grid_filename),
+            timesteps_seconds=["max"],
+            overwrite=overwrite,
+        )
 
     def calculate_raster(
         self,
         scenario_raster,
-        threedi_result,
-        mode,
-        grid_filename="grid_corr.gpkg",
-        wlvl_col_name="wlvl_max_replaced",
+        threedi_result: hrt.ThreediResult,
+        mode: str,
+        grid_filename: str = "grid_wlvl.gpkg",
+        wlvl_col_name: str = "wlvl_max_corr",
         overwrite=False,
     ):
-        """mode options are: "MODE_WDEPTH", "MODE_WLVL" """
+        """Mode options are: 'MODE_WDEPTH', 'MODE_WLVL'"""
         grid_gdf = threedi_result.full_path(grid_filename).load()
 
-        calculator_kwargs = {"dem_path": self.dem.base, "grid_gdf": grid_gdf, "wlvl_column": wlvl_col_name}
+        calculator_kwargs = {
+            "dem_path": self.dem.base,
+            "grid_gdf": grid_gdf,
+            "wlvl_column": wlvl_col_name,
+        }
 
         output_file = scenario_raster
 
@@ -128,8 +132,8 @@ class KlimaatsommenPrep:
         self,
         scenario,
         threedi_result: hrt.ThreediResult,
-        grid_filename="grid_corr.gpkg",
-        wlvl_col_name="wlvl_max_replaced",
+        grid_filename: str,
+        wlvl_col_name="wlvl_max_corr",
         overwrite=False,
     ):
         scenario_raster = scenario.depth_max
@@ -146,8 +150,8 @@ class KlimaatsommenPrep:
         self,
         scenario,
         threedi_result: hrt.ThreediResult,
-        grid_filename="grid_corr.gpkg",
-        wlvl_col_name="wlvl_max_replaced",
+        grid_filename: str,
+        wlvl_col_name="wlvl_max_corr",
         overwrite=False,
     ):
         scenario_raster = scenario.wlvl_max
@@ -194,8 +198,7 @@ class KlimaatsommenPrep:
                 if gridgpkg:
                     self.netcdf_to_grid(
                         threedi_result=threedi_result,
-                        grid_raw_filename="grid_raw.gpkg",
-                        grid_corr_filename="grid_corr.gpkg",
+                        grid_filename="grid_wlvl.gpkg",
                         overwrite=overwrite,
                     )
 
@@ -204,7 +207,7 @@ class KlimaatsommenPrep:
                     self.calculate_depth(
                         scenario=scenario,
                         threedi_result=threedi_result,
-                        grid_filename="grid_corr.gpkg",
+                        grid_filename="grid_wlvl.gpkg",
                         overwrite=overwrite,
                     )
 
@@ -214,7 +217,12 @@ class KlimaatsommenPrep:
 
                 # Waterlevelraster berekenen
                 if wlvl:
-                    self.calculate_wlvl(scenario=scenario, threedi_result=threedi_result, overwrite=overwrite)
+                    self.calculate_wlvl(
+                        scenario=scenario,
+                        threedi_result=threedi_result,
+                        grid_filename="grid_wlvl.gpkg",
+                        overwrite=overwrite,
+                    )
 
                 if testing:
                     # For pytests we dont need to run this 18 times

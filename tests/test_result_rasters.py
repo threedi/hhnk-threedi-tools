@@ -1,12 +1,6 @@
 # %%
-# First-party imports
 import geopandas as gpd
-
-# Local imports
 import hhnk_research_tools as hrt
-
-# from hhnk_threedi_tools.core.result_rasters.netcdf_to_gridgpkg import BankLevelTest
-import pandas as pd
 
 # pd.options.mode.chained_assignment = 'raise' #catch SettingWithCopyWarning
 import pytest

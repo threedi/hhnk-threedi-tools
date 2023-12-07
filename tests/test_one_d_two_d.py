@@ -1,22 +1,16 @@
 # %%
-# -*- coding: utf-8 -*-
-"""
-Functional testing for oneDtwoD object
-"""
-# First-party imports
+"""Functional testing for oneDtwoD object"""
 import os
 import pathlib
 
 import pytest
 
-# Local imports
 from hhnk_threedi_tools.core.checks.one_d_two_d import OneDTwoDTest
 from hhnk_threedi_tools.core.folders import Folders
+from tests.config import FOLDER_NEW, FOLDER_TEST
 
 # Globals
 REVISION = "BWN bwn_test #6 1d2d_test"
-
-from tests.config import FOLDER_NEW, FOLDER_TEST
 
 
 class TestOneDTwoD:
@@ -30,7 +24,7 @@ class TestOneDTwoD:
         return check_1d2d
 
     def test_run_flowline_stats(self, check_1d2d):
-        """test of de hydraulische testen werken"""
+        """Test of de hydraulische testen werken"""
         output = check_1d2d.run_flowline_stats()
 
         assert output["pump_capacity_m3_s"][1094] == 0.00116666666666667
@@ -41,7 +35,7 @@ class TestOneDTwoD:
         assert round(output["minimal_dem"][1], 3) == 1.54
 
     def test_run_depth_at_timesteps_test(self, check_1d2d):
-        """test of de 0d1d test werkt"""
+        """Test of de 0d1d test werkt"""
 
         check_1d2d.run_wlvl_depth_at_timesteps(overwrite=True)
 

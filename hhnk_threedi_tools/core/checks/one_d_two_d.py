@@ -1,18 +1,9 @@
 # %%
-# -*- coding: utf-8 -*-
-# Third-party imports
 import geopandas as gpd
-
-# research tools
 import hhnk_research_tools as hrt
 import numpy as np
 import pandas as pd
-from hhnk_research_tools.variables import (
-    all_2d,
-    t_end_rain_col,
-    t_end_sum_col,
-    t_start_rain_col,
-)
+from hhnk_research_tools.variables import all_2d, t_end_rain_col, t_end_sum_col, t_start_rain_col
 from shapely.geometry import LineString, box
 
 # Local imports
@@ -33,7 +24,6 @@ from hhnk_threedi_tools.variables.one_d_two_d import (
     one_d_boundary_col,
     one_d_two_d,
     pump_capacity_m3_s_col,
-    pump_line,
     q_m3_s_col,
     spatialite_id_col,
     start_rain_sfx,
@@ -359,7 +349,7 @@ class OneDTwoDTest:
             pump_gdf = gpd.GeoDataFrame(geometry=coords, crs=f"EPSG:{DEF_TRGT_CRS}")
 
             pump_gdf[id_col] = self.grid_result.pumps.id
-            pump_gdf[content_type_col] = pump_line
+            pump_gdf[content_type_col] = "pump_line"
             pump_gdf[pump_capacity_m3_s_col] = self.grid_result.pumps.capacity
 
             q_m3 = self.grid_result.pumps.timeseries(
