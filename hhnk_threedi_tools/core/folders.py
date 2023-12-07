@@ -142,7 +142,7 @@ class Folders(Folder):
 
     def to_file_dict(self):
         """
-        Returns dictionary containing paths to source files according to set project structure.
+        Return dictionary containing paths to source files according to set project structure.
 
             build_base_paths_dict(
                     polder_path (string: path to project folder (highest level))
@@ -178,9 +178,7 @@ class Folders(Folder):
 
 
 class SourceDir(Folder):
-    """
-    Paths to source data (datachecker, DAMO, HDB)
-    """
+    """Path to source data (datachecker, DAMO, HDB)"""
 
     def __init__(self, base, create):
         super().__init__(os.path.join(base, "01_source_data"), create)
@@ -256,7 +254,8 @@ class SourceDir(Folder):
 class SchemaDirParent(Folder):
     """Parent folder with all model (schematisations) in it. These
     all share the same base schematisation, with only differences in
-    global settings or other things specific for that model"""
+    global settings or other things specific for that model
+    """
 
     def __init__(self, base, create):
         super().__init__(os.path.join(base, "02_schematisation"), create)
@@ -544,37 +543,6 @@ class OutputDirParent(Folder):
         @property
         def structure(self):
             return self.revision_structure("Climate")
-
-
-def create_tif_path(folder, filename):
-    """
-    Takes a folder name (ex: C:../output/Layers) and base filename (ex: raster) as arguments
-    and returns full path (ex: C:../output/Layers/raster.tif)
-    """
-    try:
-        full_path = os.path.join(folder, f"{filename}.tif")
-        return full_path
-    except Exception as e:
-        raise e from None
-
-
-def get_top_level_directories(folder, condition_test=None):
-    """
-    Resturns a list of all top level directories, can be filtered with a function (condition_test)
-    that returns a bool and takes one argument (directory)
-    """
-    return [
-        item
-        for item in (os.path.join(folder, d1) for d1 in os.listdir(folder))
-        if os.path.isdir(item) and (condition_test(item) if condition_test is not None else True)
-    ]
-
-
-def if_exists(path):
-    if path is None:
-        return None
-    else:
-        return path if os.path.exists(path) else None
 
 
 # %%
