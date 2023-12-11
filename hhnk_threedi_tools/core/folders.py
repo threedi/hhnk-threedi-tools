@@ -85,11 +85,11 @@ class Folders(Folder):
             Output: 
                 Heiloo @ C:/Poldermodellen/Heiloo
                                 Folders:	  
-                           				Folders
-                           				├── 01_source_data
-                           				├── 02_schematisation
-                           				├── 03_3di_results
-                           				└── 04_test_results
+                                    Folders
+                                    ├── 01_source_data
+                                    ├── 02_schematisation
+                                    ├── 03_3di_results
+                                    └── 04_test_results
                            
                                 Files:	[]
                                 Layers:	[]
@@ -101,8 +101,8 @@ class Folders(Folder):
             
                 01_Source_data @ C:/Poldermodellen/Heiloo/01_Source_data
                                     Folders:	  
-                               				source_data
-                               				└── modelbuilder
+                                        source_data
+                                        └── modelbuilder
                                
                                     Files:	['damo', 'hdb', 'datachecker', ...]
             
@@ -290,7 +290,7 @@ class SchemaDirParent(Folder):
                 self.settings_loaded = True
 
                 for item_name, row in self.settings_df.iterrows():
-                    if not pd.isnull(row["name"]):
+                    if not pd.isna(row["name"]):
                         self._add_modelpath(name=item_name)
         else:
             print(f"Tried to load {self.settings.base}, but it doesnt exist.")
@@ -528,6 +528,7 @@ class OutputDirParent(Folder):
                 super().__init__(base, create=create)
 
                 self.add_file("grid_nodes_2d", "grid_nodes_2d.gpkg")
+                self.add_file("grid_wlvl", "grid_wlvl.gpkg")
                 self.add_file("stroming_1d2d_test", "stroming_1d2d_test.gpkg")
                 for T in [1, 3, 15]:
                     self.add_file(f"waterstand_T{T}", f"waterstand_T{T}.tif")

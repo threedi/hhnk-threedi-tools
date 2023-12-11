@@ -40,10 +40,10 @@ class TestOneDTwoD:
         check_1d2d.run_wlvl_depth_at_timesteps(overwrite=True)
 
         assert "waterdiepte_T15.tif" in [
-            i.name for i in check_1d2d.fenv.output.one_d_two_d[check_1d2d.revision].content
+            i.name for i in check_1d2d.folder.output.one_d_two_d[check_1d2d.revision].content
         ]
-        assert check_1d2d.fenv.output.one_d_two_d[check_1d2d.revision].waterdiepte_T1.shape == [787, 242]
-        assert check_1d2d.fenv.output.one_d_two_d[check_1d2d.revision].waterdiepte_T15.sum() == 1576.087158203125
+        assert check_1d2d.folder.output.one_d_two_d[check_1d2d.revision].waterdiepte_T1.shape == [787, 242]
+        assert check_1d2d.folder.output.one_d_two_d[check_1d2d.revision].waterdiepte_T15.sum() == 1576.087158203125
 
 
 # %%
