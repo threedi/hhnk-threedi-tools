@@ -351,7 +351,7 @@ class NetcdfToGPKG:
                 f"wlvl_{col_base}",
                 self.ts.get_timeseries_timestamp(param="wlvl", time_seconds=timestep),
             )
-            return grid_gdf
+        return grid_gdf
 
     def correct_waterlevels(self, grid_gdf, timesteps_seconds: list):
         """Correct the waterlevel for the given timesteps. Results are only corrected

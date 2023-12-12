@@ -40,7 +40,7 @@ def test_netcdf_to_gridgpkg():
     grid_gdf = netcdf_gpkg.correct_waterlevels(grid_gdf=grid_gdf, timesteps_seconds=timesteps_seconds)
 
     assert int(grid_gdf.loc[1, "wlvl_1h30min"] * 1e5) == 160608
-    assert int(grid_gdf.loc[1, "wlvl_1h30min_corr"] * 1e5) == 66456
+    assert int(grid_gdf.loc[1, "wlvl_corr_1h30min"] * 1e5) == 66456
 
     # Test run statement
     output_file = TEMP_DIR.joinpath(f"grid_wlvl_{hrt.current_time('%H%M%S')}.gpkg")
@@ -51,3 +51,11 @@ def test_netcdf_to_gridgpkg():
 
 if __name__ == "__main__":
     test_netcdf_to_gridgpkg()
+
+
+# %%
+import geopandas as gpd
+from dataclasses import dataclass
+
+
+# %%
