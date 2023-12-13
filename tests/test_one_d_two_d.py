@@ -1,12 +1,9 @@
 # %%
 """Functional testing for oneDtwoD object"""
-import os
-import pathlib
-
-import pytest
 import geopandas as gpd
+import pytest
+
 from hhnk_threedi_tools.core.checks.one_d_two_d import OneDTwoDTest
-from hhnk_threedi_tools.core.folders import Folders
 from tests.config import FOLDER_NEW, FOLDER_TEST
 
 # Globals
@@ -17,7 +14,7 @@ class TestOneDTwoD:
     # Remove previous output
     FOLDER_TEST.output.one_d_two_d.unlink_contents(rmdirs=True)
 
-    # @pytest.fixture(scope="class")
+    @pytest.fixture(scope="class")
     def check_1d2d(self):
         check_1d2d = OneDTwoDTest(folder=FOLDER_TEST, revision=REVISION)
         check_1d2d.output_fd.create(parents=True)

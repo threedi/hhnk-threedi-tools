@@ -28,7 +28,6 @@ from hhnk_threedi_tools.variables.one_d_two_d import (
 )
 
 
-# TODO functies weer in class onderbrengen, class nu buiten gebruik.
 class OneDTwoDTest:
     TIMESTEPS = [1, 3, 15]  # hours, 1=start rain, 3=end rain, 15=end calculation
 
@@ -49,14 +48,6 @@ class OneDTwoDTest:
             days_dry_end,
             self.timestep_df,
         ) = grid_result_metadata.construct_scenario(self.grid_result)
-
-        # if output_path:
-        #     self.output_path = output_path
-        #     self.layer_path = output_path + "/Layers"
-        #     self.log_path = output_path + "/Logs"
-        # else:
-        #     self.layer_path = str(folder.output.one_d_two_d[self.revision].layers)
-        #     self.log_path = str(folder.output.one_d_two_d[self.revision].logs)
 
         if dem_path:
             self.dem = hrt.Raster(dem_path)
