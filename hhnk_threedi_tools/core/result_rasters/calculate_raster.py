@@ -41,7 +41,7 @@ class BaseCalculatorGPKG:
         self.wlvl_column = wlvl_column  # Column to use in calculation
 
     @classmethod
-    def from_folder(cls, folder: Folders, grid_gdf: GeoDataFrame, wlvl_column: str):
+    def from_folder(cls, folder: Folders, grid_gdf: GeoDataFrame, wlvl_column: str, model_schema: str = "schema_base"):
         """Init BaseCalculatorGPKG from a model folders. It will use the model-dem and source-data panden to create
         a dem elevated +10cm at panden.
 
@@ -56,13 +56,16 @@ class BaseCalculatorGPKG:
             GeoDataFrame with 3Di grid and water levels
         wlvl_column : str
             column in grid_gdf to read to water level from
+        schematization: str
+            model schematization to read DEM from. Default is `schema_base`
+
 
         Returns
         -------
         BaseCalculatorGPKG
         """
         # check if damage dem needs to be updated
-        dem = folder.model.schema_base.rasters.dem
+        dem = getattr(folder.model, model_schema).rasters.dem
         highres_dem = folder.model.manipulated_rasters.dem
         damage_dem = folder.model.manipulated_rasters.damage_dem
         panden = folder.source_data.panden
