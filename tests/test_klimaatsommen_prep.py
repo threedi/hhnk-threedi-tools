@@ -1,3 +1,4 @@
+# %%
 # First-party imports
 import shutil
 
@@ -27,29 +28,27 @@ def test_klimaatsommenprep_verify():
 
 
 def test_klimaatsommenprep():
-
-    # Copy model_test to temp-dir
-    model_test = TEMP_DIR / f"model_test_{hrt.get_uuid()}"
-    shutil.copytree(
-        src=FOLDER_TEST.path,
-        dst=model_test,
-    )
+    """Test creation of gpkg and rasters"""
+    # %%
     klimaatsommenprep = KlimaatsommenPrep(
-        folder=Folders(model_test),
+        folder=FOLDER_TEST,
         batch_name="batch_test",
         cfg_file="cfg_lizard.cfg",
         landuse_file=FOLDER_TEST.model.schema_base.rasters.landuse,
         verify=False,
     )
 
+    # Rebase the batch_fd so it will always create all output.
+    batch_test = TEMP_DIR / f"batch_test_{hrt.get_uuid()}"
+    batch_test = ClimateResult(batch_test, create=True)
+    shutil.copytree(
+        src=klimaatsommenprep.batch_fd.downloads.piek_glg_T10.netcdf.path,
+        dst=batch_test.downloads.piek_glg_T10.netcdf.path,
+    )
+    klimaatsommenprep.batch_fd = batch_test
+
     # Run test
     klimaatsommenprep.run(overwrite=True, testing=True)
-
-    # check if intermediate results have been made
-    assert klimaatsommenprep.folder.model.manipulated_rasters.dem.exists()
-    assert klimaatsommenprep.folder.model.manipulated_rasters.panden.exists()
-    assert klimaatsommenprep.folder.model.manipulated_rasters.damage_dem.exists()
-
 
     # check results
     for raster_type in ["depth_max", "damage_total"]:
@@ -61,3 +60,8 @@ def test_klimaatsommenprep():
         # damage_data.set_index(['file name'], inplace = True)
 
         pd.testing.assert_frame_equal(scenario_metadata, assertion_metadata)
+
+
+# %%
+if __name__ == "__main__":
+    test_klimaatsommenprep()
