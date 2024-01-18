@@ -11,7 +11,7 @@ REVISION = "BWN bwn_test #6 1d2d_test"
 
 
 class TestOneDTwoD:
-    # Remove previous output
+    # Remove previous output.
     FOLDER_TEST.output.one_d_two_d.unlink_contents(rmdirs=True)
 
     @pytest.fixture(scope="class")
