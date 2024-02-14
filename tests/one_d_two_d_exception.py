@@ -49,9 +49,9 @@ raster_calc = BaseCalculatorGPKG(
     wlvl_column=f"wlvl_{T}h",
 )
 output_file = getattr(self.output_fd, f"waterdiepte_T{T}")
-mode = "MODE_WDEPTH"
+mode = "MODE_WLVL"
 min_block_size = 1024
-
+# %%
 self = raster_calc
 
 self.output_raster = hrt.Raster(output_file)
@@ -146,3 +146,26 @@ in_interpol_and_suitable[in_interpol] &= suitable
 
 # Exception is here!
 level[in_interpol_and_suitable] = np.sum(weight * nodelevel, axis=1)
+
+# %%
+# def delaunay(self):
+#     """
+#     Return a (delaunay, s1) tuple.
+
+#     `delaunay` is a qhull.Delaunay object, and `s1` is an array of
+#     waterlevels for the corresponding delaunay vertices.
+#     """
+from scipy.spatial import qhull
+from threedidepth import morton
+
+try:
+    return self.cache[self.DELAUNAY]
+except KeyError:
+    points_grid = np.array(self.grid_gdf.centroid.apply(lambda x: [x.x, x.y]).to_list())
+
+    # reorder a la lizard
+    points_grid, wlvl = morton.reorder(points_grid, self.wlvl_raw)
+    delaunay = qhull.Delaunay(points_grid)
+    self.cache[self.DELAUNAY] = delaunay, wlvl
+#    return delaunay, wlvl
+# %%
