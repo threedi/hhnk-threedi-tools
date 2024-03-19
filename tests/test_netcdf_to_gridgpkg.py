@@ -51,11 +51,3 @@ def test_netcdf_to_gridgpkg():
 
 if __name__ == "__main__":
     test_netcdf_to_gridgpkg()
-
-
-# %%
-import geopandas as gpd
-from dataclasses import dataclass
-
-
-# %%
