@@ -39,14 +39,14 @@ from hhnk_threedi_tools.variables.database_variables import (
     width_col,
 )
 
-# Error messages
+# Error/warning/info messages
 msg_height_not_used_for_shape = "WARNING: cross section definition height not used for shape type 1"
 msg_uneven_width_height = "ERROR: multiple height and width entries must have the same count"
-msg_impervious_not_in_map = "ERROR: impervious surface is not in mapping table"
+msg_impervious_not_in_map = "WARNING: impervious surface is not in mapping table"
 msg_impervious_map_refers_to_none = "ERROR: impervious surface map refers to non-existent node"
-msg_surface_not_in_mapping = "ERROR: surface is not in mapping table"
-msg_impervious_surface_map_not_in_impervious = "ERROR: impervious surface map is not in impervious surface layer"
-msg_conn_node_without_imp_surface = "ERROR: connection node without impervious surface"
+msg_surface_not_in_mapping = "WARNING: surface is not in mapping table"
+msg_impervious_surface_map_not_in_impervious = "WARNING: impervious surface map is not in impervious surface layer"
+msg_conn_node_without_imp_surface = "WARNING: connection node without impervious surface"
 msg_channel_without_cross_loc = "ERROR: channel without cross section location"
 msg_cross_sec_loc_without_def = "ERROR: cross section location without definition"
 msg_culvert_without_def = "ERROR: culvert without cross section definition"
@@ -75,7 +75,7 @@ msg_orifice_strt_end_not_same_init_waterlvl = (
 msg_culvert_strt_end_not_same_init_waterlvl = (
     "'WARNING: Initial waterlevel at start en end node not equal' || {} || " "', ' || {}"
 )
-msg_imp_surface_perc = "ERROR: percentage = 100 and should be 14.4 or 11.5"
+msg_imp_surface_perc = "WARNING: percentage = 100 and should be 14.4 or 11.5"
 msg_control_table_too_many_chars = "ERROR: action_table has more than 1000 characters (model will crash)"
 
 
