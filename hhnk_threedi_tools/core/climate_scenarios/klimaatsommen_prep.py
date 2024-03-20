@@ -89,7 +89,7 @@ class KlimaatsommenPrep:
         overwrite=False,
     ):
         """Transform netcdf to grid gpkg and apply wlvl correction
-        output will be stored in wlvl_max_corr column
+        output will be stored in wlvl_corr_max column
         """
         # Select result
         netcdf_gpkg = NetcdfToGPKG.from_folder(
@@ -110,7 +110,7 @@ class KlimaatsommenPrep:
         threedi_result: hrt.ThreediResult,
         mode: str,
         grid_filename: str = "grid_wlvl.gpkg",
-        wlvl_col_name: str = "wlvl_max_corr",
+        wlvl_col_name: str = "wlvl_corr_max",
         overwrite=False,
     ):
         """Mode options are: 'MODE_WDEPTH', 'MODE_WLVL'"""
@@ -133,7 +133,7 @@ class KlimaatsommenPrep:
         scenario,
         threedi_result: hrt.ThreediResult,
         grid_filename: str,
-        wlvl_col_name="wlvl_max_corr",
+        wlvl_col_name="wlvl_corr_max",
         overwrite=False,
     ):
         scenario_raster = scenario.depth_max
@@ -151,7 +151,7 @@ class KlimaatsommenPrep:
         scenario,
         threedi_result: hrt.ThreediResult,
         grid_filename: str,
-        wlvl_col_name="wlvl_max_corr",
+        wlvl_col_name="wlvl_corr_max",
         overwrite=False,
     ):
         scenario_raster = scenario.wlvl_max

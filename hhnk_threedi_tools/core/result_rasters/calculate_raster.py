@@ -207,7 +207,7 @@ class BaseCalculatorGPKG:
         # start with the constant level result
         # node_id_grid is 1d array of the node ids in the mesh grid
         nodeid_arr = nodeid_block.ravel()
-        # the waterlevel is known per nodeid. This loopuptable gets the waterlevel
+        # the waterlevel is known per nodeid. This lookuptable gets the waterlevel
         # per point in the mesh grid
         level = self.lookup_wlvl[nodeid_arr]
 

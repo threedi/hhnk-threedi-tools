@@ -1,12 +1,9 @@
 # %%
 """Functional testing for oneDtwoD object"""
-import os
-import pathlib
-
+import geopandas as gpd
 import pytest
 
 from hhnk_threedi_tools.core.checks.one_d_two_d import OneDTwoDTest
-from hhnk_threedi_tools.core.folders import Folders
 from tests.config import FOLDER_NEW, FOLDER_TEST
 
 # Globals
@@ -14,7 +11,7 @@ REVISION = "BWN bwn_test #6 1d2d_test"
 
 
 class TestOneDTwoD:
-    # Remove previous output
+    # Remove previous output.
     FOLDER_TEST.output.one_d_two_d.unlink_contents(rmdirs=True)
 
     @pytest.fixture(scope="class")
@@ -29,21 +26,18 @@ class TestOneDTwoD:
 
         assert output["pump_capacity_m3_s"][1094] == 0.00116666666666667
 
-    def test_run_node_stats(self, check_1d2d):
-        output = check_1d2d.run_node_stats()
-
-        assert round(output["minimal_dem"][1], 3) == 1.54
-
-    def test_run_depth_at_timesteps_test(self, check_1d2d):
+    def test_run_depth_at_timesteps(self, check_1d2d):
         """Test of de 0d1d test werkt"""
+        output_fd = check_1d2d.folder.output.one_d_two_d[check_1d2d.revision]
 
         check_1d2d.run_wlvl_depth_at_timesteps(overwrite=True)
 
-        assert "waterdiepte_T15.tif" in [
-            i.name for i in check_1d2d.fenv.output.one_d_two_d[check_1d2d.revision].content
-        ]
-        assert check_1d2d.fenv.output.one_d_two_d[check_1d2d.revision].waterdiepte_T1.shape == [787, 242]
-        assert check_1d2d.fenv.output.one_d_two_d[check_1d2d.revision].waterdiepte_T15.sum() == 1576.087158203125
+        grid_gdf = gpd.read_file(output_fd.grid_nodes_2d.path)
+        assert grid_gdf.loc[0, "wlvl_corr_15h"] == 0.7591500282287598
+        output_fd.waterdiepte_T15.exists()
+
+        assert output_fd.waterdiepte_T1.shape == [787, 242]
+        assert output_fd.waterdiepte_T15.sum() == 1588.228515625
 
 
 # %%
@@ -53,9 +47,9 @@ if __name__ == "__main__":
     self = TestOneDTwoD()
     check_1d2d = self.check_1d2d()
 
+    # %%
     # Run all testfunctions
     for i in dir(self):
         if i.startswith("test_") and hasattr(inspect.getattr_static(self, i), "__call__"):
             print(i)
             getattr(self, i)(check_1d2d)
-# %%

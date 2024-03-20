@@ -85,11 +85,11 @@ class Folders(Folder):
             Output: 
                 Heiloo @ C:/Poldermodellen/Heiloo
                                 Folders:	  
-                           				Folders
-                           				├── 01_source_data
-                           				├── 02_schematisation
-                           				├── 03_3di_results
-                           				└── 04_test_results
+                                    Folders
+                                    ├── 01_source_data
+                                    ├── 02_schematisation
+                                    ├── 03_3di_results
+                                    └── 04_test_results
                            
                                 Files:	[]
                                 Layers:	[]
@@ -101,8 +101,8 @@ class Folders(Folder):
             
                 01_Source_data @ C:/Poldermodellen/Heiloo/01_Source_data
                                     Folders:	  
-                               				source_data
-                               				└── modelbuilder
+                                        source_data
+                                        └── modelbuilder
                                
                                     Files:	['damo', 'hdb', 'datachecker', ...]
             
@@ -142,7 +142,7 @@ class Folders(Folder):
 
     def to_file_dict(self):
         """
-        Returns dictionary containing paths to source files according to set project structure.
+        Return dictionary containing paths to source files according to set project structure.
 
             build_base_paths_dict(
                     polder_path (string: path to project folder (highest level))
@@ -178,9 +178,7 @@ class Folders(Folder):
 
 
 class SourceDir(Folder):
-    """
-    Paths to source data (datachecker, DAMO, HDB)
-    """
+    """Path to source data (datachecker, DAMO, HDB)"""
 
     def __init__(self, base, create):
         super().__init__(os.path.join(base, "01_source_data"), create)
@@ -256,7 +254,8 @@ class SourceDir(Folder):
 class SchemaDirParent(Folder):
     """Parent folder with all model (schematisations) in it. These
     all share the same base schematisation, with only differences in
-    global settings or other things specific for that model"""
+    global settings or other things specific for that model
+    """
 
     def __init__(self, base, create):
         super().__init__(os.path.join(base, "02_schematisation"), create)
@@ -292,7 +291,7 @@ class SchemaDirParent(Folder):
                 self.settings_loaded = True
 
                 for item_name, row in self.settings_df.iterrows():
-                    if not pd.isnull(row["name"]):
+                    if not pd.isna(row["name"]):
                         self._add_modelpath(name=item_name)
         else:
             print(f"Tried to load {self.settings.base}, but it doesnt exist.")
@@ -556,6 +555,7 @@ class OutputDirParent(Folder):
                 super().__init__(base, create=create)
 
                 self.add_file("grid_nodes_2d", "grid_nodes_2d.gpkg")
+                self.add_file("grid_wlvl", "grid_wlvl.gpkg")
                 self.add_file("stroming_1d2d_test", "stroming_1d2d_test.gpkg")
                 for T in [1, 3, 15]:
                     self.add_file(f"waterstand_T{T}", f"waterstand_T{T}.tif")
@@ -571,37 +571,6 @@ class OutputDirParent(Folder):
         @property
         def structure(self):
             return self.revision_structure("Climate")
-
-
-def create_tif_path(folder, filename):
-    """
-    Takes a folder name (ex: C:../output/Layers) and base filename (ex: raster) as arguments
-    and returns full path (ex: C:../output/Layers/raster.tif)
-    """
-    try:
-        full_path = os.path.join(folder, f"{filename}.tif")
-        return full_path
-    except Exception as e:
-        raise e from None
-
-
-def get_top_level_directories(folder, condition_test=None):
-    """
-    Resturns a list of all top level directories, can be filtered with a function (condition_test)
-    that returns a bool and takes one argument (directory)
-    """
-    return [
-        item
-        for item in (os.path.join(folder, d1) for d1 in os.listdir(folder))
-        if os.path.isdir(item) and (condition_test(item) if condition_test is not None else True)
-    ]
-
-
-def if_exists(path):
-    if path is None:
-        return None
-    else:
-        return path if os.path.exists(path) else None
 
 
 # %%
