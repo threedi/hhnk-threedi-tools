@@ -5,7 +5,7 @@ from osgeo import ogr
 
 from hhnk_threedi_tools.git_model_repo.utils.dump_gpkg import GeoPackageDump
 from hhnk_threedi_tools.git_model_repo.utils.restore_gpkg import GeoPackageRestore
-from tests.get_local_output_dir_for_development import get_local_development_output_dir
+from tests.tests_git_model_repo.get_local_output_dir_for_development import get_local_development_output_dir
 
 """ 
 important for dump and restore (checked in tests):

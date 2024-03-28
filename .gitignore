@@ -23,7 +23,7 @@ test_polder
 test_polder.zip
 tempfiles/
 hhnk_threedi_tools/utils/notebooks/02_calculation_gui_v3_klondike.ipynb
-hhnk_threedi_tools/git_model_repo/tests/tmp_output*
+tests/tests_git_model_repo/tmp_output*
 
 # Pytests
 .coverage
