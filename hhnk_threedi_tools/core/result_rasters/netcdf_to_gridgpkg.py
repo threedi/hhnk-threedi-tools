@@ -255,7 +255,7 @@ class NetcdfToGPKG:
             overlay_df[area_col] = overlay_df.area
 
             # Group by ids so we get the total area per cell
-            overlay_df_grouped = overlay_df.groupby("id").agg("sum")
+            overlay_df_grouped = overlay_df.groupby("id")[[area_col]].agg("sum")
 
             # Put in area in grid gdf and calculate percentage.
             grid_gdf_merged = grid_gdf.merge(overlay_df_grouped[area_col], left_on="id", right_on="id", how="left")
