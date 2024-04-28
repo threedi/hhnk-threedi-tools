@@ -153,7 +153,7 @@ class BaseCalculatorGPKG:
         # combine weight and nodelevel into result
         in_interpol_and_suitable = in_interpol.copy()
         in_interpol_and_suitable[in_interpol] &= suitable
-        level[in_interpol_and_suitable] = np.sum(weight * nodelevel, axis=1)
+        level[in_interpol_and_suitable] = np.sum(weight.astype(float) * nodelevel.astype(float), axis=1)
 
         # Return interpolated mesh grid
         return level.reshape(nodeid_block.shape)
