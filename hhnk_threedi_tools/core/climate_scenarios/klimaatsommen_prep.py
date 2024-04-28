@@ -243,22 +243,21 @@ class KlimaatsommenPrep:
         for raster_type in ["depth_max", "damage_total"]:
             self.info_file[raster_type] = self.batch_fd.full_path(f"{raster_type}_info.csv")
 
-            info_df = gpd.GeoDataFrame()
+            data = []
 
             # Get statistics for all 18 scenarios
             for name in self.batch_fd.downloads.names:
                 scenario = self.get_scenario(name=name)
 
-                info_row = self._scenario_metadata_row(scenario=scenario, raster_type=raster_type)
+                data += [self._scenario_metadata_row(scenario=scenario, raster_type=raster_type)]
                 # Add row to df
-                info_df = info_df.append(info_row, ignore_index=True)
 
                 if testing:
                     # For pytests we dont need to run this 18 times
                     break
 
             # Write to file
-
+            info_df = gpd.GeoDataFrame(data)
             info_df.set_index(["filename"], inplace=True)
             info_df.to_csv(self.info_file[raster_type].path, sep=";")
 

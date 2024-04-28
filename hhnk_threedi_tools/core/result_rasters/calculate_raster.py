@@ -168,7 +168,7 @@ class BaseCalculatorGPKG:
             points_grid, wlvl = morton.reorder(points_grid, self.wlvl_raw)
             delaunay = qhull.Delaunay(points_grid)
             self.cache[self.DELAUNAY] = delaunay, wlvl
-            return delaunay, wlvl
+            return delaunay, wlvl.astype(float)
 
     def _get_points_mesh(self, window):
         """Create mesh grid points with coordinates every 0.5m with the input window.
@@ -247,7 +247,7 @@ class BaseCalculatorGPKG:
         # combine weight and nodelevel into result
         in_interpol_and_suitable = in_interpol.copy()
         in_interpol_and_suitable[in_interpol] &= suitable
-        level[in_interpol_and_suitable] = np.sum(weight * nodelevel, axis=1)
+        level[in_interpol_and_suitable] = np.sum(weight.astype(float) * nodelevel.astype(float), axis=1)
 
         # Return interpolated mesh grid
         return level.reshape(nodeid_block.shape)
