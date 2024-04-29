@@ -302,7 +302,7 @@ def get_manhole_information(
     diverging_wl_nodes: gpd.GeoDataFrame,
     manholes: gpd.GeoDataFrame,
 ):
-    """Uses the manhole table from the sqlite and the 1d2d flowlines that originate from a connection node.
+    """Use the manhole table from the sqlite and the 1d2d flowlines that originate from a connection node.
     If the connection node is not already a manhole, they are added to the list. This function generates the
     dataframe from which the sql code can be made"""
     try:
@@ -313,17 +313,21 @@ def get_manhole_information(
         all_manholes[already_manhole_col] = True
         # default manhole type, if manhole is added through other procedure,
         # this script doesnt know why it was added
-        all_manholes[type_col] = unknown_val
+        all_manholes["type"] = "unknown"
 
         # Update current manholes with the type of manhole from intersections.
         all_manholes.set_index(a_man_conn_id, drop=False, inplace=True)
-        all_manholes.update(
-            intersections.drop_duplicates(subset=[node_id_col, type_col]).set_index(node_id_col)[type_col]
-        )
-        # Add new manholes that are not yet in sqlite (rename is needed because of difference in column names)
+
+        # FIXME added calc nodes do not have a connection node id. We filter them here to get rid of
+        # ValueError: cannot reindex on an axis with duplicate labels. Take this into account on refactor.
+        intersections2 = intersections[intersections["node_type"] != "added_calculation"].copy()
+        all_manholes.update(intersections2.set_index(node_id_col)["type"])
+
+        # # Add new manholes that are not yet in sqlite (rename is needed because of difference in column names)
         all_manholes = pd.concat(
             [all_manholes, node_ids_without_manholes.rename(columns={node_id_col: a_man_conn_id})]
         )
+
         # check if nodes in wrong area (different initial waterlevel than rest in area) don't have manhole yet
         nodes_with_divergent_initial_wtrlvl_no_manhole = diverging_wl_nodes[
             ~diverging_wl_nodes[a_conn_node_id].isin(all_manholes[a_man_conn_id])
