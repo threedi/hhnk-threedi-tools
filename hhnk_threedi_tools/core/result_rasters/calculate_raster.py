@@ -9,7 +9,7 @@ import hhnk_research_tools as hrt
 import numpy as np
 from geopandas import GeoDataFrame
 from osgeo import gdal
-from scipy.spatial import qhull
+from scipy.spatial import Delaunay
 from threedidepth import morton
 from threedigrid.admin.constants import NO_DATA_VALUE
 
@@ -156,7 +156,7 @@ class BaseCalculatorGPKG:
         """
         Return a (delaunay, s1) tuple.
 
-        `delaunay` is a qhull.Delaunay object, and `s1` is an array of
+        `delaunay` is a scipy.spatial.Delaunay object, and `s1` is an array of
         waterlevels for the corresponding delaunay vertices.
         """
         try:
@@ -166,7 +166,7 @@ class BaseCalculatorGPKG:
 
             # reorder a la lizard
             points_grid, wlvl = morton.reorder(points_grid, self.wlvl_raw)
-            delaunay = qhull.Delaunay(points_grid)
+            delaunay = Delaunay(points_grid)
             self.cache[self.DELAUNAY] = delaunay, wlvl
             return delaunay, wlvl.astype(float)
 
@@ -224,16 +224,16 @@ class BaseCalculatorGPKG:
 
         # get the nodes and the transform for the corresponding triangles
         transform = delaunay.transform[simplices[in_interpol]]
-        vertices = delaunay.vertices[simplices[in_interpol]]
+        simplices = delaunay.simplices[simplices[in_interpol]]
 
         # calculate weight, see print(spatial.Delaunay.transform.__doc__) and
         # Wikipedia about barycentric coordinates
-        weight = np.empty(vertices.shape)
+        weight = np.empty(simplices.shape)
         weight[:, :2] = np.sum(transform[:, :2] * (points_int - transform[:, 2])[:, np.newaxis], 2)
         weight[:, 2] = 1 - weight[:, 0] - weight[:, 1]
 
         # set weight to zero when for inactive nodes
-        nodelevel = wlvl[vertices]
+        nodelevel = wlvl[simplices]
         weight[nodelevel == NO_DATA_VALUE] = 0
 
         # determine the sum of weights per result cell

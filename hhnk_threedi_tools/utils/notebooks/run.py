@@ -8,6 +8,7 @@ Created on Fri Sep 24 13:55:39 2021
 Opens a jupyter notebook based on nbopen using the command line
 
 """
+
 import json
 import os
 import pathlib
