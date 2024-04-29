@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 from shapely.geometry import box
 
-from hhnk_threedi_tools import Folders
+from hhnk_threedi_tools.core.folders import Folders
 
 
 class ThreediGrid:
@@ -18,7 +18,7 @@ class ThreediGrid:
     def __init__(self, **kwargs):
         raise DeprecationWarning(
             "The ThreediGrid class has been replaced by \
-htt.NetcdfToGPKG since v2023.5. Please rewrite your code."
+htt.NetcdfToGPKG since v2024.1. Please rewrite your code."
         )
 
 
@@ -31,22 +31,29 @@ class NetcdfTimeSeries:
     def __post_init__(self):
         self._wlvl_all = None
         self._vol_all = None
+        self._max_index = None
 
         self.timestamps = self.grid.nodes.timestamps
 
     @property
     def wlvl_2d_all(self):
         if self._wlvl_all is None:
-            self._wlvl_all = self.get_timerseries(param="s1")
+            self._wlvl_all = self.get_timerseries_all(param="s1")
         return self._wlvl_all
 
     @property
     def vol_2d_all(self):
         if self._vol_all is None:
-            self._vol_all = self.get_timerseries(param="vol")
+            self._vol_all = self.get_timerseries_all(param="vol")
         return self._vol_all
 
-    def get_timerseries(self, param):
+    @property
+    def max_index(self):
+        if self._max_index is None:
+            self._max_index = self.wlvl_2d_all.argmax(axis=0)
+        return self._max_index
+
+    def get_timerseries_all(self, param):
         """Get all timeseries for all 2d nodes.
         slice(0,-1) doesnt retrieve the last timestep, using timestamp length instead.
         """
@@ -54,21 +61,23 @@ class NetcdfTimeSeries:
             self.grid.nodes.subset("2D_open_water").timeseries(indexes=slice(0, len(self.timestamps))), param
         )
 
-    def get_waterlevel_and_volume(self, time_seconds: Union[int, str]) -> pd.DataFrame:
-        """Retrieve waterlevel and volume from netcdf
+    def get_timeseries_timestamp(self, param: str, time_seconds: Union[int, str]):
+        """Retrieve timeseries at given timestamp.
 
         Parameters
         ----------
+        param : str
+            options are ['wlvl', 'vol']
         time_seconds : Union[int,str]
             time in seconds since start of calculation.
             use "max" to get the max of all timesteps.
         """
-        # Waterlevel and volume at all timesteps
+
         if time_seconds == "max":
             # Retrieve values when wlvl is max
-            max_index = self.wlvl_2d_all.argmax(axis=0)
-            wlvl = np.round([row[max_index[enum]] for enum, row in enumerate(self.wlvl_2d_all.T)], 5)
-            vol = np.round([row[max_index[enum]] for enum, row in enumerate(self.vol_2d_all.T)], 5)
+            ts = np.round(
+                [row[self.max_index[enum]] for enum, row in enumerate(getattr(self, f"{param}_2d_all").T)], 5
+            )
         else:
             abs_diff = np.abs(self.timestamps - time_seconds)
             idx = np.argmin(abs_diff)
@@ -76,18 +85,17 @@ class NetcdfTimeSeries:
                 raise ValueError(
                     f"""Provided time_seconds {time_seconds} not found in netcdf timeseries.
 Closest timestep is {self.timestamps[idx]} seconds at index {idx}. \
-Debug by checking available timeseries through the (.ts).timeseries attributes"""
+Debug by checking available timeseries through the (.ts) timeseries attributes"""
                 )
+            ts = np.round([row[idx] for row in getattr(self, f"{param}_2d_all").T], 5)
 
-            wlvl = np.round([row[idx] for row in self.wlvl_2d_all.T], 5)
-            vol = np.round([row[idx] for row in self.vol_2d_all.T], 5)
-        return pd.DataFrame([wlvl, vol]).T
+        # Replace -9999 with nan values to prevent -9999 being used in replacing values.
+        ts = pd.Series(ts)
+        ts.replace(-9999, np.nan, inplace=True)
+        return ts
 
     def create_column_base(self, time_seconds):
-        """Return a base column name with hours and minutes.
-
-        Same input as self.get_waterlevel_volume.
-        """
+        """Return a base column name with hours and minutes."""
         # time_seconds = self.timestamps[np.argmin(np.abs(self.timestamps - time_seconds))]
         if time_seconds == "max":
             col_base = time_seconds
@@ -102,6 +110,44 @@ Debug by checking available timeseries through the (.ts).timeseries attributes""
                 else:
                     col_base = f"{int(np.floor(timestep_h))}h{int((timestep_h%1)*60)}min"
         return col_base
+
+
+@dataclass
+class ColumnIdx:
+    """Find index of columns in dataframe so we can insert new column
+    at the correct location. This way we can group column types.
+    e.g.
+    wlvl_1h wlvl_3h wlvl_1h_corr wlvl_3h_corr diff_1h diff_15h
+    """
+
+    gdf: gpd.GeoDataFrame
+
+    def _get_idx(self, search_str) -> int:
+        """Get idx based on search pattern, if not found return last index"""
+        idxs = self.gdf.columns.get_indexer(
+            self.gdf.columns[self.gdf.columns.str.contains(search_str, na=False)]
+        ).tolist()
+        return (idxs or [len(self.gdf.columns) - 1])[-1] + 1
+
+    @property
+    def wlvl(self):
+        return self._get_idx(search_str="^wlvl_(?!.*corr).*")
+
+    @property
+    def wlvl_corr(self):
+        return self._get_idx(search_str="^wlvl_corr_.*")
+
+    @property
+    def diff(self):
+        return self._get_idx(search_str="^diff_.*")
+
+    @property
+    def vol(self):
+        return self._get_idx(search_str="^vol_.*")
+
+    @property
+    def storage(self):
+        return self._get_idx(search_str="^storage_mm_.*")
 
 
 @dataclass
@@ -145,7 +191,7 @@ class NetcdfToGPKG:
         panden_path = folder.source_data.panden
         panden_layer = "panden"
 
-        return NetcdfToGPKG(
+        return cls(
             threedi_result=threedi_result,
             waterdeel_path=waterdeel_path,
             waterdeel_layer=waterdeel_layer,
@@ -209,7 +255,7 @@ class NetcdfToGPKG:
             overlay_df[area_col] = overlay_df.area
 
             # Group by ids so we get the total area per cell
-            overlay_df_grouped = overlay_df.groupby("id").agg("sum")
+            overlay_df_grouped = overlay_df.groupby("id")[[area_col]].agg("sum")
 
             # Put in area in grid gdf and calculate percentage.
             grid_gdf_merged = grid_gdf.merge(overlay_df_grouped[area_col], left_on="id", right_on="id", how="left")
@@ -245,6 +291,7 @@ class NetcdfToGPKG:
         gpd.GeoDataFrame
             extened grid_gdf with correction parameters columns.
         """
+        grid_gdf["dem_minimal_m"] = self.grid.cells.subset("2D_open_water").z_coordinate
         # Percentage of dem in a calculation cell
         # so we can make a selection of cells on model edge that need to be ignored
         grid_gdf["dem_area"] = self.grid.cells.subset("2D_open_water").sumax
@@ -280,13 +327,29 @@ class NetcdfToGPKG:
         return grid_gdf
 
     def get_waterlevels(self, grid_gdf, timesteps_seconds: list):
-        """Retrieve waterlevels at given timesteps"""
+        """Retrieve waterlevels volume and storage at given timesteps"""
+
+        col_idx = ColumnIdx(gdf=grid_gdf)
+
         for timestep in timesteps_seconds:
             # Make pretty column names
             col_base = self.ts.create_column_base(time_seconds=timestep)
+
             # Retrieve timeseries
-            grid_gdf[[f"wlvl_{col_base}", f"vol_{col_base}"]] = self.ts.get_waterlevel_and_volume(
-                time_seconds=timestep
+            grid_gdf.insert(
+                col_idx.vol,
+                f"vol_{col_base}",
+                self.ts.get_timeseries_timestamp(param="vol", time_seconds=timestep),
+            )
+            grid_gdf.insert(
+                col_idx.storage,
+                f"storage_mm_{col_base}",
+                np.round(grid_gdf[f"vol_{col_base}"] / grid_gdf["dem_area"] * 1000, 2),
+            )
+            grid_gdf.insert(
+                col_idx.wlvl,
+                f"wlvl_{col_base}",
+                self.ts.get_timeseries_timestamp(param="wlvl", time_seconds=timestep),
             )
         return grid_gdf
 
@@ -301,24 +364,30 @@ class NetcdfToGPKG:
         for timestep in timesteps_seconds:
             base_col = self.ts.create_column_base(time_seconds=timestep)
             wlvl_col = f"wlvl_{base_col}"
-            wlvl_corr_col = f"{wlvl_col}_corr"
+            wlvl_corr_col = f"wlvl_corr_{base_col}"
             diff_col = f"diff_{base_col}"
-            idx_col = grid_gdf_local.columns.get_loc(wlvl_col) + 1
+            col_idx = ColumnIdx(gdf=grid_gdf_local)
 
             # Make copy of original wlvls and set to None when they need to be replaced
-            grid_gdf_local.insert(idx_col, wlvl_corr_col, grid_gdf_local[wlvl_col])
+            grid_gdf_local.insert(col_idx.wlvl_corr, wlvl_corr_col, grid_gdf_local[wlvl_col])
             replace_idx = grid_gdf_local["replace_all"] != False  # noqa: E712
             grid_gdf_local.loc[replace_idx, wlvl_corr_col] = None
 
             # Loop cells that need replacing.
             for row in grid_gdf_local.loc[replace_idx].itertuples():
+                # Dont replace nan values
+                if pd.isna(grid_gdf_local.loc[row.Index, wlvl_col]):
+                    continue
+
                 # Calculate avg wlvl of neighbours and update in table
                 neighbour_ids = [int(i) for i in row.neighbour_ids[1:-1].split(",")]  # str list to list
                 neighbour_avg_wlvl = np.round(grid_gdf_local.loc[neighbour_ids][wlvl_corr_col].mean(), 5)
                 grid_gdf_local.loc[row.Index, wlvl_corr_col] = neighbour_avg_wlvl
 
             # Add diff col between corrected and original wlvl
-            grid_gdf_local.insert(idx_col + 1, diff_col, grid_gdf_local[wlvl_corr_col] - grid_gdf_local[wlvl_col])
+            grid_gdf_local.insert(
+                col_idx.diff, diff_col, np.round(grid_gdf_local[wlvl_corr_col] - grid_gdf_local[wlvl_col], 5)
+            )
         return grid_gdf_local
 
     def run(
@@ -339,9 +408,10 @@ class NetcdfToGPKG:
             When None is passed the output will be placed in the same directory as the netcdf.
             default name is: grid_wlvl.gpkg
         timesteps_seconds, by default ["max"]
-            timesteps to make
-            options: int values in seconds
-                    "max" - maximum wlvl over calculation
+            time in seconds since start of calculation. Will create cols for each item in list.
+            options:
+                int value - seconds since start
+                "max" - maximum wlvl over calculation
         replace_dem_below_perc : float, optional, by default 50
             if cell area has no dem (isna) above this value waterlevels will be replaced
         replace_water_above_perc : float, optional, by default 95

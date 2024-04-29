@@ -8,6 +8,7 @@ Created on Thu Aug 19 09:04:52 2021
 Bank level testing made into an object to have more overview
 
 """
+
 import geopandas as gpd
 import hhnk_research_tools as hrt
 import numpy as np
@@ -316,16 +317,20 @@ def get_manhole_information(
 
         # Update current manholes with the type of manhole from intersections.
         all_manholes.set_index(a_man_conn_id, drop=False, inplace=True)
-        all_manholes.update(intersections.set_index(node_id_col)[type_col])
+        all_manholes.update(
+            intersections.drop_duplicates(subset=[node_id_col, type_col]).set_index(node_id_col)[type_col]
+        )
         # Add new manholes that are not yet in sqlite (rename is needed because of difference in column names)
-        all_manholes = all_manholes.append(node_ids_without_manholes.rename(columns={node_id_col: a_man_conn_id}))
+        all_manholes = pd.concat(
+            [all_manholes, node_ids_without_manholes.rename(columns={node_id_col: a_man_conn_id})]
+        )
         # check if nodes in wrong area (different initial waterlevel than rest in area) don't have manhole yet
         nodes_with_divergent_initial_wtrlvl_no_manhole = diverging_wl_nodes[
             ~diverging_wl_nodes[a_conn_node_id].isin(all_manholes[a_man_conn_id])
         ].copy()
         nodes_with_divergent_initial_wtrlvl_no_manhole[already_manhole_col] = False
         # also add these to the list
-        all_manholes = all_manholes.append(nodes_with_divergent_initial_wtrlvl_no_manhole, ignore_index=True)
+        all_manholes = pd.concat([all_manholes, nodes_with_divergent_initial_wtrlvl_no_manhole], ignore_index=True)
         # Drop duplicates that are introduced by nodes_with_divergent_initial_wtrlvl_no_manhole
         all_manholes = (
             all_manholes.sort_values(drain_level_col, ascending=False).drop_duplicates(a_conn_node_id).sort_index()
@@ -474,8 +479,11 @@ def divergent_waterlevel_nodes(conn_nodes: gpd.GeoDataFrame, fixeddrainage: gpd.
             init_waterlevel_mode = nodes_in_same_area[initial_waterlevel_col].mode().values[0]
 
             # Find which nodes have a different waterlevel than the initial waterlevel
-            diverging_nodes = diverging_nodes.append(
-                nodes_in_same_area[nodes_in_same_area[initial_waterlevel_col] != init_waterlevel_mode],
+            diverging_nodes = pd.concat(
+                [
+                    diverging_nodes,
+                    nodes_in_same_area[nodes_in_same_area[initial_waterlevel_col] != init_waterlevel_mode],
+                ],
                 ignore_index=True,
             )
 

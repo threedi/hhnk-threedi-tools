@@ -5,6 +5,7 @@ Created on Tue Aug 24 14:11:45 2021
 
 @author: chris.kerklaan
 """
+
 # Third-party imports
 from pathlib import Path
 
@@ -397,8 +398,8 @@ class SqliteCheck:
         )
         fixeddrainage = calc_area(fixeddrainage, modelbuilder_waterdeel, damo_waterdeel, conn_nodes_geo)
         result_txt = """Gebied open water BGT: {} ha\nGebied open water model: {} ha""".format(
-            round(fixeddrainage.sum()[watersurface_waterdeel_area] / 10000, 2),
-            round(fixeddrainage.sum()[watersurface_model_area] / 10000, 2),
+            round(fixeddrainage[watersurface_waterdeel_area].sum() / 10000, 2),
+            round(fixeddrainage[watersurface_model_area].sum() / 10000, 2),
         )
         self.results["watersurface_area"] = {
             "fixeddrainage": fixeddrainage,
