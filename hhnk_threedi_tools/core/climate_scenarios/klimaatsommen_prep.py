@@ -21,6 +21,7 @@ class KlimaatsommenPrep:
         batch_name: str,
         cfg_file="cfg_lizard.cfg",
         landuse_file: str = r"\\corp.hhnk.nl\data\Hydrologen_data\Data\01.basisgegevens\rasters\landgebruik\landuse2019_tiles\combined_rasters.vrt",
+        min_block_size=1024,
         verify=True,
     ):
         if isinstance(cfg_file, str):
@@ -33,6 +34,7 @@ class KlimaatsommenPrep:
 
         self.cfg_file = cfg_file
         self.landuse_file = landuse_file
+        self.min_block_size = min_block_size
 
         if verify:
             self.verify_input()
@@ -126,7 +128,7 @@ class KlimaatsommenPrep:
 
         # Init calculator
         with BaseCalculatorGPKG(**calculator_kwargs) as basecalc:
-            basecalc.run(output_file=output_file, mode=mode, overwrite=overwrite)
+            basecalc.run(output_file=output_file, mode=mode, min_block_size=self.min_block_size, overwrite=overwrite)
 
     def calculate_depth(
         self,
@@ -181,7 +183,12 @@ class KlimaatsommenPrep:
             return
 
         # Calculation
-        wss = hrt.Waterschadeschatter(depth_file=depth_file, landuse_file=self.landuse_file, wss_settings=wss_settings)
+        wss = hrt.Waterschadeschatter(
+            depth_file=depth_file,
+            landuse_file=self.landuse_file,
+            wss_settings=wss_settings,
+            min_block_size=self.min_block_size,
+        )
 
         # Berekenen schaderaster
         wss.run(output_raster=output_raster, calculation_type="sum", overwrite=overwrite)
