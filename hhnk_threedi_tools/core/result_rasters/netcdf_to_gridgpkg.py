@@ -18,7 +18,7 @@ class ThreediGrid:
     def __init__(self, **kwargs):
         raise DeprecationWarning(
             "The ThreediGrid class has been replaced by \
-htt.NetcdfToGPKG since v2023.5. Please rewrite your code."
+htt.NetcdfToGPKG since v2024.1. Please rewrite your code."
         )
 
 
