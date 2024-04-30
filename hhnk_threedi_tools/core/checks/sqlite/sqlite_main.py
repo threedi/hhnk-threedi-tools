@@ -178,7 +178,7 @@ class SqliteCheck:
         """Create leayer with structure control in schematisation"""
         self.structure_control = StructureControl(
             model=self.fenv.model.schema_base.database,
-            hdb_control_layer=self.fenv.source_data.hdb.layers.sturing_3di,
+            hdb_control_layer=self.fenv.source_data.hdb.layers.sturing_kunstwerken,
             output_file=self.output_fd.gestuurde_kunstwerken.base,
         )
         self.structure_control.run(overwrite=overwrite)
