@@ -602,16 +602,25 @@ class DownloadWidgetsInteraction(DownloadWidgets):
 
                 # add some variables to overview
                 for index, key in enumerate(download_urls):
-                    self.vars.output_df = self.vars.output_df.append(
-                        {
-                            "id": scenario_id,
-                            "name": scenario_name,
-                            "uuid": scenario.uuid,
-                            "scenario_download_url": download_urls[key],
-                            "output_folder": output_folder,
-                        },
+                    self.vars.output_df = pd.concat(
+                        [
+                            self.vars.output_df,
+                            pd.DataFrame(
+                                pd.Series(
+                                    {
+                                        "id": scenario_id,
+                                        "name": scenario_name,
+                                        "uuid": scenario.uuid,
+                                        "scenario_download_url": download_urls[key],
+                                        "output_folder": output_folder,
+                                    }
+                                )
+                            ).T,
+                        ],
                         ignore_index=True,
                     )
+
+                    # %%
 
                 # Download files
                 if self.vars.scenario_result_type == "lizard":

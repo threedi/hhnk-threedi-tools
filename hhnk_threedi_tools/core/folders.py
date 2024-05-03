@@ -196,7 +196,7 @@ class SourceDir(Folder):
         self.damo.add_layers(["DuikerSifonHevel", "waterdeel"])
 
         self.add_file("hdb", "HDB.gpkg")
-        self.hdb.add_layer("sturing_3di")
+        self.hdb.add_layer("sturing_kunstwerken")
 
         self.add_file("datachecker", "datachecker_output.gpkg")
         self.datachecker.add_layers(["fixeddrainagelevelarea", "culvert"])
