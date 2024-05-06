@@ -200,16 +200,20 @@ class KlimaatsommenPrep:
         # Berekenen schaderaster
         wss.run(output_raster=output_raster, calculation_type="sum", overwrite=overwrite)
 
-    def run(self, gridgpkg=True, depth=True, dmg=True, wlvl=False, overwrite=False, testing=False):
+    def run(self, gridgpkg=True, depth=True, dmg=True, wlvl=False, overwrite=False, testing=False, verbose=False):
         try:
             self.dem = self.get_dem()
 
             for name in self.batch_fd.downloads.names:
+                if verbose:
+                    print(name)
                 scenario = self.get_scenario(name=name)
                 threedi_result = scenario.netcdf
 
                 # Transform netcdf to grid gpkg
                 if gridgpkg:
+                    if verbose:
+                        print("     netcdf to gpkg")
                     self.netcdf_to_grid(
                         threedi_result=threedi_result,
                         grid_filename="grid_wlvl.gpkg",
@@ -218,6 +222,8 @@ class KlimaatsommenPrep:
 
                 # Diepterasters berekenen
                 if depth:
+                    if verbose:
+                        print("     create depth raster")
                     self.calculate_depth(
                         scenario=scenario,
                         threedi_result=threedi_result,
@@ -227,10 +233,14 @@ class KlimaatsommenPrep:
 
                 # Schaderaster berekenen
                 if dmg:
+                    if verbose:
+                        print("     create damage raster")
                     self.calculate_damage(scenario=scenario, overwrite=overwrite)
 
                 # Waterlevelraster berekenen
                 if wlvl:
+                    if verbose:
+                        print("     create wlvl raster")
                     self.calculate_wlvl(
                         scenario=scenario,
                         threedi_result=threedi_result,
@@ -313,31 +323,6 @@ if __name__ == "__main__":
         verify=True,
     )
 
-    # self.run(overwrite=False)
+    self.run(overwrite=False, dmg=False, verbose=True)
 
-# %%
-gridgpkg = True
-overwrite = False
-
-
-for name in self.batch_fd.downloads.names:
-    scenario = self.get_scenario(name=name)
-    threedi_result = scenario.netcdf
-    break
-
-grid_filename = "grid_wlvl.gpkg"
-
-
-netcdf_gpkg = NetcdfToGPKG.from_folder(
-    folder=self.folder,
-    threedi_result=threedi_result,
-    use_aggregate=self.use_aggregate,
-)
-# %%
-# Convert netcdf to grid gpkg
-netcdf_gpkg.run(
-    output_file=threedi_result.full_path(grid_filename),
-    timesteps_seconds=["max"],
-    overwrite=overwrite,
-)
 # %%
