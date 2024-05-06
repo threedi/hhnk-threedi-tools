@@ -359,16 +359,21 @@ class NetcdfToGPKG:
             col_base = self.ts.create_column_base(time_seconds=timestep)
 
             # Retrieve timeseries
-            grid_gdf.insert(
-                col_idx.vol,
-                f"vol_{col_base}",
-                self.ts.get_timeseries_timestamp(param="vol", time_seconds=timestep),
-            )
-            grid_gdf.insert(
-                col_idx.storage,
-                f"storage_mm_{col_base}",
-                np.round(grid_gdf[f"vol_{col_base}"] / grid_gdf["dem_area"] * 1000, 2),
-            )
+            try:
+                vol_ts = self.ts.get_timeseries_timestamp(param="vol", time_seconds=timestep)
+                grid_gdf.insert(
+                    col_idx.vol,
+                    f"vol_{col_base}",
+                    vol_ts,
+                )
+                grid_gdf.insert(
+                    col_idx.storage,
+                    f"storage_mm_{col_base}",
+                    np.round(grid_gdf[f"vol_{col_base}"] / grid_gdf["dem_area"] * 1000, 2),
+                )
+            except KeyError:
+                print("Volume not found in (aggregated)result")
+
             grid_gdf.insert(
                 col_idx.wlvl,
                 f"wlvl_{col_base}",
@@ -484,11 +489,4 @@ if __name__ == "__main__":
     overwrite = True
     self = NetcdfToGPKG(threedi_result=threedi_result.netcdf, use_aggregate=True)
     timesteps_seconds = ["max"]
-    # self.run(wlvl_correction=wlvl_correction)
-# %%
-
-grid_gdf = self.create_base_gdf()
-
-grid_gdf = self.get_waterlevels(grid_gdf=grid_gdf, timesteps_seconds=timesteps_seconds)
-
-# %%
+    self.run(wlvl_correction=wlvl_correction)
