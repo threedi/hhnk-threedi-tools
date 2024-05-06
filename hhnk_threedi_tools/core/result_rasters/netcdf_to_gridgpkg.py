@@ -291,13 +291,11 @@ class NetcdfToGPKG:
         grid_gdf = gpd.GeoDataFrame()
 
         # * inputs every element from row as a new function argument, creating a (square) box.
-        grid_gdf["geometry"] = [box(*row) for row in self.grid.nodes.subset("2D_ALL").cell_coords.T]
-        grid_gdf.crs = "EPSG:28992"
+        grid_gdf.set_geometry(
+            [box(*row) for row in self.grid.nodes.subset("2D_ALL").cell_coords.T], crs="EPSG:28992", inplace=True
+        )
 
         grid_gdf["id"] = self.grid.cells.subset("2D_open_water").id
-
-        grid_gdf = gpd.GeoDataFrame(grid_gdf, geometry="geometry")
-
         return grid_gdf
 
     def add_correction_parameters(
@@ -472,7 +470,7 @@ class NetcdfToGPKG:
             if wlvl_correction:
                 grid_gdf = self.correct_waterlevels(grid_gdf=grid_gdf, timesteps_seconds=timesteps_seconds)
             # Save to file
-            grid_gdf.to_file(str(output_file), driver="GPKG")
+            grid_gdf.to_file(output_file.path, engine="pyogrio")
 
 
 # %%
@@ -482,7 +480,7 @@ if __name__ == "__main__":
     folder_path = r"E:\02.modellen\HKC23010_Eijerland_WP"
     folder = Folders(folder_path)
 
-    threedi_result = folder.threedi_results.batch["bwn_gxg"].downloads.blok_ghg_T10
+    threedi_result = folder.threedi_results.batch["bwn_gxg"].downloads.piek_ghg_T10
 
     output_file = None
     wlvl_correction = False
@@ -490,3 +488,5 @@ if __name__ == "__main__":
     self = NetcdfToGPKG(threedi_result=threedi_result.netcdf, use_aggregate=True)
     timesteps_seconds = ["max"]
     self.run(wlvl_correction=wlvl_correction)
+
+# %%
