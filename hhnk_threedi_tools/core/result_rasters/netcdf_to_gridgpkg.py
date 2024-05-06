@@ -7,6 +7,7 @@ import geopandas as gpd
 import hhnk_research_tools as hrt
 import numpy as np
 import pandas as pd
+from matplotlib.widgets import EllipseSelector
 from shapely.geometry import box
 
 from hhnk_threedi_tools.core.folders import Folders
@@ -33,12 +34,18 @@ class NetcdfTimeSeries:
         self._vol_all = None
         self._max_index = None
 
+        self.aggregate: bool = self.typecheck_aggregate()
+
         self.timestamps = self.grid.nodes.timestamps
 
     @property
     def wlvl_2d_all(self):
         if self._wlvl_all is None:
-            self._wlvl_all = self.get_timerseries_all(param="s1")
+            if not self.aggregate:
+                self._wlvl_all = self.get_timerseries_all(param="s1")
+            else:
+                self._wlvl_all = self.get_timerseries_all(param="s1_max")
+
         return self._wlvl_all
 
     @property
@@ -53,13 +60,25 @@ class NetcdfTimeSeries:
             self._max_index = self.wlvl_2d_all.argmax(axis=0)
         return self._max_index
 
+    def typecheck_aggregate(self) -> bool:
+        """Check if we have a normal or aggregated netcdf"""
+        return str(type(self.grid)) == "<class 'threedigrid.admin.gridresultadmin.GridH5AggregateResultAdmin'>"
+
     def get_timerseries_all(self, param):
         """Get all timeseries for all 2d nodes.
         slice(0,-1) doesnt retrieve the last timestep, using timestamp length instead.
         """
-        return getattr(
-            self.grid.nodes.subset("2D_open_water").timeseries(indexes=slice(0, len(self.timestamps))), param
-        )
+        if not self.aggregate:
+            return getattr(
+                self.grid.nodes.subset("2D_open_water").timeseries(indexes=slice(0, len(self.timestamps))), param
+            )
+
+        else:
+            """Aggregated results return a dict on self.timestamps"""
+            return getattr(
+                self.grid.nodes.subset("2D_open_water").timeseries(indexes=slice(0, len(self.timestamps[param]))),
+                param,
+            )
 
     def get_timeseries_timestamp(self, param: str, time_seconds: Union[int, str]):
         """Retrieve timeseries at given timestamp.
@@ -154,7 +173,7 @@ class ColumnIdx:
 class NetcdfToGPKG:
     """Transform netcdf into a gpkg. Can also correct waterlevels
     based on conditions. These are passed when running the function
-    .netcdf_to_grid_gpkg.
+    .run, to turn this behaviour off, use wlvl_correction=False there.
 
     Input layers can be passed directly, or when using the htt.Folders
     structure, use the .from_folder classmethod.
@@ -178,12 +197,13 @@ class NetcdfToGPKG:
     waterdeel_layer: str = None
     panden_path: str = None
     panden_layer: str = None
+    use_aggregate: bool = False
 
     def __post_init__(self):
         self._ts = None
 
     @classmethod
-    def from_folder(cls, folder: Folders, threedi_result: hrt.ThreediResult, **kwargs):
+    def from_folder(cls, folder: Folders, threedi_result: hrt.ThreediResult, use_aggregate: bool = False, **kwargs):
         """Initialize from folder structure."""
         waterdeel_path = folder.source_data.damo
         waterdeel_layer = "Waterdeel"
@@ -197,12 +217,15 @@ class NetcdfToGPKG:
             waterdeel_layer=waterdeel_layer,
             panden_path=panden_path,
             panden_layer=panden_layer,
+            use_aggregate=use_aggregate,
         )
 
     @property
     def grid(self):
-        """Instance of threedigrid.admin.gridresultadmin.GridH5ResultAdmin"""
-        return self.threedi_result.grid
+        """Instance of threedigrid.admin.gridresultadmin.GridH5ResultAdmin or GridH5AggregateResultAdmin"""
+        if self.use_aggregate is False:
+            return self.threedi_result.grid
+        return self.threedi_result.aggregate_grid
 
     @property
     def output_default(self):
@@ -447,13 +470,25 @@ class NetcdfToGPKG:
             grid_gdf.to_file(str(output_file), driver="GPKG")
 
 
+# %%
 if __name__ == "__main__":
     from hhnk_threedi_tools import Folders
 
-    folder_path = r"E:\02.modellen\23_Katvoed"
+    folder_path = r"E:\02.modellen\HKC23010_Eijerland_WP"
     folder = Folders(folder_path)
 
-    threedi_result = folder.threedi_results.one_d_two_d["katvoed #1 piek_ghg_T1000"]
+    threedi_result = folder.threedi_results.batch["bwn_gxg"].downloads.blok_ghg_T10
 
+    output_file = None
+    wlvl_correction = False
+    overwrite = True
+    self = NetcdfToGPKG(threedi_result=threedi_result.netcdf, use_aggregate=True)
+    timesteps_seconds = ["max"]
+    # self.run(wlvl_correction=wlvl_correction)
+# %%
+
+grid_gdf = self.create_base_gdf()
+
+grid_gdf = self.get_waterlevels(grid_gdf=grid_gdf, timesteps_seconds=timesteps_seconds)
 
 # %%

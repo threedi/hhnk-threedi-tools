@@ -28,8 +28,10 @@ class ClimateResult(hrt.Folder):
                 """
 
     class ClimateResultDownloads(hrt.Folder):
-        """Downloads folder with all scenarios in subfolders that will contain
-        their netcdf."""
+        """
+        Downloadfolder with all scenarios in subfolders that will contain
+        their netcdf.
+        """
 
         def __init__(self, base, create=False):
             super().__init__(os.path.join(base, "01_downloads"), create=create)
@@ -43,7 +45,7 @@ class ClimateResult(hrt.Folder):
                 setattr(self, name, self.ClimateResultScenario(self.base, name, create=self.create_bool))
 
         def get_scenario_names(self) -> list:
-            """eg .blog_ghg_T10, .piek_glg_T100"""
+            """e.g. .blog_ghg_T10, .piek_glg_T100"""
             names = []
             for rain_type in RAIN_TYPES:
                 for groundwater in GROUNDWATER:
@@ -73,12 +75,6 @@ class ClimateResult(hrt.Folder):
                 # Add netcdf to subfolders for scenario
                 setattr(self, "netcdf", hrt.ThreediResult(self.full_path(name)))
                 self.structure_extra = ["netcdf"]
-
-            def __repr__(self):
-                return f"""{self.name} @ {self.base}
-                            Folders:\t{self.structure_extra}
-                            Files:\t{list(self.files.keys())}
-                        """
 
     class ClimateResultOutput(hrt.Folder):
         def __init__(self, base, create):
