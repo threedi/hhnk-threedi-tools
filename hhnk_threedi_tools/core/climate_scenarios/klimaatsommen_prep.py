@@ -316,7 +316,7 @@ if __name__ == "__main__":
 
     self = KlimaatsommenPrep(
         folder=folder,
-        batch_name="bwn_gxg",
+        batch_name="nhflo_gxg",
         cfg_file="cfg_lizard.cfg",
         landuse_file=r"\\corp.hhnk.nl\data\Hydrologen_data\Data\01.basisgegevens\rasters\landgebruik\landuse2019_tiles\combined_rasters.vrt",
         use_aggregate=True,
