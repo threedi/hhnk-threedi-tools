@@ -35,6 +35,7 @@ dependencies:
   - openpyxl=3.1.2
   - cached_property=1.5.2
   - rtree=1.0.1
+  - pyogrio
 
   - pip: # 3Di packages are not conda installable and are therefore installed by PIP
     - threedi_modelchecker==2.4.0 #ThreediToolbox 2.5.5
