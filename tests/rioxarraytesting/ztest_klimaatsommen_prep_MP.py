@@ -190,3 +190,132 @@ def func(x):
 apply(zones, agg, func, nodata=-1)
 
 agg
+
+
+# %%
+
+# import cupy_xarray
+import threading
+
+# from dask.utils import SerializableLock
+import time
+from pathlib import Path
+
+import hhnk_research_tools as hrt
+import rioxarray as rxr
+
+now = time.time()
+
+path_out = Path(
+    r"C:/Users/Wietse/Documents/HHNK/Poldermodellen/callantsoog/03_3di_results/batch_results/callantsoog_small/01_downloads"
+)
+dem = hrt.Raster(
+    r"c:/Users/Wietse/Documents/HHNK/Poldermodellen/callantsoog/02_schematisation/00_basis/rasters/dem_callantsoog.tif"
+)
+wlvl = hrt.Raster(
+    r"C:/Users/Wietse/Documents/HHNK/Poldermodellen/callantsoog/03_3di_results/batch_results/callantsoog_small/01_downloads/wlvl_max_piek_glg_T10.tif"
+)
+
+depth = hrt.Raster(path_out.joinpath("depth.tif"))
+
+CHUNKSIZE = 4096
+# Load your rasters (replace 'path_to_raster1.tif' and 'path_to_raster2.tif' with actual file paths)
+raster1 = rxr.open_rasterio(wlvl.base, chunks={"x": CHUNKSIZE, "y": CHUNKSIZE})
+raster2 = rxr.open_rasterio(dem.base, chunks={"x": CHUNKSIZE, "y": CHUNKSIZE})
+
+
+# Set NoData values (if needed, adjust to match your actual NoData value)
+raster1 = raster1.where(raster1 != raster1.rio.nodata)
+raster2 = raster2.where(raster2 != raster2.rio.nodata)
+
+
+# raster1_chunk = raster1.chunk({'x': CHUNKSIZE, 'y': CHUNKSIZE})
+# raster2_chunk = raster2.chunk({'x': CHUNKSIZE, 'y': CHUNKSIZE})
+# result = raster1_chunk - raster2_chunk
+
+
+# Subtract the rasters, excluding NoData values
+result = raster1 - raster2
+
+# Assign values less than 0 to NoData
+
+result *= 1000  # scale_factor so we can save ints
+
+result = result.where(result >= 0, -9999)
+
+# Export the result directly to the output raster in chunks
+result.rio.set_nodata(raster1.rio.nodata)
+dir(result.rio)
+# result.rio.scale_factor = 0.001
+result.rio.to_raster(
+    depth.base,
+    chunks={"x": CHUNKSIZE, "y": CHUNKSIZE},
+    # lock=True, #Use dask multithread
+    compress="ZSTD",
+    tiled=True,
+    PREDICTOR=2,  # from hrt, does it still work?
+    ZSTD_LEVEL=1,  # from hrt, does it still work?
+    scale=0.01,
+    dtype="int16",
+)
+
+# Settings the scale_factor does not work with rioxarray. T
+with depth.open_gdal_source_write() as gdal_source:
+    b = gdal_source.GetRasterBand(1)
+    b.SetScale(0.001)
+
+print(time.time() - now)
+
+# %%
+
+d = rxr.open_rasterio(depth.base, mask_and_scale=False)
+print(d)
+d.close()
+
+import numpy as np
+
+np.unique(d.data)
+
+# %%
+import time
+
+now = time.time()
+dem = hrt.Raster(
+    r"C:/Users/Wietse/Documents/HHNK/Poldermodellen/callantsoog/02_schematisation/00_basis/rasters/dem_callantsoog.tif"
+)
+wlvl = hrt.Raster(
+    r"C:/Users/Wietse/Documents/HHNK/Poldermodellen/callantsoog/03_3di_results/batch_results/callantsoog_small/01_downloads/wlvl_max_piek_glg_T10.tif"
+)
+depth = hrt.Raster(path_out.joinpath("depth2.tif"))
+
+
+def run_rtype_window(block):
+    """Custom calc function on blocks in hrt.RasterCalculatorV2"""
+    block_out = block.blocks["wlvl"] - block.blocks["dem"]
+
+    # Nodatamasks toepassen
+    block_out[block.masks_all] = dem.nodata
+    block_out[block_out < 0] = dem.nodata
+    return block_out
+
+
+# Calculate drooglegging raster
+raster_calc = hrt.RasterCalculatorV2(
+    raster_out=depth,
+    raster_paths_dict={
+        "dem": dem,
+        "wlvl": wlvl,
+    },
+    nodata_keys=["dem"],
+    mask_keys=["wlvl"],
+    metadata_key="dem",
+    custom_run_window_function=run_rtype_window,
+    output_nodata=dem.nodata,
+    min_block_size=1024,
+    verbose=True,
+    tempdir="",
+)
+# Run calculation of output raster
+raster_calc.run(overwrite=True)
+
+print(time.time() - now)
