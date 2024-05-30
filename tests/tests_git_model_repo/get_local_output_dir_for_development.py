@@ -1,4 +1,5 @@
 import os
+import shutil
 
 
 def get_local_development_output_dir(clean=False):
@@ -12,7 +13,7 @@ def get_local_development_output_dir(clean=False):
 
     if clean:
         if os.path.exists(path):
-            os.rmdir(path)
+            shutil.rmtree(path)
         os.makedirs(path, exist_ok=True)
 
     return path

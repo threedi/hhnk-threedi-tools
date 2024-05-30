@@ -4,6 +4,7 @@ Note: the curent tests are only ran to check if the functions work.
 They still must be checked qualitatively
 
 """
+import sys
 import time
 from pathlib import Path
 
@@ -17,6 +18,7 @@ from hhnk_threedi_tools.core.folders import Folders
 from tests.config import FOLDER_TEST
 
 
+@pytest.mark.skipif('threedigrid_builder' not in sys.modules, reason="threedigrid_builder not installed")
 class TestBankLevel:
     @pytest.fixture(scope="class")
     def bl_test(self):

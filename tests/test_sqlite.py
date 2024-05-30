@@ -2,6 +2,7 @@
 # First-party imports
 import inspect
 import shutil
+import sys
 from pathlib import Path
 
 import hhnk_research_tools as hrt
@@ -92,6 +93,7 @@ class TestSqlite:
         assert output["cross_loc_id"].to_list() == [320]
         assert output["distance_to_vertex"].to_list() == [1.0]
 
+    @pytest.mark.skipif('threedigrid_builder' not in sys.modules, reason="threedigrid_builder not installed")
     def test_create_grid_from_sqlite(self, folder_new):
         self.sqlite_check.create_grid_from_sqlite(output_folder=folder_new.output.sqlite_tests.path)
         assert folder_new.output.sqlite_tests.full_path("cells.gpkg").exists()

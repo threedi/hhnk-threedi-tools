@@ -17,7 +17,6 @@ import numpy as np
 import pandas as pd
 from shapely import wkt
 from shapely.geometry import Point
-from threedigrid_builder import make_gridadmin
 
 from hhnk_threedi_tools.core.checks.sqlite.structure_control import StructureControl
 
@@ -116,7 +115,6 @@ DATACHECKER_FIELDS = ["code", "aanname"]
 DATACHECKER_LINK_ON = "code"
 DATACHECKER_ASSUMPTION_FIELD = "aanname"
 
-
 # weir heights
 OUTPUT_COLS = [
     a_weir_code,
@@ -133,8 +131,8 @@ OUTPUT_COLS = [
 
 class SqliteCheck:
     def __init__(
-        self,
-        folder: Folders,
+            self,
+            folder: Folders,
     ):
         self.fenv = folder
 
@@ -443,6 +441,10 @@ class SqliteCheck:
 
     def create_grid_from_sqlite(self, output_folder):
         """Create grid from sqlite, this includes cells, lines and nodes."""
+
+        # make package work, also without threedigrid_builder (requires package build which is not always possible)
+        from threedigrid_builder import make_gridadmin
+
         grid = make_gridadmin(self.model.base, self.dem.base)
 
         # using output here results in error, so we use the returned dict
@@ -653,10 +655,10 @@ def expand_multipolygon(df):
 
 
 def read_input(
-    model,
-    channel_profile_file,
-    fixeddrainage_layer,
-    damo_layer,
+        model,
+        channel_profile_file,
+        fixeddrainage_layer,
+        damo_layer,
 ):
     try:
         fixeddrainage = fixeddrainage_layer.load()[[peil_id_col, code_col, COL_STREEFPEIL_BWN, geometry_col]]
@@ -727,10 +729,10 @@ def calc_area(fixeddrainage, modelbuilder_waterdeel, damo_waterdeel, conn_nodes_
         fixeddrainage = add_waterdeel(fixeddrainage, modelbuilder_waterdeel)
         fixeddrainage.rename(columns={"area": watersurface_channels_area}, inplace=True)
         fixeddrainage[watersurface_model_area] = (
-            fixeddrainage[watersurface_channels_area] + fixeddrainage[watersurface_nodes_area]
+                fixeddrainage[watersurface_channels_area] + fixeddrainage[watersurface_nodes_area]
         )
         fixeddrainage[area_diff_col] = (
-            fixeddrainage[watersurface_model_area] - fixeddrainage[watersurface_waterdeel_area]
+                fixeddrainage[watersurface_model_area] - fixeddrainage[watersurface_waterdeel_area]
         )
         fixeddrainage[area_diff_perc] = fixeddrainage.apply(
             lambda row: calc_perc(row[area_diff_col], row[watersurface_waterdeel_area]),
@@ -752,6 +754,5 @@ if __name__ == "__main__":
     database = folder.model.schema_base.database
     self.run_cross_section_no_vertex(database)
     self.verify_inputs("run_imp_surface_area")
-
 
 # %%
