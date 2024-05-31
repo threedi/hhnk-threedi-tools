@@ -1,7 +1,7 @@
 import os
 import sys
 
-from utils.get_git_root import get_git_root
+from hhnk_threedi_tools.git_model_repo.utils.get_git_root import get_git_root
 
 
 def install_git_hook(repo_path, hook_name, script_path, windows=False):

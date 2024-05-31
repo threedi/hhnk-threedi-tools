@@ -1,8 +1,7 @@
 import logging
 
-from tasks.restore_files_in_directory import restore_file_in_directory
-from utils.setup_logging import setup_logging
-from utils.timer_log import SubTimer
+from hhnk_threedi_tools.git_model_repo.tasks.restore_files_in_directory import restore_file_in_directory
+from hhnk_threedi_tools.git_model_repo.utils.timer_log import SubTimer
 
 log = logging.getLogger(__name__)
 

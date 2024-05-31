@@ -4,7 +4,7 @@ from collections import OrderedDict
 
 import fiona
 
-from utils.file_change_detection import FileChangeDetection
+from .file_change_detection import FileChangeDetection
 
 
 def format_json(obj, parent_key='', depth=0):

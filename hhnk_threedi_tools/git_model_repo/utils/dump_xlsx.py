@@ -3,7 +3,7 @@ import os
 
 import pandas as pd
 
-from utils.file_change_detection import FileChangeDetection
+from .file_change_detection import FileChangeDetection
 
 
 class ExcelDump(object):

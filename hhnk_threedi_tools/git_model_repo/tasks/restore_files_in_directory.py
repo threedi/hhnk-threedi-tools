@@ -3,7 +3,7 @@ import logging
 
 from hhnk_threedi_tools.git_model_repo.utils.restore_xlsx import ExcelRestore
 from hhnk_threedi_tools.git_model_repo.utils.restore_gpkg import GeoPackageRestore
-from utils.rreplace import rreplace
+from hhnk_threedi_tools.git_model_repo.utils.rreplace import rreplace
 
 log = logging.getLogger(__name__)
 

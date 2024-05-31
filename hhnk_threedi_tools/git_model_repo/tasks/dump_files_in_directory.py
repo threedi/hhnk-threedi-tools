@@ -3,10 +3,9 @@ import os
 
 from git import Repo
 
-from utils.check_if_file_is_ignored import is_file_gitignored
-from utils.dump_gpkg import GeoPackageDump
-from utils.dump_xlsx import ExcelDump
-from utils.rreplace import rreplace
+from hhnk_threedi_tools.git_model_repo.utils.dump_gpkg import GeoPackageDump
+from hhnk_threedi_tools.git_model_repo.utils.dump_xlsx import ExcelDump
+from hhnk_threedi_tools.git_model_repo.utils.rreplace import rreplace
 
 log = logging.getLogger(__name__)
 

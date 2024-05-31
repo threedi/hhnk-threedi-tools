@@ -1,9 +1,8 @@
 import logging
 import os
-import git
 
-from tasks.dump_files_in_directory import dump_files_in_directory
-from utils.timer_log import SubTimer
+from hhnk_threedi_tools.git_model_repo.tasks.dump_files_in_directory import dump_files_in_directory
+from hhnk_threedi_tools.git_model_repo.utils.timer_log import SubTimer
 
 log = logging.getLogger(__name__)
 
