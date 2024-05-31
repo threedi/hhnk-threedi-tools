@@ -292,12 +292,12 @@ def command(path_piek, path_blok, path_out, min_flow_area=0.001, max_gradient=0.
     # logical operations to generate "case_final"
     cell_data["case_final"] = np.full(cell_data["id"].size, "", dtype="S10")
     cell_data["case_final"][(cell_data["case_blok"] == b"plas") | (cell_data["case_piek"] == b"plas")] = "plas"
-    cell_data["case_final"][
-        (cell_data["case_blok"] == b"overlast") | (cell_data["case_piek"] == b"overlast")
-    ] = "overlast"
-    cell_data["case_final"][
-        (cell_data["case_blok"] == b"modelfout") & (cell_data["case_piek"] == b"modelfout")
-    ] = "modelfout"
+    cell_data["case_final"][(cell_data["case_blok"] == b"overlast") | (cell_data["case_piek"] == b"overlast")] = (
+        "overlast"
+    )
+    cell_data["case_final"][(cell_data["case_blok"] == b"modelfout") & (cell_data["case_piek"] == b"modelfout")] = (
+        "modelfout"
+    )
 
     logger.info("Writing shapefile at {}...".format(path_out))
     to_shape(

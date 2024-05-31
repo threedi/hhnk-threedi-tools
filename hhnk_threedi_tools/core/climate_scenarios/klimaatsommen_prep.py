@@ -21,6 +21,7 @@ class KlimaatsommenPrep:
         batch_name: str,
         cfg_file="cfg_lizard.cfg",
         landuse_file: str = r"\\corp.hhnk.nl\data\Hydrologen_data\Data\01.basisgegevens\rasters\landgebruik\landuse2019_tiles\combined_rasters.vrt",
+        min_block_size=1024,
         verify=True,
     ):
         if isinstance(cfg_file, str):
@@ -33,6 +34,7 @@ class KlimaatsommenPrep:
 
         self.cfg_file = cfg_file
         self.landuse_file = landuse_file
+        self.min_block_size = min_block_size
 
         if verify:
             self.verify_input()
@@ -89,7 +91,7 @@ class KlimaatsommenPrep:
         overwrite=False,
     ):
         """Transform netcdf to grid gpkg and apply wlvl correction
-        output will be stored in wlvl_max_corr column
+        output will be stored in wlvl_corr_max column
         """
         # Select result
         netcdf_gpkg = NetcdfToGPKG.from_folder(
@@ -110,7 +112,7 @@ class KlimaatsommenPrep:
         threedi_result: hrt.ThreediResult,
         mode: str,
         grid_filename: str = "grid_wlvl.gpkg",
-        wlvl_col_name: str = "wlvl_max_corr",
+        wlvl_col_name: str = "wlvl_corr_max",
         overwrite=False,
     ):
         """Mode options are: 'MODE_WDEPTH', 'MODE_WLVL'"""
@@ -126,14 +128,14 @@ class KlimaatsommenPrep:
 
         # Init calculator
         with BaseCalculatorGPKG(**calculator_kwargs) as basecalc:
-            basecalc.run(output_file=output_file, mode=mode, overwrite=overwrite)
+            basecalc.run(output_file=output_file, mode=mode, min_block_size=self.min_block_size, overwrite=overwrite)
 
     def calculate_depth(
         self,
         scenario,
         threedi_result: hrt.ThreediResult,
         grid_filename: str,
-        wlvl_col_name="wlvl_max_corr",
+        wlvl_col_name="wlvl_corr_max",
         overwrite=False,
     ):
         scenario_raster = scenario.depth_max
@@ -151,7 +153,7 @@ class KlimaatsommenPrep:
         scenario,
         threedi_result: hrt.ThreediResult,
         grid_filename: str,
-        wlvl_col_name="wlvl_max_corr",
+        wlvl_col_name="wlvl_corr_max",
         overwrite=False,
     ):
         scenario_raster = scenario.wlvl_max
@@ -181,7 +183,12 @@ class KlimaatsommenPrep:
             return
 
         # Calculation
-        wss = hrt.Waterschadeschatter(depth_file=depth_file, landuse_file=self.landuse_file, wss_settings=wss_settings)
+        wss = hrt.Waterschadeschatter(
+            depth_file=depth_file,
+            landuse_file=self.landuse_file,
+            wss_settings=wss_settings,
+            min_block_size=self.min_block_size,
+        )
 
         # Berekenen schaderaster
         wss.run(output_raster=output_raster, calculation_type="sum", overwrite=overwrite)
@@ -243,22 +250,21 @@ class KlimaatsommenPrep:
         for raster_type in ["depth_max", "damage_total"]:
             self.info_file[raster_type] = self.batch_fd.full_path(f"{raster_type}_info.csv")
 
-            info_df = gpd.GeoDataFrame()
+            data = []
 
             # Get statistics for all 18 scenarios
             for name in self.batch_fd.downloads.names:
                 scenario = self.get_scenario(name=name)
 
-                info_row = self._scenario_metadata_row(scenario=scenario, raster_type=raster_type)
+                data += [self._scenario_metadata_row(scenario=scenario, raster_type=raster_type)]
                 # Add row to df
-                info_df = info_df.append(info_row, ignore_index=True)
 
                 if testing:
                     # For pytests we dont need to run this 18 times
                     break
 
             # Write to file
-
+            info_df = gpd.GeoDataFrame(data)
             info_df.set_index(["filename"], inplace=True)
             info_df.to_csv(self.info_file[raster_type].path, sep=";")
 

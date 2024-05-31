@@ -56,10 +56,8 @@ def test_klimaatsommenprep():
         assertion_metadata = pd.read_csv(
             TEST_DIRECTORY / rf"test_klimaatsommen/{raster_type}_info_expected.csv", sep=";"
         )
-        # scenario_metadata = damage_data.drop(['Unnamed: 0'], axis=1)
-        # damage_data.set_index(['file name'], inplace = True)
-
-        pd.testing.assert_frame_equal(scenario_metadata, assertion_metadata)
+        # we ignore the order of the columns (check_like=True)
+        pd.testing.assert_frame_equal(scenario_metadata, assertion_metadata, check_like=True)
 
 
 # %%

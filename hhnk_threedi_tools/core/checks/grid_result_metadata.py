@@ -5,9 +5,7 @@ from threedigrid.admin.gridresultadmin import GridH5ResultAdmin
 
 
 def calculate_rain_days(rain):
-    """
-    Calculates days dry before and after rain
-    """
+    """Calculate days dry before and after rain"""
     detected_rain = [i for i, e in enumerate(rain) if e > 1e-5]
     # Collect indexes of items in rain where rain falls (every index represents an hour)
     if detected_rain:
@@ -23,9 +21,7 @@ def calculate_rain_days(rain):
 
 
 def get_rain_properties(results):
-    """
-    Calculates the rain scenario used for this result
-    """
+    """Calculate the rain scenario used for this result"""
     try:
         # Calculates the mean of steps between timestamps (in seconds), then converts to minutes
         dt = round(np.mean(np.diff(results.nodes.timestamps)) / 60, 0)

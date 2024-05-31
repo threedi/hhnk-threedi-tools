@@ -4,6 +4,7 @@ Created on Fri Aug 20 16:09:34 2021
 
 @author: chris.kerklaan
 """
+
 # Third-party imports
 import hhnk_research_tools as hrt
 import pandas as pd
@@ -155,9 +156,13 @@ class ZeroDOneDTest:
             )
 
             # Find all connection nodes from channels that are primary and combine in list without duplicates
-            primary_nodes_series = channels_gdf.loc[channels_gdf.zoom_cat == 4, start_node_col].append(
-                channels_gdf.loc[channels_gdf.zoom_cat == 4, end_node_col]
+            primary_nodes_series = pd.concat(
+                [
+                    channels_gdf.loc[channels_gdf.zoom_cat == 4, start_node_col],
+                    channels_gdf.loc[channels_gdf.zoom_cat == 4, end_node_col],
+                ]
             )
+
             primary_nodes = primary_nodes_series.unique().tolist()
 
             culvert_gdf = create_structure_gdf(

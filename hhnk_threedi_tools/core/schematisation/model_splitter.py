@@ -1,3 +1,4 @@
+# %%
 import datetime
 import os
 import re
@@ -47,9 +48,7 @@ class ModelSchematisations:
         if self.folder.model.settings_default.exists():
             self.settings_default_series = pd.read_excel(
                 self.folder.model.settings_default.base, engine="openpyxl"
-            ).iloc[
-                0
-            ]  # Series, only has one row.
+            ).iloc[0]  # Series, only has one row.
         else:
             self.settings_default_series = None
             self.settings_loaded = False
@@ -239,9 +238,7 @@ or do not use this run in the modelsplitter.
                 old_val_col="width",
                 new_val_col="width_new",
             )
-
             database_new.execute_sql_changes(query=query)
-            # hrt.execute_sql_changes(query=query, database=database_path_new)
 
         # execute additional SQL code that is stored in 02_schematisation/model_sql.json.
         if self.folder.model.model_sql.exists():
@@ -325,20 +322,20 @@ or do not use this run in the modelsplitter.
 if __name__ == "__main__":
     from hhnk_threedi_tools.core.folders import Folders
 
-    path = r"E:\02.modellen\LangeWeere_NS"
+    path = r"E:\02.modellen\wormer_leggertool"
 
     folder = Folders(path)
-    name = "1d2d_glg"
+    name = "0d1d_test"
 
     self = ModelSchematisations(folder=folder, modelsettings_path=folder.model.settings.path)
     self.create_schematisation(name=name)
-    response = self.create_local_sqlite_revision(commit_message=str(" (local split revision)"))
-    self.upload_schematisation(
-        organisation_uuid="48dac75bef8a42ebbb52e8f89bbdb9f2",
-        name=name,
-        commit_message="testtest",
-        api_key="",
-    )
+    # response = self.create_local_sqlite_revision(commit_message=str(" (local split revision)"))
+    # self.upload_schematisation(
+    #     organisation_uuid="48dac75bef8a42ebbb52e8f89bbdb9f2",
+    #     name=name,
+    #     commit_message="testtest",
+    #     api_key="",
+    # )
 
 
 # %%

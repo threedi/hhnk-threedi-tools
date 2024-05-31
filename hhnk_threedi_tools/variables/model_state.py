@@ -4,6 +4,7 @@ Created on Fri Aug 27 14:33:15 2021
 
 @author: chris.kerklaan
 """
+
 # defintions
 hydraulic_test_state = "Hydraulische toets"
 one_d_two_d_state = "1d2d toets"

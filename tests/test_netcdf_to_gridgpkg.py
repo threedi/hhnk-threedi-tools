@@ -16,7 +16,7 @@ if __name__ == "__main__":
 
 def test_netcdf_to_gridgpkg():
     # input
-    timesteps_seconds = ["max", 5400]
+    timesteps_seconds = ["max", 3600, 5400]
 
     netcdf_gpkg = netcdf_to_gridgpkg.NetcdfToGPKG.from_folder(
         folder=FOLDER_TEST,
@@ -39,8 +39,8 @@ def test_netcdf_to_gridgpkg():
     grid_gdf = netcdf_gpkg.get_waterlevels(grid_gdf=grid_gdf, timesteps_seconds=timesteps_seconds)
     grid_gdf = netcdf_gpkg.correct_waterlevels(grid_gdf=grid_gdf, timesteps_seconds=timesteps_seconds)
 
-    assert np.round(grid_gdf.loc[1, "wlvl_1h30min"], 5) == 1.60609
-    assert np.round(grid_gdf.loc[1, "wlvl_1h30min_corr"], 5) == 0.66457
+    assert int(grid_gdf.loc[1, "wlvl_1h30min"] * 1e5) == 160608
+    assert int(grid_gdf.loc[1, "wlvl_corr_1h30min"] * 1e5) == 66456
 
     # Test run statement
     output_file = TEMP_DIR.joinpath(f"grid_wlvl_{hrt.current_time('%H%M%S')}.gpkg")
