@@ -4,6 +4,8 @@ from collections import OrderedDict
 
 import fiona
 
+from utils.file_change_detection import FileChangeDetection
+
 
 def format_json(obj, parent_key='', depth=0):
     """Formatteer een JSON-object met een maximale diepte van 2, voor betere leesbaarheid in git diff."""
@@ -36,6 +38,7 @@ class GeoPackageDump(object):
         self.output_path = output_path
         os.makedirs(self.output_path, exist_ok=True)
 
+        self.changed_files = []
 
     def get_schema_layer(self, layer_name):
         """get schema of the geopackage datamodel as dictionary.
@@ -57,11 +60,15 @@ class GeoPackageDump(object):
     def dump_schema(self):
         """Dump the schema of the geopackage datamodel to a json file.
         """
+        file_path = os.path.join(self.output_path, 'schema.json')
+        cd = FileChangeDetection(file_path)
 
         schema = self.get_schema()
-
         with open(os.path.join(self.output_path, 'schema.json'), 'w') as fp:
             json.dump(schema, fp, indent=2)
+
+        if cd.has_changed():
+            self.changed_files.append(file_path)
 
     def dump_layers(self, reformat=True):
         """Dump the layers and features of the geopackage to a Geojson file.
@@ -70,14 +77,17 @@ class GeoPackageDump(object):
         layers = fiona.listlayers(self.file_path)
 
         for layer_name in layers:
+
             layer = fiona.open(self.file_path, 'r', layer=layer_name)
-            output_path = os.path.join(self.output_path, f"{layer.name}.geojson")
+            output_file_path = os.path.join(self.output_path, f"{layer.name}.geojson")
+
+            cd = FileChangeDetection(output_file_path)
 
             # make sure th fid is copied too (fiona does not do this by default)
             schema = layer.schema
             schema['properties']['fid'] = 'int'
             dest_src = fiona.open(
-                output_path,
+                output_file_path,
                 'w',
                 driver='GeoJSON',
                 crs=layer.crs,
@@ -94,12 +104,15 @@ class GeoPackageDump(object):
 
             # reformat json is experiment to check what is most useful for git diff
             if reformat:
-                f = open(output_path, 'r')
+                f = open(output_file_path, 'r')
                 data = json.load(f)
                 f.close()
-                f = open(output_path, 'w')
+                f = open(output_file_path, 'w')
                 f.write(format_json(data))
                 f.close()
+
+            if cd.has_changed():
+                self.changed_files.append(output_file_path)
 
     def dump(self):
         """Dump the geopackage to a Geojson file.

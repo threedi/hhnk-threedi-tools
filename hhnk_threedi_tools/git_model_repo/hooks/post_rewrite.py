@@ -6,5 +6,4 @@ log = logging.getLogger(__name__)
 
 
 def run(repo_root: str):
-    setup_logging()
-    log.info("Running post-rewrite hook")
+    pass

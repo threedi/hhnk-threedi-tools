@@ -1,4 +1,4 @@
-def rrplace(string, old, new, occurrences):
+def rreplace(string, old, new, occurrences):
     """Replace but with occurrences from the end of the string.
 
     :param string: string to replace in

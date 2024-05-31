@@ -1,8 +1,11 @@
 import os
 import typing
+import logging
 from git import Repo
 
 from utils.get_git_root import get_git_root
+
+log = logging.getLogger(__name__)
 
 
 def is_file_gitignored(file_path, repo: typing.Union[Repo, str, None] = None) -> bool:
@@ -22,10 +25,13 @@ def is_file_gitignored(file_path, repo: typing.Union[Repo, str, None] = None) ->
     elif isinstance(repo, str):
         repo = Repo(repo)
 
-    untracked_files = repo.untracked_files
+    return repo.ignored(file_path)
 
-    # Controleer of het pad relatief is ten opzichte van de repo
-    if os.path.isabs(file_path):
-        file_path = os.path.relpath(file_path, repo.working_dir)
-
-    return file_path not in untracked_files
+    # untracked_files = repo.untracked_files
+    # log.info(f"Untracked files: {untracked_files}")
+    #
+    # # Controleer of het pad relatief is ten opzichte van de repo
+    # if os.path.isabs(file_path):
+    #     file_path = os.path.relpath(file_path, repo.working_dir)
+    #
+    # return file_path in untracked_files

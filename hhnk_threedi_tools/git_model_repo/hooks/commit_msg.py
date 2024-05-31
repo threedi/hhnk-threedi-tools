@@ -7,13 +7,13 @@ log = logging.getLogger(__name__)
 
 
 def run(repo_root: str, commit_msg_file: str):
-    log.info("Running commit_msg hook")
+    # this hook is missing link to the commit message file...
 
     commit_msg = open(
-        os.path.join(repo_root, commit_msg_file),
+        os.path.join(repo_root, ".git/COMMIT_EDITMSG"),
         'r'
     ).read()
 
-    print(commit_msg)
-    print("fout in commit message")
-    exit(1)
+    if len(commit_msg) < 8:
+        print("commit message is too short")
+        exit(1)

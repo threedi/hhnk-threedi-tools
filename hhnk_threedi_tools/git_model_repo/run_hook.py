@@ -23,7 +23,6 @@ def run_hook(hook_name, hook_dir, *args):
     try:
         # check if git_root_dir is a git repository
         root = get_git_root(hook_dir)
-        log.info(f"Running hook {hook_name} in root directory {root}. extra args: {args}")
 
         if root is None:
             raise ValueError(f"{hook_dir} is not in a git repository??!!")
