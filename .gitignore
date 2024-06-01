@@ -35,3 +35,4 @@ tests/data/new_project/*
 envs/environment_spyder_test.yml
 
 git_log.log
+.env
