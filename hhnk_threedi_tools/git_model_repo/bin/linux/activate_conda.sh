@@ -6,6 +6,8 @@ set -e
 # Laad instellingen vanuit .env bestand en stel ze in als variabelen
 if [ -f "$(dirname "$0")/../../.env" ]; then
     export $(grep -v '^#' "$(dirname "$0")/../../.env" | xargs)
+elif [ -f "$(dirname "$0")/../../../../.env" ]; then
+    export $(grep -v '^#' "$(dirname "$0")/../../../../.env" | xargs)
 else
     echo ".env bestand ontbreekt"
     exit 1
