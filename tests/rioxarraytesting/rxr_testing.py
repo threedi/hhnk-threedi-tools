@@ -14,6 +14,7 @@ import rioxarray as rxr
 
 from tests.config import FOLDER_TEST, TEMP_DIR
 
+CHUNKSIZE = 64
 
 
 dem = FOLDER_TEST.model.schema_base.rasters.dem
@@ -33,8 +34,8 @@ def get_rasters(chunksize=64):
 
 
     # Set NoData values (if needed, adjust to match your actual NoData value)
-    raster1 = raster1.where(raster1 != raster1.rio.nodata)
-    raster2 = raster2.where(raster2 != raster2.rio.nodata)
+    raster1 = raster1.where(raster1 != raster1.rio.nodata, np.nan)
+    raster2 = raster2.where(raster2 != raster2.rio.nodata, np.nan)
     return raster1, raster2
 
 
@@ -86,53 +87,11 @@ def rxr_calc_scaled_raster():
 
 
 %timeit rxr_calc_scaled_raster()
-# %%
-# %%timeit
-import xarray as xr
 
-CHUNKSIZE = 64
-
-now = time.time()
-
-raster1, raster2 = get_rasters()
-
-result = xr.zeros_like(raster1)
+assert depth.statistics(approve_ok=False) == {'min': 0.0, 'max': 0.0, 'mean': 0.0, 'std': 0.0}
 
 
-def calc(da):
-    if da.x.data[0] == 109581:
-        return xr.zeros_like(da)
 
-    else:
-        da2 = da+1
-
-        # print(da)
-        # print(da.x.data[0])
-        # print(da.y.data[0])
-        
-        return da2
-
-
-# result += 2
-result = result.map_blocks(func=calc, template=result)
-
-
-result.rio.to_raster(
-    depth.base,
-    chunks={"x": CHUNKSIZE, "y": CHUNKSIZE},
-    # lock=True, #Use dask multithread
-    compress="ZSTD",
-    tiled=True,
-    PREDICTOR=2,  # from hrt, does it still work?
-    ZSTD_LEVEL=1,  # from hrt, does it still work?
-    scale=0.01,
-    dtype="int16",
-)
-
-
-print(time.time() - now)
-
-depth.statistics(approve_ok=False)
 
 # %%
 import matplotlib.pyplot as plt
@@ -141,33 +100,33 @@ import numpy as np
 # result.where(result==-9999.0, -9999)
 # result +=1
 # r = result.compute()
-plt.imshow(result.values[0, :, :])
+plt.imshow(raster2.values[0, :, :])
 
 print(np.unique(r.values))
 # %% ufunc
-import xarray as xr
+def rxr_map_blocks():
 
-# now = time.time()
-
-def rxr_apply_ufunc():
-
-    raster1, raster2 = get_rasters(chunksize=1024)
+    raster1, raster2 = get_rasters(chunksize=CHUNKSIZE)
 
     result = xr.zeros_like(raster1)
 
 
     def calc(da1, da2):
-        # if da.x.data[0] == 109581:
-        #     return xr.zeros_like(da)
+        # if da1.x.data[0] != 10958122:
+        #     return xr.zeros_like(da1)
+
+        # if da1.x.data[0] != 109581:
+        #     return xr.zeros_like(da1)
         # print(da2)
         # else:
         r = da1 - da2
+
         # print(da)
         # print(da.x.data[0])
         # print(da.y.data[0])
 
-        r = r.where(r >= 0, -9999)
         r *= 1000  # scale_factor so we can save ints
+        r = r.where(r >= 0, -9999)
 
         return r
 
@@ -175,6 +134,7 @@ def rxr_apply_ufunc():
     # result += 2
     result = xr.map_blocks(calc, obj=raster1, args=[raster2], template = result)
 
+    result.rio.set_nodata(raster1.rio.nodata)
 
     result.rio.to_raster(
         depth.base,
@@ -194,9 +154,51 @@ def rxr_apply_ufunc():
     b.SetScale(0.001)
     gdal_source = None
 
-%timeit rxr_apply_ufunc()
+%timeit rxr_map_blocks()
 
 # print(time.time() - now)
 
-depth.statistics(approve_ok=False)
+assert depth.statistics(approve_ok=False) == {'min': 0.0, 'max': 0.0, 'mean': 0.0, 'std': 0.0}
+# %%
+
+def hrt_rastercalculator():
+
+    def run_rtype_window(block):
+        """Custom calc function on blocks in hrt.RasterCalculatorV2"""
+        block_out = block.blocks["wlvl"] - block.blocks["dem"]
+        block_out *= 1000
+
+        # Nodatamasks toepassen
+        block_out[block.masks_all] = dem.nodata
+        block_out[block_out < 0] = dem.nodata
+        return block_out
+
+
+    # Calculate drooglegging raster
+    raster_calc = hrt.RasterCalculatorV2(
+        raster_out=depth,
+        raster_paths_dict={
+            "dem": dem,
+            "wlvl": wlvl,
+        },
+        nodata_keys=["dem"],
+        mask_keys=["wlvl"],
+        metadata_key="dem",
+        custom_run_window_function=run_rtype_window,
+        output_nodata=dem.nodata,
+        min_block_size=CHUNKSIZE,
+        verbose=False,
+        tempdir="",
+    )
+    # Run calculation of output raster
+    raster_calc.run(overwrite=True)
+
+    # print(time.time() - now)
+
+%timeit hrt_rastercalculator()
+
+assert depth.statistics(approve_ok=False) == {'min': 0.0, 'max': 0.0, 'mean': 0.0, 'std': 0.0}
+
+
+
 # %%
