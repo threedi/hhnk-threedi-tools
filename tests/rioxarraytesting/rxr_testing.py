@@ -1,23 +1,29 @@
 # %%
 
 
-
 # import cupy_xarray
+import shutil
 import threading
 
 # from dask.utils import SerializableLock
 import time
 from pathlib import Path
-import shutil
+
 import hhnk_research_tools as hrt
+import numpy as np
 import rioxarray as rxr
+import xarray as xr
 
 from tests.config import FOLDER_TEST, TEMP_DIR
 
-CHUNKSIZE = 64
+CHUNKSIZE = 1024
 
 
 dem = FOLDER_TEST.model.schema_base.rasters.dem
+dem = hrt.Raster(
+    rf"C:\Users\wiets\Documents\HHNK\07.Poldermodellen\LangeWeerenToekomstHHNK_1d2d_ghg\work in progress\schematisation\rasters\dem_ontsluitingsroute_ahn4_lw_v1.tif"
+)
+
 wlvl = hrt.Raster(TEMP_DIR.joinpath(f"wlvl_{hrt.current_time(date=True)}.tif"))
 depth = hrt.Raster(TEMP_DIR.joinpath(f"raster_out_{hrt.current_time(date=True)}.tif"))
 
@@ -25,13 +31,12 @@ if not wlvl.exists():
     shutil.copy(dem.base, wlvl.base)
 
 # %%
-now = time.time()
 
-def get_rasters(chunksize=64):
+
+def get_rasters(chunksize=CHUNKSIZE):
     # Load your rasters (replace 'path_to_raster1.tif' and 'path_to_raster2.tif' with actual file paths)
     raster1 = rxr.open_rasterio(dem.base, chunks={"x": chunksize, "y": chunksize})
     raster2 = rxr.open_rasterio(wlvl.base, chunks={"x": chunksize, "y": chunksize})
-
 
     # Set NoData values (if needed, adjust to match your actual NoData value)
     raster1 = raster1.where(raster1 != raster1.rio.nodata, np.nan)
@@ -86,30 +91,29 @@ def rxr_calc_scaled_raster():
     print(time.time() - now)
 
 
-%timeit rxr_calc_scaled_raster()
+rxr_calc_scaled_raster()
 
-assert depth.statistics(approve_ok=False) == {'min': 0.0, 'max': 0.0, 'mean': 0.0, 'std': 0.0}
-
-
+assert depth.statistics(approve_ok=False) == {"min": 0.0, "max": 0.0, "mean": 0.0, "std": 0.0}
 
 
 # %%
-import matplotlib.pyplot as plt
-import numpy as np
+# import matplotlib.pyplot as plt
+# import numpy as np
 
-# result.where(result==-9999.0, -9999)
-# result +=1
-# r = result.compute()
-plt.imshow(raster2.values[0, :, :])
+# # result.where(result==-9999.0, -9999)
+# # result +=1
+# # r = result.compute()
+# plt.imshow(raster2.values[0, :, :])
 
-print(np.unique(r.values))
+
+# print(np.unique(r.values))
 # %% ufunc
 def rxr_map_blocks():
+    now = time.time()
 
     raster1, raster2 = get_rasters(chunksize=CHUNKSIZE)
 
     result = xr.zeros_like(raster1)
-
 
     def calc(da1, da2):
         # if da1.x.data[0] != 10958122:
@@ -130,9 +134,8 @@ def rxr_map_blocks():
 
         return r
 
-
     # result += 2
-    result = xr.map_blocks(calc, obj=raster1, args=[raster2], template = result)
+    result = xr.map_blocks(calc, obj=raster1, args=[raster2], template=result)
 
     result.rio.set_nodata(raster1.rio.nodata)
 
@@ -154,14 +157,19 @@ def rxr_map_blocks():
     b.SetScale(0.001)
     gdal_source = None
 
-%timeit rxr_map_blocks()
+    print(time.time() - now)
+
+
+rxr_map_blocks()
 
 # print(time.time() - now)
 
-assert depth.statistics(approve_ok=False) == {'min': 0.0, 'max': 0.0, 'mean': 0.0, 'std': 0.0}
+assert depth.statistics(approve_ok=False) == {"min": 0.0, "max": 0.0, "mean": 0.0, "std": 0.0}
 # %%
 
+
 def hrt_rastercalculator():
+    now = time.time()
 
     def run_rtype_window(block):
         """Custom calc function on blocks in hrt.RasterCalculatorV2"""
@@ -172,7 +180,6 @@ def hrt_rastercalculator():
         block_out[block.masks_all] = dem.nodata
         block_out[block_out < 0] = dem.nodata
         return block_out
-
 
     # Calculate drooglegging raster
     raster_calc = hrt.RasterCalculatorV2(
@@ -193,12 +200,12 @@ def hrt_rastercalculator():
     # Run calculation of output raster
     raster_calc.run(overwrite=True)
 
-    # print(time.time() - now)
+    print(time.time() - now)
 
-%timeit hrt_rastercalculator()
 
-assert depth.statistics(approve_ok=False) == {'min': 0.0, 'max': 0.0, 'mean': 0.0, 'std': 0.0}
+hrt_rastercalculator()
 
+assert depth.statistics(approve_ok=False) == {"min": 0.0, "max": 0.0, "mean": 0.0, "std": 0.0}
 
 
 # %%
