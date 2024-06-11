@@ -24,7 +24,7 @@ def rasterize_peilgebieden(
             gdf=pgb_gdf,
             value_field="index",
             raster_out="",
-            nodata=input_raster.nodata,
+            nodata=-9999,
             metadata=input_raster.metadata,
             driver="MEM",
         )
@@ -41,7 +41,7 @@ def rasterize_peilgebieden(
         )
 
         # Apply mask to labels. Use DEM.
-        labels_array[mask_array != 1] = input_raster.nodata
+        labels_array[mask_array != 1] = -9999
 
         hrt.save_raster_array_to_tiff(
             output_file=output_file.path,
@@ -52,7 +52,7 @@ def rasterize_peilgebieden(
 
         print(f"{output_file.name} created")
 
-        unique_labels = np.unique(labels_array[labels_array != input_raster.nodata])
+        unique_labels = np.unique(labels_array[labels_array != -9999])
 
         pgb_masked = pgb_gdf.loc[unique_labels][["index", "peil_id", "code", "name", "geometry"]]
 
