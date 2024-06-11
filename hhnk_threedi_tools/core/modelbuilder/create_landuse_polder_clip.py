@@ -2,10 +2,10 @@
 import tempfile
 from typing import Union
 
-import hhnk_threedi_tools as htt
+import hhnk_research_tools as hrt
 import rioxarray as rxr
 
-import hhnk_research_tools as hrt
+import hhnk_threedi_tools as htt
 
 CHUNKSIZE = 4096
 
@@ -57,7 +57,7 @@ def create_landuse_polder_clip(
             # Build landuse vrt
             landuse_vrt.build_vrt(overwrite=False, bounds=dem.metadata.bbox_gdal, input_files=[landuse_hhnk])
 
-            # lazy load rasters
+            # Lazy load rasters
             dem_rxr = rxr.open_rasterio(dem.base, chunks={"x": CHUNKSIZE, "y": CHUNKSIZE})
             lu_rxr = rxr.open_rasterio(landuse_vrt.base, chunks={"x": CHUNKSIZE, "y": CHUNKSIZE})
 
