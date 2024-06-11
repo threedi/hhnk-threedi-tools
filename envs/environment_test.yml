@@ -29,6 +29,7 @@ dependencies:
   # - exceptiongroup=1.1.1 #pytest dependency
   - iniconfig=2.0.0 #pytest dependency
   - tqdm=4.64.0
+  - rioxarray=0.15.0
 
 
   - xarray=2024.3.0
