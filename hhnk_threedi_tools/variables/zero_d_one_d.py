@@ -4,6 +4,7 @@ Created on Fri Aug 20 16:10:53 2021
 
 @author: chris.kerklaan
 """
+
 # columns
 lvl_start_col = "lvl_start"
 lvl_end_col = "lvl_end"

@@ -243,7 +243,7 @@ model_checks = {
         construct_query_head(impervious_surface_map_layer, msg_impervious_surface_map_not_in_impervious),
         impervious_surface_map_layer,
         f"{impervious_surface_map_layer}.{id_col}",
-        impervious_surface_id_col,
+        id_col,
         impervious_surface_layer,
     ),
     ######################################################################################
