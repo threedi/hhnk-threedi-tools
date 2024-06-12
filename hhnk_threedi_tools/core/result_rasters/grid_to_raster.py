@@ -17,6 +17,16 @@ from hhnk_threedi_tools.core.folders import Folders
 
 
 class BaseCalculatorGPKG:
+    """TODO Deprecated, remove in later release."""
+
+    def __init__(self, **kwargs):
+        raise DeprecationWarning(
+            "The BaseCalculatorGPKG class has been named to \
+htt.GridToRaster since v2024.2. Please rewrite your code."
+        )
+
+
+class GridToRaster:
     """Calculate interpolated rasters from a grid. The grid_gdf is
     created using the class ThreediGrid. Which converts the NetCDF
     into a gpkg.
@@ -42,7 +52,7 @@ class BaseCalculatorGPKG:
 
     @classmethod
     def from_folder(cls, folder: Folders, grid_gdf: GeoDataFrame, wlvl_column: str, model_schema: str = "schema_base"):
-        """Init BaseCalculatorGPKG from a model folders. It will use the model-dem and source-data panden to create
+        """Init GridToRaster from a model folders. It will use the model-dem and source-data panden to create
         a dem elevated +10cm at panden.
 
         Parameters
@@ -62,7 +72,7 @@ class BaseCalculatorGPKG:
 
         Returns
         -------
-        BaseCalculatorGPKG
+        GridToRaster
         """
         # check if damage dem needs to be updated
         dem = getattr(folder.model, model_schema).rasters.dem
@@ -313,7 +323,7 @@ class BaseCalculatorGPKG:
             target_ds = None
 
     def __enter__(self):
-        """With BaseCalculatorGPKG(**args) as x. will call this func."""
+        """With GridToRaster(**args) as x. will call this func."""
         self.cache = {}
         return self
 
@@ -340,7 +350,7 @@ if __name__ == "__main__":
     }
 
     # Init calculator
-    with BaseCalculatorGPKG(**calculator_kwargs) as self:
+    with GridToRaster(**calculator_kwargs) as self:
         # self.run(output_file=threedi_result.full_path("wlvl_orig.tif")
         #             mode="MODE_WLVL",
         #             overwrite=OVERWRITE)

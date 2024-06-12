@@ -8,7 +8,7 @@ from shapely.geometry import LineString
 
 import hhnk_threedi_tools.core.checks.grid_result_metadata as grid_result_metadata
 from hhnk_threedi_tools.core.folders import Folders
-from hhnk_threedi_tools.core.result_rasters.calculate_raster import BaseCalculatorGPKG
+from hhnk_threedi_tools.core.result_rasters.calculate_raster import GridToRaster
 
 # Local imports
 from hhnk_threedi_tools.core.result_rasters.netcdf_to_gridgpkg import NetcdfToGPKG
@@ -77,7 +77,7 @@ class OneDTwoDTest:
         # Create depth and wlvl rasters for each timestep.
         grid_gdf = gpd.read_file(self.output_fd.grid_nodes_2d.path)
         for T in self.TIMESTEPS:
-            with BaseCalculatorGPKG(
+            with GridToRaster(
                 dem_path=self.folder.model.schema_base.rasters.dem,
                 grid_gdf=grid_gdf,
                 wlvl_column=f"wlvl_{T}h",
