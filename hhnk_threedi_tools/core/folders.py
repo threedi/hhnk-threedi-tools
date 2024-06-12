@@ -1,8 +1,9 @@
 # %%
 """
-Each class has a file as its attributes and a file as a new class. 
+Each class has a file as its attributes and a file as a new class.
 self.base is the directory in which it is located
 """
+
 # First-party imports
 import os
 from pathlib import Path
@@ -262,7 +263,7 @@ class SchemaDirParent(Folder):
 
         self.revisions = self.ModelRevisionsParent(base=self.base, create=create)
         self.schema_base = hrt.ThreediSchematisation(base=self.base, name="00_basis", create=create)
-        self.manipulated_rasters = self.ManipulatedRasters(base=self.base, create=create)
+        self.calculation_rasters = self.CalculationRasters(base=self.base, create=create)
         self.schema_list = ["schema_base"]
         self.add_file("model_sql", "model_sql.json")
 
@@ -320,15 +321,17 @@ class SchemaDirParent(Folder):
             if create:
                 self.create()
 
-    class ManipulatedRasters(Folder):
-        """sub-folder of SchemaDirParent with all manipulated rasters in it.
-        For now it holds a manipulated raster used for damage calculations.
+    class CalculationRasters(Folder):
+        """sub-folder of SchemaDirParent with all rasters in it required for calculations.
+
+        With these rasters we can do:
+            - damage calculations
         """
 
         def __init__(self, base, create):
             super().__init__(os.path.join(base, "rasters_verwerkt"), create)
 
-            self.add_file("dem", "dem_05m.tif")
+            self.add_file("dem", "dem_50cm.tif")
             self.add_file("damage_dem", "damage_dem.tif")
             self.add_file("panden", "panden.tif")
             if create:
@@ -338,12 +341,11 @@ class SchemaDirParent(Folder):
         def create_readme(self):
             readme_txt = (
                 "Expected files are:\n\n"
-                "dem_05m.tif used to create damage_dem.tif\n"
-                "panden.tif used to create damage_dem.tif\n"
-                "damage_dem.tif created by damage_05m.tif + panden.tif used fro damage calculations.\n\n"
-                "\tdamage_dem.tif = dem_05m.tif + panden.tif"
+                "dem_50cm.tif -> used to create damage_dem.tif\n"
+                "panden.tif -> used to create damage_dem.tif\n"
+                "damage_dem.tif -> dem_50cm.tif + panden.tif. Used for damage calculations.\n\n"
             )
-            with open(os.path.join(self.base, "read_me.txt"), mode="w") as f:
+            with open(os.path.join(self.base, "README.txt"), mode="w") as f:
                 f.write(readme_txt)
 
 

@@ -76,15 +76,15 @@ class GridToRaster:
         """
         # check if damage dem needs to be updated
         dem = getattr(folder.model, model_schema).rasters.dem
-        highres_dem = folder.model.manipulated_rasters.dem
-        damage_dem = folder.model.manipulated_rasters.damage_dem
+        highres_dem = folder.model.calculation_rasters.dem
+        damage_dem = folder.model.calculation_rasters.damage_dem
         panden = folder.source_data.panden
-        panden_raster = folder.model.manipulated_rasters.panden
+        panden_raster = folder.model.calculation_rasters.panden
 
         # check if we need to overwrite damage_dem because it doesn't exist or panden or model-dem are newer
-        if not folder.model.manipulated_rasters.exists():  # if the folders doesn't exist we are to create it
-            folder.model.manipulated_rasters.create()
-            folder.model.manipulated_rasters.create_readme()
+        if not folder.model.calculation_rasters.exists():  # if the folders doesn't exist we are to create it
+            folder.model.calculation_rasters.create()
+            folder.model.calculation_rasters.create_readme()
             overwrite = True
         else:
             overwrite = hrt.check_create_new_file(
