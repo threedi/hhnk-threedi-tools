@@ -6,7 +6,7 @@ import hhnk_research_tools as hrt
 import pandas as pd
 
 from hhnk_threedi_tools import Folders
-from hhnk_threedi_tools.core.result_rasters.calculate_raster import GridToRaster
+from hhnk_threedi_tools.core.result_rasters.grid_to_raster import GridToRaster
 from hhnk_threedi_tools.core.result_rasters.netcdf_to_gridgpkg import NetcdfToGPKG
 
 

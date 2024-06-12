@@ -5,7 +5,7 @@ import hhnk_research_tools as hrt
 # pd.options.mode.chained_assignment = 'raise' #catch SettingWithCopyWarning
 import pytest
 
-from hhnk_threedi_tools.core.result_rasters.calculate_raster import GridToRaster
+from hhnk_threedi_tools.core.result_rasters.grid_to_raster import GridToRaster
 from tests.config import FOLDER_TEST, TEMP_DIR, TEST_DIRECTORY
 
 TEST_RESULT_DIR = TEST_DIRECTORY / r"test_result_rasters"
