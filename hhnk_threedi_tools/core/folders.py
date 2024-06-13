@@ -322,7 +322,7 @@ class SchemaDirParent(Folder):
                 self.create()
 
     class CalculationRasters(Folder):
-        """sub-folder of SchemaDirParent with all rasters in it required for calculations.
+        """sub-folder of SchemaDirParent with rasters required for calculations.
 
         With these rasters we can do:
             - damage calculations
@@ -331,22 +331,24 @@ class SchemaDirParent(Folder):
         def __init__(self, base, create):
             super().__init__(os.path.join(base, "rasters_verwerkt"), create)
 
-            self.add_file("dem", "dem_50cm.tif")
-            self.add_file("damage_dem", "damage_dem.tif")
+            # self.add_file("dem", "dem_50cm.tif")
+            self.add_file("damage_dem", "damage_dem.tif")  # TODO glob maken van beschikbare damage_dems.
             self.add_file("panden", "panden.tif")
             if create:
-                self.create()
+                self.mkdir()
                 self.create_readme()
 
         def create_readme(self):
-            readme_txt = (
-                "Expected files are:\n\n"
-                "dem_50cm.tif -> used to create damage_dem.tif\n"
-                "panden.tif -> used to create damage_dem.tif\n"
-                "damage_dem.tif -> dem_50cm.tif + panden.tif. Used for damage calculations.\n\n"
-            )
-            with open(os.path.join(self.base, "README.txt"), mode="w") as f:
-                f.write(readme_txt)
+            readme_file = self.path.joinpath("README.txt")
+            if not readme_file.exists():
+                readme_txt = (
+                    "Expected files are:\n\n"
+                    "dem_50cm.tif -> used to create damage_dem.tif\n"
+                    "panden.tif -> used to create damage_dem.tif\n"
+                    "damage_dem.tif -> dem_50cm.tif + panden.tif. Used for damage calculations.\n\n"
+                )
+                with open(readme_file, mode="w") as f:
+                    f.write(readme_txt)
 
 
 class ThreediResultsDir(Folder):

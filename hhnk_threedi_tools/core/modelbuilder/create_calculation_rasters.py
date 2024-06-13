@@ -1,6 +1,5 @@
-"""
-Create rasters required to do postprocessing.
-"""
+# %%
+"""Rasters required to do postprocessing."""
 
 from typing import Union
 
@@ -9,7 +8,10 @@ import hhnk_research_tools as hrt
 from hhnk_threedi_tools import Folders
 
 
-def create_damage_dem(folder: Folders, dem: hrt.Raster):
+def create_damage_dem(
+    folder: Folders,
+    dem: hrt.Raster,
+):
     """Create the damage dem. This dem differs from the original model dem in that the
     ground level of buildings are increased by an extra 10cm for a total of 15cm. This will ensure that
     no damage is calculated with low inundation depths. In the dem the floor
@@ -46,11 +48,6 @@ def create_damage_dem(folder: Folders, dem: hrt.Raster):
     )
 
     if overwrite:
-        # check if we need to overwrite damage_dem because it doesn't exist or panden or model-dem are newer
-        if not folder.model.calculation_rasters.exists():  # if the folders doesn't exist we are to create it
-            folder.model.calculation_rasters.create()
-            folder.model.calculation_rasters.create_readme()
-
         # create highres dem if it doesn't exist
         if dem.metadata.x_res == 0.5:
             highres_dem = dem
@@ -97,3 +94,6 @@ def create_damage_dem(folder: Folders, dem: hrt.Raster):
         calc.run(overwrite=True)
     else:
         print(f"{damage_dem.view_name_with_parents(2)} already exists")
+
+
+# %%
