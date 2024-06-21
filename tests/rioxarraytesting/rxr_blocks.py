@@ -122,13 +122,14 @@ class R(hrt.Raster):
 
 
 # %%
+CHUNKSIZE = 64
+
 if True:
     # demr = R(
     #     rf"C:\Users\wiets\Documents\HHNK\07.Poldermodellen\LangeWeerenToekomstHHNK_1d2d_ghg\work in progress\schematisation\rasters\dem_ontsluitingsroute_ahn4_lw_v1.tif"
     # )
     dem = R(dem)
 
-    CHUNKSIZE = 200
     dem.min_block_size = CHUNKSIZE
 
     bounds = [129613.0, 134520.0, 497637.0, 503208.5]
@@ -149,7 +150,6 @@ demr = rxr.open_rasterio(dem.base, chunks={"x": CHUNKSIZE, "y": CHUNKSIZE})
 
 
 # %%
-CHUNKSIZE = 200
 
 
 df["xy"] = df.apply(lambda x: f"{x['minx']},{x['maxy']}", axis=1)
@@ -165,8 +165,8 @@ def get_rasters(chunksize=CHUNKSIZE):
     raster2 = rxr.open_rasterio(wlvl.base, chunks={"x": chunksize, "y": chunksize})
 
     # Set NoData values (if needed, adjust to match your actual NoData value)
-    raster1 = raster1.where(raster1 != raster1.rio.nodata, np.nan)
-    raster2 = raster2.where(raster2 != raster2.rio.nodata, np.nan)
+    # raster1 = raster1.where(raster1 != raster1.rio.nodata, np.nan)
+    # raster2 = raster2.where(raster2 != raster2.rio.nodata, np.nan)
     return raster1, raster2
 
 
@@ -180,43 +180,46 @@ berekening sneller maakt. Vooral voor groetere rasters.
 """
 
 
-def rxr_map_blocks():
+def calc_zeros(d_out, da1, da2):
+    return d_out
+
+
+def calc_full_like(d_out, da1, da2):
+    return xr.full_like(da1, da1.rio.nodata)
+
+
+def calc_selected_blocks(d_out, da1, da2):
+    if df.loc[f"{da1.x.data[0]},{da1.y.data[0]}", "use"] is True:
+        return da1 - da2
+    else:
+        return d_out
+    # return xr.zeros_like(da1) - 9999
+
+    # print(da)
+    print(f"geometry.Point{(da1.x.data[0], da1.y.data[0])},")
+
+
+def calc_long(d_out, da1, da2):
+    return da1**da2**da1**da2**da2**da2**da1**10e6
+
+
+def calc_all(d_out, da1, da2):
+    r = da1 - da2
+    r *= 1000  # scale_factor so we can save ints
+    r = r.where(r >= 0, -9999)
+
+    return r
+
+
+def rxr_map_blocks(calc_func):
     now = time.time()
 
     raster1, raster2 = get_rasters(chunksize=CHUNKSIZE)
 
     result = xr.full_like(other=raster1, fill_value=raster1.rio.nodata)
 
-    def calc(d_out, da1, da2):
-        if df.loc[f"{da1.x.data[0]},{da1.y.data[0]}", "use"] is True:
-            print("hi")
-            return da1
-        else:
-            #     return xr.zeros_like(da1) - 9999
-            #     return xr.zeros_like(da1) - 9999
-            return d_out
-        # return xr.zeros_like(da1) - 9999
-        # return xr.full_like(da1, da1.rio.nodata)
-
-        # if da1.x.data[0] != 10958122:
-        #     return xr.zeros_like(da1)
-
-        # if da1.x.data[0] != 109581:
-        #     return xr.zeros_like(da1)
-        # print(da2)
-        # else:
-        r = da1 - da2
-
-        # print(da)
-        print(f"geometry.Point{(da1.x.data[0], da1.y.data[0])},")
-
-        r *= 1000  # scale_factor so we can save ints
-        r = r.where(r >= 0, -9999)
-
-        return r
-
     # result += 2
-    result = xr.map_blocks(calc, obj=result, args=[raster1, raster2], template=result)
+    result = xr.map_blocks(calc_func, obj=result, args=[raster1, raster2], template=result)
 
     result.rio.set_nodata(raster1.rio.nodata)
 
@@ -241,7 +244,7 @@ def rxr_map_blocks():
     print(time.time() - now)
 
 
-rxr_map_blocks()
+rxr_map_blocks(calc_zeros)
 # %%
 
 df["geometry"] = [
