@@ -189,7 +189,7 @@ def calc_full_like(d_out, da1, da2):
 
 
 def calc_selected_blocks(d_out, da1, da2):
-    if df.loc[f"{da1.x.data[0]},{da1.y.data[0]}", "use"] is True:
+    if df.at[f"{da1.x.data[0]},{da1.y.data[0]}", "use"] is True:
         return da1 - da2
     else:
         return d_out
@@ -244,7 +244,30 @@ def rxr_map_blocks(calc_func):
     print(time.time() - now)
 
 
+# %%
+
+# calc_zeros
 rxr_map_blocks(calc_zeros)
+
+# %%
+
+# calc_full_like
+rxr_map_blocks(calc_full_like)
+
+# %%
+
+# calc_selected_blocks
+rxr_map_blocks(calc_selected_blocks)
+
+# %%
+
+# calc_long
+rxr_map_blocks(calc_long)
+
+# %%
+
+# calc_all
+rxr_map_blocks(calc_all)
 # %%
 
 df["geometry"] = [

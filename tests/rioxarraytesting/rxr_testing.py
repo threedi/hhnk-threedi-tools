@@ -1,36 +1,54 @@
 # %%
-
-
-# import cupy_xarray
+import os
 import shutil
 import threading
 
 # from dask.utils import SerializableLock
 import time
+import timeit
 from pathlib import Path
 
+import geopandas as gpd
 import hhnk_research_tools as hrt
 import numpy as np
+import rasterio as rio
 import rioxarray as rxr
 import xarray as xr
 
+from hhnk_threedi_tools.core.result_rasters.calculate_raster import BaseCalculatorGPKG
 from tests.config import FOLDER_TEST, TEMP_DIR
 
-CHUNKSIZE = 1024
+CHUNKSIZE = 4096
+SETUP = "full"
+SETUPS = {
+    "clip_small": {"statistics": {"min": -32767.0, "max": 32765.0, "mean": 670.35384, "std": 2858.262956}},
+    "clip_medium": {"statistics": {"min": -32767.0, "max": 32765.0, "mean": 664.976118, "std": 2841.971657}},
+    "full": {"statistics": {"min": -32760.0, "max": 32765.0, "mean": 699.288424, "std": 2826.983867}},
+}
 
 
-dem = FOLDER_TEST.model.schema_base.rasters.dem
-dem = hrt.Raster(
-    rf"C:\Users\wiets\Documents\HHNK\07.Poldermodellen\LangeWeerenToekomstHHNK_1d2d_ghg\work in progress\schematisation\rasters\dem_ontsluitingsroute_ahn4_lw_v1.tif"
-)
+PLAYGROUND_DIR = Path(r"d:\projecten\D2402.HHNK.Ondersteuning_Python\03.playground")
+# dem = FOLDER_TEST.model.schema_base.rasters.dem FIXME: Exception: No connection or database path provided
+dem = hrt.Raster(PLAYGROUND_DIR / SETUP / "dem.tif")
+grid_gdf = gpd.read_file(PLAYGROUND_DIR / SETUP / "grid_corr.gpkg")
+wlvl = hrt.Raster(PLAYGROUND_DIR / SETUP / "wlvl.tif")
 
-wlvl = hrt.Raster(TEMP_DIR.joinpath(f"wlvl_{hrt.current_time(date=True)}.tif"))
-depth = hrt.Raster(TEMP_DIR.joinpath(f"raster_out_{hrt.current_time(date=True)}.tif"))
 
+# %% water level
+
+# waterlevel raster maken
 if not wlvl.exists():
-    shutil.copy(dem.base, wlvl.base)
+    now = time.time()
+    calculator_kwargs = {
+        "dem_path": dem.base,
+        "grid_gdf": grid_gdf,
+        "wlvl_column": "wlvl_max_replaced",
+    }
+    with BaseCalculatorGPKG(**calculator_kwargs) as basecalc:
+        basecalc.run(output_file=wlvl.path, mode="MODE_WLVL", overwrite=True)
+    print(time.time() - now)
 
-# %%
+depth = hrt.Raster(PLAYGROUND_DIR / SETUP / "depth.tif")
 
 
 def get_rasters(chunksize=CHUNKSIZE):
@@ -44,6 +62,23 @@ def get_rasters(chunksize=CHUNKSIZE):
     return raster1, raster2
 
 
+def write_to_raster(result, scale_factor):
+    result.rio.to_raster(
+        depth.base,
+        chunks={"x": CHUNKSIZE, "y": CHUNKSIZE},
+        # lock=True, #Use dask multithread
+        compress="ZSTD",
+        tiled=True,
+        PREDICTOR=2,
+        ZSTD_LEVEL=1,
+        dtype="int16",
+    )
+
+    # Settings the scale_factor does not work with rioxarray. T
+    with rio.open(depth.base, "r+") as src:
+        src.scales = (scale_factor,)
+
+
 # raster1_chunk = raster1.chunk({'x': CHUNKSIZE, 'y': CHUNKSIZE})
 # raster2_chunk = raster2.chunk({'x': CHUNKSIZE, 'y': CHUNKSIZE})
 # result = raster1_chunk - raster2_chunk
@@ -51,7 +86,10 @@ def get_rasters(chunksize=CHUNKSIZE):
 
 # %% calc option without function
 
+# rio-xarray
 
+
+# {'min': 0.0, 'max': 637.0, 'mean': 209.638603, 'std': 162.312035}
 def rxr_calc_scaled_raster():
     now = time.time()
 
@@ -68,46 +106,18 @@ def rxr_calc_scaled_raster():
 
     # Export the result directly to the output raster in chunks
     result.rio.set_nodata(raster1.rio.nodata)
-    dir(result.rio)
-    # result.rio.scale_factor = 0.001
-    result.rio.to_raster(
-        depth.base,
-        chunks={"x": CHUNKSIZE, "y": CHUNKSIZE},
-        # lock=True, #Use dask multithread
-        compress="ZSTD",
-        tiled=True,
-        PREDICTOR=2,  # from hrt, does it still work?
-        ZSTD_LEVEL=1,  # from hrt, does it still work?
-        scale=0.01,
-        dtype="int16",
-    )
-
-    # Settings the scale_factor does not work with rioxarray. T
-    gdal_source = depth.open_gdal_source_write()
-    b = gdal_source.GetRasterBand(1)
-    b.SetScale(0.001)
-    gdal_source = None
+    write_to_raster(result, scale_factor=0.001)
 
     print(time.time() - now)
 
 
 rxr_calc_scaled_raster()
 
-assert depth.statistics(approve_ok=False) == {"min": 0.0, "max": 0.0, "mean": 0.0, "std": 0.0}
+assert depth.statistics(approve_ok=False) == SETUPS[SETUP]["statistics"]
 
 
 # %%
-# import matplotlib.pyplot as plt
-# import numpy as np
-
-# # result.where(result==-9999.0, -9999)
-# # result +=1
-# # r = result.compute()
-# plt.imshow(raster2.values[0, :, :])
-
-
-# print(np.unique(r.values))
-# %% ufunc
+# xarray map_blocks
 def rxr_map_blocks():
     now = time.time()
 
@@ -139,35 +149,18 @@ def rxr_map_blocks():
 
     result.rio.set_nodata(raster1.rio.nodata)
 
-    result.rio.to_raster(
-        depth.base,
-        chunks={"x": CHUNKSIZE, "y": CHUNKSIZE},
-        # lock=True, #Use dask multithread
-        compress="ZSTD",
-        tiled=True,
-        PREDICTOR=2,  # from hrt, does it still work?
-        ZSTD_LEVEL=1,  # from hrt, does it still work?
-        scale=0.01,
-        dtype="int16",
-    )
-
-    # Settings the scale_factor does not work with rioxarray. T
-    gdal_source = depth.open_gdal_source_write()
-    b = gdal_source.GetRasterBand(1)
-    b.SetScale(0.001)
-    gdal_source = None
+    write_to_raster(result, scale_factor=0.001)
 
     print(time.time() - now)
 
 
 rxr_map_blocks()
 
-# print(time.time() - now)
-
-assert depth.statistics(approve_ok=False) == {"min": 0.0, "max": 0.0, "mean": 0.0, "std": 0.0}
+assert depth.statistics(approve_ok=False) == SETUPS[SETUP]["statistics"]
 # %%
 
 
+# hrt rastercalculator
 def hrt_rastercalculator():
     now = time.time()
 
@@ -205,7 +198,6 @@ def hrt_rastercalculator():
 
 hrt_rastercalculator()
 
-assert depth.statistics(approve_ok=False) == {"min": 0.0, "max": 0.0, "mean": 0.0, "std": 0.0}
-
+assert depth.statistics(approve_ok=False) == SETUPS[SETUP]["statistics"]
 
 # %%
