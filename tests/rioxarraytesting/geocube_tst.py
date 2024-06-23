@@ -1,5 +1,6 @@
 # %%
 
+import time
 from pathlib import Path
 
 import geopandas as gpd
@@ -15,16 +16,23 @@ SETUP = "clip_small"
 # dem = FOLDER_TEST.model.schema_base.rasters.dem FIXME: Exception: No connection or database path provided
 dem = hrt.Raster(PLAYGROUND_DIR / SETUP / "dem.tif")
 grid_gpkg = PLAYGROUND_DIR / SETUP / "grid_corr.gpkg"
-grid_tif = PLAYGROUND_DIR / SETUP / "grid.tif"
+grid_tif_geocube = PLAYGROUND_DIR / SETUP / "grid_geocube.tif"
+grid_tif_hrt = PLAYGROUND_DIR / SETUP / "grid_hrt.tif"
 
 grid_gdf = gpd.read_file(grid_gpkg)
+
+
+# %%
+
+now = time.time()
+
 out_grid = make_geocube(vector_data=grid_gdf[["wlvl_max_replaced", "geometry"]], resolution=(-0.5, 0.5), fill=-9999)
 # out_grid["wlvl_max_replaced"].rio.to_raster(grid_tif)
 
 
 # out_grid["wlvl_max_replaced"].rio.set_nodata(-9999, inplace=True)
 
-raster_out = hrt.Raster(grid_tif)
+raster_out = hrt.Raster(grid_tif_geocube)
 
 # This is just taken from the new hrt.Raster. So we can do the writing in the exact same way.
 dtype = "float32"
@@ -49,3 +57,22 @@ out_grid["wlvl_max_replaced"].rio.to_raster(
     NUM_THREADS="ALL_CPUS",  # gdal options
     dtype=dtype,
 )
+
+print(time.time() - now)
+
+
+# %% hrt gdf to raster
+
+now = time.time()
+
+hrt.gdf_to_raster(
+    gdf=grid_gdf,
+    value_field="wlvl_max_replaced",
+    raster_out=grid_tif_hrt,
+    nodata=-9999,
+    metadata=hrt.Raster(grid_tif_geocube).metadata,
+    read_array=False,
+    overwrite=True,
+)
+
+print(time.time() - now)
