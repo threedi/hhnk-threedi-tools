@@ -24,7 +24,7 @@ CHUNKSIZE = 4096
 # CHUNKSIZE = 16384
 # CHUNKSIZE = 1024
 
-SETUP = "clip_small"
+SETUP = "clip_medium"
 
 
 SETUPS = {
@@ -41,6 +41,11 @@ SETUPS = {
 }
 
 
+SETUPS={
+    "clip_small": {"statistics": {'min': 0.0, 'max': 2792.0, 'mean': 1584.604598, 'std': 633.447248}},
+    "clip_medium": {"statistics": {'min': 0.0, 'max': 2792.0, 'mean': 1584.399304, 'std': 633.472572}},
+}
+
 PLAYGROUND_DIR = Path(r"d:\projecten\D2402.HHNK.Ondersteuning_Python\03.playground")
 PLAYGROUND_DIR = Path(r"C:\Users\Wietse\Documents\HHNK\playground")
 # dem = FOLDER_TEST.model.schema_base.rasters.dem FIXME: Exception: No connection or database path provided
@@ -54,7 +59,7 @@ perf["wvg_home_small_1024"] = [28.03, 1.87, 1.95, 4.44]
 perf["wvg_home_small_4096"] = [28.66, 2.36, 1.83, 3.42]
 perf["wvg_home_small_16384"] = [28.45, 2.65, 1.9, 3.32]
 perf["wvg_home_medium_1024"] = [0, 9.2, 10.2, 18.2]
-perf["wvg_home_medium_4096"] = [97.36, 8.1, 9.2, 11.7]
+perf["wvg_home_medium_4096"] = [97.36, 6.0, 7.1, 11.7]
 perf["wvg_home_medium_16384"] = [104.1, 8.39, 8.03, 12.0]
 perf["wvg_home_full_4096"] = [343.7, 22.5, 26.8, 56.9]
 perf["wvg_home_full_16384"] = [0, 21.4, 30.17, 47.1]
@@ -105,7 +110,7 @@ def write_to_raster(raster_out, result, scale_factor):
         chunks=True,
         # lock=threading.Lock(), #Use dask multithread
         lock=True,
-        tiled=1024,
+        tiled=True,
         windowed=True,
         COMPRESS=compress,  # gdal options
         PREDICTOR=2,  # gdal options
@@ -151,7 +156,7 @@ def rxr_calc_scaled_raster():
     print(time.time() - now)
 
 
-rxr_calc_scaled_raster()
+%timeit rxr_calc_scaled_raster()
 
 assert depth_rxr.statistics(approve_ok=False) == SETUPS[SETUP]["statistics"]
 
@@ -194,7 +199,7 @@ def rxr_map_blocks():
     print(time.time() - now)
 
 
-rxr_map_blocks()
+%timeit rxr_map_blocks()
 
 assert depth_rxr_block.statistics(approve_ok=False) == SETUPS[SETUP]["statistics"]
 # %%
@@ -207,7 +212,7 @@ def hrt_rastercalculator():
     def run_rtype_window(block):
         """Custom calc function on blocks in hrt.RasterCalculatorV2"""
         block_out = block.blocks["wlvl"] - block.blocks["dem"]
-        # block_out *= 1000
+        block_out *= 1000
 
         # Nodatamasks toepassen
         block_out[block.masks_all] = dem.nodata
