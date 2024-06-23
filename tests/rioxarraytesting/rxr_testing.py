@@ -24,7 +24,7 @@ CHUNKSIZE = 4096
 # CHUNKSIZE = 16384
 # CHUNKSIZE = 1024
 
-SETUP = "clip_medium"
+SETUP = "clip_small"
 
 
 SETUPS = {
@@ -117,6 +117,7 @@ def write_to_raster(raster_out, result, scale_factor):
         ZSTD_LEVEL=1,  # gdal options
         NUM_THREADS="ALL_CPUS",  # gdal options
         dtype=dtype,
+        MAX_Z_ERROR=0.001,
     )
 
     # Settings the scale_factor does not work with rioxarray. T
