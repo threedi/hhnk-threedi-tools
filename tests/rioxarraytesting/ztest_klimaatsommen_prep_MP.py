@@ -133,26 +133,24 @@ df = pd.DataFrame([1, 2, 3, 4, 5])
 
 # %%
 import time
-
 import dask
 
-
+a = time.time()
 @dask.delayed
 def square(x):
-    time.sleep(5)
-    # return x**2
+    now = time.time() - a
+    print(f"{round(now,1)} {x} start")
+    time.sleep(x)
+    return x**2
 
-
-numbers = [1, 2, 3, 4, 5]
-
+numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 squares = []
-
 for number in numbers:
     s = square(number)
     squares.append(s)
 
 dask.compute(squares)
-
+print(time.time() - a)
 # print(*dask.compute(squares))
 
 
