@@ -16,7 +16,7 @@ dependencies:
   - h5py
   - fiona=1.9.5
   - shapely=2.0.2
-  - gdal=3.8.4
+  # - gdal=3.8.4 incompatible
 
   #User folder
   - jupyterlab=4.2.0
