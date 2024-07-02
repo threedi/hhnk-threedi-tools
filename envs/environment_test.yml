@@ -29,8 +29,8 @@ dependencies:
   # - exceptiongroup=1.1.1 #pytest dependency
   - iniconfig=2.0.0 #pytest dependency
   - tqdm=4.64.0
-  - rioxarray=0.15.0
-  - pyogrio=0.7.2
+  - rioxarray=0.15.0 #higher versions need python >=3.10
+  - pyogrio=0.9.0
 
 
   - xarray=2024.3.0
