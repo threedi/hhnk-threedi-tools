@@ -4,6 +4,7 @@ Created on Mon Aug 23 11:31:45 2021
 
 @author: chris.kerklaan
 """
+
 # General
 id_col = "id"
 spatialite_id_col = "spatialite_id"

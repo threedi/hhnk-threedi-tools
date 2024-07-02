@@ -3,9 +3,10 @@
 import os
 import pathlib
 
+from hhnk_threedi_tools.core.folders import Folders
+
 # Local imports
 from hhnk_threedi_tools.utils.notebooks.run import open_server
-from hhnk_threedi_tools.core.folders import Folders
 
 # Globals
 TEST_MODEL = str(pathlib.Path(__file__).parent.absolute()) + "/data/model_test/"

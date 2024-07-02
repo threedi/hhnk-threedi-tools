@@ -141,7 +141,7 @@ def classify_nodes(node_id_2d, groups, lines1d2d_active, lines1d2d_valid):
     # that have valid 1D lines
     node_id_2d_valid_1d = np.intersect1d(node_id_2d_active_1d, lines1d2d_valid.line.ravel())
     # create boolean arrays for fast lookup
-    is2d = np.zeros(node_id_2d.max() + 1, dtype=np.bool)
+    is2d = np.zeros(node_id_2d.max() + 1, dtype=bool)
     is2d[node_id_2d] = True
     has1d_active = np.zeros_like(is2d)
     has1d_active[node_id_2d_active_1d] = True
@@ -292,12 +292,12 @@ def command(path_piek, path_blok, path_out, min_flow_area=0.001, max_gradient=0.
     # logical operations to generate "case_final"
     cell_data["case_final"] = np.full(cell_data["id"].size, "", dtype="S10")
     cell_data["case_final"][(cell_data["case_blok"] == b"plas") | (cell_data["case_piek"] == b"plas")] = "plas"
-    cell_data["case_final"][
-        (cell_data["case_blok"] == b"overlast") | (cell_data["case_piek"] == b"overlast")
-    ] = "overlast"
-    cell_data["case_final"][
-        (cell_data["case_blok"] == b"modelfout") & (cell_data["case_piek"] == b"modelfout")
-    ] = "modelfout"
+    cell_data["case_final"][(cell_data["case_blok"] == b"overlast") | (cell_data["case_piek"] == b"overlast")] = (
+        "overlast"
+    )
+    cell_data["case_final"][(cell_data["case_blok"] == b"modelfout") & (cell_data["case_piek"] == b"modelfout")] = (
+        "modelfout"
+    )
 
     logger.info("Writing shapefile at {}...".format(path_out))
     to_shape(
