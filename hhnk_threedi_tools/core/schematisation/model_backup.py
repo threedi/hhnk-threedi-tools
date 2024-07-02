@@ -5,29 +5,30 @@ Created on Fri Aug 27 14:42:27 2021
 @author: chris.kerklaan
 """
 # Third-party imports
-import pandas as pd
 import hhnk_research_tools as hrt
+import pandas as pd
 
-# Local imports
-from hhnk_threedi_tools.variables.model_state import undefined_state, one_d_two_d_state
+from hhnk_threedi_tools.utils.queries import (
+    bank_lvls_source_creation_query,
+    bank_lvls_source_update_query,
+    weir_width_backup_query,
+)
 from hhnk_threedi_tools.variables.backups_table_names import (
+    BANK_LVLS_LAST_CALC,
+    CHANNELS_TABLE,
+    CONTR_WEIR_WIDTH_BACKUP,
     GLOBAL_SETTINGS_TABLE,
     MANHOLES_TABLE,
-    CONTR_WEIR_WIDTH_BACKUP,
-    CHANNELS_TABLE,
-    BANK_LVLS_LAST_CALC,
 )
 from hhnk_threedi_tools.variables.database_variables import (
-    global_settings_layer,
     channels_layer,
     cross_sec_def_layer,
+    global_settings_layer,
     manhole_layer,
 )
-from hhnk_threedi_tools.utils.queries import (
-    weir_width_backup_query,
-    bank_lvls_source_update_query,
-    bank_lvls_source_creation_query,
-)
+
+# Local imports
+from hhnk_threedi_tools.variables.model_state import one_d_two_d_state, undefined_state
 
 
 def create_backups(model_path, state=None, manholes_bank_levels_only=False):
@@ -95,9 +96,7 @@ def create_backups(model_path, state=None, manholes_bank_levels_only=False):
         raise e from None
 
 
-def select_values_to_update_from_backup(
-    model_df, backup_df, left_id_col, right_id_col, old_val_col, new_val_col
-):
+def select_values_to_update_from_backup(model_df, backup_df, left_id_col, right_id_col, old_val_col, new_val_col):
     """
     Merges the backup into the representation of the model, then checks
     whether the relevant value has changed. If so, we keep this row,

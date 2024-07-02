@@ -1,10 +1,11 @@
 # Third-party imports
-import numpy as np
-import shapely.geometry
 import geopandas as gpd
 
 # Local imports
 import hhnk_research_tools as hrt
+import numpy as np
+import shapely.geometry
+
 # from deprecated.core.climate_results.processes import multiprocess
 from tqdm.notebook import trange
 
@@ -18,9 +19,7 @@ def maak_schade_polygon(
 ):
     """Aggregeer de schaderasters van overlast en plasvorming naar peilgebiedniveau."""
 
-    def bereken_schade_per_peilgebied(
-        peilgebieden_file, schade_raster_file, pixel_factor
-    ):
+    def bereken_schade_per_peilgebied(peilgebieden_file, schade_raster_file, pixel_factor):
         """"""
         # importeer schaderasters
         contante_schade = {}
@@ -51,9 +50,7 @@ def maak_schade_polygon(
             try:
                 poly = row.geometry.intersection(boundingbox)
             except:
-                poly = shapely.geometry.Polygon(row.geometry.exterior).intersection(
-                    boundingbox
-                )
+                poly = shapely.geometry.Polygon(row.geometry.exterior).intersection(boundingbox)
 
             poly_gdf = gpd.GeoDataFrame(geometry=[poly])
             # Voeg kolom toe aan gdf, deze waarden worden in het raster gezet.
@@ -76,9 +73,7 @@ def maak_schade_polygon(
         return peilgebieden
 
     # Bereken de schade per peilgebied
-    peilgebieden = bereken_schade_per_peilgebied(
-        peilgebieden_file, schade_raster_file, pixel_factor
-    )
+    peilgebieden = bereken_schade_per_peilgebied(peilgebieden_file, schade_raster_file, pixel_factor)
 
     # Tabel opschonen
     schades = peilgebieden[
@@ -93,19 +88,13 @@ def maak_schade_polygon(
         ]
     ].sort_values(by="cw_schade_overlast", ascending=False)
 
-    schades.columns = [
-        i.replace("schade_overlast", "ws").replace("schade_plas", "mv")
-        for i in schades.columns
-    ]
+    schades.columns = [i.replace("schade_overlast", "ws").replace("schade_plas", "mv") for i in schades.columns]
     schades["cw_tot"] = schades["cw_ws"] + schades["cw_mv"]
 
     schades = schades.loc[schades["cw_tot"] > 0.0]
 
     schade_per_polder = (
-        schades[["name", "cw_tot", "cw_ws", "cw_mv"]]
-        .groupby("name")
-        .sum()
-        .sort_values(by="cw_ws", ascending=False)
+        schades[["name", "cw_tot", "cw_ws", "cw_mv"]].groupby("name").sum().sort_values(by="cw_ws", ascending=False)
     )
 
     # Opslaan naar shapefile en csv

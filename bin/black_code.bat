@@ -1,0 +1,1 @@
+"%appdata%\Python\Python39\Scripts\black.exe" ../hhnk_threedi_tools -l 119

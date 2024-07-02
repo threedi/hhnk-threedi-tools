@@ -8,19 +8,21 @@ Created on Fri Sep 24 13:55:39 2021
 Opens a jupyter notebook based on nbopen using the command line
 
 """
-import os
-import sys
-import subprocess
-import pathlib
-import tempfile
-import shutil
+
 import json
+import os
+import pathlib
+import shutil
 import site
+import subprocess
+import sys
+import tempfile
 from pathlib import Path
 
 CREATE_NEW_PROCESS_GROUP = 0x00000200
 DETACHED_PROCESS = 0x00000008
 
+# TODO variable also in constants.py
 NOTEBOOK_DIRECTORY = str(pathlib.Path(__file__).parent.absolute())
 
 
@@ -45,11 +47,11 @@ def copy_notebooks(new_dir, original_dir=NOTEBOOK_DIRECTORY):
     for file in os.listdir(original_dir):
         print(file)
         if file.endswith(".ipynb"):
-            cont=True
+            cont = True
         elif file == "notebook_setup.py":
-            cont=True
+            cont = True
         else:
-            cont=False
+            cont = False
 
         if cont:
             shutil.copy2(original_dir + "/" + file, new_dir + "/" + file)
@@ -76,13 +78,10 @@ def _get_python_interpreter():
     executable = sys.executable
     directory, filename = os.path.split(executable)
     if "python" in filename:
-
         if filename.lower() in ["python.exe", "python3.exe"]:
             interpreter = executable
         else:
-            raise EnvironmentError(
-                "Unexpected value for sys.executable: %s" % executable
-            )
+            raise EnvironmentError("Unexpected value for sys.executable: %s" % executable)
         assert os.path.exists(interpreter)  # safety check
         return "python", interpreter
 
@@ -98,9 +97,7 @@ def _get_python_interpreter():
             interpreter = main_folder + "/python-qgis-ltr.bat"
 
         if not interpreter:
-            raise EnvironmentError(
-                "could not find qgis-python bat file in: %s" % main_folder
-            )
+            raise EnvironmentError("could not find qgis-python bat file in: %s" % main_folder)
 
         return "qgis", interpreter
 
@@ -142,6 +139,7 @@ def notebook_command(location="osgeo", ipython=False):
         else:
             command = [python_interpreter, user_installed_notebook_path()]
     return command
+
 
 def open_server(directory=None, location="osgeo", use="run", notebook_paths=[]):
     """directory:
@@ -188,15 +186,13 @@ def create_command_bat_file(path, location="osgeo"):
         bat_file.write(" ".join(command))
 
 
-#TODO this doesnt work nicely with other  environments. Prepare for deprecation
+# TODO this doesnt work nicely with other  environments. Prepare for deprecation
 def add_notebook_paths(extra_notebook_paths):
     """adds extra notebook paths, which is used in the plugin"""
 
     # user profile paths
     user_profile_path = os.environ["USERPROFILE"]
-    ipython_profile_path = (
-        user_profile_path + "/.ipython/profile_default/ipython_config.py"
-    )
+    ipython_profile_path = user_profile_path + "/.ipython/profile_default/ipython_config.py"
 
     nb_path_command = "import sys"
     for path in extra_notebook_paths:

@@ -1,15 +1,13 @@
-import numpy as np
-
 import hhnk_research_tools as hrt
-
+import numpy as np
 
 """Functies die de 18 water depth rasters inladen van een klimaatscenario en daarmee """
 
 
 def stack_raster_arrays(raster_classes, window):
     """Inladen waterdieptes van alle 18 diepte rasters voor het gegeven window"""
-    
-    window = list(map(int, window)) # make everything a integer for reading the array.
+
+    window = list(map(int, window))  # make everything a integer for reading the array.
     stacked_array = []
     for raster in raster_classes:
         depth_array = raster._read_array(window=window)
@@ -21,7 +19,10 @@ def stack_raster_arrays(raster_classes, window):
     return stacked_array
 
 
-def interpoleer_deel(int_frequentie, waterdieptes, frequenties, min_value=0):
+def interpoleer_deel(int_frequentie, waterdieptes, frequenties, output_nodata, min_value=0):
+    """
+    min_value=0 voor inundatiediepte
+    """
     # zet de frequenties die horen bij de waterdieptes in dezelfde 3d array als de waterdieptes
     fr = np.array([l * f for l, f in zip(np.ones(waterdieptes.shape), frequenties)])
 
@@ -74,12 +75,12 @@ def interpoleer_deel(int_frequentie, waterdieptes, frequenties, min_value=0):
     )
 
     # Vul randwaarden aan
-    int_waterdiepte[geen_waarde] = 0.0
+    int_waterdiepte[geen_waarde] = output_nodata
     int_waterdiepte[maximale_waarde] = waterdieptes.max(axis=0)[maximale_waarde]
 
     # Zet waterstanden op nul waarbij de interpolatiefrequentie groter is dat de maximale frequentie
     # waarbij inundatie optreedt
-    int_waterdiepte[wlev_nul] = 0.0
+    int_waterdiepte[wlev_nul] = output_nodata
 
     return int_waterdiepte
 
@@ -93,19 +94,22 @@ def interpoleer_raster_window(
     frequenties,
     extra_nodata_value,
     output_nodata,
+    min_value,
 ):
     """Interpolatie van rasters voor een berekening over meerdere cores"""
     # Bepaal window
     window = part["window_readarray"]
 
     # Laad waterdieptes
-    stacked_raster_array = stack_raster_arrays(
-        raster_classes, window=window
-    )  # laad 18 resultaten en zet in een array
+    stacked_raster_array = stack_raster_arrays(raster_classes, window=window)  # laad 18 resultaten en zet in een array
 
     # Bepaal geïnterpoleerde waterdiepte
     int_raster_array = interpoleer_deel(
-        int_frequentie, stacked_raster_array, frequenties
+        int_frequentie=int_frequentie,
+        waterdieptes=stacked_raster_array,
+        frequenties=frequenties,
+        output_nodata=output_nodata,
+        min_value=min_value,
     )
 
     # Zet de gemaskeerde pixels op de nodata waarde (-9999.00)
@@ -131,6 +135,7 @@ def main_interpolate_rasters(
     frequenties,
     output_nodata,
     dem_raster,
+    min_value,
     extra_nodata_value=None,
 ):
     """Interpoleer 18 rasters samen met de frequentietabel tot 3 rasters met de T10, T100 en T1000 kans.
@@ -142,9 +147,7 @@ def main_interpolate_rasters(
 
         depth_raster = raster_classes[0]
         parts = depth_raster.generate_blocks()
-        array_out = (
-            np.ones([depth_raster.shape[0], depth_raster.shape[1]]) * output_nodata
-        )
+        array_out = np.ones([depth_raster.shape[0], depth_raster.shape[1]]) * output_nodata
 
         # #Loop over windows and calculate results
         for idx, part in parts.iterrows():
@@ -157,11 +160,10 @@ def main_interpolate_rasters(
                 frequenties=frequenties,
                 extra_nodata_value=extra_nodata_value,
                 output_nodata=output_nodata,
+                min_value=min_value,
             )
 
-            array_out[
-                part.window[1] : part.window[3], part.window[0] : part.window[2]
-            ] = int_raster_array
+            array_out[part.window[1] : part.window[3], part.window[0] : part.window[2]] = int_raster_array
 
         hrt.save_raster_array_to_tiff(
             output_file=output_file.path,

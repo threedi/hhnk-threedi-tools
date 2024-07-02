@@ -1,10 +1,13 @@
-import shutil
-import pandas as pd
+# %%
+import datetime
 import os
 import re
-import datetime
+import shutil
 from pathlib import Path
+
 import hhnk_research_tools as hrt
+import pandas as pd
+
 import hhnk_threedi_tools.core.schematisation.upload as upload
 
 INFILTRATION_COLS = [
@@ -23,19 +26,20 @@ RASTER_FILES = [
     "initial_waterlevel_file",
 ]
 
+
 class ModelSchematisations:
     def __init__(self, folder, modelsettings_path=None):
         self.folder = folder
         self.settings_loaded = False
 
         if modelsettings_path is None:
-            modelsettings_path=folder.model.settings
+            modelsettings_path = folder.model.settings
         else:
-            modelsettings_path=hrt.File(modelsettings_path)
+            modelsettings_path = hrt.File(modelsettings_path)
 
         if modelsettings_path.exists():
             self.settings_df = pd.read_excel(modelsettings_path.base, engine="openpyxl")
-            self.settings_df = self.settings_df[self.settings_df['name'].notna()]
+            self.settings_df = self.settings_df[self.settings_df["name"].notna()]
             self.settings_df.set_index("name", drop=False, inplace=True)
             self.settings_loaded = True
         else:
@@ -49,13 +53,10 @@ class ModelSchematisations:
             self.settings_default_series = None
             self.settings_loaded = False
 
-            
         self.folder.model.set_modelsplitter_paths()
-
 
         if self.settings_loaded:
             self._sanity_check()
-
 
     def _sanity_check(self):
         """Sanity check settings tables"""
@@ -66,7 +67,6 @@ class ModelSchematisations:
         Dat lijkt me een slecht plan. Kolommen: {inter.values}"""
             )
 
-
     def get_latest_local_revision_str(self) -> str:
         """Str with most recent revision"""
         folder_list = [x for x in self.folder.model.revisions.path.glob("*/")]
@@ -75,13 +75,14 @@ class ModelSchematisations:
         else:
             file = max(folder_list, key=os.path.getctime)
             file_modify_date = datetime.datetime.fromtimestamp(file.lstat().st_mtime)
-            local_rev_str = str(f"Most recent local revision:    {file.name} ({file_modify_date.strftime('%y-%m-%d %H:%M:%S')})" )
+            local_rev_str = str(
+                f"Most recent local revision:    {file.name} ({file_modify_date.strftime('%y-%m-%d %H:%M:%S')})"
+            )
         return local_rev_str
-    
 
     def get_model_revision_info(self, name, api_key):
         upload.threedi.set_api_key(api_key)
-        name=name        
+        name = name
         row = self.settings_df.loc[name]
         schematisation = row["schematisation_name"]
         threedimodel = upload.threedi.api.threedimodels_list(revision__schematisation__name=schematisation)
@@ -89,12 +90,11 @@ class ModelSchematisations:
         if threedimodel.results == []:
             model_revision_str = f"No previous model(s) available for: {schematisation}"
         else:
-            schema_id = threedimodel.to_dict()['results'][0]['schematisation_id']
+            schema_id = threedimodel.to_dict()["results"][0]["schematisation_id"]
             latest_revision = upload.threedi.api.schematisations_latest_revision(schema_id)
-            rev_model = threedimodel.to_dict()['results'][0]['name']
+            rev_model = threedimodel.to_dict()["results"][0]["name"]
             model_revision_str = f"Most recent model revision:      {rev_model} - {latest_revision.commit_message}"
         return model_revision_str
-
 
     def create_schematisation(self, name):
         """Create a schematisation based on the modelsettings.
@@ -109,7 +109,7 @@ class ModelSchematisations:
         schema_base = self.folder.model.schema_base
         schema_new = getattr(self.folder.model, f"schema_{name}")
         schema_new.create()
-        
+
         database_base = schema_base.database
 
         # Write the sqlite and rasters to new folders.
@@ -118,20 +118,27 @@ class ModelSchematisations:
         dst = schema_new.full_path(database_base.name)
         shutil.copyfile(src=database_base.base, dst=dst.base)
 
-        #If database_new is defined before sqlite exists, it will not work properly
-        database_new = schema_new.database 
+        # If database_new is defined before sqlite exists, it will not work properly
+        database_new = schema_new.database
 
         schema_new.rasters.create(parents=False)
         # Copy rasters that are defined in the settings file
         for raster_file in RASTER_FILES:
             if not pd.isnull(row[raster_file]):
                 src = schema_base.full_path(row[raster_file])
+
                 if src.exists():
                     dst = schema_new.full_path(row[raster_file])
                     shutil.copyfile(src=src.base, dst=dst.base)
                 else:
-                    print(f"Couldnt find     raster:\t{row[raster_file]}")
-                    raise TypeError(f"No {raster_file} in base schematisation")
+                    print(f"Couldnt find     raster:\t{src}")
+                    raise FileNotFoundError(
+                        f"""
+The '{raster_file}' used in run-name '{name}' is missing in the base-schematization.
+It is expected at {src}. Please provide the file, change your model-settings file
+or do not use this run in the modelsplitter.
+"""
+                    )
 
         # Edit the SQLITE
         table_names = ["v2_global_settings", "v2_simple_infiltration"]
@@ -152,7 +159,6 @@ class ModelSchematisations:
             # Create new value and column pairs. The new values are used from the settings.xlsx file.
             # Dont create v2_simple infiltration if the id is not defined
             if not pd.isnull(row["id"]):
-
                 df_table = database_new.read_table(table_name=table_name)
                 # df_table = hrt.sqlite_table_to_df(
                 #     database_path=database_path_new, table_name=table_name
@@ -232,11 +238,9 @@ class ModelSchematisations:
                 old_val_col="width",
                 new_val_col="width_new",
             )
-
             database_new.execute_sql_changes(query=query)
-            # hrt.execute_sql_changes(query=query, database=database_path_new)
 
-        #execute additional SQL code that is stored in 02_schematisation/model_sql.json.
+        # execute additional SQL code that is stored in 02_schematisation/model_sql.json.
         if self.folder.model.model_sql.exists():
             model_sql = self.folder.model.model_sql.read_json()
 
@@ -245,8 +249,7 @@ class ModelSchematisations:
                     database_new.execute_sql_changes(query=query)
                     print(f"executed additional query on {name}: {query}")
 
-
-    def upload_schematisation(self, name, commit_message, api_key, organisation_uuid):             
+    def upload_schematisation(self, name, commit_message, api_key, organisation_uuid):
         """
         possible raster_names
         [ dem_file, equilibrium_infiltration_rate_file, frict_coef_file,
@@ -255,7 +258,7 @@ class ModelSchematisations:
         leakage_file, phreatic_storage_capacity_file, hydraulic_conductivity_file, porosity_file, infiltration_rate_file,
         max_infiltration_capacity_file, interception_file ]
         """
-    
+
         schema_new = getattr(self.folder.model, f"schema_{name}")
         row = self.settings_df.loc[name]
 
@@ -283,55 +286,56 @@ class ModelSchematisations:
             commit_message=commit_message,
         )
 
-
     def create_local_sqlite_revision(self, commit_message):
-        """Create local revision of sqlite. Will both be made when splitting and 
+        """Create local revision of sqlite. Will both be made when splitting and
         uploading a model through the plugin"""
-        commit_message = re.sub('[^a-zA-Z0-9() \n\.]', '', commit_message)
+        commit_message = re.sub("[^a-zA-Z0-9() \n\.]", "", commit_message)
 
         if len(self.folder.model.schema_base.sqlite_names) != 1:
-            return print("0 or >1 .sqlite file in 00_basis")
-        
+            response = "0 or >1 .sqlite file in 00_basis"
+
         if len(self.folder.model.schema_base.sqlite_names) == 1:
             rev_count = len(self.folder.model.revisions.content)
             sqlite_path = self.folder.model.schema_base.sqlite_paths[0]
-            mod_settings_file = self.folder.model.settings.path_if_exists 
-            mod_settings_default = self.folder.model.settings_default.path_if_exists 
-            model_sql = self.folder.model.model_sql.path_if_exists 
+            mod_settings_file = self.folder.model.settings.path_if_exists
+            mod_settings_default = self.folder.model.settings_default.path_if_exists
+            model_sql = self.folder.model.model_sql.path_if_exists
 
             target_path = self.folder.model.revisions.full_path(f"rev_{rev_count+1} - {commit_message[:25]}")
-            target_path.create()
+            target_path.create(parents=True)
 
+            files_copied = []
             for f in [sqlite_path, mod_settings_file, mod_settings_default, model_sql]:
                 try:
                     shutil.copy(f, target_path.base)
-                except:
-                    print(f"{f} not found")
+                    files_copied += [Path(f).name]
+                except Exception as e:
+                    print(f"{e}")
 
-            return print(f"succes copy {Path(sqlite_path).name} + {Path(mod_settings_file).name} + {Path(mod_settings_default).name} + {Path(model_sql).name} to: {target_path.base}")
+            response = f"successfully copied {' + '.join(files_copied)} to: {target_path.base}"
+        print(response)
+        return response
 
-       
-        
+
 # %%
 
 if __name__ == "__main__":
     from hhnk_threedi_tools.core.folders import Folders
 
-    path = r"E:\02.modellen\LangeWeere_NS"
+    path = r"E:\02.modellen\wormer_leggertool"
 
     folder = Folders(path)
-    name = "1d2d_glg"
+    name = "0d1d_test"
 
-    self = ModelSchematisations(
-        folder=folder, modelsettings_path=folder.model.settings.path
-    )
+    self = ModelSchematisations(folder=folder, modelsettings_path=folder.model.settings.path)
     self.create_schematisation(name=name)
-    self.upload_schematisation(
-        organisation_uuid="48dac75bef8a42ebbb52e8f89bbdb9f2",
-        name=name,
-        commit_message="testtest",
-        api_key="",
-    )
+    # response = self.create_local_sqlite_revision(commit_message=str(" (local split revision)"))
+    # self.upload_schematisation(
+    #     organisation_uuid="48dac75bef8a42ebbb52e8f89bbdb9f2",
+    #     name=name,
+    #     commit_message="testtest",
+    #     api_key="",
+    # )
 
 
 # %%

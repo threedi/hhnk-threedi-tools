@@ -1,60 +1,52 @@
 from hhnk_threedi_tools.variables.database_variables import (
-    id_col,
-    conn_node_start_id_col,
-    pump_station_layer,
-    channels_layer,
-    culvert_layer,
-    pipe_layer,
-    weir_layer,
-    orifice_layer,
-    conn_node_end_id_col,
-    connection_nodes_layer,
-    cross_sec_def_layer,
-    height_col,
-    width_col,
-    shape_col,
-    impervious_surface_layer,
-    impervious_surface_id_col,
-    impervious_surface_map_layer,
-    cross_sec_loc_layer,
-    conn_node_id_col,
-    channel_id_col,
-    def_id_col,
-    cross_def_id_col,
-    manhole_layer,
-    crest_level_col,
-    surface_layer,
-    surface_id_col,
-    surface_map_layer,
-    one_d_boundary_cond_layer,
-    initial_waterlevel_col,
-    control_table_layer,
     action_col,
+    channel_id_col,
+    channels_layer,
+    conn_node_end_id_col,
+    conn_node_id_col,
+    conn_node_start_id_col,
+    connection_nodes_layer,
+    control_table_layer,
+    crest_level_col,
+    cross_def_id_col,
+    cross_sec_def_layer,
+    cross_sec_loc_layer,
+    culvert_layer,
+    def_id_col,
     discharge_coefficient_neg_col,
     discharge_coefficient_pos_col,
+    height_col,
+    id_col,
+    impervious_surface_id_col,
+    impervious_surface_layer,
+    impervious_surface_map_layer,
+    initial_waterlevel_col,
     invert_lvl_end_col,
     invert_lvl_start_col,
+    manhole_layer,
+    one_d_boundary_cond_layer,
+    orifice_layer,
     percentage_col,
-    start_level_col,
+    pipe_layer,
+    pump_station_layer,
     reference_level_col,
+    shape_col,
+    start_level_col,
+    surface_id_col,
+    surface_layer,
+    surface_map_layer,
+    weir_layer,
+    width_col,
 )
 
-# Error messages
-msg_height_not_used_for_shape = (
-    "WARNING: cross section definition height not used for shape type 1"
-)
-msg_uneven_width_height = (
-    "ERROR: multiple height and width entries must have the same count"
-)
-msg_impervious_not_in_map = "ERROR: impervious surface is not in mapping table"
-msg_impervious_map_refers_to_none = (
-    "ERROR: impervious surface map refers to non-existent node"
-)
-msg_surface_not_in_mapping = "ERROR: surface is not in mapping table"
-msg_impervious_surface_map_not_in_impervious = (
-    "ERROR: impervious surface map is not in impervious surface layer"
-)
-msg_conn_node_without_imp_surface = "ERROR: connection node without impervious surface"
+# Error/warning/info messages
+msg_height_not_used_for_shape = "WARNING: cross section definition height not used for shape type 1"
+msg_uneven_width_height = "ERROR: multiple height and width entries must have the same count"
+msg_impervious_not_in_map = "WARNING: impervious surface is not in mapping table"
+msg_impervious_map_refers_to_none = "ERROR: impervious surface map refers to non-existent node"
+msg_surface_not_in_mapping = "WARNING: surface is not in mapping table"
+msg_impervious_surface_map_not_in_impervious = "WARNING: impervious surface map is not in impervious surface layer"
+msg_conn_node_without_imp_surface = "WARNING: connection node without impervious surface"
 msg_channel_without_cross_loc = "ERROR: channel without cross section location"
 msg_cross_sec_loc_without_def = "ERROR: cross section location without definition"
 msg_culvert_without_def = "ERROR: culvert without cross section definition"
@@ -62,41 +54,29 @@ msg_weir_without_def = "ERROR: weir without cross section definition"
 msg_orifice_without_def = "ERROR: orifice without cross section definition"
 msg_manhole_without_conn_node = "ERROR: manhole without connection node"
 msg_one_d_boundary_cond_without_conn = "WARNING: 1d boundary without connection node"
-msg_cross_sec_loc_without_ref_lvl = (
-    "ERROR: cross section location without reference level"
-)
-msg_conn_node_without_init_water_lvl = (
-    "WARNING: connection node without initial waterlevel"
-)
+msg_cross_sec_loc_without_ref_lvl = "ERROR: cross section location without reference level"
+msg_conn_node_without_init_water_lvl = "WARNING: connection node without initial waterlevel"
 msg_conn_node_without_conn = "ERROR: node without connection"
-msg_strt_lvl_not_close_init_waterlvl = (
-    "WARNING: start level for pump station not close to initial waterlevel"
-)
+msg_strt_lvl_not_close_init_waterlvl = "WARNING: start level for pump station not close to initial waterlevel"
 msg_undefined_shape_or_width = "ERROR: shape or width is not defined"
 msg_pump_station_same_node = "ERROR: pumpstation from and to the same connection node"
 msg_weir_same_node = "ERROR: weir from and to the same connection node"
 msg_orifice_same_node = "ERROR: orifice from and to the same connection node"
 msg_culvert_same_node = "ERROR: culvert from and to the same connection node"
 msg_weir_start_lvl_not_close_to_init_waterlvl = (
-    "'WARNING: start level ' || {} || ' not close to initial waterlevel '"
-    " || {} || ', ' || {}"
+    "'WARNING: start level ' || {} || ' not close to initial waterlevel '" " || {} || ', ' || {}"
 )
 msg_channel_strt_end_not_same_init_waterlvl = (
-    "'WARNING: initial water level at start and end node are not equal ' "
-    "|| {} || ', ' || {}"
+    "'WARNING: initial water level at start and end node are not equal ' " "|| {} || ', ' || {}"
 )
 msg_orifice_strt_end_not_same_init_waterlvl = (
-    "'WARNING: initial water level at start and end node are not equal ' "
-    "|| {} || ', ' || {}"
+    "'WARNING: initial water level at start and end node are not equal ' " "|| {} || ', ' || {}"
 )
 msg_culvert_strt_end_not_same_init_waterlvl = (
-    "'WARNING: Initial waterlevel at start en end node not equal' || {} || "
-    "', ' || {}"
+    "'WARNING: Initial waterlevel at start en end node not equal' || {} || " "', ' || {}"
 )
-msg_imp_surface_perc = "ERROR: percentage = 100 and should be 14.4 or 11.5"
-msg_control_table_too_many_chars = (
-    "ERROR: action_table has more than 1000 characters (model will crash)"
-)
+msg_imp_surface_perc = "WARNING: percentage = 100 and should be 14.4 or 11.5"
+msg_control_table_too_many_chars = "ERROR: action_table has more than 1000 characters (model will crash)"
 
 
 def constr_in_clause(innotin, sel=False, frm=False, where=None):
@@ -128,9 +108,7 @@ def constr_in_clause(innotin, sel=False, frm=False, where=None):
     return res
 
 
-def construct_sel_from_where_query(
-    sel="{}", frm="{}", where="{}", left_join={}, inner_join={}
-):
+def construct_sel_from_where_query(sel="{}", frm="{}", where="{}", left_join={}, inner_join={}):
     """
     Constructs select / from / where query with possible join clauses (inner or left join)
 
@@ -181,12 +159,8 @@ def constr_conn_nodes_without_conn_query():
     length = len(layers)
     for i, layer in enumerate(layers):
         for node in conn_node_start_id_col, conn_node_end_id_col:
-            query += construct_sel_from_where_query(where="{} IS NOT NULL").format(
-                node, layer, node
-            )
-            if i is not length - 1 or (
-                i is length - 1 and node is conn_node_start_id_col
-            ):
+            query += construct_sel_from_where_query(where="{} IS NOT NULL").format(node, layer, node)
+            if i is not length - 1 or (i is length - 1 and node is conn_node_start_id_col):
                 query += "UNION ALL\n"
     return query
 
@@ -217,18 +191,14 @@ def constr_from_to_same_node_query():
 
 model_checks = {
     ######################################################################################
-    "height_not_used_for_shape": construct_sel_from_where_query(
-        where="{} IS NOT NULL AND {} = 1"
-    ).format(
+    "height_not_used_for_shape": construct_sel_from_where_query(where="{} IS NOT NULL AND {} = 1").format(
         construct_query_head(cross_sec_def_layer, msg_height_not_used_for_shape),
         cross_sec_def_layer,
         f"'{height_col}'",
         f"'{shape_col}'",
     ),
     ######################################################################################
-    "multiple_heights_widths_same_count": construct_sel_from_where_query(
-        where="{} - {} <> {} - {}"
-    ).format(
+    "multiple_heights_widths_same_count": construct_sel_from_where_query(where="{} - {} <> {} - {}").format(
         construct_query_head(cross_sec_def_layer, msg_uneven_width_height),
         cross_sec_def_layer,
         f"length('{height_col}')",
@@ -250,9 +220,7 @@ model_checks = {
     "impervious_surface_map_refers_to_inv_conn_node": construct_sel_from_where_query(
         where="{} " + constr_in_clause(innotin="NOT IN", sel=True, frm=True)
     ).format(
-        construct_query_head(
-            impervious_surface_map_layer, msg_impervious_map_refers_to_none
-        ),
+        construct_query_head(impervious_surface_map_layer, msg_impervious_map_refers_to_none),
         impervious_surface_map_layer,
         f"{impervious_surface_map_layer}.{conn_node_id_col}",
         id_col,
@@ -272,12 +240,10 @@ model_checks = {
     "impervious_surface_map_refers_to_inv_imp_surf": construct_sel_from_where_query(
         where="{} " + constr_in_clause(innotin="NOT IN", sel=True, frm=True)
     ).format(
-        construct_query_head(
-            impervious_surface_map_layer, msg_impervious_surface_map_not_in_impervious
-        ),
+        construct_query_head(impervious_surface_map_layer, msg_impervious_surface_map_not_in_impervious),
         impervious_surface_map_layer,
         f"{impervious_surface_map_layer}.{id_col}",
-        impervious_surface_id_col,
+        id_col,
         impervious_surface_layer,
     ),
     ######################################################################################
@@ -369,9 +335,7 @@ model_checks = {
     "one_d_boundary_without_conn_node": construct_sel_from_where_query(
         where="{} IS NULL", left_join={"{}": "{} = {}"}
     ).format(
-        construct_query_head(
-            one_d_boundary_cond_layer, msg_one_d_boundary_cond_without_conn
-        ),
+        construct_query_head(one_d_boundary_cond_layer, msg_one_d_boundary_cond_without_conn),
         one_d_boundary_cond_layer,
         connection_nodes_layer,
         f"{one_d_boundary_cond_layer}.{conn_node_id_col}",
@@ -379,20 +343,14 @@ model_checks = {
         f"{connection_nodes_layer}.{id_col}",
     ),
     ######################################################################################
-    "cross_sec_loc_without_ref_lvl": construct_sel_from_where_query(
-        where="{} IS NULL"
-    ).format(
+    "cross_sec_loc_without_ref_lvl": construct_sel_from_where_query(where="{} IS NULL").format(
         construct_query_head(cross_sec_loc_layer, msg_cross_sec_loc_without_ref_lvl),
         cross_sec_loc_layer,
         reference_level_col,
     ),
     ######################################################################################
-    "conn_node_without_init_water_lvl": construct_sel_from_where_query(
-        where="{} IS NULL"
-    ).format(
-        construct_query_head(
-            connection_nodes_layer, msg_conn_node_without_init_water_lvl
-        ),
+    "conn_node_without_init_water_lvl": construct_sel_from_where_query(where="{} IS NULL").format(
+        construct_query_head(connection_nodes_layer, msg_conn_node_without_init_water_lvl),
         connection_nodes_layer,
         initial_waterlevel_col,
     ),
@@ -417,9 +375,7 @@ model_checks = {
         f"{pump_station_layer}.{start_level_col}",
     ),
     ######################################################################################
-    "undefined_shape_or_width": construct_sel_from_where_query(
-        where="""{} IS NULL OR {} IS NULL OR {} = ''"""
-    ).format(
+    "undefined_shape_or_width": construct_sel_from_where_query(where="""{} IS NULL OR {} IS NULL OR {} = ''""").format(
         construct_query_head(cross_sec_def_layer, msg_undefined_shape_or_width),
         cross_sec_def_layer,
         shape_col,
@@ -534,9 +490,7 @@ model_checks = {
         f"{impervious_surface_map_layer}.{percentage_col}",
     ),
     ######################################################################################
-    "action_table_char_count": construct_sel_from_where_query(
-        where="length({}) > 1000"
-    ).format(
+    "action_table_char_count": construct_sel_from_where_query(where="length({}) > 1000").format(
         construct_query_head(control_table_layer, msg_control_table_too_many_chars),
         control_table_layer,
         f"{control_table_layer}.{action_col}",
@@ -551,64 +505,36 @@ class ModelCheck:
 
     def __init__(self):
         self.height_not_used_for_shape = model_checks["height_not_used_for_shape"]
-        self.multiple_heights_widths_count = model_checks[
-            "multiple_heights_widths_same_count"
-        ]
-        self.impervious_surface_not_in_mapping = model_checks[
-            "impervious_surface_not_in_mapping"
-        ]
+        self.multiple_heights_widths_count = model_checks["multiple_heights_widths_same_count"]
+        self.impervious_surface_not_in_mapping = model_checks["impervious_surface_not_in_mapping"]
         self.impervious_surface_map_refers_to_inv_conn_node = model_checks[
             "impervious_surface_map_refers_to_inv_conn_node"
         ]
         self.surface_not_in_mapping = model_checks["surface_not_in_mapping_table"]
-        self.impervious_map_not_in_imp_surface = model_checks[
-            "impervious_surface_map_refers_to_inv_imp_surf"
-        ]
-        self.conn_node_without_imp_surface = model_checks[
-            "conn_node_without_imp_surface"
-        ]
-        self.channel_without_cross_section_location = model_checks[
-            "channel_without_cross_loc"
-        ]
-        self.cross_section_loc_without_definition = model_checks[
-            "cross_section_location_without_definition"
-        ]
-        self.culvert_without_cross_section_definition = model_checks[
-            "culvert_without_cross_definition"
-        ]
-        self.weir_without_cross_section_definition = model_checks[
-            "weir_without_cross_definition"
-        ]
-        self.orifice_without_cross_section_definition = model_checks[
-            "orifice_without_cross_definition"
-        ]
+        self.impervious_map_not_in_imp_surface = model_checks["impervious_surface_map_refers_to_inv_imp_surf"]
+        self.conn_node_without_imp_surface = model_checks["conn_node_without_imp_surface"]
+        self.channel_without_cross_section_location = model_checks["channel_without_cross_loc"]
+        self.cross_section_loc_without_definition = model_checks["cross_section_location_without_definition"]
+        self.culvert_without_cross_section_definition = model_checks["culvert_without_cross_definition"]
+        self.weir_without_cross_section_definition = model_checks["weir_without_cross_definition"]
+        self.orifice_without_cross_section_definition = model_checks["orifice_without_cross_definition"]
         self.manhole_without_conn_node = model_checks["manhole_without_conn_node"]
-        self.one_d_boundary_without_conn_node = model_checks[
-            "one_d_boundary_without_conn_node"
-        ]
-        self.cross_sec_loc_without_ref_lvl = model_checks[
-            "cross_sec_loc_without_ref_lvl"
-        ]
-        self.conn_node_without_init_water_lvl = model_checks[
-            "conn_node_without_init_water_lvl"
-        ]
+        self.one_d_boundary_without_conn_node = model_checks["one_d_boundary_without_conn_node"]
+        self.cross_sec_loc_without_ref_lvl = model_checks["cross_sec_loc_without_ref_lvl"]
+        self.conn_node_without_init_water_lvl = model_checks["conn_node_without_init_water_lvl"]
         self.conn_node_without_conn = model_checks["conn_node_without_conn"]
-        self.start_lvl_not_close_init_waterlvl = model_checks[
-            "start_lvl_not_close_to_init_waterlvl"
-        ]
+        self.start_lvl_not_close_init_waterlvl = model_checks["start_lvl_not_close_to_init_waterlvl"]
         self.shape_or_width_undefined = model_checks["undefined_shape_or_width"]
         self.from_to_same_node = model_checks["from_to_same_node"]
-        self.weir_start_lvl_not_close_to_init_waterlvl = model_checks[
-            "weir_start_lvl_not_close_to_init_waterlvl"
-        ]
-        self.channel_strt_end_not_same_init_waterlvl = model_checks[
-            "channel_strt_end_not_same_init_waterlvl"
-        ]
-        self.orifice_strt_end_not_same_init_waterlvl = model_checks[
-            "orifice_strt_end_not_same_init_waterlvl"
-        ]
-        self.culvert_strt_end_not_same_init_waterlvl = model_checks[
-            "culvert_strt_end_not_same_init_waterlvl"
-        ]
+        self.weir_start_lvl_not_close_to_init_waterlvl = model_checks["weir_start_lvl_not_close_to_init_waterlvl"]
+        self.channel_strt_end_not_same_init_waterlvl = model_checks["channel_strt_end_not_same_init_waterlvl"]
+        self.orifice_strt_end_not_same_init_waterlvl = model_checks["orifice_strt_end_not_same_init_waterlvl"]
+        self.culvert_strt_end_not_same_init_waterlvl = model_checks["culvert_strt_end_not_same_init_waterlvl"]
         self.impervious_surface_perc = model_checks["imp_surface_perc"]
         self.action_table_too_many_chars = model_checks["action_table_char_count"]
+
+    @classmethod
+    def get_query(cls):
+        """Get a all variables as query to execute on model"""
+        queries_lst = [item for item in vars(cls()).values()]
+        return "UNION ALL\n".join(queries_lst)

@@ -1,5 +1,5 @@
 # This is an environment for hhnk_qgis_plugin installation
-name: hhnk_threedi
+name: threedipy
 
 channels:
   - conda-forge
@@ -7,60 +7,43 @@ channels:
 
 dependencies:
   #QGIS preinstalled
-  - python=3.9.5 # equals MI python version
-  - geopandas=0.12.2
-  - pandas=1.1.3
-  - scipy=1.6.2
 
-  # - attrs=22.2.0
-  # - apscheduler=3.10.1
-  # - click=8.1.3
-  # - click-plugins=1.1.1
-  # - colorama=0.4.6
-  # - exceptiongroup=1.1.1
-  # - iniconfig=2.0.0
-  # - ipyfilechooser=0.6.0
-  # - jupyter=1.0.0
-  # - geoalchemy2=0.10.2
-  # - tomli=2.0.1
-  # - tzlocal=2.1
-  # - packaging=23.0
-  # - python-dateutil=2.8.2
-  # - pytz=2020.1
-  # - pytz-deprecation-shim=0.1.0.post0
-  # - sqlalchemy=1.3.24
+  - python=3.9.18 # equals MI python version
+  - geopandas=0.14.1
+  - pandas=2.0.2
+  - scipy=1.10.1
+  #- h5py=3.8.0 incompatible met rest van env; conda solved naar 3.11.0
+  - h5py
+  - fiona=1.9.5
+  - shapely=2.0.2
+  - gdal=3.8.4
 
   #User folder
-  - jupyterlab=3.6.3 #Uitgezet zolang we geen notebook tests draaien.
+  - jupyterlab=3.6.3
   - ipywidgets=8.0.6
-  
   #External deps plugin
+
   - pytest=7.2.2
   - pytest-cov
   - pluggy=1.0.0 #pytest dependency
-  - exceptiongroup=1.1.1 #pytest dependency
+  # - exceptiongroup=1.1.1 #pytest dependency
   - iniconfig=2.0.0 #pytest dependency
   - tqdm=4.64.0
-  - xarray=2022.3.0
-  # - pygeos=0.14 #required for geopandas, not for geopandas 0.12.2
+  - rioxarray=0.15.0 #higher versions need python >=3.10
+  - pyogrio=0.7.2
 
+
+  - xarray=2024.3.0
+  - openpyxl=3.1.2
+  - cached_property=1.5.2
+  - rtree=1.0.1
 
   - pip: # 3Di packages are not conda installable and are therefore installed by PIP
-    # - et-xmlfile==1.1.0
-    - openpyxl==3.1.2
-    - threedi_modelchecker==2.2.4 #ThreediToolbox 2.5.3
-    - threedi_scenario_downloader==1.2 #Lizard API v4 only
-    - threedi_schema==0.217.6 #ThreediToolbox 2.5.4
-    # - threedi_raster_edits==0.26 #deprecate?
-    - threedi-api-client==4.1.2 #3Di Models and Simulations 3.5.2
-    - threedigrid_builder==1.11.4 #ThreediToolbox 2.5.3
+    - threedi_modelchecker==2.4.0 #ThreediToolbox 2.5.5
+    - threedi_scenario_downloader==1.4 #Lizard API v4 only
+    - threedi_schema==0.217.11 #ThreediToolbox 2.5.4
+    - threedi-api-client==4.1.4 #3Di Models and Simulations 3.5.2
+    - threedigrid_builder==1.12.1 #ThreediToolbox 2.5.5
     - threedigrid==2.0.6 #ThreediToolbox 2.5.4
     - threedidepth==0.6.1 #ThreediToolbox 2.5.4
-    - cached_property==1.5.2 #threedi_raster_edits dep
-    - rtree==1.0.1 #threedi_raster_edits dep 
-    # - h5py==2.10.0 #Works with gdal but build wheel doesnt work
 
-    #Plugin
-    # - hhnk_threedi_tools==2023.2
-    #- git+https://github.com/HHNK/hhnk-research-tools.git@master
-    # - hhnk_threedi_tools==2023.3
