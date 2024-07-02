@@ -31,6 +31,9 @@ dependencies:
   - tqdm=4.64.0
   - rioxarray=0.15.0 #higher versions need python >=3.10
   - pyogrio=0.7.2
+  - rasterio=1.3.10 #rxr dep
+  - affine=2.4.0 #rxr dep
+  - dask=2024.6.2 #rxr dep
 
 
   - xarray=2024.3.0
