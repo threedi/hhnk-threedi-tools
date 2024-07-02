@@ -289,7 +289,7 @@ class KlimaatsommenPrep:
         """Raster statistics for single scenario"""
         raster = getattr(scenario, raster_type)
 
-        stats = raster.statistics(approve_ok=True, force=True)
+        stats = raster.statistics(approx_ok=True, force=True)
 
         # Fill row data
         info_row = pd.Series(dtype=object)
