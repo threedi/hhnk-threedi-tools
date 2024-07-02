@@ -46,7 +46,7 @@ dependencies:
     - threedi_scenario_downloader==1.4 #Lizard API v4 only
     - threedi_schema==0.219.3 #threedi_results_analysis 3.9.0
     - threedi-api-client==4.1.7 #3Di Models and Simulations 3.11.0
-    - threedigrid_builder==1.14.3 #threedi_results_analysis 3.9.0
+    - threedigrid_builder==1.13.1 #threedi_results_analysis 3.9.0
     - threedigrid==2.2.10 #threedi_results_analysis 3.9.0
     - threedidepth==0.6.3 #threedi_results_analysis 3.9.0
 
