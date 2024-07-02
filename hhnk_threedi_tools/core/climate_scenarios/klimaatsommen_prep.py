@@ -22,6 +22,7 @@ class KlimaatsommenPrep:
         cfg_file="cfg_lizard.cfg",
         landuse_file: str = r"\\corp.hhnk.nl\data\Hydrologen_data\Data\01.basisgegevens\rasters\landgebruik\landuse2019_tiles\combined_rasters.vrt",
         min_block_size=1024,
+        use_aggregate: bool = False,
         verify=True,
     ):
         if isinstance(cfg_file, str):
@@ -35,6 +36,7 @@ class KlimaatsommenPrep:
         self.cfg_file = cfg_file
         self.landuse_file = landuse_file
         self.min_block_size = min_block_size
+        self.use_aggregate = use_aggregate
 
         if verify:
             self.verify_input()
@@ -44,10 +46,14 @@ class KlimaatsommenPrep:
         if not self.batch_fd.exists():
             raise FileNotFoundError(f"INPUTERROR - batchfolder {self.batch_fd.name} missing")
 
+        grid_name = "grid_path"
+        if self.use_aggregate:
+            grid_name = "aggregate_grid_path"
+
         netcdf_missing = [
             name
             for name in self.batch_fd.downloads.names
-            if not getattr(self.batch_fd.downloads, name).netcdf.grid_path.exists()
+            if not getattr(getattr(self.batch_fd.downloads, name).netcdf, grid_name).exists()
         ]
         if any(netcdf_missing):
             raise FileNotFoundError(f"INPUTERROR - netcdf missing for scenarios; {netcdf_missing}")
@@ -86,9 +92,9 @@ class KlimaatsommenPrep:
 
     def netcdf_to_grid(
         self,
-        threedi_result,
-        grid_filename="grid_wlvl.gpkg",
-        overwrite=False,
+        threedi_result: hrt.ThreediResult,
+        grid_filename: str = "grid_wlvl.gpkg",
+        overwrite: bool = False,
     ):
         """Transform netcdf to grid gpkg and apply wlvl correction
         output will be stored in wlvl_corr_max column
@@ -97,6 +103,7 @@ class KlimaatsommenPrep:
         netcdf_gpkg = NetcdfToGPKG.from_folder(
             folder=self.folder,
             threedi_result=threedi_result,
+            use_aggregate=self.use_aggregate,
         )
 
         # Convert netcdf to grid gpkg
@@ -193,16 +200,20 @@ class KlimaatsommenPrep:
         # Berekenen schaderaster
         wss.run(output_raster=output_raster, calculation_type="sum", overwrite=overwrite)
 
-    def run(self, gridgpkg=True, depth=True, dmg=True, wlvl=False, overwrite=False, testing=False):
+    def run(self, gridgpkg=True, depth=True, dmg=True, wlvl=False, overwrite=False, testing=False, verbose=False):
         try:
             self.dem = self.get_dem()
 
             for name in self.batch_fd.downloads.names:
+                if verbose:
+                    print(name)
                 scenario = self.get_scenario(name=name)
                 threedi_result = scenario.netcdf
 
                 # Transform netcdf to grid gpkg
                 if gridgpkg:
+                    if verbose:
+                        print("     netcdf to gpkg")
                     self.netcdf_to_grid(
                         threedi_result=threedi_result,
                         grid_filename="grid_wlvl.gpkg",
@@ -211,6 +222,8 @@ class KlimaatsommenPrep:
 
                 # Diepterasters berekenen
                 if depth:
+                    if verbose:
+                        print("     create depth raster")
                     self.calculate_depth(
                         scenario=scenario,
                         threedi_result=threedi_result,
@@ -220,10 +233,14 @@ class KlimaatsommenPrep:
 
                 # Schaderaster berekenen
                 if dmg:
+                    if verbose:
+                        print("     create damage raster")
                     self.calculate_damage(scenario=scenario, overwrite=overwrite)
 
                 # Waterlevelraster berekenen
                 if wlvl:
+                    if verbose:
+                        print("     create wlvl raster")
                     self.calculate_wlvl(
                         scenario=scenario,
                         threedi_result=threedi_result,
@@ -294,15 +311,18 @@ if __name__ == "__main__":
 
     from hhnk_threedi_tools import Folders
 
-    TEST_MODEL = r"E:\02.modellen\model_test_v2"
+    TEST_MODEL = r"E:\02.modellen\HKC23010_Eijerland_WP"
     folder = Folders(TEST_MODEL)
 
     self = KlimaatsommenPrep(
         folder=folder,
-        batch_name="batch_test2",
+        batch_name="nhflo_gxg",
         cfg_file="cfg_lizard.cfg",
         landuse_file=r"\\corp.hhnk.nl\data\Hydrologen_data\Data\01.basisgegevens\rasters\landgebruik\landuse2019_tiles\combined_rasters.vrt",
+        use_aggregate=True,
         verify=True,
     )
 
-    self.run(overwrite=False)
+    self.run(overwrite=False, dmg=False, verbose=True)
+
+# %%
