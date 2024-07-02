@@ -5,13 +5,13 @@ import hhnk_research_tools as hrt
 # pd.options.mode.chained_assignment = 'raise' #catch SettingWithCopyWarning
 import pytest
 
-from hhnk_threedi_tools.core.result_rasters.calculate_raster import BaseCalculatorGPKG
+from hhnk_threedi_tools.core.result_rasters.grid_to_raster import GridToRaster
 from tests.config import FOLDER_TEST, TEMP_DIR, TEST_DIRECTORY
 
 TEST_RESULT_DIR = TEST_DIRECTORY / r"test_result_rasters"
 
 
-class TestBaseCalculatorGPKG:
+class TestGridToRaster:
     @pytest.fixture(scope="class")
     def grid_gdf(self):
         return gpd.read_file(TEST_RESULT_DIR / "grid_corr_tiny.gpkg", driver="GPKG")
@@ -23,7 +23,7 @@ class TestBaseCalculatorGPKG:
             "grid_gdf": grid_gdf,
             "wlvl_column": "wlvl_max_replaced",
         }
-        with BaseCalculatorGPKG(**calculator_kwargs) as basecalc:
+        with GridToRaster(**calculator_kwargs) as basecalc:
             return basecalc
 
     def test_wlvl(self, basecalc):
@@ -42,7 +42,7 @@ class TestBaseCalculatorGPKG:
 if __name__ == "__main__":
     import inspect
 
-    selftest = TestBaseCalculatorGPKG()
+    selftest = TestGridToRaster()
     basecalc = selftest.basecalc(selftest.grid_gdf())
     # self = selftest.bl_test
     # Run all testfunctions

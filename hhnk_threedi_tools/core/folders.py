@@ -1,8 +1,9 @@
 # %%
 """
-Each class has a file as its attributes and a file as a new class. 
+Each class has a file as its attributes and a file as a new class.
 self.base is the directory in which it is located
 """
+
 # First-party imports
 import os
 from pathlib import Path
@@ -262,6 +263,7 @@ class SchemaDirParent(Folder):
 
         self.revisions = self.ModelRevisionsParent(base=self.base, create=create)
         self.schema_base = hrt.ThreediSchematisation(base=self.base, name="00_basis", create=create)
+        self.calculation_rasters = self.CalculationRasters(base=self.base, create=create)
         self.schema_list = ["schema_base"]
         self.add_file("model_sql", "model_sql.json")
 
@@ -318,6 +320,35 @@ class SchemaDirParent(Folder):
             super().__init__(os.path.join(base, "revisions"), create)
             if create:
                 self.create()
+
+    class CalculationRasters(Folder):
+        """sub-folder of SchemaDirParent with rasters required for calculations.
+
+        With these rasters we can do:
+            - damage calculations
+        """
+
+        def __init__(self, base, create):
+            super().__init__(os.path.join(base, "rasters_verwerkt"), create)
+
+            # self.add_file("dem", "dem_50cm.tif")
+            self.add_file("damage_dem", "damage_dem.tif")  # TODO glob maken van beschikbare damage_dems.
+            self.add_file("panden", "panden.tif")
+            if create:
+                self.mkdir()
+                self.create_readme()
+
+        def create_readme(self):
+            readme_file = self.path.joinpath("README.txt")
+            if not readme_file.exists():
+                readme_txt = (
+                    "Expected files are:\n\n"
+                    "dem_50cm.tif -> used to create damage_dem.tif\n"
+                    "panden.tif -> used to create damage_dem.tif\n"
+                    "damage_dem.tif -> dem_50cm.tif + panden.tif. Used for damage calculations.\n\n"
+                )
+                with open(readme_file, mode="w") as f:
+                    f.write(readme_txt)
 
 
 class ThreediResultsDir(Folder):
