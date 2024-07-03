@@ -44,7 +44,7 @@ from hhnk_threedi_tools.qgis.layer_structure import (
 
 # notebooks
 from hhnk_threedi_tools.utils.notebooks.run import (
-    add_notebook_paths,
+    # add_notebook_paths,
     copy_notebooks,
     open_server,
     read_notebook_json,
