@@ -30,7 +30,7 @@ dependencies:
   - iniconfig=2.0.0 #pytest dependency
   - tqdm=4.64.0
   - rioxarray=0.15.0 #higher versions need python >=3.10
-  - pyogrio=0.9.0
+  - pyogrio=0.7.2 #0.9.0 doesnt work with gdal
   - rasterio=1.3.10 #rxr dep
   - affine=2.4.0 #rxr dep
   - dask=2024.6.2 #rxr dep
