@@ -34,6 +34,8 @@ dependencies:
   - rasterio=1.3.10 #rxr dep
   - affine=2.4.0 #rxr dep
   - dask=2024.6.2 #rxr dep
+  - matplotlib=3.8.* #3.9.0 gives RuntimeError: Entry point name 'inline' duplicated
+  # See also: https://discourse.matplotlib.org/t/latest-versions-via-pip-jupyterlab-import-of-matplotlib-broken/24477/7
 
 
   - xarray=2024.3.0
