@@ -872,6 +872,7 @@ class Simulation:
         if self.model is None:
             return "define self.model_id first"
 
+
         output_path = Path(output_folder_sqlite).joinpath("tempfiles", f"model_{self.model_id}.zip")
         output_path.parent.mkdir(parents=True, exist_ok=True)  # Create parent folder
 
