@@ -1,21 +1,32 @@
-# %%
 """
 Most functions taken and edited from pip package: threedidepth.
 Modified to have more flexibility in input and calculation
 """
 
-# -*- coding: utf-8 -*-
 from pathlib import Path
 
 import hhnk_research_tools as hrt
 import numpy as np
+from geopandas import GeoDataFrame
 from osgeo import gdal
 from scipy.spatial import Delaunay
 from threedidepth import morton
 from threedigrid.admin.constants import NO_DATA_VALUE
 
+from hhnk_threedi_tools.core.folders import Folders
+
 
 class BaseCalculatorGPKG:
+    """TODO Deprecated, remove in later release."""
+
+    def __init__(self, **kwargs):
+        raise DeprecationWarning(
+            "The BaseCalculatorGPKG class has been named to \
+htt.GridToRaster since v2024.2. Please rewrite your code."
+        )
+
+
+class GridToRaster:
     """Calculate interpolated rasters from a grid. The grid_gdf is
     created using the class ThreediGrid. Which converts the NetCDF
     into a gpkg.
@@ -74,7 +85,7 @@ class BaseCalculatorGPKG:
             points_grid, wlvl = morton.reorder(points_grid, self.wlvl_raw)
             delaunay = Delaunay(points_grid)
             self.cache[self.DELAUNAY] = delaunay, wlvl
-            return delaunay, wlvl
+            return delaunay, wlvl.astype(float)
 
     def _get_points_mesh(self, window):
         """Create mesh grid points with coordinates every 0.5m with the input window.
@@ -219,7 +230,7 @@ class BaseCalculatorGPKG:
             target_ds = None
 
     def __enter__(self):
-        """With BaseCalculatorGPKG(**args) as x. will call this func."""
+        """With GridToRaster(**args) as x. will call this func."""
         self.cache = {}
         return self
 
@@ -246,11 +257,10 @@ if __name__ == "__main__":
     }
 
     # Init calculator
-    with BaseCalculatorGPKG(**calculator_kwargs) as self:
+    with GridToRaster(**calculator_kwargs) as self:
         # self.run(output_file=threedi_result.full_path("wlvl_orig.tif")
         #             mode="MODE_WLVL",
         #             overwrite=OVERWRITE)
 
         self.run(output_file=threedi_result.full_path("wdepth_orig.tif"), mode="MODE_WDEPTH", overwrite=OVERWRITE)
         print("Done.")
-# %%
