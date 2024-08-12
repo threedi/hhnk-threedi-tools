@@ -13,13 +13,15 @@ from scipy.interpolate import LinearNDInterpolator
 from scipy.spatial import Delaunay
 from threedidepth import morton
 
-SETUP = "clip_small"
+SETUP = "clip_medium"
 PLAYGROUND_DIR = Path(os.environ["3DI_PLAYGROUND_DIR"])
 grid_gdf = gpd.read_file(PLAYGROUND_DIR / SETUP / "grid_corr.gpkg")
 dem_path = PLAYGROUND_DIR / SETUP / "dem.tif"
 dem_raster = hrt.Raster(dem_path)
 NO_DATA_VALUE = -9999.0
 wlvl_column = "wlvl_max_replaced"
+
+# TODO docstrings zijn erg summier. Bij functies iets meer achtergrond.
 
 
 def get_boundary_points(grid_gdf, boundary, wlvl_column, no_data_value):

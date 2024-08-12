@@ -1,5 +1,6 @@
 # %%
 """Aanmaken rasters voor model"""
+
 import geopandas as gpd
 import hhnk_research_tools as hrt
 
@@ -50,7 +51,7 @@ class ModelbuilderRasters:
         # Rasterize polder polygon
         if not self.folder.dst.tmp.polder.exists():
             gdf_polder = gpd.read_file(self.folder.src.polder.path)
-            metadata = hrt.create_meta_from_gdf(gdf_polder, res=self.resolution)
+            metadata = hrt.RasterMetadataV2.from_gdf(gdf_polder, res=self.resolution)
             gdf_polder["value"] = 1
             hrt.gdf_to_raster(
                 gdf=gdf_polder,
