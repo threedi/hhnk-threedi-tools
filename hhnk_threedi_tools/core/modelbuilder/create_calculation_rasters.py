@@ -78,6 +78,10 @@ class DamageDem:
         )
 
         if overwrite:
+            # create highres dem if it doesn't exist
+            if not self.highres_dem.exists():
+                hrt.reproject(src=self.dem, target_res=0.5, output_path=self.highres_dem.path)
+
             # create panden_raster if it doesn't exist
             if not self.panden_raster.exists():
                 panden_gdf = self.panden_gpkg.load()
@@ -89,10 +93,6 @@ class DamageDem:
                     nodata=0,
                     metadata=self.highres_dem.metadata,
                 )
-
-            # create highres dem if it doesn't exist
-            if not self.highres_dem.exists():
-                hrt.reproject(src=self.dem, target_res=0.5, output_path=self.highres_dem.path)
 
             # Create damage dem
             def elevate_dem_block(block):
