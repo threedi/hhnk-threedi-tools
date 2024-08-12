@@ -16,7 +16,7 @@ import rasterio as rio
 import rioxarray as rxr
 import xarray as xr
 
-from hhnk_threedi_tools.core.result_rasters.calculate_raster import BaseCalculatorGPKG
+from hhnk_threedi_tools.core.result_rasters.grid_to_raster import GridToRaster
 from tests.config import FOLDER_TEST, TEMP_DIR
 
 CHUNKSIZE = 4096
@@ -77,7 +77,7 @@ if not wlvl.exists():
         "grid_gdf": grid_gdf,
         "wlvl_column": "wlvl_max_replaced",
     }
-    with BaseCalculatorGPKG(**calculator_kwargs) as basecalc:
+    with GridToRaster(**calculator_kwargs) as basecalc:
         basecalc.run(output_file=wlvl.path, mode="MODE_WLVL", overwrite=True, min_block_size=CHUNKSIZE)
     print(time.time() - now)
 

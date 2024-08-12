@@ -1,41 +1,14 @@
 # %%
-"""
-#FIXME
-In ontwikkeling. Kopie van
-"\\srv57d1\geo_info\02_Werkplaatsen\06_HYD\Projecten\HKC22014 Vergelijking GxG en bodemvochtproducten\02. Gegevens\03.scripts\bodemberging_obv_gxg_w.py"
-daarna aangepast om werkend te maken in htt als functie.
-
-Dit script rekent grondwaterstand rasters om in een beschikbare bodemberging.
-
-"""
-
-import importlib
-
-import hhnk_research_tools as hrt
-
-import hhnk_threedi_tools as htt
-import hhnk_threedi_tools.core.raster_creation.storage_lookup as storage_lookup
-
-importlib.reload(storage_lookup)
-
-import os
+#  gebaseerd op; r'G:\02_Werkplaatsen\06_HYD\Projecten\HKC22014 Vergelijking GxG en bodemvochtproducten\02. Gegevens
 
 import geopandas as gpd
+import hhnk_research_tools as hrt
 import numpy as np
-import pandas as pd
 
+import hhnk_threedi_tools.core.raster_creation.storage_lookup as storage_lookup
 from tests.config import FOLDER_TEST, TEMP_DIR
 
 building_dh = 0.1  # m. Soil starts 0.1m under building footprint. #TODO Wordt dit wel gebruikt? En zou dat moeten?
-
-
-class Folders(hrt.Folder):
-    """base; r'G:\02_Werkplaatsen\06_HYD\Projecten\HKC22014 Vergelijking GxG en bodemvochtproducten\02. Gegevens'"""
-
-    def __init__(self, base, create=False):
-        super().__init__(base, create=create)
-
-        self.add_file("storage", "storage.tif")
 
 
 # compute storage
@@ -81,13 +54,20 @@ def compute_storage_block(storage_lookup_df, block_dewa, block_soil, nodatamask,
 def calculate_storage_raster(
     output_raster,
     meta_raster,  # FIXME moet anders,
-    groundwlvl_raster,
-    dem_raster,
-    soil_raster,
+    groundwlvl_raster: hrt.Raster,
+    dem_raster: hrt.Raster,
+    soil_raster: hrt.Raster,
     storage_lookup_df,
     nodata=-9999,
     overwrite=False,
 ):
+    """Berekening van beschikbare bodembergingsraster.
+
+    Parameters
+    ----------
+    soil_raster : hrt.Raster
+
+    """
     # Controle of we door moeten gaan met berekening.
     cont = hrt.check_create_new_file(output_file=output_raster, overwrite=overwrite)
 
@@ -166,7 +146,8 @@ def calculate_storage_raster(
 
 # %%
 if __name__ == "__main__":
-    folder = Folders(TEMP_DIR / f"storage_{hrt.get_uuid()}", create=True)
+    folder = hrt.Folder(TEMP_DIR / f"storage_{hrt.get_uuid()}", create=True)
+    folder.add_file("storage", "storage.tif")
 
     rootzone_thickness_cm = 20  # cm
 
