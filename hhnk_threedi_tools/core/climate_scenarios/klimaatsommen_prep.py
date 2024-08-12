@@ -6,7 +6,7 @@ import hhnk_research_tools as hrt
 import pandas as pd
 
 from hhnk_threedi_tools import Folders
-from hhnk_threedi_tools.core.result_rasters.calculate_raster import BaseCalculatorGPKG
+from hhnk_threedi_tools.core.result_rasters.grid_to_raster import GridToRaster
 from hhnk_threedi_tools.core.result_rasters.netcdf_to_gridgpkg import NetcdfToGPKG
 
 
@@ -134,7 +134,7 @@ class KlimaatsommenPrep:
         output_file = scenario_raster
 
         # Init calculator
-        with BaseCalculatorGPKG(**calculator_kwargs) as basecalc:
+        with GridToRaster(**calculator_kwargs) as basecalc:
             basecalc.run(output_file=output_file, mode=mode, min_block_size=self.min_block_size, overwrite=overwrite)
 
     def calculate_depth(
