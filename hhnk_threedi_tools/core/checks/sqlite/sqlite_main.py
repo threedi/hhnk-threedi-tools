@@ -184,7 +184,7 @@ class SqliteCheck:
         self.structure_control.run(overwrite=overwrite)
 
     def run_dem_max_value(self):
-        stats = self.dem.statistics(approx_ok=False, force=True)
+        stats = self.dem.statistics()
         if stats["max"] > DEM_MAX_VALUE:
             result = f"Maximale waarde DEM: {stats['max']} is te hoog"
         else:

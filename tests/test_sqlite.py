@@ -53,7 +53,7 @@ class TestSqlite:
         self.sqlite_check.run_dewatering_depth()
         assert self.sqlite_check.output_fd.drooglegging.exists()
 
-        assert self.sqlite_check.output_fd.drooglegging.statistics(approx_ok=False) == {
+        assert self.sqlite_check.output_fd.drooglegging.statistics() == {
             "min": -0.76,
             "max": 10004.290039,
             "mean": 2.167882,

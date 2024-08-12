@@ -91,7 +91,7 @@ for calctype in ["maxdepth", "maxwlvl"]:
             requested resolution: {resolution}
             projection: {r.metadata.projection}
             sum: {r.sum()}
-            stats: {r.statistics(approx_ok=False)}
+            stats: {r.statistics()}
             bbox: {r.metadata.bbox}
             georef: {r.metadata.georef}
             pixelsize (x): {r.metadata.pixel_width}
@@ -103,7 +103,7 @@ print(f"""
 requested resolution: {resolution}
 projection: {r.metadata.projection}
 sum: {r.sum()}
-stats: {r.statistics(approx_ok=False)}
+stats: {r.statistics()}
 bbox: {r.metadata.bbox}
 georef: {r.metadata.georef}
 pixelsize (x): {r.metadata.pixel_width}
