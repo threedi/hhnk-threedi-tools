@@ -26,7 +26,7 @@ class DamageDem:
     Parameters
     ----------
     dem: hrt.Raster
-        path to the original dem.
+        original dem, provide the path.
         default dem = folder.model.schema_base.rasters.dem
     """
 
@@ -39,7 +39,9 @@ class DamageDem:
         if self.dem.metadata.x_res == 0.5:
             self.highres_dem = self.dem
         else:
-            self.highres_dem = hrt.Folder(self.damage_dem.parent).full_path(f"{self.dem.stem}_50cm.tif")
+            self.highres_dem = hrt.RasterV2(
+                hrt.Folder(self.damage_dem.parent).full_path(f"{self.dem.stem}_50cm.tif")
+            )  # TODO RasterV2 moet hier weg als folder de juiste tertuggeeft
 
     @classmethod
     def from_folder(cls, folder: Folders, dem=None, panden_gpkg=None, panden_raster=None, damage_dem=None):
@@ -95,30 +97,19 @@ class DamageDem:
                 )
 
             # Create damage dem
-            def elevate_dem_block(block):
-                block_out = block.blocks["dem"] + block.blocks["panden"]
+            dem = self.highres_dem.open_rxr()
+            pand = self.panden_raster.open_rxr()
 
-                block_out[block.masks_all] = self.highres_dem.nodata
-                return block_out
+            result = dem + pand.fillna(0)
 
-            calc = hrt.RasterCalculatorV2(
+            hrt.RasterV2.write(
                 raster_out=self.damage_dem,
-                raster_paths_dict={
-                    "dem": self.highres_dem,
-                    "panden": self.panden_raster,
-                },
-                nodata_keys=["dem"],
-                mask_keys=["dem"],
-                metadata_key="dem",
-                custom_run_window_function=elevate_dem_block,
-                output_nodata=self.highres_dem.nodata,
-                min_block_size=4096,
-                verbose=True,
+                result=result,
+                nodata=self.highres_dem.nodata,
+                dtype="float32",
+                scale_factor=None,
+                chunksize=self.damage_dem.chunksize,
             )
 
-            calc.run(overwrite=True)
         else:
             print(f"{self.damage_dem.view_name_with_parents(2)} already exists")
-
-
-# %%

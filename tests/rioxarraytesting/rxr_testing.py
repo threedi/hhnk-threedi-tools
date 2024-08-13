@@ -45,9 +45,8 @@ SETUPS={
     "clip_small": {"statistics": {'min': 0.0, 'max': 2792.0, 'mean': 1584.604598, 'std': 633.447248}},
     "clip_medium": {"statistics": {'min': 0.0, 'max': 2792.0, 'mean': 1584.399304, 'std': 633.472572}},
 }
+PLAYGROUND_DIR = Path(os.environ["3DI_PLAYGROUND_DIR"])
 
-PLAYGROUND_DIR = Path(r"d:\projecten\D2402.HHNK.Ondersteuning_Python\03.playground")
-PLAYGROUND_DIR = Path(r"C:\Users\Wietse\Documents\HHNK\playground")
 # dem = FOLDER_TEST.model.schema_base.rasters.dem FIXME: Exception: No connection or database path provided
 dem = hrt.Raster(PLAYGROUND_DIR / SETUP / "dem.tif")
 grid_gdf = gpd.read_file(PLAYGROUND_DIR / SETUP / "grid_corr.gpkg")
