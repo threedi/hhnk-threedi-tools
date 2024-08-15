@@ -17,21 +17,23 @@ import numpy as np
 from threedigrid.admin.gridresultadmin import GridH5ResultAdmin, GridH5AggregateResultAdmin
 from datetime import datetime, timedelta
 from create_breach_graph import create_breach_graph
-import shutil
 from threedi_api_client.api import ThreediApi
 from threedi_api_client.versions import V3Api
 from threedi_api_client.openapi import ApiException
 from download_results_from_3di import download_results_from_3di
 from breaches import Breaches
 from pathlib import Path
-
+import hhnk_research_tools as hrt
 
 def download_breach_scenario(base_folder, model_name, metadata_path, new_metadata_path, filter_names):
-    API_KEY='5ba9BrZJ.yNxkRWDwFXH8w4U0ceyGt2RaYkjv8uWu'
+    api_keys_path = rf"{os.getenv('APPDATA')}\3Di\QGIS3\profiles\default\python\plugins\hhnk_threedi_plugin\api_key.txt"
+  
+  
+    api_keys = hrt.read_api_file(api_keys_path)
     #Loggin code. 
     config = {
         "THREEDI_API_HOST": "https://api.3di.live",
-        "THREEDI_API_PERSONAL_API_TOKEN":API_KEY
+        "THREEDI_API_PERSONAL_API_TOKEN":api_keys["threedi"],
         }
     api_client: V3Api = ThreediApi(config=config, version='v3-beta')
 
@@ -44,7 +46,7 @@ def download_breach_scenario(base_folder, model_name, metadata_path, new_metadat
         print(f"Successfully logged in as {user.username}!")
    
     # SET API KEY
-    dl.set_api_key('Ssb7LXCk.sImsUmQLjXKHsNlaDs3tU0HHzPGQD8HN')    
+    dl.set_api_key(api_keys["lizard"])    
 
     # Create list of available scenarios
     name = []

@@ -9,14 +9,20 @@ from threedi_api_client.api import ThreediApi
 from threedi_api_client.versions import V3Api
 from threedi_api_client.openapi import ApiException
 from pathlib import Path
+import hhnk_research_tools as hrt
+
 #%%
 
 def complete_missing_metadata(metadata_path, output_folder, skip_region):
     #Loggin code. 
-    API_KEY='5ba9BrZJ.yNxkRWDwFXH8w4U0ceyGt2RaYkjv8uWu'
+    api_keys_path = rf"{os.getenv('APPDATA')}\3Di\QGIS3\profiles\default\python\plugins\hhnk_threedi_plugin\api_key.txt"
+  
+  
+    api_keys = hrt.read_api_file(api_keys_path)
+    #Loggin code. 
     config = {
         "THREEDI_API_HOST": "https://api.3di.live",
-        "THREEDI_API_PERSONAL_API_TOKEN":API_KEY
+        "THREEDI_API_PERSONAL_API_TOKEN":api_keys["threedi"],
         }
     api_client: V3Api = ThreediApi(config=config, version='v3-beta')
 
@@ -28,11 +34,8 @@ def complete_missing_metadata(metadata_path, output_folder, skip_region):
     else:
         print(f"Successfully logged in as {user.username}!")
 
-    # SET location and name
-    organisation = 'Hoogheemraadschap Hollands Noorderkwartier'
-
     # SET YOUT OWN API KEY
-    dl.set_api_key('Ssb7LXCk.sImsUmQLjXKHsNlaDs3tU0HHzPGQD8HN')   
+    dl.set_api_key(api_keys["lizard"])      
 
     #look up tabel 
     metadata_gdf = gpd.read_file(metadata_path, driver = 'Shapefile', engine="pyogrio")

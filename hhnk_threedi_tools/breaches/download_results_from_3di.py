@@ -19,32 +19,7 @@ output_folder = r'E:\03.resultaten\Overstromingsberekeningen primaire doorbraken
 def download_results_from_3di(output_folder, id_search, api_client):
     CHUNK_SIZE = 1024*1024 # 1MB
     
-    # dl.set_api_key('Ssb7LXCk.sImsUmQLjXKHsNlaDs3tU0HHzPGQD8HN')    # SET YOUT OWN API KEY
-    
-    # # # Loggin code. 
-    # API_KEY='5ba9BrZJ.yNxkRWDwFXH8w4U0ceyGt2RaYkjv8uWu'
-    # config = {
-    #     "THREEDI_API_HOST": "https://api.3di.live",
-    #     "THREEDI_API_PERSONAL_API_TOKEN":API_KEY
-    #     }
-    # api_client: V3Api = ThreediApi(config=config, version='v3-beta')
-    
-    # #Loggin Confirmation Message
-    # try:
-    #     user = api_client.auth_profile_list()
-    # except ApiException as e:
-    #     print("Oops, something went wrong. Maybe you made a typo?")
-    # else:
-    #     print(f"Successfully logged in as {user.username}!")
-    
-    # # Create list of available scenarios
-    # scenario1 = dl.find_scenarios_by_name(id_search, limit=1000)[0]
-    
-    # # Select the last results (0), and from it save the simulation id an the simulation name
-    # simulation_id = dict(scenario1)['simulation_identifier']
-    # simulation_name = dict(scenario1)['name']
-    # id_search = 'ROR-PRI-BALGZANDDIJK_7_EN_BALGDIJK-T100000'
-    # id_search = 'ROR-PRI-BALGZANDDIJK_3_EN_BALGDIJK-T100000'
+   
     simulation = api_client.usage_list(simulation__name = id_search).results[0] 
     simulation_name = simulation.simulation.name
     simulation_id = simulation.simulation.id
@@ -104,4 +79,3 @@ def download_results_from_3di(output_folder, id_search, api_client):
 
 # %%
 
-# download_results_from_3di(output_folder, id_search)

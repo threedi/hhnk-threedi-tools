@@ -20,15 +20,31 @@ from threedi_api_client.api import ThreediApi
 from threedi_api_client.versions import V3Api
 from pathlib import Path
 from hhnk_threedi_tools.core.api.calculation import Simulation
+import hhnk_research_tools as hrt
 
 
-def start_simulation_breaches(model_name, organisation_name, scenarios, filter_id, metadata_path, wait_time ):  
-  #Loggin code. #TODO
-  API_KEY = None
+class ModelFolder(hrt.Folder):
+    def __init__(self, base):
+      super().__init__(base)
+
+      self.add_file("schema", self.full_path(rf"work in progress/schematisation/{self.name}.gpkg"))
+
+
+
+
+  
+
+
+def start_simulation_breaches(model_folder, organisation_name, scenarios, filter_id, metadata_path, wait_time ):  
+  #%%
+  api_keys_path = rf"{os.getenv('APPDATA')}\3Di\QGIS3\profiles\default\python\plugins\hhnk_threedi_plugin\api_key.txt"
+  
+  
+  api_keys = hrt.read_api_file(api_keys_path)
   #Loggin code. 
   config = {
       "THREEDI_API_HOST": "https://api.3di.live",
-      "THREEDI_API_PERSONAL_API_TOKEN":API_KEY
+      "THREEDI_API_PERSONAL_API_TOKEN":api_keys["threedi"],
       }
   api_client: V3Api = ThreediApi(config=config, version='v3-beta')
 
@@ -42,8 +58,6 @@ def start_simulation_breaches(model_name, organisation_name, scenarios, filter_i
   # modeller_initial = '_JA'
   sim_duration = 20 # days
   start_datetime = datetime(2000, 1, 1, 0, 0)
-  modellen_folder = r'E:\02.modellen'
-  base_folder = os.path.join(modellen_folder, model_name)
   output_timestep = 900 #s
 
   # general settings setup
@@ -123,12 +137,12 @@ def start_simulation_breaches(model_name, organisation_name, scenarios, filter_i
   org_uuid = organisations.results[0].unique_id
 
   #Search for the model we want to work with.
-  model_list = api_client.threedimodels_list(name__contains=model_name)
+  model_list = api_client.threedimodels_list(name__contains=model_folder.name)
   results = model_list.results
   first_value = True
   
   for result in results:
-      if result.schematisation_name == model_name and first_value:
+      if result.schematisation_name == model_folder.name and first_value:
           first_value = False
           #get the id of the model 
           my_model_id = result.id
@@ -140,8 +154,10 @@ def start_simulation_breaches(model_name, organisation_name, scenarios, filter_i
 
   # Find the breaches in the model
   potential_breaches = api_client.threedimodels_potentialbreaches_list(my_model_id, limit=9999)
-  path_model = os.path.join(base_folder, 'work in progress', 'schematisation', 'ROR PRI - dijktraject 13-5.gpkg')
-  potential_breach_gpd = gpd.read_file(path_model, layer = 'potential_breach')
+  # potential_breach_gpd = gpd.read_file(model_folder.schema.path, layer = 'potential_breach')
+  model  = r"\\corp.hhnk.nl\data\Hydrologen_data\Data\02.modellen\ROR PRI - dijktraject 13-5\work in progress\schematisation\ROR PRI - dijktraject 13-5.gpkg"
+  potential_breach_gpd = gpd.read_file(model, layer = 'potential_breach')
+
 
   display_names = potential_breach_gpd.display_name.values
   breach_id_gpd = []
@@ -153,23 +169,22 @@ def start_simulation_breaches(model_name, organisation_name, scenarios, filter_i
 
   number_breaches = potential_breaches.count
 
-  #locate the breach result that corresponds to the connected point id
-  specific_breaches = []
-  breach_id = []
+  #Select the breach id from de geopackge to be use later to select the connected_point
   id_filter = []
-
   if not filter_id:
     id_filter = breach_id_gpd
   else:
      id_filter = filter_id
-  # id_filter = [102, 103, 104]
+
+  specific_breaches = []
+
+  # get conntected_point_id from the API using breach_id as identifier. 
   for pnt_id in range(number_breaches):
     id = potential_breaches.results[pnt_id].connected_pnt_id  
     if id in id_filter:
     # if (1<= id <=3) or (5<= id <=74):
-        breach_id.append(id)
         specific_breaches.append(pnt_id)
-
+  #%%
   # Set up simulations
   sleeptime = 2
   breach = {}
@@ -302,7 +317,9 @@ if __name__ == "__main__":
   # organisation_name = 'Hoogheemraadschap Hollands Noorderkwartier'
 
   #Set the model name as it is either in 3di or in the local folder. 
+  base_folder = r"E:\02.modellen"
   model_name = 'ROR PRI - dijktraject 13-5'
+  model_folder = ModelFolder(fr"{base_folder}\{model_name}")
 
   #Select the return periods you want to start with. If you want to use all of them keep it. 
   scenarios = [10]
@@ -310,12 +327,12 @@ if __name__ == "__main__":
   # id_filter corresponds to the column 'id' of the potential breach table of the model we are working with.
   # In case of willing to run all the potential breach, leave the list empty  --> filter_id = []
   filter_id = [102]
-
+  breach_ids
   #location of the metadata file. Important to have at least 2 version: One for uploading and run model and the other one for downloading.
   metadata_path = Path(r"E:\03.resultaten\Overstromingsberekeningen primaire doorbraken 2024\metadata\v6\metadata_shapefile.shp")  
 
   #Time (in seconds) to wait until the script tries again to upload a model. We use it to not overload the API. 
   wait_time = 3600 # 1  hour
 
-  start_simulation_breaches(model_name, organisation_name, scenarios, filter_id, metadata_path, wait_time)
+  start_simulation_breaches(model_folder, organisation_name, scenarios, filter_id, metadata_path, wait_time)
   # %%
