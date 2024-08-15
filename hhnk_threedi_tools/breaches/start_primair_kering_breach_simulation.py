@@ -23,8 +23,8 @@ from hhnk_threedi_tools.core.api.calculation import Simulation
 
 
 def start_simulation_breaches(model_name, organisation_name, scenarios, filter_id, metadata_path, wait_time ):  
-  #Loggin code. 
-  API_KEY='5ba9BrZJ.yNxkRWDwFXH8w4U0ceyGt2RaYkjv8uWu'
+  #Loggin code. #TODO
+  API_KEY = None
   #Loggin code. 
   config = {
       "THREEDI_API_HOST": "https://api.3di.live",
