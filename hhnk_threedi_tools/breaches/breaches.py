@@ -1,11 +1,13 @@
 # %%
 """
-Each class has a file as its attributes and a file as a new class. 
+Each class has a file as its attributes and a file as a new class.
 self.base is the directory in which it is located
 """
+
 # First-party imports
 import os
 from pathlib import Path
+
 import hhnk_research_tools as hrt
 from hhnk_research_tools import Folder
 
@@ -130,12 +132,10 @@ class Breaches(Folder):
             "gridadmin": self.netcdf.gridadmin.path_if_exists,
             "results_3di": self.netcdf.results_3di.path_if_exists,
             # "channels_shapefile": self.source_data.modelbuilder.channel_from_profiles.path_if_exists,
-
             # jpeg
             "graph": self.jpeg.graph.path_if_exists,
             "agg_graph": self.jpeg.agg_graph.path_if_exists,
             "overstroming": self.jpeg.overstroming.path_if_exists,
-
             # wss
             "dem_clip": self.wss.dem_clip.path_if_exists,
             "grid_raw": self.wss.grid_raw.path_if_exists,
@@ -143,14 +143,12 @@ class Breaches(Folder):
             "max_wdepth_orig": self.wss.max_wdepth_orig.path_if_exists,
             "new_grid": self.wss.new_grid.path_if_exists,
             "nodeid": self.wss.nodeid.path_if_exists,
-            "landuse_2021_clip":self.wss.landuse_2021_clip.path_if_exists,
-
+            "landuse_2021_clip": self.wss.landuse_2021_clip.path_if_exists,
             # ssm
             "max_flow_velocity_5m": self.ssm.max_flow_velocity_5m.path_if_exists,
             "max_rate_of_rise_5m": self.ssm.max_rate_of_rise_5m.sqlite_tests.path_if_exists,
             "max_waterdepth_5m": self.ssm.max_waterdepth_5m.path_if_exists,
             "max_waterlevel_5m": self.ssm.max_waterlevel_5m.path_if_exists,
-           
         }
 
     @classmethod
@@ -167,12 +165,11 @@ class NetCDF(Folder):
         super().__init__(os.path.join(base, "01_NetCDF"), create)
 
         # Folders
-        
+
         if create:
             self.create_readme()
 
         # Files
-        
 
     def create_readme(self):
         readme_txt = (
@@ -181,7 +178,6 @@ class NetCDF(Folder):
             "gridadmin (*.h5) named 'gridadmin.h5'\n"
             "gridadmin (*.sqlite) named 'gridadmin.sqlite'\n"
             "log_files (*..zip) named 'log_files.zip'\n"
-            
         )
         with open(os.path.join(self.base, "read_me.txt"), mode="w") as f:
             f.write(readme_txt)
@@ -197,7 +193,6 @@ class NetCDF(Folder):
                """
 
 
-
 class JPEG(Folder):
     """Parent folder with all the images created for the final product. They included:
     breach graph and it aggregation, and also all the maps that can be generated.
@@ -209,10 +204,9 @@ class JPEG(Folder):
         if create:
             self.create_readme()
 
-        
     def create_readme(self):
         readme_txt = (
-           "This folder is the default folder where the images and maps "
+            "This folder is the default folder where the images and maps "
             "are stored. The inner structure of these result folders "
             "is automatically generated"
         )
@@ -238,7 +232,7 @@ class SSM(Folder):
         super().__init__(os.path.join(base, "03_SSM"), create)
 
         # Folders
-       
+
         if create:
             self.create_readme()
 
@@ -264,7 +258,6 @@ class WSS(Folder):
     def __init__(self, base, create):
         super().__init__(os.path.join(base, "04_WSS"), create)
 
-  
         if create:
             self.create_readme()
 
@@ -276,8 +269,6 @@ class WSS(Folder):
         )
         with open(os.path.join(self.base, "read_me.txt"), mode="w") as f:
             f.write(readme_txt)
-
-    
 
 
 # %%
