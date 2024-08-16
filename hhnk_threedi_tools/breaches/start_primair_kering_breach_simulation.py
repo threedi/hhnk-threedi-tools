@@ -5,17 +5,13 @@ within the function.
 """
 # %%
 
+import datetime
 import os
-import time as time2
-import time as timesleep
-from asyncio.log import logger
-from datetime import datetime, time
-from getpass import getpass
+import time
 from pathlib import Path
 
 import geopandas as gpd
 import hhnk_research_tools as hrt
-import numpy as np
 from threedi_api_client.api import ThreediApi
 from threedi_api_client.openapi import ApiException
 from threedi_api_client.versions import V3Api
@@ -31,7 +27,6 @@ class ModelFolder(hrt.Folder):
 
 
 def start_simulation_breaches(model_folder, organisation_name, scenarios, filter_id, metadata_path, wait_time):
-    # %%
     api_keys_path = (
         rf"{os.getenv('APPDATA')}\3Di\QGIS3\profiles\default\python\plugins\hhnk_threedi_plugin\api_key.txt"
     )
@@ -53,7 +48,7 @@ def start_simulation_breaches(model_folder, organisation_name, scenarios, filter
         print(f"Successfully logged in as {user.username}!")
     # modeller_initial = '_JA'
     sim_duration = 20  # days
-    start_datetime = datetime(2000, 1, 1, 0, 0)
+    start_datetime = datetime.datetime(2000, 1, 1, 0, 0)
     output_timestep = 900  # s
 
     # general settings setup
@@ -118,67 +113,67 @@ def start_simulation_breaches(model_folder, organisation_name, scenarios, filter
             my_model_id = result.id
             my_model_revision = result.revision_number
             my_model_schema_id = result.schematisation_id
-            model_versie = "Schematisation id " + str(my_model_schema_id) + " - Revision #" + str(my_model_revision)
+            model_versie = f"Schematisation id {my_model_schema_id} - Revision #{my_model_revision}"
             print("model name:", result.name, "model id:", my_model_id, " rev: ", my_model_revision)
 
     # Find the breaches in the model
     potential_breaches = api_client.threedimodels_potentialbreaches_list(my_model_id, limit=9999)
-    # potential_breach_gpd = gpd.read_file(model_folder.schema.path, layer = 'potential_breach')
-    model = r"\\corp.hhnk.nl\data\Hydrologen_data\Data\02.modellen\ROR PRI - dijktraject 13-5\work in progress\schematisation\ROR PRI - dijktraject 13-5.gpkg"
-    potential_breach_gpd = gpd.read_file(model, layer="potential_breach")
+    potential_breach_gdf = gpd.read_file(model_folder.schema.path, layer="potential_breach")
 
-    display_names = potential_breach_gpd.display_name.values
-    breach_id_gpd = []
+    display_names = potential_breach_gdf.display_name.values
+    breach_ids_scenario = []
     for display_name in display_names:
         for scenario in scenarios:
             if display_name.split("-")[-1] == str(scenario):
-                active_breach = potential_breach_gpd[potential_breach_gpd["display_name"] == display_name]
-                breach_id_gpd.append(active_breach.id.values[0])
-
-    number_breaches = potential_breaches.count
+                active_breach = potential_breach_gdf[potential_breach_gdf["display_name"] == display_name]
+                breach_ids_scenario.append(active_breach.id.values[0])
 
     # Select the breach id from de geopackge to be use later to select the connected_point
     id_filter = []
     if not filter_id:
-        id_filter = breach_id_gpd
+        id_filter = breach_ids_scenario
     else:
         id_filter = filter_id
 
-    specific_breaches = []
+    breach_selected_idxs = []
 
     # get conntected_point_id from the API using breach_id as identifier.
-    for pnt_id in range(number_breaches):
-        id = potential_breaches.results[pnt_id].connected_pnt_id
-        if id in id_filter:
+    for idx in range(potential_breaches.count):
+        connected_pnt_id = potential_breaches.results[idx].connected_pnt_id
+        if connected_pnt_id in id_filter:
             # if (1<= id <=3) or (5<= id <=74):
-            specific_breaches.append(pnt_id)
-    # %%
+            breach_selected_idxs.append(idx)
+
     # Set up simulations
     sleeptime = 2
     breach = {}
     # Start simulations in a loop
-    number_breaches = specific_breaches
     # set up metadata
     metadata_gdf = gpd.read_file(metadata_path, driver="Shapefile")
 
-    for x in number_breaches:
+    for x in breach_selected_idxs:
         # if x >= 32: # DEBUGGING
         breach = potential_breaches.results[x]
         # print (x)
         print(breach.connected_pnt_id)
-        # set simulatio time and fix format.
-        datum = datetime.now().date()
-        datum_str = datum.strftime("%d-%m-%y")
+        # set simulation time and fix format.
+
+        # FIXME dit is de nieuwe standaard. Voor implementeren, eerste alle data uit metadata.SC_DATE goed zetten.
+        # Volgen LDO we moeten de format van de datum al d-m-y blijven anders gaan we en bericht fouten krijgen
+
+        datum_str = datetime.datetime.now().date().strftime("%d-%m-%y")
+        # datum_str = datetime.datetime.now().date().strftime("%y-%m-%d")
 
         # select active breach according to connected point id from API
-        active_breach = potential_breach_gpd[potential_breach_gpd["id"] == breach.connected_pnt_id]
+        breach_row = potential_breach_gdf[potential_breach_gdf["id"] == breach.connected_pnt_id].iloc[0]
 
-        # Set scearnio name aacoridng to active breach
-        scenario_code = active_breach.code.values[0]
-        scenario_split = scenario_code.split("-")
-        if scenario_split[0][-2:] == "_1":
-            scenario_split[0] = scenario_split[0][:-2]
-            scenario_name = "ROR-PRI-" + scenario_split[0] + "-T" + scenario_split[1]
+        # Set scenario name according to active breach
+        breach_code_split = breach_row.code.split("-")
+        if breach_code_split[0][-2:] == "_1":
+            # All codes have _1 at the end of name. We dont know why this is here, but remove it.
+            scenario_name = f"ROR-PRI-{breach_code_split[0][:-2]}-T{breach_code_split[1]}"
+        else:
+            raise ValueError("A scenario_name may have been used for the wrong breach in the past. Please check this.")
 
         # Components of the simulation created. IS NOT RUNNING YET. See the status below
         simulation_template = api_client.simulation_templates_list(simulation__threedimodel__id=my_model_id).results[0]
@@ -193,23 +188,23 @@ def start_simulation_breaches(model_folder, organisation_name, scenarios, filter
                 "duration": sim_duration * 3600 * 24,  # in seconds
             }
         )
-        timesleep.sleep(sleeptime)
+        time.sleep(sleeptime)
 
         api_client.simulations_settings_time_step_delete(simulation_pk=simulation.id)
         api_client.simulations_settings_time_step_create(simulation_pk=simulation.id, data=time_step_settings)
-        timesleep.sleep(sleeptime)
+        time.sleep(sleeptime)
 
         api_client.simulations_settings_numerical_delete(simulation_pk=simulation.id)
         api_client.simulations_settings_numerical_create(simulation_pk=simulation.id, data=numerical_setting)
-        timesleep.sleep(sleeptime)
+        time.sleep(sleeptime)
 
         api_client.simulations_settings_physical_delete(simulation_pk=simulation.id)
         api_client.simulations_settings_physical_create(simulation_pk=simulation.id, data=physical_settings)
-        timesleep.sleep(sleeptime)
+        time.sleep(sleeptime)
 
         for a in aggregation_settings:
             api_client.simulations_settings_aggregation_create(simulation_pk=simulation.id, data=a)
-            timesleep.sleep(sleeptime)
+            time.sleep(sleeptime)
 
         # Set breach event open
         breach_event = api_client.simulations_events_breaches_create(
@@ -223,7 +218,7 @@ def start_simulation_breaches(model_folder, organisation_name, scenarios, filter
             },
         )
 
-        timesleep.sleep(sleeptime)
+        time.sleep(sleeptime)
 
         # ADD postprocessing
         # basic_processing_data = {
@@ -233,11 +228,11 @@ def start_simulation_breaches(model_folder, organisation_name, scenarios, filter
 
         # api_client.simulations_results_post_processing_lizard_basic_create(
         #                     simulation.id, data=basic_processing_data)
-        # timesleep.sleep(sleeptime)
+        # time.sleep(sleeptime)
 
         # api_client.simulations_results_post_processing_lizard_arrival_create(
         #                     simulation_pk=simulation.id, data={})
-        # timesleep.sleep(sleeptime)
+        # time.sleep(sleeptime)
 
         # update metadata
         metadata_gdf.loc[metadata_gdf["SC_NAAM"] == scenario_name, "SC_IDENT"] = simulation.id
@@ -245,32 +240,24 @@ def start_simulation_breaches(model_folder, organisation_name, scenarios, filter
         metadata_gdf.loc[metadata_gdf["SC_NAAM"] == scenario_name, "SC_DATE"] = datum_str
         metadata_gdf.loc[metadata_gdf["SC_NAAM"] == scenario_name, "MOD_VERSIE"] = model_versie
 
-        # Save metadata as Shapefile
-        path_gdf = Path(metadata_path)
-        metadata_path = os.path.join(path_gdf.parent, path_gdf.name)
-        if not os.path.exists(path_gdf):
-            os.mkdir(path_gdf)
         metadata_gdf.to_file(metadata_path, driver="Shapefile")
 
         # Start simulation
-        max_simulation = 3
-
-        sim = Simulation(api_key=api_keys["threedi"])
         queue_jam_bwn = True
 
         while queue_jam_bwn:
-            queue_length_bwn = sim.threedi_api.statuses_list(
-                name__startswith="queued", simulation__organisation__name__istartswith="BWN"
+            queue_length_bwn = api_client.statuses_list(
+                # TODO org_uuid hier gebruiken. want daar zet je de berekening op
+                name__startswith="queued",
+                simulation__organisation__unique_id=org_uuid,
             ).count
             if queue_length_bwn < 2:
-                if queue_length_bwn < max_simulation - 1:
-                    queue_jam_bwn = False
-                    free_org_uuid = "48dac75bef8a42ebbb52e8f89bbdb9f2"
-                    api_client.simulations_actions_create(simulation.id, data={"name": "queue"})
-                    print(str(x) + ": " + scenario_name + " is queued with id " + str(simulation.id))
+                queue_jam_bwn = False
+                api_client.simulations_actions_create(simulation.id, data={"name": "queue"})
+                print(f"{x}: {scenario_name} is queued with id {simulation.id}")
             else:
                 print("wait", wait_time, "s")
-                time2.sleep(wait_time)
+                time.sleep(wait_time)
 
 
 # %%
@@ -286,11 +273,11 @@ if __name__ == "__main__":
     model_folder = ModelFolder(rf"{base_folder}\{model_name}")
     model_folder.schema.base
     # Select the return periods you want to start with. If you want to use all of them keep it.
-    scenarios = [10]
+    scenarios = [100]
 
     # id_filter corresponds to the column 'id' of the potential breach table of the model we are working with.
     # In case of willing to run all the potential breach, leave the list empty  --> filter_id = []
-    filter_id = [102]
+    filter_id = []
     # location of the metadata file. Important to have at least 2 version: One for uploading and run model and the other one for downloading.
     metadata_path = Path(
         r"E:\03.resultaten\Overstromingsberekeningen primaire doorbraken 2024\metadata\v6\metadata_shapefile.shp"
