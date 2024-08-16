@@ -1,3 +1,4 @@
+# %%
 import os
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -6,6 +7,7 @@ import geopandas as gpd
 import hhnk_research_tools as hrt
 import numpy as np
 import pandas as pd
+from breaches import Breaches
 from threedi_api_client.api import ThreediApi
 from threedi_api_client.openapi import ApiException
 from threedi_api_client.versions import V3Api
@@ -42,47 +44,30 @@ def complete_missing_metadata(metadata_path, output_folder, skip_region):
 
     # look up tabel
     metadata_gdf = gpd.read_file(metadata_path, driver="Shapefile", engine="pyogrio")
-    regions = os.listdir(output_folder)
-
     # %%
-    scenario_paths = []
-    for region in regions:
-        region_path = os.path.join(output_folder, region)
-        scenarios = os.listdir(region_path)
-        for scenario in scenarios:
-            scenario_path = os.path.join(region_path, scenario)
-            if os.path.exists(scenario_path):
-                scenario_paths.append(Path(scenario_path))
+
+    scenario_paths = [j for i in Path(output_folder).glob("*/") for j in list(i.glob("*/"))]
 
     scenario_done = []
     no_scenario = []
     #
 
-    filter_metadata = metadata_gdf[metadata_gdf["SC_DATE"].isnull()]
-    names = filter_metadata["SC_NAAM"].values
+    filter_metadata_df = metadata_gdf[metadata_gdf["SC_DATE"].isnull()]
+    missing_info_scenarionames = filter_metadata_df["SC_NAAM"].values
     # %%
-    for path in scenario_paths:
-        print(f"Adding Metadata for Scenario {path.name}")
-        name = path.name
-        if path in scenario_done or Path(path).parent.name in skip_region or name not in names:
+    for scenario_path in scenario_paths:
+        breach = Breaches(scenario_path)
+        name = breach.name
+        if (
+            scenario_path in scenario_done
+            or scenario_path.parent.name in skip_region
+            or name not in missing_info_scenarionames
+        ):
             continue
         else:
-            # Set up lists
-            x_name_list = []
-            x_list = []
-            y_list = []
-            breach_id_list = []
-            max_breach_q_list = []
-            max_breach_u_list = []
-            max_breach_wlev_upstream_list = []
-            min_breach_wlev_upstream_list = []
-            max_breach_wlev_downstream_list = []
-            min_breach_wlev_downstream_list = []
-            max_breach_depth_list = []
-            max_breach_width_list = []
-            x_name = name
+            print(f"Adding Metadata for Scenario {name}")
 
-            model_name = Path(path).parent.name
+            model_name = breach.parent.name
             model_list = api_client.threedimodels_list(name__startswith=model_name)
 
             model_results = model_list.results
@@ -90,36 +75,35 @@ def complete_missing_metadata(metadata_path, output_folder, skip_region):
                 if model.schematisation_name != model_name:
                     model_results.remove(model)
 
-            netcdf = os.path.join(path, "NetCDF")
-            simulation_name_check = api_client.usage_list(simulation__name=x_name)
+            netcdf = breach.netcdf.path  # TODO folder struct gebruiken
+            simulation_name_check = api_client.usage_list(simulation__name=name)
             if simulation_name_check.count == 0:
-                no_scenario.append(x_name)
+                no_scenario.append(name)
                 print(f"the scenario {name} does not have simulation, check name")
                 continue
             else:
                 simulation = simulation_name_check.results[0]
-                simulation_name = simulation.simulation.name
                 simulation_threedimodel_id = simulation.simulation.threedimodel_id
 
                 for model_result in model_results:
                     print(model_result.id)
-                    print(simulation_threedimodel_id)
+                    print(f"Modelid: {simulation_threedimodel_id}")
                     if model_result.id == simulation_threedimodel_id:
-                        print("yes")
                         schematisation_id = model_result.schematisation_id
                         revision_number = model_result.revision_number
                     else:
                         schematisation_id = model_results[0].schematisation_id
                         revision_number = model_results[0].revision_number
 
-                model_versie = "Schematisation id " + str(schematisation_id) + " - Revision #" + str(revision_number)
+                model_versie = f"Schematisation id {schematisation_id} - Revision #{revision_number}"
                 print(model_versie)
 
                 resultnc = os.path.join(netcdf, "results_3di.nc")
-                resulth5 = os.path.join(path, "NetCDF", "gridadmin.h5")
-                aggregated_result = os.path.join(path, "NetCDF", "aggregate_results_3di.nc")
+                resulth5 = os.path.join(netcdf, "gridadmin.h5")
+                aggregated_result = os.path.join(netcdf, "aggregate_results_3di.nc")
 
-                gr = GridH5ResultAdmin(resulth5, resultnc)
+                # gr = GridH5ResultAdmin(resulth5, resultnc)  # TODO from folder
+                gr = breach.netcdf.grid  # Zo zou dat dan eruit zien.
                 ga = GridH5AggregateResultAdmin(resulth5, aggregated_result)
 
                 # find active breach
@@ -127,8 +111,6 @@ def complete_missing_metadata(metadata_path, output_folder, skip_region):
                 breach_line = gr.lines.id[breach_mask]
 
                 breach_id = gr.lines.content_pk[breach_line]
-                fig_path_name = os.path.join(path, "JPEG", x_name + ".png")
-                fig_path_name_agg = os.path.join(path, "JPEG", x_name + "_agg.png")
                 breach_width = gr.lines.timeseries(start_time=0, end_time=gr.lines.timestamps[-1]).breach_width[
                     :, breach_mask
                 ][:, 0]
@@ -140,26 +122,14 @@ def complete_missing_metadata(metadata_path, output_folder, skip_region):
                 ][:, 0]
                 max_breach_depth = np.amax(breach_depth)
 
-                breach_q = (
-                    gr.lines.filter(id__eq=breach_line)
-                    .timeseries(start_time=0, end_time=gr.lines.timestamps[-1])
-                    .q[:, 0]
-                )
-
                 breach_q_agg = (
                     ga.lines.filter(id__eq=breach_line)
                     .timeseries(start_time=0, end_time=gr.lines.timestamps[-1])
                     .q_avg[:, 0]
                 )
                 breach_q_agg[breach_q_agg < 0] = 0
+
                 max_breach_q_agg = np.amax(breach_q_agg)
-
-                breach_u = (
-                    gr.lines.filter(id__eq=breach_line)
-                    .timeseries(start_time=0, end_time=gr.lines.timestamps[-1])
-                    .u1[:, 0]
-                )
-
                 breach_u_agg = (
                     ga.lines.filter(id__eq=breach_line)
                     .timeseries(start_time=0, end_time=gr.lines.timestamps[-1])
@@ -168,17 +138,6 @@ def complete_missing_metadata(metadata_path, output_folder, skip_region):
                 breach_u_agg[breach_u_agg <= -999] = 0
                 breach_u_agg = np.abs(breach_u_agg)
                 max_breach_u_agg = np.amax(breach_u_agg)
-
-                start_time = datetime.strptime(gr.lines.dt_timestamps[0].split(".")[0], "%Y-%m-%dT%H:%M:%S")
-                end_time = datetime.strptime(gr.lines.dt_timestamps[-1].split(".")[0], "%Y-%m-%dT%H:%M:%S")
-                timestamps = gr.lines.dt_timestamps
-                time_sec = gr.lines.timestamps
-                time_sec_agg = ga.lines.timestamps["q_avg"]
-
-                coef_dif = len(breach_width) / len(time_sec_agg)
-                index = np.arange(0, len(breach_width), coef_dif)
-                width_interp_agg = np.interp(index, np.arange(len(breach_width)), breach_width)
-                breach_depth_agg = np.interp(index, np.arange(len(breach_depth)), breach_depth)
 
                 # cumulative data
                 try:
@@ -227,8 +186,6 @@ def complete_missing_metadata(metadata_path, output_folder, skip_region):
                     .s1_avg[:, 0]
                 )
                 breach_wlev_upstream_agg[breach_wlev_upstream_agg <= -999] = np.nan
-                max_breach_wlev_upstream_agg = np.amax(breach_wlev_upstream_agg)
-                min_breach_wlev_upstream_agg = np.amin(breach_wlev_upstream_agg)
 
                 breach_wlev_downstream_agg = (
                     ga.nodes.filter(id__eq=breach_node_downstream)
@@ -236,46 +193,32 @@ def complete_missing_metadata(metadata_path, output_folder, skip_region):
                     .s1_avg[:, 0]
                 )
                 breach_wlev_downstream_agg[breach_wlev_downstream_agg <= -999] = np.nan
-                max_breach_wlev_downstream_agg = np.nanmax(breach_wlev_downstream_agg)
-                min_breach_wlev_downstream_agg = np.nanmin(breach_wlev_downstream_agg)
 
                 # coordianten van het bovenstrooms punt als brescoordinaat (het lukt me niet dit uit gr.breaches te halen)
                 x = gr.nodes.filter(id__eq=breach_node_upstream).coordinates[0][0]
                 y = gr.nodes.filter(id__eq=breach_node_upstream).coordinates[1][0]
 
-                # APPEND new values to list
-                x_name_list.append(x_name)
-                x_list.append(x)
-                y_list.append(y)
-                breach_id_list.append(breach_id)
-                max_breach_q_list.append(max_breach_q_agg)
-                max_breach_u_list.append(max_breach_u_agg)
-                max_breach_wlev_upstream_list.append(max_breach_wlev_upstream)
-                min_breach_wlev_upstream_list.append(min_breach_wlev_upstream)
-                max_breach_wlev_downstream_list.append(max_breach_wlev_downstream)
-                min_breach_wlev_downstream_list.append(min_breach_wlev_downstream)
-                max_breach_depth_list.append(max_breach_depth)
-                max_breach_width_list.append(max_breach_width)
                 # Select maximum and mimimum data per breach.
                 df_simulation_data = pd.DataFrame(
                     {
-                        "name": x_name_list,
-                        "x": x_list,
-                        "y": y_list,
-                        "breach_id": breach_id_list,
-                        "Maximum Breach Discharge": max_breach_q_list,
-                        "Maximum Breach Width": max_breach_width_list,
-                        "Maximum Breach Flow Velocity": max_breach_u_list,
-                        "Maximum Upstream Water Level": max_breach_wlev_upstream_list,
-                        "Minimum Upstream Water Level": min_breach_wlev_upstream_list,
-                        "Maximum Downstream Water Lev": max_breach_wlev_downstream_list,
-                        "Minimum Downstream Water Level": min_breach_wlev_downstream_list,
-                        "Maximum Breach Depth": max_breach_depth_list,
+                        "name": [name],
+                        "x": [x],
+                        "y": [y],
+                        "breach_id": [breach_id],
+                        "Maximum Breach Discharge": [max_breach_q_agg],
+                        "Maximum Breach Width": [max_breach_width],
+                        "Maximum Breach Flow Velocity": [max_breach_u_agg],
+                        "Maximum Upstream Water Level": [max_breach_wlev_upstream],
+                        "Minimum Upstream Water Level": [min_breach_wlev_upstream],
+                        "Maximum Downstream Water Lev": [max_breach_wlev_downstream],
+                        "Minimum Downstream Water Level": [min_breach_wlev_downstream],
+                        "Maximum Breach Depth": [max_breach_depth],
                     }
                 )
-
+                # TODO deze df als csv wegschrijven bij scenario
+                df_simulation_data.to_csv(breach.path, sep=(";"), decimal=(","))
                 # Add information to metadata file
-                print(f"Adding metada for scearnio {x_name}")
+                print(f"Adding metadata for scenario {name}")
                 # scenario_name = scenario1['name']
 
                 simulation_started_raw = simulation.started
@@ -294,55 +237,56 @@ def complete_missing_metadata(metadata_path, output_folder, skip_region):
                 sim_duur = f"{simulation_duur.days} 00:00:00"
 
                 # Max Flow
-                breach_qmax = max(df_simulation_data["Maximum Breach Discharge"])
-                # Max With
+                breach_qmax = max(max_breach_q_agg)
+                # Max Width
                 breach_width_max = max_breach_width
                 # Simulation Status
-                log_status = simulation.status
+                # log_status = simulation.status
                 # Day when the simulation started (human datum)
                 log_start_datum = simulation.started.strftime("%d-%m-%Y %H:%M:%S")
                 log_total_time_raw = timedelta(seconds=int((simulation.total_time)))
                 log_total_time_format = datetime(1, 1, 1) + log_total_time_raw
                 log_total_time = "0 " + log_total_time_format.strftime("%H:%M:%S")
                 log_end_datum = simulation.finished.strftime("%d-%m-%Y %H:%M:%S")
+
                 low_crest_level = (
-                    metadata_gdf.loc[metadata_gdf["SC_NAAM"] == x_name, "DBR_INI_CR"].values[0] - max_breach_depth
+                    metadata_gdf.loc[metadata_gdf["SC_NAAM"] == name, "DBR_INI_CR"].values[0] - max_breach_depth
                 )
                 simulation_id = simulation.simulation.id
 
                 relative_path = (os.path.relpath(resultnc))[3:]
 
-                metadata_gdf.loc[metadata_gdf["SC_NAAM"] == x_name, "DBR_BR_MAX"] = breach_width_max
-                metadata_gdf.loc[metadata_gdf["SC_NAAM"] == x_name, "DBR_BRESDI"] = max_breach_depth
-                metadata_gdf.loc[metadata_gdf["SC_NAAM"] == x_name, "DBR_QMAX"] = breach_qmax
-                metadata_gdf.loc[metadata_gdf["SC_NAAM"] == x_name, "MOD_DATE"] = mod_date
-                metadata_gdf.loc[metadata_gdf["SC_NAAM"] == x_name, "MOD_START"] = log_start_datum
-                metadata_gdf.loc[metadata_gdf["SC_NAAM"] == x_name, "MOD_EIND"] = log_end_datum
-                metadata_gdf.loc[metadata_gdf["SC_NAAM"] == x_name, "MOD_REKEND"] = log_total_time
-                metadata_gdf.loc[metadata_gdf["SC_NAAM"] == x_name, "MOD_SIM_ST"] = simulation_start
-                metadata_gdf.loc[metadata_gdf["SC_NAAM"] == x_name, "MOD_SIM_EI"] = simulation_end
-                metadata_gdf.loc[metadata_gdf["SC_NAAM"] == x_name, "MOD_SIM_DU"] = sim_duur
-                metadata_gdf.loc[metadata_gdf["SC_NAAM"] == x_name, "DBR_LOW_CR"] = low_crest_level
-                metadata_gdf.loc[metadata_gdf["SC_NAAM"] == x_name, "BUW_HMAX"] = max_breach_wlev_upstream_list[0]
-                metadata_gdf.loc[metadata_gdf["SC_NAAM"] == x_name, "BES_3Di_RE"] = relative_path
-                metadata_gdf.loc[metadata_gdf["SC_NAAM"] == x_name, "DBR_VTOT"] = vol_max
-                metadata_gdf.loc[metadata_gdf["SC_NAAM"] == x_name, "SC_IDENT"] = simulation_id
-                metadata_gdf.loc[metadata_gdf["SC_NAAM"] == x_name, "ID"] = breach_id
-                metadata_gdf.loc[metadata_gdf["SC_NAAM"] == x_name, "SC_DATE"] = simuatlion_started
-                metadata_gdf.loc[metadata_gdf["SC_NAAM"] == x_name, "MOD_VERSIE"] = model_versie
+                metadata_gdf.loc[metadata_gdf["SC_NAAM"] == name, "DBR_BR_MAX"] = breach_width_max
+                metadata_gdf.loc[metadata_gdf["SC_NAAM"] == name, "DBR_BRESDI"] = max_breach_depth
+                metadata_gdf.loc[metadata_gdf["SC_NAAM"] == name, "DBR_QMAX"] = breach_qmax
+                metadata_gdf.loc[metadata_gdf["SC_NAAM"] == name, "MOD_DATE"] = mod_date
+                metadata_gdf.loc[metadata_gdf["SC_NAAM"] == name, "MOD_START"] = log_start_datum
+                metadata_gdf.loc[metadata_gdf["SC_NAAM"] == name, "MOD_EIND"] = log_end_datum
+                metadata_gdf.loc[metadata_gdf["SC_NAAM"] == name, "MOD_REKEND"] = log_total_time
+                metadata_gdf.loc[metadata_gdf["SC_NAAM"] == name, "MOD_SIM_ST"] = simulation_start
+                metadata_gdf.loc[metadata_gdf["SC_NAAM"] == name, "MOD_SIM_EI"] = simulation_end
+                metadata_gdf.loc[metadata_gdf["SC_NAAM"] == name, "MOD_SIM_DU"] = sim_duur
+                metadata_gdf.loc[metadata_gdf["SC_NAAM"] == name, "DBR_LOW_CR"] = low_crest_level
+                metadata_gdf.loc[metadata_gdf["SC_NAAM"] == name, "BUW_HMAX"] = max_breach_wlev_upstream
+                metadata_gdf.loc[metadata_gdf["SC_NAAM"] == name, "BES_3Di_RE"] = relative_path
+                metadata_gdf.loc[metadata_gdf["SC_NAAM"] == name, "DBR_VTOT"] = vol_max
+                metadata_gdf.loc[metadata_gdf["SC_NAAM"] == name, "SC_IDENT"] = simulation_id
+                metadata_gdf.loc[metadata_gdf["SC_NAAM"] == name, "ID"] = breach_id
+                metadata_gdf.loc[metadata_gdf["SC_NAAM"] == name, "SC_DATE"] = simuatlion_started
+                metadata_gdf.loc[metadata_gdf["SC_NAAM"] == name, "MOD_VERSIE"] = model_versie
 
                 metadata_gdf.to_file(metadata_path, driver="Shapefile")
 
-                scenario_done.append(path)
-                print(f"metadta fill for scenario {x_name}")
+                scenario_done.append(scenario_path)
+                print(f"metadta fill for scenario {name}")
 
 
 # %%
 if __name__ == "__main__":
     metadata_path = (
-        r"E:\03.resultaten\Overstromingsberekeningen primaire doorbraken 2024\metadata\v7\metadata_shapefile.shp"
+        r"E:\03.resultaten\Overstromingsberekeningen primaire doorbraken 2024\metadata\v5\metadata_shapefile.shp"
     )
-    output_folder = r"E:\03.resultaten\Overstromingsberekeningen primaire doorbraken 2024\output"
+    output_folder = r"E:\03.resultaten\Overstromingsberekeningen primaire doorbraken 2024\output\test"
 
     # if there is a region to skip, type the name of thre region/modell within the list.
     skip_region = ["ROR PRI - dijktraject 13-5 - special"]
