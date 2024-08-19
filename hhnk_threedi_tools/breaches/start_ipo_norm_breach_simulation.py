@@ -3,14 +3,15 @@
 # Importing
 import datetime
 import os
+import time
+from pathlib import Path
+
+import find_upstream_links_to_breach_short as fulb_short
 import geopandas as gpd
 import hhnk_research_tools as hrt
-from threedi_api_client.openapi import ApiException
 from threedi_api_client.api import ThreediApi
+from threedi_api_client.openapi import ApiException
 from threedi_api_client.versions import V3Api
-import time
-import find_upstream_links_to_breach_short as fulb_short
-from pathlib import Path
 
 
 # Loggin code.
@@ -29,7 +30,9 @@ def start_ipo_norm_breach_simulation(
     filter_id,
     wait_time,
 ):
-    api_keys_path = rf"{os.getenv('APPDATA')}\3Di\QGIS3\profiles\default\python\plugins\hhnk_threedi_plugin\api_key.txt"
+    api_keys_path = (
+        rf"{os.getenv('APPDATA')}\3Di\QGIS3\profiles\default\python\plugins\hhnk_threedi_plugin\api_key.txt"
+    )
 
     api_keys = hrt.read_api_file(api_keys_path)
     # Loggin code.
@@ -147,16 +150,12 @@ def start_ipo_norm_breach_simulation(
     my_model_revision = my_model.revision_number
 
     my_model_schema_id = my_model.schematisation_id
-    model_versie = (
-        f"Schematisation id {my_model_schema_id} - Revision #{my_model_revision}"
-    )
+    model_versie = f"Schematisation id {my_model_schema_id} - Revision #{my_model_revision}"
 
     print("model id:", my_model_id, " rev: ", my_model_revision)
 
     # Find the breaches in the model
-    potential_breaches = api_client.threedimodels_potentialbreaches_list(
-        my_model.id, limit=9999
-    )
+    potential_breaches = api_client.threedimodels_potentialbreaches_list(my_model.id, limit=9999)
     number_breaches = potential_breaches.count
 
     # locate the breach result that corresponds to the connected point id
@@ -194,15 +193,11 @@ def start_ipo_norm_breach_simulation(
                 upstream_data = b
 
         # set up name of simulation
-        simulation_name_new = (
-            simulation_name + "_" + str(breach.connected_pnt_id) + modeller_initial
-        )
+        simulation_name_new = simulation_name + "_" + str(breach.connected_pnt_id) + modeller_initial
 
         # Components of the simulation created. IS NOT RUNNING YET. See the status below
 
-        simulation_template = api_client.simulation_templates_list(
-            simulation__threedimodel__id=my_model_id
-        ).results[0]
+        simulation_template = api_client.simulation_templates_list(simulation__threedimodel__id=my_model_id).results[0]
         simulation = api_client.simulations_create(
             data={
                 "template": simulation_template.id,
@@ -222,22 +217,14 @@ def start_ipo_norm_breach_simulation(
         time.sleep(sleeptime)
 
         # Set up numerical setting
-        api_client.simulations_settings_time_step_create(
-            simulation_pk=simulation.id, data=time_step_settings
-        )
+        api_client.simulations_settings_time_step_create(simulation_pk=simulation.id, data=time_step_settings)
         time.sleep(sleeptime)
-        api_client.simulations_settings_numerical_create(
-            simulation_pk=simulation.id, data=numerical_setting
-        )
+        api_client.simulations_settings_numerical_create(simulation_pk=simulation.id, data=numerical_setting)
         time.sleep(sleeptime)
-        api_client.simulations_settings_physical_create(
-            simulation_pk=simulation.id, data=physical_settings
-        )
+        api_client.simulations_settings_physical_create(simulation_pk=simulation.id, data=physical_settings)
         time.sleep(sleeptime)
         for a in aggregation_settings:
-            api_client.simulations_settings_aggregation_create(
-                simulation_pk=simulation.id, data=a
-            )
+            api_client.simulations_settings_aggregation_create(simulation_pk=simulation.id, data=a)
             time.sleep(sleeptime)
 
         # Set breach event open
@@ -294,13 +281,9 @@ def start_ipo_norm_breach_simulation(
             "scenario_name": simulation_name_new,
             "process_basic_results": True,
         }
-        api_client.simulations_results_post_processing_lizard_basic_create(
-            simulation.id, data=basic_processing_data
-        )
+        api_client.simulations_results_post_processing_lizard_basic_create(simulation.id, data=basic_processing_data)
         time.sleep(sleeptime)
-        api_client.simulations_results_post_processing_lizard_arrival_create(
-            simulation_pk=simulation.id, data={}
-        )
+        api_client.simulations_results_post_processing_lizard_arrival_create(simulation_pk=simulation.id, data={})
 
         time.sleep(sleeptime)
 
@@ -321,18 +304,10 @@ def start_ipo_norm_breach_simulation(
         datum_str = datetime.datetime.now().date().strftime("%d-%m-%y")
 
         # update metadata
-        metadata_gdf.loc[metadata_gdf["SC_NAAM"] == simulation_name_new, "SC_IDENT"] = (
-            simulation.id
-        )
-        metadata_gdf.loc[metadata_gdf["SC_NAAM"] == simulation_name_new, "ID"] = (
-            breach.line_id
-        )
-        metadata_gdf.loc[metadata_gdf["SC_NAAM"] == simulation_name_new, "SC_DATE"] = (
-            datum_str
-        )
-        metadata_gdf.loc[
-            metadata_gdf["SC_NAAM"] == simulation_name_new, "MOD_VERSIE"
-        ] = model_versie
+        metadata_gdf.loc[metadata_gdf["SC_NAAM"] == simulation_name_new, "SC_IDENT"] = simulation.id
+        metadata_gdf.loc[metadata_gdf["SC_NAAM"] == simulation_name_new, "ID"] = breach.line_id
+        metadata_gdf.loc[metadata_gdf["SC_NAAM"] == simulation_name_new, "SC_DATE"] = datum_str
+        metadata_gdf.loc[metadata_gdf["SC_NAAM"] == simulation_name_new, "MOD_VERSIE"] = model_versie
 
         metadata_gdf.to_file(metadata_path, driver="Shapefile")
 
@@ -347,9 +322,7 @@ def start_ipo_norm_breach_simulation(
             ).count
             if queue_length_bwn < 2:
                 queue_jam_bwn = False
-                api_client.simulations_actions_create(
-                    simulation.id, data={"name": "queue"}
-                )
+                api_client.simulations_actions_create(simulation.id, data={"name": "queue"})
                 print(f"{simulation_name_new} is queued with id {simulation.id}")
             else:
                 print("wait", wait_time, "s")
@@ -389,9 +362,7 @@ if __name__ == "__main__":
     filter_id = [50, 80]
 
     # location of the metadata file. Important to have at least 2 version: One for uploading and run model and the other one for downloading.
-    metadata_path = Path(
-        r"E:\03.resultaten\Normering Regionale Keringen\metadata\test\metadata_shapefile.shp"
-    )
+    metadata_path = Path(r"E:\03.resultaten\Normering Regionale Keringen\metadata\test\metadata_shapefile.shp")
 
     # Time (in seconds) to wait until the script tries again to upload a model. We use it to not overload the API.
     wait_time = 3600  # 1  hour
