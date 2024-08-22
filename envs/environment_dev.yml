@@ -38,6 +38,7 @@ dependencies:
   
   - rioxarray # for raster speed improvements
   - dask
+  - oracledb
 
   - pip: # 3Di packages are not conda installable and are therefore installed by PIP
     - threedi_modelchecker==2.4.0 #ThreediToolbox 2.5.5
