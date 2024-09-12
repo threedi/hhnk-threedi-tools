@@ -55,30 +55,34 @@ def create_landuse_polder_clip(
             landuse_vrt = hrt.Folder(tmpdirname).full_path(f"landuse_{landuse_name}.vrt")
 
             # Build landuse vrt
-            landuse_vrt.build_vrt(overwrite=False, bounds=dem.metadata.bbox_gdal, input_files=[landuse_hhnk])
+            hrt.Raster.build_vrt(
+                vrt_out=landuse_vrt, input_files=[landuse_hhnk], overwrite=False, bounds=dem.metadata.bbox_gdal
+            )
 
             # Lazy load rasters
-            dem_rxr = rxr.open_rasterio(dem.base, chunks={"x": CHUNKSIZE, "y": CHUNKSIZE})
-            lu_rxr = rxr.open_rasterio(landuse_vrt.base, chunks={"x": CHUNKSIZE, "y": CHUNKSIZE})
+            # dem_rxr = rxr.open_rasterio(dem.base, chunks={"x": CHUNKSIZE, "y": CHUNKSIZE})
+            # lu_rxr = rxr.open_rasterio(landuse_vrt.base, chunks={"x": CHUNKSIZE, "y": CHUNKSIZE})
+
+            dem_rxr = dem.open_rxr()
+            lu_rxr = landuse_vrt.open_rxr()
 
             # Burn dem nodata into landuse
             result = lu_rxr.where(dem_rxr != dem_rxr.rio.nodata, lu_rxr.rio.nodata)
 
-            # Write to file
-            result.rio.to_raster(
-                landuse_tif.base,
-                chunks={"x": CHUNKSIZE, "y": CHUNKSIZE},
-                compress="ZSTD",
-                tiled=True,
-                PREDICTOR=2,
-                ZSTD_LEVEL=1,
+            hrt.Raster.write(
+                raster_out=landuse_tif.base,
+                result=result,
+                nodata=None,
                 dtype="int16",
+                scale_factor=None,
             )
+
         print(f"{landuse_tif.name} created")
-        return landuse_tif, True
+        created = True
     else:
         print(f"{landuse_tif.name} already on system")
-        return landuse_tif, False
+        created = False
+    return landuse_tif, created
 
 
 # %%
