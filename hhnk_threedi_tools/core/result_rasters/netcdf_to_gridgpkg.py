@@ -7,7 +7,6 @@ import geopandas as gpd
 import hhnk_research_tools as hrt
 import numpy as np
 import pandas as pd
-from matplotlib.widgets import EllipseSelector
 from shapely.geometry import box
 
 from hhnk_threedi_tools.core.folders import Folders

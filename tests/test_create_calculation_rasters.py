@@ -17,8 +17,8 @@ def test_create_calculation_rasters():
 
     dmg_dem = create_calculation_rasters.DamageDem.from_folder(
         folder=FOLDER_TEST,
-        panden_raster=hrt.RasterV2(TEMP_DIR.joinpath(f"panden_{hrt.get_uuid()}.tif")),
-        damage_dem=hrt.RasterV2(TEMP_DIR.joinpath(f"damage_dem_50cm_{hrt.get_uuid()}.tif")),
+        panden_raster=hrt.Raster(TEMP_DIR.joinpath(f"panden_{hrt.get_uuid()}.tif")),
+        damage_dem=hrt.Raster(TEMP_DIR.joinpath(f"damage_dem_50cm_{hrt.get_uuid()}.tif")),
     )
 
     dmg_dem.create()

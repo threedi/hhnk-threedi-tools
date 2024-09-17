@@ -39,9 +39,7 @@ class DamageDem:
         if self.dem.metadata.x_res == 0.5:
             self.highres_dem = self.dem
         else:
-            self.highres_dem = hrt.RasterV2(
-                hrt.Folder(self.damage_dem.parent).full_path(f"{self.dem.stem}_50cm.tif")
-            )  # TODO RasterV2 moet hier weg als folder de juiste tertuggeeft
+            self.highres_dem = hrt.Folder(self.damage_dem.parent).full_path(f"{self.dem.stem}_50cm.tif")
 
     @classmethod
     def from_folder(cls, folder: Folders, dem=None, panden_gpkg=None, panden_raster=None, damage_dem=None):
@@ -82,7 +80,7 @@ class DamageDem:
         if overwrite:
             # create highres dem if it doesn't exist
             if not self.highres_dem.exists():
-                hrt.reproject(src=self.dem, target_res=0.5, output_path=self.highres_dem.path)
+                hrt.Raster.reproject(src=self.dem, dst=self.highres_dem, target_res=0.5)
 
             # create panden_raster if it doesn't exist
             if not self.panden_raster.exists():
@@ -94,6 +92,7 @@ class DamageDem:
                     raster_out=self.panden_raster,
                     nodata=0,
                     metadata=self.highres_dem.metadata,
+                    overwrite=True,
                 )
 
             # Create damage dem
@@ -102,7 +101,7 @@ class DamageDem:
 
             result = dem + pand.fillna(0)
 
-            hrt.RasterV2.write(
+            hrt.Raster.write(
                 raster_out=self.damage_dem,
                 result=result,
                 nodata=self.highres_dem.nodata,
@@ -113,3 +112,15 @@ class DamageDem:
 
         else:
             print(f"{self.damage_dem.view_name_with_parents(2)} already exists")
+
+
+# %%
+if __name__ == "__main__":
+    from tests.config import FOLDER_TEST, TEMP_DIR
+
+    self = dmg_dem = DamageDem.from_folder(
+        folder=FOLDER_TEST,
+        panden_raster=hrt.Raster(TEMP_DIR.joinpath(f"panden_{hrt.get_uuid()}.tif")),
+        damage_dem=hrt.Raster(TEMP_DIR.joinpath(f"damage_dem_50cm_{hrt.get_uuid()}.tif")),
+    )
+    dmg_dem.create()
