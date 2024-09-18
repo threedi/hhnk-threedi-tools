@@ -21,10 +21,10 @@ now = time.time()
 
 interpolator = get_interpolator(grid_gdf, wlvl_column, NO_DATA_VALUE)
 
-grid_to_level = GridToWaterLevel(dem_path, grid_gdf=grid_gdf, wlvl_column=wlvl_column)
-level_file = grid_to_level.run(output_file=dem_path.with_name("level.tif"), overwrite=True)
+with GridToWaterLevel(dem_path, grid_gdf=grid_gdf, wlvl_column=wlvl_column) as grid_to_level:
+    wlvl_file = grid_to_level.run(output_file=dem_path.with_name("level.tif"), overwrite=True)
 
-grid_to_depth = GridToWaterDepth(dem_path, wlvl_path=level_file.path)
-depth_file = grid_to_depth.run(output_file=dem_path.with_name("depth.tif"), overwrite=True)
+with GridToWaterDepth(dem_path, wlvl_path=wlvl_file.path) as grid_to_water_depth:
+    depth_file = grid_to_water_depth.run(output_file=dem_path.with_name("depth.tif"), overwrite=True)
 
 # %%

@@ -245,14 +245,25 @@ class GridToWaterLevel:
         self.wlvl_column = wlvl_column
         self.wlvl_raster = None
         self._interpolator = None
+        self._delaunay_grid_gdf = None
 
     @property
     def interpolator(self):
+        """2D Delaunay interpolator"""
         if self._interpolator is None:
             self._interpolator = get_interpolator(
                 grid_gdf=self.grid_gdf, wlvl_column=self.wlvl_column, no_data_value=NO_DATA_VALUE
             )
         return self._interpolator
+
+    @property
+    def delaunay_grid_gdf(self):
+        """Grid voor Delaunay interpolator als GeoDataFrame"""
+        if self._delaunay_grid_gdf is None:
+            self._delaunay_grid_gdf = get_delaunay_grid(
+                grid_gdf=self.grid_gdf, wlvl_column=self.wlvl_column, no_data_value=self.wlvl_column
+            )
+        return self._delaunay_grid_gdf
 
     def run(self, output_file, chunksize: Union[int, None] = None, overwrite: bool = False):
         # level block_calculator
@@ -291,12 +302,14 @@ class GridToWaterLevel:
         return self.wlvl_raster
 
     def __enter__(self):
-        """With GridToRaster(**args) as x. will call this func."""
+        """With GridToWaterLevel(**args) as x. will call this func."""
         self._interpolator = None
+        self._delaunay_grid_gdf = None
         return self
 
     def __exit__(self, *args):
         self._interpolator = None
+        self._delaunay_grid_gdf = None
 
 
 class GridToWaterDepth:
@@ -345,6 +358,13 @@ class GridToWaterDepth:
             self.depth_raster.write(output_file, result=result, nodata=0, chunksize=chunksize)
 
         return self.depth_raster
+
+    def __enter__(self):
+        """With GridToWaterDepth(**args) as x. will call this func."""
+        return self
+
+    def __exit__(self, *args):
+        pass
 
 
 if __name__ == "__main__":
