@@ -333,14 +333,6 @@ class GridToWaterDepth:
             )
 
     def run(self, output_file, chunksize: Union[int, None] = None, overwrite: bool = False):
-        # level block_calculator
-        def calc_depth(_, dem_da, level_da):
-            depth_da = level_da - dem_da
-
-            depth_da = xr.where(depth_da < 0, 0, depth_da)
-
-            return depth_da
-
         # get dem as xarray
         dem = self.dem_raster.open_rxr(chunksize)
         level = self.wlvl_raster.open_rxr(chunksize)
@@ -351,10 +343,8 @@ class GridToWaterDepth:
 
         if create:
             # create empty result array
-            result = xr.full_like(dem, 0)
-
-            result = xr.map_blocks(calc_depth, obj=result, args=[dem, level], template=result)
-
+            result = level - dem
+            result.where(result < 0, 0)
             self.depth_raster.write(output_file, result=result, nodata=0, chunksize=chunksize)
 
         return self.depth_raster
