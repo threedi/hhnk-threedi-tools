@@ -34,12 +34,14 @@ def test_create_storage_raster():
         overwrite=overwrite,
     )
 
-    statistics = output_raster.statistics(approx_ok=False)
+    statistics = output_raster.statistics()
 
-    assert statistics["min"] == 0.0
-    assert statistics["max"] == 0.14029
-    assert statistics["mean"] == 0.052926
-    assert statistics["std"] == 0.026567
+    assert statistics == {
+        "min": 0.0,
+        "max": 0.14029,
+        "mean": 0.052926,
+        "std": 0.026567,
+    }
 
 
 # %%

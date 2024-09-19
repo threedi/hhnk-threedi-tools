@@ -182,7 +182,7 @@ if __name__ == "__main__":
 
     # %%
 
-    assert output_raster.statistics(approx_ok=False) == {
+    assert output_raster.statistics() == {
         "min": 0.0,
         "max": 0.14029,
         "mean": 0.024702,

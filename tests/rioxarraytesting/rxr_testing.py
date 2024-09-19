@@ -158,7 +158,7 @@ def rxr_calc_scaled_raster():
 
 %timeit rxr_calc_scaled_raster()
 
-assert depth_rxr.statistics(approve_ok=False) == SETUPS[SETUP]["statistics"]
+assert depth_rxr.statistics() == SETUPS[SETUP]["statistics"]
 
 
 # %%
@@ -201,7 +201,7 @@ def rxr_map_blocks():
 
 %timeit rxr_map_blocks()
 
-assert depth_rxr_block.statistics(approve_ok=False) == SETUPS[SETUP]["statistics"]
+assert depth_rxr_block.statistics() == SETUPS[SETUP]["statistics"]
 # %%
 
 
@@ -243,6 +243,6 @@ def hrt_rastercalculator():
 
 hrt_rastercalculator()
 
-assert depth_hrt.statistics(approve_ok=False) == SETUPS[SETUP]["statistics"]
+assert depth_hrt.statistics() == SETUPS[SETUP]["statistics"]
 
 # %%
