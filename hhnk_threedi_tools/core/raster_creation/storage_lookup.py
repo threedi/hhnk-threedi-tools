@@ -103,4 +103,12 @@ def create_storage_lookup(rootzone_thickness_cm, storage_unsa_sim_path=None) -> 
                 }
             )
 
-    return pd.DataFrame(storage_lookup_dict)
+    storage_lookup_df = pd.DataFrame(storage_lookup_dict)
+    soil_lookup_df = storage_lookup_df.groupby("Soil Type").agg(
+        {
+            "Dewathering Depth (m)": list,
+            "Total Available Storage (m)": lambda x: list(round(x, 5)),
+        }
+    )
+
+    return storage_lookup_df, soil_lookup_df

@@ -288,8 +288,7 @@ class GridToWaterLevel:
         dem = self.dem_raster.open_rxr(chunksize)
 
         # init result raster
-        self.wlvl_raster = hrt.Raster(output_file, chunksize=chunksize)
-        create = hrt.check_create_new_file(output_file=self.wlvl_raster.path, overwrite=overwrite)
+        create = hrt.check_create_new_file(output_file=output_file, overwrite=overwrite)
 
         if create:
             # create empty result array
@@ -297,7 +296,7 @@ class GridToWaterLevel:
 
             result = xr.map_blocks(calc_level, obj=result, args=[dem, self.interpolator], template=result)
 
-            self.wlvl_raster.write(output_file, result=result, nodata=dem.rio.nodata, chunksize=chunksize)
+            self.wlvl_raster = hrt.Raster.write(output_file, result=result, nodata=dem.rio.nodata, chunksize=chunksize)
 
         return self.wlvl_raster
 
