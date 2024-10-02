@@ -470,7 +470,7 @@ class NetcdfToGPKG:
             if wlvl_correction:
                 grid_gdf = self.correct_waterlevels(grid_gdf=grid_gdf, timesteps_seconds=timesteps_seconds)
             # Save to file
-            grid_gdf.to_file(str(output_file), engine="pyogrio")
+            grid_gdf.to_file(output_file.path, engine="pyogrio")
 
 
 # %%

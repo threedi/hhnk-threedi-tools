@@ -60,7 +60,7 @@ def maak_schade_polygon(
                 poly_gdf,
                 value_field="val",
                 raster_out="",
-                nodata=0,
+                nodata=9999,
                 metadata=meta,
                 epsg=28992,
                 driver="MEM",
