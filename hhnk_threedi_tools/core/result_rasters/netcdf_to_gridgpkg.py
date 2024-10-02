@@ -452,6 +452,7 @@ class NetcdfToGPKG:
 
         if output_file is None:
             output_file = self.output_default
+        output_file = hrt.FileGDB(output_file)
 
         create = hrt.check_create_new_file(output_file=output_file, overwrite=overwrite)
         if create:
