@@ -145,7 +145,7 @@ this is not implemented or tested if it works."
 
     def run(self, rootzone_thickness_cm: int, chunksize: Union[int, None] = None, overwrite: bool = False):
         # level block_calculator
-        def calc_storage(da_storage, dewa_da, soil_da, mask_nodata, mask_zero, soil_lookup_df):
+        def calc_storage(da_storage, da_dewa, da_soil, mask_nodata, mask_zero, nodata):
             """
             Calculate storage for a single raster block.
 
@@ -158,34 +158,38 @@ this is not implemented or tested if it works."
             """
             # Iterate over all soil types
             # for soil_type in np.unique(storage_lookup_df['Soil Type']):
-            unique_soil_types = np.unique(soil_lookup_df.index)
-            for soil_type in np.unique(soil_da):
-                if soil_type not in unique_soil_types:
-                    print(f"Soil type {soil_type} not found in soil_lookup_df")
-                    continue
+            soil_lookup_df = self.soil_lookup_df
+            if True:
+                for soil_type in np.unique(da_soil):
+                    if soil_type not in self.soil_lookup_df.index:
+                        print(f"Soil type {soil_type} not found in soil_lookup_df")
+                        continue
 
-                soil_mask = soil_da == soil_type
+                    soil_mask = xr.where(da_soil == soil_type, True, False)
 
-                # Create list of dewateringdepths, corresponding total storage from capsim table.
-                # ontwateringsdiepte
-                # soil_idx = storage_lookup_df["Soil Type"] == soil_type
-                # xlist = np.round(
-                #     storage_lookup_df.loc[soil_idx, "Dewathering Depth (m)"].tolist(), 5
-                # )  # x = ontwateringsdiepte
-                # ylist = np.round(
-                #     storage_lookup_df.loc[soil_idx, "Total Available Storage (m)"].tolist(), 5
-                # )  # y = available storage #TODO dit 1x buiten de loop doen.
+                    # Create list of dewateringdepths, corresponding total storage from capsim table.
+                    # ontwateringsdiepte
+                    # soil_idx = storage_lookup_df["Soil Type"] == soil_type
+                    # xlist = np.round(
+                    #     storage_lookup_df.loc[soil_idx, "Dewathering Depth (m)"].tolist(), 5
+                    # )  # x = ontwateringsdiepte
+                    # ylist = np.round(
+                    #     storage_lookup_df.loc[soil_idx, "Total Available Storage (m)"].tolist(), 5
+                    # )  # y = available storage #TODO dit 1x buiten de loop doen.
 
-                xlist = soil_lookup_df.loc[soil_type, "Dewathering Depth (m)"]
-                ylist = soil_lookup_df.loc[soil_type, "Total Available Storage (m)"]
+                    xlist = soil_lookup_df.loc[soil_type, "Dewathering Depth (m)"]
+                    ylist = soil_lookup_df.loc[soil_type, "Total Available Storage (m)"]
 
-                # Determine the storage coefficient per pixel using the actual dewatering depth (dewadepth_arr[soil_mask])
-                # and the corresponding storage coefficient (ylist). Find values by interpolation.
-                da_storage[soil_mask] = np.interp(x=dewa_da[soil_mask], xp=xlist, fp=ylist)
+                    # Determine the storage coefficient per pixel using the actual dewatering depth (dewadepth_arr[soil_mask])
+                    # and the corresponding storage coefficient (ylist). Find values by interpolation.
+                    # da_storage[soil_mask] = np.interp(x=da_dewa[soil_mask], xp=xlist, fp=ylist)
+                    da_storage = xr.where(
+                        soil_mask, np.interp(x=da_dewa.where(soil_mask), xp=xlist, fp=ylist), da_storage
+                    )
 
-            # Apply nodata and zero values
-            da_storage = xr.where(mask_zero, 0, da_storage)
-            da_storage = xr.where(mask_nodata, nodata, da_storage)
+                # Apply nodata and zero values
+                da_storage = xr.where(mask_zero, 0, da_storage)
+                da_storage = xr.where(mask_nodata, nodata, da_storage)
 
             return da_storage
 
@@ -201,6 +205,8 @@ this is not implemented or tested if it works."
             da_soil = self.raster_paths_same_bounds["soil"].open_rxr(chunksize)
             da_gwlvl = self.raster_paths_same_bounds["gwlvl"].open_rxr(chunksize)
             da_dem = self.raster_paths_same_bounds["dem"].open_rxr(chunksize)
+
+            nodata = da_dem.rio.nodata
 
             da_dewa = da_dem - da_gwlvl
 
@@ -223,13 +229,12 @@ this is not implemented or tested if it works."
             result = xr.map_blocks(
                 calc_storage,
                 obj=da_storage,
-                args=[da_dewa, da_soil, mask_nodata, mask_zero, self.soil_lookup_df],
+                args=[da_dewa, da_soil, mask_nodata, mask_zero, nodata],
                 template=da_storage,
             )
 
-            self.raster_out = hrt.Raster.write(
-                self.raster_out, result=result, nodata=da_dem.rio.nodata, chunksize=chunksize
-            )
+            self.raster_out = hrt.Raster.write(self.raster_out, result=result, nodata=nodata, chunksize=chunksize)
+            return self.raster_out
 
 
 # %%
@@ -241,7 +246,6 @@ if __name__ == "__main__":
 
     folder_schema = FOLDER_TEST
 
-    output_raster = folder.storage
     overwrite = True
     nodata = -9999
     chunksize = None
