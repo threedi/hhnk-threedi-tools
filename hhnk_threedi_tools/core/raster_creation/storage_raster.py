@@ -42,13 +42,14 @@ class StorageRaster:
         self.verbose = verbose
 
         # Local vars
-        self.tempdir = tempdir
-        if tempdir is None:
-            self.tempdir = raster_out.parent.full_path(f"temp_{hrt.current_time(date=True)}")
-
+        self.storage_lookup_df = None  # Declared at .run
+        self.soil_lookup_df = None  # Declared at .run
         # If bounds of input rasters are not the same a temp vrt is created
         # The path to these files are stored here.
         self.raster_paths_same_bounds = self.raster_paths_dict.copy()
+        self.tempdir = tempdir
+        if tempdir is None:
+            self.tempdir = raster_out.parent.full_path(f"temp_{hrt.current_time(date=True)}")
 
     @property
     def metadata_raster(self) -> hrt.Raster:
@@ -74,12 +75,6 @@ class StorageRaster:
                 bounds[key] = r.metadata.bounds
         if error:
             raise FileNotFoundError(error)
-
-        # # nodata_keys and yesdata_dict are mutually exclusive.
-        # if self.yesdata_dict is not None:
-        #     for key in self.yesdata_dict:
-        #         if key in self.nodata_keys:
-        #             raise ValueError(f"Key:'{key}' not allowed to be passed to both yesdata_dict and nodata_keys.")
 
         # Check resolution
         if cont:
