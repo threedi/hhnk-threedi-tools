@@ -6,21 +6,12 @@ import hhnk_threedi_tools.core.raster_creation.storage_raster as storage_raster
 from tests.config import FOLDER_TEST, TEMP_DIR
 
 
-def test_create_storage_raster_rxr():
+def test_create_storage_raster():
     """Test create storage raster with rxr"""
     # %%
     folder_schema = FOLDER_TEST
 
     raster_out = hrt.Folder(TEMP_DIR).full_path(f"storage_glg_{hrt.get_uuid()}.tif")
-
-    rootzone_thickness_cm = 20  # cm
-
-    folder_schema = FOLDER_TEST
-
-    overwrite = True
-    nodata = -9999
-    chunksize = None
-
     raster_paths_dict = {
         "gwlvl": folder_schema.model.schema_base.rasters.gwlvl_glg,
         "dem": folder_schema.model.schema_base.rasters.dem,
@@ -29,6 +20,8 @@ def test_create_storage_raster_rxr():
     metadata_key = "soil"
     verbose = False
     tempdir = None
+
+    rootzone_thickness_cm = 20  # cm
 
     self = storage_raster.StorageRaster(
         raster_out=raster_out,
