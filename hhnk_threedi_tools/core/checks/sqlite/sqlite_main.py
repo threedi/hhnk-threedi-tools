@@ -194,7 +194,7 @@ class SqliteCheck:
 
     def run_dewatering_depth(self, overwrite=False):
         """
-        Compares initial water level from fixed drainage level areas with
+        Compare initial water level from fixed drainage level areas with
         surface level in DEM of model. Initial water level should mostly
         be below surface level.
         """

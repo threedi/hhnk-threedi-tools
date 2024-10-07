@@ -190,17 +190,22 @@ this is not implemented or tested if it works."
             da_dewa = da_dem - da_gwlvl
 
             # Create global no data masker
-            masks = {}
-            masks["dem"] = da_dem == da_dem.rio.nodata
-            masks["soil"] = da_soil == da_soil.rio.nodata
-            masks["gwlvl"] = da_gwlvl == da_gwlvl.rio.nodata
+            masks = {}  # FIXME als nodata == nan gaat dit niet op
+            masks["dem"] = da_dem == da_dem.rio.nodata  # FIXME
+            masks["soil"] = da_soil == da_soil.rio.nodata  # FIXME
+            masks["gwlvl"] = da_gwlvl == da_gwlvl.rio.nodata  # FIXME
+            da_nodatamasks = xr.concat(list(masks.values()), dim="condition")
+            da_mask_nodata = da_nodatamasks.any(dim="condition")
+
             mask_nodata = np.any([masks[i] for i in masks], 0)  # FIXME gaat dit goed met rxr?
 
-            # mask where out storage should be zero
+            # Mask where out storage should be zero
             zeromasks = {}
             zeromasks["dem_water"] = da_dem == 10  # TODO watervlakken?
             zeromasks["negative_dewa"] = da_dewa < 0
-            mask_zero = np.any([zeromasks[i] for i in zeromasks], 0)
+            # Stack the conditions into a single DataArray
+            da_zeromasks = xr.concat(list(zeromasks.values()), dim="condition")
+            da_mask_zero = da_zeromasks.any(dim="condition")
 
             da_storage = xr.full_like(da_dem, da_dem.rio.nodata)
 
@@ -208,7 +213,7 @@ this is not implemented or tested if it works."
             result = xr.map_blocks(
                 calc_storage,
                 obj=da_storage,
-                args=[da_dewa, da_soil, mask_nodata, mask_zero, nodata],
+                args=[da_dewa, da_soil, da_mask_nodata, da_mask_zero, nodata],
                 template=da_storage,
             )
 
