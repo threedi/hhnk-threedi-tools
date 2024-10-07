@@ -19,6 +19,7 @@ class StorageRaster:
         raster_out: hrt.Raster,
         raster_paths_dict: dict[str : hrt.Raster],
         metadata_key: str,
+        nodata_keys: list[str],
         verbose: bool = False,
         tempdir: hrt.Folder = None,
     ):
@@ -39,6 +40,7 @@ class StorageRaster:
         self.raster_out = raster_out
         self.raster_paths_dict = raster_paths_dict
         self.metadata_key = metadata_key
+        self.nodata_keys = nodata_keys
         self.verbose = verbose
 
         # Local vars
@@ -136,9 +138,27 @@ this is not implemented or tested if it works."
 
         self.raster_paths_same_bounds[raster_key] = output_raster
 
+    def get_nodatamasks(self, da):
+        """Create nodata masks of selected nodata_keys
+        Keys are passed with the nodata_keys variable.
+        """
+        nodatamasks = {}
+        if self.nodata_keys:
+            for key in self.nodata_keys:
+                nodata = da[key].rio.nodata
+                if np.isnan(nodata):
+                    nodatamasks[key] = da[key].isnull()
+                else:
+                    nodatamasks[key] == nodata
+
+            da_nodatamasks = xr.concat(list(nodatamasks.values()), dim="condition").any(dim="condition")
+        else:
+            da_nodatamasks = False
+        return da_nodatamasks
+
     def run(self, rootzone_thickness_cm: int, chunksize: Union[int, None] = None, overwrite: bool = False):
         # level block_calculator
-        def calc_storage(da_storage, da_dewa, da_soil, mask_nodata, mask_zero, nodata):
+        def calc_storage(da_storage, da_dewa, da_soil):
             """
             Calculate storage for a chunk.
             da_storage
@@ -166,10 +186,6 @@ this is not implemented or tested if it works."
                 # and the corresponding storage coefficient (ylist). Find values by interpolation.
                 da_storage = xr.where(soil_mask, np.interp(x=da_dewa.where(soil_mask), xp=xlist, fp=ylist), da_storage)
 
-            # Apply nodata and zero values
-            da_storage = xr.where(mask_zero, 0, da_storage)
-            da_storage = xr.where(mask_nodata, nodata, da_storage)
-
             return da_storage
 
         cont = self.verify(overwrite=overwrite)
@@ -181,43 +197,40 @@ this is not implemented or tested if it works."
             )
 
             # Load dataarrays
-            da_soil = self.raster_paths_same_bounds["soil"].open_rxr(chunksize)
-            da_gwlvl = self.raster_paths_same_bounds["gwlvl"].open_rxr(chunksize)
-            da_dem = self.raster_paths_same_bounds["dem"].open_rxr(chunksize)
+            da = {}
+            da_soil = da["soil"] = self.raster_paths_same_bounds["soil"].open_rxr(chunksize)
+            da_gwlvl = da["gwlvl"] = self.raster_paths_same_bounds["gwlvl"].open_rxr(chunksize)
+            da_dem = da["dem"] = self.raster_paths_same_bounds["dem"].open_rxr(chunksize)
 
             nodata = da_dem.rio.nodata
 
             da_dewa = da_dem - da_gwlvl
 
-            # Create global no data masker
-            masks = {}  # FIXME als nodata == nan gaat dit niet op
-            masks["dem"] = da_dem == da_dem.rio.nodata  # FIXME
-            masks["soil"] = da_soil == da_soil.rio.nodata  # FIXME
-            masks["gwlvl"] = da_gwlvl == da_gwlvl.rio.nodata  # FIXME
-            da_nodatamasks = xr.concat(list(masks.values()), dim="condition")
-            da_mask_nodata = da_nodatamasks.any(dim="condition")
-
-            mask_nodata = np.any([masks[i] for i in masks], 0)  # FIXME gaat dit goed met rxr?
+            # Create global no data mask
+            da_nodatamasks = self.get_nodatamasks(da=da)
 
             # Mask where out storage should be zero
             zeromasks = {}
             zeromasks["dem_water"] = da_dem == 10  # TODO watervlakken?
             zeromasks["negative_dewa"] = da_dewa < 0
             # Stack the conditions into a single DataArray
-            da_zeromasks = xr.concat(list(zeromasks.values()), dim="condition")
-            da_mask_zero = da_zeromasks.any(dim="condition")
+            da_zeromasks = xr.concat(list(zeromasks.values()), dim="condition").any(dim="condition")
 
             da_storage = xr.full_like(da_dem, da_dem.rio.nodata)
 
             # create empty result array
-            result = xr.map_blocks(
+            da_storage = xr.map_blocks(
                 calc_storage,
                 obj=da_storage,
-                args=[da_dewa, da_soil, da_mask_nodata, da_mask_zero, nodata],
+                args=[da_dewa, da_soil],
                 template=da_storage,
             )
 
-            self.raster_out = hrt.Raster.write(self.raster_out, result=result, nodata=nodata, chunksize=chunksize)
+            # Apply nodata and zero values
+            da_storage = xr.where(da_zeromasks, 0, da_storage)
+            da_storage = xr.where(da_nodatamasks, nodata, da_storage)
+
+            self.raster_out = hrt.Raster.write(self.raster_out, result=da_storage, nodata=nodata, chunksize=chunksize)
             return self.raster_out
 
 
@@ -240,14 +253,17 @@ if __name__ == "__main__":
         "dem": folder_schema.model.schema_base.rasters.dem,
         "soil": folder_schema.model.schema_base.rasters.soil,
     }
-    metadata_key = "soil"
+
     verbose = False
     tempdir = None
+    metadata_key = "soil"
+    nodata_keys = ["gwlvl", "dem", "soil"]
 
     self = StorageRaster(
         raster_out=raster_out,
         raster_paths_dict=raster_paths_dict,
         metadata_key=metadata_key,
+        nodata_keys=nodata_keys,
         verbose=verbose,
         tempdir=tempdir,
     )
