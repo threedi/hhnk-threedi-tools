@@ -13,7 +13,7 @@ from tests.config import FOLDER_TEST, TEMP_DIR
 building_dh = 0.1  # m. Soil starts 0.1m under building footprint. #TODO Wordt dit wel gebruikt? En zou dat moeten?
 
 
-class StorageRaster:
+class StorageRaster(hrt.RasterCalculatorRxr):
     def __init__(
         self,
         raster_out: hrt.Raster,
@@ -37,124 +37,19 @@ class StorageRaster:
             rasterpad naar gwlvl raster. Dit is het meetadataraster, op basis van deze
             extent maakt ie van de dem en soil een vrt. En output ook in deze extent.
         """
-        self.raster_out = raster_out
-        self.raster_paths_dict = raster_paths_dict
-        self.metadata_key = metadata_key
-        self.nodata_keys = nodata_keys
-        self.verbose = verbose
+
+        super().__init__(
+            raster_out=raster_out,
+            raster_paths_dict=raster_paths_dict,
+            nodata_keys=nodata_keys,
+            metadata_key=metadata_key,
+            verbose=verbose,
+            tempdir=tempdir,
+        )
 
         # Local vars
         self.storage_lookup_df = None  # Declared at .run
         self.soil_lookup_df = None  # Declared at .run
-        # If bounds of input rasters are not the same a temp vrt is created
-        # The path to these files are stored here.
-        self.raster_paths_same_bounds = self.raster_paths_dict.copy()
-        self.tempdir = tempdir
-        if tempdir is None:
-            self.tempdir = raster_out.parent.full_path(f"temp_{hrt.current_time(date=True)}")
-
-    @property
-    def metadata_raster(self) -> hrt.Raster:
-        """Raster of which metadata is used to create output."""
-        return self.raster_paths_dict[self.metadata_key]
-
-    def verify(self, overwrite: bool = False) -> bool:
-        """Verify if all inputs can be accessed and if they have the same bounds."""
-        cont = True
-
-        # Check if all input rasters have the same bounds
-        bounds = {}
-        error = None
-        for key, r in self.raster_paths_dict.items():
-            if cont:
-                if not isinstance(r, hrt.Raster):
-                    raise TypeError(f"{key}:{r} in raster_paths_dict is not of type hrt.Raster")
-                if not r.exists():
-                    print(f"Missing input raster key: {key} @ {r}")
-                    cont = False
-                    error = f"{key}: {r} does not exist"
-                    continue
-                bounds[key] = r.metadata.bounds
-        if error:
-            raise FileNotFoundError(error)
-
-        # Check resolution
-        if cont:
-            vrt_keys = []
-            for key, r in self.raster_paths_dict.items():
-                if r.metadata.pixelarea > self.metadata_raster.metadata.pixelarea:
-                    print(f"Resolution of {key} is not the same as metadataraster {self.metadata_key}, creating vrt")
-                    self.create_vrt(key)
-                    vrt_keys.append(key)
-                if r.metadata.pixelarea < self.metadata_raster.metadata.pixelarea:
-                    cont = False
-                    raise NotImplementedError(
-                        f"Resolution of {key} is smaller than metadataraster {self.metadata_key}, \
-this is not implemented or tested if it works."
-                    )
-
-        # Check bounds, if they are not the same as the metadata_raster, create a vrt
-        if cont:
-            for key, r in self.raster_paths_dict.items():
-                if r.metadata.bounds != self.metadata_raster.metadata.bounds:
-                    # Create vrt if it was not already created in resolution check
-                    if key not in vrt_keys:
-                        self.create_vrt(key)
-
-                    if self.verbose:
-                        print(f"{key} does not have same extent as {self.metadata_key}, creating vrt")
-
-        # Check if we should create new file
-        if cont:
-            if self.raster_out is not None:
-                cont = hrt.check_create_new_file(output_file=self.raster_out, overwrite=overwrite)
-                if cont is False:
-                    if self.verbose:
-                        print(f"Output raster already exists: {self.raster_out.name} @ {self.raster_out.path}")
-
-        return cont
-
-    def create_vrt(self, raster_key: str):
-        """Create vrt of input rasters with the extent of the metadata raster
-
-        Parameters
-        ----------
-        raster_key (str) : key in self.raster_paths_dict to create vrt from.
-        """
-        input_raster = self.raster_paths_dict[raster_key]
-
-        # Create temp output folder.
-        self.tempdir.mkdir()
-        output_raster = self.tempdir.full_path(f"{input_raster.stem}.vrt")
-        print(f"Creating temporary vrt; {output_raster.name} @ {output_raster}")
-
-        output_raster = hrt.Raster.build_vrt(
-            vrt_out=output_raster,
-            input_files=input_raster,
-            overwrite=True,
-            bounds=self.metadata_raster.metadata.bbox_gdal,
-            resolution=self.metadata_raster.metadata.pixel_width,
-        )
-
-        self.raster_paths_same_bounds[raster_key] = output_raster
-
-    def get_nodatamasks(self, da):
-        """Create nodata masks of selected nodata_keys
-        Keys are passed with the nodata_keys variable.
-        """
-        nodatamasks = {}
-        if self.nodata_keys:
-            for key in self.nodata_keys:
-                nodata = da[key].rio.nodata
-                if np.isnan(nodata):
-                    nodatamasks[key] = da[key].isnull()
-                else:
-                    nodatamasks[key] == nodata
-
-            da_nodatamasks = xr.concat(list(nodatamasks.values()), dim="condition").any(dim="condition")
-        else:
-            da_nodatamasks = False
-        return da_nodatamasks
 
     def run(self, rootzone_thickness_cm: int, chunksize: Union[int, None] = None, overwrite: bool = False):
         # level block_calculator
@@ -191,31 +86,31 @@ this is not implemented or tested if it works."
         cont = self.verify(overwrite=overwrite)
 
         if cont:
+            print("lets go")
             # Create/load lookup table to find available storage using dewa depth
             self.storage_lookup_df, self.soil_lookup_df = storage_lookup.create_storage_lookup(
                 rootzone_thickness_cm=rootzone_thickness_cm, storage_unsa_sim_path=None
             )
 
             # Load dataarrays
-            da = {}
-            da_soil = da["soil"] = self.raster_paths_same_bounds["soil"].open_rxr(chunksize)
-            da_gwlvl = da["gwlvl"] = self.raster_paths_same_bounds["gwlvl"].open_rxr(chunksize)
-            da_dem = da["dem"] = self.raster_paths_same_bounds["dem"].open_rxr(chunksize)
+            da_dict = {}
+            da_soil = da_dict["soil"] = self.raster_paths_same_bounds["soil"].open_rxr(chunksize)
+            da_gwlvl = da_dict["gwlvl"] = self.raster_paths_same_bounds["gwlvl"].open_rxr(chunksize)
+            da_dem = da_dict["dem"] = self.raster_paths_same_bounds["dem"].open_rxr(chunksize)
 
             nodata = da_dem.rio.nodata
 
             da_dewa = da_dem - da_gwlvl
 
             # Create global no data mask
-            da_nodatamasks = self.get_nodatamasks(da=da)
+            da_nodatamasks = self.get_nodatamasks(da_dict=da_dict)
 
             # Mask where out storage should be zero
             zeromasks = {}
             zeromasks["dem_water"] = da_dem == 10  # TODO watervlakken?
             zeromasks["negative_dewa"] = da_dewa < 0
             # Stack the conditions into a single DataArray
-            da_zeromasks = xr.concat(list(zeromasks.values()), dim="condition").any(dim="condition")
-
+            da_zeromasks = self.concat_masks(zeromasks)
             da_storage = xr.full_like(da_dem, da_dem.rio.nodata)
 
             # create empty result array
@@ -232,6 +127,8 @@ this is not implemented or tested if it works."
 
             self.raster_out = hrt.Raster.write(self.raster_out, result=da_storage, nodata=nodata, chunksize=chunksize)
             return self.raster_out
+        else:
+            print("Cont is False")
 
 
 # %%
@@ -268,4 +165,4 @@ if __name__ == "__main__":
         tempdir=tempdir,
     )
 
-    self.run(rootzone_thickness_cm=rootzone_thickness_cm)
+    o = self.run(rootzone_thickness_cm=rootzone_thickness_cm)
