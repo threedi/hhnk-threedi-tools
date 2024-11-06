@@ -20,10 +20,10 @@ if %errorlevel% neq 0 exit /b %errorlevel%
 REM make sure LFS is installed
 call git lfs install --force
 
-set path=%user_dir%\.gitattributes
+set path_file=%user_dir%\.gitattributes
 
 REM create an .gitattributes if not exists yet
-if not exist "%path%" (
+if not exist "%path_file%" (
     echo Creating .gitattributes file
     (
         echo *.nc filter=lfs diff=lfs merge=lfs -text
@@ -31,10 +31,10 @@ if not exist "%path%" (
         echo *.gpkg filter=lfs diff=lfs merge=lfs -text
         echo *.sqlite filter=lfs diff=lfs merge=lfs -text
         echo *.xlsx filter=lfs diff=lfs merge=lfs -text
-    ) > "%path%"
+    ) > "%path_file%"
 
-    git add "%path%"
-    git commit -m "Add .gitattributes file for LFS"
+    call git add "%path_file%"
+    call git commit -m "Add .gitattributes file for LFS"
 ) else (
     echo .gitattributes file already exists, make sure it contains the correct LFS filters
 )
