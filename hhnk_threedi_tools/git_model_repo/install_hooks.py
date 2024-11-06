@@ -75,7 +75,7 @@ def install_hooks(git_root_dir):
         for hook in hooks:
             install_git_hook(root, hook, script_cmd, windows=True)
 
-    if sys.platform in ["linux", "darwin"]:
+    elif sys.platform in ["linux", "darwin"]:
         script_sh = os.path.join(os.path.dirname(__file__), "bin", "linux", "run_hook.sh")
         script_sh = os.path.abspath(script_sh)
 
