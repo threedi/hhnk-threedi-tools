@@ -451,6 +451,7 @@ class NetcdfToGPKG:
 
         if output_file is None:
             output_file = self.output_default
+        output_file = hrt.FileGDB(output_file)
 
         create = hrt.check_create_new_file(output_file=output_file, overwrite=overwrite)
         if create:
@@ -469,7 +470,7 @@ class NetcdfToGPKG:
             if wlvl_correction:
                 grid_gdf = self.correct_waterlevels(grid_gdf=grid_gdf, timesteps_seconds=timesteps_seconds)
             # Save to file
-            grid_gdf.to_file(str(output_file), engine="pyogrio")
+            grid_gdf.to_file(output_file.path, engine="pyogrio")
 
 
 # %%
