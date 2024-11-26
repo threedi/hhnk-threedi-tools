@@ -12,7 +12,8 @@ import pandas as pd
 import requests
 from IPython.core.display import HTML
 from IPython.display import display
-from threedi_scenario_downloader import downloader as dl  # FIXME Zie #77 wanneer weg
+
+# from threedi_scenario_downloader import downloader as dl  # FIXME Zie #102
 from traitlets import Unicode
 
 import hhnk_threedi_tools.core.api.download_functions as download_functions
@@ -20,7 +21,8 @@ from hhnk_threedi_tools import Folders
 from hhnk_threedi_tools.core.api.calculation import Simulation
 
 # threedi
-# from hhnk_threedi_tools.external import downloader as dl
+from hhnk_threedi_tools.external import downloader as dl
+
 # Globals
 from hhnk_threedi_tools.variables.api_settings import (
     GROUNDWATER,
