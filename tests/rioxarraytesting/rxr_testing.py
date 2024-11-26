@@ -207,6 +207,7 @@ assert depth_rxr_block.statistics() == SETUPS[SETUP]["statistics"]
 
 # hrt rastercalculator
 def hrt_rastercalculator():
+    # TODO deze test zou naar hrt moeten (staat die ook al).
     now = time.time()
 
     def run_rtype_window(block):
