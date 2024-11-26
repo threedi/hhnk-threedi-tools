@@ -201,6 +201,7 @@ def create_threedimodel(schematisation, revision):
     threedimodel = hrt.call_threedi_api(
         func=threedi.api.schematisations_revisions_create_threedimodel,
         id=revision.id,
+        data={"inherit_from_previous_threedimodel": True, "inherit_from_previous_revision": False},
         schematisation_pk=schematisation.id,
     )
     print(f"Creating threedimodel with id {threedimodel.id}")

@@ -18,7 +18,7 @@ TEMP_DIR = TEMP_DIR.path
 for i in TEMP_DIR.iterdir():
     if i.is_dir:
         cont = False
-        for rmdir in ["batch_test", "test_project", "tmp_rasters", "temp_"]:
+        for rmdir in ["batch_test", "test_project", "tmp_rasters", "temp_", "storage_"]:
             if rmdir in str(i):
                 cont = True
 

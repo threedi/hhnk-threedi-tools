@@ -30,7 +30,7 @@ def test_schema_migration():
     migrate_schema = MigrateSchema(database_new)
     migrate_schema.run()
 
-    assert migrate_schema.schema.get_version() == 217
+    assert migrate_schema.schema.get_version() == 219
 
 
 # %%
