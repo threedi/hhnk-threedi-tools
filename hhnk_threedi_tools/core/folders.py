@@ -26,15 +26,17 @@ HDB = f"HDB{file_types_dict[GDB]}"
 POLDER_POLY = f"polder_polygon{file_types_dict[SHAPE]}"
 CHANNEL_FROM_PROFILES = f"channel_surface_from_profiles{file_types_dict[SHAPE]}"
 
-
 FOLDER_STRUCTURE = """
     Main Folders object
         ├── 01_source_data
         │ ├── DAMO.gpkg
+        │ ├── HyDAMO.gpkg
         │ ├── HDB.gpkg
         │ ├── datachecker_output.gpkg
         │ └── modelbuilder_output
         │     └── preprocessed
+        │ └── hydamo_validation
+        │     └── validation_result.gpkg       
         ├── 02_schematisation
         │ ├── rasters (include DEM)
         │ └── * model(.sqlite) *
@@ -152,6 +154,8 @@ class Folders(Folder):
         return {
             "datachecker": self.source_data.datachecker.path_if_exists,
             "damo": self.source_data.damo.path_if_exists,
+            "hydamo": self.source_data.hydamo.path_if_exists,
+            "validation_result": self.source_data.hydamo_validation.validation_result.path_if_exists,
             "hdb": self.source_data.hdb.path_if_exists,
             "polder_shapefile": self.source_data.polder_polygon.path_if_exists,
             "channels_shapefile": self.source_data.modelbuilder.channel_from_profiles.path_if_exists,
@@ -179,13 +183,14 @@ class Folders(Folder):
 
 
 class SourceDir(Folder):
-    """Path to source data (datachecker, DAMO, HDB)"""
+    """Path to source data (datachecker, DAMO, HyDAMO, HDB)"""
 
     def __init__(self, base, create):
         super().__init__(os.path.join(base, "01_source_data"), create)
 
         # Folders
         self.modelbuilder = self.ModelbuilderPaths(self.base, create=create)
+        self.hydamo_validation = self.HydamoValidationPaths(self.base, create=create)
         self.peilgebieden = self.PeilgebiedenPaths(self.base, create=create)
         self.wsa_output_administratie = self.WsaOutputAdministratie(self.base, create=create)
 
@@ -195,6 +200,8 @@ class SourceDir(Folder):
         # Files
         self.add_file("damo", "DAMO.gpkg")
         self.damo.add_layers(["DuikerSifonHevel", "waterdeel"])
+
+        self.add_file("hydamo", "HyDAMO.gpkg")
 
         self.add_file("hdb", "HDB.gpkg")
         self.hdb.add_layer("sturing_kunstwerken")
@@ -209,6 +216,7 @@ class SourceDir(Folder):
         readme_txt = (
             "Expected files are:\n\n"
             "Damo geopackage (*.gpkg) named 'DAMO.gpkg'\n"
+            "Hydamo geopackage (*.gpkg) named 'HyDAMO.gpkg'\n"
             "Datachecker geopackage (*.gpkg) named 'datachecker_output.gpkg'\n"
             "Hdb geopackage (*.gpkg) named 'HDB.gpkg'\n"
             "Folder named 'modelbuilder_output' and polder shapefile "
@@ -222,6 +230,7 @@ class SourceDir(Folder):
         return f"""  
                {self.space}01_source_data
                {self.space}└── modelbuilder
+               {self.space}└── hydamo_validation
                {self.space}└── peilgebieden
                {self.space}└── wsa_output_administratie
                
@@ -236,6 +245,11 @@ class SourceDir(Folder):
         def __init__(self, base, create):
             super().__init__(os.path.join(base, "modelbuilder_output"), create=create)
             self.add_file("channel_from_profiles", CHANNEL_FROM_PROFILES)
+
+    class HydamoValidationPaths(Folder):
+        def __init__(self, base, create):
+            super().__init__(os.path.join(base, "hydamo_validation"), create=create)
+            self.add_file("validation_result", "validation_result.gpkg")
 
     class PeilgebiedenPaths(Folder):
         # TODO deze map moet een andere naam en plek krijgen.
