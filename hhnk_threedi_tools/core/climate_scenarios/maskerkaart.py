@@ -23,21 +23,18 @@ fields "case_blok", "case_piek" and "case_final" added.
 NB: Some computation is done in RD, valid only in The Netherlands
 """
 
-from __future__ import division
-from __future__ import unicode_literals
+from __future__ import division, unicode_literals
 
 import argparse
 import logging
-import numpy as np
 import os
 import sys
 
-
-from osgeo import osr, ogr
+import numpy as np
+from osgeo import ogr, osr
 from scipy.sparse import coo_matrix
 from scipy.sparse.csgraph import connected_components
 from threedigrid.admin.gridresultadmin import GridH5ResultAdmin
-
 
 logger = logging.getLogger(__name__)
 
@@ -57,9 +54,7 @@ def filter_min_flow_area(lines, threshold, timestamp=None):
     """
     if timestamp is None:
         timestamp = lines.timestamps[-1]
-    data = (
-        lines.timeseries(start_time=timestamp, end_time=timestamp).only("id", "au").data
-    )
+    data = lines.timeseries(start_time=timestamp, end_time=timestamp).only("id", "au").data
     return data["id"][(data["au"] >= threshold).any(axis=0)]
 
 
@@ -78,21 +73,11 @@ def filter_max_gradient(lines, nodes, threshold, timestamp=None):
     """
     if timestamp is None:
         timestamp = lines.timestamps[-1]
-    line_data = (
-        lines.timeseries(start_time=timestamp, end_time=timestamp)
-        .only("id", "line")
-        .data
-    )
+    line_data = lines.timeseries(start_time=timestamp, end_time=timestamp).only("id", "line").data
     nodes_time = nodes.timeseries(start_time=timestamp, end_time=timestamp)
-    nodes_line = (
-        nodes_time.filter(id__in=line_data["line"].ravel()).only("id", "s1").data
-    )
-    s1_first = nodes_line["s1"][0][
-        np.searchsorted(nodes_line["id"], line_data["line"][0])
-    ]
-    s1_last = nodes_line["s1"][0][
-        np.searchsorted(nodes_line["id"], line_data["line"][1])
-    ]
+    nodes_line = nodes_time.filter(id__in=line_data["line"].ravel()).only("id", "s1").data
+    s1_first = nodes_line["s1"][0][np.searchsorted(nodes_line["id"], line_data["line"][0])]
+    s1_last = nodes_line["s1"][0][np.searchsorted(nodes_line["id"], line_data["line"][1])]
     # compute length by transforming to RD. valid only in The Netherlands
     coords = lines.reproject_to(28992).line_coords
     length = np.sqrt((coords[2] - coords[0]) ** 2 + (coords[3] - coords[1]) ** 2)
@@ -117,13 +102,9 @@ def filter_lines(gr, max_gradient, min_flow_area):
     lines_active = filter_min_flow_area(gr.lines, min_flow_area)
     lines_valid = filter_max_gradient(gr.lines, gr.nodes, max_gradient)
 
-    lines2d2d_valid = gr.lines.subset("2D_ALL").filter(
-        id__in=np.intersect1d(lines_valid, lines_active)
-    )
+    lines2d2d_valid = gr.lines.subset("2D_ALL").filter(id__in=np.intersect1d(lines_valid, lines_active))
     lines1d2d_active = gr.lines.subset("1D2D").filter(id__in=lines_active)
-    lines1d2d_valid = gr.lines.subset("1D2D").filter(
-        id__in=np.intersect1d(lines_valid, lines_active)
-    )
+    lines1d2d_valid = gr.lines.subset("1D2D").filter(id__in=np.intersect1d(lines_valid, lines_active))
     return lines2d2d_valid, lines1d2d_active, lines1d2d_valid
 
 
@@ -158,11 +139,9 @@ def classify_nodes(node_id_2d, groups, lines1d2d_active, lines1d2d_valid):
     # that have active 1D lines
     node_id_2d_active_1d = np.intersect1d(node_id_2d, lines1d2d_active.line.ravel())
     # that have valid 1D lines
-    node_id_2d_valid_1d = np.intersect1d(
-        node_id_2d_active_1d, lines1d2d_valid.line.ravel()
-    )
+    node_id_2d_valid_1d = np.intersect1d(node_id_2d_active_1d, lines1d2d_valid.line.ravel())
     # create boolean arrays for fast lookup
-    is2d = np.zeros(node_id_2d.max() + 1, dtype=np.bool)
+    is2d = np.zeros(node_id_2d.max() + 1, dtype=bool)
     is2d[node_id_2d] = True
     has1d_active = np.zeros_like(is2d)
     has1d_active[node_id_2d_active_1d] = True
@@ -249,9 +228,7 @@ def to_shape(cell_data, file_name, fields, epsg_code):
 def run_single(path, min_flow_area, max_gradient):
     logger.info("Analyzing scenario at {}".format(path))
 
-    gr = GridH5ResultAdmin(
-        os.path.join(path, GRIDADMIN_NAME), os.path.join(path, RESULTS_NAME)
-    )
+    gr = GridH5ResultAdmin(os.path.join(path, GRIDADMIN_NAME), os.path.join(path, RESULTS_NAME))
 
     lines2d2d_valid, lines1d2d_active, lines1d2d_valid = filter_lines(
         gr,
@@ -314,17 +291,13 @@ def command(path_piek, path_blok, path_out, min_flow_area=0.001, max_gradient=0.
 
     # logical operations to generate "case_final"
     cell_data["case_final"] = np.full(cell_data["id"].size, "", dtype="S10")
-    cell_data["case_final"][
-        (cell_data["case_blok"] == b"plas") | (cell_data["case_piek"] == b"plas")
-    ] = "plas"
-    cell_data["case_final"][
-        (cell_data["case_blok"] == b"overlast")
-        | (cell_data["case_piek"] == b"overlast")
-    ] = "overlast"
-    cell_data["case_final"][
-        (cell_data["case_blok"] == b"modelfout")
-        & (cell_data["case_piek"] == b"modelfout")
-    ] = "modelfout"
+    cell_data["case_final"][(cell_data["case_blok"] == b"plas") | (cell_data["case_piek"] == b"plas")] = "plas"
+    cell_data["case_final"][(cell_data["case_blok"] == b"overlast") | (cell_data["case_piek"] == b"overlast")] = (
+        "overlast"
+    )
+    cell_data["case_final"][(cell_data["case_blok"] == b"modelfout") & (cell_data["case_piek"] == b"modelfout")] = (
+        "modelfout"
+    )
 
     logger.info("Writing shapefile at {}...".format(path_out))
     to_shape(
@@ -348,16 +321,12 @@ def get_parser():
     parser.add_argument(
         "path_piek",
         help='Path to 3Di results that contain the "piek" simulation. The '
-        "files {} and {} have to be present in this directory.".format(
-            RESULTS_NAME, GRIDADMIN_NAME
-        ),
+        "files {} and {} have to be present in this directory.".format(RESULTS_NAME, GRIDADMIN_NAME),
     )
     parser.add_argument(
         "path_blok",
         help='Path to 3Di results that contain the "blok" simulation. The '
-        "files {} and {} have to be present in this directory.".format(
-            RESULTS_NAME, GRIDADMIN_NAME
-        ),
+        "files {} and {} have to be present in this directory.".format(RESULTS_NAME, GRIDADMIN_NAME),
     )
     parser.add_argument(
         "path_out",

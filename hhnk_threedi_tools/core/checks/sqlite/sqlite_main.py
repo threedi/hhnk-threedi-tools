@@ -5,30 +5,30 @@ Created on Tue Aug 24 14:11:45 2021
 
 @author: chris.kerklaan
 """
-# First-party imports
-import os
 
 # Third-party imports
-import numpy as np
+from pathlib import Path
+
+import fiona
 import geopandas as gpd
-import pandas as pd
-from shapely import wkt
-from shapely.geometry import Point
 
 # research-tools
 import hhnk_research_tools as hrt
-from hhnk_research_tools.variables import ESRI_DRIVER
-from pathlib import Path
-
-# Local imports
-from hhnk_threedi_tools.core.folders import Folders
+import numpy as np
+import pandas as pd
+from shapely import wkt
+from shapely.geometry import Point
 from threedigrid_builder import make_gridadmin
 
 from hhnk_threedi_tools.core.checks.sqlite.structure_control import StructureControl
 
+# Local imports
+from hhnk_threedi_tools.core.folders import Folders
+
 # queries
 from hhnk_threedi_tools.utils.queries import (
-    controlled_structures_query,
+    channels_query,
+    cross_section_location_query,
     geometry_check_query,
     impervious_surface_query,
     isolated_channels_query,
@@ -36,80 +36,70 @@ from hhnk_threedi_tools.utils.queries import (
     struct_channel_bed_query,
     watersurface_conn_node_query,
     weir_height_query,
-    cross_section_location_query,
-    channels_query,
 )
 from hhnk_threedi_tools.utils.queries_general_checks import ModelCheck
-
-# variables
-from hhnk_threedi_tools.variables.sqlite import (
-    watersurface_nodes_area,
-    watersurface_waterdeel_area,
-    watersurface_channels_area,
-    watersurface_model_area,
-    area_diff_col,
-    area_diff_perc,
-    down_has_assumption,
-    up_has_assumption,
-    height_inner_lower_down,
-    height_inner_lower_up,
-    datachecker_assumption_alias,
-    primary_col,
-    water_level_width_col,
-    max_depth_col,
-    length_in_meters_col,
+from hhnk_threedi_tools.variables.database_aliases import (
+    a_chan_bed_struct_code,
+    a_chan_bed_struct_id,
+    a_chan_id,
+    a_geo_end_coord,
+    a_geo_end_node,
+    a_geo_start_coord,
+    a_geo_start_node,
+    a_watersurf_conn_id,
+    a_weir_code,
+    a_weir_conn_node_end_id,
+    a_weir_conn_node_start_id,
+    a_weir_cross_loc_id,
+    a_zoom_cat,
+    df_geo_col,
 )
-from hhnk_threedi_tools.variables.weirs import (
-    min_crest_height,
-    diff_crest_ref,
-    wrong_profile,
-    new_ref_lvl,
+from hhnk_threedi_tools.variables.database_variables import (
+    action_col,
+    calculation_type_col,
+    code_col,
+    cross_sec_loc_layer,
+    height_col,
+    id_col,
+    initial_waterlevel_col,
+    reference_level_col,
+    storage_area_col,
+    width_col,
 )
-
+from hhnk_threedi_tools.variables.datachecker_variables import (
+    COL_STREEFPEIL_BWN,
+    geometry_col,
+    peil_id_col,
+)
 from hhnk_threedi_tools.variables.definitions import (
     DEM_MAX_VALUE,
     channels_isolated_calc_type,
 )
 
-from hhnk_threedi_tools.variables.database_variables import (
-    id_col,
-    calculation_type_col,
-    width_col,
-    height_col,
-    initial_waterlevel_col,
-    storage_area_col,
-    target_type_col,
-    reference_level_col,
-    cross_sec_loc_layer,
-    action_col,
-    weir_layer,
-    code_col,
+# variables
+from hhnk_threedi_tools.variables.sqlite import (
+    area_diff_col,
+    area_diff_perc,
+    datachecker_assumption_alias,
+    down_has_assumption,
+    height_inner_lower_down,
+    height_inner_lower_up,
+    length_in_meters_col,
+    max_depth_col,
+    primary_col,
+    up_has_assumption,
+    water_level_width_col,
+    watersurface_channels_area,
+    watersurface_model_area,
+    watersurface_nodes_area,
+    watersurface_waterdeel_area,
 )
-
-
-from hhnk_threedi_tools.variables.database_aliases import (
-    a_geo_end_coord,
-    a_geo_end_node,
-    a_geo_start_coord,
-    a_geo_start_node,
-    a_zoom_cat,
-    a_chan_bed_struct_id,
-    a_chan_bed_struct_code,
-    a_watersurf_conn_id,
-    a_weir_code,
-    a_weir_conn_node_start_id,
-    a_weir_conn_node_end_id,
-    a_weir_cross_loc_id,
-    a_chan_id,
-    df_geo_col,
+from hhnk_threedi_tools.variables.weirs import (
+    diff_crest_ref,
+    min_crest_height,
+    new_ref_lvl,
+    wrong_profile,
 )
-
-from hhnk_threedi_tools.variables.datachecker_variables import (
-    peil_id_col,
-    COL_STREEFPEIL_BWN,
-    geometry_col,
-)
-
 
 # Globals
 # controlled
@@ -150,42 +140,65 @@ class SqliteCheck:
         self.fenv = folder
 
         self.output_fd = self.fenv.output.sqlite_tests
-        
+
         self.model = self.fenv.model.schema_base.database
-        self.dem = hrt.Raster(self.fenv.model.schema_base.rasters.dem)
+        self.dem = self.fenv.model.schema_base.rasters.dem
         self.datachecker = self.fenv.source_data.datachecker
-        self.damo = self.fenv.source_data.damo.path
+        self.damo = self.fenv.source_data.damo
         self.channels_from_profiles = self.fenv.source_data.modelbuilder.channel_from_profiles
-        
+
         self.layer_fixeddrainage = self.fenv.source_data.datachecker.layers.fixeddrainagelevelarea
-        
+
+        # this dict we can populate with files and layers we can check using verify_inputs
+        self.inputs = {
+            "run_imp_surface_area": [{"file": self.fenv.source_data.polder_polygon.path, "layer": None}],
+            "run_struct_channel_bed_level": [{"file": self.fenv.source_data.damo.path}],
+        }
+
         self.results = {}
 
+    def verify_inputs(self, function):
+        """Check if the input of a function (if defined in self.inputs) exists."""
+        exist = True
+        # if function does not exist in self.inputs we can totally ignore this function
+        if function in self.inputs.keys():
+            for layer_input in self.inputs[function]:
+                # check if file doesn't exist
+                if not layer_input["file"].exists():
+                    exist = False
+
+                # optionally check if layer exists in file
+                elif "layer" in layer_input.keys():
+                    if layer_input["layer"] is not None:
+                        if layer_input["layer"] not in fiona.listlayers(layer_input["file"]):
+                            exist = False
+        return exist
 
     def run_controlled_structures(self, overwrite=False):
         """Create leayer with structure control in schematisation"""
-        self.structure_control = StructureControl(model=self.fenv.model.schema_base.database, 
-                            hdb_control_layer=self.fenv.source_data.hdb.layers.sturing_3di,
-                            output_file=self.fenv.output.sqlite_tests.gestuurde_kunstwerken.pl)
+        self.structure_control = StructureControl(
+            model=self.fenv.model.schema_base.database,
+            hdb_control_layer=self.fenv.source_data.hdb.layers.sturing_kunstwerken,
+            output_file=self.output_fd.gestuurde_kunstwerken.base,
+        )
         self.structure_control.run(overwrite=overwrite)
 
-
     def run_dem_max_value(self):
-        stats = self.dem.statistics(approve_ok=False, force=True)
-        if stats['max'] > DEM_MAX_VALUE:
+        stats = self.dem.statistics()
+        if stats["max"] > DEM_MAX_VALUE:
             result = f"Maximale waarde DEM: {stats['max']} is te hoog"
         else:
             result = f"Maximale waarde DEM: {stats['max']} voldoet aan de norm"
         self.results["dem_max_value"] = result
         return result
 
-
     def run_dewatering_depth(self, overwrite=False):
         """
         Compares initial water level from fixed drainage level areas with
-        surface level in DEM of model. Initial water level should mostly 
+        surface level in DEM of model. Initial water level should mostly
         be below surface level.
         """
+
         def _create_drooglegging_raster(self, windows, band_out, **kwargs):
             """hrt.Raster_calculator custom_run_window_function"""
             self.dem = self.raster1
@@ -194,79 +207,75 @@ class SqliteCheck:
             block_dem = self.dem._read_array(window=windows["raster1"])
             block_wlvl = self.wlvl._read_array(window=windows["raster2"])
 
-            #Calculate output
+            # Calculate output
             block_depth = np.subtract(block_dem, block_wlvl)
 
-            #Mask output
+            # Mask output
             nodatamask = (block_dem == self.dem.nodata) | (block_dem == 10)
             block_depth[nodatamask] = self.raster_out.nodata
 
-            #Get the window of the small raster
-            window_small = windows[[k for k,v in self.raster_mapping.items() if v=="small"][0]]
+            # Get the window of the small raster
+            window_small = windows[[k for k, v in self.raster_mapping.items() if v == "small"][0]]
 
             # Write to file
             band_out.WriteArray(block_depth, xoff=window_small[0], yoff=window_small[1])
 
         try:
             # Load layers
-            fixeddrainage_gdf = self.layer_fixeddrainage.load()
-            wlvl_raster = self.output_fd.streefpeil
             drooglegging_raster = self.output_fd.drooglegging
 
-            if drooglegging_raster.pl.exists():
-                if overwrite is False:
-                    return
-                else:
-                    drooglegging_raster.unlink_if_exists()
+            create = hrt.check_create_new_file(output_file=drooglegging_raster.path, overwrite=overwrite)
 
-            # Rasterize fixeddrainage
-            hrt.gdf_to_raster(
-                gdf=fixeddrainage_gdf,
-                value_field=COL_STREEFPEIL_BWN,
-                raster_out=wlvl_raster,
-                nodata=self.dem.nodata,
-                metadata=self.dem.metadata,
-                read_array=False,
-                overwrite=overwrite,
-            )
+            if create:
+                fixeddrainage_gdf = self.layer_fixeddrainage.load()
+                wlvl_raster = self.output_fd.streefpeil  # Rasterize fixeddrainage
+                hrt.gdf_to_raster(
+                    gdf=fixeddrainage_gdf,
+                    value_field=COL_STREEFPEIL_BWN,
+                    raster_out=wlvl_raster,
+                    nodata=self.dem.nodata,
+                    metadata=self.dem.metadata,
+                    read_array=False,
+                    overwrite=overwrite,
+                )
 
-            #Calculate drooglegging raster
-            drooglegging_calculator = hrt.RasterCalculator(
-                            raster1=self.dem, 
-                            raster2=wlvl_raster, 
-                            raster_out=drooglegging_raster, 
-                            custom_run_window_function=_create_drooglegging_raster,
-                            output_nodata=self.dem.nodata,
-                            verbose=False)
+                # Calculate drooglegging raster
+                drooglegging_calculator = hrt.RasterCalculator(
+                    raster1=self.dem,
+                    raster2=wlvl_raster,
+                    raster_out=drooglegging_raster,
+                    custom_run_window_function=_create_drooglegging_raster,
+                    output_nodata=self.dem.nodata,
+                    verbose=False,
+                )
 
-            drooglegging_calculator.run(overwrite=overwrite)
+                drooglegging_calculator.run(overwrite=overwrite)
 
-            #remove temp files
-            wlvl_raster.unlink_if_exists()
-            # self.results["dewatering_depth"] = output_file
+                # remove temp files
+                wlvl_raster.unlink(missing_ok=True)
+                # self.results["dewatering_depth"] = output_file
         except Exception as e:
             raise e from None
-    
 
     def run_model_checks(self):
         """
         Collects all queries that are part of general model checks (see general_checks_queries file)
         and executes them
         """
-        queries_lst = [item for item in vars(ModelCheck()).values()]
-        query = "UNION ALL\n".join(queries_lst)
-        db = self.model.execute_sql_selection(query=query)
 
-        self.results["model_checks"] = db
-        return db
+        df = self.model.execute_sql_selection(query=ModelCheck.get_query())
 
+        self.results["model_checks"] = df
+        return df
 
     def run_geometry_checks(self):
         """
         Deze test checkt of de geometrie van een object in het model correspondeert met de start- of end node in de
         v2_connection_nodes tafel. Als de verkeerde ids worden gebruikt geeft dit fouten in het model.
         """
-        gdf = self.model.execute_sql_selection(query=geometry_check_query,)
+        gdf = self.model.execute_sql_selection(
+            query=geometry_check_query,
+        )
 
         gdf["start_check"] = gdf[a_geo_start_node] == gdf[a_geo_start_coord]
         gdf["end_check"] = gdf[a_geo_end_node] == gdf[a_geo_end_coord]
@@ -278,21 +287,17 @@ class SqliteCheck:
         self.results["geometry_checks"] = result_db
         return result_db
 
-
     def run_imp_surface_area(self):
         """
         Calculates the impervious surface area (in the model), the area of the polder (based on the polder shapefile) and
         the difference between the two.
         """
         imp_surface_db = self.model.execute_sql_selection(impervious_surface_query)
-        imp_surface_db.set_index("id",inplace=True)
+        imp_surface_db.set_index("id", inplace=True)
 
-        
-        polygon_imp_surface = gpd.read_file(self.fenv.source_data.polder_polygon.path)
-        
-        db_surface, polygon_surface, area_diff = calc_surfaces_diff(
-            imp_surface_db, polygon_imp_surface
-        )
+        polygon_imp_surface = self.fenv.source_data.polder_polygon.load()
+
+        db_surface, polygon_surface, area_diff = calc_surfaces_diff(imp_surface_db, polygon_imp_surface)
         result_txt = (
             f"Totaal ondoorlatend oppervlak: {db_surface} ha\n"
             f"Gebied polder: {polygon_surface} ha\n"
@@ -301,7 +306,6 @@ class SqliteCheck:
         self.results["imp_surface_area"] = result_txt
         return result_txt
 
-
     def run_isolated_channels(self):
         """
         Test bepaalt welke watergangen niet zijn aangesloten op de rest van de watergangen. Deze watergangen worden niet
@@ -309,9 +313,7 @@ class SqliteCheck:
         deel daarvan geïsoleerd is.
         """
         channels_gdf = self.model.execute_sql_selection(query=isolated_channels_query)
-        channels_gdf[length_in_meters_col] = round(
-            channels_gdf[df_geo_col].length, 2
-        )
+        channels_gdf[length_in_meters_col] = round(channels_gdf[df_geo_col].length, 2)
         (
             isolated_channels_gdf,
             isolated_length,
@@ -329,7 +331,6 @@ class SqliteCheck:
         }
         return isolated_channels_gdf, result
 
-
     def run_used_profiles(self):
         """
         Koppelt de v2_cross_section_definition laag van het model (discrete weergave van de natuurlijke geometrie van de
@@ -339,21 +340,16 @@ class SqliteCheck:
         # TODO use hrt.sqlite_table_to_gdf instead?
         channels_gdf = self.model.execute_sql_selection(query=profiles_used_query)
         # If zoom category is 4, channel is considered primary
-        channels_gdf[primary_col] = channels_gdf[a_zoom_cat].apply(
-            lambda zoom_cat: zoom_cat == 4
-        )
+        channels_gdf[primary_col] = channels_gdf[a_zoom_cat].apply(lambda zoom_cat: zoom_cat == 4)
         channels_gdf[width_col] = channels_gdf[width_col].apply(split_round)
         channels_gdf[height_col] = channels_gdf[height_col].apply(split_round)
-        channels_gdf[water_level_width_col] = channels_gdf.apply(
-            func=calc_width_at_waterlevel, axis=1
-        )
+        channels_gdf[water_level_width_col] = channels_gdf.apply(func=calc_width_at_waterlevel, axis=1)
         channels_gdf[max_depth_col] = channels_gdf.apply(func=get_max_depth, axis=1)
         # Conversion to string because lists are not valid for storing in gpkg
         channels_gdf[width_col] = channels_gdf[width_col].astype(str)
         channels_gdf[height_col] = channels_gdf[height_col].astype(str)
         self.results["used_profiles"] = channels_gdf
         return channels_gdf
-
 
     def run_struct_channel_bed_level(self):
         """
@@ -363,35 +359,27 @@ class SqliteCheck:
         datachecker_culvert_layer = self.fenv.source_data.datachecker.layers.culvert
         damo_duiker_sifon_layer = self.fenv.source_data.damo.layers.DuikerSifonHevel
 
-
         below_ref_query = struct_channel_bed_query
         gdf_below_ref = self.model.execute_sql_selection(query=below_ref_query)
-        gdf_below_ref.rename(columns={'id':a_chan_bed_struct_id},inplace=True)
+        gdf_below_ref.rename(columns={"id": a_chan_bed_struct_id}, inplace=True)
 
         # See git issue about below statements
-        gdf_with_damo = add_damo_info(layer=damo_duiker_sifon_layer, gdf=gdf_below_ref
-        )
-        gdf_with_datacheck = add_datacheck_info(datachecker_culvert_layer, gdf_with_damo
-        )
-        gdf_with_datacheck.loc[:, down_has_assumption] = gdf_with_datacheck[
-            height_inner_lower_down
-        ].isna()
-        gdf_with_datacheck.loc[:, up_has_assumption] = gdf_with_datacheck[
-            height_inner_lower_up
-        ].isna()
+        gdf_with_damo = add_damo_info(layer=damo_duiker_sifon_layer, gdf=gdf_below_ref)
+        gdf_with_datacheck = add_datacheck_info(datachecker_culvert_layer, gdf_with_damo)
+        gdf_with_datacheck.loc[:, down_has_assumption] = gdf_with_datacheck[height_inner_lower_down].isna()
+        gdf_with_datacheck.loc[:, up_has_assumption] = gdf_with_datacheck[height_inner_lower_up].isna()
         self.results["struct_channel_bed_level"] = gdf_with_datacheck
         return gdf_with_datacheck
 
-
     def run_watersurface_area(self):
         """
-        Deze test controleert per peilgebied in het model hoe groot het gebied 
-        is dat het oppervlaktewater beslaat in het model. Dit totaal is opgebouwd 
+        Deze test controleert per peilgebied in het model hoe groot het gebied
+        is dat het oppervlaktewater beslaat in het model. Dit totaal is opgebouwd
         uit de kolom `storage_area` uit de `v2_connection_nodes` in de sqlite opgeteld
         bij het oppervlak van de watergangen (uitgelezen uit `channel_surface_from_profiles`)
         shapefile. Vervolgens worden de totalen per peilgebied vergeleken met diezelfde
         totalen uit de waterdelen in DAMO.
-        
+
         De kolom namen in het resultaat zijn als volgt:
         From v2_connection_nodes -> area_nodes_m2
         From channel_surface_from_profiles -> area_channels_m2
@@ -404,23 +392,20 @@ class SqliteCheck:
             conn_nodes_geo,
         ) = read_input(
             model=self.model,
-            channel_profile_path=self.channels_from_profiles.path,
+            channel_profile_file=self.channels_from_profiles,
             fixeddrainage_layer=self.fenv.source_data.datachecker.layers.fixeddrainagelevelarea,
             damo_layer=self.fenv.source_data.damo.layers.waterdeel,
         )
-        fixeddrainage = calc_area(
-            fixeddrainage, modelbuilder_waterdeel, damo_waterdeel, conn_nodes_geo
-        )
+        fixeddrainage = calc_area(fixeddrainage, modelbuilder_waterdeel, damo_waterdeel, conn_nodes_geo)
         result_txt = """Gebied open water BGT: {} ha\nGebied open water model: {} ha""".format(
-            round(fixeddrainage.sum()[watersurface_waterdeel_area] / 10000, 2),
-            round(fixeddrainage.sum()[watersurface_model_area] / 10000, 2),
+            round(fixeddrainage[watersurface_waterdeel_area].sum() / 10000, 2),
+            round(fixeddrainage[watersurface_model_area].sum() / 10000, 2),
         )
         self.results["watersurface_area"] = {
             "fixeddrainage": fixeddrainage,
             "result_txt": result_txt,
         }
         return fixeddrainage, result_txt
-
 
     def run_weir_floor_level(self):
         """
@@ -431,13 +416,10 @@ class SqliteCheck:
         weirs_gdf = self.model.execute_sql_selection(query=weir_height_query)
         # Bepaal de minimale kruinhoogte uit de action table
         weirs_gdf[min_crest_height] = [
-            min([float(b.split(";")[1]) for b in a.split("#")])
-            for a in weirs_gdf[action_col]
+            min([float(b.split(";")[1]) for b in a.split("#")]) for a in weirs_gdf[action_col]
         ]
         # Bepaal het verschil tussen de minimale kruinhoogte en reference level.
-        weirs_gdf[diff_crest_ref] = (
-            weirs_gdf[min_crest_height] - weirs_gdf[reference_level_col]
-        )
+        weirs_gdf[diff_crest_ref] = weirs_gdf[min_crest_height] - weirs_gdf[reference_level_col]
         # Als dit verschil negatief is, betekent dit dat de bodem hoger ligt dan de minimale hoogte van de stuw.
         # Dit mag niet, en daarom moet er iets aan het bodemprofiel gebeuren.
         weirs_gdf[wrong_profile] = weirs_gdf[diff_crest_ref] < 0
@@ -460,85 +442,90 @@ class SqliteCheck:
         }
         return wrong_profiles_gdf, update_query
 
-
-    def create_grid_from_sqlite(self, sqlite_path, dem_path, output_folder):
+    def create_grid_from_sqlite(self, output_folder):
         """Create grid from sqlite, this includes cells, lines and nodes."""
-        grid = make_gridadmin(
-            sqlite_path, dem_path
-        )  # using output here results in error, so we use the returned dict
+        grid = make_gridadmin(self.model.base, self.dem.base)
 
-        for i in ["cells", "lines", "nodes"]:
-            _write_grid_to_file(
-                grid=grid,
-                grid_type=i,
-                output_path=os.path.join(output_folder, f"{i}.gpkg"),
-            )
-
+        # using output here results in error, so we use the returned dict
+        for grid_type in ["cells", "lines", "nodes"]:
+            df = pd.DataFrame(grid[grid_type])
+            gdf = hrt.df_convert_to_gdf(df, geom_col_type="wkb", src_crs="28992")
+            hrt.gdf_write_to_geopackage(gdf, filepath=Path(output_folder) / f"{grid_type}.gpkg")
 
     def run_cross_section_duplicates(self, database):
         """
         Check for duplicate geometries in cross_section_locations.
         """
-        cross_section_point = database.execute_sql_selection(query= cross_section_location_query)
-    
+        cross_section_point = database.execute_sql_selection(query=cross_section_location_query)
+
         # Make buffer of the points to identify if we have cross setion overlapping each other.
         cross_section_buffer_gdf = cross_section_point.copy()
-        cross_section_buffer_gdf["geometry"] = cross_section_buffer_gdf.buffer(0.5) 
+        cross_section_buffer_gdf["geometry"] = cross_section_buffer_gdf.buffer(0.5)
 
-        #make spatial join between the buffer and the cross section point
-        cross_section_join =  gpd.sjoin(cross_section_buffer_gdf, cross_section_point,
-                            how="inner", op="intersects")
+        # make spatial join between the buffer and the cross section point
+        cross_section_join = gpd.sjoin(cross_section_buffer_gdf, cross_section_point, how="inner", op="intersects")
 
-        #duplicates in cross_loc in this join are duplicated cross_section_locations
+        # duplicates in cross_loc in this join are duplicated cross_section_locations
         index_duplicates = cross_section_join[cross_section_join["cross_loc_id_left"].duplicated()].index
         intersected_points = cross_section_point.loc[index_duplicates]
 
         return intersected_points
 
-
     def run_cross_section_no_vertex(self, database):
         """
-        Check for cross_sections that are not located on the  vertex of a channel.  
+        Check for cross_sections that are not located on the  vertex of a channel.
         """
-        #load cross locs and channels from sqlite
-        cross_section_point = database.execute_sql_selection(query = cross_section_location_query)
-        cross_section_point.rename({"geometry_point":"geometry"}, axis=1, inplace=True)
+        # load cross locs and channels from sqlite
+        cross_section_point = database.execute_sql_selection(query=cross_section_location_query)
+        cross_section_point.rename({"geometry_point": "geometry"}, axis=1, inplace=True)
 
-        channels_gdf = database.execute_sql_selection(query = channels_query)
+        channels_gdf = database.execute_sql_selection(query=channels_query)
 
-        #Create gdf of all channel vertices and buffer them
+        # Create gdf of all channel vertices and buffer them
         channels_gdf["points"] = channels_gdf["geometry"].apply(lambda x: [Point(coord) for coord in x.coords])
-        vertices_gdf = gpd.GeoDataFrame([(idx, item) for idx, sublist in zip(channels_gdf["channel_id"], channels_gdf["points"]) for item in sublist], 
-                                        columns = ["channel_id", "geometry"], 
-                                        geometry="geometry", 
-                                        crs="EPSG:28992")
+        vertices_gdf = gpd.GeoDataFrame(
+            [
+                (idx, item)
+                for idx, sublist in zip(channels_gdf["channel_id"], channels_gdf["points"])
+                for item in sublist
+            ],
+            columns=["channel_id", "geometry"],
+            geometry="geometry",
+            crs="EPSG:28992",
+        )
         vertices_gdf["geometry"] = vertices_gdf.buffer(0.001)
 
-        #Join cross section points and buffered vertices.
+        # Join cross section points and buffered vertices.
         v_cs = gpd.sjoin(cross_section_point, vertices_gdf, how="inner", predicate="intersects")
-        
+
         # Error cross loc op verkeerde channel
         # TODO error loggen/raise?
-        v_cs_channel_mismatch = v_cs[v_cs["channel_id_left"]!=v_cs["channel_id_right"]]
+        v_cs_channel_mismatch = v_cs[v_cs["channel_id_left"] != v_cs["channel_id_right"]]
         if len(v_cs_channel_mismatch) > 0:
-            print(f"cross loc ids {v_cs_channel_mismatch['cross_loc_id'].values} are located on a vertex of a different channel")
+            print(
+                f"cross loc ids {v_cs_channel_mismatch['cross_loc_id'].values} are located on a vertex of a different channel"
+            )
 
-        #cross sections that didnt get joined are missing a vertex.
-        cross_no_vertex = cross_section_point[~cross_section_point["cross_loc_id"].isin(v_cs["cross_loc_id"].values)].copy()
-        
-        #Find distance to nearest vertex
-        nearest_point=cross_no_vertex.sjoin_nearest(vertices_gdf)
+        # cross sections that didnt get joined are missing a vertex.
+        cross_no_vertex = cross_section_point[
+            ~cross_section_point["cross_loc_id"].isin(v_cs["cross_loc_id"].values)
+        ].copy()
+
+        # Find distance to nearest vertex
+        nearest_point = cross_no_vertex.sjoin_nearest(vertices_gdf)
+
         def get_distance(row):
             dist = row.geometry.distance(vertices_gdf.loc[row.index_right, "geometry"])
-            return round(dist,2)
-        cross_no_vertex["distance_to_vertex"] = nearest_point.apply(get_distance, axis=1)
-        
+            return round(dist, 2)
+
+        cross_no_vertex.loc[:, ["distance_to_vertex"]] = nearest_point.apply(get_distance, axis=1)
+
         return cross_no_vertex
 
 
 ## helper functions
 
-#TODO deprecated
+# TODO deprecated
 # def get_action_values(row):
 #     if row[target_type_col] is weir_layer:
 #         action_values = [float(b.split(";")[1]) for b in row[action_col].split("#")]
@@ -573,9 +560,7 @@ def calc_surfaces_diff(db_imp_surface, polygon_imp_surface):
 
 def calc_len_percentage(channels_gdf):
     total_length = round(channels_gdf.geometry.length.sum() / 1000, 2)
-    isolated_channels_gdf = channels_gdf[
-        channels_gdf[calculation_type_col] == channels_isolated_calc_type
-    ]
+    isolated_channels_gdf = channels_gdf[channels_gdf[calculation_type_col] == channels_isolated_calc_type]
     if not isolated_channels_gdf.empty:
         isolated_length = round(isolated_channels_gdf.geometry.length.sum() / 1000, 2)
     else:
@@ -606,9 +591,7 @@ def get_max_depth(row):
     """
     calculates difference between initial waterlevel and reference level
     """
-    return round(
-        float(row[initial_waterlevel_col]) - float(row[reference_level_col]), 2
-    )
+    return round(float(row[initial_waterlevel_col]) - float(row[reference_level_col]), 2)
 
 
 def add_damo_info(layer, gdf):
@@ -662,12 +645,8 @@ def expand_multipolygon(df):
         exploded = df.set_index([peil_id_col])[geometry_col]
         exploded = exploded.explode(index_parts=True)
         exploded = exploded.reset_index()
-        exploded = exploded.rename(
-            columns={0: geometry_col, "level_1": "multipolygon_level"}
-        )
-        merged = exploded.merge(
-            df.drop(geometry_col, axis=1), left_on=peil_id_col, right_on=peil_id_col
-        )
+        exploded = exploded.rename(columns={0: geometry_col, "level_1": "multipolygon_level"})
+        merged = exploded.merge(df.drop(geometry_col, axis=1), left_on=peil_id_col, right_on=peil_id_col)
         merged = merged.set_geometry(geometry_col, crs=df.crs)
         return merged
     except Exception as e:
@@ -676,15 +655,14 @@ def expand_multipolygon(df):
 
 def read_input(
     model,
-    channel_profile_path,
+    channel_profile_file,
     fixeddrainage_layer,
     damo_layer,
 ):
     try:
-        fixeddrainage = fixeddrainage_layer.load(
-                            )[[peil_id_col, code_col, COL_STREEFPEIL_BWN, geometry_col]]
+        fixeddrainage = fixeddrainage_layer.load()[[peil_id_col, code_col, COL_STREEFPEIL_BWN, geometry_col]]
         fixeddrainage = expand_multipolygon(fixeddrainage)
-        modelbuilder_waterdeel = gpd.read_file(channel_profile_path, driver=ESRI_DRIVER)
+        modelbuilder_waterdeel = channel_profile_file.load()
         damo_waterdeel = damo_layer.load()
         conn_nodes_geo = model.execute_sql_selection(query=watersurface_conn_node_query)
         conn_nodes_geo.set_index(a_watersurf_conn_id, inplace=True)
@@ -706,16 +684,10 @@ def add_nodes_area(fixeddrainage, conn_nodes_geo):
             rsuffix="conn",
         )
         # Combine all rows with same peil_id and multipolygon level and sum their area
-        group = joined.groupby([peil_id_col, "multipolygon_level"])[
-            storage_area_col
-        ].sum()
+        group = joined.groupby([peil_id_col, "multipolygon_level"])[storage_area_col].sum()
         # Add the aggregated area column to the original dataframe
-        fixeddrainage = fixeddrainage.merge(
-            group, how="left", on=[peil_id_col, "multipolygon_level"]
-        )
-        fixeddrainage.rename(
-            columns={storage_area_col: watersurface_nodes_area}, inplace=True
-        )
+        fixeddrainage = fixeddrainage.merge(group, how="left", on=[peil_id_col, "multipolygon_level"])
+        fixeddrainage.rename(columns={storage_area_col: watersurface_nodes_area}, inplace=True)
         return fixeddrainage
     except Exception as e:
         raise e from None
@@ -730,9 +702,7 @@ def add_waterdeel(fixeddrainage, to_add):
         # group overlaying area gdf by id's
         overl = overl.groupby([peil_id_col, "multipolygon_level"])["area"].sum()
         # merge overlapping area size into fixeddrainage
-        merged = fixeddrainage.merge(
-            overl, how="left", on=[peil_id_col, "multipolygon_level"]
-        )
+        merged = fixeddrainage.merge(overl, how="left", on=[peil_id_col, "multipolygon_level"])
         merged["area"] = round(merged["area"], 0)
         merged["area"] = merged["area"].fillna(0)
     except Exception as e:
@@ -754,18 +724,14 @@ def calc_area(fixeddrainage, modelbuilder_waterdeel, damo_waterdeel, conn_nodes_
     try:
         fixeddrainage = add_nodes_area(fixeddrainage, conn_nodes_geo)
         fixeddrainage = add_waterdeel(fixeddrainage, damo_waterdeel)
-        fixeddrainage.rename(
-            columns={"area": watersurface_waterdeel_area}, inplace=True
-        )
+        fixeddrainage.rename(columns={"area": watersurface_waterdeel_area}, inplace=True)
         fixeddrainage = add_waterdeel(fixeddrainage, modelbuilder_waterdeel)
         fixeddrainage.rename(columns={"area": watersurface_channels_area}, inplace=True)
         fixeddrainage[watersurface_model_area] = (
-            fixeddrainage[watersurface_channels_area]
-            + fixeddrainage[watersurface_nodes_area]
+            fixeddrainage[watersurface_channels_area] + fixeddrainage[watersurface_nodes_area]
         )
         fixeddrainage[area_diff_col] = (
-            fixeddrainage[watersurface_model_area]
-            - fixeddrainage[watersurface_waterdeel_area]
+            fixeddrainage[watersurface_model_area] - fixeddrainage[watersurface_waterdeel_area]
         )
         fixeddrainage[area_diff_perc] = fixeddrainage.apply(
             lambda row: calc_perc(row[area_diff_col], row[watersurface_waterdeel_area]),
@@ -776,22 +742,17 @@ def calc_area(fixeddrainage, modelbuilder_waterdeel, damo_waterdeel, conn_nodes_
         raise e from None
 
 
-def _write_grid_to_file(grid, grid_type, output_path):
-    df = pd.DataFrame(grid[grid_type])
-    gdf = hrt.df_convert_to_gdf(df, geom_col_type="wkb", src_crs="28992")
-    hrt.gdf_write_to_geopackage(gdf, filepath=output_path)
-
-
 # %%
 
-if __name__=="__main__":
-
+if __name__ == "__main__":
     TEST_MODEL = r"E:\02.modellen\model_test_v2"
+    TEST_MODEL = r"d:\projecten\D2301.HHNK.Ondersteuning_Python\04.plugin_testdata\data\model_test"
 
     folder = Folders(TEST_MODEL)
     self = SqliteCheck(folder=folder)
-    database=folder.model.schema_basis_errors.database
+    database = folder.model.schema_base.database
     self.run_cross_section_no_vertex(database)
+    self.verify_inputs("run_imp_surface_area")
 
 
 # %%

@@ -62,7 +62,7 @@ jobs:
 
       - name: Install hhnk-research_tools
         shell: pwsh
-        run: pip install git+https://github.com/HHNK/hhnk-research-tools.git@master
+        run: pip install git+https://github.com/HHNK/hhnk-research-tools.git@main
 
       - name: Test
         shell: pwsh

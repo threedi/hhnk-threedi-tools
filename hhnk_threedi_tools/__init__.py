@@ -1,42 +1,57 @@
 import sys
 
-# sys.path.append("C:/Users/chris.kerklaan/Documents/Github/hhnk-research-tools")
-# sys.path.append("C:/Users/chris.kerklaan/Documents/Github/hhnk-research-tools")
-# sys.path.insert(0, 'C:\\Users\wvangerwen\github\hhnk-threedi-tools')
-
 # folder
 from osgeo import gdal
-from hhnk_threedi_tools.core.folders import Folders
-
 
 import hhnk_threedi_tools.core
+import hhnk_threedi_tools.qgis
 import hhnk_threedi_tools.resources
 
+# checks
+from hhnk_threedi_tools.core.checks.bank_levels import BankLevelTest
 
-
-# tests
-from hhnk_threedi_tools.core.checks.bank_levels import (
-    BankLevelTest,
-)  # FIXME TypeError: metaclass conflict: the metaclass of a derived class must be a (non-strict) subclass of the metaclasses of all its bases
+# FIXME TypeError: metaclass conflict: the metaclass of a derived class must be a (non-strict) subclass of the metaclasses of all its bases
 from hhnk_threedi_tools.core.checks.one_d_two_d import OneDTwoDTest
 from hhnk_threedi_tools.core.checks.sqlite.sqlite_main import SqliteCheck  # FIXME
 from hhnk_threedi_tools.core.checks.zero_d_one_d import ZeroDOneDTest
-from hhnk_threedi_tools.core.migrate_schematisation import MigrateSchema
-
-# notebooks
-from hhnk_threedi_tools.utils.notebooks.run import add_notebook_paths
-from hhnk_threedi_tools.utils.notebooks.run import write_notebook_json
-from hhnk_threedi_tools.utils.notebooks.run import read_notebook_json
-from hhnk_threedi_tools.utils.notebooks.run import open_server
-from hhnk_threedi_tools.utils.notebooks.run import copy_notebooks
-
+from hhnk_threedi_tools.core.folders import Folders
+from hhnk_threedi_tools.core.folders_modelbuilder import FoldersModelbuilder
+from hhnk_threedi_tools.core.result_rasters.grid_to_raster import GridToRaster
+from hhnk_threedi_tools.core.modelbuilder.create_landuse_polder_clip import (
+    create_landuse_polder_clip,
+)
+from hhnk_threedi_tools.core.result_rasters.netcdf_to_gridgpkg import NetcdfToGPKG
+from hhnk_threedi_tools.core.schematisation import (
+    migrate,
+    model_backup,
+    model_splitter,
+    upload,
+)
+from hhnk_threedi_tools.core.schematisation.migrate import MigrateSchema
 
 # backup
-from hhnk_threedi_tools.core.checks.model_backup import (
+from hhnk_threedi_tools.core.schematisation.model_backup import (
     create_backups,
     select_values_to_update_from_backup,
     update_bank_levels_last_calc,
 )
 
+#
+from hhnk_threedi_tools.qgis.layer_structure import (
+    LayerStructure,
+    QgisAllGroupsSettings,
+    QgisGroupSettings,
+    QgisLayerSettings,
+    SelectedRevisions,
+)
 
-__version__ = '2023.3.2'
+# notebooks
+from hhnk_threedi_tools.utils.notebooks.run import (
+    # add_notebook_paths,
+    copy_notebooks,
+    open_server,
+    read_notebook_json,
+    write_notebook_json,
+)
+
+__version__ = "2024.1"

@@ -6,11 +6,8 @@ the "ruimte-indicator". Optionally, a mask shapefile can be provided.
 """
 
 import logging
+
 import numpy as np
-
-import hhnk_research_tools as hrt
-import geopandas as gpd
-
 
 logger = logging.getLogger(__name__)
 
@@ -53,12 +50,12 @@ ATTRS = {
 MAX_NUM_REGIONS = 2**16 - 1  # uint16 dtype + nodata value
 
 
-def create_ruimtekaart(pgb_path, output_path, batch_fd):
+def create_ruimtekaart(pgb_file, output_path, batch_fd):
     """Calcualtion of ruimtekaart. Calculates the total volume
     and damage per region for multiple calculations and calculates
     an indicator whether it is relatively cheap the store extra
     water in that region."""
-    pgb_gdf = gpd.read_file(pgb_path)
+    pgb_gdf = pgb_file.load()
     num_regions = len(pgb_gdf)
 
     # aggregate the 12 input rasters
@@ -68,39 +65,31 @@ def create_ruimtekaart(pgb_path, output_path, batch_fd):
     # Aggregate sum per region for each result for both the depth and damage rasters
 
     # DEPTH
-    labels_raster = hrt.Raster(batch_fd.output.temp.peilgebieden_diepte.path)
+    labels_raster = batch_fd.output.temp.peilgebieden_diepte
     labels_index = pgb_gdf["index"].values
     for i, fn in enumerate(SCENARIOS):
-        raster_path = getattr(batch_fd.downloads, fn).depth_max.path
-        input_raster = hrt.Raster(raster_path)
+        input_raster = getattr(batch_fd.downloads, fn).depth_max
 
-        logger.info("Aggregating '{}'".format(raster_path))
+        logger.info("Aggregating '{}'".format(input_raster.base))
 
         # calculate sum per region.
-        volumes_m3[:, i] = input_raster.sum_labels(
-            labels_raster=labels_raster, labels_index=labels_index
-        )
+        volumes_m3[:, i] = input_raster.sum_labels(labels_raster=labels_raster, labels_index=labels_index)
         volumes_m3[:, i] *= input_raster.pixelarea  # take pixelsize into account.
 
     # DAMAGE
-    labels_raster = hrt.Raster(batch_fd.output.temp.peilgebieden_schade.path)
+    labels_raster = batch_fd.output.temp.peilgebieden_schade
     labels_index = pgb_gdf["index"].values
     for i, fn in enumerate(SCENARIOS):
-        raster_path = getattr(batch_fd.downloads, fn).damage_total.path
-        input_raster = hrt.Raster(raster_path)
+        input_raster = getattr(batch_fd.downloads, fn).damage_total
 
-        logger.info("Aggregating '{}'".format(raster_path))
+        logger.info("Aggregating '{}'".format(input_raster.base))
 
         # calculate sum per region.
-        damages_euro[:, i] = input_raster.sum_labels(
-            labels_raster=labels_raster, labels_index=labels_index
-        )
+        damages_euro[:, i] = input_raster.sum_labels(labels_raster=labels_raster, labels_index=labels_index)
 
     # add the total sum per raster to the last row
     m3 = np.concatenate([volumes_m3, np.sum(volumes_m3, axis=0)[np.newaxis]], axis=0)
-    euro = np.concatenate(
-        [damages_euro, np.sum(damages_euro, axis=0)[np.newaxis]], axis=0
-    )
+    euro = np.concatenate([damages_euro, np.sum(damages_euro, axis=0)[np.newaxis]], axis=0)
 
     # take the forward differential
     d_euro = np.diff(euro, axis=1)

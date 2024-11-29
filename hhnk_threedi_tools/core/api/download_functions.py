@@ -1,10 +1,10 @@
-import os, sys
-import requests  # API call
+"""Functions that interact with the results API"""
 import math
-from tqdm import tqdm  # progressbar
+import os
 import zipfile
 
-"""Functions that interact with the results API"""
+import requests  # API call
+from tqdm import tqdm  # progressbar
 
 
 def start_download(download_url, output_folder, api_key, automatic_download):
@@ -19,7 +19,7 @@ def start_download(download_url, output_folder, api_key, automatic_download):
             if not os.path.exists(download_path):
                 # Start writing the file
                 with open(download_path, "wb") as file:
-                    print(str(index + 1) + ". Downloading to {}".format(download_path))
+                    print(f"{str(index + 1)}. Downloading to {download_path}")
                     response = requests.get(url, auth=("__key__", api_key), stream=True)
                     response.raise_for_status()
 
@@ -36,9 +36,7 @@ def start_download(download_url, output_folder, api_key, automatic_download):
                             file.flush()  # Interne buffer legen naar schijf. (belangrijk, anders geheugen probleem zonder stream!)
                             #                             os.fsync(file.fileno()) #Schrijf alles de uit buffer naar file op schijf zodat er geen gaten zijn.
 
-                            pbar.set_postfix(
-                                file=name, refresh=False
-                            )  # Static text, showing filename.
+                            pbar.set_postfix(file=name, refresh=False)  # Static text, showing filename.
                             pbar.update(len(data))  # Refresh the progressbar
                         pbar.close()
 

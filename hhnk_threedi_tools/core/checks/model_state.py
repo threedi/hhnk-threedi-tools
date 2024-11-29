@@ -11,70 +11,69 @@ used in folder structures
 # system imports
 import os
 
-# Third-party imports
-
-import pandas as pd
 import hhnk_research_tools as hrt
 
-# local imports
-from hhnk_threedi_tools.variables.model_state import (
-    hydraulic_test_state,
-    one_d_two_d_state,
-    undefined_state,
-    invalid_path,
-    zero_d_one_d_name,
-    global_settings_new_col_name,
-    manholes_new_calc_type,
-    weirs_new_width_col,
-    channels_new_calc_type,
-)
+# Third-party imports
+import pandas as pd
 
-from hhnk_threedi_tools.variables.database_variables import (
-    name_col,
-    manhole_layer,
-    conn_node_id_col,
-    cross_sec_loc_layer,
-    cross_sec_def_layer,
-    channels_layer,
-    bank_level_col,
-    calculation_type_col,
-    width_col,
-    zero_d_one_d_val,
-    global_settings_layer,
-    id_col,
-    control_group_col,
+from hhnk_threedi_tools.core.schematisation.model_backup import (
+    select_values_to_update_from_backup,
 )
-
-from hhnk_threedi_tools.variables.backups_table_names import (
-    GLOBAL_SETTINGS_TABLE,
-    CHANNELS_TABLE,
-    MANHOLES_TABLE,
-)
-
 from hhnk_threedi_tools.utils.queries import (
-    create_global_settings_rows_update_query,
+    construct_channels_update_statement,
     construct_global_settings_control_group_query,
-    create_bank_levels_update_query,
-    create_new_manholes_query,
     construct_manholes_update_query,
     construct_weir_height_update_statement,
-    construct_channels_update_statement,
+    create_bank_levels_update_query,
     create_global_settings_from_backup_query,
+    create_global_settings_rows_update_query,
+    create_new_manholes_query,
+)
+from hhnk_threedi_tools.utils.queries import (
     controlled_weirs_selection_query as from_model_query,
+)
+from hhnk_threedi_tools.utils.queries import (
     weir_widths_from_backup_query as from_backup_query,
 )
-
+from hhnk_threedi_tools.variables.backups_table_names import (
+    CHANNELS_TABLE,
+    GLOBAL_SETTINGS_TABLE,
+    MANHOLES_TABLE,
+)
+from hhnk_threedi_tools.variables.bank_levels import new_bank_level_col
 from hhnk_threedi_tools.variables.database_aliases import (
     a_cross_loc_id,
     a_weir_cross_def_id,
     a_weir_id,
 )
-
+from hhnk_threedi_tools.variables.database_variables import (
+    bank_level_col,
+    calculation_type_col,
+    channels_layer,
+    conn_node_id_col,
+    control_group_col,
+    cross_sec_def_layer,
+    cross_sec_loc_layer,
+    global_settings_layer,
+    id_col,
+    manhole_layer,
+    name_col,
+    width_col,
+    zero_d_one_d_val,
+)
 from hhnk_threedi_tools.variables.definitions import proposed_value_col
-from hhnk_threedi_tools.variables.bank_levels import new_bank_level_col
 
-from hhnk_threedi_tools.core.checks.model_backup import (
-    select_values_to_update_from_backup,
+# local imports
+from hhnk_threedi_tools.variables.model_state import (
+    channels_new_calc_type,
+    global_settings_new_col_name,
+    hydraulic_test_state,
+    invalid_path,
+    manholes_new_calc_type,
+    one_d_two_d_state,
+    undefined_state,
+    weirs_new_width_col,
+    zero_d_one_d_name,
 )
 
 
@@ -109,9 +108,7 @@ def detect_model_states(model_path):
         )
         if not global_settings_df.empty and global_settings_backup_exists:
             number_of_rows = global_settings_df.shape[0]
-            control_group_value_unique = is_unique(
-                global_settings_df[control_group_col]
-            )
+            control_group_value_unique = is_unique(global_settings_df[control_group_col])
             if (
                 control_group_value_unique
                 and not global_settings_df[control_group_col].iloc[0]
@@ -122,9 +119,7 @@ def detect_model_states(model_path):
             elif (
                 global_settings_df[control_group_col].notnull().all()
                 and number_of_rows == 4
-                and global_settings_df[
-                    global_settings_df[name_col] == zero_d_one_d_name
-                ].empty
+                and global_settings_df[global_settings_df[name_col] == zero_d_one_d_name].empty
             ):
                 return one_d_two_d_state
         return undefined_state
@@ -163,19 +158,11 @@ def get_all_update_queries(
             )
             if query is not None:
                 query_list.append(query)
-            rows_not_to_delete = [
-                item
-                for item in global_settings_to_delete
-                if item in global_settings_excluded
-            ]
+            rows_not_to_delete = [item for item in global_settings_to_delete if item in global_settings_excluded]
             # We have to filter the excluded ids and take out the ones that are excluded from being
             # removed (as they will be in the model). List now contains all id's that are not being added
             # and not the ones not being deleted
-            update_skip_ids = [
-                item
-                for item in global_settings_excluded
-                if item not in rows_not_to_delete
-            ]
+            update_skip_ids = [item for item in global_settings_excluded if item not in rows_not_to_delete]
             query = construct_global_settings_control_group_query(
                 global_settings_to_update_df=global_settings_df,
                 excluded_ids=update_skip_ids,
@@ -189,9 +176,7 @@ def get_all_update_queries(
             if query is not None:
                 query_list.append(query)
         if new_manholes_df is not None and not new_manholes_df.empty:
-            query = create_new_manholes_query(
-                new_manholes_df=new_manholes_df, excluded_ids=new_manholes_excluded
-            )
+            query = create_new_manholes_query(new_manholes_df=new_manholes_df, excluded_ids=new_manholes_excluded)
             if query is not None:
                 query_list.append(query)
         if update_manholes_df is not None and not update_manholes_df.empty:
@@ -236,47 +221,32 @@ def collect_excluded(
         global_settings_body = exception_format.format(
             global_settings_layer, id_col, ", ".join(map(str, global_settings_excluded))
         )
-        exceptions_list.append(
-            "Global settings overgeslagen ids\n" + global_settings_body
-        )
+        exceptions_list.append("Global settings overgeslagen ids\n" + global_settings_body)
     if bank_levels_excluded:
         bank_levels_body = exception_format.format(
             cross_sec_loc_layer, id_col, ", ".join(map(str, bank_levels_excluded))
         )
-        exceptions_list.append(
-            "Bank levels die niet zijn aangepast\n" + bank_levels_body
-        )
+        exceptions_list.append("Bank levels die niet zijn aangepast\n" + bank_levels_body)
     if new_manholes_excluded:
         new_manholes_body = exception_format.format(
             manhole_layer, conn_node_id_col, ", ".join(map(str, new_manholes_excluded))
         )
-        exceptions_list.append(
-            "Connection nodes waar geen putten aan zijn toegevoegd\n"
-            + new_manholes_body
-        )
+        exceptions_list.append("Connection nodes waar geen putten aan zijn toegevoegd\n" + new_manholes_body)
     if manhole_updates_excluded:
         update_manholes_body = exception_format.format(
             manhole_layer,
             conn_node_id_col,
             ", ".join(map(str, manhole_updates_excluded)),
         )
-        exceptions_list.append(
-            "Manholes aanpassingen overgeslagen ids\n" + update_manholes_body
-        )
+        exceptions_list.append("Manholes aanpassingen overgeslagen ids\n" + update_manholes_body)
     if weirs_heights_excluded:
         update_weirs_body = exception_format.format(
             cross_sec_def_layer, id_col, ", ".join(map(str, weirs_heights_excluded))
         )
-        exceptions_list.append(
-            "Gestuurde stuwen waar breedte niet van is aangepast\n" + update_weirs_body
-        )
+        exceptions_list.append("Gestuurde stuwen waar breedte niet van is aangepast\n" + update_weirs_body)
     if channels_excluded:
-        update_channels_body = exception_format.format(
-            channels_layer, id_col, ", ".join(map(str, channels_excluded))
-        )
-        exceptions_list.append(
-            "Calculation type watergangen niet aangepast\n" + update_channels_body
-        )
+        update_channels_body = exception_format.format(channels_layer, id_col, ", ".join(map(str, channels_excluded)))
+        exceptions_list.append("Calculation type watergangen niet aangepast\n" + update_channels_body)
     exceptions_string = "\n\n".join(exceptions_list)
     return exceptions_string
 
@@ -295,10 +265,7 @@ def collect_manual_adjustments(
     """
     try:
         queries_list = []
-        if (
-            global_settings_manual_df is not None
-            and not global_settings_manual_df.empty
-        ):
+        if global_settings_manual_df is not None and not global_settings_manual_df.empty:
             queries_list.append(
                 hrt.sql_create_update_case_statement(
                     df=global_settings_manual_df,
@@ -375,14 +342,10 @@ def get_proposed_adjustments_channels(model_path, from_state, to_state):
     If we are converting to hydraulic test state, we need to multiply them by 10
     """
     try:
-        channels_in_model_df = hrt.sqlite_table_to_df(
-            database_path=model_path, table_name=channels_layer
-        )
+        channels_in_model_df = hrt.sqlite_table_to_df(database_path=model_path, table_name=channels_layer)
         if from_state == hydraulic_test_state:
             # reset backup
-            channels_backup_df = hrt.sqlite_table_to_df(
-                database_path=model_path, table_name=CHANNELS_TABLE
-            )
+            channels_backup_df = hrt.sqlite_table_to_df(database_path=model_path, table_name=CHANNELS_TABLE)
             channels_to_update_df = select_values_to_update_from_backup(
                 model_df=channels_in_model_df,
                 backup_df=channels_backup_df,
@@ -413,13 +376,9 @@ def get_rows_to_add(model_path, to_state, rows_in_model_df, id_column):
     """
     try:
         query = create_global_settings_from_backup_query(to_state=to_state)
-        rows_should_be_in_model = hrt.execute_sql_selection(
-            query=query, database_path=model_path
-        )
+        rows_should_be_in_model = hrt.execute_sql_selection(query=query, database_path=model_path)
         return rows_should_be_in_model.loc[
-            ~rows_should_be_in_model[id_column].isin(
-                rows_in_model_df[id_column].tolist()
-            )
+            ~rows_should_be_in_model[id_column].isin(rows_in_model_df[id_column].tolist())
         ]
     except Exception as e:
         raise e from None
@@ -432,22 +391,16 @@ def get_rows_to_delete(rows_in_model_df, to_state, selection_col, id_column):
     """
     delete_ids = []
     if to_state == hydraulic_test_state:
-        delete_ids = rows_in_model_df[
-            rows_in_model_df[selection_col] != zero_d_one_d_val
-        ][id_column].tolist()
+        delete_ids = rows_in_model_df[rows_in_model_df[selection_col] != zero_d_one_d_val][id_column].tolist()
     elif to_state == one_d_two_d_state:
-        delete_ids = rows_in_model_df[
-            rows_in_model_df[selection_col] == zero_d_one_d_val
-        ][id_column].tolist()
+        delete_ids = rows_in_model_df[rows_in_model_df[selection_col] == zero_d_one_d_val][id_column].tolist()
     return delete_ids
 
 
 def get_global_settings_model(model_path):
     try:
         query = hrt.sql_construct_select_query(table=global_settings_layer)
-        global_settings_model = hrt.execute_sql_selection(
-            query=query, database_path=model_path
-        )
+        global_settings_model = hrt.execute_sql_selection(query=query, database_path=model_path)
         return global_settings_model
     except Exception as e:
         raise e from None
@@ -474,9 +427,7 @@ def get_proposed_adjustments_global_settings(model_path, to_state):
             selection_col=name_col,
             id_column=id_col,
         )
-        preview_df = pd.concat([rows_in_model, rows_to_add])[
-            [id_col, name_col, control_group_col]
-        ]
+        preview_df = pd.concat([rows_in_model, rows_to_add])[[id_col, name_col, control_group_col]]
         if to_state == hydraulic_test_state:
             new_value = None
         elif to_state == one_d_two_d_state:
@@ -501,9 +452,7 @@ def get_proposed_updates_manholes(model_path, to_state, from_state):
     (in this case: 1)
     """
     try:
-        manholes_in_model_df = hrt.sqlite_table_to_df(
-            database_path=model_path, table_name=manhole_layer
-        )
+        manholes_in_model_df = hrt.sqlite_table_to_df(database_path=model_path, table_name=manhole_layer)
         if to_state == hydraulic_test_state:
             # We have to set all calculation types to isolated
             manholes_in_model_df.insert(
@@ -512,14 +461,11 @@ def get_proposed_updates_manholes(model_path, to_state, from_state):
                 1,
             )
             manholes_to_update = manholes_in_model_df[
-                manholes_in_model_df[calculation_type_col]
-                != manholes_in_model_df[manholes_new_calc_type]
+                manholes_in_model_df[calculation_type_col] != manholes_in_model_df[manholes_new_calc_type]
             ]
         elif from_state == hydraulic_test_state:
             # we have to restore original calculation types from backup
-            manholes_backup_df = hrt.sqlite_table_to_df(
-                database_path=model_path, table_name=MANHOLES_TABLE
-            )
+            manholes_backup_df = hrt.sqlite_table_to_df(database_path=model_path, table_name=MANHOLES_TABLE)
             manholes_to_update = select_values_to_update_from_backup(
                 model_df=manholes_in_model_df,
                 backup_df=manholes_backup_df,
@@ -540,14 +486,10 @@ def get_proposed_adjustments_weir_width(model_path, from_state, to_state):
     If not, we need to multiply them by 10
     """
     try:
-        weir_widths_in_model_df = hrt.execute_sql_selection(
-            query=from_model_query, database_path=model_path
-        )
+        weir_widths_in_model_df = hrt.execute_sql_selection(query=from_model_query, database_path=model_path)
         if from_state == hydraulic_test_state:
             # reset backup
-            weir_widths_backup_df = hrt.execute_sql_selection(
-                query=from_backup_query, database_path=model_path
-            )
+            weir_widths_backup_df = hrt.execute_sql_selection(query=from_backup_query, database_path=model_path)
             weir_widths_to_update = select_values_to_update_from_backup(
                 model_df=weir_widths_in_model_df,
                 backup_df=weir_widths_backup_df,
@@ -558,9 +500,7 @@ def get_proposed_adjustments_weir_width(model_path, from_state, to_state):
             )
         elif to_state == hydraulic_test_state:
             # multiply by 10
-            weir_widths_in_model_df[width_col] = pd.to_numeric(
-                weir_widths_in_model_df[width_col]
-            )
+            weir_widths_in_model_df[width_col] = pd.to_numeric(weir_widths_in_model_df[width_col])
             weir_widths_in_model_df.insert(
                 weir_widths_in_model_df.columns.get_loc(width_col) + 1,
                 weirs_new_width_col,

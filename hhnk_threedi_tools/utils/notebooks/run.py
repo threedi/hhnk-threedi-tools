@@ -8,29 +8,31 @@ Created on Fri Sep 24 13:55:39 2021
 Opens a jupyter notebook based on nbopen using the command line
 
 """
-import os
-import sys
-import subprocess
-import pathlib
-import tempfile
-import shutil
+
 import json
+import os
+import pathlib
+import shutil
 import site
+import subprocess
+import sys
+import tempfile
 from pathlib import Path
 
 CREATE_NEW_PROCESS_GROUP = 0x00000200
 DETACHED_PROCESS = 0x00000008
 
+# TODO variable also in constants.py
 NOTEBOOK_DIRECTORY = str(pathlib.Path(__file__).parent.absolute())
 
 
 class TempCopy:
     def __init__(self, original_path):
-        self.original_path = original_path
+        self.original_path = Path(original_path)
 
     def __enter__(self):
         temp_dir = tempfile.gettempdir()
-        base_path = os.path.basename(self.original_path)
+        base_path = self.original_path.name
         self.path = os.path.join(temp_dir, base_path)
         shutil.copy2(self.original_path, self.path)
         return self.path
@@ -45,11 +47,11 @@ def copy_notebooks(new_dir, original_dir=NOTEBOOK_DIRECTORY):
     for file in os.listdir(original_dir):
         print(file)
         if file.endswith(".ipynb"):
-            cont=True
+            cont = True
         elif file == "notebook_setup.py":
-            cont=True
+            cont = True
         else:
-            cont=False
+            cont = False
 
         if cont:
             shutil.copy2(original_dir + "/" + file, new_dir + "/" + file)
@@ -76,13 +78,10 @@ def _get_python_interpreter():
     executable = sys.executable
     directory, filename = os.path.split(executable)
     if "python" in filename:
-
         if filename.lower() in ["python.exe", "python3.exe"]:
             interpreter = executable
         else:
-            raise EnvironmentError(
-                "Unexpected value for sys.executable: %s" % executable
-            )
+            raise EnvironmentError("Unexpected value for sys.executable: %s" % executable)
         assert os.path.exists(interpreter)  # safety check
         return "python", interpreter
 
@@ -98,9 +97,7 @@ def _get_python_interpreter():
             interpreter = main_folder + "/python-qgis-ltr.bat"
 
         if not interpreter:
-            raise EnvironmentError(
-                "could not find qgis-python bat file in: %s" % main_folder
-            )
+            raise EnvironmentError("could not find qgis-python bat file in: %s" % main_folder)
 
         return "qgis", interpreter
 
@@ -142,6 +139,7 @@ def notebook_command(location="osgeo", ipython=False):
         else:
             command = [python_interpreter, user_installed_notebook_path()]
     return command
+
 
 def open_server(directory=None, location="osgeo", use="run", notebook_paths=[]):
     """directory:
@@ -188,44 +186,42 @@ def create_command_bat_file(path, location="osgeo"):
         bat_file.write(" ".join(command))
 
 
-#TODO this doesnt work nicely with other  environments. Prepare for deprecation
-def add_notebook_paths(extra_notebook_paths):
-    """adds extra notebook paths, which is used in the plugin"""
+# # TODO this doesnt work nicely with other  environments. Prepare for deprecation
+# def add_notebook_paths(extra_notebook_paths):
+#     """adds extra notebook paths, which is used in the plugin"""
 
-    # user profile paths
-    user_profile_path = os.environ["USERPROFILE"]
-    ipython_profile_path = (
-        user_profile_path + "/.ipython/profile_default/ipython_config.py"
-    )
+#     # user profile paths
+#     user_profile_path = os.environ["USERPROFILE"]
+#     ipython_profile_path = user_profile_path + "/.ipython/profile_default/ipython_config.py"
 
-    nb_path_command = "import sys"
-    for path in extra_notebook_paths:
-        path = path.replace("\\", "/")
-        nb_path_command = nb_path_command + f'; sys.path.insert(0,"{path}")'
-    nb_string = f"c.InteractiveShellApp.exec_lines = ['{nb_path_command}']"
+#     nb_path_command = "import sys"
+#     for path in extra_notebook_paths:
+#         path = path.replace("\\", "/")
+#         nb_path_command = nb_path_command + f'; sys.path.insert(0,"{path}")'
+#     nb_string = f"c.InteractiveShellApp.exec_lines = ['{nb_path_command}']"
 
-    if not os.path.exists(ipython_profile_path):
-        # create a profile
-        command = notebook_command("user", ipython=True)
-        command = command[1] + " profile create"
+#     if not os.path.exists(ipython_profile_path):
+#         # create a profile
+#         command = notebook_command("user", ipython=True)
+#         command = command[1] + " profile create"
 
-        subprocess.run(command, shell=True)
-        print("Creating profile with: ", command)
-        # print(["start", "cmd", "/K"] + command)
-        # output, error = process.communicate()
-        # exit_code = process.wait()
-        # if exit_code:
-        #     print(f"Creating ipython profile failed: {error} {output}")
+#         subprocess.run(command, shell=True)
+#         print("Creating profile with: ", command)
+#         # print(["start", "cmd", "/K"] + command)
+#         # output, error = process.communicate()
+#         # exit_code = process.wait()
+#         # if exit_code:
+#         #     print(f"Creating ipython profile failed: {error} {output}")
 
-    # check if paths are already available
-    exists = False
-    with open(ipython_profile_path, "r") as profile_code:
-        for i in profile_code:
-            if nb_string in profile_code:
-                exists = True
-                break
+#     # check if paths are already available
+#     exists = False
+#     with open(ipython_profile_path, "r") as profile_code:
+#         for i in profile_code:
+#             if nb_string in profile_code:
+#                 exists = True
+#                 break
 
-    if not exists:
-        print("Adding:", nb_string)
-        with open(ipython_profile_path, "a") as profile_code:
-            profile_code.write("\n" + nb_string)
+#     if not exists:
+#         print("Adding:", nb_string)
+#         with open(ipython_profile_path, "a") as profile_code:
+#             profile_code.write("\n" + nb_string)
