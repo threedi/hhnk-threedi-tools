@@ -296,7 +296,16 @@ def download_file(url, path):
     """download url to specified path"""
     logging.debug("Start downloading file: {}".format(url))
     r = requests.get(url, auth=("__key__", get_api_key()), stream=True)
+    try:
+        r.raise_for_status()
+    except requests.exceptions.HTTPError:
+        #FIXME exception handling toegevoegd, zie #102
+        # Auth niet meegeven bij https://lizard-prod.s3.amazonaws.com/export_raster_to_geotiff
+        # Lijkt te werken, moet nog landen in de originele downloader
+        r = requests.get(url, stream=True)
+
     r.raise_for_status()
+
     with open(path, "wb") as file:
         for chunk in r.iter_content(1024 * 1024 * 10):
             file.write(chunk)
@@ -496,6 +505,9 @@ def download_raster(
                             )
                             task_status = "UNKNOWN"
                         else:
+                            logging.error(
+                                "Task {} failed, status was: {}".format(task_uuid, task_status)
+                            )
                             raise
 
                 elif task_status in ("PENDING", "UNKNOWN", "STARTED", "RETRY"):
