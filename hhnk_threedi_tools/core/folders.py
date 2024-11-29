@@ -28,6 +28,7 @@ CHANNEL_FROM_PROFILES = f"channel_surface_from_profiles{file_types_dict[SHAPE]}"
 
 FOLDER_STRUCTURE = """
     Main Folders object
+        ├── project.json
         ├── 01_source_data
         │ ├── DAMO.gpkg
         │ ├── HyDAMO.gpkg
@@ -117,6 +118,9 @@ class Folders(Folder):
     def __init__(self, base, create=False):
         super().__init__(base, create=create)
 
+        # project.json
+        self.project_json = self.add_file("project_json", "project.json")
+
         # source
         self.source_data = SourceDir(self.base, create=create)
 
@@ -133,6 +137,7 @@ class Folders(Folder):
     def structure(self):
         return f"""  
                {self.space}Folders
+               {self.space}├── project.json (.project_json)
                {self.space}├── 01_source_data (.source_data)
                {self.space}├── 02_schematisation (.model)
                {self.space}├── 03_3di_results (.threedi_results)
@@ -152,6 +157,7 @@ class Folders(Folder):
                 )
         """
         return {
+            "project_json": self.project_json.path_if_exists,
             "datachecker": self.source_data.datachecker.path_if_exists,
             "damo": self.source_data.damo.path_if_exists,
             "hydamo": self.source_data.hydamo.path_if_exists,
