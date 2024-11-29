@@ -4,31 +4,32 @@ Created on Fri Nov 29 09:17:01 2024
 
 @author: esther.vanderlaan
 """
-
-from hhnk_research_tools import sql_functions
+# %%
+import geopandas as gpd
+import pytest
 from local_settings import DATABASES
- 
+# %%
+from hhnk_research_tools.sql_functions import (
+    database_to_gdf,
+    sql_builder_select_by_location,
+)
 
-INPUT_DIRECTORY = "area_test_sql_helsdeur.gpkg" # verwijzing naar project directory - model extent
+# Temporary: hard coded model extent selection
+POLDERS =  gpd.read_file(r'E:\01.basisgegevens\Polders\polderclusters.gpkg', engine="pyogrio")
+model_extent = POLDERS['geometry'][54] # this polder, because others are too large
+#polygon_wkt = POLDERS['geometry'][54]
+
 EPSG_CODE = "28992"
 
 
- """test_database_to_gdf"""
-# %%
-
-def DAMO_exporter(model_extent):
+def DAMO_exporter(model_extent, table_name="HYDROOBJECT"):
 
     db_dicts = {
         "aquaprd": DATABASES.get("aquaprd_lezen", None),
         "bgt": DATABASES.get("bgt_lezen", None),
     }
     
-    db_dict = db_dicts["bgt"]
-    columns = None
-    
-    #TODO: hoe is DAMO database opgebouw? Welke table_name moeten we hebben? Of meerdere?
     schema = "DAMO_W"
-    table_name = "GEMAAL"
     
     # Load area for selection
     model_extent_gdf = gpd.read_file(model_extent, engine="pyogrio")
@@ -43,4 +44,8 @@ def DAMO_exporter(model_extent):
     
     
     gdf, sql2 = database_to_gdf(db_dict=db_dict, sql=sql, columns=columns)
-    assert gdf.loc[0, "code"] == "KGM-Q-29234"
+
+    return gdf
+# %%
+
+# afhankelijk van hoe dit gebruikt gaat worden, __main__ toevoegen om functie direct met dit script te runnen
