@@ -6,21 +6,19 @@ import time
 # A class for project
 class Project:
     def __init__(self, folder: str):
-        if folder:
-            self.folder = folder # set project folder
-            if Path(folder).exists():
-                folders = Folders(folder, create=False) # set folders instance for existing project folder
-            else:
-                Path(folder).mkdir(parents=True, exist_ok=True)
-                folders = Folders(folder, create=True) # create folders instance for new project folder
+        self.folder = folder # set project folder
 
-            if folders.project_json.exists():
-                self.load_from_json(folders.project_json.path) # load variables from json if exists (fixed filename)
-            else: 
-                self.initialise_new_project() # initialise new project
-                self.save_to_json(folders.project_json.path)
+        if Path(folder).exists():
+            folders = Folders(folder, create=False) # set folders instance for existing project folder
         else:
-            raise ValueError('No project folder specified')
+            Path(folder).mkdir(parents=True, exist_ok=True)
+            folders = Folders(folder, create=True) # create folders instance for new project folder
+
+        if folders.project_json.exists():
+            self.load_from_json(folders.project_json.path) # load variables from json if exists (fixed filename)
+        else: 
+            self.initialise_new_project() # initialise new project
+            self.save_to_json(folders.project_json.path)
 
     def initialise_new_project(self):
         """ Create all Project variables for a new project """
