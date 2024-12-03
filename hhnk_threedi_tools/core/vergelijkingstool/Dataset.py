@@ -1,15 +1,13 @@
+import json
+import math
+import sqlite3
+
 import geopandas as gpd
 import pandas as pd
-import sqlite3
-import json
 from shapely.geometry import LineString, Polygon
-import math
-import sys
-# from config import *
-vergelijkings_tool = r'E:\github\jacostabarragan\hhnk-threedi-tools\hhnk_threedi_tools\core\vergelijkingstool'
-if str(vergelijkings_tool) not in sys.path:
-    sys.path.append(str(vergelijkings_tool))
-from config import * 
+
+from hhnk_threedi_tools.core.vergelijkingstool.config import *
+
 
 class DataSet:
     """
@@ -43,7 +41,9 @@ class DataSet:
         con.execute(SQL_CREATE_LAYER_STYLES)
 
         # add layer_styles to gpkg
-        SQL_INSERT_GPKG_CONTENT = "INSERT INTO gpkg_contents (table_name, data_type) values ('layer_styles','attributes')"
+        SQL_INSERT_GPKG_CONTENT = (
+            "INSERT INTO gpkg_contents (table_name, data_type) values ('layer_styles','attributes')"
+        )
         con.execute(SQL_INSERT_GPKG_CONTENT)
 
         # fill layer_styles
@@ -53,14 +53,15 @@ class DataSet:
                 "f_table_catalog": row.f_table_catalog,
                 "f_table_schema": row.f_table_schema,
                 "f_table_name": row.f_table_name,
-                "f_geometry_column": 'geom',
+                "f_geometry_column": "geom",
                 "styleName": row.styleName,
                 "styleQML": row.styleQML,
-                "useAsDefault": row.useAsDefault
+                "useAsDefault": row.useAsDefault,
             }
             con.execute(
-                'INSERT INTO layer_styles (id, f_table_catalog, f_table_schema, f_table_name, f_geometry_column, styleName, styleQML, useAsDefault) VALUES (:id, :f_table_catalog, :f_table_schema, :f_table_name, :f_geometry_column, :styleName, :styleQML, :useAsDefault)',
-                data)
+                "INSERT INTO layer_styles (id, f_table_catalog, f_table_schema, f_table_name, f_geometry_column, styleName, styleQML, useAsDefault) VALUES (:id, :f_table_catalog, :f_table_schema, :f_table_name, :f_geometry_column, :styleName, :styleQML, :useAsDefault)",
+                data,
+            )
         con.commit()
         cur.close()
         con.close()
@@ -76,7 +77,7 @@ class DataSet:
         :param geometry_B: Shapely geometry
         :return: Shapely geometry
         """
-        if dataset == 'A' or dataset == 'AB':
+        if dataset == "A" or dataset == "AB":
             return geometry_A
         else:
             return geometry_B
@@ -104,13 +105,13 @@ class DataSet:
         :param gdf: GeoDataframe to be analyzed
         :return: GeoDataframe with added columns
         """
-        if 'geometry' in gdf.columns:
+        if "geometry" in gdf.columns:
             gdf["geom_type"] = gdf["geometry"].apply(lambda geom: geom.geom_type if geom is not None else None)
             gdf["geom_length"] = gdf.geometry.length
             gdf["geom_area"] = gdf.geometry.area
         return gdf
 
-    def drop_unused_geoseries(self, gdf, keep='geometry'):
+    def drop_unused_geoseries(self, gdf, keep="geometry"):
         """
         Removes all GeoSeries from a GeoDataframe except the column indicated with the 'keep' parameter.
         Used because for the export to GeoPackage, a GeoDataframe is only allowed to have 1 geometry column
@@ -163,13 +164,13 @@ class DataSet:
                 return None
 
         try:
-            param_left = function[function_name]['left']
-            param_right = function[function_name]['right']
+            param_left = function[function_name]["left"]
+            param_right = function[function_name]["right"]
             left = resolve_parameter(table, param_left)
             right = resolve_parameter(table, param_right)
 
             try:
-                skipna = function[function_name]['skipna']
+                skipna = function[function_name]["skipna"]
                 self.logger.debug(f"Adding skipna to function within function {function_name}")
             except:
                 skipna = False
@@ -212,7 +213,8 @@ class DataSet:
 
         except AttributeError as err:
             self.logger.error(
-                f"AttributeError: Unable to calculate {function_name} on {param_left} and {param_right}. One of the parameters might not be available in the data. Skipping comparison")
+                f"AttributeError: Unable to calculate {function_name} on {param_left} and {param_right}. One of the parameters might not be available in the data. Skipping comparison"
+            )
             return None, None
 
     def compare_category(self, row, priority):
@@ -224,7 +226,7 @@ class DataSet:
         :return: String containing the change in category, if any.
         """
 
-        if row.in_both == 'AB' or row.in_both == 'both':
+        if row.in_both == "AB" or row.in_both == "both":
             left = row[0]
             right = row[1]
 
@@ -237,17 +239,17 @@ class DataSet:
 
             if left != right:
                 # if left and right are nan, don't fill anything, else fill "left -> right"
-                if str(left) == 'nan' and str(right) == 'nan':
+                if str(left) == "nan" and str(right) == "nan":
                     return (None, None)
                 else:
-                    return ((str(left) + ' -> ' + str(right)), priority)
+                    return ((str(left) + " -> " + str(right)), priority)
             else:
                 # if left and right the same and not nan
                 if isinstance(left, float):
                     if ~math.isnan(left):
-                        return ('not changed', None)
+                        return ("not changed", None)
                 else:
-                    return ('not changed', None)
+                    return ("not changed", None)
         return (None, None)
 
     def compare_attribute(self, df, comparison):
@@ -271,7 +273,7 @@ class DataSet:
         try:
             priority = comparison["priority"]
         except KeyError:
-            self.logger.info(f"No priority set for comparison {name}, setting it to \"critical\"")
+            self.logger.info(f'No priority set for comparison {name}, setting it to "critical"')
             priority = "critical"
 
         if comparison_type == "numeric":
@@ -283,7 +285,8 @@ class DataSet:
                 threshold = comparison["threshold"]
             except KeyError:
                 self.logger.info(
-                    f"No numeric threshold set for comparison {name}, using default value of {COMPARISON_GENERAL_THRESHOLD}")
+                    f"No numeric threshold set for comparison {name}, using default value of {COMPARISON_GENERAL_THRESHOLD}"
+                )
                 threshold = COMPARISON_GENERAL_THRESHOLD
 
             # add new column with the comparison name, and result from the compare function
@@ -303,7 +306,8 @@ class DataSet:
                     df[table_name][name] = compare_result
                     df[table_name][column_name_nan_change] = compare_nan_change
                     df[table_name][column_name_priority] = pd.Series(
-                        [priority if x else '' for x in abs(compare_result) > 0])
+                        [priority if x else "" for x in abs(compare_result) > 0]
+                    )
 
                     # Add column_name_priority to the priority_columns dict
                     if table_name not in self.priority_columns.keys():
@@ -322,15 +326,15 @@ class DataSet:
             left = comparison["left"]
             right = comparison["right"]
 
-
             column_name_priority = name + "_priority"
             if table_name not in self.priority_columns.keys():
                 self.priority_columns[table_name] = []
 
             self.priority_columns[table_name].append(column_name_priority)
 
-            df[table_name][[name, column_name_priority]] = df[table_name][[left, right, 'in_both']].apply(
-                lambda row: self.compare_category(row, priority), axis=1, result_type='expand')
+            df[table_name][[name, column_name_priority]] = df[table_name][[left, right, "in_both"]].apply(
+                lambda row: self.compare_category(row, priority), axis=1, result_type="expand"
+            )
         else:
             self.logger.debug(f"Comparison type {comparison_type} not implemented")
         return df
@@ -349,12 +353,15 @@ class DataSet:
             # If there is a priority_column
             if layer:
                 columns = self.priority_columns[layer]
-                table[layer]['number_of_info'] = table[layer][columns].apply(lambda row: count_occurrences(row, 'info'),
-                                                                             axis=1)
-                table[layer]['number_of_warning'] = table[layer][columns].apply(
-                    lambda row: count_occurrences(row, 'warning'), axis=1)
-                table[layer]['number_of_critical'] = table[layer][columns].apply(
-                    lambda row: count_occurrences(row, 'critical'), axis=1)
+                table[layer]["number_of_info"] = table[layer][columns].apply(
+                    lambda row: count_occurrences(row, "info"), axis=1
+                )
+                table[layer]["number_of_warning"] = table[layer][columns].apply(
+                    lambda row: count_occurrences(row, "warning"), axis=1
+                )
+                table[layer]["number_of_critical"] = table[layer][columns].apply(
+                    lambda row: count_occurrences(row, "critical"), axis=1
+                )
         return table
 
     def apply_attribute_comparison(self, attribute_comparison, table):
@@ -373,13 +380,14 @@ class DataSet:
                 for comparison in att_comp["comparisons"]:
                     table = self.compare_attribute(table, comparison)
 
-
         except json.decoder.JSONDecodeError as err:
             self.logger.error(
-                f"Unable to load attribute comparison file. JSON structure incorrect. {err.args[0]}. Skipping attribute comparison")
+                f"Unable to load attribute comparison file. JSON structure incorrect. {err.args[0]}. Skipping attribute comparison"
+            )
         except FileNotFoundError as err:
             self.logger.error(
-                f"Unable to load attribute comparison file. File {err.filename} does not exist. Skipping attribute comparison")
+                f"Unable to load attribute comparison file. File {err.filename} does not exist. Skipping attribute comparison"
+            )
         return table
 
     def get_structure_by_code(self, code_start: str, layers):
@@ -402,8 +410,8 @@ class DataSet:
                     if i.startswith(code_start):
                         codes.append(i)
             if codes:
-                layer_data = self.data[layer][self.data[layer]['code'].isin(codes)].copy()
-                layer_data['origin'] = layer
+                layer_data = self.data[layer][self.data[layer]["code"].isin(codes)].copy()
+                layer_data["origin"] = layer
                 tabel = pd.concat((tabel, layer_data))
 
         return tabel
@@ -420,4 +428,4 @@ class DataSet:
         self.logger.info(f"Exporting statistics to {filename}")
         # For export to GeoPackage a geometry column is needed, fill it with None to create attribute only layer
         statistics["geometry"] = None
-        gpd.GeoDataFrame(statistics, geometry='geometry').to_file(filename, layer='statistics', driver="GPKG")
+        gpd.GeoDataFrame(statistics, geometry="geometry").to_file(filename, layer="statistics", driver="GPKG")
