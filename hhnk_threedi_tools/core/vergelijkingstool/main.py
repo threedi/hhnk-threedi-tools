@@ -1,6 +1,5 @@
-#%%
 #!/usr/bin/env python
-""" Module for the comparison of DAMO/HDB data and 3Di model data.
+"""Module for the comparison of DAMO/HDB data and 3Di model data.
 With this module the actuality of 3Di models can be assessed.
 There are two main usages within this module:
     1. Compare current DAMO/HDB data with the DAMO/HDB data that was used to build the model.
@@ -18,6 +17,7 @@ Module was tested with http://www.gaia-gis.it/gaia-sins/windows-bin-amd64/mod_sp
 Unpack content of .7z file and place them in the C:\\Windows\\System32 folder
 """
 
+# %%
 __authors__ = ["Thijs van den Pol (Royal HaskoningDHV)", "Emiel Verstegen (Royal HaskoningDHV)"]
 __contact__ = "emiel.verstegen@rhdhv.com"
 __credits__ = ["Thijs van den Pol", "Emiel Verstegen"]
@@ -29,118 +29,265 @@ __status__ = "Production"
 __version__ = "1.1.0"
 
 import logging
-import geopandas as gpd
-from pathlib import Path
-import warnings
 import os
-import sys
-import shutil
-vergelijkings_tool = Path(r'E:\github\jacostabarragan\hhnk-threedi-tools\hhnk_threedi_tools\core\vergelijkingstool')
-if str(vergelijkings_tool) not in sys.path:
-        sys.path.append(str(vergelijkings_tool))
-from DAMO import DAMO 
-from Threedimodel import Threedimodel
-from hhnk_threedi_tools import Folders
-#%%
-def main(cmp_damo_old, cmp_damo_last, cmp_hdb_old, cmp_hdb_last, damo_last_translation, fn_DAMO_selection):
+import warnings
+from pathlib import Path
+
+import geopandas as gpd
+
+from hhnk_threedi_tools.core.vergelijkingstool import name_date
+from hhnk_threedi_tools.core.vergelijkingstool.DAMO import DAMO
+from hhnk_threedi_tools.core.vergelijkingstool.styling import *
+from hhnk_threedi_tools.core.vergelijkingstool.Threedimodel import Threedimodel
+
+# from folder_names import name
+
+
+def main(
+    fn_DAMO_selection,
+    fn_damo_old_translation,
+    fn_damo_new,
+    fn_hdb_new,
+    fn_damo_old,
+    fn_hdb_old,
+    fn_threedimodel,
+    fn_threedimodel_translation,
+    fn_damo_attribute_comparison,
+    fn_model_attribute_comparison,
+    styling_path,
+    fn_damo_new_translation,
+    fn_DAMO_comparison_export,
+    fn_threedi_comparison_export,
+    compare_with: str = "Compare with 3Di",
+    layer_selection=True,
+    layers_input_hdb_selection=None,
+    layers_input_damo_selection=None,
+    threedi_layer_selector=False,
+    threedi_structure_selection=None,
+    damo_structure_selection=None,
+    structure_codes=None,
+):
+    # fn_damo_new_translation
     # Set logging level
     logging.basicConfig(level=logging.INFO)
 
     # Supress fiona logging to keep logging readable
     for log_name, log_obj in logging.Logger.manager.loggerDict.items():
-        if log_name.__contains__('fiona'):
+        if log_name.__contains__("fiona"):
             log_obj.disabled = True
 
     # Supress GeoSeries.notna warning, as it warns about a changed operator. Currently using the new operator.
-    warnings.filterwarnings('ignore', 'GeoSeries.notna', UserWarning)
-    
-   
-    # Read selection geopackage (done here and not in a function because it might be that functionality is implemented
-    # in a QGIS environment and the shape is passed in a different way
-    # fn_DAMO_selection = r"data\input\Zijpe\damo_selection.gpkg"
-    
-    gdf_selection = gpd.read_file(fn_DAMO_selection)
+    warnings.filterwarnings("ignore", "GeoSeries.notna", UserWarning)
+
+    gdf_selection = gpd.read_file(fn_DAMO_selection, engine="pyogrio")
     selection_shape = gdf_selection.unary_union
 
-    # Create two damo_objects, supply with DAMO-file, HDB-file and optionally a translation_DAMO, 
-    # tion_HDB or a
+    # Create two damo_objects, supply with DAMO-file, HDB-file and optionally a translation_DAMO, translation_HDB or a
     # clip_shape
-    
-    damo_old = DAMO(cmp_damo_old, cmp_hdb_old, damo_old_translation, clip_shape=selection_shape)
-    damo_new = DAMO(cmp_damo_last, cmp_hdb_last, damo_last_translation, clip_shape=selection_shape)
+
+    selection_compare = compare_with
+
+    if selection_compare == "Compare with Damo":
+        damo_old = DAMO(
+            fn_damo_old,
+            fn_hdb_old,
+            translation_DAMO=fn_damo_old_translation,
+            clip_shape=selection_shape,
+            layer_selection=layer_selection,
+            layers_input_hdb_selection=layers_input_hdb_selection,
+            layers_input_damo_selection=layers_input_damo_selection,
+        )
+        damo_new = DAMO(
+            fn_damo_new,
+            fn_hdb_new,
+            translation_DAMO=fn_damo_new_translation,
+            clip_shape=selection_shape,
+            layer_selection=layer_selection,
+            layers_input_hdb_selection=layers_input_hdb_selection,
+            layers_input_damo_selection=layers_input_damo_selection,
+        )
+        print("doing only damo")
+        # Compare damo objects with eachother and export result to geopackage
+        DAMO_comparison, DAMO_statistics = damo_new.compare_with_damo(
+            damo_old,
+            attribute_comparison=fn_damo_attribute_comparison,
+            filename=fn_DAMO_comparison_export,
+            overwrite=True,
+            styling_path=styling_path,
+        )
+
+        return fn_DAMO_comparison_export
+
+    elif selection_compare == "Compare with 3Di":
+        # Create Threedimodel object
+        threedi_model = Threedimodel(fn_threedimodel, translation=fn_threedimodel_translation)
+        damo_new = DAMO(
+            fn_damo_new,
+            fn_hdb_new,
+            translation_DAMO=fn_damo_new_translation,
+            clip_shape=selection_shape,
+            layer_selection=False,
+            layers_input_hdb_selection=layers_input_hdb_selection,
+            layers_input_damo_selection=layers_input_damo_selection,
+        )
+
+        threedi_comparison, threedi_statistics = threedi_model.compare_with_DAMO(
+            damo_new,
+            attribute_comparison=fn_model_attribute_comparison,
+            filename=fn_threedi_comparison_export,
+            overwrite=True,
+            styling_path=styling_path,
+            threedi_layer_selector=threedi_layer_selector,
+            threedi_structure_selection=threedi_structure_selection,
+            damo_structure_selection=damo_structure_selection,
+            structure_codes=structure_codes,
+        )
+
+        # return(fn_DAMO_comparison_export)
+        return fn_threedi_comparison_export
+
+    elif selection_compare == "Both":
+        threedi_model = Threedimodel(fn_threedimodel, translation=fn_threedimodel_translation)
+        damo_old = DAMO(
+            fn_damo_old,
+            fn_hdb_old,
+            translation_DAMO=fn_damo_old_translation,
+            clip_shape=selection_shape,
+            layer_selection=layer_selection,
+            layers_input_hdb_selection=layers_input_hdb_selection,
+            layers_input_damo_selection=layers_input_damo_selection,
+        )
+        damo_new = DAMO(
+            fn_damo_new,
+            fn_hdb_new,
+            translation_DAMO=fn_damo_new_translation,
+            clip_shape=selection_shape,
+            layer_selection=layer_selection,
+            layers_input_hdb_selection=layers_input_hdb_selection,
+            layers_input_damo_selection=layers_input_damo_selection,
+        )
+        DAMO_comparison, DAMO_statistics = damo_new.compare_with_damo(
+            damo_old,
+            attribute_comparison=fn_damo_attribute_comparison,
+            filename=fn_DAMO_comparison_export,
+            overwrite=True,
+            styling_path=styling_path,
+        )
+        threedi_comparison, threedi_statistics = threedi_model.compare_with_DAMO(
+            damo_new,
+            attribute_comparison=fn_model_attribute_comparison,
+            filename=fn_threedi_comparison_export,
+            overwrite=True,
+            styling_path=styling_path,
+            threedi_layer_selector=threedi_layer_selector,
+            threedi_structure_selection=threedi_structure_selection,
+            damo_structure_selection=damo_structure_selection,
+            structure_codes=structure_codes,
+        )
+        return (fn_DAMO_comparison_export, fn_threedi_comparison_export)
+
+    else:
+        print("You must select and option")
 
 
-    # Compare damo objects with eachother and export result to geopackage
-    DAMO_comparison, DAMO_statistics = damo_new.compare_with_damo(damo_old,
-                                                                  attribute_comparison=fn_damo_attribute_comparison,
-                                                                  filename=cmp_export_damo,
-                                                                  overwrite=True,
-                                                                  styling_path=styling_path)
+# %%
 
-    # Create Threedimodel object
-    threedi_model = Threedimodel(cmp_sqlite_last, translation=threedimodel_translation)
-    threedi_comparison, threedi_statistics = \
-        threedi_model.compare_with_DAMO(damo_new,
-                                        attribute_comparison=fn_model_attribute_comparison,
-                                        filename=cmp_export_sqlite,
-                                        overwrite=True,
-                                        styling_path=styling_path)
-    
-    return(cmp_export_damo, cmp_export_sqlite)
-#%%
-if __name__ == '__main__':
+if __name__ == "__main__":
+    # model folder
 
-    #model location
-    folder = Folders(r'\\corp.hhnk.nl\data\Hydrologen_data\Data\02.modellen\castricum')
+    # folder = Folders(castricum)
+    # source_data = folder.source_data.path
 
-    # Define output paths
-    vergelijking_result = Path(os.path.join(folder.output.path, 'vergelijking_result'))
-    if not os.path.exists(vergelijking_result):
-        os.makedirs(vergelijking_result)   
-        
-    cmp_export_damo = vergelijking_result.joinpath('DAMO_comparison.gpkg')
-    cmp_export_sqlite= vergelijking_result.joinpath('Threedi_comparison.gpkg')
-    cmp_export_hdb= vergelijking_result.joinpath('HDB_comparison.gpkg')
+    # name
+    path = name_date.path
+    model_name, source_data, folder = name_date.name(path)
 
-    # Define location from the peilgebeiden to clip information
-    fn_DAMO_selection = folder.source_data.peilgebieden.files['peilgebieden'].path
+    # polder polygon. It should be a geopackge file
+    fn_DAMO_selection = name_date.damo_selection
+
+    # Base folder initial files.
+    source_data_old = name_date.source_data_old
+    json_file = os.path.join(source_data, "vergelijkingsTool", "json_files")
+
+    # output location.
+    out_put_files = os.path.join(source_data, "vergelijkingsTool", "output")
+
+    # Old DAMO (DCMB/FME export) location .
+    fn_damo_old = name_date.fn_damo_old
+    fn_damo_old_translation = Path(os.path.join(source_data_old, "damo_translation.json"))
+
+    # the last version
+    fn_damo_new = name_date.fn_damo_new
+    fn_damo_new_translation = fn_damo_old_translation
+    # fn_damo_new_translation = Path(os.path.join(source_data_old, 'damo_translation.json'))
+
+    # Old HDB (DCMB/FME export) location .
+    fn_hdb_old = name_date.fn_hdb_old
+    fn_hdb_old_translation = Path(os.path.join(source_data_old, "hdb_translation.json"))
+
+    # the last version
+    fn_hdb_new = name_date.fn_hdb_new
+    fn_hdb_new_translation = fn_hdb_old_translation
+
+    fn_threedimodel = name_date.fn_threedimodel
+    fn_threedimodel_translation = Path(os.path.join(json_file, "threedi_translation.json"))
+    fn_damo_attribute_comparison = Path(os.path.join(json_file, "damo_attribute_comparison.json"))
+    fn_model_attribute_comparison = Path(os.path.join(json_file, "model_attribute_comparison.json"))
 
     # Define path where layer stylings can be found (for each layer it will search for <<LAYER_NAME>>.qml
-    styling_path = Path(os.path.join(vergelijkings_tool,'styling'))
+    styling_path = Path(os.path.join(source_data, "styling"))
 
-    # json files locations
-    json_folder = (os.path.join(vergelijkings_tool,'json_files'))
-    
-    #define paths where to copy the json files.
-    source_data = folder.source_data.path
-    vergelijkings_json_folder = os.path.join(source_data, 'vergelijkingsTool', 'json_files')
-    if not os.path.exists(vergelijkings_json_folder):
-        shutil.copytree(json_folder, vergelijkings_json_folder)    
+    # Define outputs
+    fn_DAMO_comparison_export = Path(os.path.join(out_put_files, "DAMO_comparison_Test_35.gpkg"))
 
-    # Define all the paths of the input data
-     #damo_last_version
-    cmp_damo_last = Path(folder.source_data.damo.path)
-    damo_last_translation=Path(os.path.join(vergelijkings_json_folder,'damo_translation.json'))
+    # Layers To Compare DAMO_DAMO
+    layer_selection = True
+    layers_input_damo_selection = ["AfvoergebiedAanvoergebied", "Bergingsgebied", "DuikerSifonHevel", "Stuw"]
+    layers_input_hdb_selection = ["hydro_deelgebieden", "stuwen_op_peilgrens", "Levee_overstromingsmodel"]
+    fn_threedi_comparison_export = Path(os.path.join(out_put_files, "Threedi_comparison_Test_20.gpkg"))
 
-    #hbd_last_version
-    cmp_hdb_last  = Path(folder.source_data.hdb.path)
-    hdb_last_translation =Path(os.path.join(vergelijkings_json_folder,'hdb_translation.json'))
-    
-    #sqlite_last_version
-    cmp_sqlite_last = Path(folder.model.schema_base.database_path)
-    threedimodel_translation= Path(os.path.join(vergelijkings_json_folder,'threedi_translation.json'))
+    compare_with = "Compare with Damo"
 
-    #damo_old_version
-    cmp_damo_old = Path(r"\\corp.hhnk.nl\data\Hydrologen_data\Data\02.modellen\castricum\01_source_data\Castricum_v2\DAMO.gdb")
-    damo_old_translation = damo_last_translation
+    add_symbology_both = True
+    update_symbology = name_date.symbology_both(add_symbology_both)
 
-    #hdb_old_version
-    cmp_hdb_old = Path(r"\\corp.hhnk.nl\data\Hydrologen_data\Data\02.modellen\castricum\01_source_data\Castricum_v2\HDB.gdb")
-    hdb_old_translation = hdb_last_translation
-    
+    # Layers to Compare DAMO_3di
+    threedi_layer_selector = False
+    threedi_structure_selection = [
+        "v2_culvert",
+        "v2_pumpstation",
+    ]
+    damo_structure_selection = ["duikersifonhevel", "gemaal"]
+    structure_codes = ["KDU", "KGM"]
 
-    fn_damo_attribute_comparison = Path(os.path.join(vergelijkings_json_folder,'damo_attribute_comparison.json'))
-    fn_model_attribute_comparison = Path(os.path.join(vergelijkings_json_folder,'model_attribute_comparison.json'))
-    
-    main(cmp_damo_old, cmp_damo_last, cmp_hdb_old, cmp_hdb_last, damo_last_translation, fn_DAMO_selection)
+    main(
+        fn_DAMO_selection,
+        fn_damo_old_translation,
+        fn_damo_new,
+        fn_hdb_new,
+        fn_damo_old,
+        fn_hdb_old,
+        fn_threedimodel,
+        fn_threedimodel_translation,
+        fn_damo_attribute_comparison,
+        fn_model_attribute_comparison,
+        styling_path,
+        fn_damo_new_translation,
+        fn_DAMO_comparison_export,
+        fn_threedi_comparison_export,
+        compare_with,
+        layer_selection,
+        layers_input_hdb_selection=layers_input_hdb_selection,
+        layers_input_damo_selection=layers_input_damo_selection,
+        threedi_layer_selector=threedi_layer_selector,
+        threedi_structure_selection=threedi_structure_selection,
+        damo_structure_selection=damo_structure_selection,
+        structure_codes=structure_codes,
+    )
+
+
 # %%
+# AfvoergebiedAanvoergebied, Bergingsgebied, DuikerSifonHevel
+# hydro_deelgebieden, stuwen_op_peilgrens, Levee_overstromingsmodel
+
+# AfvoergebiedAanvoergebied,  Bergingsgebied
