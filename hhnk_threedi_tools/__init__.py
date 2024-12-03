@@ -16,10 +16,10 @@ from hhnk_threedi_tools.core.checks.sqlite.sqlite_main import SqliteCheck  # FIX
 from hhnk_threedi_tools.core.checks.zero_d_one_d import ZeroDOneDTest
 from hhnk_threedi_tools.core.folders import Folders
 from hhnk_threedi_tools.core.folders_modelbuilder import FoldersModelbuilder
-from hhnk_threedi_tools.core.result_rasters.grid_to_raster import GridToRaster
 from hhnk_threedi_tools.core.modelbuilder.create_landuse_polder_clip import (
     create_landuse_polder_clip,
 )
+from hhnk_threedi_tools.core.result_rasters.grid_to_raster import GridToRaster
 from hhnk_threedi_tools.core.result_rasters.netcdf_to_gridgpkg import NetcdfToGPKG
 from hhnk_threedi_tools.core.schematisation import (
     migrate,
@@ -35,6 +35,9 @@ from hhnk_threedi_tools.core.schematisation.model_backup import (
     select_values_to_update_from_backup,
     update_bank_levels_last_calc,
 )
+
+# backup
+from hhnk_threedi_tools.core.vergelijkingstool import *
 
 #
 from hhnk_threedi_tools.qgis.layer_structure import (
