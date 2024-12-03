@@ -1,13 +1,43 @@
-STYLING_BASIC_TABLE_COLUMNS = ['id', 'f_table_catalog', 'f_table_schema', 'f_table_name', 'f_geometry_column', 'styleName', 'styleQML', 'styleSLD', 'useAsDefault', 'description', 'owner', 'ui', 'update_time']
+from hhnk_threedi_tools.core.vergelijkingstool import name_date
 
-STYLING_POINTS_DAMO = r"""
+path = name_date.path
+
+update_symbology = name_date.update_symbology
+model_name, source_data, folder = name_date.name(path)
+
+fn_damo_new = name_date.fn_damo_new
+fn_hdb_old = name_date.fn_hdb_old
+fn_damo_old = name_date.fn_damo_old
+fn_hdb_new = name_date.fn_hdb_new
+fn_3di = name_date.fn_threedimodel
+
+date_fn_damo_new, date_fn_damo_old, date_hdb_new, date_hdb_old, date_threedi = name_date.date(
+    fn_damo_new, fn_damo_old, fn_hdb_new, fn_hdb_old, fn_3di
+)
+
+STYLING_BASIC_TABLE_COLUMNS = [
+    "id",
+    "f_table_catalog",
+    "f_table_schema",
+    "f_table_name",
+    "f_geometry_column",
+    "styleName",
+    "styleQML",
+    "styleSLD",
+    "useAsDefault",
+    "description",
+    "owner",
+    "ui",
+    "update_time",
+]
+STYLING_POINTS_DAMO = f"""
 <!DOCTYPE qgis PUBLIC 'http://mrcc.com/qgis.dtd' 'SYSTEM'>
 <qgis version="3.22.4-Białowieża" styleCategories="Symbology">
   <renderer-v2 symbollevels="0" forceraster="0" enableorderby="0" type="categorizedSymbol" attr="in_both" referencescale="-1">
     <categories>
-      <category symbol="0" render="true" label="A" value="A"/>
-      <category symbol="1" render="true" label="B" value="B"/>
-      <category symbol="2" render="true" label="AB" value="AB"/>
+      <category symbol="0" render="true" label="{model_name} new {date_fn_damo_new}" value="{model_name} new"/>
+      <category symbol="1" render="true" label="{model_name} old {date_fn_damo_old}" value="{model_name} old"/>
+      <category symbol="2" render="true" label="{model_name} both" value="{model_name} both"/>
     </categories>
     <symbols>
       <symbol alpha="1" force_rhr="0" clip_to_extent="1" type="marker" name="0">
@@ -138,14 +168,14 @@ STYLING_POINTS_DAMO = r"""
           <Option type="Map">
             <Option value="0" type="QString" name="angle"/>
             <Option value="square" type="QString" name="cap_style"/>
-            <Option value="197,197,197,128" type="QString" name="color"/>
+            <Option value="197,197,197,{update_symbology}" type="QString" name="color"/>
             <Option value="1" type="QString" name="horizontal_anchor_point"/>
             <Option value="bevel" type="QString" name="joinstyle"/>
             <Option value="circle" type="QString" name="name"/>
             <Option value="0,0" type="QString" name="offset"/>
             <Option value="3x:0,0,0,0,0,0" type="QString" name="offset_map_unit_scale"/>
             <Option value="MM" type="QString" name="offset_unit"/>
-            <Option value="35,35,35,255" type="QString" name="outline_color"/>
+            <Option value="35,35,35,{update_symbology}" type="QString" name="outline_color"/>
             <Option value="solid" type="QString" name="outline_style"/>
             <Option value="0" type="QString" name="outline_width"/>
             <Option value="3x:0,0,0,0,0,0" type="QString" name="outline_width_map_unit_scale"/>
@@ -158,14 +188,14 @@ STYLING_POINTS_DAMO = r"""
           </Option>
           <prop v="0" k="angle"/>
           <prop v="square" k="cap_style"/>
-          <prop v="197,197,197,128" k="color"/>
+          <prop v="197,197,197,{update_symbology}" k="color"/>
           <prop v="1" k="horizontal_anchor_point"/>
           <prop v="bevel" k="joinstyle"/>
           <prop v="circle" k="name"/>
           <prop v="0,0" k="offset"/>
           <prop v="3x:0,0,0,0,0,0" k="offset_map_unit_scale"/>
           <prop v="MM" k="offset_unit"/>
-          <prop v="35,35,35,255" k="outline_color"/>
+          <prop v="35,35,35,{update_symbology}" k="outline_color"/>
           <prop v="solid" k="outline_style"/>
           <prop v="0" k="outline_width"/>
           <prop v="3x:0,0,0,0,0,0" k="outline_width_map_unit_scale"/>
@@ -254,14 +284,14 @@ STYLING_POINTS_DAMO = r"""
 </qgis>
 """
 
-STYLING_LINES_DAMO = """
+STYLING_LINES_DAMO = f"""
 <!DOCTYPE qgis PUBLIC 'http://mrcc.com/qgis.dtd' 'SYSTEM'>
 <qgis version="3.22.4-Białowieża" styleCategories="Symbology">
   <renderer-v2 symbollevels="0" forceraster="0" enableorderby="0" type="categorizedSymbol" attr="in_both" referencescale="-1">
     <categories>
-      <category symbol="0" render="true" label="A" value="A"/>
-      <category symbol="1" render="true" label="B" value="B"/>
-      <category symbol="2" render="true" label="AB" value="AB"/>
+      <category symbol="0" render="true" label="{model_name} new {date_fn_damo_new}" value="{model_name} new"/>
+      <category symbol="1" render="true" label="{model_name} old {date_fn_damo_old}" value="{model_name} old"/>
+      <category symbol="2" render="true" label="{model_name} both" value="{model_name} both"/>
     </categories>
     <symbols>
       <symbol alpha="1" force_rhr="0" clip_to_extent="1" type="line" name="0">
@@ -432,7 +462,7 @@ STYLING_LINES_DAMO = """
             <Option value="MM" type="QString" name="dash_pattern_offset_unit"/>
             <Option value="0" type="QString" name="draw_inside_polygon"/>
             <Option value="bevel" type="QString" name="joinstyle"/>
-            <Option value="197,197,197,128" type="QString" name="line_color"/>
+            <Option value="197,197,197,{update_symbology}" type="QString" name="line_color"/>
             <Option value="solid" type="QString" name="line_style"/>
             <Option value="1" type="QString" name="line_width"/>
             <Option value="MM" type="QString" name="line_width_unit"/>
@@ -460,7 +490,7 @@ STYLING_LINES_DAMO = """
           <prop v="MM" k="dash_pattern_offset_unit"/>
           <prop v="0" k="draw_inside_polygon"/>
           <prop v="bevel" k="joinstyle"/>
-          <prop v="197,197,197,128" k="line_color"/>
+          <prop v="197,197,197,{update_symbology}" k="line_color"/>
           <prop v="solid" k="line_style"/>
           <prop v="1" k="line_width"/>
           <prop v="MM" k="line_width_unit"/>
@@ -572,14 +602,14 @@ STYLING_LINES_DAMO = """
 </qgis>
 """
 
-STYLING_POLYGONS_DAMO = """
+STYLING_POLYGONS_DAMO = f"""
 <!DOCTYPE qgis PUBLIC 'http://mrcc.com/qgis.dtd' 'SYSTEM'>
 <qgis version="3.22.4-Białowieża" styleCategories="Symbology">
   <renderer-v2 symbollevels="0" forceraster="0" enableorderby="0" type="categorizedSymbol" attr="in_both" referencescale="-1">
     <categories>
-      <category symbol="0" render="true" label="A" value="A"/>
-      <category symbol="1" render="true" label="B" value="B"/>
-      <category symbol="2" render="true" label="AB" value="AB"/>
+      <category symbol="0" render="true" label="{model_name} new {date_fn_damo_new}" value="{model_name} new"/>
+      <category symbol="1" render="true" label="{model_name} old {date_fn_damo_old}" value="{model_name} old"/>
+      <category symbol="2" render="true" label="{model_name} both" value="{model_name} both"/>
     </categories>
     <symbols>
       <symbol alpha="1" force_rhr="0" clip_to_extent="1" type="fill" name="0">
@@ -677,7 +707,7 @@ STYLING_POLYGONS_DAMO = """
         <layer class="SimpleFill" pass="0" enabled="1" locked="0">
           <Option type="Map">
             <Option value="3x:0,0,0,0,0,0" type="QString" name="border_width_map_unit_scale"/>
-            <Option value="197,197,197,128" type="QString" name="color"/>
+            <Option value="197,197,197,{update_symbology}" type="QString" name="color"/>
             <Option value="bevel" type="QString" name="joinstyle"/>
             <Option value="0,0" type="QString" name="offset"/>
             <Option value="3x:0,0,0,0,0,0" type="QString" name="offset_map_unit_scale"/>
@@ -689,12 +719,12 @@ STYLING_POLYGONS_DAMO = """
             <Option value="solid" type="QString" name="style"/>
           </Option>
           <prop v="3x:0,0,0,0,0,0" k="border_width_map_unit_scale"/>
-          <prop v="197,197,197,128" k="color"/>
+          <prop v="197,197,197,{update_symbology}" k="color"/>
           <prop v="bevel" k="joinstyle"/>
           <prop v="0,0" k="offset"/>
           <prop v="3x:0,0,0,0,0,0" k="offset_map_unit_scale"/>
           <prop v="MM" k="offset_unit"/>
-          <prop v="35,35,35,255" k="outline_color"/>
+          <prop v="35,35,35,{update_symbology}" k="outline_color"/>
           <prop v="solid" k="outline_style"/>
           <prop v="0.26" k="outline_width"/>
           <prop v="MM" k="outline_width_unit"/>
@@ -761,14 +791,13 @@ STYLING_POLYGONS_DAMO = """
   <layerGeometryType>2</layerGeometryType>
 </qgis>
 """
-
-STYLING_POINTS_THREEDI = """<!DOCTYPE qgis PUBLIC 'http://mrcc.com/qgis.dtd' 'SYSTEM'>
+STYLING_POINTS_THREEDI = f"""<!DOCTYPE qgis PUBLIC 'http://mrcc.com/qgis.dtd' 'SYSTEM'>
 <qgis version="3.22.4-Białowieża" styleCategories="Symbology">
   <renderer-v2 symbollevels="0" forceraster="0" enableorderby="0" type="categorizedSymbol" attr="in_both" referencescale="-1">
     <categories>
-      <category symbol="0" render="true" label="Damo" value="damo"/>
-      <category symbol="1" render="true" label="Model" value="model"/>
-      <category symbol="2" render="true" label="Both" value="both"/>
+      <category symbol="0" render="true" label="Damo {model_name} {date_fn_damo_new}" value="{model_name} damo"/>
+      <category symbol="1" render="true" label="Model {model_name} {date_threedi}" value="{model_name} sqlite"/>
+      <category symbol="2" render="true" label="{model_name} both" value="{model_name} both"/>
     </categories>
     <symbols>
       <symbol alpha="1" force_rhr="0" clip_to_extent="1" type="marker" name="0">
@@ -899,7 +928,7 @@ STYLING_POINTS_THREEDI = """<!DOCTYPE qgis PUBLIC 'http://mrcc.com/qgis.dtd' 'SY
           <Option type="Map">
             <Option value="0" type="QString" name="angle"/>
             <Option value="square" type="QString" name="cap_style"/>
-            <Option value="197,197,197,128" type="QString" name="color"/>
+            <Option value="197,197,197,{update_symbology}" type="QString" name="color"/>
             <Option value="1" type="QString" name="horizontal_anchor_point"/>
             <Option value="bevel" type="QString" name="joinstyle"/>
             <Option value="circle" type="QString" name="name"/>
@@ -919,14 +948,14 @@ STYLING_POINTS_THREEDI = """<!DOCTYPE qgis PUBLIC 'http://mrcc.com/qgis.dtd' 'SY
           </Option>
           <prop v="0" k="angle"/>
           <prop v="square" k="cap_style"/>
-          <prop v="197,197,197,128" k="color"/>
+          <prop v="197,197,197,{update_symbology}" k="color"/>
           <prop v="1" k="horizontal_anchor_point"/>
           <prop v="bevel" k="joinstyle"/>
           <prop v="circle" k="name"/>
           <prop v="0,0" k="offset"/>
           <prop v="3x:0,0,0,0,0,0" k="offset_map_unit_scale"/>
           <prop v="MM" k="offset_unit"/>
-          <prop v="35,35,35,255" k="outline_color"/>
+          <prop v="35,35,35,{update_symbology}" k="outline_color"/>
           <prop v="solid" k="outline_style"/>
           <prop v="0" k="outline_width"/>
           <prop v="3x:0,0,0,0,0,0" k="outline_width_map_unit_scale"/>
@@ -1014,13 +1043,13 @@ STYLING_POINTS_THREEDI = """<!DOCTYPE qgis PUBLIC 'http://mrcc.com/qgis.dtd' 'SY
   <layerGeometryType>0</layerGeometryType>
 </qgis>"""
 
-STYLING_LINES_THREEDI = """<!DOCTYPE qgis PUBLIC 'http://mrcc.com/qgis.dtd' 'SYSTEM'>
+STYLING_LINES_THREEDI = f"""<!DOCTYPE qgis PUBLIC 'http://mrcc.com/qgis.dtd' 'SYSTEM'>
 <qgis version="3.22.4-Białowieża" styleCategories="Symbology">
   <renderer-v2 symbollevels="0" forceraster="0" enableorderby="0" type="categorizedSymbol" attr="in_both" referencescale="-1">
     <categories>
-      <category symbol="0" render="true" label="Damo" value="damo"/>
-      <category symbol="1" render="true" label="Model" value="model"/>
-      <category symbol="2" render="true" label="Both" value="both"/>
+      <category symbol="0" render="true" label="Damo {model_name} {date_fn_damo_new}" value="{model_name} damo"/>
+      <category symbol="1" render="true" label="Model {model_name} {date_threedi}" value="{model_name} sqlite"/>
+      <category symbol="2" render="true" label="{model_name} both" value="{model_name} both"/>
     </categories>
     <symbols>
       <symbol alpha="1" force_rhr="0" clip_to_extent="1" type="line" name="0">
@@ -1191,7 +1220,7 @@ STYLING_LINES_THREEDI = """<!DOCTYPE qgis PUBLIC 'http://mrcc.com/qgis.dtd' 'SYS
             <Option value="MM" type="QString" name="dash_pattern_offset_unit"/>
             <Option value="0" type="QString" name="draw_inside_polygon"/>
             <Option value="bevel" type="QString" name="joinstyle"/>
-            <Option value="197,197,197,128" type="QString" name="line_color"/>
+            <Option value="197,197,197,{update_symbology}" type="QString" name="line_color"/>
             <Option value="solid" type="QString" name="line_style"/>
             <Option value="1" type="QString" name="line_width"/>
             <Option value="MM" type="QString" name="line_width_unit"/>
@@ -1219,7 +1248,7 @@ STYLING_LINES_THREEDI = """<!DOCTYPE qgis PUBLIC 'http://mrcc.com/qgis.dtd' 'SYS
           <prop v="MM" k="dash_pattern_offset_unit"/>
           <prop v="0" k="draw_inside_polygon"/>
           <prop v="bevel" k="joinstyle"/>
-          <prop v="197,197,197,128" k="line_color"/>
+          <prop v="197,197,197,{update_symbology}" k="line_color"/>
           <prop v="solid" k="line_style"/>
           <prop v="1" k="line_width"/>
           <prop v="MM" k="line_width_unit"/>
@@ -1330,14 +1359,14 @@ STYLING_LINES_THREEDI = """<!DOCTYPE qgis PUBLIC 'http://mrcc.com/qgis.dtd' 'SYS
   <layerGeometryType>1</layerGeometryType>
 </qgis>"""
 
-STYLING_POLYGONS_THREEDI = """
+STYLING_POLYGONS_THREEDI = f"""
 <!DOCTYPE qgis PUBLIC 'http://mrcc.com/qgis.dtd' 'SYSTEM'>
 <qgis version="3.22.4-Białowieża" styleCategories="Symbology">
   <renderer-v2 symbollevels="0" forceraster="0" enableorderby="0" type="categorizedSymbol" attr="in_both" referencescale="-1">
     <categories>
-      <category symbol="0" render="true" label="Damo" value="damo"/>
-      <category symbol="1" render="true" label="Model" value="model"/>
-      <category symbol="2" render="true" label="Both" value="bot"/>
+      <category symbol="0" render="true" label="Damo {model_name} {date_fn_damo_new}" value="{model_name} sqlite"/>
+      <category symbol="1" render="true" label="Model {model_name} {date_threedi}" value="{model_name} damo"/>
+      <category symbol="2" render="true" label="{model_name} both" value="{model_name} both"/>
     </categories>
     <symbols>
       <symbol alpha="1" force_rhr="0" clip_to_extent="1" type="fill" name="0">
@@ -1435,7 +1464,7 @@ STYLING_POLYGONS_THREEDI = """
         <layer class="SimpleFill" pass="0" enabled="1" locked="0">
           <Option type="Map">
             <Option value="3x:0,0,0,0,0,0" type="QString" name="border_width_map_unit_scale"/>
-            <Option value="197,197,197,128" type="QString" name="color"/>
+            <Option value="197,197,197,{update_symbology}" type="QString" name="color"/>
             <Option value="bevel" type="QString" name="joinstyle"/>
             <Option value="0,0" type="QString" name="offset"/>
             <Option value="3x:0,0,0,0,0,0" type="QString" name="offset_map_unit_scale"/>
@@ -1447,12 +1476,12 @@ STYLING_POLYGONS_THREEDI = """
             <Option value="solid" type="QString" name="style"/>
           </Option>
           <prop v="3x:0,0,0,0,0,0" k="border_width_map_unit_scale"/>
-          <prop v="197,197,197,128" k="color"/>
+          <prop v="197,197,197,{update_symbology}" k="color"/>
           <prop v="bevel" k="joinstyle"/>
           <prop v="0,0" k="offset"/>
           <prop v="3x:0,0,0,0,0,0" k="offset_map_unit_scale"/>
           <prop v="MM" k="offset_unit"/>
-          <prop v="35,35,35,255" k="outline_color"/>
+          <prop v="35,35,35,{update_symbology}" k="outline_color"/>
           <prop v="solid" k="outline_style"/>
           <prop v="0.26" k="outline_width"/>
           <prop v="MM" k="outline_width_unit"/>
@@ -1480,7 +1509,7 @@ STYLING_POLYGONS_THREEDI = """
           <Option type="Map">
             <Option value="3x:0,0,0,0,0,0" type="QString" name="border_width_map_unit_scale"/>
             <Option value="141,90,153,255" type="QString" name="color"/>
-            <Option value="bevel" type="QString" name="joinstyle"/>
+            <Option value="bevel" type="QString" name="joinstyle"/>s
             <Option value="0,0" type="QString" name="offset"/>
             <Option value="3x:0,0,0,0,0,0" type="QString" name="offset_map_unit_scale"/>
             <Option value="MM" type="QString" name="offset_unit"/>
