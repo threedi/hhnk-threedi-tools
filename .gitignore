@@ -3,6 +3,7 @@ build
 dist
 .idea
 .ipynb_checkpoints
+local_settings.py
 hhnk_wsa_tools.egg-info
 hhnk_threedi_tools.egg-info
 venv_development_tools
