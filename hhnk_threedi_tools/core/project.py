@@ -9,16 +9,16 @@ class Project:
         self.folder = folder # set project folder
 
         if Path(folder).exists():
-            folders = Folders(folder, create=False) # set folders instance for existing project folder
+            self.folders = Folders(folder, create=False) # set folders instance for existing project folder
         else:
             Path(folder).mkdir(parents=True, exist_ok=True)
-            folders = Folders(folder, create=True) # create folders instance for new project folder
+            self.folders = Folders(folder, create=True) # create folders instance for new project folder
 
-        if folders.project_json.exists():
-            self.load_from_json(folders.project_json.path) # load variables from json if exists (fixed filename)
+        if self.folders.project_json.exists():
+            self.load_from_json() # load variables from json if exists (fixed filename)
         else: 
             self.initialise_new_project() # initialise new project
-            self.save_to_json(folders.project_json.path)
+            self.save_to_json()
 
     def initialise_new_project(self):
         """ Create all Project variables for a new project """
@@ -28,14 +28,18 @@ class Project:
 
     def update_project_status(self, status):
         self.project_status = status
+        self.save_to_json()
 
-    def save_to_json(self, filename):
+    def retrieve_project_status(self):
+        return self.project_status
+
+    def save_to_json(self):
         self.project_date = str(time.strftime("%Y-%m-%d %H:%M:%S")) # update project date
-        with open(filename, 'w') as f:
+        with open(self.folders.project_json.path, 'w') as f:
             json.dump(self.__dict__, f)
 
-    def load_from_json(self, filename):
-        with open(filename, 'r') as f:
+    def load_from_json(self):
+        with open(self.folders.project_json.path, 'r') as f:
             data = json.load(f)
             self.__dict__.update(data)
 
