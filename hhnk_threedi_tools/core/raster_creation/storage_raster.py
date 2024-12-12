@@ -86,7 +86,6 @@ class StorageRaster(hrt.RasterCalculatorRxr):
         cont = self.verify(overwrite=overwrite)
 
         if cont:
-            print("lets go")
             # Create/load lookup table to find available storage using dewa depth
             self.storage_lookup_df, self.soil_lookup_df = storage_lookup.create_storage_lookup(
                 rootzone_thickness_cm=rootzone_thickness_cm, storage_unsa_sim_path=None

@@ -17,9 +17,10 @@ def test_create_storage_raster():
         "dem": folder_schema.model.schema_base.rasters.dem,
         "soil": folder_schema.model.schema_base.rasters.soil,
     }
-    metadata_key = "soil"
     verbose = False
     tempdir = None
+    metadata_key = "soil"
+    nodata_keys = ["gwlvl", "dem", "soil"]
 
     rootzone_thickness_cm = 20  # cm
 
@@ -27,6 +28,7 @@ def test_create_storage_raster():
         raster_out=raster_out,
         raster_paths_dict=raster_paths_dict,
         metadata_key=metadata_key,
+        nodata_keys=nodata_keys,
         verbose=verbose,
         tempdir=tempdir,
     )
