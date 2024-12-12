@@ -1,24 +1,26 @@
 # %%
-"""For storage raster creation we need """
+"""For storage raster creation we need"""
 
-
-from threedi_scenario_downloader import downloader as dl
-import hhnk_research_tools as hrt
+# from threedi_scenario_downloader import downloader as dl  # FIXME Zie #102
 import os
+
+import hhnk_research_tools as hrt
+
 import hhnk_threedi_tools as htt
 import hhnk_threedi_tools.core.api.download_gui_class as download_gui_class
+from hhnk_threedi_tools.external import downloader as dl
 from tests.config import FOLDER_TEST, TEMP_DIR
 
-api_keys_path = fr"{os.getenv('APPDATA')}\3Di\QGIS3\profiles\default\python\plugins\hhnk_threedi_plugin\api_key.txt"
+api_keys_path = rf"{os.getenv('APPDATA')}\3Di\QGIS3\profiles\default\python\plugins\hhnk_threedi_plugin\api_key.txt"
 api_keys = hrt.read_api_file(api_keys_path)
 
 dl.set_api_key(api_key=api_keys["lizard"])
 
 dem = FOLDER_TEST.model.schema_base.rasters.dem
 
-#Download rasters for area
-uuids= {}
-uuids['soil'] = '9e3534b7-b5d4-46ab-be35-4a0990379f76'
+# Download rasters for area
+uuids = {}
+uuids["soil"] = "9e3534b7-b5d4-46ab-be35-4a0990379f76"
 # uuids['building'] = '98b5155d-dbc4-4a0c-a407-a9620741d308'
 
 # Download rasters that are not on system yet.
@@ -29,12 +31,14 @@ folder = hrt.Folder(TEMP_DIR)
 
 
 dl_raster_settings = download_gui_class.dlRasterSettingsV4()
-r = download_gui_class.dlRaster(scenario_uuid = uuids['soil'],
-                                raster_code = "",
-                                resolution = dem.metadata.pixel_width,
-                                output_path = folder.full_path("soil.tif").base,
-                                is_threedi_scenario = False,
-                                bbox=dem.metadata.bbox)
+r = download_gui_class.dlRaster(
+    scenario_uuid=uuids["soil"],
+    raster_code="",
+    resolution=dem.metadata.pixel_width,
+    output_path=folder.full_path("soil.tif").base,
+    is_threedi_scenario=False,
+    bbox=dem.metadata.bbox,
+)
 dl_raster_settings.add_raster(r)
 
 
@@ -61,14 +65,14 @@ for idx, gxg in enumerate(["glg", "ggg", "ghg"]):
     if not gwlvl_raster.exists():
         dem_array = dem._read_array()
 
-        gwlvl_array = dem_array - 1 + 0.3*idx #glg=-1, ggg=-0.7, ghg=-0.4
+        gwlvl_array = dem_array - 1 + 0.3 * idx  # glg=-1, ggg=-0.7, ghg=-0.4
         mask = dem_array == dem.nodata
 
         gwlvl_array[mask] = dem.nodata
         hrt.save_raster_array_to_tiff(
-            output_file = gwlvl_raster,
-            raster_array = gwlvl_array,
-            nodata = dem.nodata,
-            metadata = dem.metadata,
-            overwrite=True
+            output_file=gwlvl_raster,
+            raster_array=gwlvl_array,
+            nodata=dem.nodata,
+            metadata=dem.metadata,
+            overwrite=True,
         )

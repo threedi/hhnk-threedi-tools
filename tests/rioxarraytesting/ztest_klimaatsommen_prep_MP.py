@@ -3,6 +3,7 @@
 import datetime
 import multiprocessing as mp
 import shutil
+from curses import wrapper
 
 import hhnk_research_tools as hrt
 import pandas as pd
@@ -135,27 +136,103 @@ df = pd.DataFrame([1, 2, 3, 4, 5])
 import time
 
 import dask
+import dask.config
+
+dask.config.set({"distributed.schedluar.allowed-failures": 1, "distributed.comm.timeouts.connect": "5s"})
+
+a = time.time()
 
 
 @dask.delayed
 def square(x):
-    time.sleep(5)
-    # return x**2
+    now = time.time() - a
+    print(f"{round(now,1)} {x} start")
+    time.sleep(x)
+    return x**2
 
 
-numbers = [1, 2, 3, 4, 5]
-
+numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 squares = []
-
 for number in numbers:
     s = square(number)
     squares.append(s)
 
-dask.compute(squares)
-
+# dask.compute(squares)
+# print(time.time() - a)
 # print(*dask.compute(squares))
 
+# %%
+import concurrent.futures
+import time
 
+import dask
+
+
+def with_timeout(timeout_seconds):
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            try:
+                with concurrent.futures.ThreadPoolExecutor() as executor:
+                    return executor.submit(func, *args, **kwargs).result(timeout=timeout_seconds)
+            except concurrent.futures.TimeoutError:
+                return None
+
+        return wrapper
+
+    return decorator
+
+
+@with_timeout(timeout_seconds=2)
+@dask.delayed
+def square(x):
+    now = time.time() - a
+    print(f"{round(now,1)} {x} start")
+    time.sleep(x)
+    return x**2
+
+
+total = []
+# total += dask.delayed(inc)(3)
+numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+squares = []
+for number in numbers:
+    s = square(number)
+    squares.append(s)
+
+r = dask.compute(squares)
+print(r)
+
+
+# %%
+a = time.time()
+
+
+# @dask.delayed
+def safe_execute(func, *args, timeout_seconds):
+    try:
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            future = executor.submit(func, *args)
+            return future.result(timeout=timeout_seconds)
+    except concurrent.futures.TimeoutError:
+        return None
+
+
+# def square(x):
+#     now = time.time() - a
+#     print(f"{round(now,1)} {x} start")
+#     time.sleep(x)
+#     return x**2
+
+# total = []
+# # total += dask.delayed(inc)(3)
+# numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+# squares = []
+# for number in numbers:
+#     s = safe_execute(square,number,timeout_seconds=2)
+#     squares.append(s)
+
+# r = dask.compute(squares)
+# print(r)
 # %% TESTING WITH xarray, rasterio and rioxarray
 
 

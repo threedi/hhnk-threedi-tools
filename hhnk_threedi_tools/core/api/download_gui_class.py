@@ -12,9 +12,10 @@ import pandas as pd
 import requests
 from IPython.core.display import HTML
 from IPython.display import display
+
+# from threedi_scenario_downloader import downloader as dl  # FIXME Zie #102
 from traitlets import Unicode
 
-# from threedi_scenario_downloader import downloader as dl #FIXME Zie #77 wanneer weg
 import hhnk_threedi_tools.core.api.download_functions as download_functions
 from hhnk_threedi_tools import Folders
 from hhnk_threedi_tools.core.api.calculation import Simulation
