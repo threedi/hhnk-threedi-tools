@@ -6,13 +6,8 @@ import time
 # A class for project
 class Project:
     def __init__(self, folder: str):
-        self.folder = folder # set project folder
-
-        if Path(folder).exists():
-            folders = Folders(folder, create=False) # set folders instance for existing project folder
-        else:
-            Path(folder).mkdir(parents=True, exist_ok=True)
-            folders = Folders(folder, create=True) # create folders instance for new project folder
+        self.project_folder = folder # set project folder
+        folders = Folders(folder, create=True) # create folders instance for new project folder
 
         self.json_path = str(folders.project_json.path)
         if folders.project_json.exists():
@@ -24,8 +19,7 @@ class Project:
     def initialise_new_project(self):
         """ Create all Project variables for a new project """
         self.project_status = 0
-        self.project_name = str(Path(self.folder).name)
-        self.project_folder = self.folder
+        self.project_name = str(Path(self.project_folder).name)
 
     def update_project_status(self, status):
         self.project_status = status

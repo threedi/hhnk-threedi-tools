@@ -29,11 +29,18 @@ CHANNEL_FROM_PROFILES = f"channel_surface_from_profiles{file_types_dict[SHAPE]}"
 FOLDER_STRUCTURE = """
     Main Folders object
         ├── project.json
+        ├── 00_config
+        │ ├── conversion
+        │     └── conversion_config_hydroobject.json
+        │ └── validation
+        │     └── validation_rules.json               
         ├── 01_source_data
         │ ├── DAMO.gpkg
         │ ├── HyDAMO.gpkg
         │ ├── HDB.gpkg
         │ ├── datachecker_output.gpkg
+        │ ├── rasters
+        │     └── dem.tif
         │ └── modelbuilder_output
         │     └── preprocessed
         │ └── hydamo_validation
@@ -90,6 +97,7 @@ class Folders(Folder):
                 Heiloo @ C:/Poldermodellen/Heiloo
                                 Folders:	  
                                     Folders
+                                    ├── 00_config
                                     ├── 01_source_data
                                     ├── 02_schematisation
                                     ├── 03_3di_results
@@ -121,6 +129,9 @@ class Folders(Folder):
         # project.json
         self.project_json = self.add_file("project_json", "project.json")
 
+        # config
+        self.config = ConfigDir(self.base, create=create)
+
         # source
         self.source_data = SourceDir(self.base, create=create)
 
@@ -138,6 +149,7 @@ class Folders(Folder):
         return f"""  
                {self.space}Folders
                {self.space}├── project.json (.project_json)
+               {self.space}├── 00_config
                {self.space}├── 01_source_data (.source_data)
                {self.space}├── 02_schematisation (.model)
                {self.space}├── 03_3di_results (.threedi_results)
@@ -158,8 +170,15 @@ class Folders(Folder):
         """
         return {
             "project_json": self.project_json.path_if_exists,
+            # config
+            "validation": self.config.validation.path_if_exists,
+            "validation_rules": self.config.validation.validation_rules.path_if_exists,
+            "conversion": self.config.conversion.path_if_exists,
+            "conversion_config_hydroobject": self.config.conversion.conversion_config_hydrobject.path_if_exists,
+            # source data
             "datachecker": self.source_data.datachecker.path_if_exists,
             "damo": self.source_data.damo.path_if_exists,
+            "dem": self.source_data.modelbuilder.dem.path_if_exists,
             "hydamo": self.source_data.hydamo.path_if_exists,
             "validation_result": self.source_data.hydamo_validation.validation_result.path_if_exists,
             "hdb": self.source_data.hdb.path_if_exists,
@@ -184,8 +203,52 @@ class Folders(Folder):
     @classmethod
     def is_valid(self, folderpath):
         """Check if folder stucture is available in input folder."""
-        SUB_FOLDERS = ["01_source_data", "02_schematisation", "03_3di_results", "04_test_results"]
+        SUB_FOLDERS = ["00_config", "01_source_data", "02_schematisation", "03_3di_results", "04_test_results"]
         return all([Path(folderpath).joinpath(i).exists() for i in SUB_FOLDERS])
+
+class ConfigDir(Folder):
+    """Folder with configuration files"""
+    
+    def __init__(self, base, create):
+        super().__init__(os.path.join(base, "00_config"), create=create)
+
+        # Folders
+        self.conversion = self.ConversionDir(self.base, create=create)
+        self.validation = self.ValidationDir(self.base, create=create)
+
+        if create:
+            self.create_readme()
+
+        # Files
+        self.conversion_config_hydrobject = self.add_file("conversion_config_hydroobject", "conversion_config_hydroobject.json")
+        self.validation_rules = self.add_file("validation_rules", "validation_rules.json")
+
+    @property
+    def structure(self):
+        return f"""  
+            {self.space}00_config
+            {self.space}├── conversion
+            {self.space}└── validation
+            """
+
+    def create_readme(self):
+        readme_txt = (
+            "Expected files are:\n\n"
+            "Json file with conversion rules of hydroobjects named 'conversion_config_hydroobject.json'\n"
+            "Json file with validation rules named 'validation_rules.json'\n"
+        )
+        with open(os.path.join(self.base, "read_me.txt"), mode="w") as f:
+            f.write(readme_txt)
+
+    class ConversionDir(Folder):
+        def __init__(self, base, create):
+            super().__init__(os.path.join(base, "conversion"), create=create)
+            self.conversion_config_hydrobject = self.add_file("conversion_config_hydroobject", "conversion_config_hydroobject.json")
+
+    class ValidationDir(Folder):
+        def __init__(self, base, create):
+            super().__init__(os.path.join(base, "validation"), create=create)
+            self.validation_rules = self.add_file("validation_rules", "validation_rules.json")
 
 
 class SourceDir(Folder):
@@ -206,6 +269,8 @@ class SourceDir(Folder):
         # Files
         self.add_file("damo", "DAMO.gpkg")
         self.damo.add_layers(["DuikerSifonHevel", "waterdeel"])
+
+        self.add_file("dem", "dem.tif")
 
         self.add_file("hydamo", "HyDAMO.gpkg")
 
