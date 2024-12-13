@@ -1,3 +1,4 @@
+# %%
 """DAMO exporter based on model extent"""
 
 import geopandas as gpd
@@ -5,7 +6,7 @@ from hhnk_research_tools.sql_functions import (
     database_to_gdf,
     sql_builder_select_by_location,
 )
-from local_settings import DATABASES
+from hhnk_threedi_plugin.local_settings import DATABASES
 from shapely.geometry import box
 
 
@@ -20,8 +21,7 @@ def DAMO_exporter(model_extent, table_names, EPSG_CODE="28992"):
     schema = "DAMO_W"
 
     # make bbox --> to simply string request to DAMO db
-    min_x, min_y, max_x, max_y = model_extent.bounds
-    bbox_model = box(min_x, min_y, max_x, max_y)
+    bbox_model = box(*model_extent.total_bounds)
 
     dict_gdfs_damo = {}
     for table in table_names:
@@ -43,8 +43,10 @@ def DAMO_exporter(model_extent, table_names, EPSG_CODE="28992"):
     return dict_gdfs_damo
 
 
+# %%
 # Test
-POLDERS_PATH = r"E:\01.basisgegevens\Polders\polderclusters.gpkg"
-POLDERS = gpd.read_file(POLDERS_PATH, engine="pyogrio")
-model_extent = POLDERS["geometry"][15]
-output_DAMO = DAMO_exporter(model_extent, ["HYDROOBJECT"])
+if __name__ == "__main__":
+    POLDERS_PATH = r"\\corp.hhnk.nl\data\Hydrologen_data\Data\09.modellen_speeltuin\egmondermeer_leggertool\01_source_data\polder_polygon.shp"
+    POLDERS = gpd.read_file(POLDERS_PATH, engine="pyogrio")
+    model_extent = POLDERS
+    output_DAMO = DAMO_exporter(model_extent, ["HYDROOBJECT"])
