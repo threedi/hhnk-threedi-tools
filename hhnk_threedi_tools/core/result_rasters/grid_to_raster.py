@@ -325,7 +325,7 @@ class GridToWaterDepth:
         """
         self.dem_raster = hrt.Raster(dem_path)
         self.wlvl_raster = hrt.Raster(wlvl_path)
-        self.depth_raster = None
+        self.depth_raster = None  # Set on run.
 
         if not self.wlvl_raster.path.exists():
             raise FileNotFoundError(
@@ -357,6 +357,7 @@ class GridToWaterDepth:
         pass
 
 
+# %%
 if __name__ == "__main__":
     from hhnk_threedi_tools import Folders
 
@@ -377,5 +378,5 @@ if __name__ == "__main__":
 
     # Init calculator
     with GridToWaterLevel(**calculator_kwargs) as self:
-        self.run(output_file=threedi_result.full_path("wdepth_orig.tif"), mode="MODE_WDEPTH", overwrite=OVERWRITE)
+        self.run(output_file=threedi_result.full_path("wdepth_orig.tif"), overwrite=OVERWRITE)
         print("Done.")

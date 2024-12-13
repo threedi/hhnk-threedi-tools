@@ -18,7 +18,7 @@ class TestOneDTwoD:
     @pytest.fixture(scope="class")
     def check_1d2d(self):
         check_1d2d = OneDTwoDTest(folder=FOLDER_TEST, revision=REVISION)
-        check_1d2d.output_fd.create(parents=True)
+        check_1d2d.output_fd.mkdir(parents=True)
         return check_1d2d
 
     def test_run_flowline_stats(self, check_1d2d):
@@ -38,6 +38,8 @@ class TestOneDTwoD:
         output_fd.waterdiepte_T15.exists()
 
         assert output_fd.waterdiepte_T1.shape == [787, 242]
+        # TODO nieuwe waarde -56925.17578125 wijkt nog erg af uitzoeken.
+        # TODO clip op dem lijkt niet te gebeuren?
         assert output_fd.waterdiepte_T15.sum() == 1588.228515625
 
 

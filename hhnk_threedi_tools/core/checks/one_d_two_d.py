@@ -83,13 +83,16 @@ class OneDTwoDTest:
                 wlvl_column=f"wlvl_{T}h",
             ) as raster_calc:
                 level_raster = raster_calc.run(
-                    output_file=getattr(self.output_fd, f"waterdiepte_T{T}"), overwrite=overwrite
+                    output_file=getattr(self.output_fd, f"waterstand_T{T}"),
+                    overwrite=overwrite,
                 )
-            with GridToWaterLevel(
-                dem_path=self.folder.model.schema_base.rasters.dem, wlvl_path=level_raster.path
+            with GridToWaterDepth(
+                dem_path=self.folder.model.schema_base.rasters.dem,
+                wlvl_path=level_raster,
             ) as raster_calc:
-                raster_calc.run(
-                    output_file=getattr(self.output_fd, f"waterstand_T{T}"), mode="MODE_WLVL", overwrite=overwrite
+                _ = raster_calc.run(
+                    output_file=getattr(self.output_fd, f"waterdiepte_T{T}"),
+                    overwrite=overwrite,
                 )
 
     def run_flowline_stats(self):
