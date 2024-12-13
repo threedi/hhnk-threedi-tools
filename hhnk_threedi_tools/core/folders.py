@@ -319,7 +319,7 @@ class SchemaDirParent(Folder):
         def __init__(self, base, create):
             super().__init__(os.path.join(base, "revisions"), create)
             if create:
-                self.create()
+                self.mkdir()
 
     class CalculationRasters(Folder):
         """sub-folder of SchemaDirParent with rasters required for calculations.
