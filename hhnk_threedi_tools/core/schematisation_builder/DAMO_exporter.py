@@ -1,7 +1,6 @@
 """DAMO exporter based on model extent"""
 
 import geopandas as gpd
-import pytest
 from hhnk_research_tools.sql_functions import (
     database_to_gdf,
     sql_builder_select_by_location,
@@ -48,4 +47,4 @@ def DAMO_exporter(model_extent, table_names, EPSG_CODE="28992"):
 POLDERS_PATH = r"E:\01.basisgegevens\Polders\polderclusters.gpkg"
 POLDERS = gpd.read_file(POLDERS_PATH, engine="pyogrio")
 model_extent = POLDERS["geometry"][15]
-output_DAMO = DAMO_exporter(model_extent)
+output_DAMO = DAMO_exporter(model_extent, ["HYDROOBJECT"])
