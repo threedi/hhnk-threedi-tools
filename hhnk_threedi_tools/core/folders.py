@@ -149,7 +149,7 @@ class Folders(Folder):
         return f"""  
                {self.space}Folders
                {self.space}├── project.json (.project_json)
-               {self.space}├── 00_config
+               {self.space}├── 00_config (.config)
                {self.space}├── 01_source_data (.source_data)
                {self.space}├── 02_schematisation (.model)
                {self.space}├── 03_3di_results (.threedi_results)
@@ -227,12 +227,10 @@ class ConfigDir(Folder):
             self.create_readme()
 
         # Files
-        self.conversion_config_hydrobject = self.add_file(
+        self.add_file(
             "conversion_config_hydroobject", "conversion_config_hydroobject.json"
         )
-        self.validation_rules = self.add_file(
-            "validation_rules", "validation_rules.json"
-        )
+        self.add_file("validation_rules", "validation_rules.json")
 
     @property
     def structure(self):
@@ -254,16 +252,14 @@ class ConfigDir(Folder):
     class ConversionDir(Folder):
         def __init__(self, base, create):
             super().__init__(os.path.join(base, "conversion"), create=create)
-            self.conversion_config_hydrobject = self.add_file(
+            self.add_file(
                 "conversion_config_hydroobject", "conversion_config_hydroobject.json"
             )
 
     class ValidationDir(Folder):
         def __init__(self, base, create):
             super().__init__(os.path.join(base, "validation"), create=create)
-            self.validation_rules = self.add_file(
-                "validation_rules", "validation_rules.json"
-            )
+            self.add_file("validation_rules", "validation_rules.json")
 
 
 class SourceDir(Folder):
