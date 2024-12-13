@@ -203,12 +203,19 @@ class Folders(Folder):
     @classmethod
     def is_valid(self, folderpath):
         """Check if folder stucture is available in input folder."""
-        SUB_FOLDERS = ["00_config", "01_source_data", "02_schematisation", "03_3di_results", "04_test_results"]
+        SUB_FOLDERS = [
+            "00_config",
+            "01_source_data",
+            "02_schematisation",
+            "03_3di_results",
+            "04_test_results",
+        ]
         return all([Path(folderpath).joinpath(i).exists() for i in SUB_FOLDERS])
+
 
 class ConfigDir(Folder):
     """Folder with configuration files"""
-    
+
     def __init__(self, base, create):
         super().__init__(os.path.join(base, "00_config"), create=create)
 
@@ -220,8 +227,12 @@ class ConfigDir(Folder):
             self.create_readme()
 
         # Files
-        self.conversion_config_hydrobject = self.add_file("conversion_config_hydroobject", "conversion_config_hydroobject.json")
-        self.validation_rules = self.add_file("validation_rules", "validation_rules.json")
+        self.conversion_config_hydrobject = self.add_file(
+            "conversion_config_hydroobject", "conversion_config_hydroobject.json"
+        )
+        self.validation_rules = self.add_file(
+            "validation_rules", "validation_rules.json"
+        )
 
     @property
     def structure(self):
@@ -243,12 +254,16 @@ class ConfigDir(Folder):
     class ConversionDir(Folder):
         def __init__(self, base, create):
             super().__init__(os.path.join(base, "conversion"), create=create)
-            self.conversion_config_hydrobject = self.add_file("conversion_config_hydroobject", "conversion_config_hydroobject.json")
+            self.conversion_config_hydrobject = self.add_file(
+                "conversion_config_hydroobject", "conversion_config_hydroobject.json"
+            )
 
     class ValidationDir(Folder):
         def __init__(self, base, create):
             super().__init__(os.path.join(base, "validation"), create=create)
-            self.validation_rules = self.add_file("validation_rules", "validation_rules.json")
+            self.validation_rules = self.add_file(
+                "validation_rules", "validation_rules.json"
+            )
 
 
 class SourceDir(Folder):
@@ -261,7 +276,9 @@ class SourceDir(Folder):
         self.modelbuilder = self.ModelbuilderPaths(self.base, create=create)
         self.hydamo_validation = self.HydamoValidationPaths(self.base, create=create)
         self.peilgebieden = self.PeilgebiedenPaths(self.base, create=create)
-        self.wsa_output_administratie = self.WsaOutputAdministratie(self.base, create=create)
+        self.wsa_output_administratie = self.WsaOutputAdministratie(
+            self.base, create=create
+        )
 
         if create:
             self.create_readme()
@@ -309,7 +326,9 @@ class SourceDir(Folder):
 
     class WsaOutputAdministratie(Folder):
         def __init__(self, base, create):
-            super().__init__(os.path.join(base, "wsa_output_administratie"), create=create)
+            super().__init__(
+                os.path.join(base, "wsa_output_administratie"), create=create
+            )
             self.add_file("opmerkingen", "opmerkingen.shp")
 
     class ModelbuilderPaths(Folder):
@@ -329,7 +348,11 @@ class SourceDir(Folder):
 
             # Find peilgebieden shapefile in folder.
             if self.exists():
-                shape_name = [x.name for x in self.content if x.stem.startswith("peilgebieden") and x.suffix == ".shp"]
+                shape_name = [
+                    x.name
+                    for x in self.content
+                    if x.stem.startswith("peilgebieden") and x.suffix == ".shp"
+                ]
                 if len(shape_name) == 1:
                     self.add_file("peilgebieden", shape_name[0])
                 else:
@@ -347,8 +370,12 @@ class SchemaDirParent(Folder):
         super().__init__(os.path.join(base, "02_schematisation"), create)
 
         self.revisions = self.ModelRevisionsParent(base=self.base, create=create)
-        self.schema_base = hrt.ThreediSchematisation(base=self.base, name="00_basis", create=create)
-        self.calculation_rasters = self.CalculationRasters(base=self.base, create=create)
+        self.schema_base = hrt.ThreediSchematisation(
+            base=self.base, name="00_basis", create=create
+        )
+        self.calculation_rasters = self.CalculationRasters(
+            base=self.base, create=create
+        )
         self.schema_list = ["schema_base"]
         self.add_file("model_sql", "model_sql.json")
 
@@ -363,14 +390,20 @@ class SchemaDirParent(Folder):
         self.settings_df = None
 
     def _add_modelpath(self, name):
-        setattr(self, f"schema_{name}", hrt.ThreediSchematisation(base=self.base, name=name, create=False))
+        setattr(
+            self,
+            f"schema_{name}",
+            hrt.ThreediSchematisation(base=self.base, name=name, create=False),
+        )
         self.schema_list.append(f"schema_{name}")
         return f"schema_{name}"
 
     def set_modelsplitter_paths(self):
         """Call this to set the individual schematisations for the splitter."""
         if self.settings.exists():
-            if not self.settings_loaded:  # only read once. #FIXME test this, might cause issues.
+            if (
+                not self.settings_loaded
+            ):  # only read once. #FIXME test this, might cause issues.
                 self.settings_df = pd.read_excel(self.settings.base, engine="openpyxl")
                 self.settings_df = self.settings_df[self.settings_df["name"].notna()]
                 self.settings_df.set_index("name", drop=False, inplace=True)
@@ -417,7 +450,9 @@ class SchemaDirParent(Folder):
             super().__init__(os.path.join(base, "rasters_verwerkt"), create)
 
             # self.add_file("dem", "dem_50cm.tif")
-            self.add_file("damage_dem", "damage_dem.tif")  # TODO glob maken van beschikbare damage_dems.
+            self.add_file(
+                "damage_dem", "damage_dem.tif"
+            )  # TODO glob maken van beschikbare damage_dems.
             self.add_file("panden", "panden.tif")
             if create:
                 self.mkdir()
@@ -497,7 +532,9 @@ class ThreediResultsDir(Folder):
 
     class ZeroDOneDDir(hrt.RevisionsDir):
         def __init__(self, base, create):
-            super().__init__(base, "0d1d_results", returnclass=hrt.ThreediResult, create=create)
+            super().__init__(
+                base, "0d1d_results", returnclass=hrt.ThreediResult, create=create
+            )
 
         @property
         def structure(self):
@@ -505,7 +542,9 @@ class ThreediResultsDir(Folder):
 
     class OneDTwoDDir(hrt.RevisionsDir):
         def __init__(self, base, create):
-            super().__init__(base, "1d2d_results", returnclass=hrt.ThreediResult, create=create)
+            super().__init__(
+                base, "1d2d_results", returnclass=hrt.ThreediResult, create=create
+            )
 
         @property
         def structure(self):
@@ -513,7 +552,9 @@ class ThreediResultsDir(Folder):
 
     class ClimateResultsDir(hrt.RevisionsDir):
         def __init__(self, base, create):
-            super().__init__(base, "batch_results", returnclass=ClimateResult, create=create)
+            super().__init__(
+                base, "batch_results", returnclass=ClimateResult, create=create
+            )
 
         @property
         def structure(self):
@@ -532,11 +573,21 @@ class OutputDirParent(Folder):
     def __init__(self, base, create):
         super().__init__(os.path.join(base, "04_test_results"), create)
 
-        self.sqlite_tests = self.OutputDirSqlite(self.full_path("sqlite_tests"), create=create)
-        self.bank_levels = self.OutputDirBankLevel(self.full_path("bank_levels"), create=create)
-        self.zero_d_one_d = self.OutputDir0d1d(base=self.base, name="0d1d_tests", create=create)
-        self.one_d_two_d = self.OutputDir1d2d(base=self.base, name="1d2d_tests", create=create)
-        self.climate = self.OutputDirClimate(base=self.base, name="climate", create=create)
+        self.sqlite_tests = self.OutputDirSqlite(
+            self.full_path("sqlite_tests"), create=create
+        )
+        self.bank_levels = self.OutputDirBankLevel(
+            self.full_path("bank_levels"), create=create
+        )
+        self.zero_d_one_d = self.OutputDir0d1d(
+            base=self.base, name="0d1d_tests", create=create
+        )
+        self.one_d_two_d = self.OutputDir1d2d(
+            base=self.base, name="1d2d_tests", create=create
+        )
+        self.climate = self.OutputDirClimate(
+            base=self.base, name="climate", create=create
+        )
 
         if create:
             self.create_readme()
@@ -607,7 +658,9 @@ class OutputDirParent(Folder):
 
     class OutputDir0d1d(hrt.RevisionsDir):
         def __init__(self, base, name, create):
-            super().__init__(base, name, returnclass=self.Outputd0d1d_revision, create=create)
+            super().__init__(
+                base, name, returnclass=self.Outputd0d1d_revision, create=create
+            )
 
         @property
         def structure(self):
@@ -631,7 +684,9 @@ class OutputDirParent(Folder):
 
     class OutputDir1d2d(hrt.RevisionsDir):
         def __init__(self, base, name, create):
-            super().__init__(base, name, returnclass=self.Outputd1d2d_revision, create=create)
+            super().__init__(
+                base, name, returnclass=self.Outputd1d2d_revision, create=create
+            )
 
         @property
         def structure(self):
