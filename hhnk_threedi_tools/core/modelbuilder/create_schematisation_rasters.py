@@ -1,8 +1,11 @@
 # %%
 """Aanmaken rasters voor model"""
 
+from typing import Union
+
 import geopandas as gpd
 import hhnk_research_tools as hrt
+import xarray as xr
 
 import hhnk_threedi_tools as htt
 
@@ -157,3 +160,74 @@ class ModelbuilderRasters:
 # # stats.strip_dirs()
 # stats.sort_stats("tottime")
 # stats.print_stats()
+
+
+# %% RXR
+
+
+class ModelbuilderRastersRxr(hrt.RasterCalculatorRxr):
+    def __init__(
+        self,
+        raster_out: hrt.Raster,
+        raster_paths_dict: dict[str : hrt.Raster],
+        metadata_key: str,
+        nodata_keys: list[str],
+        verbose: bool = False,
+        tempdir: hrt.Folder = None,
+    ):
+        """Create model dem with nodata outside polder."""
+        super().__init__(
+            raster_out=raster_out,
+            raster_paths_dict=raster_paths_dict,
+            nodata_keys=nodata_keys,
+            metadata_key=metadata_key,
+            verbose=verbose,
+            tempdir=tempdir,
+        )
+
+    def run_dem(self, chunksize: Union[int, None] = None, overwrite: bool = False):
+        cont = self.verify(overwrite=overwrite)
+
+        if cont:
+            # Load dataarrays
+            da_dict = {}
+            da_dem = da_dict["dem"] = self.raster_paths_same_bounds["dem"].open_rxr(chunksize)
+            da_polder = da_dict["polder"] = self.raster_paths_same_bounds["polder"].open_rxr(chunksize)  # Nodata key
+            da_watervlakken = da_dict["watervlakken"] = self.raster_paths_same_bounds["watervlakken"].open_rxr(
+                chunksize
+            )
+
+            nodata = da_dem.rio.nodata
+
+            # Create global no data mask
+            da_nodatamasks = self.get_nodatamasks(da_dict=da_dict, nodata_keys=self.nodata_keys)
+
+            da_out = xr.full_like(da_dem, nodata)
+            da_out = xr.where(da_watervlakken == 1, 10, da_out)  # Watervlakken ophogen naar 10mNAP
+            da_out = xr.where(da_nodatamasks, nodata, da_out)  # Polder extent
+
+            self.raster_out = hrt.Raster.write(self.raster_out, result=da_out, nodata=nodata, chunksize=chunksize)
+            return self.raster_out
+        else:
+            print("Cont is False")
+
+
+# init calculator
+self = dem_calc = ModelbuilderRastersRxr(
+    raster_out=folder.dst.dem,
+    raster_paths_dict={
+        "dem": folder.src.dem,
+        "polder": folder.dst.tmp.polder,
+        "watervlakken": folder.dst.tmp.watervlakken,
+    },
+    metadata_key="polder",
+    nodata_keys=["polder"],
+    # mask_keys=["polder", "dem"],
+    # custom_run_window_function=run_dem_window,
+    # output_nodata=self.nodata,
+    # min_block_size=4096,
+    verbose=verbose,
+    tempdir=folder.dst.tmp,
+)
+
+# %% ENDTEST

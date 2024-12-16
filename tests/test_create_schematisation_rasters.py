@@ -13,32 +13,36 @@ importlib.reload(folders_modelbuilder)
 def test_create_schematisation_rasters():
     """Test creation of model rasters"""
     # %%
+
+    rasters_dir = FOLDER_TEST.model.schema_base.rasters
     source_paths = folders_modelbuilder.SourcePaths(
-        dem_path=FOLDER_TEST.model.schema_base.rasters.dem,
-        glg_path=FOLDER_TEST.model.schema_base.rasters.full_path("storage_glg_hoekje.tif"),
-        ggg_path=FOLDER_TEST.model.schema_base.rasters.full_path("storage_ggg_hoekje.tif"),
-        ghg_path=FOLDER_TEST.model.schema_base.rasters.full_path("storage_ghg_hoekje.tif"),
-        infiltration_path=FOLDER_TEST.model.schema_base.rasters.full_path("infiltration_hoekje.tif"),
-        friction_path=FOLDER_TEST.model.schema_base.rasters.full_path("friction_hoekje.tif"),
+        dem_path=rasters_dir.dem,
+        glg_path=rasters_dir.full_path("storage_glg_hoekje.tif"),
+        ggg_path=rasters_dir.full_path("storage_ggg_hoekje.tif"),
+        ghg_path=rasters_dir.full_path("storage_ghg_hoekje.tif"),
+        infiltration_path=rasters_dir.full_path("infiltration_hoekje.tif"),
+        friction_path=rasters_dir.full_path("friction_hoekje.tif"),
         polder_path=FOLDER_TEST.source_data.polder_polygon,
         watervlakken_path=FOLDER_TEST.source_data.modelbuilder.channel_from_profiles,
     )
 
-    folder_rasters = folders_modelbuilder.FoldersModelbuilder(dst_path=TEMP_DIR, source_paths=source_paths)
+    folder = folders_modelbuilder.FoldersModelbuilder(dst_path=TEMP_DIR, source_paths=source_paths)
 
-    assert folder_rasters.dst.dem.exists() is False
+    assert folder.dst.dem.exists() is False
 
-    model_rasters = ModelbuilderRasters(
-        folder=folder_rasters,
-        resolution=0.5,
-        nodata=-9999,
-        overwrite=False,
+    resolution = 0.5
+    nodata = -9999
+    overwrite = False
+    verbose = True
+    chunksize = None
+    self = model_rasters = ModelbuilderRasters(
+        folder=folder, resolution=resolution, nodata=nodata, overwrite=overwrite, verbose=verbose
     )
 
     model_rasters.run()
 
-    assert folder_rasters.dst.dem.exists() is True
-    assert folder_rasters.dst.dem.shape == [6962, 7686]
+    assert folder.dst.dem.exists() is True
+    assert folder.dst.dem.shape == [6962, 7686]
 
 
 # %%

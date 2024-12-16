@@ -101,16 +101,7 @@ class StorageRaster(hrt.RasterCalculatorRxr):
 
             da_dewa = da_dem - da_gwlvl
 
-            # Create global no data mask
-            da_nodatamasks = self.get_nodatamasks(da_dict=da_dict)
-
-            # Mask where out storage should be zero
-            zeromasks = {}
-            zeromasks["dem_water"] = da_dem == 10  # TODO watervlakken?
-            zeromasks["negative_dewa"] = da_dewa < 0
-            # Stack the conditions into a single DataArray
-            da_zeromasks = self.concat_masks(zeromasks)
-            da_storage = xr.full_like(da_dem, da_dem.rio.nodata)
+            da_storage = xr.full_like(da_dem, nodata)
 
             # create empty result array
             da_storage = xr.map_blocks(
@@ -120,8 +111,16 @@ class StorageRaster(hrt.RasterCalculatorRxr):
                 template=da_storage,
             )
 
-            # Apply nodata and zero values
+            # Mask where out storage should be zero
+            zeromasks = {}
+            zeromasks["dem_water"] = da_dem == 10  # TODO watervlakken?
+            zeromasks["negative_dewa"] = da_dewa < 0
+            # Stack the conditions into a single DataArray
+            da_zeromasks = self.concat_masks(zeromasks)
             da_storage = xr.where(da_zeromasks, 0, da_storage)
+
+            # Apply global no data mask
+            da_nodatamasks = self.get_nodatamasks(da_dict=da_dict, nodata_keys=self.nodata_keys)
             da_storage = xr.where(da_nodatamasks, nodata, da_storage)
 
             self.raster_out = hrt.Raster.write(self.raster_out, result=da_storage, nodata=nodata, chunksize=chunksize)
