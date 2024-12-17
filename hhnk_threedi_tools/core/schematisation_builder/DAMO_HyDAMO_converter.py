@@ -30,12 +30,20 @@ class Converter:
         List of layer names to convert to HyDAMO
     """
 
-    def __init__(self, DAMO_path, HyDAMO_path, hydamo_schema_path, damo_schema_path, layers):
+    def __init__(self, DAMO_path, HyDAMO_path, layers, hydamo_schema_path=None, damo_schema_path=None):
         self.DAMO_path = Path(DAMO_path)
         self.HyDAMO_path = Path(HyDAMO_path)
-        self.hydamo_schema_path = Path(hydamo_schema_path)
-        self.damo_schema_path = Path(damo_schema_path)
         self.layers = layers
+
+        if hydamo_schema_path is None:
+            self.hydamo_schema_path = Path(__file__).parent / "HyDAMO_2_3/HyDAMO_2.3.json"
+        else:
+            self.hydamo_schema_path = Path(hydamo_schema_path)
+        
+        if damo_schema_path is None:
+            self.damo_schema_path = Path(__file__).parent / "DAMO_2_3/DAMO_23.xml"
+        else:
+            self.damo_schema_path = Path(damo_schema_path)
 
         self.retrieve_domain_mapping()
         self.retrieve_HyDAMO_definitions()
@@ -45,7 +53,7 @@ class Converter:
 
     def retrieve_domain_mapping(self):
         """
-        Retrieve the domain mapping from the DAMO schema.
+        Retrieve the domain mapping from the DAMO schema.DA
 
         Returns
         -------
