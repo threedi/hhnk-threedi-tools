@@ -40,6 +40,7 @@ class Converter:
         self.retrieve_domain_mapping()
         self.retrieve_HyDAMO_definitions()
 
+    def run(self):
         self.convert()
 
     def retrieve_domain_mapping(self):
