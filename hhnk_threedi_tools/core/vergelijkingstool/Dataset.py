@@ -260,7 +260,6 @@ class DataSet:
         :param comparison: Dictionary with the comparison rules
         :return:
         """
-
         self.logger.debug(f"Applying comparison with the following data: {comparison}")
 
         name = comparison["name"]
@@ -268,6 +267,10 @@ class DataSet:
         comparison_type = comparison["type"]
         table_name = comparison["table"]
         table = df[table_name]
+
+        # Compare only with the selection that has been made, table_names comes from names of the of the table dictionary
+        # used in the function apply_attribute_comparison
+        print(f"the name to compare is {table_name}")
 
         # Try reading the priority, if not set, use "critical"
         try:
@@ -374,11 +377,20 @@ class DataSet:
         """
 
         self.logger.debug(f"Start applying attribute comparison")
+
         try:
             with open(attribute_comparison) as file:
                 att_comp = json.load(file)
                 for comparison in att_comp["comparisons"]:
-                    table = self.compare_attribute(table, comparison)
+                    description = comparison["description"]
+                    table_name = comparison["table"]
+
+                    if table_name in table.keys():
+                        print(f"comparing {description}")
+                        table = self.compare_attribute(table, comparison)
+                    else:
+                        # table = self.compare_attribute(table, comparison)
+                        print(f"The table {table_name} is not included in the comparision process")
 
         except json.decoder.JSONDecodeError as err:
             self.logger.error(
