@@ -11,8 +11,22 @@ from shapely.geometry import box
 
 
 def DAMO_exporter(model_extent, table_names, EPSG_CODE="28992"):
-    # if instead of a model_extent, polder_name is given as input.
-    # make it possible to select geometry of polder from polderclusters.gpkg
+    """Exports data from DAMO for polder of interest.
+    
+    Parameters
+    ----------
+    model_extent : (MULTI)POLYGON
+        Select geometry in .gpkg file of polder
+    table_names : list
+        f"landuse_{landuse_name}.tif" -> name to use in the output. 'landuse_' will be prepended.
+    ESPG_CODE : str
+        Default is "28992"
+
+    Returns
+    -------
+    gpkg -> output from DAMO for each table.
+    """
+
     db_dicts = {
         "aquaprd": DATABASES.get("aquaprd_lezen", None),
         "bgt": DATABASES.get("bgt_lezen", None),
