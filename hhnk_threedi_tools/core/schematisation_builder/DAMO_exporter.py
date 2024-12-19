@@ -56,8 +56,8 @@ def DAMO_exporter(model_extent, table_names, output_file, EPSG_CODE="28992"):
             # exports data from DAMO database
             bbox_gdf, sql2 = database_to_gdf(db_dict=db_dict, sql=sql, columns=columns)
 
-            # clip gdf to model_extent again
-            gdf_model = gpd.clip(bbox_gdf, model_extent)
+            # select all objects which (partly) lay within the model extent
+            gdf_model = bbox_gdf[bbox_gdf["geometry"].intersects(model_extent)]
 
             # adds table to geopackage file as a layer
             gdf_model.to_file(output_file, layer=table, driver="GPKG")
