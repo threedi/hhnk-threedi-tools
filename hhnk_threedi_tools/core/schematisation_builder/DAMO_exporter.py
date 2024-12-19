@@ -7,8 +7,9 @@ from hhnk_research_tools.sql_functions import (
     database_to_gdf,
     sql_builder_select_by_location,
 )
-from hhnk_threedi_plugin.local_settings import DATABASES
 from shapely.geometry import box
+
+from local_settings import DATABASES
 
 
 def DAMO_exporter(model_extent, table_names, output_file, EPSG_CODE="28992"):
@@ -29,6 +30,7 @@ def DAMO_exporter(model_extent, table_names, output_file, EPSG_CODE="28992"):
     -------
     gpkg -> output from DAMO for each table.
     """
+
     logger = hrt.logging.get_logger(__name__)
     logger.info("Start export from DAMO database")
 
