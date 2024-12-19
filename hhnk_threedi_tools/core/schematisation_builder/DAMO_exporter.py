@@ -2,6 +2,7 @@
 """DAMO exporter based on model extent"""
 
 import geopandas as gpd
+import hhnk_research_tools as hrt
 from hhnk_research_tools.sql_functions import (
     database_to_gdf,
     sql_builder_select_by_location,
@@ -15,8 +16,8 @@ def DAMO_exporter(model_extent, table_names, output_file, EPSG_CODE="28992"):
 
     Parameters
     ----------
-    model_extent : (MULTI)POLYGON
-        Select geometry in .gpkg file of polder
+    model_extent : GeoDataFrame
+        gdf of selected polder
     table_names : list
         f"landuse_{landuse_name}.tif" -> name to use in the output. 'landuse_' will be prepended.
     ESPG_CODE : str
@@ -28,6 +29,8 @@ def DAMO_exporter(model_extent, table_names, output_file, EPSG_CODE="28992"):
     -------
     gpkg -> output from DAMO for each table.
     """
+    logger = hrt.logging.get_logger(__name__)
+    logger.info("Start export from DAMO database")
 
     db_dicts = {
         "aquaprd": DATABASES.get("aquaprd_lezen", None),
@@ -39,8 +42,10 @@ def DAMO_exporter(model_extent, table_names, output_file, EPSG_CODE="28992"):
     # make bbox --> to simplify string request to DAMO db
     bbox_model = box(*model_extent.total_bounds)
 
+    logging = []
     for table in table_names:
         try:
+            logger.info(f"Start export of table {table} from DAMO database")
             # Build sql string for request to DAMO db for given input polygon
             sql = sql_builder_select_by_location(
                 schema=schema, table_name=table, epsg_code=EPSG_CODE, polygon_wkt=bbox_model, simplify=True
@@ -57,8 +62,13 @@ def DAMO_exporter(model_extent, table_names, output_file, EPSG_CODE="28992"):
             # adds table to geopackage file as a layer
             gdf_model.to_file(output_file, layer=table, driver="GPKG")
 
+            logger.info(f"Finished export of table {table} from DAMO database")
         except Exception as e:
-            print(f"An error occured while exporting data from DAMO: {e}")
+            error = f"An error occured while exporting data of table {table} from DAMO: {e}"
+            logger.error(error)
+            logging.append(error)
+
+    return logging
 
 
 # %%
