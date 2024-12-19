@@ -10,9 +10,9 @@ from hhnk_threedi_plugin.local_settings import DATABASES
 from shapely.geometry import box
 
 
-def DAMO_exporter(model_extent, table_names, EPSG_CODE="28992"):
+def DAMO_exporter(model_extent, table_names, output_file, EPSG_CODE="28992"):
     """Exports data from DAMO for polder of interest.
-    
+
     Parameters
     ----------
     model_extent : (MULTI)POLYGON
@@ -20,7 +20,9 @@ def DAMO_exporter(model_extent, table_names, EPSG_CODE="28992"):
     table_names : list
         f"landuse_{landuse_name}.tif" -> name to use in the output. 'landuse_' will be prepended.
     ESPG_CODE : str
-        Default is "28992"
+        Default is "28992".
+    output_file: Path
+        path to output gpkg file in project directory.
 
     Returns
     -------
@@ -34,27 +36,29 @@ def DAMO_exporter(model_extent, table_names, EPSG_CODE="28992"):
 
     schema = "DAMO_W"
 
-    # make bbox --> to simply string request to DAMO db
+    # make bbox --> to simplify string request to DAMO db
     bbox_model = box(*model_extent.total_bounds)
 
-    dict_gdfs_damo = {}
     for table in table_names:
-        # Build sql to select by input polygon
-        sql = sql_builder_select_by_location(
-            schema=schema, table_name=table, epsg_code=EPSG_CODE, polygon_wkt=bbox_model, simplify=True
-        )
-        db_dict = db_dicts["aquaprd"]
-        columns = None
+        try:
+            # Build sql string for request to DAMO db for given input polygon
+            sql = sql_builder_select_by_location(
+                schema=schema, table_name=table, epsg_code=EPSG_CODE, polygon_wkt=bbox_model, simplify=True
+            )
+            db_dict = db_dicts["aquaprd"]
+            columns = None
 
-        bbox_gdf, sql2 = database_to_gdf(db_dict=db_dict, sql=sql, columns=columns)
+            # exports data from DAMO database
+            bbox_gdf, sql2 = database_to_gdf(db_dict=db_dict, sql=sql, columns=columns)
 
-        # clip gdf to model_extent again
-        gdf_model = gpd.clip(bbox_gdf, model_extent)
+            # clip gdf to model_extent again
+            gdf_model = gpd.clip(bbox_gdf, model_extent)
 
-        # add gdf of table export from DAMO to dictonary
-        dict_gdfs_damo[table] = gdf_model
+            # adds table to geopackage file as a layer
+            gdf_model.to_file(output_file, layer=table, driver="GPKG")
 
-    return dict_gdfs_damo
+        except Exception as e:
+            print(f"An error occured while exporting data from DAMO: {e}")
 
 
 # %%
