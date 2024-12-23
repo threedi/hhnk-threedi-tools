@@ -60,7 +60,7 @@ class Converter:
 
     def retrieve_domain_mapping(self):
         """
-        Retrieve the domain mapping from the DAMO schema.DA
+        Retrieve the domain mapping from the DAMO schema.
 
         Returns
         -------
@@ -117,7 +117,7 @@ class Converter:
                             field_type = field_type.replace("esriFieldType", "")
                         field_dict[field_name] = field_type
 
-            self.objects[data_name] = field_dict
+            self.objects[data_name.lower()] = field_dict
 
     def retrieve_HyDAMO_definitions(self):
         """
@@ -197,7 +197,7 @@ class Converter:
         # Get the field type of the attribute from the HyDAMO schema
         field_type = self.get_field_type(column_name, layer_name)
         # Convert the domain values to HyDAMO target values
-        column = self.convert_domain_values(column_name, column)
+        column = self.convert_domain_values(layer_name, column_name, column)
         # Convert the field type to the correct type
         column = self.convert_field_type(column, field_type)
         return column
@@ -223,28 +223,40 @@ class Converter:
         field = properties.get(column_name, {})
         return field.get("type", None)
 
-    def convert_domain_values(self, column_name, column):
+    def convert_domain_values(self, object_name, column_name, column):
         """
-        Check if column_name is a domain.
-        If it is a domain, convert the values of the column to the HyDAMO target values.
+        Check if the column_name corresponds to a field in the specified object that is a domain.
+        If it is a domain, convert the values of the column using the associated domain.
         Else, return the column as is.
 
         Parameters
         ----------
+        object_name : str
+            Name of the object containing the field.
+        column_name : str
+            Name of the column to check and convert.
         column : pandas.Series
-            Attribute column to convert
+            Attribute column to convert.
 
         Returns
         -------
         pandas.Series
-            Converted attribute column
+            Converted attribute column if it corresponds to a domain, else the original column.
         """
-        if column_name in self.domains:
-            domain = self.domains[column_name]
-            mapped_column = column.map(domain)
-            print(f"Converted domain values of column {column_name} from Integer to Text")
-            return mapped_column
+        # Check if the object_name exists and contains the column_name
+        if object_name in self.objects:
+            fields = self.objects[object_name]
+            if column_name in fields:
+                field_domain = fields[column_name]
 
+                # If field_domain corresponds to a domain, perform the conversion
+                if field_domain in self.domains:
+                    domain = self.domains[field_domain]
+                    mapped_column = column.map(domain)
+                    print(f"Converted domain values of column {column_name} in object {object_name} using domain {field_domain}")
+                    return mapped_column
+
+        # If no domain is found, return the column as is
         return column
 
     def convert_field_type(self, column, field_type):
