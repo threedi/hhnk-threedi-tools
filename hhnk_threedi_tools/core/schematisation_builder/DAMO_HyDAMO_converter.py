@@ -80,15 +80,17 @@ class Converter:
 
         # Extract coded values and create the dictionary structure
         for domain_element in domain_elements:
-            domain_name = domain_element.find("DomainName").text
+            domain_name = domain_element.find("DomainName").text.lower()
             coded_values = domain_element.find(".//CodedValues")
             if coded_values is not None:
                 coded_value_dict = {}
                 for coded_value in coded_values.findall("CodedValue"):
-                    name = coded_value.find("Name").text
+                    name = coded_value.find("Name").text.lower()
                     code = coded_value.find("Code").text
                     if code.isdigit():
                         code = int(code)
+                    else:
+                        code = code.lower()
                     coded_value_dict[code] = name
                 self.domains[domain_name.lower()] = coded_value_dict
 
@@ -100,7 +102,7 @@ class Converter:
 
         # Extract Name and create the nested dictionary structure
         for data_element_element in data_element_elements:
-            data_name = data_element_element.find(".//Name").text
+            data_name = data_element_element.find(".//Name").text.lower()
             field_dict = {}
 
             fields_element = data_element_element.find(".//Fields")
@@ -108,12 +110,12 @@ class Converter:
                 field_array_element = fields_element.find(".//FieldArray")
                 if field_array_element is not None:
                     for field_element in field_array_element.findall(".//Field"):
-                        field_name = field_element.find("Name").text
+                        field_name = field_element.find("Name").text.lower()
                         field_domain = field_element.find("Domain")
                         if field_domain is not None:
-                            field_type = field_domain.find("DomainName").text
+                            field_type = field_domain.find("DomainName").text.lower()
                         else:
-                            field_type = field_element.find("Type").text
+                            field_type = field_element.find("Type").text.lower()
                             field_type = field_type.replace("esriFieldType", "")
                         field_dict[field_name] = field_type
 
@@ -244,16 +246,18 @@ class Converter:
             Converted attribute column if it corresponds to a domain, else the original column.
         """
         # Check if the object_name exists and contains the column_name
-        if object_name in self.objects:
+        object_name = object_name.lower()
+        if object_name in self.objects.keys():
             fields = self.objects[object_name]
-            if column_name in fields:
+            if column_name in fields.keys():
                 field_domain = fields[column_name]
-
                 # If field_domain corresponds to a domain, perform the conversion
-                if field_domain in self.domains:
+                if field_domain in self.domains.keys():
                     domain = self.domains[field_domain]
                     mapped_column = column.map(domain)
-                    print(f"Converted domain values of column {column_name} in object {object_name} using domain {field_domain}")
+                    print(
+                        f"Converted domain values of column {column_name} in object {object_name} using domain {field_domain}"
+                    )
                     return mapped_column
 
         # If no domain is found, return the column as is
