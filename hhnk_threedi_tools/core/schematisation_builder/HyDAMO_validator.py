@@ -1,15 +1,25 @@
+import os
+import shutil
 from pathlib import Path
-from HyDAMOValidatieModule.hydamo_validation import validator
+
+folder = Path(__file__).parents[4] / "HyDAMOValidatieModule"
+os.chdir(folder)
+
+from hydamo_validation import validator
 
 # TODO make import work by local installation of HyDAMOValidatieModule
-# TODO how to prepare coverages_dict?
-# TODO create standard validation_rules_json_path in project folder
-# TODO make test for this function
 
-def validate_hydamo(hydamo_file_path, validation_rules_json_path, validation_directory, coverages_dict, output_types=["geopackage", "csv", "geojson"]):
+
+def validate_hydamo(
+    hydamo_file_path,
+    validation_rules_json_path,
+    validation_directory_path,
+    coverages_dict,
+    output_types=["geopackage", "csv", "geojson"],
+):
     """
     Validate the HyDAMO file
-    
+
     Parameters
     ----------
     hydamo_file_path : str
@@ -22,22 +32,21 @@ def validate_hydamo(hydamo_file_path, validation_rules_json_path, validation_dir
         List with the output types, by default ["geopackage", "csv", "geojson"]
     """
     # Prepare the validation directory containing the HyDAMO file and the validation rules
-    validation_directory.mkdir(parents=True, exist_ok=True)
+    validation_directory_path.mkdir(parents=True, exist_ok=True)
     hydamo_file_path = Path(hydamo_file_path)
     validation_rules_json_path = Path(validation_rules_json_path)
-    hydamo_file_path.copy2(validation_directory / hydamo_file_path.name)
-    validation_rules_json_path.copy2(validation_directory / validation_rules_json_path.name)
+
+    # Copy the HyDAMO file and the validation rules to the validation directory if they are not already there
+    if not (validation_directory_path / "datasets" / hydamo_file_path.name).exists():
+        Path(validation_directory_path / "datasets").mkdir(parents=True, exist_ok=True)
+        shutil.copy2(hydamo_file_path, validation_directory_path / "datasets" / hydamo_file_path.name)
+    if not (validation_directory_path / "validationrules.json").exists():
+        shutil.copy2(validation_rules_json_path, validation_directory_path / "validationrules.json")
 
     # Prepare the validator
-    hydamo_validator = validator(
-        coverages=coverages_dict,
-        output_types=output_types
-    )
+    hydamo_validator = validator(coverages=coverages_dict, output_types=output_types)
 
     # Validate the HyDAMO file
-    datamodel, layer_summary, result_summary = hydamo_validator(
-        directory=validation_directory,
-        raise_error=True
-    )
+    datamodel, layer_summary, result_summary = hydamo_validator(directory=validation_directory_path, raise_error=True)
 
     return result_summary.to_dict()
