@@ -1,4 +1,5 @@
 """Folderstructuur voor de modelbuilder."""
+
 import os
 from dataclasses import dataclass
 from pathlib import Path
@@ -68,8 +69,10 @@ class SourcePaths:
 class FoldersModelbuilder:
     """Folder structuur om de rasters in op te slaan.
 
-    dst_base (str): path to output folder
-    source_paths (SourcePaths): bronrasters en shapes
+    source_paths : SourcePaths
+        bronrasters en shapes
+    dst_base : str
+        path to output folder
     """
 
     def __init__(self, dst_path: str, source_paths: SourcePaths):
