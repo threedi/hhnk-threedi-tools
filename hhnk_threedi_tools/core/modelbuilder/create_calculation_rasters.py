@@ -32,7 +32,7 @@ def create_polder_tif(folder, overwrite=False):
         )
 
 
-def create_watervlak_tif(folder, overwrite=False):
+def create_waterdeel_tif(folder, overwrite=False):
     output_file = folder.model.calculation_rasters.waterdeel
     create = hrt.check_create_new_file(
         output_file=output_file,
