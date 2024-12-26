@@ -3,6 +3,7 @@ import tempfile
 from typing import Union
 
 import hhnk_research_tools as hrt
+import pandas as pd
 import rioxarray as rxr
 
 import hhnk_threedi_tools as htt
@@ -65,6 +66,9 @@ def create_landuse_polder_clip(
 
             dem_rxr = dem.open_rxr()
             lu_rxr = landuse_vrt.open_rxr()
+
+            if pd.isna(dem_rxr.rio.nodata):
+                raise ValueError("Dem Nodata is NaN. This will cause issues later.")
 
             # Burn dem nodata into landuse
             result = lu_rxr.where(dem_rxr != dem_rxr.rio.nodata, lu_rxr.rio.nodata)

@@ -55,9 +55,9 @@ if not folder.ond_wtd_tif.exists():
 
 # %%
 
-wd_gdf = folder.wtd_gpkg.load()
-owd_gdf = folder.ond_wtd_gpkg.load()
+# wd_gdf = folder.wtd_gpkg.load()
+# owd_gdf = folder.ond_wtd_gpkg.load()
 
-import pandas as pd
+# import pandas as pd
 
-df = pd.concat([wd_gdf, owd_gdf])
+# df = pd.concat([wd_gdf, owd_gdf])

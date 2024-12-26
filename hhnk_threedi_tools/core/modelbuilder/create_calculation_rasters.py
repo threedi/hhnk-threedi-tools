@@ -5,9 +5,31 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Union
 
+import geopandas as gpd
 import hhnk_research_tools as hrt
 
 from hhnk_threedi_tools import Folders
+
+
+def create_polder_tif(folder, overwrite=False):
+    output_file = folder.model.calculation_rasters.polder
+    create = hrt.check_create_new_file(
+        output_file=output_file,
+        input_files=[folder.source_data.polder_polygon],
+        overwrite=overwrite,
+    )
+    if create:
+        gdf_polder = folder.source_data.polder_polygon.load()
+        metadata = hrt.RasterMetadataV2.from_gdf(gdf=gdf_polder, res=0.5)
+        gdf_polder["value"] = 1
+        hrt.gdf_to_raster(
+            gdf=gdf_polder,
+            value_field="value",
+            raster_out=folder.model.calculation_rasters.polder,
+            nodata=0,
+            metadata=metadata,
+            read_array=False,
+        )
 
 
 @dataclass

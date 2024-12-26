@@ -318,8 +318,6 @@ class SchemaDirParent(Folder):
 
         def __init__(self, base, create):
             super().__init__(os.path.join(base, "revisions"), create)
-            if create:
-                self.mkdir()
 
     class CalculationRasters(Folder):
         """sub-folder of SchemaDirParent with rasters required for calculations.
@@ -334,8 +332,8 @@ class SchemaDirParent(Folder):
             # self.add_file("dem", "dem_50cm.tif")
             self.add_file("damage_dem", "damage_dem.tif")  # TODO glob maken van beschikbare damage_dems.
             self.add_file("panden", "panden.tif")
+            self.add_file("polder", "polder.tif")
             if create:
-                self.mkdir()
                 self.create_readme()
 
         def create_readme(self):
@@ -346,6 +344,7 @@ class SchemaDirParent(Folder):
                     "dem_50cm.tif -> used to create damage_dem.tif\n"
                     "panden.tif -> used to create damage_dem.tif\n"
                     "damage_dem.tif -> dem_50cm.tif + panden.tif. Used for damage calculations.\n\n"
+                    "polder.tif -> Model bounds.\n\n"
                 )
                 with open(readme_file, mode="w") as f:
                     f.write(readme_txt)
