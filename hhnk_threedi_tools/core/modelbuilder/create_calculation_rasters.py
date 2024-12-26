@@ -32,6 +32,27 @@ def create_polder_tif(folder, overwrite=False):
         )
 
 
+def create_watervlak_tif(folder, overwrite=False):
+    output_file = folder.model.calculation_rasters.waterdeel
+    create = hrt.check_create_new_file(
+        output_file=output_file,
+        # input_files=[folder.source_data.polder_polygon], #TODO check edit time of layers in gpkg?
+        overwrite=overwrite,
+    )
+    if create:
+        gdf = folder.source_data.damo.load(layer="Waterdeel")
+        metadata = folder.model.calculation_rasters.polder.metadata
+        gdf["value"] = 1
+        hrt.gdf_to_raster(
+            gdf=gdf,
+            value_field="value",
+            raster_out=folder.model.calculation_rasters.waterdeel,
+            nodata=0,
+            metadata=metadata,
+            read_array=False,
+        )
+
+
 @dataclass
 class DamageDem:
     """Create the damage dem. This dem differs from the original model dem in that the

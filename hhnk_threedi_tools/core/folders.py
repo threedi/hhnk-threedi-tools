@@ -333,6 +333,7 @@ class SchemaDirParent(Folder):
             self.add_file("damage_dem", "damage_dem.tif")  # TODO glob maken van beschikbare damage_dems.
             self.add_file("panden", "panden.tif")
             self.add_file("polder", "polder.tif")
+            self.add_file("waterdeel", "waterdeel.tif")
             if create:
                 self.create_readme()
 
@@ -345,6 +346,7 @@ class SchemaDirParent(Folder):
                     "panden.tif -> used to create damage_dem.tif\n"
                     "damage_dem.tif -> dem_50cm.tif + panden.tif. Used for damage calculations.\n\n"
                     "polder.tif -> Model bounds.\n\n"
+                    "waterdeel.tif -> Waterdeel\n\n"
                 )
                 with open(readme_file, mode="w") as f:
                     f.write(readme_txt)
