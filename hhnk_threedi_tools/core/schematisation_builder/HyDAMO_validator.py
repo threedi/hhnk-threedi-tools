@@ -2,9 +2,6 @@ import os
 import shutil
 from pathlib import Path
 
-folder = Path(__file__).parents[4] / "HyDAMOValidatieModule"
-os.chdir(folder)
-
 from hydamo_validation import validator
 
 # TODO make import work by local installation of HyDAMOValidatieModule
