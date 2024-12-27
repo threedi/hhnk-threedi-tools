@@ -33,7 +33,6 @@ class ClipModelRasterCalc(hrt.RasterCalculatorRxr):
         super().__init__(
             raster_out=raster_out,
             raster_paths_dict=raster_paths_dict,
-            nodata_keys=[],  # TODO uitfaseren
             metadata_key=metadata_key,
             tempdir=tempdir,
         )

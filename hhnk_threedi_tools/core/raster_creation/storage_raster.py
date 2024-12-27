@@ -19,8 +19,6 @@ class StorageRaster(hrt.RasterCalculatorRxr):
         raster_out: hrt.Raster,
         raster_paths_dict: dict[str : hrt.Raster],
         metadata_key: str,
-        nodata_keys: list[str],
-        verbose: bool = False,
         tempdir: hrt.Folder = None,
     ):
         """Bereken beschikbaar bodembergingsraster
@@ -41,9 +39,7 @@ class StorageRaster(hrt.RasterCalculatorRxr):
         super().__init__(
             raster_out=raster_out,
             raster_paths_dict=raster_paths_dict,
-            nodata_keys=nodata_keys,
             metadata_key=metadata_key,
-            verbose=verbose,
             tempdir=tempdir,
         )
 
@@ -120,7 +116,7 @@ class StorageRaster(hrt.RasterCalculatorRxr):
             da_storage = xr.where(da_zeromasks, 0, da_storage)
 
             # Apply global no data mask
-            da_nodatamasks = self.get_nodatamasks(da_dict=da_dict, nodata_keys=self.nodata_keys)
+            da_nodatamasks = self.get_nodatamasks(da_dict=da_dict, nodata_keys=["gwlvl", "dem", "soil"])
             da_storage = xr.where(da_nodatamasks, nodata, da_storage)
 
             self.raster_out = hrt.Raster.write(self.raster_out, result=da_storage, nodata=nodata, chunksize=chunksize)
@@ -149,17 +145,13 @@ if __name__ == "__main__":
         "soil": folder_schema.model.schema_base.rasters.soil,
     }
 
-    verbose = False
     tempdir = None
     metadata_key = "soil"
-    nodata_keys = ["gwlvl", "dem", "soil"]
 
     self = StorageRaster(
         raster_out=raster_out,
         raster_paths_dict=raster_paths_dict,
         metadata_key=metadata_key,
-        nodata_keys=nodata_keys,
-        verbose=verbose,
         tempdir=tempdir,
     )
 
