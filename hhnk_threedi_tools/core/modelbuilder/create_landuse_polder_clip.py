@@ -11,6 +11,7 @@ import hhnk_threedi_tools as htt
 CHUNKSIZE = 4096
 
 
+# TODO Deze is niet nodig als het via ClipModelRasterCalc gaat.
 def create_landuse_polder_clip(
     dem: hrt.Raster,
     landuse_name: str,

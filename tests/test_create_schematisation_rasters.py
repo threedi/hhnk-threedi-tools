@@ -29,6 +29,7 @@ def test_create_schematisation_rasters():
         ghg_path=rasters_dir.full_path("storage_ghg_hoekje.tif"),
         infiltration_path=rasters_dir.full_path("infiltration_hoekje.tif"),
         friction_path=rasters_dir.full_path("friction_hoekje.tif"),
+        landuse_path=FOLDER_TEST.model.schema_base.rasters.landuse,
         polder_path=FOLDER_TEST.source_data.polder_polygon,
         waterdeel_path=FOLDER_TEST.source_data.modelbuilder.channel_from_profiles,
     )
@@ -41,6 +42,7 @@ def test_create_schematisation_rasters():
 
     assert folder_mb.dst.dem.exists() is True
     assert folder_mb.dst.dem.shape == [6962, 7686]
+    assert folder_mb.dst.landuse.sum() == 234612304.0
 
 
 # %%

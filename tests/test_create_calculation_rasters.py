@@ -26,13 +26,13 @@ class TestCreateCalculationRasters:
 
         return FOLDER_NEW
 
-    def test_create_polder_tif(folder_new):
+    def test_create_polder_tif(self, folder_new):
         folder = folder_new
         create_calculation_rasters.create_polder_tif(folder, overwrite=True)
 
         assert folder.model.calculation_rasters.polder.exists()
 
-    def test_create_waterdeel_tif(folder_new):
+    def test_create_waterdeel_tif(self, folder_new):
         folder = folder_new
         create_calculation_rasters.create_waterdeel_tif(folder, overwrite=True)
 
@@ -53,7 +53,7 @@ def test_create_calculation_rasters():
     # assert folder_rasters.dst.dem.exists() is True
     # assert folder_rasters.dst.dem.shape == [6962, 7686]
     # assert dmg_dem.damage_dem.open_rxr().sum() == 1507350.39453125
-    assert dmg_dem.damage_dem.open_rxr().sum().values == 1507349.75
+    assert dmg_dem.damage_dem.open_rxr().sum().to_numpy() == 1507349.75
 
 
 # %%

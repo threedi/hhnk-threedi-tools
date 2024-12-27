@@ -308,7 +308,7 @@ class SchemaDirParent(Folder):
 
     def __repr__(self):
         return f"""{self.name} @ {self.base}
-                    Folders:\t{self.structure}
+                    Folders:\t .calculation_rasters
                     Files:\t{list(self.files.keys())}
                     Model schemas:\t{self.schema_list}
                 """
@@ -335,6 +335,7 @@ class SchemaDirParent(Folder):
             self.add_file("ghg", "ghg.tif")
             self.add_file("infiltration", "infiltration.tif")
             self.add_file("friction", "friction.tif")
+            self.add_file("landuse", "landuse.tif")
             self.add_file("polder", "polder.tif")
             self.add_file("waterdeel", "waterdeel.tif")
 

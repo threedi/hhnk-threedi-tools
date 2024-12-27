@@ -38,7 +38,13 @@ class ClipModelRasterCalc(hrt.RasterCalculatorRxr):
         )
         self.raster_name = raster_name
 
-    def run(self, waterdeel_value=None, chunksize: Union[int, None] = None, overwrite: bool = False):
+    def run(
+        self,
+        waterdeel_value=None,
+        dtype="float32",
+        chunksize: Union[int, None] = None,
+        overwrite: bool = False,
+    ):
         """
         Parameters
         ----------
@@ -54,23 +60,30 @@ class ClipModelRasterCalc(hrt.RasterCalculatorRxr):
         if cont:
             # Load DataArrays
             da_dict = {}
-            da_out = da_dict[self.raster_name] = self.raster_paths_same_bounds[self.raster_name].open_rxr(chunksize)
-            da_polder = da_dict["polder"] = self.raster_paths_same_bounds["polder"].open_rxr(chunksize)  # Nodata key
+            for key, r in self.raster_paths_same_bounds.items():
+                da_dict[key] = r.open_rxr(chunksize)
+
+            da_out = da_dict[self.raster_name]
 
             crs = da_out.rio.crs  # This is lost when xr.where is used.
 
             if waterdeel_value is not None:
                 # waterdeel ophogen naar 10mNAP (default voor dem)
-                da_waterdeel = da_dict["waterdeel"] = self.raster_paths_same_bounds["waterdeel"].open_rxr(chunksize)
-                da_out = xr.where(da_waterdeel == 1, waterdeel_value, da_out)
+                da_out = xr.where(da_dict["waterdeel"] == 1, waterdeel_value, da_out)
 
             # Create global no data mask
-            nodata = np.nan
+            nodata = hrt.variables.DEFAULT_NODATA_VALUES[dtype]
 
-            da_nodatamasks = self.get_nodatamasks(da_dict=da_dict, nodata_keys=["polder"])
+            da_nodatamasks = self.get_nodatamasks(da_dict=da_dict, nodata_keys=["polder", self.raster_name])
             da_out = xr.where(da_nodatamasks, nodata, da_out)  # Polder extent
             da_out.rio.set_crs(crs)
-            self.raster_out = hrt.Raster.write(self.raster_out, result=da_out, nodata=nodata, chunksize=chunksize)
+            self.raster_out = hrt.Raster.write(
+                self.raster_out,
+                result=da_out,
+                nodata=nodata,
+                dtype=dtype,
+                chunksize=chunksize,
+            )
         else:
             logger.info("Cont is false")
 
@@ -80,11 +93,16 @@ def create_schematisation_rasters(folder_mb: FoldersModelbuilder, pytests=False)
     tempdir = folder_mb.dst.full_path(f"temp_{hrt.current_time(date=True)}")
 
     # List of raster types to process
-    raster_names = ["dem", "glg", "ggg", "ghg", "infiltration", "friction"]
+    raster_names = ["dem", "glg", "ggg", "ghg", "infiltration", "friction", "landuse"]
+
+    # When running pytest, only try selection
+    if pytests:
+        raster_names = ["dem", "landuse"]
 
     for raster_name in raster_names:
         # Set parameters based on the raster type
         waterdeel_value = 10 if raster_name == "dem" else None
+        dtype = "uint8" if raster_name == "landuse" else "float32"
         raster_paths_dict = {
             raster_name: getattr(folder_mb.src, raster_name),
             "polder": folder_mb.dst.polder,
@@ -101,11 +119,7 @@ def create_schematisation_rasters(folder_mb: FoldersModelbuilder, pytests=False)
         )
 
         # Run calculation of output raster
-        raster_calc.run(waterdeel_value=waterdeel_value, overwrite=False)
-
-        # If running pytest, break after the first iteration
-        if pytests:
-            break
+        raster_calc.run(waterdeel_value=waterdeel_value, dtype=dtype, overwrite=False)
 
 
 if __name__ == "__main__":

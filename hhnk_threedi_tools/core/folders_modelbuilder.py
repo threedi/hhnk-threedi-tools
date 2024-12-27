@@ -20,6 +20,7 @@ class SourcePaths:
     ghg_path: Union[str, Path, hrt.Raster]
     infiltration_path: Union[str, Path, hrt.Raster]
     friction_path: Union[str, Path, hrt.Raster]
+    landuse_path: Union[str, Path, hrt.Raster]
     polder_path: str
     waterdeel_path: str
 
@@ -39,6 +40,7 @@ class SourcePaths:
         self.ghg = hrt.Raster(self.ghg_path)
         self.infiltration = hrt.Raster(self.infiltration_path)
         self.friction = hrt.Raster(self.friction_path)
+        self.landuse = hrt.Raster(self.landuse_path)
         self.polder = hrt.File(self.polder_path)
         self.waterdeel = hrt.File(self.waterdeel_path)
         self.verify()
@@ -53,6 +55,7 @@ class SourcePaths:
             self.ghg,
             self.infiltration,
             self.friction,
+            self.landuse,
             self.polder,
             self.waterdeel,
         ]:
