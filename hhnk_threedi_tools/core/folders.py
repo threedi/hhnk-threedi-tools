@@ -329,11 +329,18 @@ class SchemaDirParent(Folder):
         def __init__(self, base, create):
             super().__init__(os.path.join(base, "rasters_verwerkt"), create)
 
+            self.add_file("dem", "dem.tif")
+            self.add_file("glg", "glg.tif")
+            self.add_file("ggg", "ggg.tif")
+            self.add_file("ghg", "ghg.tif")
+            self.add_file("infiltration", "infiltration.tif")
+            self.add_file("friction", "friction.tif")
+            self.add_file("polder", "polder.tif")
+            self.add_file("waterdeel", "waterdeel.tif")
+
             # self.add_file("dem", "dem_50cm.tif")
             self.add_file("damage_dem", "damage_dem.tif")  # TODO glob maken van beschikbare damage_dems.
             self.add_file("panden", "panden.tif")
-            self.add_file("polder", "polder.tif")
-            self.add_file("waterdeel", "waterdeel.tif")
             if create:
                 self.create_readme()
 
