@@ -193,6 +193,7 @@ class SqliteCheck:
         return result
 
     def run_dewatering_depth(self, overwrite=False):
+        # TODO rewrite to RXR
         """
         Compare initial water level from fixed drainage level areas with
         surface level in DEM of model. Initial water level should mostly

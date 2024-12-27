@@ -29,6 +29,7 @@ class TestOneDTwoD:
 
     def test_run_depth_at_timesteps(self, check_1d2d):
         """Test of de 0d1d test werkt"""
+        # TODO move output to temp folder
         output_fd = check_1d2d.folder.output.one_d_two_d[check_1d2d.revision]
 
         check_1d2d.run_wlvl_depth_at_timesteps(overwrite=True)
@@ -38,9 +39,7 @@ class TestOneDTwoD:
         output_fd.waterdiepte_T15.exists()
 
         assert output_fd.waterdiepte_T1.shape == [787, 242]
-        # TODO nieuwe waarde -56925.17578125 wijkt nog erg af uitzoeken.
-        # TODO clip op dem lijkt niet te gebeuren?
-        assert output_fd.waterdiepte_T15.sum() == 1588.228515625
+        assert output_fd.waterdiepte_T15.sum() == 1654.740478515625
 
 
 # %%

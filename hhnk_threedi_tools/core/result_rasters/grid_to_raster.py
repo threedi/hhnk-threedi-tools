@@ -314,7 +314,7 @@ class GridToWaterLevel:
 
 class GridToWaterDepth:
     def __init__(self, dem_path: Path, wlvl_path: Path):
-        """Bereken waterstanden geinterpoleerd naar de resolutie van de DEM, gebruikmakend van Delaunay-interpolatie
+        """Bereken waterdieptes geinterpoleerd naar de resolutie van de DEM, gebruikmakend van Delaunay-interpolatie
 
         Parameters
         ----------
@@ -334,18 +334,21 @@ class GridToWaterDepth:
 
     def run(self, output_file, chunksize: Union[int, None] = None, overwrite: bool = False):
         # get dem as xarray
-        dem = self.dem_raster.open_rxr(chunksize)
-        level = self.wlvl_raster.open_rxr(chunksize)
 
         # init result raster
         self.depth_raster = hrt.Raster(output_file, chunksize=chunksize)
         create = hrt.check_create_new_file(output_file=self.depth_raster.path, overwrite=overwrite)
 
         if create:
+            dem = self.dem_raster.open_rxr(chunksize)
+            level = self.wlvl_raster.open_rxr(chunksize)
+
             # create empty result array
             result = level - dem
-            result.where(result < 0, 0)
-            self.depth_raster.write(output_file, result=result, nodata=0, chunksize=chunksize)
+            result = xr.where(result < 0, 0, result)
+
+            result.rio.set_crs(dem.rio.crs)
+            self.depth_raster = hrt.Raster.write(output_file, result=result, nodata=0, chunksize=chunksize)
 
         return self.depth_raster
 

@@ -20,7 +20,7 @@ def test_grid_to_raster():
     gridtowlvl = GridToWaterLevel(dem_path=dem_path, grid_gdf=grid_gdf, wlvl_column=wlvl_column)
     gridtowlvl.run(output_file=wlvl_raster, overwrite=True)
 
-    assert wlvl_raster.sum() == 43.918495178222656
+    assert wlvl_raster.sum() == 43.86664581298828
 
     # WDEPTH raster
     wdepth_raster = hrt.Folder(TEMP_DIR).full_path(f"wdepth_corr_{hrt.get_uuid()}.tif")
@@ -28,7 +28,7 @@ def test_grid_to_raster():
     gridtowdepth = GridToWaterDepth(dem_path=dem_path, wlvl_path=wlvl_raster)
     gridtowdepth.run(output_file=wdepth_raster, overwrite=True)
 
-    assert wdepth_raster.sum() == 5.868329048156738
+    assert wdepth_raster.sum() == 5.917023658752441
 
 
 # %%
