@@ -40,6 +40,7 @@ class ClipModelRasterCalc(hrt.RasterCalculatorRxr):
 
     def run(
         self,
+        nodata_keys: list,
         waterdeel_value=None,
         dtype="float32",
         chunksize: Union[int, None] = None,
@@ -74,7 +75,7 @@ class ClipModelRasterCalc(hrt.RasterCalculatorRxr):
             # Create global no data mask
             nodata = hrt.variables.DEFAULT_NODATA_VALUES[dtype]
 
-            da_nodatamasks = self.get_nodatamasks(da_dict=da_dict, nodata_keys=["polder", self.raster_name])
+            da_nodatamasks = self.get_nodatamasks(da_dict=da_dict, nodata_keys=nodata_keys)
             da_out = xr.where(da_nodatamasks, nodata, da_out)  # Polder extent
             da_out.rio.set_crs(crs)
             self.raster_out = hrt.Raster.write(
@@ -108,6 +109,7 @@ def create_schematisation_rasters(folder_mb: FoldersModelbuilder, pytests=False)
             "polder": folder_mb.dst.polder,
             **({"waterdeel": folder_mb.dst.waterdeel} if raster_name == "dem" else {}),
         }
+        nodata_keys = ["polder", raster_name]
 
         # Initialize the raster calculator
         self = raster_calc = ClipModelRasterCalc(
@@ -119,7 +121,12 @@ def create_schematisation_rasters(folder_mb: FoldersModelbuilder, pytests=False)
         )
 
         # Run calculation of output raster
-        raster_calc.run(waterdeel_value=waterdeel_value, dtype=dtype, overwrite=False)
+        raster_calc.run(
+            nodata_keys=nodata_keys,
+            waterdeel_value=waterdeel_value,
+            dtype=dtype,
+            overwrite=False,
+        )
 
 
 if __name__ == "__main__":
