@@ -1,9 +1,7 @@
 # %%
-import importlib
 import shutil
 
 import hhnk_research_tools as hrt
-import pytest
 
 from hhnk_threedi_tools.core import folders_modelbuilder
 from hhnk_threedi_tools.core.folders import Folders
