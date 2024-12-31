@@ -8,7 +8,7 @@ import hhnk_research_tools as hrt
 import numpy as np
 import pandas as pd
 from matplotlib.widgets import EllipseSelector
-from shapely.geometry import box
+from shapely.geometry import Point, box
 
 from hhnk_threedi_tools.core.folders import Folders
 
@@ -223,7 +223,7 @@ class NetcdfToGPKG:
     @property
     def grid(self):
         """Instance of threedigrid.admin.gridresultadmin.GridH5ResultAdmin or GridH5AggregateResultAdmin"""
-        if self.use_aggregate is False:
+        if self.use_aggregate is False:  # TODO hoe krijg ik dit als optie default altijd gebruiken als beschikbaar
             return self.threedi_result.grid
         return self.threedi_result.aggregate_grid
 
@@ -289,14 +289,29 @@ class NetcdfToGPKG:
     def create_base_gdf(self):
         """Create base grid from netcdf"""
         grid_gdf = gpd.GeoDataFrame()
+        node_gdf = gpd.GeoDataFrame()
 
         # * inputs every element from row as a new function argument, creating a (square) box.
         grid_gdf.set_geometry(
-            [box(*row) for row in self.grid.nodes.subset("2D_ALL").cell_coords.T], crs="EPSG:28992", inplace=True
+            [box(*row) for row in self.grid.nodes.subset("2D_ALL").cell_coords.T],
+            crs=f"EPSG:{self.grid.epsg_code}",
+            inplace=True,
         )
 
-        grid_gdf["id"] = self.grid.cells.subset("2D_open_water").id
-        return grid_gdf
+        grid_gdf["id"] = self.grid.cells.subset("2D_open_water").id  # NOTE waarom andere subset?
+
+        # TODO hier lijnen en punten toevoegen, moet dat nu
+        if self.grid.has_1d:
+            node_gdf.set_geometry(
+                Point(self.grid.nodes.subset("1D_ALL").coordinates),
+                crs=f"EPSG:{self.grid.epsg_code}",
+                inplace=True,
+            )
+
+        node_gdf["id"] = self.grid.nodes.subset("1D_ALL").id
+        node_gdf["calculation_type"] = self.grid.nodes.subset("1D_ALL").calculation_type
+
+        return grid_gdf, node_gdf
 
     def add_correction_parameters(
         self,
@@ -482,6 +497,11 @@ if __name__ == "__main__":
     folder = Folders(folder_path)
 
     threedi_result = folder.threedi_results.batch["bwn_gxg"].downloads.piek_ghg_T10
+
+    # # get and correct waterlevels
+    #  timesteps_seconds = ["max", 3600, 5400]
+    # grid_gdf = netcdf_gpkg.get_waterlevels(grid_gdf=grid_gdf, timesteps_seconds=timesteps_seconds)
+    # grid_gdf = netcdf_gpkg.correct_waterlevels(grid_gdf=grid_gdf, timesteps_seconds=timesteps_seconds)
 
     output_file = None
     wlvl_correction = False
