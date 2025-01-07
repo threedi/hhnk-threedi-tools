@@ -1,9 +1,4 @@
-import os
-import shutil
-from pathlib import Path
-
 import geopandas as gpd
-import numpy as np
 
 from hhnk_threedi_tools.core.schematisation_builder.HyDAMO_conversion_to_3Di import convert_to_3Di
 from tests.config import TEST_DIRECTORY
@@ -22,7 +17,7 @@ def test_HyDAMO_conversion_to_3Di():
     convert_to_3Di(
         hydamo_file_path=HyDAMO_path,
         empty_schematisation_file_path=empty_schematisation_file_path,
-        output_schematisation_directory=TEST_DIRECTORY_HyDAMO_validator
+        output_schematisation_directory=TEST_DIRECTORY_HyDAMO_validator,
     )
 
     # Check if the output schematisation file exists
@@ -31,10 +26,7 @@ def test_HyDAMO_conversion_to_3Di():
 
     # Get all layers from the output schematisation file
     output_schematisation_layers = {
-        layer: gpd.read_file(output_schematisation_file, layer=layer) for layer in [
-            "connection_node", 
-            "channel"
-            ]
+        layer: gpd.read_file(output_schematisation_file, layer=layer) for layer in ["connection_node", "channel"]
     }
 
     # Check if feature with code OAF-Q-121848 is present in the channel layer
