@@ -37,6 +37,8 @@ def test_HyDAMO_validator():
         output_types=["geopackage", "csv", "geojson"],
     )
 
+    # TODO some checks on the output
+
 
 # %%
 if __name__ == "__main__":
