@@ -6,7 +6,7 @@ import hhnk_research_tools as hrt
 import pandas as pd
 
 from hhnk_threedi_tools import Folders
-from hhnk_threedi_tools.core.result_rasters.grid_to_raster import GridToWaterLevel
+from hhnk_threedi_tools.core.result_rasters.grid_to_raster import GridToWaterDepth, GridToWaterLevel
 from hhnk_threedi_tools.core.result_rasters.netcdf_to_gridgpkg import NetcdfToGPKG
 
 
@@ -138,6 +138,18 @@ class KlimaatsommenPrep:
             with GridToWaterLevel(**calculator_kwargs) as basecalc:
                 basecalc.run(
                     output_file=output_file, mode=mode, min_block_size=self.min_block_size, overwrite=overwrite
+                )
+
+        if mode == "MODE_WDEPTH":
+            raise NotImplementedError("Yep this should be fixed soon.")
+
+            with GridToWaterDepth(
+                dem_path=self.dem.base,
+                wlvl_path=level_raster,  # TODO level raster maken?
+            ) as raster_calc:
+                _ = raster_calc.run(
+                    output_file=output_file,
+                    overwrite=overwrite,
                 )
 
     def calculate_depth(
