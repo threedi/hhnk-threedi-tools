@@ -1,12 +1,12 @@
 # %%
 import requests
 import pandas as pd
-csv_location = pd.read_excel(
-    r"E:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\ldo_structuur\delete_id.xlsx"
-)
+
+# place the path of the metadata to be fill
+csv_location = pd.read_excel()
 
 
-# json_file  = r"E:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\ldo_structuur\response_1735297760045.json"
+# Json function to be use in case there is a json file to read
 def extract_ids(json_data):
     ids = []
     for item in json_data["items"]:
@@ -48,7 +48,7 @@ parameters = {
 api_key_10_07_24 = "lask2hq6.JhTTsbYLI0j5FNF20JQNpubBaYpByIx0"
 # %%
 # Check Tenants
-tenants = "https://www.overstromingsinformatie.nl/auth/v1/tenants/"
+tenants = "Place here the API key"
 response_tenants = requests.get(
     url=tenants, headers=headers, auth=("__key__", api_key_10_07_24)
 )
@@ -86,8 +86,9 @@ response_incomplete = requests.get(url=file_import_url, headers=headers_excel)
 
 # Get json file from the link to be extracted
 # %%
+
 # id_scenarios = extract_ids(response_incomplete.json())
-id_scenarios = csv_location['id_delete'].values
+id_scenarios = csv_location["id_delete"].values
 
 # %%
 # id_scenarios = []
