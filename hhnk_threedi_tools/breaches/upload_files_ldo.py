@@ -43,7 +43,7 @@ print(well_know_response.json())
 # %%
 # FOR ADMINISTRATION PERMISION USE THE FOLLOWING. Otherwise you will get a permission feedback
 # at the moment you will try to upload the excel file.
-# You will need to copy those files in the webiste *https://www.overstromingsinformatie.nl/auth/)
+# You will need to copy your own data in the webiste *https://www.overstromingsinformatie.nl/auth/)
 # to retrieve de API KEY
 
 parameters = {
@@ -54,7 +54,6 @@ parameters = {
 }
 
 # Copy here the API key generated on the website
-
 api_key_10_07_24 = "You must place here the API KEY"
 # %%
 # Check Tenants
