@@ -31,7 +31,7 @@ health = "https://www.overstromingsinformatie.nl/auth/health/"
 headers = {
     "accept": "application/json",
     "content-type": "application/json",
-    "X-CSRFToken": "lIiP686oF2VRs9iXgtLDxKRdqBUBzHSPS19M3MZVERhlTVhZOzNXeCciUERzVuMA",
+    "X-CSRFToken": "u64z4jugD7ojNi1DPtuSRdAoSi6nG5fjJB1Q7HclZgCKubqHhqUqPgyjQXb0MvPD",
 }
 response_health = requests.get(url=health, headers=headers)
 print(response_health.json())
@@ -49,14 +49,13 @@ print(well_know_response.json())
 parameters = {
     "scope": "admin",
     "name": "Juan_Test_12",
-    "expiry_date": "2024-10-09T06:54:04.597Z",
+    "expiry_date": "2025-01-18T10:22:48.008Z",
     "revoked": False,
 }
 
-
 # Copy here the API key generated on the website
 
-api_key_10_07_24 = "iLqGxRM0.aWWOppwLpzciPWYwAHXhfUFwTnR2ty7p"
+api_key_10_07_24 = "You must place here the API KEY"
 # %%
 # Check Tenants
 tenants = "https://www.overstromingsinformatie.nl/auth/v1/tenants/"
@@ -86,21 +85,19 @@ refresh_token = response_refresh["access"]
 print(response_refresh)
 
 # %%
-# Excel files per scenario.
-metadata_folder = r"E:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\ldo_structuur\metadata_per_scenario"
 
+#Set Paths from the data to be uploaded
+
+# Excel files per scenario.
+metadata_folder = 
 # Folder location from where the scenarios are going to be copy
-output_folder = (
-    r"E:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\output"
-)
+output_folder = 
 
 # Folder location to copy the Scenarios
-ldo_structuur_folder = (
-    r"E:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\ldo_structuur"
-)
+ldo_structuur_folder =
 
 # Excel file where the ID and size of of the upload is going to be store
-id_scenarios = r"E:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\ldo_structuur\scenarios_ids.xlsx"
+id_scenarios =
 
 # Open the excel file as pandas dataframe
 pd_scenarios = pd.read_excel(id_scenarios)
