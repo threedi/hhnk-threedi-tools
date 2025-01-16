@@ -301,7 +301,7 @@ or do not use this run in the modelsplitter.
             mod_settings_default = self.folder.model.settings_default.path_if_exists
             model_sql = self.folder.model.model_sql.path_if_exists
 
-            target_path = self.folder.model.revisions.full_path(f"rev_{rev_count+1} - {commit_message[:25]}")
+            target_path = self.folder.model.revisions.full_path(f"rev_{rev_count + 1} - {commit_message[:25]}")
             target_path.mkdir(parents=True)
 
             files_copied = []
