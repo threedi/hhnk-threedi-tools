@@ -3,6 +3,7 @@
 
 import geopandas as gpd
 import hhnk_research_tools as hrt
+import pandas as pd
 from hhnk_research_tools.sql_functions import (
     database_to_gdf,
     sql_builder_select_by_location,
@@ -59,7 +60,12 @@ def DAMO_exporter(model_extent, table_names, output_file, EPSG_CODE="28992"):
             bbox_gdf, sql2 = database_to_gdf(db_dict=db_dict, sql=sql, columns=columns)
 
             # select all objects which (partly) lay within the model extent
-            gdf_model = bbox_gdf[bbox_gdf["geometry"].intersects(model_extent)]
+            gdf_model = bbox_gdf[bbox_gdf["geometry"].intersects(model_extent["geometry"][0])]
+
+            # make sure that all colums which can contain dates has the type datetime
+            for col in gdf_model.columns:
+                if "date" in col or "datum" in col:
+                    gdf_model[col] = pd.to_datetime(gdf_model[col], errors="coerce")
 
             # adds table to geopackage file as a layer
             gdf_model.to_file(output_file, layer=table, driver="GPKG")
