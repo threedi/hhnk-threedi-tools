@@ -8,7 +8,6 @@ self.base is the directory in which it is located
 import os
 from pathlib import Path
 
-import hhnk_research_tools as hrt
 from hhnk_research_tools import Folder
 
 FOLDER_STRUCTURE = """
