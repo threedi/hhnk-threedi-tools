@@ -44,7 +44,6 @@ jobs:
         with:
           miniconda-version: "latest"
           activate-environment: my-env
-          mamba-version: "*"
 
       - name: Set cache date
         run: echo "DATE=$(date +'%Y%m%d')" >> $GITHUB_ENV
@@ -57,7 +56,7 @@ jobs:
 
       - name: Update environment
         if: steps.cache.outputs.cache-hit != 'true'
-        run: mamba env update -n my-env -f envs\environment_test.yml
+        run: conda env update -n my-env -f envs\environment_test.yml
 
       - name: Install hhnk-research_tools
         shell: pwsh
