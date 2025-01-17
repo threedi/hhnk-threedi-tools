@@ -22,7 +22,8 @@ Following the next structure
 
 Next, the script creates a zip file and uploads it into the LDO. In the subsequent loop, it deletes
 the folder, in this case ROR-PRI-WATERLANDSE_ZEEDIJK_1.5_2-T100000 and all the file contents on it
-to prevent overloading the computer with information. Following the next structure
+to prevent overloading the computer with information. The final structure of the scenario folder to
+be uploaded should follows the next structure
 
 ├── ldo_structuur
     ├── ROR-PRI-WATERLANDSE_ZEEDIJK_1.5_2-T100000
