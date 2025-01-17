@@ -16,6 +16,7 @@ import geopandas as gpd
 import hhnk_research_tools as hrt
 import numpy as np
 import pandas as pd
+import xarray as xr
 from shapely import wkt
 from shapely.geometry import Point
 from threedigrid_builder import make_gridadmin
@@ -132,6 +133,7 @@ OUTPUT_COLS = [
 ]
 
 
+# %%
 class SqliteCheck:
     def __init__(
         self,
@@ -193,74 +195,52 @@ class SqliteCheck:
         return result
 
     def run_dewatering_depth(self, overwrite=False):
-        # TODO rewrite to RXR
         """
         Compare initial water level from fixed drainage level areas with
         surface level in DEM of model. Initial water level should mostly
         be below surface level.
         """
+        drooglegging_raster = self.output_fd.drooglegging
+        create = hrt.check_create_new_file(output_file=drooglegging_raster.path, overwrite=overwrite)
 
-        def _create_drooglegging_raster(self, windows, band_out, **kwargs):
-            """hrt.Raster_calculator custom_run_window_function"""
-            self.dem = self.raster1
-            self.wlvl = self.raster2
+        if create:
+            # Rasterize fixeddrainage
+            wlvl_raster = self.output_fd.streefpeil
+            dtype = "float32"
+            nodata = hrt.variables.DEFAULT_NODATA_VALUES[dtype]
 
-            block_dem = self.dem._read_array(window=windows["raster1"])
-            block_wlvl = self.wlvl._read_array(window=windows["raster2"])
+            fixeddrainage_gdf = self.layer_fixeddrainage.load()
+            hrt.gdf_to_raster(
+                gdf=fixeddrainage_gdf,
+                value_field=COL_STREEFPEIL_BWN,
+                raster_out=wlvl_raster,
+                nodata=nodata,
+                metadata=self.dem.metadata,
+                read_array=False,
+                overwrite=overwrite,
+            )
 
-            # Calculate output
-            block_depth = np.subtract(block_dem, block_wlvl)
+            # Load data arrays
+            da_dem = self.dem.open_rxr()
+            da_wlvl = wlvl_raster.open_rxr()
+            crs = da_dem.rio.crs  # CRS is lost during xr.where; preserve it.
 
-            # Mask output
-            nodatamask = (block_dem == self.dem.nodata) | (block_dem == 10)
-            block_depth[nodatamask] = self.raster_out.nodata
+            da_out = da_dem - da_wlvl
 
-            # Get the window of the small raster
-            window_small = windows[[k for k, v in self.raster_mapping.items() if v == "small"][0]]
+            da_out = xr.where(da_dem == 10, nodata, da_out)
 
             # Write to file
-            band_out.WriteArray(block_depth, xoff=window_small[0], yoff=window_small[1])
-
-        try:
-            # Load layers
-            drooglegging_raster = self.output_fd.drooglegging
-
-            create = hrt.check_create_new_file(output_file=drooglegging_raster.path, overwrite=overwrite)
-
-            if create:
-                fixeddrainage_gdf = self.layer_fixeddrainage.load()
-                wlvl_raster = self.output_fd.streefpeil  # Rasterize fixeddrainage
-                hrt.gdf_to_raster(
-                    gdf=fixeddrainage_gdf,
-                    value_field=COL_STREEFPEIL_BWN,
-                    raster_out=wlvl_raster,
-                    nodata=self.dem.nodata,
-                    metadata=self.dem.metadata,
-                    read_array=False,
-                    overwrite=overwrite,
-                )
-
-                # Calculate drooglegging raster
-                drooglegging_calculator = hrt.RasterCalculator(
-                    raster1=self.dem,
-                    raster2=wlvl_raster,
-                    raster_out=drooglegging_raster,
-                    custom_run_window_function=_create_drooglegging_raster,
-                    output_nodata=self.dem.nodata,
-                    verbose=False,
-                )
-
-                drooglegging_calculator.run(overwrite=overwrite)
-
-                # remove temp files
-                wlvl_raster.unlink(missing_ok=True)
-                # self.results["dewatering_depth"] = output_file
-        except Exception as e:
-            raise e from None
+            da_out.rio.set_crs(crs)  # Reapply crs
+            drooglegging_raster = hrt.Raster.write(
+                drooglegging_raster,
+                result=da_out,
+                nodata=nodata,
+                dtype=dtype,
+                chunksize=None,
+            )
 
     def run_model_checks(self):
-        """
-        Collects all queries that are part of general model checks (see general_checks_queries file)
+        """Collect all queries that are part of general model checks (see general_checks_queries file)
         and executes them
         """
 
@@ -289,9 +269,10 @@ class SqliteCheck:
         return result_db
 
     def run_imp_surface_area(self):
-        """
-        Calculates the impervious surface area (in the model), the area of the polder (based on the polder shapefile) and
-        the difference between the two.
+        """Calculate
+        1. the impervious surface area in the model
+        2. the area of the polder (based on the polder shapefile)
+        3. the difference between the two.
         """
         imp_surface_db = self.model.execute_sql_selection(impervious_surface_query)
         imp_surface_db.set_index("id", inplace=True)
@@ -353,9 +334,9 @@ class SqliteCheck:
         return channels_gdf
 
     def run_struct_channel_bed_level(self):
-        """
-        Checks whether the reference level of any of the adjacent cross section locations (channels) to a structure
-        is lower than the reference level for that structure (3di crashes if it is)
+        """Check whether the reference level of any of the adjacent cross section locations
+        (channels) to a structure is lower than the reference level for that structure
+        (3di crashes if it is)
         """
         datachecker_culvert_layer = self.fenv.source_data.datachecker.layers.culvert
         damo_duiker_sifon_layer = self.fenv.source_data.damo.layers.DuikerSifonHevel
@@ -454,9 +435,7 @@ class SqliteCheck:
             hrt.gdf_write_to_geopackage(gdf, filepath=Path(output_folder) / f"{grid_type}.gpkg")
 
     def run_cross_section_duplicates(self, database):
-        """
-        Check for duplicate geometries in cross_section_locations.
-        """
+        """Check for duplicate geometries in cross_section_locations."""
         cross_section_point = database.execute_sql_selection(query=cross_section_location_query)
 
         # Make buffer of the points to identify if we have cross setion overlapping each other.
@@ -473,9 +452,7 @@ class SqliteCheck:
         return intersected_points
 
     def run_cross_section_no_vertex(self, database):
-        """
-        Check for cross_sections that are not located on the  vertex of a channel.
-        """
+        """Check for cross_sections that are not located on the  vertex of a channel."""
         # load cross locs and channels from sqlite
         cross_section_point = database.execute_sql_selection(query=cross_section_location_query)
         cross_section_point.rename({"geometry_point": "geometry"}, axis=1, inplace=True)
@@ -582,16 +559,14 @@ def calc_width_at_waterlevel(row):
 
 
 def split_round(item):
-    """
-    Split items in width and height columns by space, round all items in resulting list and converts to floats
+    """Split items in width and height columns by space,
+    round all items in resulting list and converts to floats
     """
     return [round(float(n), 2) for n in str(item).split(" ")]
 
 
 def get_max_depth(row):
-    """
-    calculates difference between initial waterlevel and reference level
-    """
+    """Calculate difference between initial waterlevel and reference level"""
     return round(float(row[initial_waterlevel_col]) - float(row[reference_level_col]), 2)
 
 
@@ -638,8 +613,7 @@ def add_datacheck_info(layer, gdf):
 
 
 def expand_multipolygon(df):
-    """
-    New version using explode, old version returned pandas dataframe not geopandas
+    """New version using explode, old version returned pandas dataframe not geopandas
     geodataframe (missing last line), I think it works now?
     """
     try:
