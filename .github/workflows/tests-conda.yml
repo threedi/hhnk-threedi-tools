@@ -44,7 +44,7 @@ jobs:
         with:
           miniconda-version: "latest"
           activate-environment: my-env
-          use-mamba: true
+          mamba-version: "*"
 
       - name: Set cache date
         run: echo "DATE=$(date +'%Y%m%d')" >> $GITHUB_ENV
