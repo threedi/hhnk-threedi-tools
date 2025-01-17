@@ -9,6 +9,8 @@ from hhnk_threedi_tools import Folders
 from hhnk_threedi_tools.core.result_rasters.grid_to_raster import GridToWaterDepth, GridToWaterLevel
 from hhnk_threedi_tools.core.result_rasters.netcdf_to_gridgpkg import NetcdfToGPKG
 
+logger = hrt.logging.get_logger(__name__)
+
 
 class KlimaatsommenPrep:
     """Postprocessing of climate scenarios. This object will turn the
@@ -74,11 +76,13 @@ class KlimaatsommenPrep:
         dem = self.folder.model.schema_base.rasters.dem
 
         # Reproject to 0.5m if necessary
+        # TODO use schadedem?
         if dem.metadata.pixel_width != 0.5:
-            new_dem_path = self.batch_fd.downloads.full_path(f"{dem.stem}_05m.tif")
+            new_dem_path = self.batch_fd.downloads.full_path(f"{dem.stem}_50cm.tif")
             if not new_dem_path.exists():
-                hrt.reproject(src=dem, target_res=0.5, output_path=new_dem_path)
-            dem = hrt.Raster(new_dem_path)
+                dem = hrt.Raster.reproject(src=dem, dst=new_dem_path, target_res=0.5)
+            else:
+                dem = hrt.Raster(new_dem_path)
             return dem
         else:
             return dem
@@ -113,14 +117,15 @@ class KlimaatsommenPrep:
             overwrite=overwrite,
         )
 
-    def calculate_raster(
+    def calculate_wlvl_wdepth_rasters(
         self,
-        scenario_raster,
+        wlvl_raster,
+        wdepth_raster,
         threedi_result: hrt.ThreediResult,
-        mode: str,
+        create_wdepth: bool = True,
         grid_filename: str = "grid_wlvl.gpkg",
         wlvl_col_name: str = "wlvl_corr_max",
-        overwrite=False,
+        overwrite: bool = False,
     ):
         """Mode options are: 'MODE_WDEPTH', 'MODE_WLVL'"""
         grid_gdf = threedi_result.full_path(grid_filename).load()
@@ -131,62 +136,17 @@ class KlimaatsommenPrep:
             "wlvl_column": wlvl_col_name,
         }
 
-        output_file = scenario_raster
+        # Create wlvl raster
+        with GridToWaterLevel(**calculator_kwargs) as wlvlcalc:
+            wlvlcalc.run(output_file=wlvl_raster, chunksize=self.min_block_size, overwrite=overwrite)
 
-        # Init calculator
-        if mode == "MODE_WLVL":
-            with GridToWaterLevel(**calculator_kwargs) as basecalc:
-                basecalc.run(
-                    output_file=output_file, mode=mode, min_block_size=self.min_block_size, overwrite=overwrite
-                )
-
-        if mode == "MODE_WDEPTH":
-            raise NotImplementedError("Yep this should be fixed soon.")
-
+        if create_wdepth:
+            # Create wdepth raster
             with GridToWaterDepth(
                 dem_path=self.dem.base,
-                wlvl_path=level_raster,  # TODO level raster maken?
-            ) as raster_calc:
-                _ = raster_calc.run(
-                    output_file=output_file,
-                    overwrite=overwrite,
-                )
-
-    def calculate_depth(
-        self,
-        scenario,
-        threedi_result: hrt.ThreediResult,
-        grid_filename: str,
-        wlvl_col_name="wlvl_corr_max",
-        overwrite=False,
-    ):
-        scenario_raster = scenario.depth_max
-        self.calculate_raster(
-            scenario_raster=scenario_raster,
-            threedi_result=threedi_result,
-            mode="MODE_WDEPTH",
-            grid_filename=grid_filename,
-            wlvl_col_name=wlvl_col_name,
-            overwrite=overwrite,
-        )
-
-    def calculate_wlvl(
-        self,
-        scenario,
-        threedi_result: hrt.ThreediResult,
-        grid_filename: str,
-        wlvl_col_name="wlvl_corr_max",
-        overwrite=False,
-    ):
-        scenario_raster = scenario.wlvl_max
-        self.calculate_raster(
-            scenario_raster=scenario_raster,
-            threedi_result=threedi_result,
-            mode="MODE_WLVL",
-            grid_filename=grid_filename,
-            wlvl_col_name=wlvl_col_name,
-            overwrite=overwrite,
-        )
+                wlvl_path=wlvl_raster,
+            ) as wdepth_calc:
+                wdepth_calc.run(output_file=wdepth_raster, chunksize=self.min_block_size, overwrite=overwrite)
 
     def calculate_damage(self, scenario, overwrite=False):
         # Variables
@@ -215,13 +175,21 @@ class KlimaatsommenPrep:
         # Berekenen schaderaster
         wss.run(output_raster=output_raster, calculation_type="sum", overwrite=overwrite)
 
-    def run(self, gridgpkg=True, depth=True, dmg=True, wlvl=False, overwrite=False, testing=False, verbose=False):
+    def run(
+        self,
+        gridgpkg=True,
+        wlvl_wdepth=True,
+        create_wdepth=True,
+        dmg=True,
+        overwrite=False,
+        testing=False,
+        verbose=False,
+    ):
         try:
             self.dem = self.get_dem()
 
             for name in self.batch_fd.downloads.names:
-                if verbose:
-                    print(name)
+                logger.info(name)
                 scenario = self.get_scenario(name=name)
                 threedi_result = scenario.netcdf
 
@@ -235,14 +203,19 @@ class KlimaatsommenPrep:
                         overwrite=overwrite,
                     )
 
-                # Diepterasters berekenen
-                if depth:
+                # Create wlvl and wdepth raster
+                if wlvl_wdepth:
+                    wlvl_raster = scenario.wlvl_max
+                    wdepth_raster = scenario.depth_max
                     if verbose:
-                        print("     create depth raster")
-                    self.calculate_depth(
-                        scenario=scenario,
+                        print("     create wlvl and wdepth raster")
+                    self.calculate_wlvl_wdepth_rasters(
+                        wlvl_raster=wlvl_raster,
+                        wdepth_raster=wdepth_raster,
                         threedi_result=threedi_result,
+                        create_wdepth=create_wdepth,
                         grid_filename="grid_wlvl.gpkg",
+                        wlvl_col_name="wlvl_corr_max",
                         overwrite=overwrite,
                     )
 
@@ -251,17 +224,6 @@ class KlimaatsommenPrep:
                     if verbose:
                         print("     create damage raster")
                     self.calculate_damage(scenario=scenario, overwrite=overwrite)
-
-                # Waterlevelraster berekenen
-                if wlvl:
-                    if verbose:
-                        print("     create wlvl raster")
-                    self.calculate_wlvl(
-                        scenario=scenario,
-                        threedi_result=threedi_result,
-                        grid_filename="grid_wlvl.gpkg",
-                        overwrite=overwrite,
-                    )
 
                 if testing:
                     # For pytests we dont need to run this 18 times
