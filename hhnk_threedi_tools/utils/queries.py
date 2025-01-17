@@ -239,13 +239,13 @@ def create_global_settings_rows_update_query(excluded_ids=[], ids_to_add=[], ids
     SELECT *
     FROM {GLOBAL_SETTINGS_TABLE}
     WHERE {id_col} in ({{}})
-    AND {id_col} NOT IN ({', '.join(map(str, excluded_ids))})
+    AND {id_col} NOT IN ({", ".join(map(str, excluded_ids))})
     """
 
     delete_rows_query = f"""
     DELETE FROM {global_settings_layer}
     WHERE {id_col} IN ({{}})
-    AND {id_col} NOT IN ({', '.join(map(str, excluded_ids))})
+    AND {id_col} NOT IN ({", ".join(map(str, excluded_ids))})
     """
     query_list = []
     if ids_to_add:

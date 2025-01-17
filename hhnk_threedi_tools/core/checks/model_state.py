@@ -8,6 +8,7 @@ This is for once not a object, but these are helper functions which are
 used in folder structures
 
 """
+
 # system imports
 import os
 

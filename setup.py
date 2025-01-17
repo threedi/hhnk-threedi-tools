@@ -1,14 +1,17 @@
 # %%
-from setuptools import setup, find_packages
 import codecs
-import re
 import os
+import re
+
+from setuptools import find_packages, setup
 
 here = os.path.abspath(os.path.dirname(__file__))
+
 
 def read(*parts):
     with codecs.open(os.path.join(here, *parts), "r") as fp:
         return fp.read()
+
 
 def find_version(*file_paths):
     """
@@ -41,7 +44,7 @@ setup(
     ],
     # package_dir={'':'hhnk_threedi_tools'},
     # packages=find_packages(),
-    packages=find_packages(exclude=['tests', 'deprecated']),
+    packages=find_packages(exclude=["tests", "deprecated"]),
     python_requires=">=3.7",
     # install_requires=["hhnk-research-tools==2023.1", "xarray", "pytest"],
     # setup_requires=['setuptools_scm'],

@@ -1,209 +1,158 @@
 # %%
-"""
-#FIXME
-In ontwikkeling. Kopie van
-"\\srv57d1\geo_info\02_Werkplaatsen\06_HYD\Projecten\HKC22014 Vergelijking GxG en bodemvochtproducten\02. Gegevens\03.scripts\bodemberging_obv_gxg_w.py"
-daarna aangepast om werkend te maken in htt als functie.
+#  gebaseerd op; r'G:\02_Werkplaatsen\06_HYD\Projecten\HKC22014 Vergelijking GxG en bodemvochtproducten\02. Gegevens
 
-Dit script rekent grondwaterstand rasters om in een beschikbare bodemberging.
-
-"""
-
-import importlib
+from typing import Union
 
 import hhnk_research_tools as hrt
-
-import hhnk_threedi_tools as htt
-import hhnk_threedi_tools.core.raster_creation.storage_lookup as storage_lookup
-
-importlib.reload(storage_lookup)
-
-import os
-
-import geopandas as gpd
 import numpy as np
-import pandas as pd
+import xarray as xr
 
+import hhnk_threedi_tools.core.raster_creation.storage_lookup as storage_lookup
 from tests.config import FOLDER_TEST, TEMP_DIR
 
 building_dh = 0.1  # m. Soil starts 0.1m under building footprint. #TODO Wordt dit wel gebruikt? En zou dat moeten?
 
 
-class Folders(hrt.Folder):
-    """base; r'G:\02_Werkplaatsen\06_HYD\Projecten\HKC22014 Vergelijking GxG en bodemvochtproducten\02. Gegevens'"""
+class StorageRaster(hrt.RasterCalculatorRxr):
+    def __init__(
+        self,
+        raster_out: hrt.Raster,
+        raster_paths_dict: dict[str : hrt.Raster],
+        metadata_key: str,
+        tempdir: hrt.Folder = None,
+    ):
+        """Bereken beschikbaar bodembergingsraster
 
-    def __init__(self, base, create=False):
-        super().__init__(base, create=create)
+        Parameters
+        ----------
+        rasters : dict
+            {
+                "gwlvl":,
+                "dem":,
+                "soil":,
+            }
 
-        self.add_file("storage", "storage.tif")
+            rasterpad naar gwlvl raster. Dit is het meetadataraster, op basis van deze
+            extent maakt ie van de dem en soil een vrt. En output ook in deze extent.
+        """
 
+        super().__init__(
+            raster_out=raster_out,
+            raster_paths_dict=raster_paths_dict,
+            metadata_key=metadata_key,
+            tempdir=tempdir,
+        )
 
-# compute storage
-def compute_storage_block(storage_lookup_df, block_dewa, block_soil, nodatamask, nodatavalue, zeromask):
-    """
-    Calculate storage for a single raster block.
+        # Local vars
+        self.storage_lookup_df = None  # Declared at .run
+        self.soil_lookup_df = None  # Declared at .run
 
-    storage_lookup_df (pd.DataFrame: lookup table to find available storage using dewa depth
-    block_dewa (np.array): gwlvl - dem
-    block_soil (np.array): soil
-    nodatamask (np.array): mask where output will be nodata
-    nodatavalue (float): output nodata
-    zeromask (np.array): mask where output will be zero
-    """
-    block_storage = np.zeros(block_dewa.shape)
-    # Iterate over all soil types
-    # for soil_type in np.unique(storage_lookup_df['Soil Type']):
-    for soil_type in np.unique(block_soil):
-        if soil_type not in np.unique(storage_lookup_df["Soil Type"]):
-            continue
+    def run(self, rootzone_thickness_cm: int, chunksize: Union[int, None] = None, overwrite: bool = False):
+        # level block_calculator
+        def calc_storage(da_storage, da_dewa, da_soil):
+            """
+            Calculate storage for a chunk.
+            da_storage
+            da_dewa (xr.DataArray): gwlvl - dem
+            da_soil (xr.DataArray): soil
+            mask_nodata (xr.DataArray): mask where output will be nodata
+            mask_zero (xr.DataArray): mask where output will be zero
+            nodata (int, float): output nodata
+            """
+            # Iterate over all soil types
+            soil_lookup_df = self.soil_lookup_df
+            for soil_type in np.unique(da_soil):
+                if soil_type not in self.soil_lookup_df.index:
+                    print(f"Soil type {soil_type} not found in soil_lookup_df")
+                    continue
 
-        soil_mask = block_soil == soil_type
+                soil_mask = xr.where(da_soil == soil_type, True, False)
 
-        # Create list of dewateringdepths, corresponding total storage from capsim table.
-        # ontwateringsdiepte
-        idx_soil = storage_lookup_df["Soil Type"] == soil_type
-        xlist = np.round(
-            storage_lookup_df.loc[idx_soil, "Dewathering Depth (m)"].tolist(), 5
-        )  # x = ontwateringsdiepte
-        ylist = np.round(
-            storage_lookup_df.loc[idx_soil, "Total Available Storage (m)"].tolist(), 5
-        )  # y = available storage
-        # Determine the storage coefficient per pixel using the actual dewatering depth (dewadepth_arr[soil_mask])
-        # and the corresponding storage coefficient (ylist). Find values by interpolation.
-        block_storage[soil_mask] = np.interp(x=block_dewa[soil_mask], xp=xlist, fp=ylist)
+                # Create list of dewateringdepths, corresponding total storage from capsim table.
+                # ontwateringsdiepte
+                xlist = soil_lookup_df.loc[soil_type, "Dewathering Depth (m)"]
+                ylist = soil_lookup_df.loc[soil_type, "Total Available Storage (m)"]
 
-    # Apply nodata and zero values
-    block_storage[zeromask] = 0
-    block_storage[nodatamask] = nodatavalue
-    return block_storage
+                # Determine the storage coefficient per pixel using the actual dewatering depth (dewadepth_arr[soil_mask])
+                # and the corresponding storage coefficient (ylist). Find values by interpolation.
+                da_storage = xr.where(soil_mask, np.interp(x=da_dewa.where(soil_mask), xp=xlist, fp=ylist), da_storage)
 
+            return da_storage
 
-def calculate_storage_raster(
-    output_raster,
-    meta_raster,  # FIXME moet anders,
-    groundwlvl_raster,
-    dem_raster,
-    soil_raster,
-    storage_lookup_df,
-    nodata=-9999,
-    overwrite=False,
-):
-    # Controle of we door moeten gaan met berekening.
-    cont = hrt.check_create_new_file(output_file=output_raster, overwrite=overwrite)
+        cont = self.verify(overwrite=overwrite)
 
-    if cont:
-        print(f"creating {output_raster.name}")
-
-        # Create output raster
-        output_raster.create(metadata=meta_raster.metadata, nodata=nodata, verbose=False, overwrite=overwrite)
-
-        # Rasters kunnen verschillende extent hebben, om dezelfde block in te laden
-        # de verschillen berekenen.
-        dx_min = {}
-        dy_min = {}
-        for rtype, rpath in zip(["soil", "dem", "gwlvl"], [soil_raster, dem_raster, groundwlvl_raster]):
-            dx_min[rtype], dy_min[rtype], _, _ = hrt.dx_dy_between_rasters(
-                meta_big=rpath.metadata, meta_small=meta_raster.metadata
+        if cont:
+            # Create/load lookup table to find available storage using dewa depth
+            self.storage_lookup_df, self.soil_lookup_df = storage_lookup.create_storage_lookup(
+                rootzone_thickness_cm=rootzone_thickness_cm, storage_unsa_sim_path=None
             )
 
-        # Load output raster so we can edit it.
-        target_ds = output_raster.open_gdal_source_write()
-        out_band = target_ds.GetRasterBand(1)
+            # Load dataarrays
+            da_dict = {}
+            da_soil = da_dict["soil"] = self.raster_paths_same_bounds["soil"].open_rxr(chunksize)
+            da_gwlvl = da_dict["gwlvl"] = self.raster_paths_same_bounds["gwlvl"].open_rxr(chunksize)
+            da_dem = da_dict["dem"] = self.raster_paths_same_bounds["dem"].open_rxr(chunksize)
 
-        blocks_df = meta_raster.generate_blocks()
+            nodata = da_dem.rio.nodata
 
-        len_total = len(blocks_df)
-        for idx, block_row in blocks_df.iterrows():
-            # Create windows
-            window = block_row["window_readarray"]
+            da_dewa = da_dem - da_gwlvl
 
-            windows = {}
-            for rtype in ["soil", "dem", "gwlvl"]:
-                windows[rtype] = window.copy()
-                windows[rtype][0] += dx_min[rtype]
-                windows[rtype][1] += dy_min[rtype]
+            da_storage = xr.full_like(da_dem, nodata)
 
-            # Load blocks
-            block_soil = soil_raster._read_array(window=windows["soil"])
-            block_dem = dem_raster._read_array(window=windows["dem"])
-            block_gwlvl = groundwlvl_raster._read_array(window=windows["gwlvl"])
+            # create empty result array
+            da_storage = xr.map_blocks(
+                calc_storage,
+                obj=da_storage,
+                args=[da_dewa, da_soil],
+                template=da_storage,
+            )
 
-            # Calc dewatering depth
-            block_dewa = block_dem - block_gwlvl
-
-            # create global no data masker
-            masks = {}
-            masks["dem"] = block_dem == dem_raster.nodata
-            masks["soil"] = block_soil == soil_raster.nodata
-            masks["gwlvl"] = block_gwlvl == groundwlvl_raster.nodata
-            mask = np.any([masks[i] for i in masks], 0)
-
-            # mask where out storage should be zero
+            # Mask where out storage should be zero
             zeromasks = {}
-            zeromasks["dem_water"] = block_dem == 10
-            zeromasks["negative_dewa"] = block_dewa < 0
-            zeromask = np.any([zeromasks[i] for i in zeromasks], 0)
+            zeromasks["dem_water"] = da_dem == 10  # TODO watervlakken?
+            zeromasks["negative_dewa"] = da_dewa < 0
+            # Stack the conditions into a single DataArray
+            da_zeromasks = self.concat_masks(zeromasks)
+            da_storage = xr.where(da_zeromasks, 0, da_storage)
 
-            # Calculate storage
-            block_storage = compute_storage_block(
-                storage_lookup_df=storage_lookup_df,
-                block_dewa=block_dewa,
-                block_soil=block_soil,
-                nodatamask=mask,
-                nodatavalue=nodata,
-                zeromask=zeromask,
-            )
+            # Apply global no data mask
+            da_nodatamasks = self.get_nodatamasks(da_dict=da_dict, nodata_keys=["gwlvl", "dem", "soil"])
+            da_storage = xr.where(da_nodatamasks, nodata, da_storage)
 
-            # Write to file
-            out_band.WriteArray(block_storage, xoff=window[0], yoff=window[1])
-
-            print(f"{idx} / {len_total}", end="\r")
-
-        out_band.FlushCache()  # close file after writing
-        out_band = None
-        target_ds = None
+            self.raster_out = hrt.Raster.write(self.raster_out, result=da_storage, nodata=nodata, chunksize=chunksize)
+            return self.raster_out
+        else:
+            print("Cont is False")
 
 
 # %%
 if __name__ == "__main__":
-    folder = Folders(TEMP_DIR / f"storage_{hrt.get_uuid()}", create=True)
+    folder = hrt.Folder(TEMP_DIR / f"storage_{hrt.get_uuid()}", create=True)
+    folder.add_file("storage", "storage.tif")
 
     rootzone_thickness_cm = 20  # cm
 
-    # Create/load Storage lookup df
-    storage_lookup_df = storage_lookup.create_storage_lookup(
-        rootzone_thickness_cm=rootzone_thickness_cm, storage_unsa_sim_path=None
-    )
-
     folder_schema = FOLDER_TEST
 
-    output_raster = folder.storage
     overwrite = True
     nodata = -9999
+    chunksize = None
 
-    groundwlvl_raster = folder_schema.model.schema_base.rasters.gwlvl_glg
-    dem_raster = folder_schema.model.schema_base.rasters.dem
-    soil_raster = folder_schema.model.schema_base.rasters.soil
-    meta_raster = dem_raster
+    raster_out = folder.storage
+    raster_paths_dict = {
+        "gwlvl": folder_schema.model.schema_base.rasters.gwlvl_glg,
+        "dem": folder_schema.model.schema_base.rasters.dem,
+        "soil": folder_schema.model.schema_base.rasters.soil,
+    }
 
-    # %%
+    tempdir = None
+    metadata_key = "soil"
 
-    calculate_storage_raster(
-        output_raster=output_raster,
-        meta_raster=meta_raster,
-        groundwlvl_raster=groundwlvl_raster,
-        dem_raster=dem_raster,
-        soil_raster=soil_raster,
-        storage_lookup_df=storage_lookup_df,
-        nodata=nodata,
-        overwrite=overwrite,
+    self = StorageRaster(
+        raster_out=raster_out,
+        raster_paths_dict=raster_paths_dict,
+        metadata_key=metadata_key,
+        tempdir=tempdir,
     )
 
-    # %%
-
-    assert output_raster.statistics(approx_ok=False) == {
-        "min": 0.0,
-        "max": 0.14029,
-        "mean": 0.024702,
-        "std": 0.031965,
-    }
+    o = self.run(rootzone_thickness_cm=rootzone_thickness_cm)

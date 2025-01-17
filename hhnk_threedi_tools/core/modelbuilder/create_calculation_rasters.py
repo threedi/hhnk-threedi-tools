@@ -5,9 +5,52 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Union
 
+import geopandas as gpd
 import hhnk_research_tools as hrt
 
 from hhnk_threedi_tools import Folders
+
+
+def create_polder_tif(folder, overwrite=False):
+    output_file = folder.model.calculation_rasters.polder
+    create = hrt.check_create_new_file(
+        output_file=output_file,
+        input_files=[folder.source_data.polder_polygon],
+        overwrite=overwrite,
+    )
+    if create:
+        gdf_polder = folder.source_data.polder_polygon.load()
+        metadata = hrt.RasterMetadataV2.from_gdf(gdf=gdf_polder, res=0.5)
+        gdf_polder["value"] = 1
+        hrt.gdf_to_raster(
+            gdf=gdf_polder,
+            value_field="value",
+            raster_out=folder.model.calculation_rasters.polder,
+            nodata=0,
+            metadata=metadata,
+            read_array=False,
+        )
+
+
+def create_waterdeel_tif(folder, overwrite=False):
+    output_file = folder.model.calculation_rasters.waterdeel
+    create = hrt.check_create_new_file(
+        output_file=output_file,
+        # input_files=[folder.source_data.polder_polygon], #TODO check edit time of layers in gpkg?
+        overwrite=overwrite,
+    )
+    if create:
+        gdf = folder.source_data.damo.load(layer="Waterdeel")
+        metadata = folder.model.calculation_rasters.polder.metadata
+        gdf["value"] = 1
+        hrt.gdf_to_raster(
+            gdf=gdf,
+            value_field="value",
+            raster_out=folder.model.calculation_rasters.waterdeel,
+            nodata=0,
+            metadata=metadata,
+            read_array=False,
+        )
 
 
 @dataclass
@@ -26,7 +69,7 @@ class DamageDem:
     Parameters
     ----------
     dem: hrt.Raster
-        path to the original dem.
+        original dem, provide the path.
         default dem = folder.model.schema_base.rasters.dem
     """
 
@@ -78,6 +121,10 @@ class DamageDem:
         )
 
         if overwrite:
+            # create highres dem if it doesn't exist
+            if not self.highres_dem.exists():
+                hrt.Raster.reproject(src=self.dem, dst=self.highres_dem, target_res=0.5)
+
             # create panden_raster if it doesn't exist
             if not self.panden_raster.exists():
                 panden_gdf = self.panden_gpkg.load()
@@ -88,37 +135,35 @@ class DamageDem:
                     raster_out=self.panden_raster,
                     nodata=0,
                     metadata=self.highres_dem.metadata,
+                    overwrite=True,
                 )
 
-            # create highres dem if it doesn't exist
-            if not self.highres_dem.exists():
-                hrt.reproject(src=self.dem, target_res=0.5, output_path=self.highres_dem.path)
-
             # Create damage dem
-            def elevate_dem_block(block):
-                block_out = block.blocks["dem"] + block.blocks["panden"]
+            dem = self.highres_dem.open_rxr()
+            pand = self.panden_raster.open_rxr()
 
-                block_out[block.masks_all] = self.highres_dem.nodata
-                return block_out
+            result = dem + pand.fillna(0)
 
-            calc = hrt.RasterCalculatorV2(
+            hrt.Raster.write(
                 raster_out=self.damage_dem,
-                raster_paths_dict={
-                    "dem": self.highres_dem,
-                    "panden": self.panden_raster,
-                },
-                nodata_keys=["dem"],
-                mask_keys=["dem"],
-                metadata_key="dem",
-                custom_run_window_function=elevate_dem_block,
-                output_nodata=self.highres_dem.nodata,
-                min_block_size=4096,
-                verbose=True,
+                result=result,
+                nodata=self.highres_dem.nodata,
+                dtype="float32",
+                scale_factor=None,
+                chunksize=self.damage_dem.chunksize,
             )
 
-            calc.run(overwrite=True)
         else:
             print(f"{self.damage_dem.view_name_with_parents(2)} already exists")
 
 
 # %%
+if __name__ == "__main__":
+    from tests.config import FOLDER_TEST, TEMP_DIR
+
+    self = dmg_dem = DamageDem.from_folder(
+        folder=FOLDER_TEST,
+        panden_raster=hrt.Raster(TEMP_DIR.joinpath(f"panden_{hrt.get_uuid()}.tif")),
+        damage_dem=hrt.Raster(TEMP_DIR.joinpath(f"damage_dem_50cm_{hrt.get_uuid()}.tif")),
+    )
+    dmg_dem.create()

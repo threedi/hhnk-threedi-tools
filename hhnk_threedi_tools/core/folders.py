@@ -308,7 +308,7 @@ class SchemaDirParent(Folder):
 
     def __repr__(self):
         return f"""{self.name} @ {self.base}
-                    Folders:\t{self.structure}
+                    Folders:\t .calculation_rasters
                     Files:\t{list(self.files.keys())}
                     Model schemas:\t{self.schema_list}
                 """
@@ -318,8 +318,6 @@ class SchemaDirParent(Folder):
 
         def __init__(self, base, create):
             super().__init__(os.path.join(base, "revisions"), create)
-            if create:
-                self.create()
 
     class CalculationRasters(Folder):
         """sub-folder of SchemaDirParent with rasters required for calculations.
@@ -331,11 +329,20 @@ class SchemaDirParent(Folder):
         def __init__(self, base, create):
             super().__init__(os.path.join(base, "rasters_verwerkt"), create)
 
+            self.add_file("dem", "dem.tif")
+            self.add_file("glg", "glg.tif")
+            self.add_file("ggg", "ggg.tif")
+            self.add_file("ghg", "ghg.tif")
+            self.add_file("infiltration", "infiltration.tif")
+            self.add_file("friction", "friction.tif")
+            self.add_file("landuse", "landuse.tif")
+            self.add_file("polder", "polder.tif")
+            self.add_file("waterdeel", "waterdeel.tif")
+
             # self.add_file("dem", "dem_50cm.tif")
             self.add_file("damage_dem", "damage_dem.tif")  # TODO glob maken van beschikbare damage_dems.
             self.add_file("panden", "panden.tif")
             if create:
-                self.mkdir()
                 self.create_readme()
 
         def create_readme(self):
@@ -346,6 +353,8 @@ class SchemaDirParent(Folder):
                     "dem_50cm.tif -> used to create damage_dem.tif\n"
                     "panden.tif -> used to create damage_dem.tif\n"
                     "damage_dem.tif -> dem_50cm.tif + panden.tif. Used for damage calculations.\n\n"
+                    "polder.tif -> Model bounds.\n\n"
+                    "waterdeel.tif -> Waterdeel\n\n"
                 )
                 with open(readme_file, mode="w") as f:
                     f.write(readme_txt)

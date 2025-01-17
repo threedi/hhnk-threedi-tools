@@ -872,7 +872,6 @@ class Simulation:
         if self.model is None:
             return "define self.model_id first"
 
-
         output_path = Path(output_folder_sqlite).joinpath("tempfiles", f"model_{self.model_id}.zip")
         output_path.parent.mkdir(parents=True, exist_ok=True)  # Create parent folder
 
@@ -934,7 +933,7 @@ class Simulation:
             return f"Simulation: {sim.url}\
                     {newline}Scenario name: {sim.name}\
                     {newline}Organisation name: {sim.organisation_name}\
-                    {newline}Duration: {sim.duration}s ({sim.duration/3600}h)\
+                    {newline}Duration: {sim.duration}s ({sim.duration / 3600}h)\
                     {newline}Rain events: {self.data.rain}\
                     {newline}Control structures count: {len(self.data.structure_control)}\t(used={self.tracker.structure_control})\
                     {newline}Laterals count: {len(self.data.laterals)}\t(used={self.tracker.laterals})\
@@ -957,7 +956,7 @@ class Simulation:
                 f"Simulation id: <a href={sim.url}>{sim.id}</a>\
                     {newline}Scenario name: {sim.name}\
                     {newline}Organisation name: {sim.organisation_name}\
-                    {newline}Duration: {sim.duration}s ({sim.duration/3600}h)\
+                    {newline}Duration: {sim.duration}s ({sim.duration / 3600}h)\
                     {newline}Rain events: {self.data.rain}\
                     {newline}Control structures count: {len(self.data.structure_control)}\t(used={self.tracker.structure_control})\
                     {newline}Laterals count: {len(self.data.laterals)}\t(used={self.tracker.laterals})\
