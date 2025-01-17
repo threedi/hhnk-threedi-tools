@@ -14,15 +14,16 @@ Etc.
 """
 
 # %%
-import requests
-from pathlib import Path
 import json
 import os
-from breaches import Breaches
 import shutil
-import zipfile
 import time as timesleep
+import zipfile
+from pathlib import Path
+
 import pandas as pd
+import requests
+from breaches import Breaches
 
 # %%
 # Test API connection
@@ -58,17 +59,13 @@ api_key_10_07_24 = "You must place here the API KEY"
 # %%
 # Check Tenants
 tenants = "https://www.overstromingsinformatie.nl/auth/v1/tenants/"
-response_tenants = requests.get(
-    url=tenants, headers=headers, auth=("__key__", api_key_10_07_24)
-)
+response_tenants = requests.get(url=tenants, headers=headers, auth=("__key__", api_key_10_07_24))
 print(response_tenants.json())
 
 # %%
 # Get Token
 token_url = "https://www.overstromingsinformatie.nl/auth/v1/token/"
-response_5 = requests.post(
-    url=token_url, json={"tenant": 4}, auth=("__key__", api_key_10_07_24)
-)
+response_5 = requests.post(url=token_url, json={"tenant": 4}, auth=("__key__", api_key_10_07_24))
 print(response_5.json())
 refresh = response_5.json()["refresh"]
 
@@ -76,27 +73,25 @@ refresh = response_5.json()["refresh"]
 access = response_5.json()
 refresh_url = "https://www.overstromingsinformatie.nl/auth/v1/token/refresh/"
 data_refresh = {"refresh": response_5.json()["refresh"]}
-response_refresh = requests.post(
-    url=refresh_url, json=data_refresh, auth=("__key__", api_key_10_07_24)
-)
+response_refresh = requests.post(url=refresh_url, json=data_refresh, auth=("__key__", api_key_10_07_24))
 response_refresh = response_refresh.json()
 refresh_token = response_refresh["access"]
 print(response_refresh)
 
 # %%
 
-#Set Paths from the data to be uploaded
+# Set Paths from the data to be uploaded
 
 # Excel files per scenario.
-metadata_folder = 
+metadata_folder = ""
 # Folder location from where the scenarios are going to be copy
-output_folder = 
+output_folder = ""
 
 # Folder location to copy the Scenarios
-ldo_structuur_folder =
+ldo_structuur_folder = ""
 
 # Excel file where the ID and size of of the upload is going to be store
-id_scenarios =
+id_scenarios = ""
 
 # Open the excel file as pandas dataframe
 pd_scenarios = pd.read_excel(id_scenarios)
@@ -105,9 +100,7 @@ pd_scenarios = pd.read_excel(id_scenarios)
 
 # function to select folder from which the info is goin to be copy
 def select_folder(scenario_name_path):
-    scenario_paths = [
-        j for i in Path(output_folder).glob("*/") for j in list(i.glob("*/"))
-    ]
+    scenario_paths = [j for i in Path(output_folder).glob("*/") for j in list(i.glob("*/"))]
     for scenario_path in scenario_paths:
         if scenario_path.name == scenario_name:
             return scenario_path
@@ -122,9 +115,7 @@ sleeptime = 420
 delete_file = []
 
 # check if scenario is done
-scenario_done = pd_scenarios.loc[
-    pd_scenarios["ID_SCENARIO"] > 0, "Naam van het scenario"
-].to_list()
+scenario_done = pd_scenarios.loc[pd_scenarios["ID_SCENARIO"] > 0, "Naam van het scenario"].to_list()
 # %%
 # Loop over al the scenarios
 for excel_file_name in scenario_names:
@@ -140,9 +131,7 @@ for excel_file_name in scenario_names:
         print(f"uploading scenario {scenario_name}")
 
         # UPLOAD EXCEL FILE OF THE SCENARIO
-        excel_import_url = refresh_url = (
-            "https://www.overstromingsinformatie.nl/api/v1/excel-imports?mode=create"
-        )
+        excel_import_url = refresh_url = "https://www.overstromingsinformatie.nl/api/v1/excel-imports?mode=create"
 
         headers_excel = {
             "accept": "application/json",
@@ -158,9 +147,7 @@ for excel_file_name in scenario_names:
                     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 )
             }
-            excel_response = requests.post(
-                url=excel_import_url, headers=headers_excel, files=excel_files
-            )
+            excel_response = requests.post(url=excel_import_url, headers=headers_excel, files=excel_files)
 
         # GET RESPONSE.
         print(f"the excel file for the scenario {scenario_name} has been uploaded")
@@ -171,9 +158,7 @@ for excel_file_name in scenario_names:
 
         # store scenario id in the metadata
         scenario_id = response_json["scenario_ids"][0]
-        pd_scenarios.loc[
-            pd_scenarios["Naam van het scenario"] == scenario_name, "ID_SCENARIO"
-        ] = scenario_id
+        pd_scenarios.loc[pd_scenarios["Naam van het scenario"] == scenario_name, "ID_SCENARIO"] = scenario_id
 
         print(f"uploading scenario {scenario_name} with uploading id:{scenario_id}")
 
@@ -219,9 +204,7 @@ for excel_file_name in scenario_names:
                             arcname=os.path.join(f"{zipfile_location_name}", arcname),
                         )
 
-        print(
-            f"Folder '{scenario_folder_structuur}' has been zipped successfully into '{scenario_folder_structuur}'."
-        )
+        print(f"Folder '{scenario_folder_structuur}' has been zipped successfully into '{scenario_folder_structuur}'.")
         # Set sleep time while the folder is zipped.
         timesleep.sleep(50)
 
@@ -232,12 +215,12 @@ for excel_file_name in scenario_names:
         print(f"zip file created with size {zip_kb} kb")
 
         # copy the size of the scenario in the metdata dataframe
-        pd_scenarios.loc[
-            pd_scenarios["Naam van het scenario"] == scenario_name, "SIZE_KB"
-        ] = zip_kb
+        pd_scenarios.loc[pd_scenarios["Naam van het scenario"] == scenario_name, "SIZE_KB"] = zip_kb
 
         # UPOLOAD ZIP FILES TO LDO
-        file_import_url = f"https://www.overstromingsinformatie.nl/api/v1/excel-imports/{id_excel}/files/{zip_name}/upload"
+        file_import_url = (
+            f"https://www.overstromingsinformatie.nl/api/v1/excel-imports/{id_excel}/files/{zip_name}/upload"
+        )
         headers_excel = {
             "accept": "application/json",
             "authorization": f"Bearer {refresh_token}",

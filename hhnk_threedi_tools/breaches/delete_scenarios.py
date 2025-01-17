@@ -1,6 +1,6 @@
 # %%
-import requests
 import pandas as pd
+import requests
 
 # place the path of the metadata to be fill
 csv_location = pd.read_excel()
@@ -49,17 +49,13 @@ api_key_10_07_24 = "lask2hq6.JhTTsbYLI0j5FNF20JQNpubBaYpByIx0"
 # %%
 # Check Tenants
 tenants = "Place here the API key"
-response_tenants = requests.get(
-    url=tenants, headers=headers, auth=("__key__", api_key_10_07_24)
-)
+response_tenants = requests.get(url=tenants, headers=headers, auth=("__key__", api_key_10_07_24))
 print(response_tenants.json())
 
 # %%
 # Get Token
 token_url = "https://www.overstromingsinformatie.nl/auth/v1/token/"
-response_5 = requests.post(
-    url=token_url, json={"tenant": 4}, auth=("__key__", api_key_10_07_24)
-)
+response_5 = requests.post(url=token_url, json={"tenant": 4}, auth=("__key__", api_key_10_07_24))
 print(response_5.json())
 refresh = response_5.json()["refresh"]
 
@@ -67,9 +63,7 @@ refresh = response_5.json()["refresh"]
 access = response_5.json()
 refresh_url = "https://www.overstromingsinformatie.nl/auth/v1/token/refresh/"
 data_refresh = {"refresh": response_5.json()["refresh"]}
-response_refresh = requests.post(
-    url=refresh_url, json=data_refresh, auth=("__key__", api_key_10_07_24)
-)
+response_refresh = requests.post(url=refresh_url, json=data_refresh, auth=("__key__", api_key_10_07_24))
 response_refresh = response_refresh.json()
 refresh_token = response_refresh["access"]
 print(response_refresh)
@@ -93,9 +87,7 @@ id_scenarios = csv_location["id_delete"].values
 # %%
 # id_scenarios = []
 for id_scenario in id_scenarios:
-    file_import_url = (
-        f"https://www.overstromingsinformatie.nl/api/v1/scenarios/{id_scenario}"
-    )
+    file_import_url = f"https://www.overstromingsinformatie.nl/api/v1/scenarios/{id_scenario}"
     # file_import_url = f'https://ldo.staging.lizard.net/api/v1/excel-imports/{id_excel}/files/{zip_name}/upload'
     headers_excel = {
         "accept": "application/json",
