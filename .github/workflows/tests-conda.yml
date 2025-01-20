@@ -22,14 +22,6 @@ jobs:
     strategy:
       matrix:
         include:
-          # - os: ubuntu-latest
-          #   label: linux-64
-          #   prefix: /usr/share/miniconda3/envs/my-env
-
-          # - os: macos-latest
-          #   label: osx-64
-          #   prefix: /Users/runner/miniconda3/envs/my-env
-
           - os: windows-latest
             label: win-64
             prefix: C:\Miniconda3\envs\my-env
@@ -37,7 +29,7 @@ jobs:
     name: ${{ matrix.label }}
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Setup miniconda
         uses: conda-incubator/setup-miniconda@v3
@@ -48,7 +40,7 @@ jobs:
       - name: Set cache date
         run: echo "DATE=$(date +'%Y%m%d')" >> $GITHUB_ENV
 
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: ${{ matrix.prefix }}
           key: ${{ matrix.label }}-conda-${{ hashFiles('envs\environment_test.yml') }}-${{ env.CACHE_NUMBER }}
@@ -71,7 +63,7 @@ jobs:
           pytest --cov-report term-missing --cov=hhnk_threedi_tools --cov-report=xml tests/
       
       - name: Upload coverage
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v5
 
       #Hopefully reduces run time; see https://github.com/conda-incubator/setup-miniconda/issues/277
       - name: Rename conda package cache
