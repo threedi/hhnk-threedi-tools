@@ -7,6 +7,7 @@ import pandas as pd
 
 from hhnk_threedi_tools import Folders
 from hhnk_threedi_tools.core.result_rasters.grid_to_raster import GridToWaterDepth, GridToWaterLevel
+from hhnk_threedi_tools.core.result_rasters.grid_to_raster_old import GridToRaster
 from hhnk_threedi_tools.core.result_rasters.netcdf_to_gridgpkg import NetcdfToGPKG
 
 logger = hrt.logging.get_logger(__name__)
@@ -26,7 +27,14 @@ class KlimaatsommenPrep:
         min_block_size=1024,
         use_aggregate: bool = False,
         verify=True,
+        old_wlvl=False,
     ):
+        """
+        Parameters
+        ----------
+        old_wlvl : bool #TODO Deprecate in 2025.2
+            Use the Deprecated GridToRaster to calculate the wlvl and wdepth.
+        """
         if isinstance(cfg_file, str):
             cfg_file = hrt.get_pkg_resource_path(package_resource=hrt.waterschadeschatter.resources, name=cfg_file)
             if not cfg_file.exists():
@@ -39,6 +47,7 @@ class KlimaatsommenPrep:
         self.landuse_file = landuse_file
         self.min_block_size = min_block_size
         self.use_aggregate = use_aggregate
+        self.old_wlvl = old_wlvl
 
         if verify:
             self.verify_input()
@@ -136,17 +145,36 @@ class KlimaatsommenPrep:
             "wlvl_column": wlvl_col_name,
         }
 
-        # Create wlvl raster
-        with GridToWaterLevel(**calculator_kwargs) as wlvlcalc:
-            wlvlcalc.run(output_file=wlvl_raster, chunksize=self.min_block_size, overwrite=overwrite)
+        if not self.old_wlvl:
+            # Create wlvl raster
+            with GridToWaterLevel(**calculator_kwargs) as wlvlcalc:
+                wlvlcalc.run(output_file=wlvl_raster, chunksize=self.min_block_size, overwrite=overwrite)
 
-        if create_wdepth:
-            # Create wdepth raster
-            with GridToWaterDepth(
-                dem_path=self.dem.base,
-                wlvl_path=wlvl_raster,
-            ) as wdepth_calc:
-                wdepth_calc.run(output_file=wdepth_raster, chunksize=self.min_block_size, overwrite=overwrite)
+            if create_wdepth:
+                # Create wdepth raster
+                with GridToWaterDepth(
+                    dem_path=self.dem.base,
+                    wlvl_path=wlvl_raster,
+                ) as wdepth_calc:
+                    wdepth_calc.run(output_file=wdepth_raster, chunksize=self.min_block_size, overwrite=overwrite)
+        else:
+            # TODO Old depth calculation. Depecrate in next update.
+            with GridToRaster(**calculator_kwargs) as basecalc:
+                basecalc.run(
+                    output_file=wlvl_raster,
+                    mode="MODE_WLVL",
+                    min_block_size=self.min_block_size,
+                    overwrite=overwrite,
+                )
+
+            # Init calculator
+            with GridToRaster(**calculator_kwargs) as basecalc:
+                basecalc.run(
+                    output_file=wdepth_raster,
+                    mode="MODE_WDEPTH",
+                    min_block_size=self.min_block_size,
+                    overwrite=overwrite,
+                )
 
     def calculate_damage(self, scenario, overwrite=False):
         # Variables

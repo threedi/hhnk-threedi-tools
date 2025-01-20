@@ -1,13 +1,15 @@
 """
 Most functions taken and edited from pip package: threedidepth.
 Modified to have more flexibility in input and calculation
+
+#NOTE 2025-01 replaced with GridToWaterLevel and GridToWaterDepth in grid_to_raster.py.
+
 """
 
 from pathlib import Path
 
 import hhnk_research_tools as hrt
 import numpy as np
-from geopandas import GeoDataFrame
 from osgeo import gdal
 from scipy.spatial import Delaunay
 from threedidepth import morton
@@ -15,14 +17,17 @@ from threedigrid.admin.constants import NO_DATA_VALUE
 
 from hhnk_threedi_tools.core.folders import Folders
 
+logger = hrt.logging.get_logger(__name__)
+
 
 class BaseCalculatorGPKG:
     """TODO Deprecated, remove in later release."""
 
     def __init__(self, **kwargs):
         raise DeprecationWarning(
-            "The BaseCalculatorGPKG class has been named to \
-htt.GridToRaster since v2024.2. Please rewrite your code."
+            "The BaseCalculatorGPKG class has been named to htt.GridToRaster since v2024.2. \
+Which will also soon will be deprecated for GridToWaterLevel and GridToWaterDepth.\
+Please rewrite your code."
         )
 
 
@@ -45,10 +50,12 @@ class GridToRaster:
         grid_gdf,
         wlvl_column,
     ):
-        self.dem_raster = hrt.Raster(dem_path)
+        self.dem_raster = hrt.RasterOld(dem_path)
 
         self.grid_gdf = grid_gdf
         self.wlvl_column = wlvl_column  # Column to use in calculation
+
+        logger.warning("DeprecationWarning: GridToRaster has been replaced by GridToWaterLevel and GridToWaterDepth")
 
     @property
     def lookup_wlvl(self):
@@ -201,7 +208,7 @@ class GridToRaster:
 
     def run(self, output_file, mode="MODE_WLVL", min_block_size=1024, overwrite=False):
         # Init rasters
-        self.output_raster = hrt.Raster(output_file)
+        self.output_raster = hrt.RasterOld(output_file)
         self.nodeid_raster = self.output_raster.parent.full_path("nodeid.tif")
 
         create = hrt.check_create_new_file(output_file=self.output_raster.path, overwrite=overwrite)
