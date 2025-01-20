@@ -30,5 +30,5 @@ for i in TEMP_DIR.iterdir():
 
 FOLDER_TEST = Folders(PATH_TEST_MODEL)
 
-PATH_NEW_FOLDER = TEMP_DIR / f"test_project_{hrt.get_uuid()}"
+PATH_NEW_FOLDER = TEMP_DIR / f"test_project_{hrt.current_time(date=True)}"
 FOLDER_NEW = Folders(PATH_NEW_FOLDER)

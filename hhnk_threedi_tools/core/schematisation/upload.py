@@ -182,10 +182,10 @@ def create_threedimodel(schematisation, revision):
             break
         else:
             if i == 9:
-                raise Exception(f"revision did not become valid after {(i+1)*5}s; {rev}")
+                raise Exception(f"revision did not become valid after {(i + 1) * 5}s; {rev}")
             else:
                 time.sleep(5)
-                print(f"waiting for revision to become valid ({(i+1)*5}s)")
+                print(f"waiting for revision to become valid ({(i + 1) * 5}s)")
 
     # Check number of models, if more than 2, delete oldest.
     threedimodels = hrt.call_threedi_api(
