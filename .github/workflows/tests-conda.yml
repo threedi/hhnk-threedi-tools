@@ -66,10 +66,11 @@ jobs:
         uses: codecov/codecov-action@v5
 
       #Hopefully reduces run time; see https://github.com/conda-incubator/setup-miniconda/issues/277
-      - name: Rename conda package cache
-        if: steps.cache.outputs.cache-hit != 'true' #Doesnt work when cache is used.
-        shell: bash
-        run: mv "${CONDA_PKGS_DIR}" "${CONDA_PKGS_DIR}_do_not_cache"
+      #This worked in conda-incubator/setup-miniconda@v2, but not on conda-incubator/setup-miniconda@v3
+      # - name: Rename conda package cache
+      #   if: steps.cache.outputs.cache-hit != 'true' #Doesnt work when cache is used.
+      #   shell: bash
+      #   run: mv "${CONDA_PKGS_DIR}" "${CONDA_PKGS_DIR}_do_not_cache"
 
     # fail_if_pull_request_is_draft:
     #   if: github.event.pull_request.draft == true
