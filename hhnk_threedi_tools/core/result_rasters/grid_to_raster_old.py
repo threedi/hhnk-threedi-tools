@@ -2,7 +2,7 @@
 Most functions taken and edited from pip package: threedidepth.
 Modified to have more flexibility in input and calculation
 
-#NOTE 2025-01 replaced with GridToWaterLevel and GridToWaterDepth in grid_to_raster.py.
+#NOTE 2025-01 replaced with GridToWaterLevel and GridToWaterDepth in grid_to_raster.py
 
 """
 
