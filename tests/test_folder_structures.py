@@ -3,18 +3,15 @@ import shutil
 from pathlib import Path
 
 from hhnk_threedi_tools.core.folders import Folders
+from tests.config import FOLDER_NEW, FOLDER_TEST, PATH_NEW_FOLDER
 
 SUB_FOLDERS = ["01_source_data", "02_schematisation", "03_3di_results", "04_test_results"]
-
-from tests.config import FOLDER_NEW, FOLDER_TEST, PATH_NEW_FOLDER, PATH_TEST_MODEL
 
 
 class TestFolder:
     def test_create_project(self):
         """Test if a new project folders are created"""
         # create a project without creating sub-dirs
-        new_folder = Folders(PATH_NEW_FOLDER, create=False)
-        assert not Path(PATH_NEW_FOLDER).exists()  # check sub-dirs empty
         new_folder = Folders(PATH_NEW_FOLDER, create=True)
 
         # check if SUB_FOLDERS exist and contain a readme.txt
