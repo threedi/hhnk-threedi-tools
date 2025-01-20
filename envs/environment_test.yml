@@ -3,7 +3,6 @@ name: threedipy
 
 channels:
   - conda-forge
-  - defaults
 
 dependencies:
   #QGIS preinstalled
@@ -43,6 +42,7 @@ dependencies:
   - cached_property=1.5.2
   - rtree=1.0.1
   - pip=24.0
+  - oracledb==2.4.1
 
   - pip: # 3Di packages are not conda installable and are therefore installed by PIP
     - threedi_modelchecker==2.6.3 #threedi_results_analysis 3.9.0
@@ -50,7 +50,7 @@ dependencies:
     - threedi_schema==0.219.3 #threedi_results_analysis 3.9.0
     - threedi-api-client==4.1.7 #3Di Models and Simulations 3.11.0
     - threedigrid_builder==1.14.4 #threedi_results_analysis 3.9.2
-    - threedigrid==2.2.10 #threedi_results_analysis 3.9.0 -> not found in 3.9.2, but still in htt?
+    - threedigrid==2.3.3 #threedi_results_analysis 3.12.0
     - threedidepth==0.6.3 #threedi_results_analysis 3.9.0
 
     # Schema 217.
