@@ -43,6 +43,7 @@ dependencies:
   - rtree=1.0.1
   - oracledb=2.4.1
   - pip=24.0
+  - oracledb=2.4.1
 
   - pip: # 3Di packages are not conda installable and are therefore installed by PIP
     - threedi_modelchecker==2.6.3 #threedi_results_analysis 3.9.0
