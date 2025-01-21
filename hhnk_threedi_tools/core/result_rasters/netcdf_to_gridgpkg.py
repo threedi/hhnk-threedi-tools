@@ -125,9 +125,9 @@ Debug by checking available timeseries through the (.ts) timeseries attributes""
                 col_base = f"{int(timestep_h)}h"
             else:
                 if timestep_h < 1:
-                    col_base = f"{int(timestep_h*60)}min"
+                    col_base = f"{int(timestep_h * 60)}min"
                 else:
-                    col_base = f"{int(np.floor(timestep_h))}h{int((timestep_h%1)*60)}min"
+                    col_base = f"{int(np.floor(timestep_h))}h{int((timestep_h % 1) * 60)}min"
         return col_base
 
 
@@ -298,9 +298,9 @@ class NetcdfToGPKG:
             inplace=True,
         )
 
-        grid_gdf["id"] = self.grid.cells.subset("2D_open_water").id  # NOTE waarom andere subset?
+        grid_gdf["id"] = self.grid.cells.subset("2D_open_water").id  # NOTE WE waarom andere subset?
 
-        # TODO hier lijnen en punten toevoegen, moet dat nu
+        # TODO WE hier lijnen en punten toevoegen, moet dat hier?
         if self.grid.has_1d:
             node_gdf.set_geometry(
                 Point(self.grid.nodes.subset("1D_ALL").coordinates),
@@ -312,6 +312,9 @@ class NetcdfToGPKG:
         node_gdf["calculation_type"] = self.grid.nodes.subset("1D_ALL").calculation_type
 
         return grid_gdf, node_gdf
+
+    def get_default_timesteps_seconds:
+
 
     def add_correction_parameters(
         self,
@@ -362,7 +365,7 @@ class NetcdfToGPKG:
         grid_gdf["neighbour_ids"] = neighbours
         return grid_gdf
 
-    def get_waterlevels(self, grid_gdf, timesteps_seconds: list):
+    def get_waterlevels(self, grid_gdf, timesteps_seconds: list):  # TODO WE hernoemen naar get_timeseries_data?
         """Retrieve waterlevels volume and storage at given timesteps"""
 
         col_idx = ColumnIdx(gdf=grid_gdf)
@@ -385,7 +388,9 @@ class NetcdfToGPKG:
                     np.round(grid_gdf[f"vol_{col_base}"] / grid_gdf["dem_area"] * 1000, 2),
                 )
             except KeyError:
-                print("Volume not found in (aggregated)result")
+                print(
+                    "Volume not found in (aggregated)result"
+                )  # NOTE WE Wordt volume dan niet uit gewone netcdf gehaald?
 
             grid_gdf.insert(
                 col_idx.wlvl,
