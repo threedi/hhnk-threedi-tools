@@ -20,7 +20,7 @@ def calculate_rain_days(rain):
         raise Exception(f"Geen regen gedetecteerd in 3di scenario")
 
 
-def get_rain_properties(results):
+def get_rain_properties(results):  # NOTE WE hier einde regen
     """Calculate the rain scenario used for this result"""
     try:
         # Calculates the mean of steps between timestamps (in seconds), then converts to minutes

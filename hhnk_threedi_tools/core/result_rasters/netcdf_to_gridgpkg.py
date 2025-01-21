@@ -92,7 +92,7 @@ class NetcdfTimeSeries:
             use "max" to get the max of all timesteps.
         """
 
-        if time_seconds == "max":
+        if time_seconds == "max":  # NOTE WE hier pakt hij max
             # Retrieve values when wlvl is max
             ts = np.round(
                 [row[self.max_index[enum]] for enum, row in enumerate(getattr(self, f"{param}_2d_all").T)], 5
@@ -286,7 +286,9 @@ class NetcdfToGPKG:
             return grid_gdf_merged[[area_col, perc_col]]
         return np.nan
 
-    def create_base_gdf(self):
+        # NOTE WE waar vindt ik de functie einde neerslag
+
+    def create_base_gdf(self):  # NOTE WE layername wordt belangrijk voor raster creatie
         """Create base grid from netcdf"""
         grid_gdf = gpd.GeoDataFrame()
         node_gdf = gpd.GeoDataFrame()
@@ -311,10 +313,8 @@ class NetcdfToGPKG:
         node_gdf["id"] = self.grid.nodes.subset("1D_ALL").id
         node_gdf["calculation_type"] = self.grid.nodes.subset("1D_ALL").calculation_type
 
+        # NOTE WE .log bestand met metadata
         return grid_gdf, node_gdf
-
-    def get_default_timesteps_seconds:
-
 
     def add_correction_parameters(
         self,
@@ -365,7 +365,9 @@ class NetcdfToGPKG:
         grid_gdf["neighbour_ids"] = neighbours
         return grid_gdf
 
-    def get_waterlevels(self, grid_gdf, timesteps_seconds: list):  # TODO WE hernoemen naar get_timeseries_data?
+    def get_waterlevels(
+        self, grid_gdf, timesteps_seconds: list
+    ):  # TODO WE hernoemen naar get_timeseries_data? Losse functies voor nodes/lines
         """Retrieve waterlevels volume and storage at given timesteps"""
 
         col_idx = ColumnIdx(gdf=grid_gdf)
