@@ -19,9 +19,7 @@ import hhnk_threedi_tools.core.climate_scenarios.maskerkaart as maskerkaart
 import hhnk_threedi_tools.core.climate_scenarios.peilgebieden as peilgebieden
 import hhnk_threedi_tools.core.climate_scenarios.ruimtekaart as ruimtekaart
 import hhnk_threedi_tools.core.climate_scenarios.schadekaart as schadekaart
-from hhnk_threedi_tools.core.climate_scenarios.interpolate_rasters import (
-    main_interpolate_rasters,
-)
+from hhnk_threedi_tools.core.climate_scenarios.interpolate_rasters import main_interpolate_rasters
 from hhnk_threedi_tools.core.climate_scenarios.klimaatsommen_prep import KlimaatsommenPrep
 from hhnk_threedi_tools.core.climate_scenarios.maskerkaart_raster import rasterize_maskerkaart
 from hhnk_threedi_tools.core.climate_scenarios.schadekaart_peilgebieden import maak_schade_polygon
