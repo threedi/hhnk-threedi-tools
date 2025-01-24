@@ -1,3 +1,4 @@
+# Open in jupyterlab as a notebook; right click .py -> Open With -> Jupytext Notebook
 # %% [markdown]
 # ## Create grid nodes and lines from sqlite
 

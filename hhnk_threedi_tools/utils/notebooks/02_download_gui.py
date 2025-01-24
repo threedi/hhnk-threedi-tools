@@ -1,3 +1,4 @@
+# Open in jupyterlab as a notebook; right click .py -> Open With -> Jupytext Notebook
 # %% [markdown]
 # # 02. Downloaden modelresultaten
 # - modelnaam in rasters toevoegen
