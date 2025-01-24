@@ -11,6 +11,7 @@ import ipywidgets as widgets
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from IPython.display import display
 
 import hhnk_threedi_tools as htt
 
@@ -30,7 +31,7 @@ plt.ioff()  # turn off inline plots, only show when asked
 
 # Of handmatig;
 # folder=Folders(r"E:\02.modellen\model_test_v2")
-folder = htt.Folders(r"C:\Users\wiets\Documents\GitHub\hhnk-threedi-tools\tests\data\model_test")
+folder = htt.Folders(r"C:\Users\wietse\Documents\GitHub\hhnk-threedi-tools\tests\data\model_test")
 
 
 class KlimaatsommenSettings:
@@ -154,10 +155,7 @@ class KlimaatsommenWidgets:
             layout=self.item_layout(grid_area="precipitation_zone_box"),
         )
 
-        self.dem_label = widgets.Label(
-            "DEM:",
-            layout=self.item_layout(grid_area="dem_label"),
-        )
+        self.dem_label = widgets.Label("DEM:", layout=self.item_layout(grid_area="dem_label"))
 
         self.dem_text = widgets.Text(
             self.caller.settings.dem.view_name_with_parents(3),
@@ -165,10 +163,7 @@ class KlimaatsommenWidgets:
             layout=self.item_layout(grid_area="dem_text"),
         )
 
-        self.pgb_label = widgets.Label(
-            "Peilgebieden:",
-            layout=self.item_layout(grid_area="pgb_label"),
-        )
+        self.pgb_label = widgets.Label("Peilgebieden:", layout=self.item_layout(grid_area="pgb_label"))
 
         self.pgb_text = widgets.Text(
             self.caller.settings.pgb.view_name_with_parents(2),
@@ -210,11 +205,14 @@ class KlimaatsommenWidgets:
             package_resource=htt.resources, name="precipitation_zones_hhnk.tif"
         )
         precip_zones_raster = hrt.Raster(precip_zones_raster)
-        neerslag_array = precip_zones_raster.get_array(band_count=3)
+
+        da_precip = precip_zones_raster.open_rxr()
+        neerslag_array = da_precip.transpose("y", "x", "band").data
 
         fig, ax = plt.subplots(figsize=(6, 6))
-        ax.imshow(neerslag_array, extent=precip_zones_raster.metadata.bounds)
+        ax.imshow(neerslag_array / 255, extent=precip_zones_raster.metadata.bounds)
         polder_shape.plot(ax=ax, color="red")
+
         return fig
 
     def item_layout(self, width="95%", grid_area="", **kwargs):
@@ -319,6 +317,7 @@ class KlimaatsommenMain:
 
 if __name__ == "__main__":
     self = KlimaatsommenMain(folder=folder)
+    # %%
     display(self.widgets.gui())
 
     # FIXME Voor testen standaard selecteren
