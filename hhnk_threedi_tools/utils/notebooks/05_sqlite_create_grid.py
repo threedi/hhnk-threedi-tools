@@ -1,17 +1,3 @@
-# ---
-# jupyter:
-#   jupytext:
-#     text_representation:
-#       extension: .py
-#       format_name: percent
-#       format_version: '1.3'
-#       jupytext_version: 1.16.6
-#   kernelspec:
-#     display_name: Python 3 (ipykernel)
-#     language: python
-#     name: python3
-# ---
-
 # %% [markdown]
 # ## Create grid nodes and lines from sqlite
 
@@ -21,17 +7,17 @@ from notebook_setup import setup_notebook
 
 notebook_data = setup_notebook()
 
+import importlib.resources as pkg_resources  # Load resource from package
+import json
 import os
+import sys
+
 import geopandas as gpd
-import pandas as pd
+import ipywidgets as widgets
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 from osgeo import gdal
-import sys
-import importlib.resources as pkg_resources  # Load resource from package
-import ipywidgets as widgets
-import json
-
 
 from hhnk_threedi_tools import Folders, SqliteCheck
 

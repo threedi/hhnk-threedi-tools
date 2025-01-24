@@ -1,23 +1,8 @@
-# ---
-# jupyter:
-#   jupytext:
-#     text_representation:
-#       extension: .py
-#       format_name: percent
-#       format_version: '1.3'
-#       jupytext_version: 1.16.6
-#   kernelspec:
-#     display_name: Python 3 (ipykernel)
-#     language: python
-#     name: python3
-# ---
-
 # %% [markdown]
 # # Steps:
 # 1. Laadt imports
 # 2. Vul variabelen in
 # 3. Draai start_calculation tab
-#
 
 # %%
 # Add qgis plugin deps to syspath and load notebook_data
@@ -28,7 +13,7 @@ notebook_data = setup_notebook()
 
 # ipython imports
 import ipywidgets as widgets
-from IPython.display import display, HTML
+from IPython.display import HTML, display
 
 display(HTML("<style>.container {width:90% !important;}</style>"))
 # %matplotlib inline

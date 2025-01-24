@@ -1,17 +1,3 @@
-# ---
-# jupyter:
-#   jupytext:
-#     text_representation:
-#       extension: .py
-#       format_name: percent
-#       format_version: '1.3'
-#       jupytext_version: 1.16.6
-#   kernelspec:
-#     display_name: Python 3 (ipykernel)
-#     language: python
-#     name: python3
-# ---
-
 # %% [markdown]
 # # Naverwerking waterdiepte
 #
@@ -35,16 +21,15 @@ from notebook_setup import setup_notebook
 notebook_data = setup_notebook()
 
 
+import geopandas as gpd
+import hhnk_research_tools as hrt
 import xarray
+
+import hhnk_threedi_tools as htt
 
 # import threedi_raster_edits as tre
 from hhnk_threedi_tools import Folders
-import hhnk_research_tools as hrt
-import geopandas as gpd
-
-import hhnk_threedi_tools as htt
-from hhnk_threedi_tools.core.result_rasters.calculate_raster import GridToWaterLevel, GridToWaterDepthDepth
-
+from hhnk_threedi_tools.core.result_rasters.calculate_raster import GridToWaterDepthDepth, GridToWaterLevel
 
 # User input
 folder_path = r"E:\02.modellen\model_test_v2"

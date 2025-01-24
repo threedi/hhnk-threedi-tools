@@ -1,17 +1,3 @@
-# ---
-# jupyter:
-#   jupytext:
-#     text_representation:
-#       extension: .py
-#       format_name: percent
-#       format_version: '1.3'
-#       jupytext_version: 1.16.6
-#   kernelspec:
-#     display_name: Python 3 (ipykernel)
-#     language: python
-#     name: python3
-# ---
-
 # %% [markdown]
 # # 02. Downloaden modelresultaten
 # - modelnaam in rasters toevoegen
@@ -24,7 +10,7 @@ from notebook_setup import setup_notebook
 
 notebook_data = setup_notebook()
 
-from IPython.display import display, HTML
+from IPython.display import HTML, display
 
 display(HTML("<style>.container {width:90% !important;}</style>"))
 # %matplotlib inline
@@ -53,11 +39,11 @@ dl.resume_download_tasks(batch_csv_file, overwrite=False)
 # ## Downloaden van rasters voor hetzelfde model op alle tijdstappen
 
 # %%
+import getpass
 import os
 
 # from threedi_scenario_downloader import downloader as dl  # FIXME Zie #102
 from hhnk_threedi_tools.external import downloader as dl
-import getpass
 
 # Change three discenario downloader
 # def new_get_headers():

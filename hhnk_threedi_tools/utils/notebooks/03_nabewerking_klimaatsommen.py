@@ -1,17 +1,3 @@
-# ---
-# jupyter:
-#   jupytext:
-#     text_representation:
-#       extension: .py
-#       format_name: percent
-#       format_version: '1.3'
-#       jupytext_version: 1.16.6
-#   kernelspec:
-#     display_name: Python 3 (ipykernel)
-#     language: python
-#     name: python3
-# ---
-
 # %% [markdown]
 # # Nabewerking Klimaatsommen
 #
@@ -27,53 +13,38 @@ from notebook_setup import setup_notebook
 
 notebook_data = setup_notebook()
 
+import importlib.resources as pkg_resources  # Load resource from package
 import os
-
-import geopandas as gpd
-import pandas as pd
-
-import matplotlib.pyplot as plt
-
-import numpy as np
-
+import sys
 from pathlib import Path
 
-import sys
-
-import importlib.resources as pkg_resources  # Load resource from package
-
-import ipywidgets as widgets
-
-
-from hhnk_threedi_tools import Folders
-import hhnk_threedi_tools as htt
+import geopandas as gpd
 import hhnk_research_tools as hrt
+import ipywidgets as widgets
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 
+import hhnk_threedi_tools as htt
 
 # import hhnk_threedi_tools.core.climate_scenarios as hrt_climate
 import hhnk_threedi_tools.core.climate_scenarios.maskerkaart as maskerkaart
-
+import hhnk_threedi_tools.core.climate_scenarios.peilgebieden as peilgebieden
 import hhnk_threedi_tools.core.climate_scenarios.ruimtekaart as ruimtekaart
-
+import hhnk_threedi_tools.core.climate_scenarios.schadekaart as schadekaart
+from hhnk_threedi_tools import Folders
 from hhnk_threedi_tools.core.climate_scenarios.interpolate_rasters import (
     main_interpolate_rasters,
 )
-import hhnk_threedi_tools.core.climate_scenarios.schadekaart as schadekaart
-
-import hhnk_threedi_tools.core.climate_scenarios.peilgebieden as peilgebieden
-
-from hhnk_threedi_tools.core.climate_scenarios.schadekaart_peilgebieden import (
-    maak_schade_polygon,
-)
-
-from hhnk_threedi_tools.core.climate_scenarios.maskerkaart_raster import (
-    rasterize_maskerkaart,
-)
-
 from hhnk_threedi_tools.core.climate_scenarios.klimaatsommen_prep import (
     KlimaatsommenPrep,
 )
-
+from hhnk_threedi_tools.core.climate_scenarios.maskerkaart_raster import (
+    rasterize_maskerkaart,
+)
+from hhnk_threedi_tools.core.climate_scenarios.schadekaart_peilgebieden import (
+    maak_schade_polygon,
+)
 
 # Folders inladen
 
@@ -86,6 +57,7 @@ folder = Folders(notebook_data["polder_folder"])
 
 # %% [markdown]
 # ## Selectie neerslagzone en dem
+
 
 # %%
 def item_layout(width="95%", grid_area="", **kwargs):
