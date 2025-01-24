@@ -1,5 +1,5 @@
-# Open in jupyterlab as a notebook; right click .py -> Open With -> Jupytext Notebook
 # %% [markdown]
+# Open in jupyterlab as a notebook; right click .py -> Open With -> Jupytext Notebook
 # # Naverwerking waterdiepte
 #
 # De waterdiepte kaarten worden geinterpoleerd tussen verschillende waterstand punten. Bij HHNK worden echter watervlakken opgehoogd in het 2D om te voorkomen dat er dubbele berging ontstaat. Als dit vlak binnen een rekencel valt kan het zijn dat er water op dit vlak komt te staan. Dit willen we niet.

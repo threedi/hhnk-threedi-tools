@@ -1,5 +1,5 @@
-# Open in jupyterlab as a notebook; right click .py -> Open With -> Jupytext Notebook
 # %% [markdown]
+# Open in jupyterlab as a notebook; right click .py -> Open With -> Jupytext Notebook
 # # Nabewerking Klimaatsommen
 #
 # Zorg dat in de poldermap onder 01. DAMO en HDB een folder staat met de naam 'peilgebieden'.

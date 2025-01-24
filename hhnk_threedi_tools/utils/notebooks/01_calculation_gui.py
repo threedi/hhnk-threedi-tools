@@ -1,9 +1,9 @@
-# Open in jupyterlab as a notebook; right click .py -> Open With -> Jupytext Notebook
 # %% [markdown]
+# Open in jupyterlab as a notebook; right click .py -> Open With -> Jupytext Notebook
 # # Steps:
-# 1. Laadt imports
-# 2. Vul variabelen in
-# 3. Draai start_calculation tab
+# 1. Load imports
+# 2. Enter variables
+# 3. Run start_calculation tab
 #
 
 # %%

@@ -1,5 +1,5 @@
-# Open in jupyterlab as a notebook; right click .py -> Open With -> Jupytext Notebook
 # %% [markdown]
+# Open in jupyterlab as a notebook; right click .py -> Open With -> Jupytext Notebook
 # # 02. Downloaden modelresultaten
 # - modelnaam in rasters toevoegen
 # - HTTPError: 504 Server Error: Gateway Time-out oplossen
