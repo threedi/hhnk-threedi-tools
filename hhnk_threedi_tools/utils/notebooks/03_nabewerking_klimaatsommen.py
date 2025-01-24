@@ -9,20 +9,19 @@
 #
 
 # %%
-from notebook_setup import setup_notebook
+try:
+    from hhnk_threedi_tools.utils.notebooks.notebook_setup import setup_notebook
+except:
+    from notebook_setup import setup_notebook  # in case hhnk-threedi-tools is not part of python installation
+
 
 notebook_data = setup_notebook()
 
-import importlib.resources as pkg_resources  # Load resource from package
-import os
-import sys
-from pathlib import Path
 
 import geopandas as gpd
 import hhnk_research_tools as hrt
 import ipywidgets as widgets
 import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
 
 import hhnk_threedi_tools as htt
@@ -33,9 +32,7 @@ import hhnk_threedi_tools.core.climate_scenarios.peilgebieden as peilgebieden
 import hhnk_threedi_tools.core.climate_scenarios.ruimtekaart as ruimtekaart
 import hhnk_threedi_tools.core.climate_scenarios.schadekaart as schadekaart
 from hhnk_threedi_tools import Folders
-from hhnk_threedi_tools.core.climate_scenarios.interpolate_rasters import (
-    main_interpolate_rasters,
-)
+from hhnk_threedi_tools.core.climate_scenarios.interpolate_rasters import main_interpolate_rasters
 from hhnk_threedi_tools.core.climate_scenarios.klimaatsommen_prep import KlimaatsommenPrep
 from hhnk_threedi_tools.core.climate_scenarios.maskerkaart_raster import rasterize_maskerkaart
 from hhnk_threedi_tools.core.climate_scenarios.schadekaart_peilgebieden import maak_schade_polygon

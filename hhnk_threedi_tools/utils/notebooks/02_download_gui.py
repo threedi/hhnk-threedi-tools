@@ -6,7 +6,11 @@
 
 # %%
 # Add qgis plugin deps to syspath and load notebook_data
-from notebook_setup import setup_notebook
+try:
+    from hhnk_threedi_tools.utils.notebooks.notebook_setup import setup_notebook
+except:
+    from notebook_setup import setup_notebook  # in case hhnk-threedi-tools is not part of python installation
+
 
 notebook_data = setup_notebook()
 

@@ -1,0 +1,1 @@
+Open the files in jupyter lab using jupytext (right click, open with)

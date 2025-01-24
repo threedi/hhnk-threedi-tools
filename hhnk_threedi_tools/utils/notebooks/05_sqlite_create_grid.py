@@ -3,21 +3,14 @@
 
 # %%
 # Add qgis plugin deps to syspath and load notebook_data
-from notebook_setup import setup_notebook
+try:
+    from hhnk_threedi_tools.utils.notebooks.notebook_setup import setup_notebook
+except:
+    from notebook_setup import setup_notebook  # in case hhnk-threedi-tools is not part of python installation
+
 
 notebook_data = setup_notebook()
 
-import importlib.resources as pkg_resources  # Load resource from package
-import json
-import os
-import sys
-
-import geopandas as gpd
-import ipywidgets as widgets
-import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
-from osgeo import gdal
 
 from hhnk_threedi_tools import Folders, SqliteCheck
 

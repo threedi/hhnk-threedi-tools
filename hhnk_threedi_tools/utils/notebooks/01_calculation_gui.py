@@ -7,13 +7,15 @@
 
 # %%
 # Add qgis plugin deps to syspath and load notebook_data
-from notebook_setup import setup_notebook
+try:
+    from hhnk_threedi_tools.utils.notebooks.notebook_setup import setup_notebook
+except:
+    from notebook_setup import setup_notebook  # in case hhnk-threedi-tools is not part of python installation
 
 notebook_data = setup_notebook()
 
 
 # ipython imports
-import ipywidgets as widgets
 from IPython.display import HTML, display
 
 display(HTML("<style>.container {width:90% !important;}</style>"))
@@ -26,3 +28,5 @@ self = StartCalculationGui(data=notebook_data)
 self.w.model.schema_name_widget.value = self.vars.folder.name  # default name
 
 display(self.tab)
+
+# %%

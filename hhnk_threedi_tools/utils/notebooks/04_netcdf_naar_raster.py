@@ -16,20 +16,22 @@
 
 # %%
 # Add qgis plugin deps to syspath and load notebook_data
-from notebook_setup import setup_notebook
+try:
+    from hhnk_threedi_tools.utils.notebooks.notebook_setup import setup_notebook
+except:
+    from notebook_setup import setup_notebook  # in case hhnk-threedi-tools is not part of python installation
+
 
 notebook_data = setup_notebook()
 
 
-import geopandas as gpd
 import hhnk_research_tools as hrt
-import xarray
 
 import hhnk_threedi_tools as htt
 
 # import threedi_raster_edits as tre
 from hhnk_threedi_tools import Folders
-from hhnk_threedi_tools.core.result_rasters.calculate_raster import GridToWaterDepthDepth, GridToWaterLevel
+from hhnk_threedi_tools.core.result_rasters.grid_to_raster import GridToWaterDepth, GridToWaterLevel
 
 # User input
 folder_path = r"E:\02.modellen\model_test_v2"
@@ -70,7 +72,7 @@ calculator_kwargs = {"dem_path": dem_path, "grid_gdf": grid_gdf, "wlvl_column": 
 # Init calculator
 with GridToWaterLevel(**calculator_kwargs) as self:
     wlvl_raster = self.run(output_file=threedi_result.full_path("wlvl_corr.tif"), overwrite=OVERWRITE)
-with GridToWaterDepthDepth(calculator_kwargs["dem_path"], wlvl_path=wlvl_raster.path) as self:
+with GridToWaterDepth(calculator_kwargs["dem_path"], wlvl_path=wlvl_raster.path) as self:
     self.run(output_file=threedi_result.full_path("wdepth_corr.tif"), overwrite=OVERWRITE)
     print("Done.")
 
@@ -79,7 +81,7 @@ calculator_kwargs = {"dem_path": dem_path, "grid_gdf": grid_gdf, "wlvl_column": 
 
 with GridToWaterLevel(**calculator_kwargs) as self:
     wlvl_raster = self.run(output_file=threedi_result.full_path("wlvl_orig.tif"), overwrite=OVERWRITE)
-with GridToWaterDepthDepth(calculator_kwargs["dem_path"], wlvl_path=wlvl_raster.path) as self:
+with GridToWaterDepth(calculator_kwargs["dem_path"], wlvl_path=wlvl_raster.path) as self:
     self.run(output_file=threedi_result.full_path("wdepth_orig.tif"), overwrite=OVERWRITE)
 
 # %% [markdown]
@@ -87,7 +89,6 @@ with GridToWaterDepthDepth(calculator_kwargs["dem_path"], wlvl_path=wlvl_raster.
 
 # %%
 # Schadeschatter heeft wat extra voorbereiding nodig.
-from pathlib import Path
 
 # Variables
 cfg_file = hrt.get_pkg_resource_path(package_resource=hrt.waterschadeschatter.resources, name="cfg_lizard.cfg")
@@ -106,7 +107,7 @@ wss_settings = {
 }
 
 # Calculation
-self = hrt.Waterschadeschatter(depth_file=depth_file.path, landuse_file=landuse_file.path, wss_settings=wss_settings)
+self = hrt.Waterschadeschatter(depth_file=depth_file.path, landuse_file=landuse_file, wss_settings=wss_settings)
 
 # Berkenen schaderaster
 self.run(
