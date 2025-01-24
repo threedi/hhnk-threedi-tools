@@ -36,23 +36,14 @@ from hhnk_threedi_tools import Folders
 from hhnk_threedi_tools.core.climate_scenarios.interpolate_rasters import (
     main_interpolate_rasters,
 )
-from hhnk_threedi_tools.core.climate_scenarios.klimaatsommen_prep import (
-    KlimaatsommenPrep,
-)
-from hhnk_threedi_tools.core.climate_scenarios.maskerkaart_raster import (
-    rasterize_maskerkaart,
-)
-from hhnk_threedi_tools.core.climate_scenarios.schadekaart_peilgebieden import (
-    maak_schade_polygon,
-)
+from hhnk_threedi_tools.core.climate_scenarios.klimaatsommen_prep import KlimaatsommenPrep
+from hhnk_threedi_tools.core.climate_scenarios.maskerkaart_raster import rasterize_maskerkaart
+from hhnk_threedi_tools.core.climate_scenarios.schadekaart_peilgebieden import maak_schade_polygon
 
 # Folders inladen
-
 folder = Folders(notebook_data["polder_folder"])
 
-
 # Of handmatig;
-
 # folder=Folders(r"E:\02.modellen\model_test_v2")
 
 # %% [markdown]
@@ -89,7 +80,6 @@ dem_path_dropdown = widgets.Select(
     disabled=False,
     layout=item_layout(grid_area="dem_path_dropdown"),
 )
-
 
 # Display precipitation zones
 polder_shape = folder.source_data.polder_polygon.load()
@@ -149,7 +139,6 @@ if dem.metadata.pixel_width != 0.5:
 
 df = pd.DataFrame(batch_fd.downloads.names, columns=["dl_name"])
 for dl_name in batch_fd.downloads.names:
-    df.loc[df["dl_name"] == dl_name, "wlvl_max"] = getattr(batch_fd.downloads, dl_name).wlvl_max.base
     df.loc[df["dl_name"] == dl_name, "depth_max"] = getattr(batch_fd.downloads, dl_name).depth_max.base
     df.loc[df["dl_name"] == dl_name, "damage_total"] = getattr(batch_fd.downloads, dl_name).damage_total.base
 
@@ -192,7 +181,7 @@ klimaatsommen_prep = KlimaatsommenPrep(
     min_block_size=2**11,  # 2048, high is faster but requires more RAM.
     use_aggregate=False,
     verify=True,
-    old_wlvl=False,  # wvg 2025-01; zet naar True om de oude (lizard) wdepth berekening te gebruiken
+    old_wlvl=True,  # wvg 2025-01; zet naar True om de oude (lizard) wdepth berekening te gebruiken
 )
 
 klimaatsommen_prep.run(gridgpkg=True, wlvl_wdepth=True, create_wdepth=True, dmg=True, overwrite=False)
@@ -211,16 +200,16 @@ maskerkaart.command(
 # Omzetten polygon in raster voor diepteraster
 mask_depth = rasterize_maskerkaart(
     input_file=batch_fd.output.maskerkaart.base,
-    mask_plas_raster=batch_fd.output.mask_diepte_plas,
-    mask_overlast_raster=batch_fd.output.mask_diepte_overlast,
+    mask_plas_path=batch_fd.output.mask_depth_plas,
+    mask_overlast_path=batch_fd.output.mask_depth_overlast,
     meta=batch_fd.downloads.piek_glg_T10.depth_max.metadata,
 )
 
 # Omzetten polygon in raster voor schaderaster (kan verschillen van diepte met andere resolutie)
 mask_damage = rasterize_maskerkaart(
     input_file=batch_fd.output.maskerkaart.path,
-    mask_plas_raster=batch_fd.output.mask_schade_plas,
-    mask_overlast_raster=batch_fd.output.mask_schade_overlast,
+    mask_plas_path=batch_fd.output.mask_damage_plas,
+    mask_overlast_path=batch_fd.output.mask_damage_overlast,
     meta=batch_fd.downloads.piek_glg_T10.damage_total.metadata,
 )
 
@@ -228,7 +217,7 @@ mask_damage = rasterize_maskerkaart(
 # ## Peilgebieden rasterizeren
 
 # %%
-for raster_type, raster_name in zip(["depth_max", "damage_total"], ["diepte", "schade"]):
+for raster_type, raster_name in zip(["depth_max", "damage_total"], ["depth", "damage"]):
     peilgebieden.rasterize_peilgebieden(
         input_raster=hrt.Raster(df.iloc[0][raster_type]),
         output_file=getattr(batch_fd.output.temp, f"peilgebieden_{raster_name}"),
@@ -245,7 +234,7 @@ for raster_type, raster_name in zip(["depth_max", "damage_total"], ["diepte", "s
 if not batch_fd.output.ruimtekaart.exists():
     # if True:
     ruimtekaart.create_ruimtekaart(
-        pgb_file=batch_fd.output.temp.peilgebieden,
+        pgb_path=batch_fd.output.temp.peilgebieden,
         output_path=batch_fd.output.ruimtekaart.base,
         batch_fd=batch_fd,
     )
@@ -270,7 +259,6 @@ for T in [10, 100, 1000]:
         frequenties=frequenties,
         output_nodata=-9999.00,
         dem_raster=dem,
-        min_value=0,
         extra_nodata_value=0,
     )
 
@@ -283,7 +271,7 @@ for T in [10, 100, 1000]:
 
     # Creeer masker voor plas en overlast
     for mask_type in ["plas", "overlast"]:
-        mask = getattr(batch_fd.output, f"mask_diepte_{mask_type}")
+        mask = getattr(batch_fd.output, f"mask_depth_{mask_type}")
 
         output_raster = getattr(batch_fd.output, f"depth_T{T}_{mask_type}")
 
@@ -337,7 +325,7 @@ input_raster = hrt.Raster(batch_fd.output.cw_schade_totaal.path)
 
 # Creeer masker voor plas en overlast
 for mask_type in ["plas", "overlast"]:
-    mask = hrt.Raster(getattr(batch_fd.output, f"mask_schade_{mask_type}").path)
+    mask = hrt.Raster(getattr(batch_fd.output, f"mask_damage_{mask_type}").path)
 
     output_raster = getattr(batch_fd.output, f"cw_schade_{mask_type}")
 
@@ -364,7 +352,7 @@ mask_array = None
 
 # %%
 schade_gdf = batch_fd.output.temp.peilgebieden.load()
-labels_raster = batch_fd.output.temp.peilgebieden_schade
+labels_raster = batch_fd.output.temp.peilgebieden_damage
 labels_index = schade_gdf["index"].values
 
 output_file = batch_fd.output.schade_peilgebied
@@ -412,29 +400,16 @@ pixel_factor = raster.metadata["pixel_width"] ** 2 / 0.25  # niet nodig als reso
 # %%
 maskerkaart2 = gpd.read_file(str(folder.source_data.peilgebieden.geen_schade))  # load maskerkaart (geen_schade.shp)
 
-
 maskerkaart_union = maskerkaart2.buffer(0.1).unary_union.buffer(-0.1)  # make one geometry from gdf.
 
-
 # Rasterize polygon
-
 maskerkaart_union = gpd.GeoDataFrame(geometry=[maskerkaart_union])
-
 # Voeg kolom toe aan gdf, deze waarden worden in het raster gezet.
-
 maskerkaart_union["val"] = 1
 
-
 mask = hrt.gdf_to_raster(
-    maskerkaart_union,
-    value_field="val",
-    raster_out="",
-    nodata=0,
-    metadata=damage_meta,
-    epsg=28992,
-    driver="MEM",
+    maskerkaart_union, value_field="val", raster_out="", nodata=0, metadata=damage_meta, epsg=28992, driver="MEM"
 )
-
 mask = mask > 0
 
 # %%
@@ -450,7 +425,6 @@ schade_raster_corr_file = {
     "plas": str(batch_fd.output.cw_schade_plas_corr),
     "overlast": str(batch_fd.output.cw_schade_overlast_corr),
 }
-
 schades, schade_per_polder = maak_schade_polygon(
     peilgebieden_file=folder.source_data.peilgebieden.peilgebieden,
     schade_raster_file=schade_raster_corr_file,
