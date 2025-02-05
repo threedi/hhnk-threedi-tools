@@ -119,7 +119,7 @@ id_scenarios = r"E:\03.resultaten\Overstromingsberekeningenprimairedoorbraken202
 # Open the excel file as pandas dataframe
 pd_scenarios = pd.read_excel(id_scenarios)
 
-
+#%%
 class LDO_API_AUTH:
     def __init__(self, url_auth, api_key):
         self.url_auth = url_auth
@@ -165,6 +165,7 @@ FOLDER_STRUCTURE = """
         ├── dem.tif
         ├── results_3di.nc
     """        
+#%%
 class SelectFolder(Folder):
     __doc__ = f"""
         --------------------------------------------------------------------------
@@ -172,19 +173,21 @@ class SelectFolder(Folder):
         files that need to be uploaded to LDO. 
          {FOLDER_STRUCTURE}
         """
-    def __init__(self, base, create=True):
+    
+    def __init__(self, base,  create=True):
         super().__init__(base, create=create)
         self.path = base.path
 
+
+
+    # @classmethod
+    # def is_valid(self):
+    #     """Check if folder stucture is available in input folder."""
+    #     return (Path(self.path).joinpath().exists())
+      
     @classmethod
-    def is_valid(self, folderpath):
-        """Check if folder stucture is available in input folder."""
-        return (Path(folderpath).joinpath().exists())
-    
-    @classmethod
-    def copy_files(self, folderpath, file_copy):
-         
-        def select_folder(scenario_name, output_folder):
+    def copy_files(self, folder_structure_path, scenario_name):
+        def select_folder(output_folder, scenario_name):
             scenario_paths = [
                 j for i in Path(output_folder).glob("*/") for j in list(i.glob("*/"))
             ]
@@ -192,34 +195,82 @@ class SelectFolder(Folder):
                 if scenario_path.name == scenario_name:
                     return scenario_path
             
-        scenario_folder = select_folder(scenario_name)
+        scenario_folder = select_folder(output_folder, scenario_name)
         breach = Breaches(scenario_folder)
         raster_compress_path = os.path.join(breach.wss.path, "dem_clip.tif")
         netcdf_path = os.path.join(breach.netcdf.path, "results_3di.nc")
 
-        shutil.copy2(netcdf_path, scenario_folder)
+        shutil.copy2(netcdf_path, folder_structure_path)
+        shutil.copy2(raster_compress_path, folder_structure_path)
 
-        return()
+        return(print(f'Scenario {scenario_name} has been copy in the folder structure'))
     
-    # function to select folder
-    def select_folder(scenario_name, output_folder):
-        scenario_paths = [
-            j for i in Path(output_folder).glob("*/") for j in list(i.glob("*/"))
-        ]
-        for scenario_path in scenario_paths:
-            if scenario_path.name == scenario_name:
-                return scenario_path
+    @classmethod
+    def zip_files(self, base, scenario_name):
+
+        # Create name of the zip file
+        zip_name = scenario_name + ".zip"
+        zip_name = zip_name.replace(" ", "_")
+
+        # Set the zip file path
+        folder_structure_path= Path(os.path.join(base, scenario_name))
+        zipfile_location = os.path.join(base, scenario_name, zip_name)
         
+
+        # Zip the folder to be uploaded
+        with zipfile.ZipFile(zipfile_location, "w") as zipf:
+            # Walk through the folder and add files to the zip file
+            for root, dirs, files in os.walk(folder_structure_path):
+                for file in files:
+                    if file != f"{zip_name}": 
+                        # root = r'E:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\ldo_structuur'
+                        file_path = os.path.join(root, file)
+                        arcname = os.path.relpath(file_path, folder_structure_path)
+                        zipf.write(
+                            file_path,
+                            arcname=os.path.join(f"{scenario_name}", arcname),
+                )
+                        
+        return(print('done'))    
+#%%   
+
 scenario_done = pd_scenarios.loc[pd_scenarios["ID_SCENARIO"] > 0, "Naam van het scenario"].to_list()
 #%%
 class LDO_API_UPLOAD:
 
-    def upload_excel(self, df) -> int:
-        """"""
-        call api
-        scenario_id : int = jsob.read_ blabla
+    def __init__(self, metadata_folder_path, refresh_token):
+        self.metadata_folder_path =  metadata_folder_path
+        self.refresh_token = refresh_token
+        self.headers_excel =  {
+            "accept": "application/json",
+            "authorization": f"Bearer {self.refresh_token }",
+            # 'content-type':'multiplart/form-data',
+        }
+        
 
-        return scenario_id 
+    def upload_excel(self, metadata_folder_path, scenario_name, headers_excel):
+        """"""
+        # UPLOAD EXCEL FILE OF THE SCENARIO
+        excel_import_url = "https://www.overstromingsinformatie.nl/api/v1/excel-imports?mode=create"
+        metadata_location = os.path.join(metadata_folder_path, scenario_name + '.xlsx')
+        with open(metadata_location, "rb") as excel_files:
+            excel_files = {
+                "file": (
+                    f"{scenario_name}",
+                    excel_files,
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                )
+            }
+            excel_response = requests.post(
+                url=excel_import_url, headers=headers_excel, files=excel_files
+            )
+            
+            print(f"the excel file for the scenario {scenario_name} has been uploaded")
+        return(excel_response)
+#%%
+        # GET RESPONSE.
+        # print(excel_response.status_code)
+        print(f"the excel file for the scenario {scenario_name} has been uploaded")
 # TODO  There are 3 diferent links from 2 website to work with. One the webstie use to retrieve the APIKEY is (authorization website):
 # https://www.overstromingsinformatie.nl/auth and the other two that are more related to the core of the API
 # https://www.overstromingsinformatie.nl/api/v1/excel-imports?mode=create and f"https://www.overstromingsinformatie.nl/api/v1/excel-imports/{id_excel}/files/{zip_name}/upload"
@@ -352,7 +403,7 @@ for excel_file_name in scenario_names:
         print(f"Uploading scenario {scenario_name} with uploading id:{scenario_id}")
 
         # Create folder in ldo_structuur location folder
-        scenario_folder_structuur = os.path.join(ldo_structuur_folder, scenario_name)
+        scenario_folder_structuur = os.path.join(ldo_structuur_folder.parent.path, scenario_name)
         if not os.path.exists(scenario_folder_structuur):
             os.makedirs(scenario_folder_structuur)
 
@@ -371,7 +422,7 @@ for excel_file_name in scenario_names:
         zip_name = zip_name.replace(" ", "_")
 
         # Set the zip file path
-        zipfile_location = os.path.join(ldo_structuur_folder, scenario_name, zip_name)
+        zipfile_location = os.path.join(ldo_structuur_folder.parent.path, scenario_name, zip_name)
         zipfile_location_name = Path(zipfile_location).stem
 
         # Zip the folder to be uploaded
