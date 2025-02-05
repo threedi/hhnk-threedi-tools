@@ -47,7 +47,6 @@ Dem is aggregated to 5x5 results created at 0.5x0.5m
 
 It is important to set a sleep time so the API wil not be overloaded
 """
-
 # %%
 import json
 import os
@@ -55,12 +54,12 @@ import shutil
 import time
 import zipfile
 from pathlib import Path
-
+from hhnk_research_tools import Folder
 import pandas as pd
 import requests
 from breaches import Breaches
 
-LDO_API_URL = "https://www.overstromingsinformatie.nl/auth/v1"
+LDO_API_URL = "https://www.overstromingsinformatie.nl/auth/"
 
 # Generate api key on de LDO_API_URL website.
 LDO_API_KEY = ""
@@ -121,35 +120,106 @@ id_scenarios = r"E:\03.resultaten\Overstromingsberekeningenprimairedoorbraken202
 pd_scenarios = pd.read_excel(id_scenarios)
 
 
-class LDO_API:
-    def __init__(self, url, key):
-        self.url = url
-        self.key = key
-
-        self.test_api()
-
-    @property
+class LDO_API_AUTH:
+    def __init__(self, url_auth, api_key):
+        self.url_auth = url_auth
+        self.api_key = api_key
+        self.headers = {
+        "accept": "application/json",
+        "content-type": "application/json",
+        "X-CSRFToken": "lIiP686oF2VRs9iXgtLDxKRdqBUBzHSPS19M3MZVERhlTVhZOzNXeCciUERzVuMA",
+         }
+        # self.test_api()
+    
+    @property #to get health url 
     def health(self):
-        return self.url[:-3] + "/health/"  # Health is not under v1.
+        return self.url_auth[:-3] + "/health/"  # Health is not under v1.
 
-    @property
+    @property #to get tenant
     def tenants(self):
-        return self.url + "/tenants/"
+        tenat_url = self.url_auth + "v1/tenants/4"
+        tenant_hhnk = (requests.get(url = tenat_url, headers=self.headers, auth=("__key__", self.api_key))).json()
+        return tenant_hhnk
 
-    @property
+    # The token is requiered to get the refresh_token which is going to be use in in this website:  "https://www.overstromingsinformatie.nl/api/v1/excel-imports?mode=create"
+    @property 
     def token(self):
-        return self.url + "/token/"
-
-    def get(self, url):
-        """Get request with authorisation"""
-        return requests.get(url=url, auth=("__key__", self.key))
-
+        token_url= self.url_auth + "v1/token/"
+        token = (requests.post(url=token_url, json={"tenant": 4}, auth=("__key__", self.api_key))).json()["refresh"]
+        return token
+    
+    def get_access_refresh(self, token):
+        url_refresh =self.url_auth + "v1/token/refresh/"
+        data_refresh = {"refresh": token}
+        access = (requests.post(url=url_refresh, json = data_refresh,  auth=("__key__", self.api_key))).json()["access"]
+        return access
+    
     def test_api(self):
         """Test api connection"""
         response_health = requests.get(url=self.health)
         assert response_health.status_code == 200
+#%%
 
+FOLDER_STRUCTURE = """
+    Main Folder object
+        ├── dem.tif
+        ├── results_3di.nc
+    """        
+class SelectFolder(Folder):
+    __doc__ = f"""
+        --------------------------------------------------------------------------
+        An object to ease the accessibility, creation and checks of folders and
+        files that need to be uploaded to LDO. 
+         {FOLDER_STRUCTURE}
+        """
+    def __init__(self, base, create=True):
+        super().__init__(base, create=create)
+        self.path = base.path
 
+    @classmethod
+    def is_valid(self, folderpath):
+        """Check if folder stucture is available in input folder."""
+        return (Path(folderpath).joinpath().exists())
+    
+    @classmethod
+    def copy_files(self, folderpath, file_copy):
+         
+        def select_folder(scenario_name, output_folder):
+            scenario_paths = [
+                j for i in Path(output_folder).glob("*/") for j in list(i.glob("*/"))
+            ]
+            for scenario_path in scenario_paths:
+                if scenario_path.name == scenario_name:
+                    return scenario_path
+            
+        scenario_folder = select_folder(scenario_name)
+        breach = Breaches(scenario_folder)
+        raster_compress_path = os.path.join(breach.wss.path, "dem_clip.tif")
+        netcdf_path = os.path.join(breach.netcdf.path, "results_3di.nc")
+
+        shutil.copy2(netcdf_path, scenario_folder)
+
+        return()
+    
+    # function to select folder
+    def select_folder(scenario_name, output_folder):
+        scenario_paths = [
+            j for i in Path(output_folder).glob("*/") for j in list(i.glob("*/"))
+        ]
+        for scenario_path in scenario_paths:
+            if scenario_path.name == scenario_name:
+                return scenario_path
+        
+scenario_done = pd_scenarios.loc[pd_scenarios["ID_SCENARIO"] > 0, "Naam van het scenario"].to_list()
+#%%
+class LDO_API_UPLOAD:
+
+    def upload_excel(self, df) -> int:
+        """"""
+        call api
+        scenario_id : int = jsob.read_ blabla
+
+        return scenario_id 
 # TODO  There are 3 diferent links from 2 website to work with. One the webstie use to retrieve the APIKEY is (authorization website):
 # https://www.overstromingsinformatie.nl/auth and the other two that are more related to the core of the API
 # https://www.overstromingsinformatie.nl/api/v1/excel-imports?mode=create and f"https://www.overstromingsinformatie.nl/api/v1/excel-imports/{id_excel}/files/{zip_name}/upload"
