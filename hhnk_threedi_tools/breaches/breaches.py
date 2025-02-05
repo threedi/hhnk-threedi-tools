@@ -44,7 +44,7 @@ class Breaches(Folder):
         
         --------------------------------------------------------------------------
         An object to ease the accessibility, creation and checks of folders and
-        files in the polder structure.
+        files in the current structure.
         
         Usage as follows:
             - Access class with te path to the main folder (e.g., E:\03.resultaten\Overstromingsberekeningen primaire doorbraken 2024\output\ROR PRI - dijktrajecten 13-8 en 13-9 - Stroom_ZUID_T10_T3000\ROR-PRI-UITDAMMERDIJK_8-T100)
@@ -60,7 +60,7 @@ class Breaches(Folder):
             folder.show
            
             Output: 
-                Heiloo @ E:\03.resultaten\Overstromingsberekeningen primaire doorbraken 2024\output\ROR PRI - dijktrajecten 13-8 en 13-9 - Stroom_ZUID_T10_T3000\ROR-PRI-UITDAMMERDIJK_8-T100
+                ROR-PRI-UITDAMMERDIJK_8-T100 @ E:\03.resultaten\Overstromingsberekeningen primaire doorbraken 2024\output\ROR PRI - dijktrajecten 13-8 en 13-9 - Stroom_ZUID_T10_T3000\ROR-PRI-UITDAMMERDIJK_8-T100
                                 Folders:	  
                                     Folders
                                     ├── 01_NetCDF
@@ -74,15 +74,6 @@ class Breaches(Folder):
             
             folder.source_data.show
             
-            Output: 
-            
-                01_Source_data @ C:/Poldermodellen/Heiloo/01_Source_data
-                                    Folders:	  
-                                        source_data
-                                        └── modelbuilder
-                               
-                                    Files:	['aggregate_results_3di', 'gridadmin', 'results_3di', ...]
-            
             
         {FOLDER_STRUCTURE}
 
@@ -94,13 +85,13 @@ class Breaches(Folder):
         # NetCDF
         self.netcdf = NetCDF(self.base, create=create)
 
-        # model files
+        # png file: maps or graphs
         self.jpeg = JPEG(self.base, create=create)
 
-        # Threedi results
+        # damage folder
         self.ssm = SSM(self.base, create=create)
 
-        # Results of tests
+        # water depth and gridraw
         self.wss = WSS(self.base, create=create)
 
     @property
@@ -112,10 +103,6 @@ class Breaches(Folder):
                {self.space}├── 03_SSM (.ssm)
                {self.space}└── 04_WSS (.wss)
                """
-
-    @property
-    def full_structure(self):
-        return print(FOLDER_STRUCTURE)
 
     def to_file_dict(self):
         """
@@ -223,8 +210,6 @@ class SSM(Folder):
     """
     Folder in which rasters from lizard can be saved
 
-    to use with list indexing use the following options:
-
     """
 
     def __init__(self, base, create):
@@ -245,13 +230,10 @@ class SSM(Folder):
             f.write(readme_txt)
 
 
-# 1d2d output
 class WSS(Folder):
     """
-    Output paths are only defined up to the foldername
-    of the test, because we can internally decide on the
-    filenames of logfiles and generated layers (these
-    paths are not up to the user)
+    Folder where the the water depth raster are going to be created. Also all the files used to create it,
+    are going to be store in this folder.
     """
 
     def __init__(self, base, create):
