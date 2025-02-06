@@ -76,7 +76,6 @@ LDO_API_KEY = ""
 # TODO you dont need this here?
 # This one I leave it to copy and paste the information in the website
 
-
 parameters = {
     "scope": "admin",
     "name": "Juan_Test_12",
@@ -85,25 +84,11 @@ parameters = {
 }
 
 
-# Set Paths from the data to be uploaded
-# TODO provide example.
-# TODO make class of the ldo_structuur_folder? unclear how its structured now
-
-# Excel files per scenario.
-metadata_folder = r"E:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\ldo_structuur\metadata_per_scenario"
-# Folder location from where the scenarios are going to be copied
-output_folder = (
-    r"E:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\output"
-)
-
-# Folder location to copy the scenarios
-ldo_structuur_folder = (
-    r"E:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\ldo_structuur"
-)
 
 
-# Excel file where the ID and size of the upload is going to be stored
-id_scenarios = r"E:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\ldo_structuur\scenarios_ids.xlsx"
+
+
+
 # Why user input?
 # Those ID are needed to be store for multiple reasons:
 # 1 . In case we need to delete the scenario ID it is going to be easy to simply store them and then delete them with the
@@ -117,7 +102,6 @@ id_scenarios = r"E:\03.resultaten\Overstromingsberekeningenprimairedoorbraken202
 # 4. It make easy to locate them in the website.
 
 # Open the excel file as pandas dataframe
-pd_scenarios = pd.read_excel(id_scenarios)
 
 #%%
 class LDO_API_AUTH:
@@ -141,13 +125,18 @@ class LDO_API_AUTH:
         tenant_hhnk = (requests.get(url = tenat_url, headers=self.headers, auth=("__key__", self.api_key))).json()
         return tenant_hhnk
 
+    # Get Token
     # The token is requiered to get the refresh_token which is going to be use in in this website:  "https://www.overstromingsinformatie.nl/api/v1/excel-imports?mode=create"
+    # That is different from LDO_API_URL
     @property 
     def token(self):
         token_url= self.url_auth + "v1/token/"
         token = (requests.post(url=token_url, json={"tenant": 4}, auth=("__key__", self.api_key))).json()["refresh"]
         return token
-    
+
+    # Get the TokenRefresh
+    # If we do not use the refresh token, the api formo the website "https://www.overstromingsinformatie.nl/api/v1/excel-imports?mode=create"
+    # will not work. with out that refersh_token API does not work.   
     def get_access_refresh(self, token):
         url_refresh =self.url_auth + "v1/token/refresh/"
         data_refresh = {"refresh": token}
@@ -177,6 +166,7 @@ class SelectFolder(Folder):
     def __init__(self, base,  create=True):
         super().__init__(base, create=create)
         self.path = base.path
+        self.zip_kb = None
 
 
 
@@ -205,6 +195,8 @@ class SelectFolder(Folder):
 
         return(print(f'Scenario {scenario_name} has been copy in the folder structure'))
     
+
+    #Create the zip file to uploaded. 
     @classmethod
     def zip_files(self, base, scenario_name):
 
@@ -233,13 +225,11 @@ class SelectFolder(Folder):
         # Get zipfile size.
         zp = zipfile.ZipFile(f"{zipfile_location}")
         size = sum([zinfo.file_size for zinfo in zp.filelist])
-        zip_kb = float(size) / 1000  # kB
-        print(f"zip file created with size {zip_kb} kb") 
+        self.zip_kb  = float(size) / 1000  # kB
+        print(f"zip file created with size {self.zip_kb} kb") 
         return(zipfile_location)    
 #%%   
 
-scenario_done = pd_scenarios.loc[pd_scenarios["ID_SCENARIO"] > 0, "Naam van het scenario"].to_list()
-#%%
 class LDO_API_UPLOAD:
 
     def __init__(self, metadata_folder_path, refresh_token, scenario_name):
@@ -252,12 +242,13 @@ class LDO_API_UPLOAD:
             # 'content-type':'multiplart/form-data',
         }
         self.url_uploadfile = "https://www.overstromingsinformatie.nl/api/v1/excel-imports"
+
+
+    # UPLOAD EXCEL FILE OF THE SCENARIO and retrieve id of the excel upload. In case there is an
+    #error y will print the reason. 
     @classmethod
     def upload_excel(self, metadata_file, url_uploadfile, headers_excel):
-        """"""
-        # UPLOAD EXCEL FILE OF THE SCENARIO and retrieve id of the excel upload. In case there is an
-        #error y will print the reason. 
-     
+    
         excel_import_url = url_uploadfile+"?mode=create"
         excel_name = metadata_file.name
         with open(metadata_file, "rb") as excel_files:
@@ -282,6 +273,7 @@ class LDO_API_UPLOAD:
             print(f'The excel file is {status},  and has been uploaded with id_excel number: {id_excel}')
         return(response_json)
     
+    #Upload the zip file using the excel ID.
     @classmethod
     def upload_zip_files(self, url_uploadfile, id_excel, zipfile_location, headers_excel):
         # With this link the zip file is not going to be uploaded. 
@@ -300,104 +292,91 @@ class LDO_API_UPLOAD:
         print("uploading")
         print(file_import_url)
         return (print(f"the scenario {zip_name} has been uploaded"))
-#%%
-        # GET RESPONSE.
-        # print(excel_response.status_code)
-
-# TODO  There are 3 diferent links from 2 website to work with. One the webstie use to retrieve the APIKEY is (authorization website):
-# https://www.overstromingsinformatie.nl/auth and the other two that are more related to the core of the API
-# https://www.overstromingsinformatie.nl/api/v1/excel-imports?mode=create and f"https://www.overstromingsinformatie.nl/api/v1/excel-imports/{id_excel}/files/{zip_name}/upload"
-# The first one to upload the excel file and the other one to upload the data
 
 # %%
+if __name__ == "__main__":
+    # Set Paths from the data to be uploaded
+
+    # Excel files per scenario.
+    metadata_folder = r"E:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\ldo_structuur\metadata_per_scenario"
+    
+    # Excel file where the ID and size of the upload is going to be stored
+    id_scenarios = r"E:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\ldo_structuur\scenarios_ids.xlsx"
+    
+    # Folder location from where the scenarios are going to be copied
+    output_folder = (r"E:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\output")
+
+    # Folder location where the scenarios are going to be copied
+    ldo_structuur_path = (r"E:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\ldo_structuur")
+    
+    #List the scenario name to be uploaded
+    scenario_names = os.listdir(metadata_folder)
+
+    # data frame from the scenarios that are gonig to be uploaded.
+    pd_scenarios = pd.read_excel(id_scenarios)
+
+    #Select scenarios ids that area already uploaded to be skiped
+    scenario_done = pd_scenarios.loc[pd_scenarios["ID_SCENARIO"] > 0, "Naam van het scenario"].to_list()
+    
+    # Sleep time to not burn out the API
+    sleeptime = 420
+
+    # Create a list to delete scenarios already uploaded.
+    delete_file = []
+
+    # Check if scenario is done
+    scenario_done = pd_scenarios.loc[pd_scenarios["ID_SCENARIO"] > 0, "Naam van het scenario"].to_list()
 
 
-# %%
-# Get Token
-# TODO why do we need this?
-# The token is requiered to get the refresh_token which is going to be use in in this website:  "https://www.overstromingsinformatie.nl/api/v1/excel-imports?mode=create"
-# That is different from LDO_API_URL
-
-
-
-# Get the TokenRefresh
-# TODO why do we need this??
-# If we do not use the refresh token, the api formo the website "https://www.overstromingsinformatie.nl/api/v1/excel-imports?mode=create"
-# will not work. with out that refersh_token API does not work.
-
-
-# %%
-
-
-# function to select folder from which the info is goin to be copied
-# TODO is this necessary? shouldnt the scenario_path be provided already? This is the first time
-# the output_folder is used, bit unclear. Would expect this to be in the excel you ge tit from.
-
-
-# They way I structure the code is that I use the scenario_name from the excel files, to locate the
-# scenario in the output_folder. From that folder I copy DEM and results.nc in the ldo_structuur folder.
-
-
-scenario_names = os.listdir(metadata_folder)
-
-# Sleep time to not burn out the API
-sleeptime = 420
-# %%
-# Create a list to delete scenarios already uploaded.
-delete_file = []
-
-# check if scenario is done
-scenario_done = pd_scenarios.loc[
-    pd_scenarios["ID_SCENARIO"] > 0, "Naam van het scenario"
-].to_list()
-# %%
-# TODO wvg
-# heb wat moeite met deze loop. Kan het niet testen omdat ik geen data heb
-# maar er wordt nogal wat heen enweer geschoven met bestanden in een
-# Separate the local moving and zipping of files from the API interaction. You dont need
-# to post the excel before everything is set up locally right?
-# Yes I need to do that, because once I load the excel file I use the excel_id of the upload
-# to upload the zipfile. That is why I do this id_excel = response_json["id"]. Check comment line 236
-
-# I am copy one excel file per scenario. I can not upload just the whole metadata and then the scenarios
-# Each scenario must have its onw excel metedata file.
-
-# They restructure of the code is not going to work becuse it is using only 1 link.
-# TODO wvg
-# Loop over al the scenarios
-for excel_file_name in scenario_names:
+    # Loop over al the scenarios
+    for excel_file_name in scenario_names:
+        scenario_name = excel_file_name[:-5] 
     # If the scenario is done the continue
-    if excel_file_name[:-5] in scenario_done:
-        continue
-    else:
-        
-        # store scenario id in the metadata
-        scenario_id = response_json["scenario_ids"][0]
-        pd_scenarios.loc[
-            pd_scenarios["Naam van het scenario"] == scenario_name, "ID_SCENARIO"
-        ] = scenario_id
+        if scenario_name in scenario_done:
+            continue
+#%%
+        else:
+            path = Folder(os.path.join(ldo_structuur_path, scenario_name))
+            ldo_structuur = SelectFolder(path)
+            ldo_structuur.copy_files(ldo_structuur.path, scenario_name)
+            zipfile_location = ldo_structuur.zip_files(ldo_structuur_path, scenario_name)
+
+            ldo_api = LDO_API_AUTH(url_auth=LDO_API_URL, api_key='jdmIJoMc.dW7HhHnM80EneAYQS3yT2I5FX7gG86GO')
+            refresh = ldo_api.get_access_refresh(ldo_api.token)
+            ldo_upload = LDO_API_UPLOAD(metadata_folder, refresh, scenario_name)
+
+            headers_excel = ldo_upload.headers_excel
+            url_uploadfile = ldo_upload.url_uploadfile
+            metadata_file = ldo_upload.metadata_file
+
+            excel_response = ldo_upload.upload_excel(metadata_file, url_uploadfile, headers_excel)
+            id_excel = excel_response["id"]
+            ldo_upload.upload_zip_files(url_uploadfile, id_excel, zipfile_location, headers_excel)
+
+            # store scenario id in the metadata
+            scenario_id = response_json["scenario_ids"][0]
+            pd_scenarios.loc[
+            pd_scenarios["Naam van het scenario"] == scenario_name, "ID_SCENARIO"] = scenario_id
 
         
-        # Set sleep time while the folder is zipped.
-        time.sleep(50)  # TODO Why?
+            # Set sleep time while the folder is zipped.
+            time.sleep(50)  # TODO Why?
 
-        # copy the size of the scenario in the metdata dataframe
-        pd_scenarios.loc[
-            pd_scenarios["Naam van het scenario"] == scenario_name, "SIZE_KB"
-        ] = zip_kb
+            # copy the size of the scenario in the metdata dataframe
+            pd_scenarios.loc[pd_scenarios["Naam van het scenario"] == scenario_name, "SIZE_KB"] = zip_kb
 
         
 
-        # REMOVE/DELETE ZIP AND FOLDER FROM THE SCENARIO THAT IS ALREADY UPLOADED.
-        delete_file.append(scenario_folder_structuur)
+            # REMOVE/DELETE ZIP AND FOLDER FROM THE SCENARIO THAT IS ALREADY UPLOADED.
+            delete_file.append(scenario_folder_structuur)
 
-        if len(delete_file) > 1:
-            previous_folder = delete_file.pop(0)
-            shutil.rmtree(previous_folder)
+            if len(delete_file) > 1:
+               previous_folder = delete_file.pop(0)
+               shutil.rmtree(previous_folder)
 
-        print(f"the scenario {scenario_name} has been uploaded")
+            print(f"the scenario {scenario_name} has been uploaded")
 
-        # Save the excel file.
-        pd_scenarios.to_excel(id_scenarios, index=False, engine="openpyxl")
+            # Save the excel file.
+            pd_scenarios.to_excel(id_scenarios, index=False, engine="openpyxl")
 
     # %%
