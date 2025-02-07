@@ -166,7 +166,7 @@ class LDO_API:
             )
             return excel_id, scenario_id
 
-    def upload_zip_files(self, zip_path, excel_id):
+    def upload_zip_file(self, zip_path, excel_id):
         """Upload the zip file using the excel ID."""
         file_import_url = self.url + f"excel-imports/{excel_id}/files/{zip_path.name}/upload"
 
@@ -243,8 +243,8 @@ class LdoUploadFolder(hrt.Folder):
                 if file.name != zip_name:
                     zipf.write(file, arcname=file.name)
 
-        self.zip_size = round(self.zip_path.stat().st_size / 1024 / 1024, 2)  # MB
-        logger.info(f"Zip {zip_name} created with size {self.zip_size} MB")
+        self.zip_size = round(self.zip_path.stat().st_size / 1024, 0)  # KB
+        logger.info(f"Zip {zip_name} created with size {self.zip_size / 1024} MB")
         return self.zip_path
 
 
@@ -272,7 +272,7 @@ if __name__ == "__main__":
     pd_scenarios = pd.read_excel(id_scenarios)
 
     # Select scenarios ids that area already uploaded to be skiped
-    scenario_done = pd_scenarios.loc[pd_scenarios["ID_SCENARIO"] > 0, "Naam van het scenario"].to_list()
+    scenarios_done = pd_scenarios.loc[pd_scenarios["ID_SCENARIO"] > 0, "Naam van het scenario"].to_list()
 
     # Sleep time to not burn out the API
     sleeptime = 420  # FIXME 7 minutes seems alot?
@@ -287,7 +287,7 @@ if __name__ == "__main__":
         scenario_name = metadata_xlsx.stem
         # %%
         # If the scenario is done the continue
-        if scenario_name in scenario_done:
+        if scenario_name in scenarios_done:
             continue
         else:
             # Set folder with scenario name to be uploaded to LDO
@@ -302,7 +302,7 @@ if __name__ == "__main__":
             excel_id, scenario_id = ldo_api.upload_excel(metadata_xlsx=metadata_xlsx)
 
             # Upload zip file
-            ldo_api.upload_zip_files(zip_path=zip_path, excel_id=excel_id)
+            ldo_api.upload_zip_file(zip_path=zip_path, excel_id=excel_id)
 
             # Save the id of upload from the scenario
             pd_scenarios.loc[pd_scenarios["Naam van het scenario"] == scenario_name, "ID_SCENARIO"] = scenario_id
