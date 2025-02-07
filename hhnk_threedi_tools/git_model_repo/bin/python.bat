@@ -7,4 +7,8 @@ set PYTHONHOME=
 call %~dp0activate_conda.bat
 
 REM Call Python in the virtualenv
-python %*
+call python.exe %*
+if errorlevel 1 (
+    echo Error: Python script failed
+    exit /b 1
+)

@@ -1,5 +1,6 @@
 @echo off
 
+cls
 SET commando=%~dp0python.bat
 
-"%commando%" %~dp0../run_hook.py %*
+call "%commando%" %~dp0../run_hook.py %*
