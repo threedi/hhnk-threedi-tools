@@ -59,7 +59,7 @@ import pandas as pd
 import requests
 from breaches import Breaches
 
-
+#get the api key
 with open("api_ldo_key.txt", "r") as file:
      api_key = file.read().strip()
 
