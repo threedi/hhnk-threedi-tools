@@ -94,54 +94,50 @@ class LDO_API_AUTH:
         self.api_key = api_key
         self.tenant = tenant  # organisation, 4=hhnk.
 
-        self._token = None
-        self._refresh_token = None
-
-    @property  # to get health url
-    def health(self):
-        return self.url_auth[:-5] + "/health/"  # Health is not under v1.
-
-    @property
-    def token(self):
-        """Token is required to get the refresh_token which is going to be used in in this website:
-        https://www.overstromingsinformatie.nl/api/v1/excel-imports?mode=create
-        That is different from LDO_API_URL
-        """
-        if self._token is None:
-            token_url = self.url_auth + "v1/token/"
-            self._token = (
-                requests.post(url=token_url, json={"tenant": self.tenant}, auth=("__key__", self.api_key))
-            ).json()["refresh"]
-        return self._token
+        self.token = None  # set on calling refresh_token
+        self._refresh_token = None  # Property
 
     @property
     def refresh_token(self):
-        """Get refresh token
-        If we do not use the refresh token, the api formo the website
-        "https://www.overstromingsinformatie.nl/api/v1/excel-imports?mode=create"
-        will not work. with out that refersh_token API does not work.
-        """
+        """Get refresh token so we can interact with the api."""
         if self._refresh_token is None:
+            # Token is required to get the refresh_token
+            token_url = self.url_auth + "v1/token/"
+            self.token = (
+                requests.post(
+                    url=token_url,
+                    json={"tenant": self.tenant},
+                    auth=("__key__", self.api_key),
+                    timeout=5,
+                )
+            ).json()["refresh"]
+
             url_refresh = self.url_auth + "v1/token/refresh/"
             self._refresh_token = (
-                requests.post(url=url_refresh, json={"refresh": self.token}, auth=("__key__", self.api_key))
+                requests.post(
+                    url=url_refresh,
+                    json={"refresh": self.token},
+                    auth=("__key__", self.api_key),
+                    timeout=5,
+                )
             ).json()["access"]
         return self._refresh_token
 
     def get_tenants(self):
         """Tenant / organisation which has an id and name.
 
-        Prints the tenants. The id can be use to get the token.
+        Prints the tenants. The id can be used to get the token.
         """
         tenant_url = self.url_auth + "v1/tenants/"
-        tenants = requests.get(url=tenant_url, auth=("__key__", self.api_key)).json()
+        tenants = requests.get(url=tenant_url, auth=("__key__", self.api_key), timeout=5).json()
         for tenant in tenants:
             logger.info(tenant)
         return tenants
 
     def test_api(self):
         """Test api connection"""
-        response_health = requests.get(url=self.health)
+        health_url = self.url_auth[:-5] + "/health/"  # Health is not under v1.
+        response_health = requests.get(url=health_url, timeout=5)
         assert response_health.status_code == 200
 
 
@@ -158,62 +154,48 @@ class SelectFolder(hrt.Folder):
         ├── results_3di.nc
     """
 
-    def __init__(self, base, create=True):
-        self.path = base.path
-        self.scenario_name = base.name
-        self.zip_kb = None
+    def __init__(self, base, scenario_output_path, create=True):
         super().__init__(base, create=create)
-        self.zipfile_location = None
+        self.scenario_output_path = scenario_output_path
+        self.zip_kb = None
+        self.zip_path = None
+
+    def _find_scenario_folder(self):
+        """Get Path to scenario results"""
+        scenario_paths = [j for i in self.scenario_output_path.glob("*/") for j in list(i.glob("*/"))]
+        for scenario_path in scenario_paths:
+            if scenario_path.name == self.name:
+                return scenario_path
+        raise FileNotFoundError(f"{self.name} not found in {self.scenario_output_path}")
 
     def copy_files(self):
-        # Folder location from where the scenarios are going to be copied
-        output_folder = r"E:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\output"
-
-        def select_folder(output_folder, scenario_name):
-            scenario_paths = [j for i in Path(output_folder).glob("*/") for j in list(i.glob("*/"))]
-            for scenario_path in scenario_paths:
-                if scenario_path.name == scenario_name:
-                    return scenario_path
-
-        scenario_folder = select_folder(output_folder, self.scenario_name)
+        """Copy NetCDF and DEM to the upload folder"""
+        scenario_folder = self._find_scenario_folder()
         breach = Breaches(scenario_folder)
-        raster_compress_path = os.path.join(breach.wss.path, "dem_clip.tif")
-        netcdf_path = os.path.join(breach.netcdf.path, "results_3di.nc")
+        raster_compress_path = breach.wss.path.joinpath("dem_clip.tif")
+        netcdf_path = breach.netcdf.path.joinpath("results_3di.nc")
 
-        shutil.copy2(netcdf_path, self.path)
         shutil.copy2(raster_compress_path, self.path)
+        shutil.copy2(netcdf_path, self.path)
 
-        return print(f"Scenario {self.scenario_name} has been copy in the folder structure")
+        logger.info(f"Scenario {self.name} has been copied in the folder structure")
 
-    # Create the zip file to uploaded.
     def zip_files(self):
-        # Create name of the zip file
-        zip_name = self.scenario_name + ".zip"
-        zip_name = zip_name.replace(" ", "_")
+        """Zip files so they can be uploaded"""
+        zip_name = self.name.replace(" ", "_") + ".zip"
 
         # Set the zip file path
-        folder_structure_path = Path(os.path.join(self.path))
-        self.zipfile_location = Path(os.path.join(self.path, zip_name))
+        self.zip_path = self.path.joinpath(zip_name)
 
         # Zip the folder to be uploaded
-        with zipfile.ZipFile(self.zipfile_location, "w") as zipf:
-            # Walk through the folder and add files to the zip file
-            for root, dirs, files in os.walk(folder_structure_path):
-                for file in files:
-                    if file != f"{zip_name}":
-                        # root = r'E:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\ldo_structuur'
-                        file_path = os.path.join(root, file)
-                        arcname = os.path.relpath(file_path, folder_structure_path)
-                        zipf.write(
-                            file_path,
-                            arcname=os.path.join(f"{self.scenario_name}", arcname),
-                        )
-        # Get zipfile size.
-        zp = zipfile.ZipFile(f"{self.zipfile_location}")
-        size = sum([zinfo.file_size for zinfo in zp.filelist])
-        self.zip_kb = float(size) / 1000  # kB
-        print(f"zip file created with size {self.zip_kb} kb")
-        return self.zipfile_location
+        with zipfile.ZipFile(self.zip_path, "w") as zipf:
+            for file in self.path.glob("*"):
+                if file.name != zip_name:
+                    zipf.write(file, arcname=file.name)
+
+        self.zip_kb = round(self.zip_path.stat().st_size / 1024 / 1024, 2)  # MB
+        logger.info(f"Zip {zip_name} created with size {self.zip_kb} MB")
+        return self.zip_path
 
 
 # %%
@@ -259,9 +241,8 @@ class LDO_API_UPLOAD:
             print(f"The excel file is {status},  and has been uploaded with id_excel number: {self.id_excel}")
         return response_json
 
-    # Upload the zip file using the excel ID.
     def upload_zip_files(self, zipfile_location):
-        # With this link the zip file is not going to be uploaded.
+        """Upload the zip file using the excel ID."""
         zip_name = zipfile_location.name
         file_import_url = self.url_uploadfile + f"/{self.id_excel}/files/{zip_name}/upload"
 
@@ -290,9 +271,9 @@ if __name__ == "__main__":
 
     # Excel file where the ID and size of the upload is going to be stored
     id_scenarios = r"E:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\ldo_structuur\scenarios_ids.xlsx"
-
     # Folder location where the scenarios are going to be copied
     ldo_structuur_path = r"E:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\ldo_structuur"
+    scenario_output_path = Path(r"E:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\output")
 
     # List the scenario name to be uploaded
     scenario_names = os.listdir(metadata_folder)
@@ -321,14 +302,12 @@ if __name__ == "__main__":
             # Set folder with scenario name to be uploaded to LDO
             path = hrt.Folder(os.path.join(ldo_structuur_path, scenario_name))
 
-            # Create Folder as Oboject
+            # Create folder with data to upload.
             ldo_structuur = SelectFolder(path)
-
-            # Copy file NetCDF and DEM inside the previous folder.
             ldo_structuur.copy_files()
+            ldo_structuur.zip_files()
 
             # Zip the file and retrieve the path of its location
-            ldo_structuur.zip_files()
 
             # Set API key
             ldo_api = LDO_API_AUTH(url_auth=LDO_API_URL, api_key=LDO_API_KEY)
@@ -342,8 +321,6 @@ if __name__ == "__main__":
             # Upload excel file from the scenario, and retrieve json infomration
             excel_response = ldo_upload.upload_excel()
 
-            # Get size of the zip folder.
-            zip_size = ldo_structuur.zip_kb
             # store scenario id in the metadata
             scenario_id = ldo_upload.scenario_id
             print(scenario_id)
@@ -356,7 +333,7 @@ if __name__ == "__main__":
             pd_scenarios.loc[pd_scenarios["Naam van het scenario"] == scenario_name, "ID_SCENARIO"] = scenario_id
 
             # Save  the size of the scenario in the metdata dataframe
-            pd_scenarios.loc[pd_scenarios["Naam van het scenario"] == scenario_name, "SIZE_KB"] = zip_size
+            pd_scenarios.loc[pd_scenarios["Naam van het scenario"] == scenario_name, "SIZE_KB"] = ldo_structuur.zip_kb
 
             # REMOVE/DELETE ZIP AND FOLDER FROM THE SCENARIO THAT IS ALREADY UPLOADED.
             delete_file.append(ldo_structuur.path)
