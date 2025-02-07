@@ -59,21 +59,24 @@ import pandas as pd
 import requests
 from breaches import Breaches
 
+
+with open("api_ldo_key.txt", "r") as file:
+     api_key = file.read().strip()
+
 LDO_API_URL = "https://www.overstromingsinformatie.nl/auth/"
 
 # Generate api key on de LDO_API_URL website.
-LDO_API_KEY = ""
+LDO_API_KEY = api_key
 
 # %%
 # FOR ADMINISTRATION PERMISSION USE THE FOLLOWING. Otherwise you will get a permission feedback
 # at the moment you will try to upload the excel file.
-# You will need to copy your own data in the webiste *https://www.overstromingsinformatie.nl/auth/) #TODO how does this work?
+# You will need to copy your own data in the webiste *https://www.overstromingsinformatie.nl/auth/) 
 # 1. Open the website
 # 2. Provide credential to log in
-# 3. On the website in the box auth/v1/personalapikeys/ copy the information that is below (line 44 to 49)
-# 4. Copy the API key in line 30
+# 3. On the website in the box auth/v1/personalapikeys/ copy your own information as below (line 78 to 83)
+# 4. Store the API KEY
 
-# TODO you dont need this here?
 # This one I leave it to copy and paste the information in the website
 
 parameters = {
@@ -82,20 +85,6 @@ parameters = {
     "expiry_date": "2025-01-18T10:22:48.008Z",
     "revoked": False,
 }
-
-# Why user input?
-# Those ID are needed to be store for multiple reasons:
-# 1 . In case we need to delete the scenario ID it is going to be easy to simply store them and then delete them with the
-# script delete_scenarios
-# 2. With that id I can create easily the website that takes you directly to the scenario you want to check. Examplel
-# https://www.overstromingsinformatie.nl/scenarios/106063
-# for that path the patern is very easy: https://www.overstromingsinformatie.nl/scenarios/  + ID
-# 3. I that folder I am storing also the size of the zipfile to be uploaded. That help me to check those scenarios
-# that has more than 2 GB size. Beacuse according to LDO, the API is not going to be able to upload those scenarios
-# with a bigger size than 2GB. thanksfully they all worked even if they where bigger than 2 GB
-# 4. It make easy to locate them in the website.
-
-# Open the excel file as pandas dataframe
 
 #%%
 class LDO_API_AUTH:
@@ -123,8 +112,8 @@ class LDO_API_AUTH:
     # Get Token
     # The token is requiered to get the refresh_token which is going to be use in in this website:  "https://www.overstromingsinformatie.nl/api/v1/excel-imports?mode=create"
     # That is different from LDO_API_URL
-    @property 
-    def token(self):
+     
+    def get_token(self):
         token_url= self.url_auth + "v1/token/"
         self.token = (requests.post(url=token_url, json={"tenant": 4}, auth=("__key__", self.api_key))).json()["refresh"]
         return self.token
@@ -164,6 +153,7 @@ class SelectFolder(Folder):
         self.scenario_name = base.name
         self.zip_kb = None
         super().__init__(base, create=create)
+        self.zipfile_location = None
       
     def copy_files(self):
 
@@ -197,11 +187,11 @@ class SelectFolder(Folder):
 
         # Set the zip file path
         folder_structure_path= Path(os.path.join(self.path))
-        zipfile_location = Path(os.path.join(self.path, zip_name))
+        self.zipfile_location = Path(os.path.join(self.path, zip_name))
         
 
         # Zip the folder to be uploaded
-        with zipfile.ZipFile(zipfile_location, "w") as zipf:
+        with zipfile.ZipFile(self.zipfile_location, "w") as zipf:
             # Walk through the folder and add files to the zip file
             for root, dirs, files in os.walk(folder_structure_path):
                 for file in files:
@@ -214,18 +204,18 @@ class SelectFolder(Folder):
                             arcname=os.path.join(f"{self.scenario_name}", arcname),
                 )
         # Get zipfile size.
-        zp = zipfile.ZipFile(f"{zipfile_location}")
+        zp = zipfile.ZipFile(f"{self.zipfile_location}")
         size = sum([zinfo.file_size for zinfo in zp.filelist])
         self.zip_kb  = float(size) / 1000  # kB
         print(f"zip file created with size {self.zip_kb} kb") 
-        return(zipfile_location)    
+        return(self.zipfile_location)    
 #%%   
 
 class LDO_API_UPLOAD:
 
     def __init__(self, metadata_folder_path, refresh_token, scenario_name):
         self.metadata_folder_path =  metadata_folder_path
-        self.metadata_file = Path(os.path.join(metadata_folder, scenario_name +'.xlsx'))
+        self.metadata_file = Path(os.path.join(metadata_folder_path, scenario_name +'.xlsx'))
         self.refresh_token = refresh_token
         self.headers_excel =  {
             "accept": "application/json",
@@ -235,15 +225,15 @@ class LDO_API_UPLOAD:
         self.url_uploadfile = "https://www.overstromingsinformatie.nl/api/v1/excel-imports"
         self.scenario_id = None
         self.id_excel = None
+        
 
     # UPLOAD EXCEL FILE OF THE SCENARIO and retrieve id of the excel upload. In case there is an
     #error y will print the reason. 
-    @classmethod
     def upload_excel(self):
     
         excel_import_url = self.url_uploadfile+"?mode=create"
         excel_name = self.metadata_file.name
-        with open(metadata_file, "rb") as excel_files:
+        with open(self.metadata_file, "rb") as excel_files:
             excel_files = {
                 "file": (
                     f"{excel_name}",
@@ -267,7 +257,6 @@ class LDO_API_UPLOAD:
         return(response_json)
     
     #Upload the zip file using the excel ID.
-    @classmethod
     def upload_zip_files(self, zipfile_location):
         # With this link the zip file is not going to be uploaded. 
         zip_name = zipfile_location.name
@@ -314,9 +303,6 @@ if __name__ == "__main__":
     # Create a list to delete scenarios already uploaded.
     delete_file = []
 
-    # Check if scenario is done
-    scenario_done = pd_scenarios.loc[pd_scenarios["ID_SCENARIO"] > 0, "Naam van het scenario"].to_list()
-
     # Loop over al the scenarios
     for excel_file_name in scenario_names:
 
@@ -337,13 +323,10 @@ if __name__ == "__main__":
             ldo_structuur.copy_files()
 
             # Zip the file and retrieve the path of its location
-            zipfile_location = ldo_structuur.zip_files()
-
-            # Set sleep time while the folder is zipped.
-            # time.sleep(150) 
+            ldo_structuur.zip_files()
 
             # Set API key 
-            ldo_api = LDO_API_AUTH(url_auth=LDO_API_URL, api_key='')
+            ldo_api = LDO_API_AUTH(url_auth=LDO_API_URL, api_key=LDO_API_KEY)
 
             # Retrieve the refress token to be able to upload the info. 
             refresh = ldo_api.get_access_refresh()
@@ -364,8 +347,8 @@ if __name__ == "__main__":
             print(scenario_id)
 
             # Upload zip file using the 
-            ldo_upload.upload_zip_files(zipfile_location)
-            time.sleep(150) 
+            ldo_upload.upload_zip_files(ldo_structuur.zipfile_location)
+            time.sleep(sleeptime) 
             
             # Save the id of upload from the scenario 
             pd_scenarios.loc[pd_scenarios["Naam van het scenario"] == scenario_name, "ID_SCENARIO"] = scenario_id
@@ -384,5 +367,4 @@ if __name__ == "__main__":
 
             # Save the excel file.
             pd_scenarios.to_excel(id_scenarios, index=False, engine="openpyxl")
-
     # %%
