@@ -64,7 +64,7 @@ from breaches import Breaches
 LDO_API_URL = "https://www.overstromingsinformatie.nl/api/v1/"
 
 # Generate api key on de LDO_API_URL website. And place it in api_ldo_key.txt
-LDO_API_KEY = Path("api_ldo_key.txt").read_text()
+LDO_API_KEY = Path("api_ldo_key.txt").read_text("utf8")
 
 logger = hrt.logging.get_logger(__name__)
 
@@ -100,6 +100,12 @@ class LDO_API:
         self._refresh_token = None  # set on calling self.access_token
         self._access_token = None  # Property
 
+        # TODO FROM LDO_API_UPLOAD
+        self.headers_excel = {
+            "accept": "application/json",
+            "authorization": f"Bearer {self.access_token}",
+        }
+
     @property
     def access_token(self):
         """Get refresh token so we can interact with the api."""
@@ -130,6 +136,51 @@ class LDO_API:
         health_url = self.url[:-4] + "/health/"  # Health is not under v1.
         response_health = requests.get(url=health_url, timeout=5)
         assert response_health.status_code == 200
+
+    def upload_excel(self, metadata_xlsx):
+        """Upload excel file of the scenario and retrieve id of the excel upload.
+        In case there is an error it will print the reason.
+        """
+        url_excel_import = self.url + "excel-imports?mode=create"
+        with open(metadata_xlsx, "rb") as excel_files:
+            excel_files = {
+                "file": (
+                    metadata_xlsx.name,
+                    excel_files,
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                )
+            }
+            excel_response = requests.post(url=url_excel_import, headers=self.headers_excel, files=excel_files)
+        response_json = json.loads(excel_response.content.decode("utf-8"))
+        if response_json.__contains__("message"):
+            msg = response_json["detail"][0]["msg"]
+            logger.error("The excel file has an error")
+            raise ValueError(msg)
+
+        else:
+            status = response_json["status"]
+            excel_id = response_json["id"]
+            scenario_id = response_json["scenario_ids"][0]
+            logger.info(
+                f"The excel file is {status}, and has been uploaded with excel_id: {excel_id}, scenario_id: {scenario_id}"
+            )
+            return excel_id, scenario_id
+
+    def upload_zip_files(self, zip_path, excel_id):
+        """Upload the zip file using the excel ID."""
+        file_import_url = self.url + f"excel-imports/{excel_id}/files/{zip_path.name}/upload"
+
+        logger.info(f"Uploading zip to {file_import_url}")
+        # Create link to upload zip file
+        response = requests.put(url=file_import_url, headers=self.headers_excel)
+        upload_url = response.json()["url"]
+
+        # Upload data using link
+        with open(zip_path, "rb") as data:
+            r = requests.put(upload_url, data=data)
+        logger.info(f"status code: {r.status_code}")
+        logger.info(f"reason: {r.reason}")
+        logger.info(f"Finished uploading {zip_path.name}")
 
 
 # %%
@@ -198,78 +249,21 @@ class UploadFolder(hrt.Folder):
 # %%
 
 
-class LDO_API_UPLOAD:
-    def __init__(self, metadata_folder_path, refresh_token, scenario_name):
-        self.metadata_folder_path = metadata_folder_path
-        self.metadata_file = Path(os.path.join(metadata_folder_path, scenario_name + ".xlsx"))
-        self.refresh_token = refresh_token
-        self.headers_excel = {
-            "accept": "application/json",
-            "authorization": f"Bearer {self.refresh_token}",
-            # 'content-type':'multiplart/form-data',
-        }
-        self.url_uploadfile = "/excel-imports"
-        self.scenario_id = None
-        self.id_excel = None
-
-    # UPLOAD EXCEL FILE OF THE SCENARIO and retrieve id of the excel upload. In case there is an
-    # error y will print the reason.
-    def upload_excel(self):
-        excel_import_url = self.url_uploadfile + "?mode=create"
-        excel_name = self.metadata_file.name
-        with open(self.metadata_file, "rb") as excel_files:
-            excel_files = {
-                "file": (
-                    f"{excel_name}",
-                    excel_files,
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                )
-            }
-            excel_response = requests.post(url=excel_import_url, headers=self.headers_excel, files=excel_files)
-        response_json = json.loads(excel_response.content.decode("utf-8"))
-        if response_json.__contains__("message"):
-            msg = response_json["detail"][0]["msg"]
-            print(f"The excel file has a error, reason {msg}")
-
-        else:
-            status = response_json["status"]
-            self.id_excel = response_json["id"]
-            self.scenario_id = response_json["scenario_ids"][0]
-            print(f"The excel file is {status},  and has been uploaded with id_excel number: {self.id_excel}")
-        return response_json
-
-    def upload_zip_files(self, zipfile_location):
-        """Upload the zip file using the excel ID."""
-        zip_name = zipfile_location.name
-        file_import_url = self.url_uploadfile + f"/{self.id_excel}/files/{zip_name}/upload"
-
-        # Create link to upload zip file
-        response = requests.put(url=file_import_url, headers=self.headers_excel)
-        upload_url = response.json()["url"]
-
-        # upload data using link
-        with open(f"{zipfile_location}", "rb") as data:
-            r = requests.put(upload_url, data=data)
-        print(r.status_code)
-        print(r.reason)
-        print("uploading")
-        print(file_import_url)
-        return print(f"the scenario {zip_name} has been uploaded")
-
-
 # %%
 if __name__ == "__main__":
     # Set Paths from the data to be uploaded
 
     # Excel files per scenario.
-    metadata_folder = (
+    metadata_folder = Path(
         r"E:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\ldo_structuur\metadata_per_scenario"
     )
 
     # Excel file where the ID and size of the upload is going to be stored
-    id_scenarios = r"E:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\ldo_structuur\scenarios_ids.xlsx"
+    id_scenarios = Path(
+        r"E:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\ldo_structuur\scenarios_ids.xlsx"
+    )
     # Folder location where the scenarios are going to be copied
-    ldo_structuur_path = r"E:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\ldo_structuur"
+    ldo_structuur_path = Path(r"E:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\ldo_structuur")
     scenario_results_path = Path(r"E:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\output")
 
     # List the scenario name to be uploaded
@@ -284,9 +278,6 @@ if __name__ == "__main__":
     # Sleep time to not burn out the API
     sleeptime = 420
 
-    # Create a list to delete scenarios already uploaded.
-    delete_file = []
-
     # Loop over al the scenarios
     for excel_file_name in scenario_names:
         # Set Scenario Name
@@ -298,48 +289,35 @@ if __name__ == "__main__":
         else:
             # Set folder with scenario name to be uploaded to LDO
             path = hrt.Folder(os.path.join(ldo_structuur_path, scenario_name))
+            metadata_xlsx = metadata_folder.joinpath(f"{scenario_name}.xlsx")
 
             # Create folder with data to upload.
             ldo_structuur = UploadFolder(path, scenario_results_path=scenario_results_path)
             ldo_structuur.copy_files()
-            ldo_structuur.zip_files()
+            zip_path = ldo_structuur.zip_files()
 
             # Set API key
             ldo_api = LDO_API(api_key=LDO_API_KEY)
 
-            # Set UPLOAD as an object
-            ldo_upload = LDO_API_UPLOAD(metadata_folder, ldo_api.access_token, scenario_name)
-
-            # get metadata file of the scenario that is been uploaded
-            metadata_file = ldo_upload.metadata_file
-
             # Upload excel file from the scenario, and retrieve json infomration
-            excel_response = ldo_upload.upload_excel()
-
-            # store scenario id in the metadata
-            scenario_id = ldo_upload.scenario_id
-            print(scenario_id)
+            excel_id, scenario_id = ldo_api.upload_excel(metadata_xlsx=metadata_xlsx)
 
             # Upload zip file using the
-            ldo_upload.upload_zip_files(ldo_structuur.zipfile_location)
+            ldo_api.upload_zip_files(zip_path=zip_path, excel_id=excel_id)
             time.sleep(sleeptime)
 
             # Save the id of upload from the scenario
             pd_scenarios.loc[pd_scenarios["Naam van het scenario"] == scenario_name, "ID_SCENARIO"] = scenario_id
 
-            # Save  the size of the scenario in the metdata dataframe
+            # Save the size of the scenario in the metdata dataframe
             pd_scenarios.loc[pd_scenarios["Naam van het scenario"] == scenario_name, "SIZE_KB"] = (
                 ldo_structuur.zip_size
             )
 
-            # REMOVE/DELETE ZIP AND FOLDER FROM THE SCENARIO THAT IS ALREADY UPLOADED.
-            delete_file.append(ldo_structuur.path)
+            # Clear outputs
+            shutil.rmtree(ldo_structuur.path)
 
-            if len(delete_file) > 1:
-                previous_folder = delete_file.pop(0)
-                shutil.rmtree(previous_folder)
-
-            print(f"the scenario {scenario_name} has been uploaded")
+            logger.info(f"Scenario {scenario_name} has been uploaded")
 
             # Save the excel file.
             pd_scenarios.to_excel(id_scenarios, index=False, engine="openpyxl")
