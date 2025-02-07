@@ -56,19 +56,17 @@ import time
 import zipfile
 from pathlib import Path
 
+import hhnk_research_tools as hrt
 import pandas as pd
 import requests
 from breaches import Breaches
-from hhnk_research_tools import Folder
-
-# get the api key
-with open("api_ldo_key.txt", "r") as file:
-    api_key = file.read().strip()
 
 LDO_API_URL = "https://www.overstromingsinformatie.nl/auth/"
 
-# Generate api key on de LDO_API_URL website.
-LDO_API_KEY = api_key
+# Generate api key on de LDO_API_URL website. And place it in api_ldo_key.txt
+LDO_API_KEY = Path("api_ldo_key.txt").read_text()
+
+logger = hrt.logging.get_logger(__name__)
 
 # %%
 # FOR ADMINISTRATION PERMISSION USE THE FOLLOWING. Otherwise you will get a permission feedback
@@ -91,46 +89,55 @@ parameters = {
 
 # %%
 class LDO_API_AUTH:
-    def __init__(self, url_auth, api_key):
+    def __init__(self, url_auth, api_key, tenant=4):
         self.url_auth = url_auth
         self.api_key = api_key
-        self.headers = {
-            "accept": "application/json",
-            "content-type": "application/json",
-            "X-CSRFToken": "lIiP686oF2VRs9iXgtLDxKRdqBUBzHSPS19M3MZVERhlTVhZOzNXeCciUERzVuMA",
-        }
-        self.token = None
-        # self.test_api()
+        self.tenant = tenant  # organisation, 4=hhnk.
+
+        self._token = None
+        self._refresh_token = None
 
     @property  # to get health url
     def health(self):
-        return self.url_auth[:-3] + "/health/"  # Health is not under v1.
+        return self.url_auth[:-5] + "/health/"  # Health is not under v1.
 
-    @property  # to get tenant
-    def tenants(self):
-        tenat_url = self.url_auth + "v1/tenants/4"
-        tenant_hhnk = (requests.get(url=tenat_url, headers=self.headers, auth=("__key__", self.api_key))).json()
-        return tenant_hhnk
+    @property
+    def token(self):
+        """Token is required to get the refresh_token which is going to be used in in this website:
+        https://www.overstromingsinformatie.nl/api/v1/excel-imports?mode=create
+        That is different from LDO_API_URL
+        """
+        if self._token is None:
+            token_url = self.url_auth + "v1/token/"
+            self._token = (
+                requests.post(url=token_url, json={"tenant": self.tenant}, auth=("__key__", self.api_key))
+            ).json()["refresh"]
+        return self._token
 
-    # Get Token
-    # The token is requiered to get the refresh_token which is going to be use in in this website:  "https://www.overstromingsinformatie.nl/api/v1/excel-imports?mode=create"
-    # That is different from LDO_API_URL
+    @property
+    def refresh_token(self):
+        """Get refresh token
+        If we do not use the refresh token, the api formo the website
+        "https://www.overstromingsinformatie.nl/api/v1/excel-imports?mode=create"
+        will not work. with out that refersh_token API does not work.
+        """
+        if self._refresh_token is None:
+            url_refresh = self.url_auth + "v1/token/refresh/"
+            self._refresh_token = (
+                requests.post(url=url_refresh, json={"refresh": self.token}, auth=("__key__", self.api_key))
+            ).json()["access"]
+        return self._refresh_token
 
-    def get_token(self):
-        token_url = self.url_auth + "v1/token/"
-        self.token = (requests.post(url=token_url, json={"tenant": 4}, auth=("__key__", self.api_key))).json()[
-            "refresh"
-        ]
-        return self.token
+    def get_tenants(self):
+        """Tenant / organisation which has an id and name.
 
-    # Get the TokenRefresh
-    # If we do not use the refresh token, the api formo the website "https://www.overstromingsinformatie.nl/api/v1/excel-imports?mode=create"
-    # will not work. with out that refersh_token API does not work.
-    def get_access_refresh(self):
-        url_refresh = self.url_auth + "v1/token/refresh/"
-        data_refresh = {"refresh": self.token}
-        access = (requests.post(url=url_refresh, json=data_refresh, auth=("__key__", self.api_key))).json()["access"]
-        return access
+        Prints the tenants. The id can be use to get the token.
+        """
+        tenant_url = self.url_auth + "v1/tenants/"
+        tenants = requests.get(url=tenant_url, auth=("__key__", self.api_key)).json()
+        for tenant in tenants:
+            logger.info(tenant)
+        return tenants
 
     def test_api(self):
         """Test api connection"""
@@ -141,7 +148,7 @@ class LDO_API_AUTH:
 # %%
 
 
-class SelectFolder(Folder):
+class SelectFolder(hrt.Folder):
     """
     An object to ease the accessibility, creation and checks of folders and
     files that need to be uploaded to LDO.
@@ -312,7 +319,7 @@ if __name__ == "__main__":
             continue
         else:
             # Set folder with scenario name to be uploaded to LDO
-            path = Folder(os.path.join(ldo_structuur_path, scenario_name))
+            path = hrt.Folder(os.path.join(ldo_structuur_path, scenario_name))
 
             # Create Folder as Oboject
             ldo_structuur = SelectFolder(path)
@@ -326,11 +333,8 @@ if __name__ == "__main__":
             # Set API key
             ldo_api = LDO_API_AUTH(url_auth=LDO_API_URL, api_key=LDO_API_KEY)
 
-            # Retrieve the refress token to be able to upload the info.
-            refresh = ldo_api.get_access_refresh()
-
             # Set UPLOAD as an object
-            ldo_upload = LDO_API_UPLOAD(metadata_folder, refresh, scenario_name)
+            ldo_upload = LDO_API_UPLOAD(metadata_folder, ldo_api.refresh_token, scenario_name)
 
             # get metadata file of the scenario that is been uploaded
             metadata_file = ldo_upload.metadata_file
