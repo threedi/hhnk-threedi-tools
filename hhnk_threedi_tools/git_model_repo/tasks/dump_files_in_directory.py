@@ -41,7 +41,8 @@ def dump_files_in_directory(
             # relative path for printing
             rel_file_path = os.path.relpath(file_path, directory)
             log.debug("Checking file '%s'", rel_file_path)
-            if rel_file_path[:2] not in ["01", "02"]:
+            # currently only model schematisation
+            if rel_file_path[:2] not in ["02"]:
                 continue
 
             if output_path:

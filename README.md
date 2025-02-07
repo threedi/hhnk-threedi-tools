@@ -48,8 +48,10 @@ initialize git LFS (Large File Storage), create or append to the .gitattributes 
 
 configure a `.env` file in the root of the hhnk-threedi-tools repo, with the content:
 
-```shell
-# `.env` file in the root of the hhnk-threedi-tools repo
-CONDA_CMD=micromamba # or conda or the full path to the conda executable
-ACTIVE_ENV=hhnk_threedi
 ```
+# `.env` file in the root of the hhnk-threedi-tools repo
+CONDA_CMD=mamba
+ACTIVE_ENV=threedipy
+```
+
+mamba init
