@@ -186,10 +186,12 @@ class LDO_API:
 # %%
 
 
-class UploadFolder(hrt.Folder):
+class LdoUploadFolder(hrt.Folder):
     def __init__(self, base, scenario_results_path, create=True):
         """
         Folder to store files that need to be uploaded to LDO.
+        This is a temporary dir that will be removed after a successful
+        upload
 
         Folder
             ├── dem.tif
@@ -254,20 +256,17 @@ if __name__ == "__main__":
     # Set Paths from the data to be uploaded
 
     # Excel files per scenario.
-    metadata_folder = Path(
-        r"E:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\ldo_structuur\metadata_per_scenario"
-    )
+    base_path = Path(r"E:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024")
+    metadata_folder = base_path.joinpath(r"ldo_structuur\metadata_per_scenario")
 
     # Excel file where the ID and size of the upload is going to be stored
-    id_scenarios = Path(
-        r"E:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\ldo_structuur\scenarios_ids.xlsx"
-    )
-    # Folder location where the scenarios are going to be copied
-    ldo_structuur_path = Path(r"E:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\ldo_structuur")
-    scenario_results_path = Path(r"E:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\output")
+    id_scenarios = base_path.joinpath(r"ldo_structuur\scenarios_ids.xlsx")
 
-    # List the scenario name to be uploaded
-    scenario_names = os.listdir(metadata_folder)
+    # Folder location where the scenarios are going to be copied
+    ldo_structuur_path = base_path.joinpath("ldo_structuur")
+
+    # Folder where scenario results are stored.
+    scenario_results_path = base_path.joinpath("output")
 
     # data frame from the scenarios that are gonig to be uploaded.
     pd_scenarios = pd.read_excel(id_scenarios)
@@ -276,35 +275,34 @@ if __name__ == "__main__":
     scenario_done = pd_scenarios.loc[pd_scenarios["ID_SCENARIO"] > 0, "Naam van het scenario"].to_list()
 
     # Sleep time to not burn out the API
-    sleeptime = 420
+    sleeptime = 420  # FIXME 7 minutes seems alot?
+
+    # Set API key
+    ldo_api = LDO_API(api_key=LDO_API_KEY)
 
     # Loop over al the scenarios
-    for excel_file_name in scenario_names:
+    scenarios = list(metadata_folder.glob("*.xlsx"))
+    for metadata_xlsx in scenarios:
         # Set Scenario Name
-        scenario_name = excel_file_name[:-5]
+        scenario_name = metadata_xlsx.stem
         # %%
         # If the scenario is done the continue
         if scenario_name in scenario_done:
             continue
         else:
             # Set folder with scenario name to be uploaded to LDO
-            path = hrt.Folder(os.path.join(ldo_structuur_path, scenario_name))
-            metadata_xlsx = metadata_folder.joinpath(f"{scenario_name}.xlsx")
+            scenario_path = ldo_structuur_path.joinpath(scenario_name)
 
             # Create folder with data to upload.
-            ldo_structuur = UploadFolder(path, scenario_results_path=scenario_results_path)
+            ldo_structuur = LdoUploadFolder(scenario_path, scenario_results_path=scenario_results_path)
             ldo_structuur.copy_files()
             zip_path = ldo_structuur.zip_files()
-
-            # Set API key
-            ldo_api = LDO_API(api_key=LDO_API_KEY)
 
             # Upload excel file from the scenario, and retrieve json infomration
             excel_id, scenario_id = ldo_api.upload_excel(metadata_xlsx=metadata_xlsx)
 
-            # Upload zip file using the
+            # Upload zip file
             ldo_api.upload_zip_files(zip_path=zip_path, excel_id=excel_id)
-            time.sleep(sleeptime)
 
             # Save the id of upload from the scenario
             pd_scenarios.loc[pd_scenarios["Naam van het scenario"] == scenario_name, "ID_SCENARIO"] = scenario_id
@@ -317,8 +315,9 @@ if __name__ == "__main__":
             # Clear outputs
             shutil.rmtree(ldo_structuur.path)
 
-            logger.info(f"Scenario {scenario_name} has been uploaded")
-
             # Save the excel file.
             pd_scenarios.to_excel(id_scenarios, index=False, engine="openpyxl")
+            logger.info(f"Finished processing {scenario_name}")
+            time.sleep(sleeptime)
+
     # %%
