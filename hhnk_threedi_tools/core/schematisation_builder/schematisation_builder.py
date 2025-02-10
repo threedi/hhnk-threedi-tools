@@ -20,7 +20,7 @@ logger.setLevel(logging.INFO)
 # %%
 
 # define project folder path and create project if it does not exist yet
-project_folder = Path("E:/09.modellen_speeltuin/egmondermeer_leggertool_test4")
+project_folder = Path("E:/09.modellen_speeltuin/demo_sprint3")
 Project(str(project_folder))
 
 
@@ -29,7 +29,7 @@ polder_file_path = project_folder / "01_source_data" / "polder_polygon.shp"
 damo_file_path = project_folder / "01_source_data" / "DAMO.gpkg"
 hydamo_file_path = project_folder / "01_source_data" / "HyDAMO.gpkg"
 
-TABLE_NAMES = ["HYDROOBJECT", "DUIKERSIFONHEVEL"]
+TABLE_NAMES = ["HYDROOBJECT", "DUIKERSIFONHEVEL"]  # , "DUIKERSIFONHEVEL"
 
 if polder_file_path:
     logger.info(f"Start export from DAMO database for file: {polder_file_path}")

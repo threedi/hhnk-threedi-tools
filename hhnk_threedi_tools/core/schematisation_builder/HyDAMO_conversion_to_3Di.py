@@ -102,7 +102,7 @@ def process_hydroobject_layer(hydroobject, schematisation_layers, connection_nod
     channel_gdf_2.to_file(output_path, layer="channel", driver="GPKG")
 
 
-def convert_to_3Di(hydamo_file_path, empty_schematisation_file_path, output_schematisation_directory):
+def convert_to_3Di(hydamo_file_path, hydamo_layers, empty_schematisation_file_path, output_schematisation_directory):
     """
     Convert the HyDAMO file to a 3Di schematisation.
 
@@ -116,7 +116,7 @@ def convert_to_3Di(hydamo_file_path, empty_schematisation_file_path, output_sche
         Path to the directory where the 3Di schematisation will be stored.
     """
     # Load the HyDAMO file layers
-    hydamo_layers = {layer: gpd.read_file(hydamo_file_path, layer=layer) for layer in HYDAMO_LAYERS}
+    layers = {layer: gpd.read_file(hydamo_file_path, layer=layer) for layer in hydamo_layers}
 
     # Load the empty schematisation layers
     schematisation_layers = load_all_schematisation_layers(empty_schematisation_file_path)
@@ -130,10 +130,12 @@ def convert_to_3Di(hydamo_file_path, empty_schematisation_file_path, output_sche
     shutil.copy2(empty_schematisation_file_path, output_path)
 
     # Process the hydroobject layer if present
-    if "hydroobject" in hydamo_layers:
-        hydroobject = hydamo_layers["hydroobject"]
+    if "HYDROOBJECT" in layers:
+        hydroobject = layers["HYDROOBJECT"]
         connection_node_id = get_unique_id(schematisation_layers.get("connection_node", gpd.GeoDataFrame()))
         channel_id = get_unique_id(schematisation_layers.get("channel", gpd.GeoDataFrame()))
         process_hydroobject_layer(
             hydroobject, schematisation_layers, connection_node_id, channel_id, output_path, hydroobject.crs
         )
+    else:
+        raise ValueError("No HYDROOBJECT layer found in the HyDAMO file.")
