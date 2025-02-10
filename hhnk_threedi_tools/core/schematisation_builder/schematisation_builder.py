@@ -1,3 +1,16 @@
+"""This script is used to export data from the DAMO database to a HyDAMO file and validate it.
+First a project folders is created.
+Than the polder_polygon.shp file have to copied (manually) to the project folder.
+Define TABLE_NAMES to select which tables to export from DAMO.
+The script will export the data from DAMO to a HyDAMO file and validate it.
+Result:
+- DAMO.gpkg: exported data from DAMO
+- HyDAMO.gpkg: converted data from DAMO to HyDAMO
+- 01_source_data\hydamo_validation\results: validation results (gpkg. csv, geojson)
+After:
+Use the schematisation builder plugin in QGIS to build the schematisation based on the validated HyDAMO file.
+"""
+
 # %%
 import logging
 import os
@@ -23,13 +36,16 @@ logger.setLevel(logging.INFO)
 project_folder = Path("E:/09.modellen_speeltuin/demo_sprint3")
 Project(str(project_folder))
 
+# TODO: copy polder_polygon.shp of area of interest to project_folder/01_source_data
+
 
 # %%
 polder_file_path = project_folder / "01_source_data" / "polder_polygon.shp"
 damo_file_path = project_folder / "01_source_data" / "DAMO.gpkg"
 hydamo_file_path = project_folder / "01_source_data" / "HyDAMO.gpkg"
 
-TABLE_NAMES = ["HYDROOBJECT", "DUIKERSIFONHEVEL"]  # , "DUIKERSIFONHEVEL"
+# select which tables names to export from DAMO
+TABLE_NAMES = ["HYDROOBJECT", "DUIKERSIFONHEVEL"]
 
 if polder_file_path:
     logger.info(f"Start export from DAMO database for file: {polder_file_path}")

@@ -79,10 +79,3 @@ def DAMO_exporter(model_extent, table_names, output_file, EPSG_CODE="28992"):
     return logging
 
 
-# %%
-# Test
-if __name__ == "__main__":
-    POLDERS_PATH = r"\\corp.hhnk.nl\data\Hydrologen_data\Data\09.modellen_speeltuin\egmondermeer_leggertool\01_source_data\polder_polygon.shp"
-    POLDERS = gpd.read_file(POLDERS_PATH, engine="pyogrio")
-    model_extent = POLDERS
-    output_DAMO = DAMO_exporter(model_extent, ["HYDROOBJECT"])
