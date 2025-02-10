@@ -175,14 +175,10 @@ class SelectFolder(hrt.Folder):
 
     def copy_files(self):
         # Folder location from where the scenarios are going to be copied
-        output_folder = (
-            r"E:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\output"
-        )
+        output_folder = r"E:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\output"
 
         def select_folder(output_folder, scenario_name):
-            scenario_paths = [
-                j for i in Path(output_folder).glob("*/") for j in list(i.glob("*/"))
-            ]
+            scenario_paths = [j for i in Path(output_folder).glob("*/") for j in list(i.glob("*/"))]
             for scenario_path in scenario_paths:
                 if scenario_path.name == scenario_name:
                     return scenario_path
@@ -195,9 +191,7 @@ class SelectFolder(hrt.Folder):
         shutil.copy2(netcdf_path, self.path)
         shutil.copy2(raster_compress_path, self.path)
 
-        return print(
-            f"Scenario {self.scenario_name} has been copy in the folder structure"
-        )
+        return print(f"Scenario {self.scenario_name} has been copy in the folder structure")
 
     # Create the zip file to uploaded.
     def zip_files(self):
@@ -236,18 +230,14 @@ class SelectFolder(hrt.Folder):
 class LDO_API_UPLOAD:
     def __init__(self, metadata_folder_path, refresh_token, scenario_name):
         self.metadata_folder_path = metadata_folder_path
-        self.metadata_file = Path(
-            os.path.join(metadata_folder_path, scenario_name + ".xlsx")
-        )
+        self.metadata_file = Path(os.path.join(metadata_folder_path, scenario_name + ".xlsx"))
         self.refresh_token = refresh_token
         self.headers_excel = {
             "accept": "application/json",
             "authorization": f"Bearer {self.refresh_token}",
             # 'content-type':'multiplart/form-data',
         }
-        self.url_uploadfile = (
-            "https://www.overstromingsinformatie.nl/api/v1/excel-imports"
-        )
+        self.url_uploadfile = "https://www.overstromingsinformatie.nl/api/v1/excel-imports"
         self.scenario_id = None
         self.id_excel = None
 
@@ -264,9 +254,7 @@ class LDO_API_UPLOAD:
                     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 )
             }
-            excel_response = requests.post(
-                url=excel_import_url, headers=self.headers_excel, files=excel_files
-            )
+            excel_response = requests.post(url=excel_import_url, headers=self.headers_excel, files=excel_files)
         response_json = json.loads(excel_response.content.decode("utf-8"))
         if response_json.__contains__("message"):
             msg = response_json["detail"][0]["msg"]
@@ -276,18 +264,14 @@ class LDO_API_UPLOAD:
             status = response_json["status"]
             self.id_excel = response_json["id"]
             self.scenario_id = response_json["scenario_ids"][0]
-            print(
-                f"The excel file is {status},  and has been uploaded with id_excel number: {self.id_excel}"
-            )
+            print(f"The excel file is {status},  and has been uploaded with id_excel number: {self.id_excel}")
         return response_json
 
     # Upload the zip file using the excel ID.
     def upload_zip_files(self, zipfile_location):
         # With this link the zip file is not going to be uploaded.
         zip_name = zipfile_location.name
-        file_import_url = (
-            self.url_uploadfile + f"/{self.id_excel}/files/{zip_name}/upload"
-        )
+        file_import_url = self.url_uploadfile + f"/{self.id_excel}/files/{zip_name}/upload"
 
         # Create link to upload zip file
         response = requests.put(url=file_import_url, headers=self.headers_excel)
@@ -308,7 +292,9 @@ if __name__ == "__main__":
     # Set Paths from the data to be uploaded
 
     # Excel files per scenario.
-    metadata_folder = r"E:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\ldo_structuur\metadata_per_scenario"
+    metadata_folder = (
+        r"E:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\ldo_structuur\metadata_per_scenario"
+    )
 
     # Excel file where the ID and size of the upload is going to be stored
     id_scenarios = r"E:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\ldo_structuur\scenarios_ids.xlsx"
@@ -323,9 +309,7 @@ if __name__ == "__main__":
     pd_scenarios = pd.read_excel(id_scenarios)
 
     # Select scenarios ids that area already uploaded to be skiped
-    scenario_done = pd_scenarios.loc[
-        pd_scenarios["ID_SCENARIO"] > 0, "Naam van het scenario"
-    ].to_list()
+    scenario_done = pd_scenarios.loc[pd_scenarios["ID_SCENARIO"] > 0, "Naam van het scenario"].to_list()
 
     # Sleep time to not burn out the API
     sleeptime = 420
@@ -358,9 +342,7 @@ if __name__ == "__main__":
             ldo_api = LDO_API_AUTH(url_auth=LDO_API_URL, api_key=LDO_API_KEY)
 
             # Set UPLOAD as an object
-            ldo_upload = LDO_API_UPLOAD(
-                metadata_folder, ldo_api.refresh_token, scenario_name
-            )
+            ldo_upload = LDO_API_UPLOAD(metadata_folder, ldo_api.refresh_token, scenario_name)
 
             # get metadata file of the scenario that is been uploaded
             metadata_file = ldo_upload.metadata_file
@@ -378,14 +360,10 @@ if __name__ == "__main__":
             time.sleep(sleeptime)
 
             # Save the id of upload from the scenario
-            pd_scenarios.loc[
-                pd_scenarios["Naam van het scenario"] == scenario_name, "ID_SCENARIO"
-            ] = scenario_id
+            pd_scenarios.loc[pd_scenarios["Naam van het scenario"] == scenario_name, "ID_SCENARIO"] = scenario_id
 
             # Save  the size of the scenario in the metdata dataframe
-            pd_scenarios.loc[
-                pd_scenarios["Naam van het scenario"] == scenario_name, "SIZE_KB"
-            ] = zip_size
+            pd_scenarios.loc[pd_scenarios["Naam van het scenario"] == scenario_name, "SIZE_KB"] = zip_size
 
             # REMOVE/DELETE ZIP AND FOLDER FROM THE SCENARIO THAT IS ALREADY UPLOADED.
             delete_file.append(ldo_structuur.path)
