@@ -11,7 +11,13 @@ def update_syspath(sys_paths):
 
 
 def setup_notebook() -> json:
-    """Load notebook data and fix syspath."""
+    """Load notebook data and fix syspath.
+    Through QGIS its setup to add the plugin extra dependencies folders for
+    - hhnk_threedi_plugin
+    - threedi_results_analysis
+
+    notebook_data also contains the api_keys_path and polder_folder
+    """
     notebook_data = {}
     try:
         with open(os.getcwd() + "/notebook_data.json") as f:

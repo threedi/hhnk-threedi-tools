@@ -14,6 +14,7 @@ hhnk_threedi_tools/variables/localsettings.py
 hhnk_threedi_tools/tests/data/new_project/
 *.aux.xml
 Thumbs.db
+local_settings.py
 
 #FIXME temporary
 01_downloads_blokt100fout
