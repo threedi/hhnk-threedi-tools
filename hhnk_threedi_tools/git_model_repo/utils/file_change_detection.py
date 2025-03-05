@@ -21,25 +21,26 @@ class FileChangeDetection(object):
         self.file_hash = self.get_file_hash()
 
 
-def is_file_git_modified(repo, file_path):
+def is_file_git_modified(repo, rel_file_path):
     """Detecteert of een bestand is gewijzigd in een Git-repository."""
 
+    relpath_linux_like = rel_file_path.replace("\\", "/")
     try:
         # Controleer op wijzigingen in de werkdirectory (untracked of modified)
         diff_index = repo.index.diff(None)  # Verschillen met de HEAD
         for diff in diff_index:
-            if diff.a_path == file_path or diff.b_path == file_path:
+            if diff.a_path == relpath_linux_like or diff.b_path == relpath_linux_like:
                 return True
 
         # Controleer op wijzigingen in de index (gestaged)
         staged_diff = repo.index.diff("HEAD")
         for diff in staged_diff:
-            if diff.a_path == file_path or diff.b_path == file_path:
+            if diff.a_path == relpath_linux_like or diff.b_path == relpath_linux_like:
                 return True
 
         # Controleer op niet-gevolgde bestanden
         untracked_files = repo.untracked_files
-        if file_path in untracked_files:
+        if relpath_linux_like in untracked_files:
           return True
 
         return False  # het bestand is niet gewijzigd
