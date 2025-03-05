@@ -2,10 +2,16 @@ import json
 import logging
 import os
 from collections import OrderedDict
+from datetime import time
+
+if __name__ == "__main__":
+    import sys
+    sys.path.append(os.path.join(os.path.dirname(__file__), "../../../"))
 
 import fiona
 
-from .file_change_detection import FileChangeDetection
+from hhnk_threedi_tools.git_model_repo.utils.file_change_detection import FileChangeDetection
+from hhnk_threedi_tools.git_model_repo.utils.timer_log import SubTimer
 
 log = logging.getLogger(__name__)
 
@@ -84,36 +90,38 @@ class GeoPackageDump(object):
 
             cd = FileChangeDetection(output_file_path)
 
-            # make sure th fid is copied too (fiona does not do this by default)
-            schema = layer.schema
-            schema["properties"]["fid"] = "int"
-            dest_src = fiona.open(
-                output_file_path,
-                "w",
-                driver="GeoJSON",
-                crs=layer.crs,
-                schema=schema,
-                COORDINATE_PRECISION=6,
-                id_field="fid",
-            )
+            with SubTimer(f"dump layer {layer_name}"):
+                # make sure th fid is copied too (fiona does not do this by default)
+                schema = layer.schema
+                schema["properties"]["fid"] = "int"
+                dest_src = fiona.open(
+                    output_file_path,
+                    "w",
+                    driver="GeoJSON",
+                    crs=layer.crs,
+                    schema=schema,
+                    COORDINATE_PRECISION=6,
+                    id_field="fid",
+                )
 
-            for feature in layer:
-                feature["properties"]["fid"] = feature["id"]
-                dest_src.write(feature)
+                for feature in layer:
+                    feature["properties"]["fid"] = feature["id"]
+                    dest_src.write(feature)
 
-            dest_src.close()
+                dest_src.close()
 
             # reformat json is experiment to check what is most useful for git diff
             if reformat:
-                f = open(output_file_path, "r")
-                data = json.load(f)
-                f.close()
-                if len(data.get("features", [])) == 0:
-                    os.remove(output_file_path)
-                else:
-                    f = open(output_file_path, "w")
-                    f.write(format_json(data))
+                with SubTimer(f"reformat json {layer_name}"):
+                    f = open(output_file_path, "r")
+                    data = json.load(f)
                     f.close()
+                    if len(data.get("features", [])) == 0:
+                        os.remove(output_file_path)
+                    else:
+                        f = open(output_file_path, "w")
+                        f.write(format_json(data))
+                        f.close()
 
             if cd.has_changed():
                 self.changed_files.append(output_file_path)

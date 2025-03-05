@@ -5,6 +5,7 @@ from git import Repo
 
 from hhnk_threedi_tools.git_model_repo.utils.dump_gpkg import GeoPackageDump
 from hhnk_threedi_tools.git_model_repo.utils.dump_xlsx import ExcelDump
+from hhnk_threedi_tools.git_model_repo.utils.file_change_detection import is_file_git_modified
 from hhnk_threedi_tools.git_model_repo.utils.rreplace import rreplace
 
 log = logging.getLogger(__name__)
@@ -50,6 +51,10 @@ def dump_files_in_directory(
             if os.path.isfile(file_path):
                 if repo.ignored(file_path):
                     log.info("Skipping ignored file '%s'", rel_file_path)
+                    continue
+
+                if not is_file_git_modified(repo, file_path):
+                    log.info("Skip not modified file '%s'", rel_file_path)
                     continue
 
                 if file_name.endswith(".gpkg") and gpkg_dump:
