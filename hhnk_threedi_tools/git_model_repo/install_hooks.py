@@ -2,7 +2,7 @@ import logging
 import os
 import sys
 
-sys.path.append(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), os.pardir, os.pardir))
 
 from hhnk_threedi_tools.git_model_repo.utils.get_git_root import get_git_root
 

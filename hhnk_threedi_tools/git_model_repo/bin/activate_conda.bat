@@ -5,6 +5,6 @@ REM for /f "eol=- delims=" %%a in (%~dp0..\.env) do set "%%a"
 for /f "eol=# delims=" %%a in (%~dp0\..\..\..\.env) do set "%%a"
 
 if NOT DEFINED ACTIVE_ENV echo ".env file is missing or setting 'ACTIVE_ENV' is missing"
-if NOT DEFINED CONDA_CMD echo ".env file is missing or setting 'CONDA_DIR' is missing"
+if NOT DEFINED CONDA_CMD echo ".env file is missing or setting 'CONDA_CMD' is missing"
 
 call %CONDA_CMD% activate "%ACTIVE_ENV%" %*
