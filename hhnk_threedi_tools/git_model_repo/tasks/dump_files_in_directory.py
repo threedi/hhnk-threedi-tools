@@ -53,7 +53,7 @@ def dump_files_in_directory(
                     log.info("Skipping ignored file '%s'", rel_file_path)
                     continue
 
-                if not is_file_git_modified(repo, file_path):
+                if not is_file_git_modified(repo, rel_file_path):
                     log.info("Skip not modified file '%s'", rel_file_path)
                     continue
 
