@@ -19,7 +19,7 @@ def backup_sqlite(filename, clear_folder=False):
     direct copy of ThreeDiToolbox\\utils\\utils.py to reduce dependencies"""
 
     backup_folder = hrt.Folder(Path(filename).parents[1] / "_backup")
-    backup_folder.create()
+    backup_folder.mkdir()
 
     if clear_folder:
         backup_folder.unlink_contents()

@@ -41,7 +41,7 @@ dem = hrt.Raster(FOLDER_TEST.model.schema_base.rasters.dem)
 for v in ["v4"]:
     calctype = "maxdepth"
     if v == "v3":
-        if not rasters[calctype][v].pl.exists():
+        if not rasters[calctype][v].exists():
             dl_old.download_maximum_waterdepth_raster(
                 scenario_uuid=uuid,
                 target_srs="EPSG:28992",
@@ -51,7 +51,7 @@ for v in ["v4"]:
                 pathname=rasters[calctype][v].path,
             )
     if v == "v4":
-        if not rasters[calctype][v].pl.exists():
+        if not rasters[calctype][v].exists():
             dl_new.download_maximum_waterdepth_raster(
                 scenario_uuid=uuid,
                 projection="EPSG:28992",
@@ -62,7 +62,7 @@ for v in ["v4"]:
             )
     calctype = "maxwlvl"
     if v == "v3":
-        if not rasters[calctype][v].pl.exists():
+        if not rasters[calctype][v].exists():
             dl_old.download_maximum_waterlevel_raster(
                 scenario_uuid=uuid,
                 target_srs="EPSG:28992",
@@ -72,7 +72,7 @@ for v in ["v4"]:
                 pathname=rasters[calctype][v].path,
             )
     if v == "v4":
-        if not rasters[calctype][v].pl.exists():
+        if not rasters[calctype][v].exists():
             dl_new.download_maximum_waterlevel_raster(
                 scenario_uuid=uuid,
                 projection=None,
@@ -85,7 +85,7 @@ for v in ["v4"]:
 for calctype in ["maxdepth", "maxwlvl"]:
     for v in ["v3", "v4"]:
         r = rasters[calctype][v]
-        if r.pl.exists():
+        if r.exists():
             print(f"""
             {calctype} {v}
             requested resolution: {resolution}

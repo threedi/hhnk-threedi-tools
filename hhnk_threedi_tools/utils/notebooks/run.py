@@ -46,15 +46,8 @@ def copy_notebooks(new_dir, original_dir=NOTEBOOK_DIRECTORY):
 
     for file in os.listdir(original_dir):
         print(file)
-        if file.endswith(".ipynb"):
-            cont = True
-        elif file == "notebook_setup.py":
-            cont = True
-        else:
-            cont = False
-
-        if cont:
-            shutil.copy2(original_dir + "/" + file, new_dir + "/" + file)
+        if file.endswith(".py"):
+            shutil.copy2(os.path.join(original_dir, file), os.path.join(new_dir, file))
 
 
 def write_notebook_json(directory, data):

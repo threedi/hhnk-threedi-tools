@@ -65,7 +65,7 @@ def create_ruimtekaart(pgb_file, output_path, batch_fd):
     # Aggregate sum per region for each result for both the depth and damage rasters
 
     # DEPTH
-    labels_raster = batch_fd.output.temp.peilgebieden_diepte
+    labels_raster = batch_fd.output.temp.peilgebieden_depth
     labels_index = pgb_gdf["index"].values
     for i, fn in enumerate(SCENARIOS):
         input_raster = getattr(batch_fd.downloads, fn).depth_max
@@ -77,7 +77,7 @@ def create_ruimtekaart(pgb_file, output_path, batch_fd):
         volumes_m3[:, i] *= input_raster.pixelarea  # take pixelsize into account.
 
     # DAMAGE
-    labels_raster = batch_fd.output.temp.peilgebieden_schade
+    labels_raster = batch_fd.output.temp.peilgebieden_damage
     labels_index = pgb_gdf["index"].values
     for i, fn in enumerate(SCENARIOS):
         input_raster = getattr(batch_fd.downloads, fn).damage_total
