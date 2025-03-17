@@ -3,7 +3,8 @@
 line-length = 119
 
 #Exclude external packages in formatter
-extend-exclude = ["hhnk_threedi_tools/external/**/*.py"]
+extend-exclude = ["hhnk_threedi_tools/external/**/*.py", ".pixi/*"]
+include = ["*.py"]
 
 [tool.ruff.lint]
 select = ["D", "E", "F", "NPY", "PD", "C4", "I"]
