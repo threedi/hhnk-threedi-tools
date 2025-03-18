@@ -5,7 +5,7 @@ from pathlib import Path
 from hhnk_threedi_tools.core.folders import Folders
 from tests.config import FOLDER_NEW, FOLDER_TEST, PATH_NEW_FOLDER
 
-SUB_FOLDERS = ["01_source_data", "02_schematisation", "03_3di_results", "04_test_results"]
+SUB_FOLDERS = ["00_config", "01_source_data", "02_schematisation", "03_3di_results", "04_test_results"]
 
 
 class TestFolder:
