@@ -47,6 +47,26 @@ class ColumnIdx:
         return self._get_idx(search_str="^vol_.*")
 
     @property
+    def infilt(self):
+        return self._get_idx(search_str="^infilt_.*")
+
+    @property
+    def incept(self):
+        return self._get_idx(search_str="^incept_.*")
+
+    @property
+    def rain(self):
+        return self._get_idx(search_str="^rain_.*")
+
+    @property
+    def q(self):
+        return self._get_idx(search_str="^discharge_.*")
+
+    @property
+    def u1(self):
+        return self._get_idx(search_str="^vel_.*")
+
+    @property
     def storage(self):
         return self._get_idx(search_str="^storage_mm_.*")
 
@@ -254,34 +274,19 @@ class NetcdfEssentials:
 
         return ness
 
-    def _get_ts_indices(self, ness, user_defined_timesteps: list[int]):
-        """Retrieve indices of requested output timesteps"""
-        ness["max_ind"] = (
-            None  # TODO, ik gebruik deze nu niet want kon net zo makkelijk later, maar misschien nog nodig voor negatieve max etc
-        )
-        ness["ts_ind"] = None
-        for i, row in ness.iterrows():
-            if row["active"]:
-                indices = []
-                for j in user_defined_timesteps:
-                    abs_diff = np.abs(self.timestamps - j)
-                    # geeft 1 index voor de gevraagde timestep gelijk voor alle elementen
-                    idx = np.argmin(abs_diff)
-                    if (
-                        np.min(abs_diff) > 30
-                    ):  # seconds diff. # TODO gebruik hier de helft van de opgegeven output timestep
-                        raise ValueError(
-                            f"""Provided time_seconds {j} not found in netcdf timeseries.
-                                Closest timestep is {self.timestamps[idx]} seconds at index {idx}. \
-                                Debug by checking available timeseries through the (.ts) timeseries attributes"""
-                        )
-                    else:
-                        # lijst van indices voor gevraagde tijdstappen
-                        indices.append(idx)
-                # Vul lijst met indexes voor gevraagde tijdstappen aan
-                ness.at[i, "ts_ind"] = indices  # noqa: PD008 .loc werkt niet met nested array
+    def _get_ts_index(self, time_seconds: int):
+        """Retrieve indices of requested output time_seconds"""
+        abs_diff = np.abs(self.timestamps - time_seconds)
+        # geeft 1 index voor de gevraagde timestep gelijk voor alle elementen
+        ts_indx = np.argmin(abs_diff)
+        if np.min(abs_diff) > 30:  # seconds diff. # TODO gebruik hier de helft van de opgegeven output time_seconds
+            raise ValueError(
+                f"""Provided time_seconds {time_seconds} not found in netcdf timeseries.
+                    Closest timestep is {self.timestamps[ts_indx]} seconds at index {ts_indx}. \
+                    Debug by checking available timeseries through the (.timestamps) timeseries attributes"""
+            )
 
-        return ness
+        return ts_indx
 
     def _attronly_schema(self, df):
         """
@@ -306,11 +311,10 @@ class NetcdfEssentials:
             },
         }
 
-    def process_ness(self, ness, user_defined_timesteps: list[int]):
+    def process_ness(self, ness):
         """Process ness dataframe to retrieve timeseries and indices"""
         ness = self._set_active_attributes(ness)
         ness = self._get_ts(ness)
-        ness = self._get_ts_indices(ness, user_defined_timesteps)
         return ness
 
     def create_base_gdf(self):  # NOTE WE layername wordt belangrijk voor raster creatie
@@ -495,19 +499,31 @@ class NetcdfEssentials:
     def append_data(self, ness, gdf, timesteps_seconds_output: list):
         """Insert data at given timesteps to geodataframe."""
 
-        col_idx = ColumnIdx(gdf=gdf)  # Dit geeft steeds foutmelding bij debuggen maar niet in de test.>?
+        col_idx = ColumnIdx(gdf=gdf)
 
         for i, row in ness.iterrows():
-            if row["active"]:  # and row['geom_type'] == gdf.geometry.geom_type.unique()[0]:
-                for timestep in timesteps_seconds_output:
-                    # Make pretty column names
-                    col_sub = self._create_column_base(time_seconds=timestep)
-                    if timestep == "max":
+            # break
+            if row["active"] and row["geom_type"] == gdf.geometry.geom_type.unique()[0]:
+                for key in timesteps_seconds_output:
+                    # break
+                    # TODO min negatieve max etc
+                    if key == "max":  # isinstance(time_seconds, str):
+                        gdf.insert(
+                            getattr(col_idx, row["attribute_name"]),
+                            f"{row['attribute_name']}_{key}",
+                            np.max(abs(row["data"]), axis=1),
+                        )
+                    elif isinstance(key, int):
+                        # Make pretty column names
+                        col_sub = self._create_column_base(time_seconds=key)
+                        # Find index of timestep
+                        data_timestep = row["data"][:, self._get_ts_index(time_seconds=key)]
                         gdf.insert(
                             getattr(col_idx, row["attribute_name"]),
                             f"{row['attribute_name']}_{col_sub}",
-                            np.max(abs(row["data"]), axis=1),
+                            data_timestep,
                         )
+
         return gdf
 
     def correct_waterlevels(self, grid_gdf, timesteps_seconds_output: list):
@@ -586,17 +602,17 @@ class NetcdfEssentials:
         # TODO bijwerken
         """
 
-        timesteps_seconds_output = self.get_output_timesteps(user_defined_timesteps)
-
-        ness = self.load_default_ness(ness_fp=ness_fp)
-        ness = self.process_ness(ness=ness, user_defined_timesteps=user_defined_timesteps)
-
         if output_file is None:
             output_file = self.output_default
         output_file = hrt.FileGDB(output_file)  # TODO FileGDB??
 
         create = hrt.check_create_new_file(output_file=output_file, overwrite=overwrite)
         if create:
+            timesteps_seconds_output = self.get_output_timesteps(user_defined_timesteps)
+
+            ness = self.load_default_ness(ness_fp=ness_fp)
+            ness = self.process_ness(ness=ness)
+
             grid_gdf, node_gdf, line_gdf, meta_gdf = self.create_base_gdf()
 
             if wlvl_correction:
@@ -622,6 +638,8 @@ class NetcdfEssentials:
                 schema=self._attronly_schema(meta_gdf),
                 overwrite=overwrite,
             )
+        else:
+            print("Output file already exists. Set overwrite to True to overwrite.")
 
 
 # %% Working code example small model
@@ -645,7 +663,6 @@ if __name__ == "__main__":
         wlvl_correction=wlvl_correction,
         overwrite=overwrite,
     )
-# TODO meta_gdf wordt niet weggeschreven
 
 # %% Performance test (large model including sewerage)
 if __name__ == "__main__":
@@ -688,3 +705,7 @@ if __name__ == "__main__":
     self = NetcdfEssentials(threedi_result=threedi_result.netcdf, use_aggregate=True)
     timesteps_seconds = ["max"]
     self.run(wlvl_correction=wlvl_correction)
+
+# %% TODO test model zonder maaiveld
+
+# %% TODO test model met bressen
