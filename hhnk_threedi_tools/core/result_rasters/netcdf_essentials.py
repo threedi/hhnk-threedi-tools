@@ -511,7 +511,7 @@ class NetcdfEssentials:
                         gdf.insert(
                             getattr(col_idx, row["attribute_name"]),
                             f"{row['attribute_name']}_{key}",
-                            np.max(abs(row["data"]), axis=1),
+                            np.nanmax(abs(row["data"]), axis=1),
                         )
                     elif isinstance(key, int):
                         # Make pretty column names
@@ -534,8 +534,8 @@ class NetcdfEssentials:
         grid_gdf_local = grid_gdf.copy()
         grid_gdf_local.set_index("id", inplace=True)
 
-        # Also correct max
-        timesteps_seconds_output.append("max")
+        # # Also correct max
+        # timesteps_seconds_output.append("max")
 
         for timestep in timesteps_seconds_output:
             base_col = self._create_column_base(time_seconds=timestep)
@@ -625,7 +625,12 @@ class NetcdfEssentials:
 
             grid_gdf = self.append_data(ness=ness, gdf=grid_gdf, timesteps_seconds_output=timesteps_seconds_output)
             node_gdf = self.append_data(ness=ness, gdf=node_gdf, timesteps_seconds_output=timesteps_seconds_output)
-            node_gdf = self.append_data(ness=ness, gdf=node_gdf, timesteps_seconds_output=timesteps_seconds_output)
+            line_gdf = self.append_data(ness=ness, gdf=line_gdf, timesteps_seconds_output=timesteps_seconds_output)
+
+            if wlvl_correction:
+                grid_gdf = self.correct_waterlevels(
+                    grid_gdf=grid_gdf, timesteps_seconds_output=timesteps_seconds_output
+                )
 
             # Save to file
             grid_gdf.to_file(output_file.path, layer="grid_2d", engine="pyogrio", overwrite=overwrite)
@@ -649,8 +654,9 @@ if __name__ == "__main__":
     folder_path = r"../tests\data\model_test"
     folder = Folders(folder_path)
 
-    user_defined_timesteps = [3600, 5400]
+    user_defined_timesteps = ["max", 3600, 5400]
     output_file = None
+    ness_fp = None
     wlvl_correction = True
     overwrite = True
     self = NetcdfEssentials.from_folder(
