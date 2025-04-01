@@ -90,16 +90,14 @@ class NetcdfEssentials:
     ness_fp: str = None
     use_aggregate: bool = False  # NOTE dus ik moet als gebruiker aangeven of ik aggregate result gebruik
 
-    def __post_init__(self, ness):
+    def __post_init__(self):
         self._ts = None
 
         # Check if result is aggregate # TODO add somehow check that it contains attributes
-        self.aggregate: bool = self.typecheck_aggregate()
+        self.aggregate: bool = self.typecheck_aggregate
 
         # Check if result has breaches
         self.breaches: bool = self.grid.has_breaches
-
-        return ness
 
     @classmethod
     def from_folder(cls, folder: Folders, threedi_result: hrt.ThreediResult, use_aggregate: bool = False, **kwargs):
@@ -120,16 +118,9 @@ class NetcdfEssentials:
         )
 
     @property
-    def ness_default(self, ness_fp):
+    def ness(self):
         """Relevant data for HHNK models"""
-        if ness_fp is None:
-            # ness = pd.read_csv("./netcdf_essentials.csv")
-            ness = pd.read_csv(
-                r"E:\github\wvanesse\hhnk-threedi-tools\hhnk_threedi_tools\core\result_rasters\netcdf_essentials.csv"
-            )  # TODO hoe ga ik dit meegeven? Bij input? Of default ergens in de module?
-        else:
-            ness = pd.read_csv(ness_fp)
-        return ness
+        return self.ness
 
     @property
     def grid(self):
@@ -146,12 +137,23 @@ class NetcdfEssentials:
     @property
     def output_default(self):
         """Default output if no path is specified."""
-        return self.threedi_result.full_path("grid_wlvl.gpkg")
+        return self.threedi_result.full_path("grid_wlvl.gpkg")  # TODO
 
     @property
     def typecheck_aggregate(self) -> bool:
         """Check if we have a normal or aggregated netcdf"""
         return str(type(self.grid)) == "<class 'threedigrid.admin.gridresultadmin.GridH5AggregateResultAdmin'>"
+
+    def load_default_ness(self, ness_fp=None):
+        """Relevant data for HHNK models"""
+        if ness_fp is None:
+            # ness = pd.read_csv("./netcdf_essentials.csv")
+            ness = pd.read_csv(
+                r"E:\github\wvanesse\hhnk-threedi-tools\hhnk_threedi_tools\core\result_rasters\netcdf_essentials.csv"
+            )  # TODO hoe ga ik dit meegeven? Bij input? Of default ergens in de module?
+        else:
+            ness = pd.read_csv(ness_fp)
+        return ness
 
     def _create_column_base(self, time_seconds):
         """Return a base column name with hours and minutes."""
@@ -281,6 +283,29 @@ class NetcdfEssentials:
 
         return ness
 
+    def _attronly_schema(self, df):
+        """
+        Needed to save attributes without geometry
+        see: https://gis.stackexchange.com/questions/396752
+        """
+
+        def remap(dtype):
+            correction = {
+                "int64": "int",
+                "int32": "int",
+                "float32": "float",
+                "float64": "float",
+                "object": "str",
+            }
+            return correction[dtype] if dtype in correction else dtype
+
+        return {
+            "geometry": "None",
+            "properties": {
+                column: remap(str(dtype)) for column, dtype in zip(df.columns, df.dtypes) if column != "geometry"
+            },
+        }
+
     def process_ness(self, ness, user_defined_timesteps: list[int]):
         """Process ness dataframe to retrieve timeseries and indices"""
         ness = self._set_active_attributes(ness)
@@ -392,10 +417,12 @@ class NetcdfEssentials:
             "has_breaches": self.grid.has_interception,
             "has_max_infiltration_capacity": self.grid.has_max_infiltration_capacity,
             "has_simple_infiltration": self.grid.has_simple_infiltration,
-            "threedicore_result_version": self.grid.threedicore_result_version,
+            "threedicore_result_version": str(self.grid.threedicore_result_version),
             "epsg_code": self.grid.nodes.epsg_code,
         }
         meta_gdf = gpd.GeoDataFrame(meta_dict, index=[0])  # zodat ik hem weg kan schrijven naar geopackage
+        meta_gdf["geometry"] = None
+        meta_gdf.set_geometry("geometry", inplace=True)
 
         # TODO breaches?
         return grid_gdf, node_gdf, line_gdf, meta_gdf
@@ -474,7 +501,7 @@ class NetcdfEssentials:
             if row["active"]:  # and row['geom_type'] == gdf.geometry.geom_type.unique()[0]:
                 for timestep in timesteps_seconds_output:
                     # Make pretty column names
-                    col_sub = self.ts.create_column_base(time_seconds=timestep)
+                    col_sub = self._create_column_base(time_seconds=timestep)
                     if timestep == "max":
                         gdf.insert(
                             getattr(col_idx, row["attribute_name"]),
@@ -495,7 +522,7 @@ class NetcdfEssentials:
         timesteps_seconds_output.append("max")
 
         for timestep in timesteps_seconds_output:
-            base_col = self.ts.create_column_base(time_seconds=timestep)
+            base_col = self._create_column_base(time_seconds=timestep)
             wlvl_col = f"wlvl_{base_col}"
             wlvl_corr_col = f"wlvl_corr_{base_col}"
             diff_col = f"diff_{base_col}"
@@ -525,7 +552,7 @@ class NetcdfEssentials:
 
     def run(
         self,
-        ness=None,
+        ness_fp=None,
         output_file=None,
         user_defined_timesteps: list[int] = None,
         replace_dem_below_perc: float = 50,
@@ -561,13 +588,12 @@ class NetcdfEssentials:
 
         timesteps_seconds_output = self.get_output_timesteps(user_defined_timesteps)
 
-        if ness is None:
-            ness = self.ness_default
-        ness = self.process_ness(ness)
+        ness = self.load_default_ness(ness_fp=ness_fp)
+        ness = self.process_ness(ness=ness, user_defined_timesteps=user_defined_timesteps)
 
         if output_file is None:
             output_file = self.output_default
-        output_file = hrt.FileGDB(output_file)
+        output_file = hrt.FileGDB(output_file)  # TODO FileGDB??
 
         create = hrt.check_create_new_file(output_file=output_file, overwrite=overwrite)
         if create:
@@ -586,13 +612,63 @@ class NetcdfEssentials:
             node_gdf = self.append_data(ness=ness, gdf=node_gdf, timesteps_seconds_output=timesteps_seconds_output)
 
             # Save to file
-            grid_gdf.to_file(output_file.path, layer="grid_2d", engine="pyogrio")
-            node_gdf.to_file(output_file.path, layer="node_1d", engine="pyogrio")
-            line_gdf.to_file(output_file.path, layer="line_1d", engine="pyogrio")
-            meta_gdf.to_file(output_file.path, layer="metadata", driver="GPKG")
+            grid_gdf.to_file(output_file.path, layer="grid_2d", engine="pyogrio", overwrite=overwrite)
+            node_gdf.to_file(output_file.path, layer="node_1d", engine="pyogrio", overwrite=overwrite)
+            line_gdf.to_file(output_file.path, layer="line_1d", engine="pyogrio", overwrite=overwrite)
+            meta_gdf.to_file(
+                output_file.path,
+                layer="metadata",
+                driver="GPKG",
+                schema=self._attronly_schema(meta_gdf),
+                overwrite=overwrite,
+            )
 
 
-# %%
+# %% Working code example small model
+if __name__ == "__main__":
+    from hhnk_threedi_tools import Folders
+
+    folder_path = r"../tests\data\model_test"
+    folder = Folders(folder_path)
+
+    user_defined_timesteps = [3600, 5400]
+    output_file = None
+    wlvl_correction = True
+    overwrite = True
+    self = NetcdfEssentials.from_folder(
+        folder=folder, threedi_result=folder.threedi_results.batch["batch_test"].downloads.piek_glg_T10.netcdf
+    )
+
+    self.run(
+        output_file=output_file,
+        user_defined_timesteps=user_defined_timesteps,
+        wlvl_correction=wlvl_correction,
+        overwrite=overwrite,
+    )
+# TODO meta_gdf wordt niet weggeschreven
+
+# %% Performance test (large model including sewerage)
+if __name__ == "__main__":
+    from hhnk_threedi_tools import Folders
+
+    folder_path = r"E:\02.modellen\BWN_Castricum_Integraal_10m"
+    folder = Folders(folder_path)
+    threedi_result = folder.threedi_results.batch["rev1"].downloads.piek_ghg_T1000
+
+    user_defined_timesteps = [3600, 5400]
+    output_file = r"E:\02.modellen\BWN_Castricum_Integraal_10m\test_netcdfessentials_piek_ghg_T1000.gpkg"
+    wlvl_correction = False
+    overwrite = True
+    self = NetcdfEssentials(threedi_result=threedi_result.netcdf, use_aggregate=False)
+    self.run(
+        output_file=output_file,
+        user_defined_timesteps=user_defined_timesteps,
+        wlvl_correction=wlvl_correction,
+        overwrite=overwrite,
+    )
+# NOTE op volle server geeft dit al memory issues, duurt nu 20 s
+
+# %% Working code example with aggregate result TODO
 if __name__ == "__main__":
     from hhnk_threedi_tools import Folders
 
