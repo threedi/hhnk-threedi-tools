@@ -14,7 +14,7 @@ from local_settings import DATABASES
 
 
 def DAMO_exporter(model_extent, table_names, output_file, EPSG_CODE="28992"):
-    """Exports data from DAMO for polder of interest.
+    """Export data from DAMO for polder of interest.
 
     Parameters
     ----------
@@ -77,5 +77,3 @@ def DAMO_exporter(model_extent, table_names, output_file, EPSG_CODE="28992"):
             logging.append(error)
 
     return logging
-
-

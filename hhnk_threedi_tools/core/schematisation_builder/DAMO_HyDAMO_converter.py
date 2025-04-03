@@ -3,7 +3,12 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 import geopandas as gpd
+import hhnk_research_tools as hrt
 import pandas as pd
+
+import hhnk_threedi_tools as htt
+
+logger = hrt.logging.get_logger(__name__)
 
 WATERSCHAPSCODE = 12  # Hoogheemraadschap Hollands Noorderkwartier
 
@@ -43,17 +48,27 @@ class Converter:
         self.layers = layers
 
         if hydamo_schema_path is None:
-            self.hydamo_schema_path = Path(__file__).parents[2] / "resources/HyDAMO_2_3/HyDAMO_2_3.json"
+            self.hydamo_schema_path = hrt.get_pkg_resource_path(
+                package_resource=htt.resources.schematisation_builder, name="HyDAMO_2_3.json"
+            )
+
         else:
             self.hydamo_schema_path = Path(hydamo_schema_path)
 
         if damo_schema_path is None:
-            self.damo_schema_path = Path(__file__).parents[2] / "resources/DAMO_2_3/DAMO_2_3.xml"
+            self.damo_schema_path = hrt.get_pkg_resource_path(
+                package_resource=htt.resources.schematisation_builder, name="DAMO_2_3.xml"
+            )
         else:
             self.damo_schema_path = Path(damo_schema_path)
 
-        self.retrieve_domain_mapping()
-        self.retrieve_HyDAMO_definitions()
+        self.domains, self.objects = self.retrieve_domain_mapping()
+
+        # Read JSON definitions
+        with open(self.hydamo_schema_path, "r") as json_file:
+            hydamo_schema = json.load(json_file)
+
+        self.definitions = hydamo_schema.get("definitions", {})
 
     def run(self):
         self.convert()
@@ -73,7 +88,7 @@ class Converter:
         root = ET.fromstring(xml_text)
 
         # Initialize the domain dictionary
-        self.domains = {}
+        domains = {}
 
         # Find all Domain elements
         domain_elements = root.findall(".//Domain")
@@ -92,10 +107,10 @@ class Converter:
                     else:
                         code = code.lower()
                     coded_value_dict[code] = name
-                self.domains[domain_name.lower()] = coded_value_dict
+                domains[domain_name.lower()] = coded_value_dict
 
         # Initialize the objects dictionary
-        self.objects = {}
+        objects = {}
 
         # Find all DataElement elements
         data_element_elements = root.findall(".//DataElement")
@@ -119,20 +134,9 @@ class Converter:
                             field_type = field_type.replace("esriFieldType", "")
                         field_dict[field_name] = field_type
 
-            self.objects[data_name.lower()] = field_dict
+            objects[data_name.lower()] = field_dict
 
-    def retrieve_HyDAMO_definitions(self):
-        """
-        Reads JSON definitions and assigns them as instance variables.
-        """
-        with open(self.hydamo_schema_path, "r") as json_file:
-            hydamo_schema = json.load(json_file)
-
-        definitions = hydamo_schema.get("definitions", {})
-
-        for key, value in definitions.items():
-            attr_name = f"definition_{key}"
-            setattr(self, attr_name, value)
+        return domains, objects
 
     def convert(self):
         """
@@ -156,10 +160,10 @@ class Converter:
         Returns
         ----
         """
-        layer_gdf = gpd.read_file(self.DAMO_path, layer=layer_name)
+        layer_gdf = gpd.read_file(self.DAMO_path, layer=layer_name, engine="pyogrio")
         layer_gdf = self.convert_attributes(layer_gdf, layer_name)
         layer_gdf = self.add_column_NEN3610id(layer_gdf, layer_name)
-        layer_gdf.to_file(self.HyDAMO_path, layer=layer_name, driver="GPKG")
+        layer_gdf.to_file(self.HyDAMO_path, layer=layer_name, engine="pyogrio")
 
     def convert_attributes(self, layer_gdf, layer_name):
         """
@@ -206,24 +210,22 @@ class Converter:
 
     def get_field_type(self, column_name, layer_name):
         """
-        Retrieves the field type of a specific attribute in a definition.
+        Retrieve the field type of a specific attribute in a definition.
 
         Args:
             layer_name (str): The name of the object (e.g., 'hydroobject').
             column_name (str): The name of the field (e.g., 'nen3610id').
 
-        Returns:
+        Return:
             str: The type of the field if found, else None.
         """
-        # Find the object definition
-        object_def = getattr(self, f"definition_{layer_name}", {})
-
-        # Navigate to the 'properties' of the object
-        properties = object_def.get("properties", {})
-
-        # Retrieve the field type
-        field = properties.get(column_name, {})
-        return field.get("type", None)
+        try:
+            field_type = self.definitions[layer_name]["properties"][column_name]["type"]
+        except:
+            logger.error(f"Field {column_name} not found in schema definitions for layer {layer_name}")
+            field_type = None
+        finally:
+            return field_type
 
     def convert_domain_values(self, object_name, column_name, column):
         """
