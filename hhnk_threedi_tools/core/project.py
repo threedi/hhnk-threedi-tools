@@ -1,22 +1,19 @@
-from hhnk_threedi_tools.core.folders import Folders
 import json
-from pathlib import Path
 import time
+from pathlib import Path
+
+from hhnk_threedi_tools.core.folders import Folders
 
 
 # A class for project
 class Project:
     def __init__(self, folder: str):
         self.project_folder = folder  # set project folder
-        folders = Folders(
-            folder, create=True
-        )  # create folders instance for new project folder
+        folders = Folders(folder, create=True)  # create folders instance for new project folder
 
         self.json_path = str(folders.project_json.path)
         if folders.project_json.exists():
-            self.load_from_json(
-                self.json_path
-            )  # load variables from json if exists (fixed filename)
+            self.load_from_json(self.json_path)  # load variables from json if exists (fixed filename)
         else:
             self.initialise_new_project()  # initialise new project
             self.save_to_json(self.json_path)
@@ -34,9 +31,7 @@ class Project:
         return self.project_status
 
     def save_to_json(self, filepath):
-        self.project_date = str(
-            time.strftime("%Y-%m-%d %H:%M:%S")
-        )  # update project date
+        self.project_date = str(time.strftime("%Y-%m-%d %H:%M:%S"))  # update project date
         with open(filepath, "w") as f:
             json.dump(self.__dict__, f)
 
