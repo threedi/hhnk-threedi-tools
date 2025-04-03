@@ -35,6 +35,8 @@ class Converter:
         Path to the DAMO schema (xml file)
     layers : list
         List of layer names to convert to HyDAMO
+    overwrite : bool
+        If True, overwrite an existing layer in existing HyDAMO geopackage
 
     Sources
     ----------
@@ -42,9 +44,9 @@ class Converter:
     DAMO_schema: XML file retrieved from Het Waterschapshuis by mail
     """
 
-    def __init__(self, DAMO_path, HyDAMO_path, layers, hydamo_schema_path=None, damo_schema_path=None):
+    def __init__(self, DAMO_path, HyDAMO_path, layers, hydamo_schema_path=None, damo_schema_path=None, overwrite=False):
         self.DAMO_path = Path(DAMO_path)
-        self.HyDAMO_path = Path(HyDAMO_path)
+        self.HyDAMO_path = hrt.FileGDB(HyDAMO_path)
         self.layers = layers
 
         if hydamo_schema_path is None:
@@ -79,6 +81,10 @@ class Converter:
 
         Returns
         -------
+        domains : dict
+            Dictionary with the domains and their coded values
+        objects : dict
+            Dictionary with the objects and their fields
         """
         # Read XML file content
         with open(self.damo_schema_path, "r") as xml_file:
@@ -138,17 +144,17 @@ class Converter:
 
         return domains, objects
 
-    def convert(self):
+    def convert(self, overwrite):
         """
         Open layer by layer and convert the attributes to HyDAMO.
 
         Returns
-        ----
+        -------
         """
         for layer_name in self.layers:
-            self.convert_layer(layer_name)
+            self.convert_layer(layer_name, overwrite)
 
-    def convert_layer(self, layer_name):
+    def convert_layer(self, layer_name, overwrite=False):
         """
         Convert the layer to HyDAMO and write to the target HyDAMO geopackage.
 
@@ -158,8 +164,13 @@ class Converter:
             Name of the layer to convert
 
         Returns
-        ----
+        -------
         """
+        if not overwrite and self.HyDAMO_path.exists():
+            if layer_name in self.HyDAMO_path.available_layers():
+                logger.info(f"Layer {layer_name} already exists in {self.HyDAMO_path}. Skipping conversion.")
+                return
+
         layer_gdf = gpd.read_file(self.DAMO_path, layer=layer_name, engine="pyogrio")
         layer_gdf = self.convert_attributes(layer_gdf, layer_name)
         layer_gdf = self.add_column_NEN3610id(layer_gdf, layer_name)
@@ -205,7 +216,9 @@ class Converter:
         # Convert the domain values to HyDAMO target values
         column = self.convert_domain_values(layer_name, column_name, column)
         # Convert the field type to the correct type
-        column = self.convert_field_type(column, field_type)
+        if field_type is not None:
+            column = column.astype(field_type)  # Convert to the field type
+        
         return column
 
     def get_field_type(self, column_name, layer_name):
@@ -219,8 +232,18 @@ class Converter:
         Return:
             str: The type of the field if found, else None.
         """
+        field_types_dict = {
+            "string": str,
+            "integer": int,
+            "number": float,
+        }
+
         try:
             field_type = self.definitions[layer_name]["properties"][column_name]["type"]
+            field_type = field_types_dict.get(field_type, None)
+            if field_type is None:
+                logger.error(f"Field type is not find in field_types_dict for field {column_name} in layer {layer_name}")
+
         except:
             logger.error(f"Field {column_name} not found in schema definitions for layer {layer_name}")
             field_type = None
@@ -257,7 +280,7 @@ class Converter:
                 if field_domain in self.domains.keys():
                     domain = self.domains[field_domain]
                     mapped_column = column.map(domain)
-                    print(
+                    logger.info(
                         f"Converted domain values of column {column_name} in object {object_name} using domain {field_domain}"
                     )
                     return mapped_column
@@ -265,33 +288,6 @@ class Converter:
         # If no domain is found, return the column as is
         return column
 
-    def convert_field_type(self, column, field_type):
-        """
-        Convert the field type of the column to the correct type.
-
-        Parameters
-        ----------
-        column : pandas.Series
-            Attribute column to convert
-        field_type : str
-            Field type to convert to
-
-        Returns
-        -------
-        pandas.Series
-            Converted attribute column
-        """
-        if field_type == "string":
-            column = column.apply(lambda x: str(x) if pd.notnull(x) else None)
-        elif field_type == "integer":
-            column = column.apply(lambda x: int(x) if pd.notnull(x) else None)
-        elif field_type == "number":
-            column = column.apply(lambda x: float(x) if pd.notnull(x) else None)
-        elif field_type == None:  # column not part of the schema, so we keep it as is
-            return column
-        else:
-            raise ValueError(f"Field type {field_type} not supported")
-        return column
 
     def add_column_NEN3610id(self, layer_gdf, layer_name):
         """
