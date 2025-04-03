@@ -797,8 +797,8 @@ class DownloadWidgetsInteraction(DownloadWidgets):
             # batch_fd = Folders(batch_folder).
             # Create destination folder
 
-            self.vars.batch_fd.create()
-            self.vars.batch_fd.downloads.create()
+            self.vars.batch_fd.mkdir()
+            self.vars.batch_fd.downloads.mkdir()
 
             # Temporary disable download button
             self.download_batch.button.style.button_color = "orange"
@@ -879,7 +879,7 @@ class DownloadWidgetsInteraction(DownloadWidgets):
                     output_folder = getattr(self.vars.batch_fd.downloads, row["dl_name"]).netcdf
 
                     # Create destination folder
-                    output_folder.create()
+                    output_folder.mkdir()
                     output_folder = output_folder.path
 
                     # Start downloading of the files
