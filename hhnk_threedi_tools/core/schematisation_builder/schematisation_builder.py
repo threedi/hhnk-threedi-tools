@@ -20,7 +20,7 @@ from pathlib import Path
 import geopandas as gpd
 import pandas as pd
 from DAMO_exporter import DAMO_exporter
-from DAMO_HyDAMO_converter import Converter
+from DAMO_HyDAMO_converter import DAMO_to_HyDAMO_Converter
 from HyDAMO_validator import validate_hydamo
 
 from hhnk_threedi_tools.core.project import Project
@@ -33,7 +33,7 @@ logger.setLevel(logging.INFO)
 # %%
 
 # define project folder path and create project if it does not exist yet
-project_folder = Path("E:/09.modellen_speeltuin/demo_sprint3")
+project_folder = Path("E:/09.modellen_speeltuin/demo_van_demo")
 Project(str(project_folder))
 
 # TODO: copy polder_polygon.shp of area of interest to project_folder/01_source_data
@@ -58,7 +58,9 @@ if polder_file_path:
 
     # Conversion to HyDAMO
     logger.info(f"DAMO export was succesfull. Now, start conversion to HyDAMO for file: {polder_file_path}")
-    converter = Converter(DAMO_path=damo_file_path, HyDAMO_path=hydamo_file_path, layers=TABLE_NAMES)
+    converter = DAMO_to_HyDAMO_Converter(
+        DAMO_path=damo_file_path, HyDAMO_path=hydamo_file_path, layers=TABLE_NAMES, overwrite=True
+    )
     converter.run()
 
     logger.info(f"HyDAMO exported for file: {polder_file_path}")

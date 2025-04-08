@@ -13,7 +13,7 @@ logger = hrt.logging.get_logger(__name__)
 WATERSCHAPSCODE = 12  # Hoogheemraadschap Hollands Noorderkwartier
 
 
-class Converter:
+class DAMO_to_HyDAMO_Converter:
     """
     Convert DAMO to HyDAMO. Also known as 'wasmachine'.
 
@@ -44,10 +44,14 @@ class Converter:
     DAMO_schema: XML file retrieved from Het Waterschapshuis by mail
     """
 
-    def __init__(self, DAMO_path, HyDAMO_path, layers, hydamo_schema_path=None, damo_schema_path=None, overwrite=False):
+    def __init__(
+        self, DAMO_path, HyDAMO_path, layers, hydamo_schema_path=None, damo_schema_path=None, overwrite=False
+    ):
         self.DAMO_path = Path(DAMO_path)
-        self.HyDAMO_path = hrt.FileGDB(HyDAMO_path)
+        self.HyDAMO_path = Path(HyDAMO_path)
+        self.HyDAMO_filegdb = hrt.FileGDB(HyDAMO_path)
         self.layers = layers
+        self.overwrite = overwrite
 
         if hydamo_schema_path is None:
             self.hydamo_schema_path = hrt.get_pkg_resource_path(
@@ -73,7 +77,7 @@ class Converter:
         self.definitions = hydamo_schema.get("definitions", {})
 
     def run(self):
-        self.convert()
+        self.convert_layers()
 
     def retrieve_domain_mapping(self):
         """
@@ -144,37 +148,23 @@ class Converter:
 
         return domains, objects
 
-    def convert(self, overwrite):
+    def convert_layers(self):
         """
-        Open layer by layer and convert the attributes to HyDAMO.
+        Open layer by layer and convert the layer to HyDAMO and write to the target HyDAMO geopackage.
 
         Returns
         -------
         """
         for layer_name in self.layers:
-            self.convert_layer(layer_name, overwrite)
+            if not self.overwrite and self.HyDAMO_path.exists():
+                if layer_name in self.HyDAMO_filegdb.available_layers():
+                    logger.info(f"Layer {layer_name} already exists in {self.HyDAMO_path}. Skipping conversion.")
+                    return
 
-    def convert_layer(self, layer_name, overwrite=False):
-        """
-        Convert the layer to HyDAMO and write to the target HyDAMO geopackage.
-
-        Parameters
-        ----------
-        layer : str
-            Name of the layer to convert
-
-        Returns
-        -------
-        """
-        if not overwrite and self.HyDAMO_path.exists():
-            if layer_name in self.HyDAMO_path.available_layers():
-                logger.info(f"Layer {layer_name} already exists in {self.HyDAMO_path}. Skipping conversion.")
-                return
-
-        layer_gdf = gpd.read_file(self.DAMO_path, layer=layer_name, engine="pyogrio")
-        layer_gdf = self.convert_attributes(layer_gdf, layer_name)
-        layer_gdf = self.add_column_NEN3610id(layer_gdf, layer_name)
-        layer_gdf.to_file(self.HyDAMO_path, layer=layer_name, engine="pyogrio")
+            layer_gdf = gpd.read_file(self.DAMO_path, layer=layer_name, engine="pyogrio")
+            layer_gdf = self.convert_attributes(layer_gdf, layer_name)
+            layer_gdf = self.add_column_NEN3610id(layer_gdf, layer_name)
+            layer_gdf.to_file(self.HyDAMO_path, layer=layer_name, engine="pyogrio")
 
     def convert_attributes(self, layer_gdf, layer_name):
         """
@@ -216,9 +206,13 @@ class Converter:
         # Convert the domain values to HyDAMO target values
         column = self.convert_domain_values(layer_name, column_name, column)
         # Convert the field type to the correct type
-        if field_type is not None:
+        if field_type is not None and pd.notna(column).all():
             column = column.astype(field_type)  # Convert to the field type
-        
+        else:
+            logger.info(
+                f"field_type is None and/or column values are NaN for field {column_name} in layer {layer_name}"
+            )
+
         return column
 
     def get_field_type(self, column_name, layer_name):
@@ -239,13 +233,19 @@ class Converter:
         }
 
         try:
+            # make sure the layer_name and column_name are lowercase
+            layer_name = layer_name.lower()
+            column_name = column_name.lower()
+            # Check if the layer_name exists in the definitions
             field_type = self.definitions[layer_name]["properties"][column_name]["type"]
+
             field_type = field_types_dict.get(field_type, None)
             if field_type is None:
-                logger.error(f"Field type is not find in field_types_dict for field {column_name} in layer {layer_name}")
-
+                logger.info(
+                    f"Field type is not find in field_types_dict for field {column_name} in layer {layer_name}"
+                )
         except:
-            logger.error(f"Field {column_name} not found in schema definitions for layer {layer_name}")
+            logger.info(f"Field {column_name} not found in schema definitions for layer {layer_name}")
             field_type = None
         finally:
             return field_type
@@ -287,7 +287,6 @@ class Converter:
 
         # If no domain is found, return the column as is
         return column
-
 
     def add_column_NEN3610id(self, layer_gdf, layer_name):
         """

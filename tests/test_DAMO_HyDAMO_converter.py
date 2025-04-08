@@ -3,7 +3,7 @@ from pathlib import Path
 import geopandas as gpd
 import numpy as np
 
-from hhnk_threedi_tools.core.schematisation_builder.DAMO_HyDAMO_converter import Converter
+from hhnk_threedi_tools.core.schematisation_builder.DAMO_HyDAMO_converter import DAMO_to_HyDAMO_Converter
 from tests.config import FOLDER_TEST, TEMP_DIR, TEST_DIRECTORY
 
 LAYERS = ["HYDROOBJECT"]
@@ -23,11 +23,8 @@ def test_DAMO_HyDAMO_converter():
     if not DAMO_path.exists():
         raise FileNotFoundError(f"File {DAMO_path} does not exist")
 
-    # remove HyDAMO.gpkg if exists
-    if HyDAMO_path.exists():
-        HyDAMO_path.unlink()
-
-    converter = Converter(DAMO_path=DAMO_path, HyDAMO_path=HyDAMO_path, layers=LAYERS)
+    # change overwrite to True to overwrite layer(s) in the HyDAMO file
+    converter = DAMO_to_HyDAMO_Converter(DAMO_path=DAMO_path, HyDAMO_path=HyDAMO_path, layers=LAYERS, overwrite=False)
     converter.run()
 
     # Check if HyDAMO.gpkg is created
