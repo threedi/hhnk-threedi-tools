@@ -1,7 +1,7 @@
 # %%
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Union
+from typing import Literal, Union
 
 import geopandas as gpd
 import hhnk_research_tools as hrt
@@ -37,12 +37,14 @@ class NetcdfTimeSeries:
 
         self.timestamps = self.grid.nodes.timestamps
 
+        # Init lege dict waar de tijdreeksen inkomen voor parameter / subset combinatie
         self._ts_dict = {
             "wlvl_2D_All": None,
             "wlvl_1D_All": None,
             "vol_2D_All": None,
             "vol_1D_All": None,
         }
+        # Init lege dict waar de max index in de tijdreeksen inkomen voor parameter / subset combinatie
         self._max_index = {
             "wlvl_2D_All": None,
             "wlvl_1D_All": None,
@@ -51,14 +53,39 @@ class NetcdfTimeSeries:
         }
 
     # @property # TODO dictionary opzetten om properties aan te maken met key
-    def get_ts_dict(self, param, subset):
+    def get_ts_dict(self, param: str, subset: str):
+        """Get timeseries from netcdf for a parameter and subset combination.
+        If result was already read once, it will use the saved value.
+
+        Parameters
+        ----------
+        parameter : str, one of ['wlvl', 'vol']
+        subset : str, one of ['1D_All', '2D_All']
+
+        Returns
+        -------
+        TODO
+        """
         key = f"{param}_{subset}"
 
         if self._ts_dict[key] is None:
             self._ts_dict[key] = self.get_timerseries_nodes_all(param=param, subset=subset)
         return self._ts_dict[key]
 
-    def get_max_index(self, param, subset):
+    def get_max_index(self, param: str, subset: str):
+        """Get index per node from netcdf which has the highest value over the whole
+        simulation. Do this for a parameter and subset combination.
+        If result was already read once, it will use the saved value.
+
+        Parameters
+        ----------
+        parameter : str, options are ['wlvl', 'vol']
+        subset : str, one of ['1D_All', '2D_All']
+
+        Returns
+        -------
+        TODO
+        """
         key = f"{param}_{subset}"
 
         if self._max_index[key] is None:
@@ -69,9 +96,14 @@ class NetcdfTimeSeries:
         """Check if we have a normal or aggregated netcdf"""
         return str(type(self.grid)) == "<class 'threedigrid.admin.gridresultadmin.GridH5AggregateResultAdmin'>"
 
-    def get_timerseries_nodes_all(self, param, subset):
+    def get_timerseries_nodes_all(self, param: str, subset: str):  # TODO wvg, wat is de returntype?
         """Get all timeseries for all 2d nodes.
         slice(0,-1) doesnt retrieve the last timestep, using timestamp length instead.
+
+        Parameters
+        ----------
+        parameter : str, options are ['wlvl', 'vol']
+        subset : str, one of ['1D_All', '2D_All']
         """
         PARAM_DICT = {"wlvl": "s1", "vol": "vol"}
         if self.aggregate:
@@ -88,20 +120,19 @@ class NetcdfTimeSeries:
     def get_timeseries_timestamp(
         self,
         param: str,
-        time_seconds: Union[int, str],
-        result_geom_type: str = "grid",
+        time_seconds: Union[int, Literal["max"]],
+        result_geom_type: Literal["grid", "node"] = "grid",
     ):
-        """Retrieve timeseries at given timestamp.
+        """Retrieve timeseries from netcdf at given timestamp.
 
         Parameters
         ----------
-        param : str
-            options are ['wlvl', 'vol']
-        time_seconds : Union[int,str]
-            time in seconds since start of calculation.
-            use "max" to get the max of all timesteps.
-        result_type : str
-            type of result, options are ['grid','node'] TODO add lines
+        param : str, options are ['wlvl', 'vol']
+        time_seconds : Union[int, Literal['max']]
+            int -> time in seconds since start of calculation.
+            Literal['max'] -> use "max" to get the max of all timesteps.
+        result_geom_type : str, options are ['grid','node']
+            type of result  TODO add lines
         """
 
         if result_geom_type == "grid":
@@ -166,25 +197,14 @@ class ColumnIdx:
         ).tolist()
         return (idxs or [len(self.gdf.columns) - 1])[-1] + 1
 
+    def get_idx_basic(self, column_name) -> int:
+        """Get idx based on search pattern, if not found return last index"""
+
+        return self._get_idx(search_str=f"^{column_name}_.*")
+
     @property
     def wlvl(self):
         return self._get_idx(search_str="^wlvl_(?!.*corr).*")
-
-    @property
-    def wlvl_corr(self):
-        return self._get_idx(search_str="^wlvl_corr_.*")
-
-    @property
-    def diff(self):
-        return self._get_idx(search_str="^diff_.*")
-
-    @property
-    def vol(self):
-        return self._get_idx(search_str="^vol_.*")
-
-    @property
-    def storage(self):
-        return self._get_idx(search_str="^storage_mm_.*")
 
 
 @dataclass
@@ -237,6 +257,15 @@ class NetcdfToGPKG:
             panden_layer=panden_layer,
             use_aggregate=use_aggregate,
         )
+
+    @property
+    def is_aggregate(self):
+        """Check if provided netcdf is an aggregate result"""
+        # TODO wvg; @wvanesse, zoiets? Niet gechecked of het werkt.
+        # Misschien moet er verder gezocht worden in aggregate of er resultaten staan.
+        if hasattr(self.threedi_result, "aggregate_grid"):
+            return True
+        return False
 
     @property
     def grid(self):
@@ -304,7 +333,7 @@ class NetcdfToGPKG:
             return grid_gdf_merged[[area_col, perc_col]]
         return np.nan
 
-        # NOTE WE waar vindt ik de functie einde neerslag
+        # NOTE WE waar vindt ik de functie einde neerslag: grid_result_metadata.get_rain_properties
 
     def create_base_gdf(self):  # NOTE WE layername wordt belangrijk voor raster creatie
         """Create base grid from netcdf"""
@@ -315,7 +344,7 @@ class NetcdfToGPKG:
         # * inputs every element from row as a new function argument, creating a (square) box.
         grid_gdf.set_geometry(
             [box(*row) for row in self.grid.nodes.subset("2D_ALL").cell_coords.T],
-            crs=f"EPSG:{self.grid.epsg_code}",
+            crs=self.grid.epsg_code,  # TODO wvg: check of code nu ook werkt, dacht t wel.
             inplace=True,
         )
 
@@ -335,11 +364,7 @@ class NetcdfToGPKG:
             points = [Point(j) for j in xy]
 
             # Voeg geometry toe aan node gdf
-            node_gdf.set_geometry(
-                points,
-                crs=f"EPSG:{self.grid.epsg_code}",
-                inplace=True,
-            )
+            node_gdf.set_geometry(points, crs=self.grid.epsg_code, inplace=True)
 
             # Add relevant metadata
             node_gdf["id"] = self.grid.nodes.subset("1D_ALL").id
@@ -415,12 +440,12 @@ class NetcdfToGPKG:
             try:
                 vol_ts = self.ts.get_timeseries_timestamp(param="vol", time_seconds=timestep)
                 grid_gdf.insert(
-                    col_idx.vol,
+                    col_idx.get_idx_basic("vol"),
                     f"vol_{col_base}",
                     vol_ts,
                 )
                 grid_gdf.insert(
-                    col_idx.storage,
+                    col_idx.get_idx_basic("storage_mm"),
                     f"storage_mm_{col_base}",
                     np.round(grid_gdf[f"vol_{col_base}"] / grid_gdf["dem_area"] * 1000, 2),
                 )
@@ -453,7 +478,7 @@ class NetcdfToGPKG:
                     result_geom_type="node",
                 )
                 node_gdf.insert(
-                    col_idx.vol,
+                    col_idx.get_idx_basic("vol"),
                     f"vol_{col_base}",
                     vol_ts,
                 )
@@ -489,7 +514,7 @@ class NetcdfToGPKG:
             col_idx = ColumnIdx(gdf=grid_gdf_local)
 
             # Make copy of original wlvls and set to None when they need to be replaced
-            grid_gdf_local.insert(col_idx.wlvl_corr, wlvl_corr_col, grid_gdf_local[wlvl_col])
+            grid_gdf_local.insert(col_idx.get_idx_basic("wlvl_corr"), wlvl_corr_col, grid_gdf_local[wlvl_col])
             replace_idx = grid_gdf_local["replace_all"] != False  # noqa: E712
             grid_gdf_local.loc[replace_idx, wlvl_corr_col] = None
 
@@ -506,14 +531,16 @@ class NetcdfToGPKG:
 
             # Add diff col between corrected and original wlvl
             grid_gdf_local.insert(
-                col_idx.diff, diff_col, np.round(grid_gdf_local[wlvl_corr_col] - grid_gdf_local[wlvl_col], 5)
+                col_idx.get_idx_basic("diff"),
+                diff_col,
+                np.round(grid_gdf_local[wlvl_corr_col] - grid_gdf_local[wlvl_col], 5),
             )
         return grid_gdf_local
 
     def run(
         self,
         output_file=None,
-        timesteps_seconds: list[int, str] = ["max"],
+        timesteps_seconds: list[int, Literal["max"]] = ["max"],
         replace_dem_below_perc: float = 50,
         replace_water_above_perc: float = 95,
         replace_pand_above_perc: float = 99,
@@ -530,8 +557,8 @@ class NetcdfToGPKG:
         timesteps_seconds, by default ["max"]
             time in seconds since start of calculation. Will create cols for each item in list.
             options:
-                int value - seconds since start
-                "max" - maximum wlvl over calculation
+                int -> seconds since start
+                Liteal['max'] -> use "max" to find maximum wlvl over calculation
         replace_dem_below_perc : float, optional, by default 50
             if cell area has no dem (isna) above this value waterlevels will be replaced
         replace_water_above_perc : float, optional, by default 95
