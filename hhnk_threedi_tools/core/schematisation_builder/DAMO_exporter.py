@@ -10,7 +10,7 @@ from hhnk_research_tools.sql_functions import (
 )
 from shapely.geometry import box
 
-from local_settings import DATABASES
+from local_settings import DATABASES, DB_LAYERS_MAPPING
 
 
 def DAMO_exporter(model_extent, table_names, output_file, EPSG_CODE="28992"):
@@ -53,7 +53,9 @@ def DAMO_exporter(model_extent, table_names, output_file, EPSG_CODE="28992"):
             sql = sql_builder_select_by_location(
                 schema=schema, table_name=table, epsg_code=EPSG_CODE, polygon_wkt=bbox_model, simplify=True
             )
-            db_dict = db_dicts["aquaprd"]
+            layer_db = DB_LAYERS_MAPPING.get(table, None)
+            db_dict = db_dicts[layer_db]
+            logger.info(f"Get out of database {layer_db} for table {table}")
             columns = None
 
             # exports data from DAMO database
