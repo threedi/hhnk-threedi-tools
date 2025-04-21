@@ -15,7 +15,7 @@ from shapely.geometry import box
 
 
 def DAMO_exporter(
-    model_extent: gpd.GeoDataFrame,
+    model_extent_gdf: gpd.GeoDataFrame,
     table_names: list[str],
     output_file: Path,
     EPSG_CODE: str = "28992",
@@ -25,7 +25,7 @@ def DAMO_exporter(
 
     Parameters
     ----------
-    model_extent : GeoDataFrame
+    model_extent_gdf : GeoDataFrame
         GeoDataFrame of the selected polder
     table_names : list[str]
         f"landuse_{landuse_name}.tif" -> name to use in the output. 'landuse_' will be prepended.
@@ -34,15 +34,15 @@ def DAMO_exporter(
     ESPG_CODE : str, default is "28992"
         Projection string epsg code
 
-    Returns
-    -------
-    logging_DAMO : list
-        Error logs when a table export fails
-
     Writes
     ------
     output_file : Path
         GPKG file containing the exported tables from DAMO.
+
+    Returns
+    -------
+    logging_DAMO : list
+        Error logs when a table export fails
     """
 
     logger = hrt.logging.get_logger(__name__)
@@ -56,7 +56,7 @@ def DAMO_exporter(
     schema = "DAMO_W"
 
     # make bbox --> to simplify string request to DAMO db
-    bbox_model = box(*model_extent.total_bounds)
+    bbox_model = box(*model_extent_gdf.total_bounds)
 
     logging_DAMO = []
     for table in table_names:
@@ -75,7 +75,7 @@ def DAMO_exporter(
             bbox_gdf, sql2 = database_to_gdf(db_dict=db_dict, sql=sql, columns=columns)
 
             # select all objects which (partly) lay within the model extent
-            gdf_model = bbox_gdf[bbox_gdf["geometry"].intersects(model_extent["geometry"][0])]
+            gdf_model = bbox_gdf[bbox_gdf["geometry"].intersects(model_extent_gdf["geometry"][0])]
 
             # make sure that all colums which can contain dates has the type datetime
             for col in gdf_model.columns:
