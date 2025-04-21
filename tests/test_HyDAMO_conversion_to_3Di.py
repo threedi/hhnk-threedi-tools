@@ -9,12 +9,10 @@ def test_HyDAMO_conversion_to_3Di():
     output_schematisation_directory = TEST_DIRECTORY / "test_HyDAMO_converter_to_3Di"
     hydamo_file_path = output_schematisation_directory / "HyDAMO.gpkg"
     hydamo_layers = ["connection_node", "channel"]
-    empty_schematisation_file_path = output_schematisation_directory / "empty.gpkg"
+    empty_schematisation_file_path = None  # Use default from htt.resources
 
     if not hydamo_file_path.exists():
         raise FileNotFoundError(f"File {hydamo_file_path} does not exist")
-    if not empty_schematisation_file_path.exists():
-        raise FileNotFoundError(f"File {empty_schematisation_file_path} does not exist")
 
     convert_to_3Di(
         hydamo_file_path=hydamo_file_path,
@@ -29,7 +27,12 @@ def test_HyDAMO_conversion_to_3Di():
 
     # Get all layers from the output schematisation file
     output_schematisation_layers = {
-        layer: gpd.read_file(output_schematisation_file, layer=layer, engine="pyogrio") for layer in hydamo_layers
+        layer: gpd.read_file(
+            output_schematisation_file,
+            layer=layer,
+            engine="pyogrio",
+        )
+        for layer in hydamo_layers
     }
 
     # Check if feature with code OAF-Q-121848 is present in the channel layer
@@ -40,5 +43,3 @@ def test_HyDAMO_conversion_to_3Di():
 # %%
 if __name__ == "__main__":
     test_HyDAMO_conversion_to_3Di()
-
-# %%

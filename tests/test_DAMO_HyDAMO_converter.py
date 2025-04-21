@@ -1,4 +1,4 @@
-from pathlib import Path
+# %%
 
 import geopandas as gpd
 import numpy as np
@@ -24,7 +24,12 @@ def test_DAMO_HyDAMO_converter():
         raise FileNotFoundError(f"File {DAMO_path} does not exist")
 
     # change overwrite to True to overwrite layer(s) in the HyDAMO file
-    converter = DAMO_to_HyDAMO_Converter(DAMO_path=DAMO_path, HyDAMO_path=HyDAMO_path, layers=LAYERS, overwrite=False)
+    converter = DAMO_to_HyDAMO_Converter(
+        DAMO_path=DAMO_path,
+        HyDAMO_path=HyDAMO_path,
+        layers=LAYERS,
+        overwrite=True,
+    )
     converter.run()
 
     # Check if HyDAMO.gpkg is created

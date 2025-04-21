@@ -83,6 +83,7 @@ class DAMO_to_HyDAMO_Converter:
         self.definitions = hydamo_schema.get("definitions", {})
 
     def run(self) -> None:
+        """self.convert_layers writes to self.HyDAMO_path.path"""
         self.convert_layers()
 
     def retrieve_domain_mapping(self) -> Tuple[dict, dict]:

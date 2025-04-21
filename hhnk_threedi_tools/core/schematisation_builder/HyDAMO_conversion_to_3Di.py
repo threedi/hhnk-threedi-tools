@@ -1,33 +1,45 @@
+# %%
 import shutil
 from pathlib import Path
-from typing import Union
+from typing import Optional, Tuple, Union
 
 import geopandas as gpd
+import hhnk_research_tools as hrt
 import pandas as pd
 from shapely import Point
+
+import hhnk_threedi_tools.resources.schematisation_builder as schematisation_builder_resources
 
 HYDAMO_LAYERS = ["hydroobject"]
 SCHEMATISATION_LAYERS = ["channel", "connection_node"]
 
 
-def load_all_schematisation_layers(empty_schematisation_file_path: Path) -> dict[str, gpd.GeoDataFrame]:
+def load_all_schematisation_layers(
+    empty_schematisation_file_path: Optional[Path] = None,
+) -> Tuple[dict[str, gpd.GeoDataFrame], Path]:
     """
     Load schematisation layers from an empty schema file into a dictionary.
 
     Parameters
     ----------
-    empty_schematisation_file_path : Path
-        File path containing the empty schematisation
+    empty_schematisation_file_path : Path, default is None
+        File path containing the empty schematisation. When None, it will load the empty.gpkg
+        from htt.resources.schematisation_builder
 
     Returns
     -------
     layers_data : dict[str, gpd.GeoDataFrame]
         Dictionary of GeoDataFrames for each layer
+    empty_schematisation_file_path : Path
+        Path to empty gpkg, wont be None from here on.
     """
+    if empty_schematisation_file_path is None:
+        empty_schematisation_file_path = hrt.get_pkg_resource_path(schematisation_builder_resources, "empty.gpkg")
+
     layers_data = {}
     for layer in SCHEMATISATION_LAYERS:
         layers_data[layer] = gpd.read_file(empty_schematisation_file_path, layer=layer)
-    return layers_data
+    return layers_data, empty_schematisation_file_path
 
 
 def get_unique_id(layer) -> int:
@@ -130,8 +142,8 @@ def process_hydroobject_layer(
 def convert_to_3Di(
     hydamo_file_path: Path,
     hydamo_layers: list,
-    empty_schematisation_file_path: Path,
     output_schematisation_directory: Path,
+    empty_schematisation_file_path: Optional[Path] = None,
 ) -> None:
     """
     Convert the HyDAMO file to a 3Di schematisation.
@@ -143,16 +155,19 @@ def convert_to_3Di(
         Path to the HyDAMO file.
     hydamo_layers : list
         TODO
-    empty_schematisation_file_path : Path
-        Path to the empty schematisation file.
     output_schematisation_directory : Path
         Path to the directory where the 3Di schematisation will be stored.
+    empty_schematisation_file_path : Optional[Path], default is None
+        File path containing the empty schematisation. When None, it will load the empty.gpkg
+        from htt.resources.schematisation_builder
     """
     # Load the HyDAMO file layers
     layers = {layer: gpd.read_file(hydamo_file_path, layer=layer) for layer in hydamo_layers}
 
     # Load the empty schematisation layers
-    schematisation_layers = load_all_schematisation_layers(empty_schematisation_file_path)
+    schematisation_layers, empty_schematisation_file_path = load_all_schematisation_layers(
+        empty_schematisation_file_path
+    )
 
     # Create the output directory if it does not exist
     output_schematisation_directory = Path(output_schematisation_directory)

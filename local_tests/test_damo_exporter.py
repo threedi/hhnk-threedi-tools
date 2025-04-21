@@ -1,10 +1,12 @@
 # %%
-"""Test for DAMO exporter function"""
+"""Test for DAMO exporter function
+NOTE this only works on HHNK systems as it requires a connection to the AQUAPRD
+"""
 
 import geopandas as gpd
-from config import TEST_DIRECTORY
 
 from hhnk_threedi_tools.core.schematisation_builder.DAMO_exporter import DAMO_exporter
+from tests.config import TEST_DIRECTORY
 
 
 def test_DAMO_exporter_one_feature():
