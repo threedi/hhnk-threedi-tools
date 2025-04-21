@@ -1,27 +1,25 @@
 # %%
-import shutil
-from pathlib import Path
 
-from tests.config import TEST_DIRECTORY
+import hhnk_research_tools as hrt
+
+from tests.config import TEMP_DIR, TEST_DIRECTORY
 
 
 def test_HyDAMO_validator():
     from hhnk_threedi_tools.core.schematisation_builder.HyDAMO_validator import validate_hydamo
 
-    validation_directory_path = TEST_DIRECTORY / "test_HyDAMO_validator"
-    hydamo_file_path = validation_directory_path / "HyDAMO.gpkg"
-    validation_rules_json_path = validation_directory_path / "rules.json"
+    validation_directory_path = TEMP_DIR / f"temp_HyDAMO_validator_{hrt.current_time(date=True)}"
+    hydamo_file_path = TEST_DIRECTORY / "schema_builder" / "HyDAMO.gpkg"
+    validation_rules_json_path = TEST_DIRECTORY / "schema_builder" / "rules.json"
+
+    test_coverage_location = TEST_DIRECTORY / "schema_builder" / "dtm"
 
     if not hydamo_file_path.exists():
         raise FileNotFoundError(f"File {hydamo_file_path} does not exist")
     if not validation_rules_json_path.exists():
         raise FileNotFoundError(f"File {validation_rules_json_path} does not exist")
 
-    test_coverage_location = r"data/test_HyDAMO_validator/dtm"
-    if not Path(test_coverage_location).exists():  # copy it from static data folder
-        shutil.copytree(r"D:/github/overmeen/data/test_HyDAMO_validator/dtm", test_coverage_location)
-
-    validate_hydamo(
+    result_summary = validate_hydamo(
         hydamo_file_path=hydamo_file_path,
         validation_rules_json_path=validation_rules_json_path,
         validation_directory_path=validation_directory_path,
@@ -29,6 +27,8 @@ def test_HyDAMO_validator():
         output_types=["geopackage", "csv", "geojson"],
     )
 
+    assert result_summary["success"] is True
+    assert validation_directory_path.joinpath("datasets", "HyDAMO.gpkg").exists()
     # TODO some checks on the output
 
 
