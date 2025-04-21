@@ -1,5 +1,6 @@
 import shutil
 from pathlib import Path
+from typing import Union
 
 import geopandas as gpd
 import pandas as pd
@@ -9,28 +10,47 @@ HYDAMO_LAYERS = ["hydroobject"]
 SCHEMATISATION_LAYERS = ["channel", "connection_node"]
 
 
-def load_all_schematisation_layers(empty_schematisation_file_path):
-    """Load all the layers of the empty schematisation file into a dictionary."""
+def load_all_schematisation_layers(empty_schematisation_file_path: Path) -> dict[str, gpd.GeoDataFrame]:
+    """
+    Load schematisation layers from an empty schema file into a dictionary.
+
+    Parameters
+    ----------
+    empty_schematisation_file_path : Path
+        File path containing the empty schematisation
+
+    Returns
+    -------
+    layers_data : dict[str, gpd.GeoDataFrame]
+        Dictionary of GeoDataFrames for each layer
+    """
     layers_data = {}
     for layer in SCHEMATISATION_LAYERS:
         layers_data[layer] = gpd.read_file(empty_schematisation_file_path, layer=layer)
     return layers_data
 
 
-def get_unique_id(layer):
+def get_unique_id(layer) -> int:
     """Get a unique ID for a layer."""
     return layer["id"].max() + 1 if not layer.empty else 1
 
 
-def find_point_in_points(point, points, tolerance=1e-2):
-    """Function to find an existing point or return None."""
+def find_point_in_points(point, points, tolerance: float = 1e-2):
+    """Find an existing point or return None."""
     for pt in points:
         if pt["geometry"].distance(point) < tolerance:
             return pt["id"]
     return None
 
 
-def process_hydroobject_layer(hydroobject, schematisation_layers, connection_node_id, channel_id, output_path, crs):
+def process_hydroobject_layer(
+    hydroobject: gpd.GeoDataFrame,
+    schematisation_layers: dict,
+    connection_node_id: int,
+    channel_id: int,
+    output_path: Path,
+    crs: Union[str, int],
+):
     """
     Process the hydroobject layer and save connection_node and channel layers.
 
@@ -46,11 +66,16 @@ def process_hydroobject_layer(hydroobject, schematisation_layers, connection_nod
         Starting ID for channels.
     output_path : Path
         Path to save the output layers.
-    crs : dict or str
+    crs : Union[str, int]
         Coordinate reference system for the GeoDataFrames.
+
+    Writes
+    ------
+    output_path : Path
+        Write 'connection_node' and 'channel' layer to gpkg.
     """
-    connection_nodes = []
-    channels = []
+    connection_nodes: list[dict] = []
+    channels: list[dict] = []
 
     for _, row in hydroobject.iterrows():
         # Add start and end points of the feature to the connection_node layer
@@ -98,21 +123,29 @@ def process_hydroobject_layer(hydroobject, schematisation_layers, connection_nod
     channel_gdf_2 = gpd.GeoDataFrame(pd.concat([channel_layer, channel_gdf], ignore_index=True), crs=crs)
 
     # Save the layers
-    connection_node_gdf_2.to_file(output_path, layer="connection_node", driver="GPKG")
-    channel_gdf_2.to_file(output_path, layer="channel", driver="GPKG")
+    connection_node_gdf_2.to_file(output_path, layer="connection_node", engine="pyogrio")
+    channel_gdf_2.to_file(output_path, layer="channel", engine="pyogrio")
 
 
-def convert_to_3Di(hydamo_file_path, hydamo_layers, empty_schematisation_file_path, output_schematisation_directory):
+def convert_to_3Di(
+    hydamo_file_path: Path,
+    hydamo_layers: list,
+    empty_schematisation_file_path: Path,
+    output_schematisation_directory: Path,
+) -> None:
     """
     Convert the HyDAMO file to a 3Di schematisation.
+    Writing is handled in process_hydroobject_layer.
 
     Parameters
     ----------
-    hydamo_file_path : str
+    hydamo_file_path : Path
         Path to the HyDAMO file.
-    empty_schematisation_file_path : str
+    hydamo_layers : list
+        TODO
+    empty_schematisation_file_path : Path
         Path to the empty schematisation file.
-    output_schematisation_directory : str
+    output_schematisation_directory : Path
         Path to the directory where the 3Di schematisation will be stored.
     """
     # Load the HyDAMO file layers

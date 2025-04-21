@@ -1,6 +1,7 @@
 import json
 import xml.etree.ElementTree as ET
 from pathlib import Path
+from typing import Optional, Tuple
 
 import geopandas as gpd
 import hhnk_research_tools as hrt
@@ -25,16 +26,16 @@ class DAMO_to_HyDAMO_Converter:
 
     Parameters
     ----------
-    DAMO_path : str
+    DAMO_path : Path
         Path to the source DAMO geopackage
-    HyDAMO_path : str
-        Path to the target HyDAMO geopackage
-    hydamo_schema_path : str
-        Path to the HyDAMO schema (json file)
-    DAMO_schema_path : str
-        Path to the DAMO schema (xml file)
+    HyDAMO_path : Path
+        Path to the target HyDAMO geopackage. Converted to hrt.FileGDB after initialization
     layers : list
         List of layer names to convert to HyDAMO
+    hydamo_schema_path : Path
+        Path to the HyDAMO schema (json file)
+    damo_schema_path : Path
+        Path to the DAMO schema (xml file)
     overwrite : bool
         If True, overwrite an existing layer in existing HyDAMO geopackage
 
@@ -45,11 +46,16 @@ class DAMO_to_HyDAMO_Converter:
     """
 
     def __init__(
-        self, DAMO_path, HyDAMO_path, layers, hydamo_schema_path=None, damo_schema_path=None, overwrite=False
+        self,
+        DAMO_path: Path,
+        HyDAMO_path: Path,
+        layers: list,
+        hydamo_schema_path: Optional[Path] = None,
+        damo_schema_path: Optional[Path] = None,
+        overwrite: bool = False,
     ):
         self.DAMO_path = Path(DAMO_path)
-        self.HyDAMO_path = Path(HyDAMO_path)
-        self.HyDAMO_filegdb = hrt.FileGDB(HyDAMO_path)
+        self.HyDAMO_path = hrt.FileGDB(HyDAMO_path)
         self.layers = layers
         self.overwrite = overwrite
 
@@ -76,10 +82,10 @@ class DAMO_to_HyDAMO_Converter:
 
         self.definitions = hydamo_schema.get("definitions", {})
 
-    def run(self):
+    def run(self) -> None:
         self.convert_layers()
 
-    def retrieve_domain_mapping(self):
+    def retrieve_domain_mapping(self) -> Tuple[dict, dict]:
         """
         Retrieve the domain mapping from the DAMO schema.
 
@@ -148,36 +154,40 @@ class DAMO_to_HyDAMO_Converter:
 
         return domains, objects
 
-    def convert_layers(self):
+    def convert_layers(self) -> None:
         """
         Open layer by layer and convert the layer to HyDAMO and write to the target HyDAMO geopackage.
 
-        Returns
+        Writes
         -------
+        self.HyDAMO_path.path : Path
+            GPKG file containing HyDAMO layers
         """
         for layer_name in self.layers:
             if not self.overwrite and self.HyDAMO_path.exists():
-                if layer_name in self.HyDAMO_filegdb.available_layers():
-                    logger.info(f"Layer {layer_name} already exists in {self.HyDAMO_path}. Skipping conversion.")
+                if layer_name in self.HyDAMO_path.available_layers():
+                    logger.info(f"Layer {layer_name} already exists in {self.HyDAMO_path.path}. Skipping conversion.")
                     return
 
             layer_gdf = gpd.read_file(self.DAMO_path, layer=layer_name, engine="pyogrio")
             layer_gdf = self.convert_attributes(layer_gdf, layer_name)
             layer_gdf = self.add_column_NEN3610id(layer_gdf, layer_name)
-            layer_gdf.to_file(self.HyDAMO_path, layer=layer_name, engine="pyogrio")
+            layer_gdf.to_file(self.HyDAMO_path.path, layer=layer_name, engine="pyogrio")
 
-    def convert_attributes(self, layer_gdf, layer_name):
+    def convert_attributes(self, layer_gdf: gpd.GeoDataFrame, layer_name: str) -> gpd.GeoDataFrame:
         """
         Convert the attributes of the layer to HyDAMO.
 
         Parameters
         ----------
-        layer_gdf : geopandas.GeoDataFrame
+        layer_gdf : gpd.GeoDataFrame
             Layer to convert
+        layer_name : str
+            Layer name to convert
 
         Returns
         -------
-        geopandas.GeoDataFrame
+        gpd.GeoDataFrame
             Converted layer
         """
         for column_name in layer_gdf.columns:
@@ -185,20 +195,22 @@ class DAMO_to_HyDAMO_Converter:
             layer_gdf[column_name] = self.convert_column(layer_gdf[column_name], column_name, layer_name)
         return layer_gdf
 
-    def convert_column(self, column, column_name, layer_name):
+    def convert_column(self, column: pd.Series, column_name: str, layer_name: str) -> pd.Series:
         """
         Convert the attribute column to HyDAMO.
 
         Parameters
         ----------
-        column : pandas.Series
+        column : pd.Series
             Attribute column to convert
         column_name : str
             Name of the attribute column
+        layer_name : str
+            Name of the layer
 
         Returns
         -------
-        pandas.Series
+        pd.Series
             Converted attribute column
         """
         # Get the field type of the attribute from the HyDAMO schema
@@ -215,16 +227,21 @@ class DAMO_to_HyDAMO_Converter:
 
         return column
 
-    def get_field_type(self, column_name, layer_name):
+    def get_field_type(self, column_name: str, layer_name: str) -> str:
         """
         Retrieve the field type of a specific attribute in a definition.
 
-        Args:
-            layer_name (str): The name of the object (e.g., 'hydroobject').
-            column_name (str): The name of the field (e.g., 'nen3610id').
+        Parameters
+        ----------
+        layer_name : str
+            The name of the object (e.g., 'hydroobject').
+        column_name : str
+            The name of the field (e.g., 'nen3610id').
 
-        Return:
-            str: The type of the field if found, else None.
+        Returns
+        -------
+        field_type : str or None
+            The type of the field if found, else None.
         """
         field_types_dict = {
             "string": str,
@@ -244,13 +261,13 @@ class DAMO_to_HyDAMO_Converter:
                 logger.info(
                     f"Field type is not find in field_types_dict for field {column_name} in layer {layer_name}"
                 )
-        except:
+        except Exception as e:
             logger.info(f"Field {column_name} not found in schema definitions for layer {layer_name}")
             field_type = None
         finally:
             return field_type
 
-    def convert_domain_values(self, object_name, column_name, column):
+    def convert_domain_values(self, object_name: str, column_name: str, column: pd.Series) -> pd.Series:
         """
         Check if the column_name corresponds to a field in the specified object that is a domain.
         If it is a domain, convert the values of the column using the associated domain.
@@ -262,12 +279,12 @@ class DAMO_to_HyDAMO_Converter:
             Name of the object containing the field.
         column_name : str
             Name of the column to check and convert.
-        column : pandas.Series
+        column : pd.Series
             Attribute column to convert.
 
         Returns
         -------
-        pandas.Series
+        pd.Series
             Converted attribute column if it corresponds to a domain, else the original column.
         """
         # Check if the object_name exists and contains the column_name
