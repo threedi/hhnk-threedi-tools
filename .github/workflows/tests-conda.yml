@@ -50,9 +50,13 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
         run: conda env update -n my-env -f envs\environment_test.yml
 
-      - name: Install hhnk-research_tools
+      - name: Install hhnk_research_tools
         shell: pwsh
         run: pip install git+https://github.com/HHNK/hhnk-research-tools.git@main
+
+      - name: Install HyDAMOValidatieModule (hydamo_validation)
+        shell: pwsh
+        run: pip install git+https://github.com/HHNK/HyDAMOValidatieModule.git@main
 
       - name: Test
         shell: pwsh
