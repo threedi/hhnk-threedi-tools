@@ -161,7 +161,7 @@ class DAMO_to_HyDAMO_Converter:
         Writes
         -------
         self.HyDAMO_path.path : Path
-            GPKG file containing HyDAMO layers
+            GPKG file containing HyDAMO layers contained in self.layers
         """
         for layer_name in self.layers:
             if not self.overwrite and self.HyDAMO_path.exists():
@@ -210,7 +210,7 @@ class DAMO_to_HyDAMO_Converter:
 
         Returns
         -------
-        pd.Series
+        column : pd.Series
             Converted attribute column
         """
         # Get the field type of the attribute from the HyDAMO schema

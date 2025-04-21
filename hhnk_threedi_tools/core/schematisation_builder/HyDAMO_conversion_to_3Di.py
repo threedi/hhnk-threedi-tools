@@ -50,7 +50,7 @@ def process_hydroobject_layer(
     channel_id: int,
     output_path: Path,
     crs: Union[str, int],
-):
+) -> None:
     """
     Process the hydroobject layer and save connection_node and channel layers.
 

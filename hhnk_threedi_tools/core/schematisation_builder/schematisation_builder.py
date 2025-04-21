@@ -76,7 +76,7 @@ if hydamo_file_path:
     # HyDAMO validation
     # TODO: nu nog handmatig regels neerzetten, later automatiseren bij aanmaken project
     validation_rules_json_path = project_folder / "00_config" / "validation" / "validationrules.json"
-    validation_directory_path = project_folder / "01_source_data" / "hydamo_validation"
+    validation_directory_path = project_folder.project_folder.source_data.hydamo_validation
 
     if not validation_rules_json_path.exists():
         shutil.copyfile(r"E:/09.modellen_speeltuin/validationrules.json", validation_rules_json_path)

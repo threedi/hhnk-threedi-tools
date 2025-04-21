@@ -1,3 +1,4 @@
+# %%
 import geopandas as gpd
 
 from hhnk_threedi_tools.core.schematisation_builder.HyDAMO_conversion_to_3Di import convert_to_3Di
@@ -5,28 +6,30 @@ from tests.config import TEST_DIRECTORY
 
 
 def test_HyDAMO_conversion_to_3Di():
-    TEST_DIRECTORY_HyDAMO_validator = TEST_DIRECTORY / "test_HyDAMO_converter_to_3Di"
-    HyDAMO_path = TEST_DIRECTORY_HyDAMO_validator / "HyDAMO.gpkg"
-    empty_schematisation_file_path = TEST_DIRECTORY_HyDAMO_validator / "empty.gpkg"
+    output_schematisation_directory = TEST_DIRECTORY / "test_HyDAMO_converter_to_3Di"
+    hydamo_file_path = output_schematisation_directory / "HyDAMO.gpkg"
+    hydamo_layers = ["connection_node", "channel"]
+    empty_schematisation_file_path = output_schematisation_directory / "empty.gpkg"
 
-    if not HyDAMO_path.exists():
-        raise FileNotFoundError(f"File {HyDAMO_path} does not exist")
+    if not hydamo_file_path.exists():
+        raise FileNotFoundError(f"File {hydamo_file_path} does not exist")
     if not empty_schematisation_file_path.exists():
         raise FileNotFoundError(f"File {empty_schematisation_file_path} does not exist")
 
     convert_to_3Di(
-        hydamo_file_path=HyDAMO_path,
+        hydamo_file_path=hydamo_file_path,
+        hydamo_layers=hydamo_layers,
         empty_schematisation_file_path=empty_schematisation_file_path,
-        output_schematisation_directory=TEST_DIRECTORY_HyDAMO_validator,
+        output_schematisation_directory=output_schematisation_directory,
     )
 
     # Check if the output schematisation file exists
-    output_schematisation_file = TEST_DIRECTORY_HyDAMO_validator / "3Di_schematisation.gpkg"
+    output_schematisation_file = output_schematisation_directory / "3Di_schematisation.gpkg"
     assert output_schematisation_file.exists()
 
     # Get all layers from the output schematisation file
     output_schematisation_layers = {
-        layer: gpd.read_file(output_schematisation_file, layer=layer) for layer in ["connection_node", "channel"]
+        layer: gpd.read_file(output_schematisation_file, layer=layer, engine="pyogrio") for layer in hydamo_layers
     }
 
     # Check if feature with code OAF-Q-121848 is present in the channel layer
