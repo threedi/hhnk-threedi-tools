@@ -10,14 +10,9 @@ def test_HyDAMO_validator():
 
     validation_directory_path = TEMP_DIR / f"temp_HyDAMO_validator_{hrt.current_time(date=True)}"
     hydamo_file_path = TEST_DIRECTORY / "schema_builder" / "HyDAMO.gpkg"
-    validation_rules_json_path = TEST_DIRECTORY / "schema_builder" / "rules.json"
+    validation_rules_json_path = TEST_DIRECTORY / "schema_builder" / "validationrules.json"
 
-    test_coverage_location = TEST_DIRECTORY / "schema_builder" / "dtm"
-
-    if not hydamo_file_path.exists():
-        raise FileNotFoundError(f"File {hydamo_file_path} does not exist")
-    if not validation_rules_json_path.exists():
-        raise FileNotFoundError(f"File {validation_rules_json_path} does not exist")
+    test_coverage_location = TEST_DIRECTORY / "schema_builder" / "dtm"  # should hold index.shp
 
     result_summary = validate_hydamo(
         hydamo_file_path=hydamo_file_path,

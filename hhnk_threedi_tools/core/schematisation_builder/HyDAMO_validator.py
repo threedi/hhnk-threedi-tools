@@ -14,7 +14,7 @@ def validate_hydamo(
     coverages_dict: dict,
     output_types: list[str] = ["geopackage", "csv", "geojson"],
 ) -> dict:
-    """
+    r"""
     Validate the HyDAMO file
 
     Parameters
@@ -24,13 +24,21 @@ def validate_hydamo(
     validation_rules_json_path : Path
         Path to the JSON file with validation rules
     coverages_dict : dict
-        Dictionary with the coverages, e.g. {"AHN": r"../tests/data/dtm"}
-    output_types : list, optional
+        Dictionary with the coverages, e.g. {"AHN": r"../tests/data/dtm"}. This dtm dir needs to
+        hold an index.shp file, see hydamo_validation/functions/general.py buffer(). Here it uses
+        the COVERAGES dict to load an index.shp to gdf.
+    output_types : list[str], optional
         List with the output types, by default ["geopackage", "csv", "geojson"]
+
+    Writes
+    ------
+    TODO
 
     Returns
     -------
-    TODO
+    result_summary : dict
+        Output dict with summary of validation, including; succesful, missing_layers, logs.
+        This is also written to results\validation_result.json.
     """
     # Prepare the validation directory containing the HyDAMO file and the validation rules
     validation_directory_path.mkdir(parents=True, exist_ok=True)
