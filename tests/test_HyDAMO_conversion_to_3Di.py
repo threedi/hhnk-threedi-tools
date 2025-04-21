@@ -1,18 +1,16 @@
 # %%
 import geopandas as gpd
+import hhnk_research_tools as hrt
 
 from hhnk_threedi_tools.core.schematisation_builder.HyDAMO_conversion_to_3Di import convert_to_3Di
-from tests.config import TEST_DIRECTORY
+from tests.config import TEMP_DIR, TEST_DIRECTORY
 
 
 def test_HyDAMO_conversion_to_3Di():
-    output_schematisation_directory = TEST_DIRECTORY / "test_HyDAMO_converter_to_3Di"
-    hydamo_file_path = output_schematisation_directory / "HyDAMO.gpkg"
-    hydamo_layers = ["connection_node", "channel"]
+    output_schematisation_directory = TEMP_DIR / f"temp_HyDAMO_converter_to_3Di_{hrt.current_time(date=True)}"
+    hydamo_file_path = TEST_DIRECTORY / "schema_builder" / "HyDAMO.gpkg"
+    hydamo_layers = ["HYDROOBJECT"]
     empty_schematisation_file_path = None  # Use default from htt.resources
-
-    if not hydamo_file_path.exists():
-        raise FileNotFoundError(f"File {hydamo_file_path} does not exist")
 
     convert_to_3Di(
         hydamo_file_path=hydamo_file_path,
@@ -32,7 +30,7 @@ def test_HyDAMO_conversion_to_3Di():
             layer=layer,
             engine="pyogrio",
         )
-        for layer in hydamo_layers
+        for layer in ["connection_node", "channel"]
     }
 
     # Check if feature with code OAF-Q-121848 is present in the channel layer

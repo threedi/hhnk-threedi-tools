@@ -152,7 +152,7 @@ def convert_to_3Di(
     Parameters
     ----------
     hydamo_file_path : Path
-        Path to the HyDAMO file.
+        Path to the HyDAMO file. Will be converted to hrt.FileGDB
     hydamo_layers : list
         TODO
     output_schematisation_directory : Path
@@ -161,8 +161,10 @@ def convert_to_3Di(
         File path containing the empty schematisation. When None, it will load the empty.gpkg
         from htt.resources.schematisation_builder
     """
+    hydamo_file_path = hrt.FileGDB(hydamo_file_path)
+
     # Load the HyDAMO file layers
-    layers = {layer: gpd.read_file(hydamo_file_path, layer=layer) for layer in hydamo_layers}
+    layers = {layer: hydamo_file_path.load(layer=layer) for layer in hydamo_layers}
 
     # Load the empty schematisation layers
     schematisation_layers, empty_schematisation_file_path = load_all_schematisation_layers(
