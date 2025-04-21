@@ -57,7 +57,7 @@ if polder_file_path:
     # Conversion to HyDAMO
     logger.info(f"DAMO export was succesfull. Now, start conversion to HyDAMO for file: {polder_file_path}")
     converter = DAMO_to_HyDAMO_Converter(
-        DAMO_path=damo_file_path, HyDAMO_path=hydamo_file_path, layers=TABLE_NAMES, overwrite=True
+        damo_file_path=damo_file_path, hydamo_file_path=hydamo_file_path, layers=TABLE_NAMES, overwrite=True
     )
     converter.run()
 

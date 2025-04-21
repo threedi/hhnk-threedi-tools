@@ -26,9 +26,9 @@ class DAMO_to_HyDAMO_Converter:
 
     Parameters
     ----------
-    DAMO_path : Path
+    damo_file_path : Path
         Path to the source DAMO geopackage
-    HyDAMO_path : Path
+    hydamo_file_path : Path
         Path to the target HyDAMO geopackage. Converted to hrt.FileGDB after initialization
     layers : list
         List of layer names to convert to HyDAMO
@@ -40,22 +40,22 @@ class DAMO_to_HyDAMO_Converter:
         If True, overwrite an existing layer in existing HyDAMO geopackage
 
     Sources
-    ----------
+    -------
     HyDAMO schema: https://github.com/HetWaterschapshuis/HyDAMOValidatieModule/blob/main/hydamo_validation/schemas/hydamo/HyDAMO_2.3.json
     DAMO_schema: XML file retrieved from Het Waterschapshuis by mail
     """
 
     def __init__(
         self,
-        DAMO_path: Path,
-        HyDAMO_path: Path,
+        damo_file_path: Path,
+        hydamo_file_path: Path,
         layers: list,
         hydamo_schema_path: Optional[Path] = None,
         damo_schema_path: Optional[Path] = None,
         overwrite: bool = False,
     ):
-        self.DAMO_path = Path(DAMO_path)
-        self.HyDAMO_path = hrt.FileGDB(HyDAMO_path)
+        self.damo_file_path = Path(damo_file_path)
+        self.hydamo_file_path = hrt.FileGDB(hydamo_file_path)
         self.layers = layers
         self.overwrite = overwrite
 
@@ -63,7 +63,6 @@ class DAMO_to_HyDAMO_Converter:
             self.hydamo_schema_path = hrt.get_pkg_resource_path(
                 package_resource=htt.resources.schematisation_builder, name="HyDAMO_2_3.json"
             )
-
         else:
             self.hydamo_schema_path = Path(hydamo_schema_path)
 
@@ -83,7 +82,7 @@ class DAMO_to_HyDAMO_Converter:
         self.definitions = hydamo_schema.get("definitions", {})
 
     def run(self) -> None:
-        """self.convert_layers writes to self.HyDAMO_path.path"""
+        """self.convert_layers writes to self.hydamo_file_path.path"""
         self.convert_layers()
 
     def retrieve_domain_mapping(self) -> Tuple[dict, dict]:
@@ -161,19 +160,23 @@ class DAMO_to_HyDAMO_Converter:
 
         Writes
         -------
-        self.HyDAMO_path.path : Path
+        self.hydamo_file_path.path : Path
             GPKG file containing HyDAMO layers contained in self.layers
         """
+        self.hydamo_file_path.parent.mkdir(parents=True, exist_ok=True)
+
         for layer_name in self.layers:
-            if not self.overwrite and self.HyDAMO_path.exists():
-                if layer_name in self.HyDAMO_path.available_layers():
-                    logger.info(f"Layer {layer_name} already exists in {self.HyDAMO_path.path}. Skipping conversion.")
+            if not self.overwrite and self.hydamo_file_path.exists():
+                if layer_name in self.hydamo_file_path.available_layers():
+                    logger.info(
+                        f"Layer {layer_name} already exists in {self.hydamo_file_path.path}. Skipping conversion."
+                    )
                     return
 
-            layer_gdf = gpd.read_file(self.DAMO_path, layer=layer_name, engine="pyogrio")
+            layer_gdf = gpd.read_file(self.damo_file_path, layer=layer_name, engine="pyogrio")
             layer_gdf = self.convert_attributes(layer_gdf, layer_name)
             layer_gdf = self.add_column_NEN3610id(layer_gdf, layer_name)
-            layer_gdf.to_file(self.HyDAMO_path.path, layer=layer_name, engine="pyogrio")
+            layer_gdf.to_file(self.hydamo_file_path.path, layer=layer_name, engine="pyogrio")
 
     def convert_attributes(self, layer_gdf: gpd.GeoDataFrame, layer_name: str) -> gpd.GeoDataFrame:
         """
