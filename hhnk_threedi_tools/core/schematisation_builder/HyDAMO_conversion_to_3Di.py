@@ -140,7 +140,7 @@ def process_hydroobject_layer(
 
 
 def convert_to_3Di(
-    hydamo_file_path: Union[Path, hrt.FileGDB],
+    hydamo_file_path: Union[Path, hrt.SpatialDatabase],
     hydamo_layers: list,
     output_schematisation_directory: Path,
     empty_schematisation_file_path: Optional[Path] = None,
@@ -151,8 +151,8 @@ def convert_to_3Di(
 
     Parameters
     ----------
-    hydamo_file_path : Union[Path, hrt.FileGDB]
-        Path to the HyDAMO file. Will be converted to hrt.FileGDB
+    hydamo_file_path : Union[Path, hrt.SpatialDatabase]
+        Path to the HyDAMO file. Will be converted to hrt.SpatialDatabase
     hydamo_layers : list
         Layers in hydamo_file_path to process, e.g. HYDROOBJECT
     output_schematisation_directory : Path
@@ -161,7 +161,7 @@ def convert_to_3Di(
         File path containing the empty schematisation. When None, it will load the empty.gpkg
         from htt.resources.schematisation_builder
     """
-    hydamo_file_path = hrt.FileGDB(hydamo_file_path)
+    hydamo_file_path = hrt.SpatialDatabase(hydamo_file_path)
 
     # Load the HyDAMO file layers
     layers_dict = {layer: hydamo_file_path.load(layer=layer) for layer in hydamo_layers}

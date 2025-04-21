@@ -1,7 +1,7 @@
 import json
 import xml.etree.ElementTree as ET
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Union
 
 import geopandas as gpd
 import hhnk_research_tools as hrt
@@ -29,7 +29,7 @@ class DAMO_to_HyDAMO_Converter:
     damo_file_path : Path
         Path to the source DAMO geopackage
     hydamo_file_path : Path
-        Path to the target HyDAMO geopackage. Converted to hrt.FileGDB after initialization
+        Path to the target HyDAMO geopackage. Converted to hrt.SpatialDatabase after initialization
     layers : list
         List of layer names to convert to HyDAMO
     hydamo_schema_path : Path
@@ -48,14 +48,14 @@ class DAMO_to_HyDAMO_Converter:
     def __init__(
         self,
         damo_file_path: Path,
-        hydamo_file_path: Path,
+        hydamo_file_path: Union[Path, hrt.SpatialDatabase],
         layers: list,
         hydamo_schema_path: Optional[Path] = None,
         damo_schema_path: Optional[Path] = None,
         overwrite: bool = False,
     ):
         self.damo_file_path = Path(damo_file_path)
-        self.hydamo_file_path = hrt.FileGDB(hydamo_file_path)
+        self.hydamo_file_path = hrt.SpatialDatabase(hydamo_file_path)
         self.layers = layers
         self.overwrite = overwrite
 
