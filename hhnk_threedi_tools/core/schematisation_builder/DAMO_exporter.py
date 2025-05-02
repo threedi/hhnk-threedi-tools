@@ -10,8 +10,14 @@ from hhnk_research_tools.sql_functions import (
     database_to_gdf,
     sql_builder_select_by_location,
 )
-from local_settings import DATABASES, DB_LAYERS_MAPPING
 from shapely.geometry import box
+
+try:
+    from local_settings_htt import DATABASES, DB_LAYERS_MAPPING
+except ImportError as e:
+    raise ImportError(
+        "The 'local_settings_htt' module is missing. Get it from D:\github\evanderlaan\local_settings_htt.py and place it in \hhnk_threedi_tools\core\schematisation_builder"
+    ) from e
 
 
 def DAMO_exporter(
