@@ -2,6 +2,7 @@
 
 import hhnk_research_tools as hrt
 
+import hhnk_threedi_tools.resources.schematisation_builder as schematisation_builder_resources
 from tests.config import TEMP_DIR, TEST_DIRECTORY
 
 
@@ -10,7 +11,7 @@ def test_HyDAMO_validator():
 
     validation_directory_path = TEMP_DIR / f"temp_HyDAMO_validator_{hrt.current_time(date=True)}"
     hydamo_file_path = TEST_DIRECTORY / "schema_builder" / "HyDAMO.gpkg"
-    validation_rules_json_path = TEST_DIRECTORY / "schema_builder" / "validationrules.json"
+    validation_rules_json_path = hrt.get_pkg_resource_path(schematisation_builder_resources, "validationrules.json")
 
     test_coverage_location = TEST_DIRECTORY / "schema_builder" / "dtm"  # should hold index.shp
 

@@ -17,10 +17,12 @@ import shutil
 from pathlib import Path
 
 import geopandas as gpd
+import hhnk_research_tools as hrt
 from DAMO_exporter import DAMO_exporter
 from DAMO_HyDAMO_converter import DAMO_to_HyDAMO_Converter
 from HyDAMO_validator import validate_hydamo
 
+import hhnk_threedi_tools.resources.schematisation_builder as schematisation_builder_resources
 from hhnk_threedi_tools.core.project import Project
 
 # initialize logger
@@ -31,7 +33,7 @@ logger.setLevel(logging.INFO)
 # %%
 
 # define project folder path and create project if it does not exist yet
-project_folder = Path("E:/09.modellen_speeltuin/demo_van_demo")
+project_folder = Path("E:/09.modellen_speeltuin/test_nieuwe_manier_validationrules")
 Project(str(project_folder))
 
 # TODO: copy polder_polygon.shp of area of interest to project_folder/01_source_data
@@ -74,12 +76,16 @@ if hydamo_file_path:
     logger.info(f"Start validation of HyDAMO file: {hydamo_file_path}")
 
     # HyDAMO validation
-    # TODO: nu nog handmatig regels neerzetten, later automatiseren bij aanmaken project
-    validation_rules_json_path = project_folder / "00_config" / "validation" / "validationrules.json"
-    validation_directory_path = project_folder.project_folder.source_data.hydamo_validation
+    validation_directory_path = project_folder / "01_source_data" / "hydamo_validation"
+
+    # copy validationrules.json from resources to project folder
+    resources_validationrules_path = hrt.get_pkg_resource_path(
+        schematisation_builder_resources, "validationrules.json"
+    )
+    validation_rules_json_path = validation_directory_path / "validationrules.json"
 
     if not validation_rules_json_path.exists():
-        shutil.copyfile(r"E:/09.modellen_speeltuin/validationrules.json", validation_rules_json_path)
+        shutil.copyfile(resources_validationrules_path, validation_rules_json_path)
 
     coverage_location = validation_directory_path / "dtm"  # r"data/test_HyDAMO_validator/dtm"
     if not Path(coverage_location).exists():  # copy it from static data folder
