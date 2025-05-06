@@ -2,6 +2,7 @@ import os
 import shutil
 from pathlib import Path
 
+import hhnk_research_tools as hrt
 from hydamo_validation import validator
 
 # TODO make import work by local installation of HyDAMOValidatieModule
@@ -13,6 +14,7 @@ def validate_hydamo(
     validation_directory_path: Path,
     coverages_dict: dict,
     output_types: list[str] = ["geopackage", "csv", "geojson"],
+    logger=None,
 ) -> dict:
     r"""
     Validate the HyDAMO file
@@ -40,6 +42,10 @@ def validate_hydamo(
         Output dict with summary of validation, including; succesful, missing_layers, logs.
         This is also written to results\validation_result.json.
     """
+    if not logger:
+        logger = hrt.logging.get_logger(__name__)
+    logger.info("Start validation")
+
     # Prepare the validation directory containing the HyDAMO file and the validation rules
     validation_directory_path.mkdir(parents=True, exist_ok=True)
     hydamo_file_path = Path(hydamo_file_path)
@@ -57,6 +63,7 @@ def validate_hydamo(
 
     # Prepare the validator
     hydamo_validator = validator(coverages=coverages_dict, output_types=output_types)
+    # TODO how to get logging in logger
 
     # Validate the HyDAMO file
     datamodel, layer_summary, result_summary = hydamo_validator(directory=validation_directory_path, raise_error=True)

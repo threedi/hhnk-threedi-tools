@@ -9,8 +9,6 @@ import pandas as pd
 
 import hhnk_threedi_tools as htt
 
-logger = hrt.logging.get_logger(__name__)
-
 WATERSCHAPSCODE = 12  # Hoogheemraadschap Hollands Noorderkwartier
 
 
@@ -53,11 +51,19 @@ class DAMO_to_HyDAMO_Converter:
         hydamo_schema_path: Optional[Path] = None,
         damo_schema_path: Optional[Path] = None,
         overwrite: bool = False,
+        logger=None,
     ):
         self.damo_file_path = Path(damo_file_path)
         self.hydamo_file_path = hrt.SpatialDatabase(hydamo_file_path)
         self.layers = layers
         self.overwrite = overwrite
+
+        if logger:
+            self.logger = logger
+        else:
+            self.logger = hrt.logging.get_logger(__name__)
+
+        logger.info(f"conversion layers are {self.layers}")
 
         if hydamo_schema_path is None:
             self.hydamo_schema_path = hrt.get_pkg_resource_path(
@@ -166,9 +172,10 @@ class DAMO_to_HyDAMO_Converter:
         self.hydamo_file_path.parent.mkdir(parents=True, exist_ok=True)
 
         for layer_name in self.layers:
+            self.logger.info(f"Conversion of {layer_name}")
             if not self.overwrite and self.hydamo_file_path.exists():
                 if layer_name in self.hydamo_file_path.available_layers():
-                    logger.info(
+                    self.logger.info(
                         f"Layer {layer_name} already exists in {self.hydamo_file_path.path}. Skipping conversion."
                     )
                     return
@@ -225,7 +232,7 @@ class DAMO_to_HyDAMO_Converter:
         if field_type is not None and pd.notna(column).all():
             column = column.astype(field_type)  # Convert to the field type
         else:
-            logger.info(
+            self.logger.info(
                 f"field_type is None and/or column values are NaN for field {column_name} in layer {layer_name}"
             )
 
@@ -262,11 +269,11 @@ class DAMO_to_HyDAMO_Converter:
 
             field_type = field_types_dict.get(field_type, None)
             if field_type is None:
-                logger.info(
+                self.logger.info(
                     f"Field type is not find in field_types_dict for field {column_name} in layer {layer_name}"
                 )
         except Exception as e:
-            logger.info(f"Field {column_name} not found in schema definitions for layer {layer_name}")
+            self.logger.info(f"Field {column_name} not found in schema definitions for layer {layer_name}")
             field_type = None
         finally:
             return field_type
@@ -301,7 +308,7 @@ class DAMO_to_HyDAMO_Converter:
                 if field_domain in self.domains.keys():
                     domain = self.domains[field_domain]
                     mapped_column = column.map(domain)
-                    logger.info(
+                    self.logger.info(
                         f"Converted domain values of column {column_name} in object {object_name} using domain {field_domain}"
                     )
                     return mapped_column

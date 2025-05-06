@@ -23,7 +23,7 @@ from DAMO_HyDAMO_converter import DAMO_to_HyDAMO_Converter
 from HyDAMO_validator import validate_hydamo
 
 import hhnk_threedi_tools.resources.schematisation_builder as schematisation_builder_resources
-from hhnk_threedi_tools.core.project import Project
+from hhnk_threedi_tools.core.folders import Project
 
 # %%
 
@@ -52,7 +52,7 @@ def make_validated_hydamo_package(project_folder: Path, table_names: list) -> No
 
     """
     # initialize logger
-    logger = hrt.logging.get_logger(__name__)
+    logger = hrt.logging.get_logger(__name__, filepath=Path(project_folder) / "log.log")
     logger.setLevel(logging.INFO)
 
     # create project if it does not exist yet
