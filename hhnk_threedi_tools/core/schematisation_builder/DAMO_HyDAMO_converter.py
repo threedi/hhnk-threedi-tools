@@ -63,7 +63,7 @@ class DAMO_to_HyDAMO_Converter:
         else:
             self.logger = hrt.logging.get_logger(__name__)
 
-        logger.info(f"conversion layers are {self.layers}")
+        self.logger.info(f"conversion layers are {self.layers}")
 
         if hydamo_schema_path is None:
             self.hydamo_schema_path = hrt.get_pkg_resource_path(
