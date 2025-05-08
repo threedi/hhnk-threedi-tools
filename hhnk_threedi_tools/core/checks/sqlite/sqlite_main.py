@@ -19,8 +19,8 @@ import pandas as pd
 import xarray as xr
 from shapely import wkt
 from shapely.geometry import Point
-from threedigrid_builder import make_gridadmin
 
+# from threedigrid_builder import make_gridadmin
 from hhnk_threedi_tools.core.checks.sqlite.structure_control import StructureControl
 
 # Local imports
@@ -426,7 +426,8 @@ class SqliteCheck:
 
     def create_grid_from_sqlite(self, output_folder):
         """Create grid from sqlite, this includes cells, lines and nodes."""
-        grid = make_gridadmin(self.model.base, self.dem.base)
+        # grid = make_gridadmin(self.model.base, self.dem.base)
+        grid = 0
 
         # using output here results in error, so we use the returned dict
         for grid_type in ["cells", "lines", "nodes"]:

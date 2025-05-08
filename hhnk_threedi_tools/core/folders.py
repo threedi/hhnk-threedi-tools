@@ -697,10 +697,10 @@ class OutputDirParent(Folder):
 class Project:
     def __init__(self, folder: str):
         self.project_folder = folder  # set project folder
-        folders = Folders(folder, create=True)  # create folders instance for new project folder
+        self.folders = Folders(folder, create=True)  # create folders instance for new project folder
 
-        self.json_path = str(folders.project_json.path)
-        if folders.project_json.exists():
+        self.json_path = str(self.folders.project_json.path)
+        if self.folders.project_json.exists():
             self.load_from_json(self.json_path)  # load variables from json if exists (fixed filename)
         else:
             self.initialise_new_project()  # initialise new project
@@ -719,9 +719,20 @@ class Project:
         return self.project_status
 
     def save_to_json(self, filepath):
-        self.project_date = str(time.strftime("%Y-%m-%d %H:%M:%S"))  # update project date
-        with open(filepath, "w") as f:
-            json.dump(self.__dict__, f)
+        self.project_date = time.strftime("%Y-%m-%d %H:%M:%S")  # update project date
+
+        def is_json_serializable(value):
+            try:
+                json.dumps(value)
+                return True
+            except (TypeError, OverflowError):
+                return False
+
+        data = {k: v for k, v in self.__dict__.items() if is_json_serializable(v)}
+
+        filepath = Path(filepath)
+        with filepath.open("w") as f:
+            json.dump(data, f, indent=2)
 
     def load_from_json(self, filepath):
         with open(filepath, "r") as f:

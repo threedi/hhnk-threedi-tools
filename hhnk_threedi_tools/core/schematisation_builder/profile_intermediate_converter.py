@@ -17,8 +17,10 @@ class ProfileIntermediateConverter:
 
     Functionalities
     ---------------
-    - Read and validate DAMO layers
-    - Linemerge hydroobjects
+    - Read and validate layers
+    - Create WATERBREEDTE column on hydroobject
+    - Create WATERHOOGTE coolumn on hydroobject
+    - Linemerge hydroobjects on peilvakken
 
     Parameters
     ----------
@@ -162,7 +164,7 @@ class ProfileIntermediateConverter:
             if hydroobjects.empty:
                 continue
 
-            # First clip
+            # First clip #TODO check cases where hydroobject overlaps two peilgebieden
             hydroobjects = hydroobjects.clip(peilgebied.geometry)
             if hydroobjects.empty:
                 continue

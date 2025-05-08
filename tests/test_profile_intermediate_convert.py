@@ -1,6 +1,7 @@
 # %%
 from pathlib import Path
 
+# %%
 import hhnk_research_tools as hrt
 
 # %%
@@ -12,7 +13,7 @@ from tests.config import FOLDER_TEST, TEMP_DIR, TEST_DIRECTORY
 def test_profile_intermediate_converter():
     """
     Test the ProfileIntermediateConverter class.
-    - Check if the converter can load and validate DAMO layers.
+    - Check if the converter can load and validate layers.
     - Check if the line merge algorithm works correctly.
     """
     damo_file_path = TEST_DIRECTORY / "schema_builder" / "DAMO anna paulowna.gpkg"
@@ -24,7 +25,7 @@ def test_profile_intermediate_converter():
 
     converter = ProfileIntermediateConverter(damo_file_path=damo_file_path, ods_cso_file_path=cso_file_path)
 
-    # Load and validate DAMO layers
+    # Load and validate layers
     converter.load_layers()
 
     # Check if layers are loaded
