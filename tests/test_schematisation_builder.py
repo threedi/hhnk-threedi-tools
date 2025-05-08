@@ -2,8 +2,7 @@
 
 from pathlib import Path
 
-import hhnk_research_tools as hrt
-
+# import hhnk_research_tools as hrt
 from hhnk_threedi_tools.core.schematisation_builder.schematisation_builder import make_validated_hydamo_package
 from tests.config import TEMP_DIR, TEST_DIRECTORY
 
