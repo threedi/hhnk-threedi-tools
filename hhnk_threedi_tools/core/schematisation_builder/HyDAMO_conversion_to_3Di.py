@@ -113,30 +113,33 @@ def process_hydroobject_layer(
             {
                 "id": channel_id,
                 "geometry": row["geometry"],
-                "connection_node_start_id": connection_node_start_id,
-                "connection_node_end_id": connection_node_end_id,
+                "connection_node_id_start": connection_node_start_id,
+                "connection_node_id_end": connection_node_end_id,
+                "exchange_type": 101,
                 "code": row["code"],
             }
         )
         channel_id += 1
 
-    # Get empty GeoDataFrames from schematisation_layers
-    connection_node_layer = schematisation_layers.get("connection_node", gpd.GeoDataFrame())
-    channel_layer = schematisation_layers.get("channel", gpd.GeoDataFrame())
+    # Get schema templates (empty GeoDataFrames with correct dtypes)
+    connection_node_template = schematisation_layers.get("connection_node", gpd.GeoDataFrame()).copy()
+    channel_template = schematisation_layers.get("channel", gpd.GeoDataFrame()).copy()
 
-    # Create GeoDataFrames
-    connection_node_gdf = gpd.GeoDataFrame(connection_nodes, geometry="geometry", crs=crs)
-    channel_gdf = gpd.GeoDataFrame(channels, geometry="geometry", crs=crs)
+    # Add id column to templates
+    connection_node_template["id"] = pd.Series(dtype="int64")
+    channel_template["id"] = pd.Series(dtype="int64")
 
-    # Concatenate the GeoDataFrames
-    connection_node_gdf_2 = gpd.GeoDataFrame(
-        pd.concat([connection_node_layer, connection_node_gdf], ignore_index=True), crs=crs
-    )
-    channel_gdf_2 = gpd.GeoDataFrame(pd.concat([channel_layer, channel_gdf], ignore_index=True), crs=crs)
+    # Create GeoDataFrame
+    connection_node_gdf = gpd.GeoDataFrame(connection_nodes, geometry="geometry", crs=connection_node_template.crs)
+    channel_gdf = gpd.GeoDataFrame(channels, geometry="geometry", crs=channel_template.crs)
+
+    # Reindex to match template columns (missing ones will be NaN, extra ones will be dropped)
+    connection_node_gdf = connection_node_gdf.reindex(columns=connection_node_template.columns)
+    channel_gdf = channel_gdf.reindex(columns=channel_template.columns)
 
     # Save the layers
-    connection_node_gdf_2.to_file(output_path, layer="connection_node", engine="pyogrio")
-    channel_gdf_2.to_file(output_path, layer="channel", engine="pyogrio")
+    connection_node_gdf.to_file(output_path, layer="connection_node", engine="pyogrio")
+    channel_gdf.to_file(output_path, layer="channel", engine="pyogrio")
 
 
 def convert_to_3Di(
