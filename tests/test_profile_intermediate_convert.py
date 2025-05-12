@@ -44,6 +44,11 @@ def test_profile_intermediate_converter():
     peilgebied_id = converter.find_peilgebied_id_by_hydroobject_code("OAF-JF-3094")
     assert peilgebied_id == 62170
 
+    # Create profielgroep, profiellijn and profielpunt
+    converter.create_profile_tables()
+
+    # TODO implement tests for profile tables
+
     # Write the result to a new file
     output_file_path = temp_dir_out / "output.gpkg"
     converter.write_outputs(output_path=output_file_path)
