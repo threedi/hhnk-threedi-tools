@@ -88,19 +88,30 @@ class ProfileIntermediateConverter:
             raise ValueError("Layers not loaded. Call load_layers() first.")
 
         # Create profielgroep and profiellijn, both are a copy of gw_pro
-        # Profielgroep has no geometry
-        # Change column name PRO_ID to code
-        # Create uuid for profielgroep, in profielgroep this is GlobalID and in profiellijn this is ProfielgroepID
-        # Create uuid for profiellijn, in profiellijn this is GlobalID
         self.profielgroep = self.gw_pro.copy()
-        self.profielgroep = self.profielgroep.rename(columns={"PRO_ID": "code"})
         self.profielgroep["GlobalID"] = [str(uuid.uuid4()) for _ in range(len(self.profielgroep))]
-        self.profielgroep["geometry"] = None
+
+        # TODO we need to attach profielgroep to hydroObjectID based on the geometry
+
+        self.profielgroep["geometry"] = None # Profielgroep has no geometry
+
+        # Rename columns in profielgroep and drop unnecessary columns
+        self.profielgroep = self.profielgroep.rename(columns={"PRO_ID": "code"})
+        self.profielgroep = self.profielgroep[["GlobalID", "code", "geometry", "hydroobjectID"]]
 
         self.profiellijn = self.gw_pro.copy()
-        self.profiellijn = self.profiellijn.rename(columns={"PRO_ID": "code"})
         self.profiellijn["GlobalID"] = [str(uuid.uuid4()) for _ in range(len(self.profiellijn))]
         self.profiellijn["ProfielgroepID"] = self.profielgroep["GlobalID"]
+
+        # Rename columns in profiellijn and drop unnecessary columns
+        self.profiellijn = self.profiellijn.rename(
+            columns={
+                "OPRDATOP": "datumInwinning",
+                "OSMOMSCH": "namespace",
+                "PRO_ID": "code"
+            }
+        )
+        self.profiellijn = self.profiellijn["GlobalID", "code", "datumInwinning", "namespace", "geometry", "ProfielgroepID"]
 
         # Create profielpunt
         # Geometry is in iws_geo_beschr_profielpunten
@@ -113,6 +124,23 @@ class ProfileIntermediateConverter:
         # We filter profielpunt to keep only 'vaste bodem'
         # 'vaste bodem' is denoted as Z1 in OSMOMSCH column from GW_PRW
         #  GW_PRW can be mapped based on PRW_ID in GW_PRW and PRW_PRW_ID in profielpunt
+        # We join, then filter
+        self.profielpunt = self.profielpunt.merge(
+            self.gw_prw[["PRW_ID", "PRO_PRO_ID", "OSMOMSCH"]],
+            left_on="PRW_PRW_ID",
+            right_on="PRW_ID",
+            how="left",
+        )
+        self.profielpunt = self.profielpunt[self.profielpunt["OSMOMSCH"] == "Z1"]
+        self.profielpunt = self.profielpunt.drop(columns=["PRW_ID"])
+
+        # Log warning if there are still duplicates in profielpunt (based on geometry) # TODO temp validation here
+        duplicates = self.profielpunt[self.profielpunt.duplicated(subset=["geometry"], keep=False)]
+        if not duplicates.empty:
+            self.logger.warning(
+                f"Found {len(duplicates)} duplicate geometries in profielpunt. "
+                f"Codes: {duplicates['code'].unique()}"
+            )
 
         # Other information is in gw_pbp
         # We create new columns in profielpunt for the information from gw_pbp
@@ -129,11 +157,24 @@ class ProfileIntermediateConverter:
                 "PBPSOORT": "typeProfielPunt",
                 "IWS_VOLGNR": "codeVolgnummer",
                 "IWS_HOOGTE": "hoogte",
-                "IWS_AFSTAND": "afstand",
+                "IWS_AFSTAND": "afstand"
             }
         )
 
         # Now we need to add the profielLijnID to every profielpunt
+        # We can use the PRO_PRO_ID in gw_prw to find the globalID in profiellijn with a matching PRO_ID (which was renamed to code)        
+        self.profielpunt = self.profielpunt.merge(
+            self.profiellijn[["code", "GlobalID"]],
+            left_on="PRO_PRO_ID",
+            right_on="code",
+            how="left",
+            suffixes=("", "_profiellijn")
+        )
+        self.profielpunt = self.profielpunt.rename(columns={"GlobalID": "ProfielLijnID"})
+        self.profielpunt = self.profielpunt.drop(columns=["code_profiellijn"])
+        
+        # TODO drop columns that are not needed
+
 
     def process_linemerge(self):
         """Run line merge algorithm and store result."""
