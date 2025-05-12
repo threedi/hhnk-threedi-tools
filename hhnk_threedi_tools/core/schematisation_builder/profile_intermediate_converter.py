@@ -18,9 +18,8 @@ class ProfileIntermediateConverter:
     Functionalities
     ---------------
     - Read and validate layers
-    - Create WATERBREEDTE column on hydroobject
-    - Create WATERHOOGTE coolumn on hydroobject
     - Linemerge hydroobjects on peilvakken
+    - Write output
 
     Parameters
     ----------
@@ -79,80 +78,6 @@ class ProfileIntermediateConverter:
         if self.hydroobject is None or self.gecombineerde_peilen is None:
             raise ValueError("Layers not loaded. Call load_damo_layers() first.")
         self.hydroobject_linemerged = self._linemerge_hydroobjects(self.gecombineerde_peilen, self.hydroobject)
-
-    def create_waterbreedte_column(self):
-        """
-        Create the 'WATERBREEDTE' column based on a hierarchy of rules.
-        """
-        # First hierarchy rule
-        # If 'BGT breedte' is not NaN, use 'BGT breedte'.
-        if "BGT breedte" in self.hydroobject.columns:
-            self.hydroobject["WATERBREEDTE"] = self.hydroobject["BGT breedte"]
-        else:
-            self.hydroobject["WATERBREEDTE"] = np.nan
-
-        # Second hierarchy rule
-        self.hydroobject["WATERBREEDTE"] = self.hydroobject.apply(
-            lambda row: self._apply_waterbreedte_second_rule(row)
-            if pd.isna(row["WATERBREEDTE"])
-            else row["WATERBREEDTE"],
-            axis=1,
-        )
-
-        # Third hierarchy rule
-        self.hydroobject["WATERBREEDTE"] = self.hydroobject.apply(
-            lambda row: self._apply_waterbreedte_third_rule(row)
-            if pd.isna(row["WATERBREEDTE"])
-            else row["WATERBREEDTE"],
-            axis=1,
-        )
-
-    def _apply_waterbreedte_second_rule(self, row):
-        """
-        If 'WS_DROGE_BEDDING' is not NaN, use ...
-        """
-        if pd.notna(row.get("WS_DROGE_BEDDING")):
-            return 1  # TODO what to do here
-        return np.nan
-
-    def _apply_waterbreedte_third_rule(self, row):
-        return 0  # TODO what to do here
-
-    def create_waterdiepte_column(self):
-        """
-        Create the 'WATERDIEPTE' column based on a hierarchy of rules.
-        """
-        # First hierarchy rule
-        self.hydroobject["WATERDIEPTE"] = self.hydroobject.apply(
-            lambda row: self._apply_waterdiepte_first_rule(row),
-            axis=1,
-        )
-
-        # Second hierarchy rule
-        self.hydroobject["WATERDIEPTE"] = self.hydroobject.apply(
-            lambda row: self._apply_waterdiepte_second_rule(row)
-            if pd.isna(row["WATERDIEPTE"])
-            else row["WATERDIEPTE"],
-            axis=1,
-        )
-
-        # Third hierarchy rule
-        self.hydroobject["WATERDIEPTE"] = self.hydroobject.apply(
-            lambda row: self._apply_waterdiepte_third_rule(row) if pd.isna(row["WATERDIEPTE"]) else row["WATERDIEPTE"],
-            axis=1,
-        )
-
-    def _apply_waterdiepte_first_rule(self, row):
-        # If 'WS_DROGE_BEDDING' is not NaN, use WS_BODEMHOOGTE
-        if pd.notna(row.get("WS_DROGE_BEDDING")):
-            return row.get("WS_BODEMHOOGTE")
-        return np.nan
-
-    def _apply_waterdiepte_second_rule(self, row):
-        return 1  # TODO what to do here
-
-    def _apply_waterdiepte_third_rule(self, row):
-        return 0  # TODO what to do here
 
     def _linemerge_hydroobjects(self, gecombineerde_peilen, hydroobject):
         """Merges hydroobjects within a peilgebied."""
