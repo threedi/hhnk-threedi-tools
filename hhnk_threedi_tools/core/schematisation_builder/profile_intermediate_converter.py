@@ -72,14 +72,19 @@ class ProfileIntermediateConverter:
         if "geometry" in gdf.columns:
             gdf["geometry"] = gdf["geometry"].apply(make_valid)
         return gdf
-    
+
     def create_profile_tables(self):
         """
         Create profielgroep, profiellijn, and profielpunten.
         Based on the layers 'gw_pro', 'gw_prw', 'gw_pbp' and 'iws_geo_beschr_profielpunten'.
         """
         self.logger.info("Creating profile tables...")
-        if self.gw_pro is None or self.gw_prw is None or self.gw_pbp is None or self.iws_geo_beschr_profielpunten is None:
+        if (
+            self.gw_pro is None
+            or self.gw_prw is None
+            or self.gw_pbp is None
+            or self.iws_geo_beschr_profielpunten is None
+        ):
             raise ValueError("Layers not loaded. Call load_layers() first.")
 
         # Create profielgroep and profiellijn, both are a copy of gw_pro
@@ -90,7 +95,7 @@ class ProfileIntermediateConverter:
         self.profielgroep = self.gw_pro.copy()
         self.profielgroep = self.profielgroep.rename(columns={"PRO_ID": "Code"})
         self.profielgroep["GlobalID"] = [str(uuid.uuid4()) for _ in range(len(self.profielgroep))]
-        self.profielgroep = self.profielgroep.drop(columns=["geometry"])
+        self.profielgroep["geometry"] = None
 
         self.profiellijn = self.gw_pro.copy()
         self.profiellijn = self.profiellijn.rename(columns={"PRO_ID": "Code"})
@@ -101,22 +106,23 @@ class ProfileIntermediateConverter:
         # Geometry is in iws_geo_beschr_profielpunten
         # Change column name PBP_PBP_ID to Code
         # Create uuid for profielpunt, in profielpunt this is GlobalID
-        self.profielpunt = self.gw_pbp.copy()
+        self.profielpunt = self.iws_geo_beschr_profielpunten.copy()
         self.profielpunt = self.profielpunt.rename(columns={"PBP_PBP_ID": "Code"})
         self.profielpunt["GlobalID"] = [str(uuid.uuid4()) for _ in range(len(self.profielpunt))]
 
         # Other information is in gw_pbp
         # We create new columns in profielpunt for the information from gw_pbp
         # We can use the PBP_ID in gw_pbp to join the two tables to Code in profielpunt
+
         self.profielpunt = self.profielpunt.merge(
-            self.gw_pbp[["PRW_PRW_ID", "PBPSOORT", "IWS_VOLGNR", "IWS_HOOGTE", "IWS_AFSTAND"]],
+            self.gw_pbp[["PBP_ID", "PRW_PRW_ID", "PBPSOORT", "IWS_VOLGNR", "IWS_HOOGTE", "IWS_AFSTAND"]],
             left_on="Code",
             right_on="PBP_ID",
             how="left",
         )
         self.profielpunt = self.profielpunt.drop(columns=["PBP_ID"])
         self.profielpunt = self.profielpunt.rename(
-            columns={ # TODO check if this is correct
+            columns={  # TODO check if this is correct
                 "PBPSOORT": "Soort",
                 "IWS_VOLGNR": "Volgnummer",
                 "IWS_HOOGTE": "Hoogte",
