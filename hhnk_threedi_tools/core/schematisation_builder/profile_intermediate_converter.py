@@ -97,8 +97,9 @@ class ProfileIntermediateConverter:
 
         # Rename columns in profielgroep and drop unnecessary columns
         self.profielgroep = self.profielgroep.rename(columns={"PRO_ID": "code"})
-        self.profielgroep = self.profielgroep[["GlobalID", "code", "geometry", "hydroobjectID"]]
-
+        #self.profielgroep = self.profielgroep[["GlobalID", "code", "geometry", "hydroobjectID"]]
+        self.profielgroep = self.profielgroep[["GlobalID", "code", "geometry"]]
+        
         self.profiellijn = self.gw_pro.copy()
         self.profiellijn["GlobalID"] = [str(uuid.uuid4()) for _ in range(len(self.profiellijn))]
         self.profiellijn["ProfielgroepID"] = self.profielgroep["GlobalID"]
@@ -111,7 +112,7 @@ class ProfileIntermediateConverter:
                 "PRO_ID": "code"
             }
         )
-        self.profiellijn = self.profiellijn["GlobalID", "code", "datumInwinning", "namespace", "geometry", "ProfielgroepID"]
+        self.profiellijn = self.profiellijn[["GlobalID", "code", "datumInwinning", "namespace", "geometry", "ProfielgroepID"]]
 
         # Create profielpunt
         # Geometry is in iws_geo_beschr_profielpunten
@@ -120,6 +121,24 @@ class ProfileIntermediateConverter:
         self.profielpunt = self.iws_geo_beschr_profielpunten.copy()
         self.profielpunt = self.profielpunt.rename(columns={"PBP_PBP_ID": "code"})
         self.profielpunt["GlobalID"] = [str(uuid.uuid4()) for _ in range(len(self.profielpunt))]
+
+        # Other information is in gw_pbp
+        # We create new columns in profielpunt for the information from gw_pbp
+        # We can use the PBP_ID in gw_pbp to join the two tables to code in profielpunt
+        self.profielpunt = self.profielpunt.merge(
+            self.gw_pbp[["PBP_ID", "PRW_PRW_ID", "PBPSOORT", "IWS_VOLGNR", "IWS_HOOGTE", "IWS_AFSTAND"]],
+            left_on="code",
+            right_on="PBP_ID",
+            how="left",
+        )
+        self.profielpunt = self.profielpunt.rename(
+            columns={
+                "PBPSOORT": "typeProfielPunt",
+                "IWS_VOLGNR": "codeVolgnummer",
+                "IWS_HOOGTE": "hoogte",
+                "IWS_AFSTAND": "afstand"
+            }
+        )
 
         # We filter profielpunt to keep only 'vaste bodem'
         # 'vaste bodem' is denoted as Z1 in OSMOMSCH column from GW_PRW
@@ -132,34 +151,15 @@ class ProfileIntermediateConverter:
             how="left",
         )
         self.profielpunt = self.profielpunt[self.profielpunt["OSMOMSCH"] == "Z1"]
-        self.profielpunt = self.profielpunt.drop(columns=["PRW_ID"])
 
         # Log warning if there are still duplicates in profielpunt (based on geometry) # TODO temp validation here
         duplicates = self.profielpunt[self.profielpunt.duplicated(subset=["geometry"], keep=False)]
         if not duplicates.empty:
             self.logger.warning(
                 f"Found {len(duplicates)} duplicate geometries in profielpunt. "
-                f"Codes: {duplicates['code'].unique()}"
+                #f"Codes: {duplicates['code'].unique()}"
             )
 
-        # Other information is in gw_pbp
-        # We create new columns in profielpunt for the information from gw_pbp
-        # We can use the PBP_ID in gw_pbp to join the two tables to code in profielpunt
-        self.profielpunt = self.profielpunt.merge(
-            self.gw_pbp[["PBP_ID", "PRW_PRW_ID", "PBPSOORT", "IWS_VOLGNR", "IWS_HOOGTE", "IWS_AFSTAND"]],
-            left_on="code",
-            right_on="PBP_ID",
-            how="left",
-        )
-        self.profielpunt = self.profielpunt.drop(columns=["PBP_ID"])
-        self.profielpunt = self.profielpunt.rename(
-            columns={
-                "PBPSOORT": "typeProfielPunt",
-                "IWS_VOLGNR": "codeVolgnummer",
-                "IWS_HOOGTE": "hoogte",
-                "IWS_AFSTAND": "afstand"
-            }
-        )
 
         # Now we need to add the profielLijnID to every profielpunt
         # We can use the PRO_PRO_ID in gw_prw to find the globalID in profiellijn with a matching PRO_ID (which was renamed to code)        
@@ -170,10 +170,13 @@ class ProfileIntermediateConverter:
             how="left",
             suffixes=("", "_profiellijn")
         )
-        self.profielpunt = self.profielpunt.rename(columns={"GlobalID": "ProfielLijnID"})
+        self.profielpunt = self.profielpunt.rename(columns={"GlobalID_profiellijn": "ProfielLijnID"})
         self.profielpunt = self.profielpunt.drop(columns=["code_profiellijn"])
         
-        # TODO drop columns that are not needed
+        # Drop columns that are not needed
+        self.profielpunt = self.profielpunt.drop(
+            columns=["PRW_ID", "PBP_ID", "PRO_PRO_ID", "PRW_PRW_ID"]
+        )
 
 
     def process_linemerge(self):
