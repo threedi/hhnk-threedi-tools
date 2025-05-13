@@ -1,6 +1,8 @@
 # %%
 """Test for DAMO exporter function"""
 
+from pathlib import Path
+
 import geopandas as gpd
 import hhnk_research_tools as hrt
 
@@ -23,6 +25,8 @@ def test_DAMO_exporter_one_feature():
         output_file=output_file,
     )
 
+    assert output_file.exists() is True
+
     gdf_result = gpd.read_file(output_file, engine="pyogrio")
 
     assert gdf_result.loc[0, "code"] == "KGM-Q-29234"
@@ -42,6 +46,8 @@ def test_DAMO_exporter_polders():
         output_file=output_file,
     )
 
+    assert output_file.exists() is True
+
     gdf_result = gpd.read_file(output_file, engine="pyogrio")
 
     assert logging_DAMO == []
@@ -52,6 +58,7 @@ def test_DAMO_exporter_polders():
 # %%
 # Test
 if __name__ == "__main__":
+    Path(damo_export_output_dir).mkdir(exist_ok=True, parents=True)
     test_DAMO_exporter_one_feature()
     test_DAMO_exporter_polders()
 

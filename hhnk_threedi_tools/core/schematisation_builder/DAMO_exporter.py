@@ -12,46 +12,12 @@ from hhnk_research_tools.sql_functions import (
 )
 from shapely.geometry import box
 
-"""
 try:
     from local_settings_htt import DATABASES, DB_LAYERS_MAPPING
 except ImportError as e:
     raise ImportError(
         "The 'local_settings_htt' module is missing. Get it from D:\github\evanderlaan\local_settings_htt.py and place it in \hhnk_threedi_tools\core\schematisation_builder"
     ) from e
-"""
-
-DATABASES = {
-    "aquaprd_lezen": {
-        "service_name": "AQUAPRD",
-        "user": "DAMO_LEZEN",
-        "password": "damo_lezen",
-        "host": "geoaquaprd.corp.hhnk.nl",  # empty string for localhost.
-        "port": "1521",
-    },
-    "bgt_lezen": {
-        "service_name": "GBRPRD",
-        "user": "bgt_raadplegen",
-        "password": "bgt_raadplegen",
-        "host": "srv500d1.corp.hhnk.nl",
-        "port": "1521",
-    },
-    "csoprd_lezen": {
-        "service_name": "ODSPRD",
-        "user": "CSOPRD_LEES",
-        "password": "csoprd_lees",
-        "host": "SRV585D1.corp.hhnk.nl",
-        "port": "1521",
-    },
-}
-
-DB_LAYERS_MAPPING = {
-    "HYDROOBJECT": "aquaprd",
-    "DUIKERSIFONHEVEL": "aquaprd",
-    "GEMAAL": "aquaprd",
-    "PROFIELLIJN": "aquaprd",
-    "PROFIELPUNT": "aquaprd",
-}
 
 
 def DAMO_exporter(
@@ -111,7 +77,6 @@ def DAMO_exporter(
             db_dict = db_dicts[layer_db]
             logger.info(f"Get out of database {layer_db} for table {table}")
             columns = None
-
             # exports data from DAMO database
             bbox_gdf, sql2 = database_to_gdf(db_dict=db_dict, sql=sql, columns=columns)
 
