@@ -138,8 +138,8 @@ def process_hydroobject_layer(
     channel_gdf = channel_gdf.reindex(columns=channel_template.columns)
 
     # Save the layers
-    connection_node_gdf.to_file(output_path, layer="connection_node", engine="pyogrio")
-    channel_gdf.to_file(output_path, layer="channel", engine="pyogrio")
+    connection_node_gdf.to_file(output_path, layer="connection_node", engine="pyogrio", mode="a")
+    channel_gdf.to_file(output_path, layer="channel", engine="pyogrio", mode="a")
 
 
 def convert_to_3Di(
