@@ -7,6 +7,6 @@ _backup/
 temp/
 dl
 revisions/
-/01_source_data/DAMO.gpkg
 hydamo_validation/
 log.log
+local_tests/data/tes_schematisation_builder/01_source_data/HyDAMO.gpkg

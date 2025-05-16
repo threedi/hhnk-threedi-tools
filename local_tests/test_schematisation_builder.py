@@ -2,14 +2,17 @@
 
 from pathlib import Path
 
+from config import TEST_DIRECTORY
+
 # import hhnk_research_tools as hrt
 from hhnk_threedi_tools.core.schematisation_builder.schematisation_builder import make_validated_hydamo_package
-from tests.config import TEMP_DIR, TEST_DIRECTORY
 
 
 def test_schematisation_builder():
     # define project folder path and
     project_folder = TEST_DIRECTORY / "test_schematisation_builder"
+
+    # TODO: if polder shapefile automatically is copied, define here folder from where
 
     # select which tables names to export from DAMO
     TABLE_NAMES = ["HYDROOBJECT", "DUIKERSIFONHEVEL"]
