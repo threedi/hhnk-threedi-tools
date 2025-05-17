@@ -91,6 +91,7 @@ hhnk-threedi-tools = { path = ".", editable = true }
 jupyterlab = "*"
 ipywidgets = "*"
 jupytext = "*"
+pre-commit = "*"
 twine="*"
 ruff = "*"
 
