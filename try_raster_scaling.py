@@ -1,15 +1,15 @@
 # %%
 
-from osgeo import gdal
 import hhnk_research_tools as hrt
 import numpy as np
+from osgeo import gdal
 
 src = r"E:\02.modellen\23_Katvoed\02_schematisation\00_basis\rasters\dem_katvoed_ahn4.tif"
 dst = r"E:\02.modellen\23_Katvoed\03_3di_results\1d2d_results\testdem.tif"
 
 r = hrt.Raster(src)
 
-scaled=False
+scaled = False
 
 
 # compressions = ["None", "LZW", "DEFLATE", "PACKBITS"]
@@ -20,22 +20,21 @@ for scaled in [True, False]:
     #     continue
     for compression in compressions:
         if not scaled:
-            dst = fr"E:\02.modellen\23_Katvoed\03_3di_results\1d2d_results\testdem_normal_{compression}.tif"
+            dst = rf"E:\02.modellen\23_Katvoed\03_3di_results\1d2d_results\testdem_normal_{compression}.tif"
             arr = r._read_array()
-            datatype=gdal.GDT_Float32
-            nodata=r.nodata
-            
+            datatype = gdal.GDT_Float32
+            nodata = r.nodata
+
         else:
-            dst = fr"E:\02.modellen\23_Katvoed\03_3di_results\1d2d_results\testdem_scaled_{compression}.tif"
+            dst = rf"E:\02.modellen\23_Katvoed\03_3di_results\1d2d_results\testdem_scaled_{compression}.tif"
             arr = r._read_array()
-            mask = arr==r.nodata
-            arr*=100
-            nodata= np.iinfo("int16").min
+            mask = arr == r.nodata
+            arr *= 100
+            nodata = np.iinfo("int16").min
             arr[mask] = nodata
-            datatype=gdal.GDT_Int16
+            datatype = gdal.GDT_Int16
 
-
-        tiled="YES"
+        tiled = "YES"
         driver = GEOTIFF = "GTiff"
 
         def save_raster_array_to_tiff(
@@ -71,20 +70,20 @@ for scaled in [True, False]:
             except Exception as e:
                 raise e
 
-
-        save_raster_array_to_tiff(output_file=dst,
-                                    raster_array=arr,
-                                    nodata=nodata,
-                                    metadata=r.metadata,
-                                    datatype=datatype,
-                                    compression=compression)
+        save_raster_array_to_tiff(
+            output_file=dst,
+            raster_array=arr,
+            nodata=nodata,
+            metadata=r.metadata,
+            datatype=datatype,
+            compression=compression,
+        )
 
         if scaled:
-            d=hrt.Raster(dst)
+            d = hrt.Raster(dst)
             b = d._source.GetRasterBand(1)
             b.SetScale(0.01)
-            d=None
-            b=None
+            d = None
+            b = None
 
 # %%
-
