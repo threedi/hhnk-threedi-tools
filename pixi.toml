@@ -7,12 +7,12 @@ repository = "https://github.com/threedi/hhnk-threedi-tools"
 
 
 [target.win-64.tasks]
-hrt-install = "binpixi/install_hrt.cmd"
-hydamo_validation-install = "binpixi/install_hydamo_validation.cmd"
+hrt-install = "bin/pixi/install_hrt.cmd"
+hydamo_validation-install = "bin/pixi/install_hydamo_validation.cmd"
 
 [target.linux-64.tasks]
-hrt-install = "bash binpixi/install_hrt.sh"
-hydamo_validation-install = "binpixi/install_hydamo_validation.sh"
+hrt-install = "bash bin/pixi/install_hrt.sh"
+hydamo_validation-install = "bin/pixi/install_hydamo_validation.sh"
 
 
 [tasks]
