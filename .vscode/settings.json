@@ -22,5 +22,8 @@
         "**/.ipynb_checkpoints": true,
         "**/.mypy_cache": true,
         "**.egg-info": true,
+        "**/.pytest_cache": true,
+        "**/.ruff_cache": true,
     },
+    "jupyter.interactiveWindow.textEditor.executeSelection": true,
 }
