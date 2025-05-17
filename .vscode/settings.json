@@ -24,6 +24,7 @@
         "**.egg-info": true,
         "**/.pytest_cache": true,
         "**/.ruff_cache": true,
+        ".coverage": true,
     },
     "jupyter.interactiveWindow.textEditor.executeSelection": true,
 }
