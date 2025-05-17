@@ -1,1 +1,0 @@
-This folder is the default folder where the HHNK plugin saves results of tests. The inner structure of these result folders is automatically generated

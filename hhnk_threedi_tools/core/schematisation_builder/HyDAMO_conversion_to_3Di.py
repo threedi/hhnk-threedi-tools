@@ -23,7 +23,7 @@ def load_all_schematisation_layers(
     Parameters
     ----------
     empty_schematisation_file_path : Path, default is None
-        File path containing the empty schematisation. When None, it will load the empty.gpkg
+        File path containing the empty schematisation. When None, it will load the empty_schematisation.gpkg
         from htt.resources.schematisation_builder
 
     Returns
@@ -34,7 +34,9 @@ def load_all_schematisation_layers(
         Path to empty gpkg, wont be None from here on.
     """
     if empty_schematisation_file_path is None:
-        empty_schematisation_file_path = hrt.get_pkg_resource_path(schematisation_builder_resources, "empty.gpkg")
+        empty_schematisation_file_path = hrt.get_pkg_resource_path(
+            schematisation_builder_resources, "empty_schematisation.gpkg"
+        )
 
     layers_data = {}
     for layer in SCHEMATISATION_LAYERS:
@@ -161,8 +163,8 @@ def convert_to_3Di(
     output_schematisation_directory : Path
         Path to the directory where the 3Di schematisation will be stored.
     empty_schematisation_file_path : Optional[Path], default is None
-        File path containing the empty schematisation. When None, it will load the empty.gpkg
-        from htt.resources.schematisation_builder
+        File path containing the empty schematisation. When None, it will load the
+        empty_schematisation.gpkg from htt.resources.schematisation_builder
     """
     hydamo_file_path = hrt.SpatialDatabase(hydamo_file_path)
 

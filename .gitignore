@@ -4,7 +4,6 @@ build
 dist
 .idea
 .ipynb_checkpoints
-local_settings.py
 hhnk_wsa_tools.egg-info
 hhnk_threedi_tools.egg-info
 venv_development_tools
@@ -34,8 +33,5 @@ test.cmd
 tests/data/new_project/*
 envs/environment_spyder_test.yml
 hhnk_threedi_tools/breaches/api_ldo_key.txt
-local_tests/data/temp/temp_damo_exporter_20250516_161803_145735/DAMO.gpkg
-/local_tests/data/temp
-local_tests/data/test_schematisation_builder/01_source_data/DAMO.gpkg
-local_tests/data/test_schematisation_builder/01_source_data/HyDAMO.gpkg
-/local_tests/data/test_schematisation_builder/01_source_data/hydamo_validation
+local_tests/data/temp
+local_tests/data
