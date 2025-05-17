@@ -6,6 +6,7 @@ import hhnk_research_tools as hrt
 import pytest
 
 from hhnk_threedi_tools.core.folders import Folders
+from hhnk_threedi_tools.core.modelbuilder import create_base_rasters
 from hhnk_threedi_tools.core.schematisation.model_splitter import ModelSchematisations
 from tests.config import FOLDER_TEST, PATH_NEW_FOLDER
 
