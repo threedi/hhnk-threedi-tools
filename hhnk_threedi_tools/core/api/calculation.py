@@ -12,7 +12,6 @@ import requests
 
 # Third-party imports
 import threedi_api_client as tac
-from IPython.core.display import HTML
 from threedi_api_client import ThreediApi
 from threedi_api_client.openapi import ApiException
 
@@ -927,6 +926,8 @@ class Simulation:
         self.threedi_api.simulations_actions_create(simulation_pk, data={"name": "shutdown"})
 
     def simulation_info(self, str_type="text"):
+        from IPython.core.display import HTML  # Import here to prevent IPython dep on tests
+
         sim = self.simulation
         if str_type == "text":
             newline = "\n"

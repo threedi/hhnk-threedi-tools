@@ -29,10 +29,13 @@ pre-commit-install = "pre-commit install --install-hooks -t=pre-push" #-t=pre-co
 postinstall = { depends-on = ["hrt-install", "pre-commit-install"] }
 
 pre-commit-run = "pre-commit run --all-files"
-tests = "pytest --cov-report term-missing --cov=hhnk_threedi_tools ."
 
 # Upload to PyPi to make it available with pip
 upload_pypi = "twine upload --repository hhnk-threedi-tools  dist/*"
+
+[feature.test.tasks]
+tests = "pytest --cov-report term-missing --cov=hhnk_threedi_tools --cov-report=xml tests/"
+
 
 [dependencies]
 python = "3.12.*"
@@ -67,13 +70,6 @@ tqdm = "*"
 xarray = "*"
 # xyzservices # folium dep
 
-# DataCheker
-flask = "*"  # oude datachecker
-sqlparse = "*"  # oude datachecker
-psycopg2 = "*"  # oude datachecker
-fastapi = "*"  # nieuwe datachecker
-uvicorn = "*"  # nieuwe datachecker
-django = "<4"  # datachecker (<4 wegens compatibility met 3Di modules)
 
 pip = "*"
 
@@ -97,6 +93,15 @@ ipywidgets = "*"
 jupytext = "*"
 twine="*"
 ruff = "*"
+
+# DataCheker
+flask = "*"  # oude datachecker
+sqlparse = "*"  # oude datachecker
+psycopg2 = "*"  # oude datachecker
+fastapi = "*"  # nieuwe datachecker
+uvicorn = "*"  # nieuwe datachecker
+django = "<4"  # datachecker (<4 wegens compatibility met 3Di modules)
+
 
 [feature.dev.pypi-dependencies]
 # Editable installs, not installed on test. #FIXME doesnt work on Github Actions.
