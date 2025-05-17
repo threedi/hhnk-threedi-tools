@@ -14,12 +14,6 @@ hrt-install = "bash binpixi/install_hrt.sh"
 
 
 [tasks]
-#Styling
-sort_imports = "python -m ruff check  ./**/*.py --select I --fix --force-exclude"
-fmt = "python -m ruff format ./**/*.py --force-exclude"
-style = {depends-on = ["sort_imports", "fmt"]} # `pixi run style`
-
-
 #Starting vs code using vs-code.cmd (pixi run code)
 lab = "jupyter lab"
 code = "code"
@@ -32,6 +26,12 @@ pre-commit-run = "pre-commit run --all-files"
 
 # Upload to PyPi to make it available with pip
 upload_pypi = "twine upload --repository hhnk-threedi-tools  dist/*"
+
+[feature.dev.tasks]
+#Styling
+sort_imports = "python -m ruff check  ./**/*.py --select I --fix --force-exclude"
+fmt = "python -m ruff format ./**/*.py --force-exclude"
+style = {depends-on = ["sort_imports", "fmt"]} # `pixi run style`
 
 [feature.test.tasks]
 tests = "pytest --cov-report term-missing --cov=hhnk_threedi_tools --cov-report=xml tests/"
