@@ -138,8 +138,8 @@ def process_hydroobject_layer(
     channel_gdf = channel_gdf.reindex(columns=channel_template.columns)
 
     # Save the layers
-    connection_node_gdf.to_file(output_path, layer="connection_node", engine="pyogrio", mode="a")
-    channel_gdf.to_file(output_path, layer="channel", engine="pyogrio", mode="a")
+    connection_node_gdf.to_file(output_path, layer="connection_node", engine="pyogrio", mode="w")
+    channel_gdf.to_file(output_path, layer="channel", engine="pyogrio", mode="w")
 
 
 def convert_to_3Di(
@@ -187,13 +187,14 @@ def convert_to_3Di(
         hydroobject = layers_dict["HYDROOBJECT"]
         connection_node_id = get_unique_id(layer_gdf=schematisation_layers.get("connection_node", gpd.GeoDataFrame()))
         channel_id = get_unique_id(layer_gdf=schematisation_layers.get("channel", gpd.GeoDataFrame()))
+        crs = hydroobject.crs
         process_hydroobject_layer(
             hydroobject=hydroobject,
             schematisation_layers=schematisation_layers,
             connection_node_id=connection_node_id,
             channel_id=channel_id,
             output_path=output_path,
-            crs=hydroobject.crs,
+            crs=crs,
         )
     else:
         raise ValueError("No HYDROOBJECT layer found in the HyDAMO file.")
