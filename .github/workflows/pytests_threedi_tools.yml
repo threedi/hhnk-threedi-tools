@@ -1,0 +1,41 @@
+name: Pytests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+
+# Automatically stop old builds on the same branch/PR
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
+jobs:
+  default:
+    if: |
+      github.event_name == 'push' ||
+      github.event.pull_request.draft == false
+    strategy:
+      matrix:
+        os: ["windows-latest", ]
+        # ["ubuntu-latest", "windows-latest"]
+        python-version: [ "py39", ]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup pixi
+        uses: prefix-dev/setup-pixi@v0.8.8
+        with:
+          pixi-version: "latest"
+          cache: true
+          # cache-write: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
+          environments: ${{ matrix.python-version }}
+          
+      - name: Run Tests
+        run: pixi run -e py39 tests
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v5

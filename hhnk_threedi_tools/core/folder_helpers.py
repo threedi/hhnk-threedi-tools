@@ -25,7 +25,7 @@ class ClimateResult(hrt.Folder):
             {self.space}{self.name}
             {self.space}├── downloads
             {self.space}└── output
-                """
+        """
 
     class ClimateResultDownloads(hrt.Folder):
         """
