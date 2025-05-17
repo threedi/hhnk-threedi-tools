@@ -3,7 +3,7 @@
 line-length = 119
 
 #Exclude external packages in formatter
-extend-exclude = ["hhnk_threedi_tools/external/**/*.py", ".pixi/*", "deprecated/*"]
+extend-exclude = ["hhnk_threedi_tools/external/**/*.py", ".pixi/*", "deprecated/*", "tests/rioxarraytesting/*"]
 include = ["*.py"]
 
 [tool.ruff.lint]
