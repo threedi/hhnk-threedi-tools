@@ -29,8 +29,8 @@ upload_pypi = "twine upload --repository hhnk-threedi-tools  dist/*"
 
 [feature.dev.tasks]
 #Styling
-sort_imports = "python -m ruff check  ./**/*.py --select I --fix --force-exclude"
-fmt = "python -m ruff format ./**/*.py --force-exclude"
+sort_imports = "ruff check  ./**/*.py --select I --fix --force-exclude"
+fmt = "ruff format ./**/*.py --force-exclude"
 style = {depends-on = ["sort_imports", "fmt"]} # `pixi run style`
 
 # FIXME set env to 'test' here once we switch to py312. Run tests with; pixi run -e py39 tests
