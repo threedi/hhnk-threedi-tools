@@ -1,7 +1,7 @@
 # %%
+import codecs
 import os
 import re
-import codecs
 
 from setuptools import find_packages, setup
 
