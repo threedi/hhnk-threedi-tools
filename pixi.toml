@@ -35,6 +35,11 @@ sort_imports = "ruff check  ./**/*.py --select I --fix --force-exclude"
 fmt = "ruff format ./**/*.py --force-exclude"
 style = {depends-on = ["sort_imports", "fmt"]} # `pixi run style`
 
+build_wheels = "rm -rf dist/ && python -m build" # build wheels
+twine_check = "twine check dist/*"
+build = { depends-on = ["build_wheels", "twine_check"] }
+
+
 # FIXME set env to 'test' here once we switch to py312. Run tests with; pixi run -e py39 tests
 # FIXME change env in pytests_threedi_tools.yml as well
 [feature.py39.tasks]
@@ -107,6 +112,7 @@ django = "<4"  # datachecker (<4 wegens compatibility met 3Di modules)
 # https://github.com/prefix-dev/pixi/issues/2763
 # FIXME disabled. should run pixi run postinstall
 # hhnk-research-tools = { path = "../hhnk-research-tools", editable = true }
+build = "*"
 
 
 [feature.test.pypi-dependencies]
