@@ -20,3 +20,7 @@ convention = "numpy"
 
 [tool.pylint]
 disable = ["W1203"]
+
+[tool.pytest.ini_options]
+# Directories where pytest will look for tests
+testpaths = ["tests", "local_tests"]
