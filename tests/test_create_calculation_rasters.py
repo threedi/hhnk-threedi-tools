@@ -1,18 +1,17 @@
 # %%
 import importlib
+import shutil
 
 import hhnk_research_tools as hrt
 import pytest
 
 from hhnk_threedi_tools.core import folders_modelbuilder
+from hhnk_threedi_tools.core.folders import Folders
 from hhnk_threedi_tools.core.modelbuilder import create_calculation_rasters
 from tests.config import FOLDER_TEST, PATH_NEW_FOLDER, TEMP_DIR
 
 importlib.reload(folders_modelbuilder)
 importlib.reload(create_calculation_rasters)
-import shutil
-
-from hhnk_threedi_tools.core.folders import Folders
 
 
 class TestCreateCalculationRasters:

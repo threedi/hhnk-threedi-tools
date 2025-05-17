@@ -5,7 +5,7 @@ import hhnk_research_tools as hrt
 import numpy as np
 
 from hhnk_threedi_tools.core.schematisation_builder.DAMO_HyDAMO_converter import DAMO_to_HyDAMO_Converter
-from tests.config import FOLDER_TEST, TEMP_DIR, TEST_DIRECTORY
+from tests.config import TEMP_DIR, TEST_DIRECTORY
 
 LAYERS = ["HYDROOBJECT"]
 temp_dir_out = TEMP_DIR / f"temp_DAMO_HyDAMO_converter_{hrt.current_time(date=True)}"
