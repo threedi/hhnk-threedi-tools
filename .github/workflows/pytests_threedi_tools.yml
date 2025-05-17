@@ -2,7 +2,7 @@ name: Pytests
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, pixi ]
   pull_request:
     branches: [ main ]
 
