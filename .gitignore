@@ -33,5 +33,5 @@ test.cmd
 tests/data/new_project/*
 envs/environment_spyder_test.yml
 hhnk_threedi_tools/breaches/api_ldo_key.txt
-local_tests/data/temp
-local_tests/data
+tests_local/data/temp
+tests_local/data
