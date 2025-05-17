@@ -13,9 +13,7 @@ def install_qgis_plugin(plugin_name: str):
     try:
         subprocess.check_call(["qgis-plugin-manager", "init"], cwd=plugin_path)
         subprocess.check_call(["qgis-plugin-manager", "update"], cwd=plugin_path)
-        subprocess.check_call(
-            ["qgis-plugin-manager", "install", plugin_name], cwd=plugin_path
-        )
+        subprocess.check_call(["qgis-plugin-manager", "install", plugin_name], cwd=plugin_path)
     finally:
         # remove the qgis-manager-plugin cache, because QGIS tries to load it as a plugin
         os.remove(plugin_path / "sources.list")

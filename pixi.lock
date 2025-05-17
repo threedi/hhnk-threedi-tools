@@ -4426,7 +4426,7 @@ packages:
 - pypi: .
   name: hhnk-threedi-tools
   version: '2024.1'
-  sha256: 6d09d323733c93d0ab00446141d4327b06353b408e85f8ecb740ed75620bb43b
+  sha256: 58ef68cabae3824c6451fd62921d7c81f49331fde10f4baa2134c09354f2edef
   requires_python: '>=3.7'
   editable: true
 - conda: https://conda.anaconda.org/conda-forge/noarch/hpack-4.1.0-pyhd8ed1ab_0.conda
