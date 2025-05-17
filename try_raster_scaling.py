@@ -1,8 +1,8 @@
 # %%
 
-from osgeo import gdal
 import hhnk_research_tools as hrt
 import numpy as np
+from osgeo import gdal
 
 src = r"E:\02.modellen\23_Katvoed\02_schematisation\00_basis\rasters\dem_katvoed_ahn4.tif"
 dst = r"E:\02.modellen\23_Katvoed\03_3di_results\1d2d_results\testdem.tif"
