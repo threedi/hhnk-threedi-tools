@@ -8,9 +8,11 @@ repository = "https://github.com/threedi/hhnk-threedi-tools"
 
 [target.win-64.tasks]
 hrt-install = "binpixi/install_hrt.cmd"
+hydamo_validation-install = "binpixi/install_hydamo_validation.cmd"
 
 [target.linux-64.tasks]
 hrt-install = "bash binpixi/install_hrt.sh"
+hydamo_validation-install = "binpixi/install_hydamo_validation.sh"
 
 
 [tasks]
@@ -20,7 +22,7 @@ code = "code"
 code_insiders = "code-insiders"
 
 pre-commit-install = "pre-commit install --install-hooks -t=pre-push" #-t=pre-commit
-postinstall = { depends-on = ["hrt-install", "pre-commit-install"] }
+postinstall = { depends-on = ["hrt-install", "hydamo_validation-install", "pre-commit-install"] }
 
 pre-commit-run = "pre-commit run --all-files"
 
@@ -109,6 +111,7 @@ django = "<4"  # datachecker (<4 wegens compatibility met 3Di modules)
 
 [feature.test.pypi-dependencies]
 hhnk-research-tools = { git = "https://github.com/hhnk/hhnk-research-tools.git", rev = "main" }
+hydamo_validation = { git = "https://github.com/hhnk/HyDAMOValidatieModule.git", rev = "main" }
 
 
 # Temporary old py39 env to have working tests
@@ -157,6 +160,7 @@ threedigrid_builder = "==1.14.4" # threedi_results_analysis 3.9.2
 threedigrid = "==2.3.3" # threedi_results_analysis 3.12.0
 threedidepth = "==0.6.3" # threedi_results_analysis 3.9.0
 hhnk-research-tools = { git = "https://github.com/hhnk/hhnk-research-tools.git", rev = "main" }
+hydamo_validation = { git = "https://github.com/hhnk/HyDAMOValidatieModule.git", rev = "main" }
 
 #Editable installs
 hhnk_threedi_tools = { path = ".", editable = true }

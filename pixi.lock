@@ -1868,8 +1868,11 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/c1/61/3489e3fd3b7dc81c73368177313231a1a1b30df660a0c117830aa18e0f29/greenlet-3.2.2-cp39-cp39-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/b2/fc/e73747f3dd31906bfbb78c76069f67d91525fefa28492a1f949cbb4a3c7f/h5netcdf-1.6.1-py3-none-any.whl
       - pypi: git+https://github.com/hhnk/hhnk-research-tools.git?rev=main#7473b5e4b2eef93966221bb9c8f5e2677f51f4a7
+      - pypi: git+https://github.com/hhnk/HyDAMOValidatieModule.git?rev=main#46b1cddefa420cd2113021e603305564687e59b9
       - pypi: https://files.pythonhosted.org/packages/ff/62/85c4c919272577931d407be5ba5d71c20f0b616d31a0befe0ae45bb79abd/imagesize-1.4.1-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/87/fb/99f81ac72ae23375f22b7afdb7642aba97c00a713c217124420147681a2f/mako-1.3.10-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/5e/0b/bd73621d2a5f87da97158c5c77a4bf31e27d60cf6bcc6ddea532043cc21d/rasterstats-0.20.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/09/68/1e81ed83f38906c8859f2b973afb19302357d6003e724a6105cee0f61ec7/simplejson-3.20.1-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/c8/78/3565d011c61f5a43488987ee32b6f3f656e7f107ac2782dd57bdd7d91d9a/snowballstemmer-3.0.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/0d/ef/153f6803c5d5f8917dbb7f7fcf6d34a871ede3296fa89c2c703f5f8a6c8e/sphinx-7.4.7-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/85/77/46e3bac77b82b4df5bb5b61f2de98637724f246b4966cfc34bc5895d852a/sphinx_rtd_theme-3.0.2-py2.py3-none-any.whl
@@ -2253,8 +2256,11 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/ff/a3/eb7713abfd0a079d24b775d01c6578afbcc6676d89508ab3cbebd5c836ea/greenlet-3.2.2-cp39-cp39-win_amd64.whl
       - pypi: https://files.pythonhosted.org/packages/b2/fc/e73747f3dd31906bfbb78c76069f67d91525fefa28492a1f949cbb4a3c7f/h5netcdf-1.6.1-py3-none-any.whl
       - pypi: git+https://github.com/hhnk/hhnk-research-tools.git?rev=main#7473b5e4b2eef93966221bb9c8f5e2677f51f4a7
+      - pypi: git+https://github.com/hhnk/HyDAMOValidatieModule.git?rev=main#46b1cddefa420cd2113021e603305564687e59b9
       - pypi: https://files.pythonhosted.org/packages/ff/62/85c4c919272577931d407be5ba5d71c20f0b616d31a0befe0ae45bb79abd/imagesize-1.4.1-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/87/fb/99f81ac72ae23375f22b7afdb7642aba97c00a713c217124420147681a2f/mako-1.3.10-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/5e/0b/bd73621d2a5f87da97158c5c77a4bf31e27d60cf6bcc6ddea532043cc21d/rasterstats-0.20.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/88/c9/d8bf87aaebec5a4c3ccfd5228689578e2fe77027d6114a259255d54969bf/simplejson-3.20.1-cp39-cp39-win_amd64.whl
       - pypi: https://files.pythonhosted.org/packages/c8/78/3565d011c61f5a43488987ee32b6f3f656e7f107ac2782dd57bdd7d91d9a/snowballstemmer-3.0.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/0d/ef/153f6803c5d5f8917dbb7f7fcf6d34a871ede3296fa89c2c703f5f8a6c8e/sphinx-7.4.7-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/85/77/46e3bac77b82b4df5bb5b61f2de98637724f246b4966cfc34bc5895d852a/sphinx_rtd_theme-3.0.2-py2.py3-none-any.whl
@@ -2580,6 +2586,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/b2/fc/e73747f3dd31906bfbb78c76069f67d91525fefa28492a1f949cbb4a3c7f/h5netcdf-1.6.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/a7/da/3c137006ff5f0433f0fb076b1ebe4a7bf7b5ee1e8811b5486af98b500dd5/h5py-3.13.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
       - pypi: git+https://github.com/hhnk/hhnk-research-tools.git?rev=main#7473b5e4b2eef93966221bb9c8f5e2677f51f4a7
+      - pypi: git+https://github.com/hhnk/HyDAMOValidatieModule.git?rev=main#46b1cddefa420cd2113021e603305564687e59b9
       - pypi: https://files.pythonhosted.org/packages/87/fb/99f81ac72ae23375f22b7afdb7642aba97c00a713c217124420147681a2f/mako-1.3.10-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/3c/35/f74add3978c20de6323fb11cb5162702670cc7a9420033befb43d8d5b7a4/sqlalchemy-2.0.41-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/f3/74/5024ca4f72dec37665ffda472e15e0264ee1d2ec37c6b78e7e83aac859a8/threedi-scenario-downloader-1.4.tar.gz
@@ -2831,6 +2838,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/b2/fc/e73747f3dd31906bfbb78c76069f67d91525fefa28492a1f949cbb4a3c7f/h5netcdf-1.6.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/25/61/d897952629cae131c19d4c41b2521e7dd6382f2d7177c87615c2e6dced1a/h5py-3.13.0-cp312-cp312-win_amd64.whl
       - pypi: git+https://github.com/hhnk/hhnk-research-tools.git?rev=main#7473b5e4b2eef93966221bb9c8f5e2677f51f4a7
+      - pypi: git+https://github.com/hhnk/HyDAMOValidatieModule.git?rev=main#46b1cddefa420cd2113021e603305564687e59b9
       - pypi: https://files.pythonhosted.org/packages/87/fb/99f81ac72ae23375f22b7afdb7642aba97c00a713c217124420147681a2f/mako-1.3.10-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/7f/23/4c2833d78ff3010a4e17f984c734f52b531a8c9060a50429c9d4b0211be6/sqlalchemy-2.0.41-cp312-cp312-win_amd64.whl
       - pypi: https://files.pythonhosted.org/packages/f3/74/5024ca4f72dec37665ffda472e15e0264ee1d2ec37c6b78e7e83aac859a8/threedi-scenario-downloader-1.4.tar.gz
@@ -6778,6 +6786,18 @@ packages:
   - pkg:pypi/httpx?source=hash-mapping
   size: 63082
   timestamp: 1733663449209
+- pypi: git+https://github.com/hhnk/HyDAMOValidatieModule.git?rev=main#46b1cddefa420cd2113021e603305564687e59b9
+  name: hydamo-validation
+  version: 1.3.1
+  requires_dist:
+  - geopandas
+  - pandas>=2
+  - pyogrio
+  - rasterio
+  - shapely>=2
+  - rasterstats
+  - pytest ; extra == 'tests'
+  requires_python: '>=3.9'
 - conda: https://conda.anaconda.org/conda-forge/noarch/hyperframe-6.1.0-pyhd8ed1ab_0.conda
   sha256: 77af6f5fe8b62ca07d09ac60127a30d9069fdc3c68d6b256754d0ffb1f7779f8
   md5: 8e6923fc12f1fe8f8c4e5c9f343256ac
@@ -14443,6 +14463,30 @@ packages:
   - pkg:pypi/rasterio?source=hash-mapping
   size: 7869724
   timestamp: 1742429400145
+- pypi: https://files.pythonhosted.org/packages/5e/0b/bd73621d2a5f87da97158c5c77a4bf31e27d60cf6bcc6ddea532043cc21d/rasterstats-0.20.0-py3-none-any.whl
+  name: rasterstats
+  version: 0.20.0
+  sha256: a7015e99f42807842b8638d489157639ff0cbf8e35aac9647aa3e079982b18ee
+  requires_dist:
+  - affine
+  - click>7.1
+  - cligj>=0.4
+  - fiona
+  - numpy>=1.9
+  - rasterio>=1.0
+  - simplejson
+  - shapely
+  - rasterstats[test] ; extra == 'dev'
+  - numpydoc ; extra == 'dev'
+  - twine ; extra == 'dev'
+  - tqdm ; extra == 'progress'
+  - coverage ; extra == 'test'
+  - geopandas ; extra == 'test'
+  - pyshp>=1.1.4 ; extra == 'test'
+  - pytest>=4.6 ; extra == 'test'
+  - pytest-cov>=2.2.0 ; extra == 'test'
+  - simplejson ; extra == 'test'
+  requires_python: '>=3.7'
 - conda: https://conda.anaconda.org/conda-forge/noarch/rasterstats-0.20.0-pyhd8ed1ab_1.conda
   sha256: 2d549a6cbb14d076e123e9e97c79c347cc0c5b82d55771be1fde86001a14ef4b
   md5: d0bf36963569fa8b1843cb4c3e5cd74b
@@ -15156,6 +15200,16 @@ packages:
   - pkg:pypi/shellingham?source=compressed-mapping
   size: 14462
   timestamp: 1733301007770
+- pypi: https://files.pythonhosted.org/packages/09/68/1e81ed83f38906c8859f2b973afb19302357d6003e724a6105cee0f61ec7/simplejson-3.20.1-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+  name: simplejson
+  version: 3.20.1
+  sha256: 6e18345c8dda5d699be8166b61f9d80aaee4545b709f1363f60813dc032dac53
+  requires_python: '>=2.5,!=3.0.*,!=3.1.*,!=3.2.*'
+- pypi: https://files.pythonhosted.org/packages/88/c9/d8bf87aaebec5a4c3ccfd5228689578e2fe77027d6114a259255d54969bf/simplejson-3.20.1-cp39-cp39-win_amd64.whl
+  name: simplejson
+  version: 3.20.1
+  sha256: 463f1fca8fbf23d088e5850fdd0dd4d5faea8900a9f9680270bd98fd649814ca
+  requires_python: '>=2.5,!=3.0.*,!=3.1.*,!=3.2.*'
 - conda: https://conda.anaconda.org/conda-forge/linux-64/simplejson-3.20.1-py312h66e93f0_0.conda
   sha256: 22041442f0659ef55073ca8536708115cdf6ac19d461a4db6840dc9b4d534ced
   md5: d1c95aa4908e88bd4216f04b6bb7e297

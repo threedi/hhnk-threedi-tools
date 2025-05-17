@@ -15,6 +15,7 @@ hhnk_threedi_tools/tests/data/new_project/
 *.aux.xml
 Thumbs.db
 local_settings.py
+local_settings_htt.py
 
 #FIXME temporary
 01_downloads_blokt100fout
@@ -32,3 +33,5 @@ test.cmd
 tests/data/new_project/*
 envs/environment_spyder_test.yml
 hhnk_threedi_tools/breaches/api_ldo_key.txt
+local_tests/data/temp
+local_tests/data

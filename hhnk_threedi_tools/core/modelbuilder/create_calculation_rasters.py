@@ -73,7 +73,7 @@ class DamageDem:
     """
 
     dem: hrt.Raster
-    panden_gpkg: Union[hrt.FileGDB, hrt.File, Path, str]
+    panden_gpkg: Union[hrt.SpatialDatabase, hrt.File, Path, str]
     panden_raster: hrt.Raster
     damage_dem: hrt.Raster
 
