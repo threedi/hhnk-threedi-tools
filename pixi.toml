@@ -2,7 +2,6 @@
 channels = ["conda-forge"]
 name = "hhnk-threedi-tools"
 platforms = ["win-64", "linux-64"]
-version = "2025.1"
 repository = "https://github.com/threedi/hhnk-threedi-tools"
 
 
