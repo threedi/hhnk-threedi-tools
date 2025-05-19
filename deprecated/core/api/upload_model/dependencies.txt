@@ -1,3 +1,0 @@
-in osgeo: py3_env
-pip install threedi-api-client
-pip install threedi-scenario-downloader

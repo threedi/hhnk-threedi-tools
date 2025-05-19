@@ -2,17 +2,16 @@
 channels = ["conda-forge"]
 name = "hhnk-threedi-tools"
 platforms = ["win-64", "linux-64"]
-version = "2025.1"
 repository = "https://github.com/threedi/hhnk-threedi-tools"
 
 
 [target.win-64.tasks]
-hrt-install = "binpixi/install_hrt.cmd"
-hydamo_validation-install = "binpixi/install_hydamo_validation.cmd"
+hrt-install = "bin/pixi/install_hrt.cmd"
+hydamo_validation-install = "bin/pixi/install_hydamo_validation.cmd"
 
 [target.linux-64.tasks]
-hrt-install = "bash binpixi/install_hrt.sh"
-hydamo_validation-install = "binpixi/install_hydamo_validation.sh"
+hrt-install = "bash bin/pixi/install_hrt.sh"
+hydamo_validation-install = "bin/pixi/install_hydamo_validation.sh"
 
 
 [tasks]
@@ -34,6 +33,11 @@ upload_pypi = "twine upload --repository hhnk-threedi-tools  dist/*"
 sort_imports = "ruff check  ./**/*.py --select I --fix --force-exclude"
 fmt = "ruff format ./**/*.py --force-exclude"
 style = {depends-on = ["sort_imports", "fmt"]} # `pixi run style`
+
+build_wheels = "rm -rf dist/ && python -m build" # build wheels
+twine_check = "twine check dist/*"
+build = { depends-on = ["build_wheels", "twine_check"] }
+
 
 # FIXME set env to 'test' here once we switch to py312. Run tests with; pixi run -e py39 tests
 # FIXME change env in pytests_threedi_tools.yml as well
@@ -107,6 +111,7 @@ django = "<4"  # datachecker (<4 wegens compatibility met 3Di modules)
 # https://github.com/prefix-dev/pixi/issues/2763
 # FIXME disabled. should run pixi run postinstall
 # hhnk-research-tools = { path = "../hhnk-research-tools", editable = true }
+build = "*"
 
 
 [feature.test.pypi-dependencies]

@@ -11,7 +11,6 @@ from hhnk_threedi_tools.core.climate_scenarios.klimaatsommen_prep import (
     KlimaatsommenPrep,
 )
 from hhnk_threedi_tools.core.folder_helpers import ClimateResult
-from hhnk_threedi_tools.core.folders import Folders
 from tests.config import FOLDER_TEST, TEMP_DIR, TEST_DIRECTORY
 
 

@@ -5,7 +5,7 @@ import geopandas as gpd
 import pytest
 
 from hhnk_threedi_tools.core.checks.one_d_two_d import OneDTwoDTest
-from tests.config import FOLDER_NEW, FOLDER_TEST
+from tests.config import FOLDER_TEST
 
 # Globals
 REVISION = "BWN bwn_test #6 1d2d_test"
