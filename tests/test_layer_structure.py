@@ -1,10 +1,6 @@
 # %%
 import importlib
-import os
 
-import hhnk_research_tools as hrt
-import numpy as np
-import pandas as pd
 import pytest
 
 import hhnk_threedi_tools.qgis.layer_structure as layer_structure

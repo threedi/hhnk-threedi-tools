@@ -6,7 +6,7 @@ import pytest
 # pd.options.mode.chained_assignment = 'raise' #catch SettingWithCopyWarning
 from hhnk_threedi_tools.core.result_rasters.grid_to_raster import GridToWaterDepth, GridToWaterLevel
 from hhnk_threedi_tools.core.result_rasters.grid_to_raster_old import GridToRaster
-from tests.config import FOLDER_TEST, TEMP_DIR, TEST_DIRECTORY
+from tests.config import TEMP_DIR, TEST_DIRECTORY
 
 TEST_RESULT_DIR = TEST_DIRECTORY / r"test_result_rasters"
 

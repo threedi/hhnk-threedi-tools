@@ -18,12 +18,15 @@ from pathlib import Path
 
 import geopandas as gpd
 import hhnk_research_tools as hrt
-from DAMO_exporter import DAMO_exporter
-from DAMO_HyDAMO_converter import DAMO_to_HyDAMO_Converter
-from HyDAMO_validator import validate_hydamo
 
+# from DAMO_exporter import DAMO_exporter
+# from DAMO_HyDAMO_converter import DAMO_to_HyDAMO_Converter
+# from HyDAMO_validator import validate_hydamo
 import hhnk_threedi_tools.resources.schematisation_builder as schematisation_builder_resources
 from hhnk_threedi_tools.core.folders import Project
+from hhnk_threedi_tools.core.schematisation_builder.DAMO_exporter import DAMO_exporter
+from hhnk_threedi_tools.core.schematisation_builder.DAMO_HyDAMO_converter import DAMO_to_HyDAMO_Converter
+from hhnk_threedi_tools.core.schematisation_builder.HyDAMO_validator import validate_hydamo
 
 # %%
 
@@ -51,13 +54,10 @@ def make_validated_hydamo_package(project_folder: Path, table_names: list) -> No
         If the HyDAMO file is not found in the project folder.
 
     """
+    Project(str(project_folder))
     # initialize logger
     logger = hrt.logging.get_logger(__name__, filepath=Path(project_folder) / "log.log")
     logger.setLevel(logging.INFO)
-
-    # create project if it does not exist yet
-    logger.info(f"Create project folder: {project_folder}")
-    Project(str(project_folder))
 
     polder_file_path = project_folder / "01_source_data" / "polder_polygon.shp"
     damo_file_path = project_folder / "01_source_data" / "DAMO.gpkg"
@@ -76,7 +76,7 @@ def make_validated_hydamo_package(project_folder: Path, table_names: list) -> No
         # Conversion to HyDAMO
         logger.info(f"DAMO export was succesfull. Now, start conversion to HyDAMO for file: {polder_file_path}")
         converter = DAMO_to_HyDAMO_Converter(
-            damo_file_path=damo_file_path, hydamo_file_path=hydamo_file_path, layers=TABLE_NAMES, overwrite=True
+            damo_file_path=damo_file_path, hydamo_file_path=hydamo_file_path, layers=table_names, overwrite=True
         )
         converter.run()
 
@@ -128,14 +128,10 @@ def make_validated_hydamo_package(project_folder: Path, table_names: list) -> No
 
 
 # %%
-# check if the script is run as main
-if __name__ == "__main__":
-    # set logging level
-    # logger = hrt.logging.get_logger(__name__)
-    # logger.setLevel(logging.INFO)
 
+if __name__ == "__main__":
     # define project folder path and
-    project_folder = Path("E:/09.modellen_speeltuin/test_nieuwe_manier_validationrules1")
+    project_folder = Path("E:/09.modellen_speeltuin/test_nieuwe_manier_validationrules5")
 
     # select which tables names to export from DAMO
     TABLE_NAMES = ["HYDROOBJECT", "DUIKERSIFONHEVEL"]

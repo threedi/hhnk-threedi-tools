@@ -53,5 +53,3 @@ from hhnk_threedi_tools.utils.notebooks.run import (
     read_notebook_json,
     write_notebook_json,
 )
-
-__version__ = "2024.1"

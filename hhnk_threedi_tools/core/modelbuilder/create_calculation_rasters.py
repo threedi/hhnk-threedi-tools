@@ -5,7 +5,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Union
 
-import geopandas as gpd
 import hhnk_research_tools as hrt
 
 from hhnk_threedi_tools import Folders
