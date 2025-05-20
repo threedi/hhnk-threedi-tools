@@ -1,37 +1,20 @@
 __pycache__
-.mypy_cache
+
+*.aux.xml
+*.egg-info
+.ipynb_checkpoints
+
 build
 dist
-.idea
-.ipynb_checkpoints
-local_settings.py
-hhnk_wsa_tools.egg-info
-hhnk_threedi_tools.egg-info
-venv_development_tools
-dist
-.pytest_chache
-.eggs
-hhnk_threedi_tools/variables/localsettings.py
-hhnk_threedi_tools/tests/data/new_project/
-*.aux.xml
 Thumbs.db
 local_settings.py
 local_settings_htt.py
-
-#FIXME temporary
-01_downloads_blokt100fout
-egmond
 notebook_data.json
-test_polder
-test_polder.zip
-tempfiles/
-hhnk_threedi_tools/utils/notebooks/02_calculation_gui_v3_klondike.ipynb
 
 # Pytests
 .coverage
 coverage.xml
-test.cmd
-tests/data/new_project/*
-envs/environment_spyder_test.yml
 hhnk_threedi_tools/breaches/api_ldo_key.txt
-debug.log
+hhnk_threedi_tools/tests/data/new_project/
+tests_local/data/temp
+tests_local/data

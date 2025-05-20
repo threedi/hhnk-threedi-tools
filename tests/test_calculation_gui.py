@@ -1,13 +1,9 @@
 # %%
-import shutil
-from pathlib import Path
 
 import hhnk_research_tools as hrt
-import pytest
 
 from hhnk_threedi_tools.core.api.calculation import SimulationData
-from hhnk_threedi_tools.core.folders import Folders
-from tests.config import FOLDER_TEST, PATH_NEW_FOLDER
+from tests.config import FOLDER_TEST
 
 
 def test_simulationdata():

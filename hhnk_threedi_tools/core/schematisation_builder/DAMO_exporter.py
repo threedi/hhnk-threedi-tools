@@ -12,18 +12,17 @@ from hhnk_research_tools.sql_functions import (
 )
 from shapely.geometry import box
 
+from hhnk_threedi_tools.resources.schematisation_builder.db_layer_mapping import DB_LAYER_MAPPING
+
 try:
-    from local_settings import (  # TODO ik zou graag willen dat de layer mapping in een aparte file onder recources komt. Dan kan ik die wel berheren op één plek
-        DATABASES,
-        DB_LAYERS_MAPPING,
-    )
+    from hhnk_threedi_tools.resources.schematisation_builder.local_settings_htt import DATABASES
 except ImportError as e:
     raise ImportError(
         "The 'local_settings_htt' module is missing. Get it from D:\github\evanderlaan\local_settings_htt.py and place it in \hhnk_threedi_tools\core\schematisation_builder"
     ) from e
 
 # From mapping json list top level keys
-tables_default = list(DB_LAYERS_MAPPING.keys())
+tables_default = list(DB_LAYER_MAPPING.keys())
 
 # %%
 # TODO verwijder blok, alleen voor test
@@ -78,17 +77,17 @@ def DAMO_exporter(
     logging_DAMO = []
     for table in table_names:
         try:
-            if DB_LAYERS_MAPPING.get(table, None).get("geometry_source", None) == "local":
+            if DB_LAYER_MAPPING.get(table, None).get("geometry_source", None) == "local":
                 logger.info(f"Start export of table {table} from DAMO database")
                 # Build sql string for request to DAMO db for given input polygon
                 sql = sql_builder_select_by_location(
-                    schema=DB_LAYERS_MAPPING.get(table, None).get("schema", None),
+                    schema=DB_LAYER_MAPPING.get(table, None).get("schema", None),
                     table_name=table,
                     epsg_code=EPSG_CODE,
                     polygon_wkt=bbox_model,
                     simplify=True,
                 )
-                layer_db = DB_LAYERS_MAPPING.get(table, None).get("source", None)
+                layer_db = DB_LAYER_MAPPING.get(table, None).get("source", None)
                 db_dict = DATABASES[layer_db]
                 logger.info(f"Retrieved {table} from database {layer_db}")
                 columns = None  # TODO willen we deze ook uit de mapping halen?

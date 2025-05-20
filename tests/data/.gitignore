@@ -7,6 +7,4 @@ _backup/
 temp/
 dl
 revisions/
-/01_source_data/DAMO.gpkg
 hydamo_validation/
-log.log

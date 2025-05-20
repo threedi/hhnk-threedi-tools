@@ -54,13 +54,10 @@ def make_validated_hydamo_package(project_folder: Path, table_names: list) -> No
         If the HyDAMO file is not found in the project folder.
 
     """
+    Project(str(project_folder))
     # initialize logger
     logger = hrt.logging.get_logger(__name__, filepath=Path(project_folder) / "log.log")
     logger.setLevel(logging.INFO)
-
-    # create project if it does not exist yet
-    logger.info(f"Create project folder: {project_folder}")
-    Project(str(project_folder))
 
     polder_file_path = project_folder / "01_source_data" / "polder_polygon.shp"
     damo_file_path = project_folder / "01_source_data" / "DAMO.gpkg"
@@ -131,14 +128,10 @@ def make_validated_hydamo_package(project_folder: Path, table_names: list) -> No
 
 
 # %%
-# check if the script is run as main
-if __name__ == "__main__":
-    # set logging level
-    # logger = hrt.logging.get_logger(__name__)
-    # logger.setLevel(logging.INFO)
 
+if __name__ == "__main__":
     # define project folder path and
-    project_folder = Path("E:/09.modellen_speeltuin/test_nieuwe_manier_validationrules1")
+    project_folder = Path("E:/09.modellen_speeltuin/test_nieuwe_manier_validationrules5")
 
     # select which tables names to export from DAMO
     TABLE_NAMES = ["HYDROOBJECT", "DUIKERSIFONHEVEL"]

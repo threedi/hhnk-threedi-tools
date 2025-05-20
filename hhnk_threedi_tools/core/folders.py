@@ -694,6 +694,7 @@ class OutputDirParent(Folder):
 
 
 # A class for project
+# TODO remove Project and add functionality to Folders.
 class Project:
     def __init__(self, folder: str):
         self.project_folder = folder  # set project folder
