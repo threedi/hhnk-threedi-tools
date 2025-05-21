@@ -1,6 +1,6 @@
+import logging
 import os
 import sys
-import logging
 
 if __name__ == '__main__':
     # add the path of the parent directory to the python path

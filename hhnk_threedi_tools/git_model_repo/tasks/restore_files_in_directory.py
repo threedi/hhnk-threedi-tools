@@ -1,8 +1,8 @@
-import os
 import logging
+import os
 
-from hhnk_threedi_tools.git_model_repo.utils.restore_xlsx import ExcelRestore
 from hhnk_threedi_tools.git_model_repo.utils.restore_gpkg import GeoPackageRestore
+from hhnk_threedi_tools.git_model_repo.utils.restore_xlsx import ExcelRestore
 from hhnk_threedi_tools.git_model_repo.utils.rreplace import rreplace
 
 log = logging.getLogger(__name__)
