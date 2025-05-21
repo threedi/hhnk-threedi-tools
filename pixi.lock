@@ -318,7 +318,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/af/db/70bdf58fba21f1043db3bfada43c2c15c7246c7077859429e36abc43b171/threedidepth-0.6.3-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/a4/84/aca4601652247838c82e0eac3d04d15d25337312feb0311d731d598a4b3c/threedigrid-2.3.5-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/78/4e/060315a0ff5572aefb143638cb77689bf287dd09c2e7399cc58b4a0259d1/threedigrid_builder-1.24.3-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
-      - pypi: ./
+      - pypi: .\
       osx-arm64:
       - conda: https://conda.anaconda.org/conda-forge/noarch/affine-2.4.0-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/attrs-25.3.0-pyh71513ae_0.conda
@@ -560,7 +560,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/45/00/dd004936e2aab10283bcc78f17b01b0f210bfbb75c5cc33ced07c84bb5f3/threedi_schema-0.300.26-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/af/db/70bdf58fba21f1043db3bfada43c2c15c7246c7077859429e36abc43b171/threedidepth-0.6.3-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/a4/84/aca4601652247838c82e0eac3d04d15d25337312feb0311d731d598a4b3c/threedigrid-2.3.5-py2.py3-none-any.whl
-      - pypi: ./
+      - pypi: .\
       win-64:
       - conda: https://conda.anaconda.org/conda-forge/win-64/_openmp_mutex-4.5-2_gnu.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/affine-2.4.0-pyhd8ed1ab_1.conda
@@ -813,7 +813,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/af/db/70bdf58fba21f1043db3bfada43c2c15c7246c7077859429e36abc43b171/threedidepth-0.6.3-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/a4/84/aca4601652247838c82e0eac3d04d15d25337312feb0311d731d598a4b3c/threedigrid-2.3.5-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/a1/58/4ae5726a506ceaed76d11fb5c3648bdbd48b863cf06c0f0aa037ee939b35/threedigrid_builder-1.24.3-cp312-cp312-win_amd64.whl
-      - pypi: ./
+      - pypi: .\
   dev:
     channels:
     - url: https://conda.anaconda.org/conda-forge/
@@ -1286,7 +1286,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/af/db/70bdf58fba21f1043db3bfada43c2c15c7246c7077859429e36abc43b171/threedidepth-0.6.3-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/a4/84/aca4601652247838c82e0eac3d04d15d25337312feb0311d731d598a4b3c/threedigrid-2.3.5-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/78/4e/060315a0ff5572aefb143638cb77689bf287dd09c2e7399cc58b4a0259d1/threedigrid_builder-1.24.3-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
-      - pypi: ./
+      - pypi: .\
       osx-arm64:
       - conda: https://conda.anaconda.org/conda-forge/noarch/_python_abi3_support-1.0-hd8ed1ab_2.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/affine-2.4.0-pyhd8ed1ab_1.conda
@@ -1687,7 +1687,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/45/00/dd004936e2aab10283bcc78f17b01b0f210bfbb75c5cc33ced07c84bb5f3/threedi_schema-0.300.26-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/af/db/70bdf58fba21f1043db3bfada43c2c15c7246c7077859429e36abc43b171/threedidepth-0.6.3-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/a4/84/aca4601652247838c82e0eac3d04d15d25337312feb0311d731d598a4b3c/threedigrid-2.3.5-py2.py3-none-any.whl
-      - pypi: ./
+      - pypi: .\
       win-64:
       - conda: https://conda.anaconda.org/conda-forge/win-64/_openmp_mutex-4.5-2_gnu.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/_python_abi3_support-1.0-hd8ed1ab_2.conda
@@ -2093,7 +2093,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/af/db/70bdf58fba21f1043db3bfada43c2c15c7246c7077859429e36abc43b171/threedidepth-0.6.3-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/a4/84/aca4601652247838c82e0eac3d04d15d25337312feb0311d731d598a4b3c/threedigrid-2.3.5-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/a1/58/4ae5726a506ceaed76d11fb5c3648bdbd48b863cf06c0f0aa037ee939b35/threedigrid_builder-1.24.3-cp312-cp312-win_amd64.whl
-      - pypi: ./
+      - pypi: .\
   py39:
     channels:
     - url: https://conda.anaconda.org/conda-forge/
@@ -2553,7 +2553,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/af/db/70bdf58fba21f1043db3bfada43c2c15c7246c7077859429e36abc43b171/threedidepth-0.6.3-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/98/ea/1154f19785c18d35066ce8819ba50aedec91e4194d712d84e14930e7b073/threedigrid-2.3.3-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/be/4d/433aee868c4a1bcdc44093af52b36e77157cad58dfc44577b13256057190/threedigrid_builder-1.14.4-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
-      - pypi: ./
+      - pypi: .\
       osx-arm64:
       - conda: https://conda.anaconda.org/conda-forge/noarch/affine-2.4.0-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/anyio-4.9.0-pyh29332c3_0.conda
@@ -2931,7 +2931,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/f3/dc/580b89d75518443a17c00806b2980cbda3d6e7447c35c376e81d4c603e47/threedi_schema-0.219.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/af/db/70bdf58fba21f1043db3bfada43c2c15c7246c7077859429e36abc43b171/threedidepth-0.6.3-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/98/ea/1154f19785c18d35066ce8819ba50aedec91e4194d712d84e14930e7b073/threedigrid-2.3.3-py2.py3-none-any.whl
-      - pypi: ./
+      - pypi: .\
       win-64:
       - conda: https://conda.anaconda.org/conda-forge/noarch/affine-2.4.0-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/anyio-4.9.0-pyh29332c3_0.conda
@@ -3322,7 +3322,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/af/db/70bdf58fba21f1043db3bfada43c2c15c7246c7077859429e36abc43b171/threedidepth-0.6.3-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/98/ea/1154f19785c18d35066ce8819ba50aedec91e4194d712d84e14930e7b073/threedigrid-2.3.3-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/75/b7/7849ad6f25e17f72f4c7e411b36b456205db2c501ad495bfc97c1cd3b813/threedigrid_builder-1.14.4-cp39-cp39-win_amd64.whl
-      - pypi: ./
+      - pypi: .\
   test:
     channels:
     - url: https://conda.anaconda.org/conda-forge/
@@ -3643,7 +3643,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/af/db/70bdf58fba21f1043db3bfada43c2c15c7246c7077859429e36abc43b171/threedidepth-0.6.3-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/a4/84/aca4601652247838c82e0eac3d04d15d25337312feb0311d731d598a4b3c/threedigrid-2.3.5-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/78/4e/060315a0ff5572aefb143638cb77689bf287dd09c2e7399cc58b4a0259d1/threedigrid_builder-1.24.3-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
-      - pypi: ./
+      - pypi: .\
       osx-arm64:
       - conda: https://conda.anaconda.org/conda-forge/noarch/affine-2.4.0-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/attrs-25.3.0-pyh71513ae_0.conda
@@ -3887,7 +3887,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/45/00/dd004936e2aab10283bcc78f17b01b0f210bfbb75c5cc33ced07c84bb5f3/threedi_schema-0.300.26-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/af/db/70bdf58fba21f1043db3bfada43c2c15c7246c7077859429e36abc43b171/threedidepth-0.6.3-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/a4/84/aca4601652247838c82e0eac3d04d15d25337312feb0311d731d598a4b3c/threedigrid-2.3.5-py2.py3-none-any.whl
-      - pypi: ./
+      - pypi: .\
       win-64:
       - conda: https://conda.anaconda.org/conda-forge/win-64/_openmp_mutex-4.5-2_gnu.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/affine-2.4.0-pyhd8ed1ab_1.conda
@@ -4142,7 +4142,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/af/db/70bdf58fba21f1043db3bfada43c2c15c7246c7077859429e36abc43b171/threedidepth-0.6.3-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/a4/84/aca4601652247838c82e0eac3d04d15d25337312feb0311d731d598a4b3c/threedigrid-2.3.5-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/a1/58/4ae5726a506ceaed76d11fb5c3648bdbd48b863cf06c0f0aa037ee939b35/threedigrid_builder-1.24.3-cp312-cp312-win_amd64.whl
-      - pypi: ./
+      - pypi: .\
 packages:
 - conda: https://conda.anaconda.org/conda-forge/linux-64/_libgcc_mutex-0.1-conda_forge.tar.bz2
   sha256: fe51de6107f9edc7aa4f786a70f4a883943bc9d39b3bb7307c04c41410990726
