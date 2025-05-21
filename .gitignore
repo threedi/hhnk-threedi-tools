@@ -27,3 +27,4 @@ tests_local/data
 git_log.log
 .env
 .DS_Store
+.idea
