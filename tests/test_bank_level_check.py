@@ -6,17 +6,12 @@ They still must be checked qualitatively
 """
 import sys
 
-import time
-from pathlib import Path
-
-import pandas as pd
-
-# pd.options.mode.chained_assignment = 'raise' #catch SettingWithCopyWarning
 import pytest
 
 from hhnk_threedi_tools.core.checks.bank_levels import BankLevelTest
-from hhnk_threedi_tools.core.folders import Folders
 from tests.config import FOLDER_TEST
+
+# pd.options.mode.chained_assignment = 'raise' #catch SettingWithCopyWarning
 
 
 @pytest.mark.skipif('threedigrid_builder' not in sys.modules, reason="threedigrid_builder not installed")
@@ -28,7 +23,7 @@ class TestBankLevel:
         return bl
 
     def test_import_information_object(self, bl_test):
-        """tests if the import of information works, if the correct amount is imported"""
+        """Test if the import of information works, if the correct amount is imported"""
 
         # look at counts
         assert all(bl_test.imports["manholes"].count() == 0)  # no manholes
@@ -50,7 +45,7 @@ class TestBankLevel:
         assert bl_test.imports["levee_lines"]["levee_height"][54] == 0.159
 
     def test_levee_intersections(self, bl_test):
-        """tests if levee intersections can be done"""
+        """Test if levee intersections can be done"""
         bl_test.line_intersections()
         assert bl_test.line_intersects["levee_id"][425] == 16
 

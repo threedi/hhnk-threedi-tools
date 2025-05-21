@@ -1,10 +1,12 @@
 """Folderstructuur voor de modelbuilder."""
-import os
+
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Union
 
 import hhnk_research_tools as hrt
+
+from hhnk_threedi_tools.core.folders import Folders
 
 
 @dataclass
@@ -17,8 +19,9 @@ class SourcePaths:
     ghg_path: Union[str, Path, hrt.Raster]
     infiltration_path: Union[str, Path, hrt.Raster]
     friction_path: Union[str, Path, hrt.Raster]
+    landuse_path: Union[str, Path, hrt.Raster]
     polder_path: str
-    watervlakken_path: str
+    waterdeel_path: str
 
     def __post_init__(self):
         """
@@ -27,7 +30,7 @@ class SourcePaths:
         ggg_path (str): raster source van ggg
         ghg_path (str): raster source van ghg
         polder_path (str): polder met bounds van de output
-        watervlakken_path (str): shapfile met watervlakken van polder
+        waterdeel_path (str): shapfile met waterdeel van polder
         """
 
         self.dem = hrt.Raster(self.dem_path)
@@ -36,8 +39,9 @@ class SourcePaths:
         self.ghg = hrt.Raster(self.ghg_path)
         self.infiltration = hrt.Raster(self.infiltration_path)
         self.friction = hrt.Raster(self.friction_path)
+        self.landuse = hrt.Raster(self.landuse_path)
         self.polder = hrt.File(self.polder_path)
-        self.watervlakken = hrt.File(self.watervlakken_path)
+        self.waterdeel = hrt.File(self.waterdeel_path)
         self.verify()
 
     def verify(self):
@@ -50,8 +54,9 @@ class SourcePaths:
             self.ghg,
             self.infiltration,
             self.friction,
+            self.landuse,
             self.polder,
-            self.watervlakken,
+            self.waterdeel,
         ]:
             try:
                 if not f.exists():
@@ -68,33 +73,12 @@ class SourcePaths:
 class FoldersModelbuilder:
     """Folder structuur om de rasters in op te slaan.
 
-    dst_base (str): path to output folder
-    source_paths (SourcePaths): bronrasters en shapes
+    source_paths : SourcePaths
+        bronrasters en shapes
+    dst_base : str
+        path to output folder
     """
 
-    def __init__(self, dst_path: str, source_paths: SourcePaths):
+    def __init__(self, folder: Folders, source_paths: SourcePaths):
         self.src = source_paths
-        self.dst = self.DestPaths(dst_path)
-
-    class DestPaths(hrt.Folder):
-        """Output rasters, heeft temp rasters om de berekening te doen."""
-
-        def __init__(self, base):
-            super().__init__(base=os.path.join(base, ""))
-            self.tmp = self.TempPaths(base)
-
-            self.dem = self.full_path("dem.tif")
-            self.glg = self.full_path("glg.tif")
-            self.ggg = self.full_path("ggg.tif")
-            self.ghg = self.full_path("ghg.tif")
-            self.infiltration = self.full_path("infiltration.tif")
-            self.friction = self.full_path("friction.tif")
-
-        class TempPaths(hrt.Folder):
-            """temp rasters allemaal met dezelfde extent."""
-
-            def __init__(self, base):
-                super().__init__(base=os.path.join(base, "tmp_rasters"))
-
-                self.polder = self.full_path("polder.tif")
-                self.watervlakken = self.full_path("watervlakken.tif")
+        self.dst = folder.model.calculation_rasters

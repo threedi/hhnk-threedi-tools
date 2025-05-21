@@ -1,10 +1,13 @@
 # %%
 """
-Each class has a file as its attributes and a file as a new class. 
+Each class has a file as its attributes and a file as a new class.
 self.base is the directory in which it is located
 """
+
 # First-party imports
+import json
 import os
+import time
 from pathlib import Path
 
 import hhnk_research_tools as hrt
@@ -25,15 +28,25 @@ HDB = f"HDB{file_types_dict[GDB]}"
 POLDER_POLY = f"polder_polygon{file_types_dict[SHAPE]}"
 CHANNEL_FROM_PROFILES = f"channel_surface_from_profiles{file_types_dict[SHAPE]}"
 
-
 FOLDER_STRUCTURE = """
     Main Folders object
+        ├── project.json
+        ├── 00_config
+        │ ├── conversion
+        │     └── conversion_config_hydroobject.json
+        │ └── validation
+        │     └── validation_rules.json               
         ├── 01_source_data
         │ ├── DAMO.gpkg
+        │ ├── HyDAMO.gpkg
         │ ├── HDB.gpkg
         │ ├── datachecker_output.gpkg
+        │ ├── rasters
+        │     └── dem.tif
         │ └── modelbuilder_output
         │     └── preprocessed
+        │ └── hydamo_validation
+        │     └── validation_result.gpkg       
         ├── 02_schematisation
         │ ├── rasters (include DEM)
         │ └── * model(.sqlite) *
@@ -86,6 +99,7 @@ class Folders(Folder):
                 Heiloo @ C:/Poldermodellen/Heiloo
                                 Folders:	  
                                     Folders
+                                    ├── 00_config
                                     ├── 01_source_data
                                     ├── 02_schematisation
                                     ├── 03_3di_results
@@ -114,6 +128,12 @@ class Folders(Folder):
     def __init__(self, base, create=False):
         super().__init__(base, create=create)
 
+        # project.json
+        self.project_json = self.add_file("project_json", "project.json")
+
+        # config
+        self.config = ConfigDir(self.base, create=create)
+
         # source
         self.source_data = SourceDir(self.base, create=create)
 
@@ -130,6 +150,8 @@ class Folders(Folder):
     def structure(self):
         return f"""  
                {self.space}Folders
+               {self.space}├── project.json (.project_json)
+               {self.space}├── 00_config (.config)
                {self.space}├── 01_source_data (.source_data)
                {self.space}├── 02_schematisation (.model)
                {self.space}├── 03_3di_results (.threedi_results)
@@ -149,8 +171,19 @@ class Folders(Folder):
                 )
         """
         return {
+            "project_json": self.project_json.path_if_exists,
+            # config
+            "validation": self.config.validation.path_if_exists,
+            "validation_rules": self.config.validation.validation_rules.path_if_exists,
+            "conversion": self.config.conversion.path_if_exists,
+            "conversion_config_hydroobject": self.config.conversion.conversion_config_hydroobject.path_if_exists,
+            # source data
             "datachecker": self.source_data.datachecker.path_if_exists,
             "damo": self.source_data.damo.path_if_exists,
+            "rasters": self.source_data.rasters.path_if_exists,
+            "dem": self.source_data.rasters.dem.path_if_exists,
+            "hydamo": self.source_data.hydamo.path_if_exists,
+            "validation_result": self.source_data.hydamo_validation.validation_result.path_if_exists,
             "hdb": self.source_data.hdb.path_if_exists,
             "polder_shapefile": self.source_data.polder_polygon.path_if_exists,
             "channels_shapefile": self.source_data.modelbuilder.channel_from_profiles.path_if_exists,
@@ -173,20 +206,73 @@ class Folders(Folder):
     @classmethod
     def is_valid(self, folderpath):
         """Check if folder stucture is available in input folder."""
-        SUB_FOLDERS = ["01_source_data", "02_schematisation", "03_3di_results", "04_test_results"]
+        SUB_FOLDERS = [
+            "00_config",
+            "01_source_data",
+            "02_schematisation",
+            "03_3di_results",
+            "04_test_results",
+        ]
         return all([Path(folderpath).joinpath(i).exists() for i in SUB_FOLDERS])
 
 
+class ConfigDir(Folder):
+    """Folder with configuration files"""
+
+    def __init__(self, base, create):
+        super().__init__(os.path.join(base, "00_config"), create=create)
+
+        # Folders
+        self.conversion = self.ConversionDir(self.base, create=create)
+        self.validation = self.ValidationDir(self.base, create=create)
+
+        if create:
+            self.create_readme()
+
+        # Files
+        self.add_file("conversion_config_hydroobject", "conversion_config_hydroobject.json")
+        self.add_file("validation_rules", "validation_rules.json")
+
+    @property
+    def structure(self):
+        return f"""  
+            {self.space}00_config
+            {self.space}├── conversion
+            {self.space}└── validation
+            """
+
+    def create_readme(self):
+        readme_txt = (
+            "Expected files are:\n\n"
+            "Json file with conversion rules of hydroobjects named 'conversion_config_hydroobject.json'\n"
+            "Json file with validation rules named 'validation_rules.json'\n"
+        )
+        with open(os.path.join(self.base, "read_me.txt"), mode="w") as f:
+            f.write(readme_txt)
+
+    class ConversionDir(Folder):
+        def __init__(self, base, create):
+            super().__init__(os.path.join(base, "conversion"), create=create)
+            self.add_file("conversion_config_hydroobject", "conversion_config_hydroobject.json")
+
+    class ValidationDir(Folder):
+        def __init__(self, base, create):
+            super().__init__(os.path.join(base, "validation"), create=create)
+            self.add_file("validation_rules", "validation_rules.json")
+
+
 class SourceDir(Folder):
-    """Path to source data (datachecker, DAMO, HDB)"""
+    """Path to source data (datachecker, DAMO, HyDAMO, HDB)"""
 
     def __init__(self, base, create):
         super().__init__(os.path.join(base, "01_source_data"), create)
 
         # Folders
         self.modelbuilder = self.ModelbuilderPaths(self.base, create=create)
+        self.hydamo_validation = self.HydamoValidationPaths(self.base, create=create)
         self.peilgebieden = self.PeilgebiedenPaths(self.base, create=create)
         self.wsa_output_administratie = self.WsaOutputAdministratie(self.base, create=create)
+        self.rasters = self.Rasters(self.base, create=create)
 
         if create:
             self.create_readme()
@@ -194,6 +280,10 @@ class SourceDir(Folder):
         # Files
         self.add_file("damo", "DAMO.gpkg")
         self.damo.add_layers(["DuikerSifonHevel", "waterdeel"])
+
+        self.add_file("dem", "dem.tif")
+
+        self.add_file("hydamo", "HyDAMO.gpkg")
 
         self.add_file("hdb", "HDB.gpkg")
         self.hdb.add_layer("sturing_kunstwerken")
@@ -208,9 +298,11 @@ class SourceDir(Folder):
         readme_txt = (
             "Expected files are:\n\n"
             "Damo geopackage (*.gpkg) named 'DAMO.gpkg'\n"
+            "Hydamo geopackage (*.gpkg) named 'HyDAMO.gpkg'\n"
             "Datachecker geopackage (*.gpkg) named 'datachecker_output.gpkg'\n"
             "Hdb geopackage (*.gpkg) named 'HDB.gpkg'\n"
             "Folder named 'modelbuilder_output' and polder shapefile "
+            "Folder named 'rasters'"
             "(*.shp and associated file formats)"
         )
         with open(os.path.join(self.base, "read_me.txt"), mode="w") as f:
@@ -220,11 +312,18 @@ class SourceDir(Folder):
     def structure(self):
         return f"""  
                {self.space}01_source_data
-               {self.space}└── modelbuilder
+               {self.space}└── rasters
+               {self.space}└── modelbuilder_output
+               {self.space}└── hydamo_validation
                {self.space}└── peilgebieden
                {self.space}└── wsa_output_administratie
                
                """
+
+    class Rasters(Folder):
+        def __init__(self, base, create):
+            super().__init__(os.path.join(base, "rasters"), create=create)
+            self.add_file("dem", "dem.tif")
 
     class WsaOutputAdministratie(Folder):
         def __init__(self, base, create):
@@ -235,6 +334,11 @@ class SourceDir(Folder):
         def __init__(self, base, create):
             super().__init__(os.path.join(base, "modelbuilder_output"), create=create)
             self.add_file("channel_from_profiles", CHANNEL_FROM_PROFILES)
+
+    class HydamoValidationPaths(Folder):
+        def __init__(self, base, create):
+            super().__init__(os.path.join(base, "hydamo_validation"), create=create)
+            self.add_file("validation_result", "validation_result.gpkg")
 
     class PeilgebiedenPaths(Folder):
         # TODO deze map moet een andere naam en plek krijgen.
@@ -262,6 +366,7 @@ class SchemaDirParent(Folder):
 
         self.revisions = self.ModelRevisionsParent(base=self.base, create=create)
         self.schema_base = hrt.ThreediSchematisation(base=self.base, name="00_basis", create=create)
+        self.calculation_rasters = self.CalculationRasters(base=self.base, create=create)
         self.schema_list = ["schema_base"]
         self.add_file("model_sql", "model_sql.json")
 
@@ -276,7 +381,11 @@ class SchemaDirParent(Folder):
         self.settings_df = None
 
     def _add_modelpath(self, name):
-        setattr(self, f"schema_{name}", hrt.ThreediSchematisation(base=self.base, name=name, create=False))
+        setattr(
+            self,
+            f"schema_{name}",
+            hrt.ThreediSchematisation(base=self.base, name=name, create=False),
+        )
         self.schema_list.append(f"schema_{name}")
         return f"schema_{name}"
 
@@ -306,7 +415,7 @@ class SchemaDirParent(Folder):
 
     def __repr__(self):
         return f"""{self.name} @ {self.base}
-                    Folders:\t{self.structure}
+                    Folders:\t .calculation_rasters
                     Files:\t{list(self.files.keys())}
                     Model schemas:\t{self.schema_list}
                 """
@@ -316,8 +425,46 @@ class SchemaDirParent(Folder):
 
         def __init__(self, base, create):
             super().__init__(os.path.join(base, "revisions"), create)
+
+    class CalculationRasters(Folder):
+        """sub-folder of SchemaDirParent with rasters required for calculations.
+
+        With these rasters we can do:
+            - damage calculations
+        """
+
+        def __init__(self, base, create):
+            super().__init__(os.path.join(base, "rasters_verwerkt"), create)
+
+            self.add_file("dem", "dem.tif")
+            self.add_file("glg", "glg.tif")
+            self.add_file("ggg", "ggg.tif")
+            self.add_file("ghg", "ghg.tif")
+            self.add_file("infiltration", "infiltration.tif")
+            self.add_file("friction", "friction.tif")
+            self.add_file("landuse", "landuse.tif")
+            self.add_file("polder", "polder.tif")
+            self.add_file("waterdeel", "waterdeel.tif")
+
+            # self.add_file("dem", "dem_50cm.tif")
+            self.add_file("damage_dem", "damage_dem.tif")  # TODO glob maken van beschikbare damage_dems.
+            self.add_file("panden", "panden.tif")
             if create:
-                self.create()
+                self.create_readme()
+
+        def create_readme(self):
+            readme_file = self.path.joinpath("README.txt")
+            if not readme_file.exists():
+                readme_txt = (
+                    "Expected files are:\n\n"
+                    "dem_50cm.tif -> used to create damage_dem.tif\n"
+                    "panden.tif -> used to create damage_dem.tif\n"
+                    "damage_dem.tif -> dem_50cm.tif + panden.tif. Used for damage calculations.\n\n"
+                    "polder.tif -> Model bounds.\n\n"
+                    "waterdeel.tif -> Waterdeel\n\n"
+                )
+                with open(readme_file, mode="w") as f:
+                    f.write(readme_txt)
 
 
 class ThreediResultsDir(Folder):
@@ -544,6 +691,54 @@ class OutputDirParent(Folder):
         @property
         def structure(self):
             return self.revision_structure("Climate")
+
+
+# A class for project
+# TODO remove Project and add functionality to Folders.
+class Project:
+    def __init__(self, folder: str):
+        self.project_folder = folder  # set project folder
+        self.folders = Folders(folder, create=True)  # create folders instance for new project folder
+
+        self.json_path = str(self.folders.project_json.path)
+        if self.folders.project_json.exists():
+            self.load_from_json(self.json_path)  # load variables from json if exists (fixed filename)
+        else:
+            self.initialise_new_project()  # initialise new project
+            self.save_to_json(self.json_path)
+
+    def initialise_new_project(self):
+        """Create all Project variables for a new project"""
+        self.project_status = 0
+        self.project_name = str(Path(self.project_folder).name)
+
+    def update_project_status(self, status):
+        self.project_status = status
+        self.save_to_json(self.json_path)
+
+    def retrieve_project_status(self):
+        return self.project_status
+
+    def save_to_json(self, filepath):
+        self.project_date = time.strftime("%Y-%m-%d %H:%M:%S")  # update project date
+
+        def is_json_serializable(value):
+            try:
+                json.dumps(value)
+                return True
+            except (TypeError, OverflowError):
+                return False
+
+        data = {k: v for k, v in self.__dict__.items() if is_json_serializable(v)}
+
+        filepath = Path(filepath)
+        with filepath.open("w") as f:
+            json.dump(data, f, indent=2)
+
+    def load_from_json(self, filepath):
+        with open(filepath, "r") as f:
+            data = json.load(f)
+            self.__dict__.update(data)
 
 
 # %%

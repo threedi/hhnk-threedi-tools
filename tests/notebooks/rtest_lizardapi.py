@@ -11,9 +11,8 @@ from tests.config import FOLDER_TEST, TEMP_DIR, TEST_DIRECTORY
 
 notebook_data = setup_notebook()
 
-from threedi_scenario_downloader import downloader as dl_new
-
 from deprecated.core.api import downloader as dl_old
+from threedi_scenario_downloader import downloader as dl_new
 
 dl_old.LIZARD_URL = "https://hhnk.lizard.net/api/v3/"
 dl_new.LIZARD_URL = "https://hhnk.lizard.net/api/v4/"
@@ -41,7 +40,7 @@ dem = hrt.Raster(FOLDER_TEST.model.schema_base.rasters.dem)
 for v in ["v4"]:
     calctype = "maxdepth"
     if v == "v3":
-        if not rasters[calctype][v].pl.exists():
+        if not rasters[calctype][v].exists():
             dl_old.download_maximum_waterdepth_raster(
                 scenario_uuid=uuid,
                 target_srs="EPSG:28992",
@@ -51,7 +50,7 @@ for v in ["v4"]:
                 pathname=rasters[calctype][v].path,
             )
     if v == "v4":
-        if not rasters[calctype][v].pl.exists():
+        if not rasters[calctype][v].exists():
             dl_new.download_maximum_waterdepth_raster(
                 scenario_uuid=uuid,
                 projection="EPSG:28992",
@@ -62,7 +61,7 @@ for v in ["v4"]:
             )
     calctype = "maxwlvl"
     if v == "v3":
-        if not rasters[calctype][v].pl.exists():
+        if not rasters[calctype][v].exists():
             dl_old.download_maximum_waterlevel_raster(
                 scenario_uuid=uuid,
                 target_srs="EPSG:28992",
@@ -72,7 +71,7 @@ for v in ["v4"]:
                 pathname=rasters[calctype][v].path,
             )
     if v == "v4":
-        if not rasters[calctype][v].pl.exists():
+        if not rasters[calctype][v].exists():
             dl_new.download_maximum_waterlevel_raster(
                 scenario_uuid=uuid,
                 projection=None,
@@ -85,13 +84,13 @@ for v in ["v4"]:
 for calctype in ["maxdepth", "maxwlvl"]:
     for v in ["v3", "v4"]:
         r = rasters[calctype][v]
-        if r.pl.exists():
+        if r.exists():
             print(f"""
             {calctype} {v}
             requested resolution: {resolution}
             projection: {r.metadata.projection}
             sum: {r.sum()}
-            stats: {r.statistics(approve_ok=False)}
+            stats: {r.statistics()}
             bbox: {r.metadata.bbox}
             georef: {r.metadata.georef}
             pixelsize (x): {r.metadata.pixel_width}
@@ -103,7 +102,7 @@ print(f"""
 requested resolution: {resolution}
 projection: {r.metadata.projection}
 sum: {r.sum()}
-stats: {r.statistics(approve_ok=False)}
+stats: {r.statistics()}
 bbox: {r.metadata.bbox}
 georef: {r.metadata.georef}
 pixelsize (x): {r.metadata.pixel_width}

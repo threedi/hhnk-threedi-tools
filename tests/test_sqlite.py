@@ -1,11 +1,8 @@
 # %%
 # First-party imports
-import inspect
 import shutil
-import sys
-from pathlib import Path
 
-import hhnk_research_tools as hrt
+
 import pytest
 
 # Local imports
@@ -26,16 +23,16 @@ class TestSqlite:
         """Copy folder structure and sqlite and then run splitter so we
         get the correct sqlite (with errors) to run tests on.
         """
-        FOLDER_NEW = Folders(PATH_NEW_FOLDER, create=True)
-        shutil.copytree(FOLDER_TEST.model.schema_base.path, FOLDER_NEW.model.schema_base.path, dirs_exist_ok=True)
-        shutil.copy(FOLDER_TEST.model.settings.path, FOLDER_NEW.model.settings.path)
-        shutil.copy(FOLDER_TEST.model.settings_default.path, FOLDER_NEW.model.settings_default.path)
-        shutil.copy(FOLDER_TEST.model.model_sql.path, FOLDER_NEW.model.model_sql.path)
+        folder_new = Folders(PATH_NEW_FOLDER, create=True)
+        shutil.copytree(FOLDER_TEST.model.schema_base.path, folder_new.model.schema_base.path, dirs_exist_ok=True)
+        shutil.copy(FOLDER_TEST.model.settings.path, folder_new.model.settings.path)
+        shutil.copy(FOLDER_TEST.model.settings_default.path, folder_new.model.settings_default.path)
+        shutil.copy(FOLDER_TEST.model.model_sql.path, folder_new.model.model_sql.path)
         # self.folder=FOLDER_TEST
-        spl = ModelSchematisations(folder=FOLDER_NEW)
+        spl = ModelSchematisations(folder=folder_new)
         spl.create_schematisation(name="basis_errors")
 
-        return FOLDER_NEW
+        return folder_new
 
     def test_run_controlled_structures(self):
         self.sqlite_check.run_controlled_structures()
@@ -54,11 +51,11 @@ class TestSqlite:
         self.sqlite_check.run_dewatering_depth()
         assert self.sqlite_check.output_fd.drooglegging.exists()
 
-        assert self.sqlite_check.output_fd.drooglegging.statistics(approve_ok=False) == {
+        assert self.sqlite_check.output_fd.drooglegging.statistics() == {
             "min": -0.76,
-            "max": 10004.290039,
-            "mean": 2.167882,
-            "std": 91.391436,
+            "max": 9.401,
+            "mean": 1.332812,
+            "std": 1.19355,
         }
 
     def test_run_model_checks(self):

@@ -25,11 +25,13 @@ class ClimateResult(hrt.Folder):
             {self.space}{self.name}
             {self.space}├── downloads
             {self.space}└── output
-                """
+        """
 
     class ClimateResultDownloads(hrt.Folder):
-        """Downloads folder with all scenarios in subfolders that will contain
-        their netcdf."""
+        """
+        Downloadfolder with all scenarios in subfolders that will contain
+        their netcdf.
+        """
 
         def __init__(self, base, create=False):
             super().__init__(os.path.join(base, "01_downloads"), create=create)
@@ -43,7 +45,7 @@ class ClimateResult(hrt.Folder):
                 setattr(self, name, self.ClimateResultScenario(self.base, name, create=self.create_bool))
 
         def get_scenario_names(self) -> list:
-            """eg .blog_ghg_T10, .piek_glg_T100"""
+            """e.g. .blog_ghg_T10, .piek_glg_T100"""
             names = []
             for rain_type in RAIN_TYPES:
                 for groundwater in GROUNDWATER:
@@ -74,12 +76,6 @@ class ClimateResult(hrt.Folder):
                 setattr(self, "netcdf", hrt.ThreediResult(self.full_path(name)))
                 self.structure_extra = ["netcdf"]
 
-            def __repr__(self):
-                return f"""{self.name} @ {self.base}
-                            Folders:\t{self.structure_extra}
-                            Files:\t{list(self.files.keys())}
-                        """
-
     class ClimateResultOutput(hrt.Folder):
         def __init__(self, base, create):
             super().__init__(os.path.join(base, "02_output_rasters"), create=create)
@@ -92,10 +88,10 @@ class ClimateResult(hrt.Folder):
             self.add_file("maskerkaart_diepte_tif", "maskerkaart_diepte.tif")
             self.add_file("maskerkaart_schade_tif", "maskerkaart_schade.tif")
             self.add_file("geen_schade_tif", "geen_schade.tif")
-            self.add_file("mask_diepte_plas", "mask_diepte_plas.tif")
-            self.add_file("mask_schade_plas", "mask_schade_plas.tif")
-            self.add_file("mask_diepte_overlast", "mask_diepte_overlast.tif")
-            self.add_file("mask_schade_overlast", "mask_schade_overlast.tif")
+            self.add_file("mask_depth_plas", "mask_depth_plas.tif")
+            self.add_file("mask_damage_plas", "mask_damage_plas.tif")
+            self.add_file("mask_depth_overlast", "mask_depth_overlast.tif")
+            self.add_file("mask_damage_overlast", "mask_damage_overlast.tif")
             self.add_file("ruimtekaart", "ruimtekaart.shp")
             self.add_file("schade_peilgebied", "schade_per_peilgebied.shp")
             self.add_file("schade_peilgebied_corr", "schade_per_peilgebied_correctie.shp")
@@ -137,6 +133,6 @@ class ClimateResult(hrt.Folder):
             def __init__(self, base, create):
                 super().__init__(os.path.join(base, "temp"), create=create)
 
-                self.add_file("peilgebieden_diepte", "peilgebieden_diepte.tif")
-                self.add_file("peilgebieden_schade", "peilgebieden_schade.tif")
+                self.add_file("peilgebieden_depth", "peilgebieden_depth.tif")
+                self.add_file("peilgebieden_damage", "peilgebieden_damage.tif")
                 self.add_file("peilgebieden", "peilgebieden_clipped.shp")

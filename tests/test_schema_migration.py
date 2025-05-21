@@ -10,7 +10,7 @@ from tests.config import FOLDER_TEST, TEMP_DIR
 
 
 def test_schema_migration():
-    """test if an old sqlite can be migrated to the latest schema version"""
+    """Test if an old sqlite can be migrated to the latest schema version"""
     # Make a copy, the migration is done on the same database.
     database_old = FOLDER_TEST.full_path("bwn_test_v216.sqlite")
     database_new = hrt.Folder(TEMP_DIR).full_path(f"migrated_sqlite_{hrt.get_uuid()}.sqlite")
@@ -30,7 +30,7 @@ def test_schema_migration():
     migrate_schema = MigrateSchema(database_new)
     migrate_schema.run()
 
-    assert migrate_schema.schema.get_version() == 217
+    assert migrate_schema.schema.get_version() == 219
 
 
 # %%

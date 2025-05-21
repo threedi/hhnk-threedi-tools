@@ -1,8 +1,6 @@
 # %%
 import shutil
-from pathlib import Path
 
-import hhnk_research_tools as hrt
 import pytest
 
 from hhnk_threedi_tools.core.folders import Folders

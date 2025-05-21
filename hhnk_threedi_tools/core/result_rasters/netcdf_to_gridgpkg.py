@@ -33,12 +33,18 @@ class NetcdfTimeSeries:
         self._vol_all = None
         self._max_index = None
 
+        self.aggregate: bool = self.typecheck_aggregate()
+
         self.timestamps = self.grid.nodes.timestamps
 
     @property
     def wlvl_2d_all(self):
         if self._wlvl_all is None:
-            self._wlvl_all = self.get_timerseries_all(param="s1")
+            if not self.aggregate:
+                self._wlvl_all = self.get_timerseries_all(param="s1")
+            else:
+                self._wlvl_all = self.get_timerseries_all(param="s1_max")
+
         return self._wlvl_all
 
     @property
@@ -53,13 +59,25 @@ class NetcdfTimeSeries:
             self._max_index = self.wlvl_2d_all.argmax(axis=0)
         return self._max_index
 
+    def typecheck_aggregate(self) -> bool:
+        """Check if we have a normal or aggregated netcdf"""
+        return str(type(self.grid)) == "<class 'threedigrid.admin.gridresultadmin.GridH5AggregateResultAdmin'>"
+
     def get_timerseries_all(self, param):
         """Get all timeseries for all 2d nodes.
         slice(0,-1) doesnt retrieve the last timestep, using timestamp length instead.
         """
-        return getattr(
-            self.grid.nodes.subset("2D_open_water").timeseries(indexes=slice(0, len(self.timestamps))), param
-        )
+        if not self.aggregate:
+            return getattr(
+                self.grid.nodes.subset("2D_open_water").timeseries(indexes=slice(0, len(self.timestamps))), param
+            )
+
+        else:
+            """Aggregated results return a dict on self.timestamps"""
+            return getattr(
+                self.grid.nodes.subset("2D_open_water").timeseries(indexes=slice(0, len(self.timestamps[param]))),
+                param,
+            )
 
     def get_timeseries_timestamp(self, param: str, time_seconds: Union[int, str]):
         """Retrieve timeseries at given timestamp.
@@ -106,9 +124,9 @@ Debug by checking available timeseries through the (.ts) timeseries attributes""
                 col_base = f"{int(timestep_h)}h"
             else:
                 if timestep_h < 1:
-                    col_base = f"{int(timestep_h*60)}min"
+                    col_base = f"{int(timestep_h * 60)}min"
                 else:
-                    col_base = f"{int(np.floor(timestep_h))}h{int((timestep_h%1)*60)}min"
+                    col_base = f"{int(np.floor(timestep_h))}h{int((timestep_h % 1) * 60)}min"
         return col_base
 
 
@@ -154,7 +172,7 @@ class ColumnIdx:
 class NetcdfToGPKG:
     """Transform netcdf into a gpkg. Can also correct waterlevels
     based on conditions. These are passed when running the function
-    .netcdf_to_grid_gpkg.
+    .run, to turn this behaviour off, use wlvl_correction=False there.
 
     Input layers can be passed directly, or when using the htt.Folders
     structure, use the .from_folder classmethod.
@@ -178,12 +196,13 @@ class NetcdfToGPKG:
     waterdeel_layer: str = None
     panden_path: str = None
     panden_layer: str = None
+    use_aggregate: bool = False
 
     def __post_init__(self):
         self._ts = None
 
     @classmethod
-    def from_folder(cls, folder: Folders, threedi_result: hrt.ThreediResult, **kwargs):
+    def from_folder(cls, folder: Folders, threedi_result: hrt.ThreediResult, use_aggregate: bool = False, **kwargs):
         """Initialize from folder structure."""
         waterdeel_path = folder.source_data.damo
         waterdeel_layer = "Waterdeel"
@@ -197,12 +216,15 @@ class NetcdfToGPKG:
             waterdeel_layer=waterdeel_layer,
             panden_path=panden_path,
             panden_layer=panden_layer,
+            use_aggregate=use_aggregate,
         )
 
     @property
     def grid(self):
-        """Instance of threedigrid.admin.gridresultadmin.GridH5ResultAdmin"""
-        return self.threedi_result.grid
+        """Instance of threedigrid.admin.gridresultadmin.GridH5ResultAdmin or GridH5AggregateResultAdmin"""
+        if self.use_aggregate is False:
+            return self.threedi_result.grid
+        return self.threedi_result.aggregate_grid
 
     @property
     def output_default(self):
@@ -268,13 +290,11 @@ class NetcdfToGPKG:
         grid_gdf = gpd.GeoDataFrame()
 
         # * inputs every element from row as a new function argument, creating a (square) box.
-        grid_gdf["geometry"] = [box(*row) for row in self.grid.nodes.subset("2D_ALL").cell_coords.T]
-        grid_gdf.crs = "EPSG:28992"
+        grid_gdf.set_geometry(
+            [box(*row) for row in self.grid.nodes.subset("2D_ALL").cell_coords.T], crs="EPSG:28992", inplace=True
+        )
 
         grid_gdf["id"] = self.grid.cells.subset("2D_open_water").id
-
-        grid_gdf = gpd.GeoDataFrame(grid_gdf, geometry="geometry")
-
         return grid_gdf
 
     def add_correction_parameters(
@@ -336,16 +356,21 @@ class NetcdfToGPKG:
             col_base = self.ts.create_column_base(time_seconds=timestep)
 
             # Retrieve timeseries
-            grid_gdf.insert(
-                col_idx.vol,
-                f"vol_{col_base}",
-                self.ts.get_timeseries_timestamp(param="vol", time_seconds=timestep),
-            )
-            grid_gdf.insert(
-                col_idx.storage,
-                f"storage_mm_{col_base}",
-                np.round(grid_gdf[f"vol_{col_base}"] / grid_gdf["dem_area"] * 1000, 2),
-            )
+            try:
+                vol_ts = self.ts.get_timeseries_timestamp(param="vol", time_seconds=timestep)
+                grid_gdf.insert(
+                    col_idx.vol,
+                    f"vol_{col_base}",
+                    vol_ts,
+                )
+                grid_gdf.insert(
+                    col_idx.storage,
+                    f"storage_mm_{col_base}",
+                    np.round(grid_gdf[f"vol_{col_base}"] / grid_gdf["dem_area"] * 1000, 2),
+                )
+            except KeyError:
+                print("Volume not found in (aggregated)result")
+
             grid_gdf.insert(
                 col_idx.wlvl,
                 f"wlvl_{col_base}",
@@ -426,6 +451,7 @@ class NetcdfToGPKG:
 
         if output_file is None:
             output_file = self.output_default
+        output_file = hrt.SpatialDatabase(output_file)
 
         create = hrt.check_create_new_file(output_file=output_file, overwrite=overwrite)
         if create:
@@ -444,16 +470,23 @@ class NetcdfToGPKG:
             if wlvl_correction:
                 grid_gdf = self.correct_waterlevels(grid_gdf=grid_gdf, timesteps_seconds=timesteps_seconds)
             # Save to file
-            grid_gdf.to_file(str(output_file), driver="GPKG")
+            grid_gdf.to_file(output_file.path, engine="pyogrio")
 
 
+# %%
 if __name__ == "__main__":
     from hhnk_threedi_tools import Folders
 
-    folder_path = r"E:\02.modellen\23_Katvoed"
+    folder_path = r"E:\02.modellen\HKC23010_Eijerland_WP"
     folder = Folders(folder_path)
 
-    threedi_result = folder.threedi_results.one_d_two_d["katvoed #1 piek_ghg_T1000"]
+    threedi_result = folder.threedi_results.batch["bwn_gxg"].downloads.piek_ghg_T10
 
+    output_file = None
+    wlvl_correction = False
+    overwrite = True
+    self = NetcdfToGPKG(threedi_result=threedi_result.netcdf, use_aggregate=True)
+    timesteps_seconds = ["max"]
+    self.run(wlvl_correction=wlvl_correction)
 
 # %%

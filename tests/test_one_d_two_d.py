@@ -5,7 +5,7 @@ import geopandas as gpd
 import pytest
 
 from hhnk_threedi_tools.core.checks.one_d_two_d import OneDTwoDTest
-from tests.config import FOLDER_NEW, FOLDER_TEST
+from tests.config import FOLDER_TEST
 
 # Globals
 REVISION = "BWN bwn_test #6 1d2d_test"
@@ -18,7 +18,7 @@ class TestOneDTwoD:
     @pytest.fixture(scope="class")
     def check_1d2d(self):
         check_1d2d = OneDTwoDTest(folder=FOLDER_TEST, revision=REVISION)
-        check_1d2d.output_fd.create(parents=True)
+        check_1d2d.output_fd.mkdir(parents=True)
         return check_1d2d
 
     def test_run_flowline_stats(self, check_1d2d):
@@ -29,6 +29,7 @@ class TestOneDTwoD:
 
     def test_run_depth_at_timesteps(self, check_1d2d):
         """Test of de 0d1d test werkt"""
+        # TODO move output to temp folder
         output_fd = check_1d2d.folder.output.one_d_two_d[check_1d2d.revision]
 
         check_1d2d.run_wlvl_depth_at_timesteps(overwrite=True)
@@ -38,7 +39,7 @@ class TestOneDTwoD:
         output_fd.waterdiepte_T15.exists()
 
         assert output_fd.waterdiepte_T1.shape == [787, 242]
-        assert output_fd.waterdiepte_T15.sum() == 1588.228515625
+        assert output_fd.waterdiepte_T15.sum() == 1654.740478515625
 
 
 # %%
