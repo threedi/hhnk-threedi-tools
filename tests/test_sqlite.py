@@ -1,6 +1,7 @@
 # %%
 # First-party imports
 import shutil
+import sys
 
 
 import pytest

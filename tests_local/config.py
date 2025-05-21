@@ -15,6 +15,10 @@ TEMP_DIR = hrt.Folder(TEST_DIRECTORY / r"temp", create=True)
 
 TEMP_DIR.unlink_contents()
 TEMP_DIR = TEMP_DIR.path
+
+# make sure directory exists
+TEMP_DIR.mkdir(parents=True, exist_ok=True)
+
 for i in TEMP_DIR.iterdir():
     if i.is_dir:
         cont = False
