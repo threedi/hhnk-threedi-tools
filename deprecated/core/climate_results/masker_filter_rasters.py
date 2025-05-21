@@ -84,7 +84,7 @@ def rasterize_maskerkaart(input_file, mask_plas_path, mask_overlast_path, meta):
     mask_path["overlast"] = mask_overlast_path
 
     for mask_type in ["plas", "overlast"]:
-        if not os.path.exists(mask_path[mask_type]):
+        if not os.path.exists(str(mask_path[mask_type])):
             # Repareer geometry
             temp_geom = (
                 maskerkaart_gdf.buffer(0.1)

@@ -17,13 +17,13 @@ RAIN_SETTINGS["piek"]["rain_duration"] = "2*3600"
 # Rain intensity per scenario
 RAIN_INTENSITY = {}
 RAIN_INTENSITY["blok"] = {}
-RAIN_INTENSITY["blok"]["T10"] = "71.2 / 48"  # mm/hour
-RAIN_INTENSITY["blok"]["T100"] = "100.9 / 48"  # mm/hour
-RAIN_INTENSITY["blok"]["T1000"] = "134.6 / 48"  # mm/hour
+RAIN_INTENSITY["blok"]["T10"] = "77.5 / 48"  # mm/hour
+RAIN_INTENSITY["blok"]["T100"] = "115.2 / 48"  # mm/hour
+RAIN_INTENSITY["blok"]["T1000"] = "162.8 / 48"  # mm/hour
 RAIN_INTENSITY["piek"] = {}
-RAIN_INTENSITY["piek"]["T10"] = "35.5 / 2"  # mm/hour
-RAIN_INTENSITY["piek"]["T100"] = "55.7 / 2"  # mm/hour
-RAIN_INTENSITY["piek"]["T1000"] = "80.5 / 2"  # mm/hour
+RAIN_INTENSITY["piek"]["T10"] = "38.4 / 2"  # mm/hour
+RAIN_INTENSITY["piek"]["T100"] = "71.6 / 2"  # mm/hour
+RAIN_INTENSITY["piek"]["T1000"] = "133.4 / 2"  # mm/hour
 
 RAIN_TYPES = ["piek", "blok"]
 GROUNDWATER = ["glg", "ggg", "ghg"]
