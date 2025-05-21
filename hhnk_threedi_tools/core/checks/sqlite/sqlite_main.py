@@ -134,8 +134,8 @@ OUTPUT_COLS = [
 # %%
 class SqliteCheck:
     def __init__(
-            self,
-            folder: Folders,
+        self,
+        folder: Folders,
     ):
         self.fenv = folder
 
@@ -631,10 +631,10 @@ def expand_multipolygon(df):
 
 
 def read_input(
-        model,
-        channel_profile_file,
-        fixeddrainage_layer,
-        damo_layer,
+    model,
+    channel_profile_file,
+    fixeddrainage_layer,
+    damo_layer,
 ):
     try:
         fixeddrainage = fixeddrainage_layer.load()[[peil_id_col, code_col, COL_STREEFPEIL_BWN, geometry_col]]
@@ -705,10 +705,10 @@ def calc_area(fixeddrainage, modelbuilder_waterdeel, damo_waterdeel, conn_nodes_
         fixeddrainage = add_waterdeel(fixeddrainage, modelbuilder_waterdeel)
         fixeddrainage.rename(columns={"area": watersurface_channels_area}, inplace=True)
         fixeddrainage[watersurface_model_area] = (
-                fixeddrainage[watersurface_channels_area] + fixeddrainage[watersurface_nodes_area]
+            fixeddrainage[watersurface_channels_area] + fixeddrainage[watersurface_nodes_area]
         )
         fixeddrainage[area_diff_col] = (
-                fixeddrainage[watersurface_model_area] - fixeddrainage[watersurface_waterdeel_area]
+            fixeddrainage[watersurface_model_area] - fixeddrainage[watersurface_waterdeel_area]
         )
         fixeddrainage[area_diff_perc] = fixeddrainage.apply(
             lambda row: calc_perc(row[area_diff_col], row[watersurface_waterdeel_area]),

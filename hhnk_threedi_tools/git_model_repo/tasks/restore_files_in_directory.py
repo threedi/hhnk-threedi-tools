@@ -50,8 +50,7 @@ def restore_files_in_directory(directory, output_file_path=None):
             path = os.path.join(root, rel_path)
 
             if os.path.isdir(path):
-                if rel_path.startswith('.') and rel_path.endswith("_gpkg"):
-
+                if rel_path.startswith(".") and rel_path.endswith("_gpkg"):
                     if output_file_path is None:
                         tmp_file_path, orig_file_path, backup_file_path = get_file_names_from_path(path)
 
@@ -76,7 +75,7 @@ def restore_files_in_directory(directory, output_file_path=None):
                         restorer = GeoPackageRestore(path, output_file_path)
                         restorer.restore()
 
-                elif rel_path.startswith('.') and rel_path.endswith("_xlsx"):
+                elif rel_path.startswith(".") and rel_path.endswith("_xlsx"):
                     if output_file_path is None:
                         tmp_file_path, orig_file_path, backup_file_path = get_file_names_from_path(path)
 

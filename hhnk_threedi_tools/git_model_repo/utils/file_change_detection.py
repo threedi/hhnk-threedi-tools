@@ -12,7 +12,7 @@ class FileChangeDetection(object):
     def get_file_hash(self):
         if not os.path.exists(self.file_path):
             return None
-        with open(self.file_path, 'rb') as f:
+        with open(self.file_path, "rb") as f:
             return hashlib.md5(f.read()).hexdigest()
 
     def has_changed(self):
@@ -42,7 +42,7 @@ def is_file_git_modified(repo, rel_file_path):
         # Controleer op niet-gevolgde bestanden
         untracked_files = repo.untracked_files
         if relpath_linux_like in untracked_files:
-          return True
+            return True
 
         return False  # het bestand is niet gewijzigd
     except Exception as e:

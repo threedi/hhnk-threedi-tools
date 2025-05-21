@@ -1,7 +1,7 @@
 import logging
 import time
 
-log = logging.getLogger('performance')
+log = logging.getLogger("performance")
 
 
 class SubTimer:

@@ -14,7 +14,7 @@ class GeoPackageRestore(object):
         """
         self.gpkg_path = gpkg_path
         if output_file_path is None:
-            filename = os.path.basename(gpkg_path.rtrim('_gpkg')) + "_restored.gpkg"
+            filename = os.path.basename(gpkg_path.rtrim("_gpkg")) + "_restored.gpkg"
             output_file_path = os.path.join(os.path.dirname(gpkg_path), os.pardir, filename)
 
         self.output_file_path = output_file_path
@@ -24,28 +24,26 @@ class GeoPackageRestore(object):
         return json.load(open(os.path.join(self.gpkg_path, "schema.json")))
 
     def restore_layers(self):
-
         schema = self.read_schema()
 
         for layer_name, layer_schema in schema.items():
-
-            layer = fiona.open(os.path.join(self.gpkg_path, layer_name + '.geojson'), 'r', layer=layer_name)
+            layer = fiona.open(os.path.join(self.gpkg_path, layer_name + ".geojson"), "r", layer=layer_name)
 
             # make sure th fid is copied too (fiona does not do this by default)
-            layer_schema['properties']['fid'] = 'int'
+            layer_schema["properties"]["fid"] = "int"
             dest_src = fiona.open(
                 self.output_file_path,
-                'w',
-                driver='GPKG',
+                "w",
+                driver="GPKG",
                 crs=layer.crs,
                 schema=layer_schema,
                 layer=layer_name,
-                FID='fid',
+                FID="fid",
                 overwrite=True,
             )
 
             for feature in layer:
-                feature['properties']['fid'] = int(feature['id'])
+                feature["properties"]["fid"] = int(feature["id"])
                 dest_src.write(feature)
             dest_src.close()
             layer.close()
