@@ -1,7 +1,7 @@
 [project]
 channels = ["conda-forge"]
 name = "hhnk-threedi-tools"
-platforms = ["win-64", "linux-64"]
+platforms = ["win-64", "linux-64", "osx-arm64"]
 repository = "https://github.com/threedi/hhnk-threedi-tools"
 
 
@@ -10,6 +10,10 @@ hrt-install = "bin/pixi/install_hrt.cmd"
 hydamo_validation-install = "bin/pixi/install_hydamo_validation.cmd"
 
 [target.linux-64.tasks]
+hrt-install = "bash bin/pixi/install_hrt.sh"
+hydamo_validation-install = "bin/pixi/install_hydamo_validation.sh"
+
+[target.osx-arm64.tasks]
 hrt-install = "bash bin/pixi/install_hrt.sh"
 hydamo_validation-install = "bin/pixi/install_hydamo_validation.sh"
 
@@ -156,7 +160,7 @@ oracledb = "==2.4.1"
 seaborn = "*"
 pip = "*"
 urllib3= "1.*"
-gitpython="3.1.40"
+gitpython="==3.1.40"
 
 [feature.py39.pypi-dependencies]
 threedi_modelchecker = "==2.6.3" # threedi_results_analysis 3.9.0
