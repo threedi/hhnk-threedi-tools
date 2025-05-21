@@ -88,11 +88,16 @@ threedi-schema = "==0.300.26"
 threedi-scenario-downloader = "*"
 threedi_mi_utils = "==0.1.10"
 threedigrid = "==2.3.5"
-threedigrid-builder = ">=1.24.3"
 threedidepth = "==0.6.3"
 
 # HHNK deps
 hhnk-threedi-tools = { path = ".", editable = true }
+
+[target.win-64.pypi-dependencies]
+threedigrid-builder = ">=1.24.3"
+
+[target.linux-64.pypi-dependencies]
+threedigrid-builder = ">=1.24.3"
 
 [feature.dev.dependencies]
 jupyterlab = "*"
@@ -167,7 +172,6 @@ threedi_modelchecker = "==2.6.3" # threedi_results_analysis 3.9.0
 threedi_scenario_downloader = "==1.4" # Lizard API v4 only
 threedi_schema = "==0.219.3" # threedi_results_analysis 3.9.0
 threedi-api-client = "==4.1.7" # 3Di Models and Simulations 3.11.0
-threedigrid_builder = "==1.14.4" # threedi_results_analysis 3.9.2
 threedigrid = "==2.3.3" # threedi_results_analysis 3.12.0
 threedidepth = "==0.6.3" # threedi_results_analysis 3.9.0
 hhnk-research-tools = { git = "https://github.com/hhnk/hhnk-research-tools.git", rev = "main" }
@@ -176,6 +180,11 @@ hydamo_validation = { git = "https://github.com/hhnk/HyDAMOValidatieModule.git",
 #Editable installs
 hhnk_threedi_tools = { path = ".", editable = true }
 
+[feature.py39.target.win-64.pypi-dependencies]
+threedigrid_builder = "==1.14.4" # threedi_results_analysis 3.9.2
+
+[feature.py39.target.linux-64.pypi-dependencies]
+threedigrid_builder = "==1.14.4" # threedi_results_analysis 3.9.2
 
 [environments]
 dev = ["dev"]
