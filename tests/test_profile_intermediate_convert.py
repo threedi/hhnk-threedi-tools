@@ -41,7 +41,7 @@ def test_profile_intermediate_converter():
     # Check for a single hydroobject OAF-JF-3094
     linemerge_id = converter.find_linemerge_id_by_hydroobject_code("OAF-JF-3094")
     assert linemerge_id is not None
-    linemerge = converter.hydroobject_linemerged.query("GlobalID == @linemerge_id").iloc[0]
+    linemerge = converter.hydroobject_linemerged.query("linemergeID == @linemerge_id").iloc[0]
     assert linemerge["categorie"] == "secondary"
     peilgebied_id = converter.find_peilgebied_id_by_hydroobject_code("OAF-JF-3094")
     assert peilgebied_id == 62170
