@@ -47,7 +47,35 @@ def test_profile_intermediate_converter():
     # Create profielgroep, profiellijn and profielpunt
     converter.create_profile_tables()
 
-    # TODO implement tests for profile tables
+    # Tests for profile tables
+    profielpunt = converter.profielpunt
+    profiellijn = converter.profiellijn
+    profielgroep = converter.profielgroep
+    hydroobject = converter.hydroobject
+
+    # Filter profielpunt on id 16564
+    pp = profielpunt[profielpunt["id"] == 16564]
+    assert len(pp) == 1
+
+    # Get profiellijnID
+    lijn_id = pp.iloc[0]["profielLijnID"]
+
+    # Filter profiellijn on GlobalID
+    pl = profiellijn[profiellijn["GlobalID"] == lijn_id]
+    assert len(pl) == 1
+    assert pl.iloc[0]["code"] == 42315
+
+    # Get profielgroepID
+    groep_id = pl.iloc[0]["profielgroepID"]
+
+    # Filter profielgroep on GlobalID
+    pg = profielgroep[profielgroep["GlobalID"] == groep_id]
+    assert len(pg) == 1
+    assert pg.iloc[0]["code"] == 42315
+
+    # Check hydroobjectID of profielgroep
+    ho = hydroobject[hydroobject["CODE"] == "OAF-QJ-16158"]
+    assert pg["hydroobjectID"].iloc[0] == ho["GlobalID"].iloc[0]
 
     # Write the result to a new file
     output_file_path = temp_dir_out / "output.gpkg"

@@ -91,28 +91,28 @@ class ProfileIntermediateConverter:
         self.profielgroep = self.gw_pro.copy()
         self.profielgroep["GlobalID"] = [str(uuid.uuid4()) for _ in range(len(self.profielgroep))]
 
-        # TODO we need to attach profielgroep to hydroObjectID based on the geometry
-
-        self.profielgroep["geometry"] = None # Profielgroep has no geometry
-
-        # Rename columns in profielgroep and drop unnecessary columns
+        # Rename
         self.profielgroep = self.profielgroep.rename(columns={"PRO_ID": "code"})
-        #self.profielgroep = self.profielgroep[["GlobalID", "code", "geometry", "hydroobjectID"]]
-        self.profielgroep = self.profielgroep[["GlobalID", "code", "geometry"]]
-        
+
+        # Attach profielgroep to hydroObjectID based on the geometry
+        self.assign_hydroobject_ids()
+
+        self.profielgroep["geometry"] = None  # Profielgroep has no geometry
+
+        # Drop unnecessary columns
+        self.profielgroep = self.profielgroep[["GlobalID", "code", "geometry", "hydroobjectID"]]
+
         self.profiellijn = self.gw_pro.copy()
         self.profiellijn["GlobalID"] = [str(uuid.uuid4()) for _ in range(len(self.profiellijn))]
-        self.profiellijn["ProfielgroepID"] = self.profielgroep["GlobalID"]
+        self.profiellijn["profielgroepID"] = self.profielgroep["GlobalID"]
 
         # Rename columns in profiellijn and drop unnecessary columns
         self.profiellijn = self.profiellijn.rename(
-            columns={
-                "OPRDATOP": "datumInwinning",
-                "OSMOMSCH": "namespace",
-                "PRO_ID": "code"
-            }
+            columns={"OPRDATOP": "datumInwinning", "OSMOMSCH": "namespace", "PRO_ID": "code"}
         )
-        self.profiellijn = self.profiellijn[["GlobalID", "code", "datumInwinning", "namespace", "geometry", "ProfielgroepID"]]
+        self.profiellijn = self.profiellijn[
+            ["GlobalID", "code", "datumInwinning", "namespace", "geometry", "profielgroepID"]
+        ]
 
         # Create profielpunt
         # Geometry is in iws_geo_beschr_profielpunten
@@ -136,7 +136,7 @@ class ProfileIntermediateConverter:
                 "PBPSOORT": "typeProfielPunt",
                 "IWS_VOLGNR": "codeVolgnummer",
                 "IWS_HOOGTE": "hoogte",
-                "IWS_AFSTAND": "afstand"
+                "IWS_AFSTAND": "afstand",
             }
         )
 
@@ -157,27 +157,57 @@ class ProfileIntermediateConverter:
         if not duplicates.empty:
             self.logger.warning(
                 f"Found {len(duplicates)} duplicate geometries in profielpunt. "
-                #f"Codes: {duplicates['code'].unique()}"
+                # f"Codes: {duplicates['code'].unique()}"
             )
 
-
         # Now we need to add the profielLijnID to every profielpunt
-        # We can use the PRO_PRO_ID in gw_prw to find the globalID in profiellijn with a matching PRO_ID (which was renamed to code)        
+        # We can use the PRO_PRO_ID in gw_prw to find the globalID in profiellijn with a matching PRO_ID (which was renamed to code)
         self.profielpunt = self.profielpunt.merge(
             self.profiellijn[["code", "GlobalID"]],
             left_on="PRO_PRO_ID",
             right_on="code",
             how="left",
-            suffixes=("", "_profiellijn")
+            suffixes=("", "_profiellijn"),
         )
-        self.profielpunt = self.profielpunt.rename(columns={"GlobalID_profiellijn": "ProfielLijnID"})
+        self.profielpunt = self.profielpunt.rename(columns={"GlobalID_profiellijn": "profielLijnID"})
         self.profielpunt = self.profielpunt.drop(columns=["code_profiellijn"])
-        
-        # Drop columns that are not needed
-        self.profielpunt = self.profielpunt.drop(
-            columns=["PRW_ID", "PBP_ID", "PRO_PRO_ID", "PRW_PRW_ID"]
-        )
 
+        # Drop columns that are not needed
+        self.profielpunt = self.profielpunt.drop(columns=["PRW_ID", "PBP_ID", "PRO_PRO_ID", "PRW_PRW_ID"])
+
+    def assign_hydroobject_ids(self):
+        if not "GlobalID" in self.hydroobject.columns:
+            self.hydroobject["GlobalID"] = [str(uuid.uuid4()) for _ in range(len(self.hydroobject))]
+
+        no_match_codes = []
+        multiple_match_codes = []
+
+        for idx, row in self.profielgroep.iterrows():
+            intersecting = self.hydroobject[self.hydroobject.intersects(row.geometry)]
+
+            gids_list = intersecting["GlobalID"].tolist()
+
+            if not gids_list:
+                no_match_codes.append(row.get("code"))
+                self.profielgroep.at[idx, "hydroobjectID"] = None
+                continue
+
+            self.profielgroep.at[idx, "hydroobjectID"] = gids_list[0]
+
+            if len(gids_list) > 1:
+                multiple_match_codes.append((row.get("code"), len(gids_list)))
+                for i, gid in enumerate(gids_list[1:], start=2):
+                    self.profielgroep.at[idx, f"hydroobjectID{i}"] = gid
+
+        warnings_list = []
+        if no_match_codes:
+            warnings_list.append(f"No intersection for profielgroep with code(s): {no_match_codes}")
+        if multiple_match_codes:
+            details = ", ".join([f"{idx} ({count})" for idx, count in multiple_match_codes])
+            warnings_list.append(f"Multiple intersections for profielgroep with code(s): {details}")
+
+        if warnings_list:
+            self.logger.warning("\n".join(warnings_list))
 
     def process_linemerge(self):
         """Run line merge algorithm and store result."""
