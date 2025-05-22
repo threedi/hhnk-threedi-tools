@@ -17,4 +17,14 @@
     ],
     "python.testing.unittestEnabled": false,
     "python.testing.pytestEnabled": true,
+    "files.exclude": {
+        "**/__pycache__": true,
+        "**/.ipynb_checkpoints": true,
+        "**/.mypy_cache": true,
+        "**.egg-info": true,
+        "**/.pytest_cache": true,
+        "**/.ruff_cache": true,
+        ".coverage": true,
+    },
+    "jupyter.interactiveWindow.textEditor.executeSelection": true,
 }

@@ -5,7 +5,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Union
 
-import geopandas as gpd
 import hhnk_research_tools as hrt
 
 from hhnk_threedi_tools import Folders
@@ -74,7 +73,7 @@ class DamageDem:
     """
 
     dem: hrt.Raster
-    panden_gpkg: Union[hrt.FileGDB, hrt.File, Path, str]
+    panden_gpkg: Union[hrt.SpatialDatabase, hrt.File, Path, str]
     panden_raster: hrt.Raster
     damage_dem: hrt.Raster
 

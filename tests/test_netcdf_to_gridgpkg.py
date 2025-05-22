@@ -2,7 +2,6 @@
 """Functional testing creating a grid.gpkg from a .nc"""
 
 import hhnk_research_tools as hrt
-import numpy as np
 import pytest
 
 from hhnk_threedi_tools.core.result_rasters import netcdf_to_gridgpkg

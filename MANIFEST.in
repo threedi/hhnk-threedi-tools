@@ -1,9 +1,15 @@
-# Exclude byte-compiled code # no-found due to natural exclusion
-prune /tests
-global-exclude */__pycache__/*
-# Include docs in the root.
+# MANIFEST.in is used in building the pypi wheels.
 include *.rst
-#include notebook
+include README.md
 graft hhnk_threedi_tools/utils
 graft hhnk_threedi_tools/resources
 
+global-exclude */__pycache__/* *.py[cod]
+
+# Exclude cache, tests, dev files
+prune **\.ipynb_checkpoints
+prune **\.mypy_cache
+prune .pytest_cache
+prune .pixi
+prune tests
+prune deprecated
