@@ -1,0 +1,66 @@
+DB_LAYER_MAPPING = {
+    # All non geometry tables should listed as sub tables
+    "HYDROOBJECT": {
+        "source": "aquaprd_lezen",
+        "schema": "DAMO_W",
+        "columns": None,
+        "required_sub_table": None,
+    },
+    "DUIKERSIFONHEVEL": {
+        "source": "csoprd_lezen",
+        "schema": "CS_OBJECTEN",
+        "columns": None,
+        "required_sub_table": None,
+    },
+    "GEMAAL": {  # TODO sub table POMP toevoegen
+        "source": "csoprd_lezen",
+        "schema": "CS_OBJECTEN",
+        "columns": None,
+        "required_sub_table": None,
+    },
+    "COMBINATIEPEILGEBIED": {
+        "source": "csoprd_lezen",
+        "schema": "CS_OBJECTEN",
+        "columns": None,
+        "required_sub_table": None,
+    },
+    "IWS_GEO_BESCHR_PROFIELPUNTEN": {
+        "source": "aquaprd_lezen",
+        "schema": "DAMO_W",
+        "geomcolumn": "GEOMETRIE",
+        "columns": ["PBP_PBP_ID"],
+        "required_sub_table": None,
+    },
+    "GW_PRO": {
+        "source": "aquaprd_lezen",
+        "schema": "DAMO_W",
+        "geomcolumn": "GEOMETRIE",
+        "columns": [
+            "PRO_ID",
+            "PROIDENT",
+            "OVK_OVK_ID",
+            "OPRDATOP",
+            "OSMOMSCH",
+        ],
+        "required_sub_table": "GW_PRW",
+        "id_link_column": "PRO_ID",
+        "sub_id_column": "PRO_PRO_ID",
+        "sub_columns": [
+            "PRO_PRO_ID",
+            "PRW_ID",
+            "OSMOMSCH",
+        ],
+        "required_sub2_table": "GW_PBP",
+        "sub_id_link_column": "PRW_ID",
+        "sub2_id_column": "PRW_PRW_ID",
+        "sub2_columns": [
+            "PBP_ID",
+            "PRW_PRW_ID",
+            "PBPIDENT",
+            "PBPSOORT",
+            "IWS_VOLGNR",
+            "IWS_HOOGTE",
+            "IWS_AFSTAND",
+        ],
+    },
+}

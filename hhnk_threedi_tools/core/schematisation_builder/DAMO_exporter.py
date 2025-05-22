@@ -8,6 +8,7 @@ import hhnk_research_tools as hrt
 import pandas as pd
 from hhnk_research_tools.sql_functions import (
     database_to_gdf,
+    sql_builder_select_by_id_list_statement,
     sql_builder_select_by_location,
 )
 from shapely.geometry import box
@@ -24,16 +25,9 @@ except ImportError as e:
 # From mapping json list top level keys
 tables_default = list(DB_LAYER_MAPPING.keys())
 
-# %%
-# TODO verwijder blok, alleen voor test
-EPSG_CODE = "28992"
-table = "GW_PRO"
-model_extent_gdf = gpd.read_file(r"E:\02.modelrepos\castricum\01_source_data\polder_polygon.shp")
-logger = False
-
 
 # %%
-def DAMO_exporter(
+def DAMO_exporter(  # TODO rename to DB_exporter
     model_extent_gdf: gpd.GeoDataFrame,
     output_file: Path,
     table_names: list[str] = tables_default,
@@ -66,53 +60,115 @@ def DAMO_exporter(
     """
     if not logger:  # moet dit if logger is None zijn?
         logger = hrt.logging.get_logger(__name__)
-    logger.info("Start export from DAMO database")
-
-    # schema = "DAMO_W"  # TODO: dit moet ook in de layer mapping komen en uitgelezen worden.
-    # TODO om de layer mapping moet het geometry type komen te staan
+    logger.info("Start export")
 
     # make bbox --> to simplify string request to DAMO db
     bbox_model = box(*model_extent_gdf.total_bounds)
 
-    logging_DAMO = []
+    logging = []
     for table in table_names:
+        layer_db = DB_LAYER_MAPPING.get(table, None).get("source", None)
+        geomcolumn = DB_LAYER_MAPPING.get(table, None).get("geomcolumn", None)
+        columns = DB_LAYER_MAPPING.get(table, None).get("columns", None)
+        if geomcolumn is not None:
+            columns = [geomcolumn] + columns
+
+        db_dict = DATABASES[layer_db]
+        service_name = db_dict.get("service_name", None)
         try:
-            if DB_LAYER_MAPPING.get(table, None).get("geometry_source", None) == "local":
-                logger.info(f"Start export of table {table} from DAMO database")
-                # Build sql string for request to DAMO db for given input polygon
-                sql = sql_builder_select_by_location(
+            logger.info(f"Start export of table {table} from {service_name}")
+
+            # Build sql string for request to db for given input polygon
+            sql = sql_builder_select_by_location(
+                schema=DB_LAYER_MAPPING.get(table, None).get("schema", None),
+                table_name=table,
+                geomcolumn=geomcolumn,
+                epsg_code=EPSG_CODE,
+                polygon_wkt=bbox_model,
+                simplify=True,
+            )
+
+            logger.info(f"Created sql statement {table} from from {service_name}")
+
+            # exports data from DAMO database
+            bbox_gdf, sql2 = database_to_gdf(db_dict=db_dict, sql=sql, columns=columns)
+
+            # select all objects which (partly) lay within the model extent
+            model_gdf = bbox_gdf[bbox_gdf["geometry"].intersects(model_extent_gdf["geometry"][0])]
+
+            # make sure that all colums which can contain dates has the type datetime
+            for col in model_gdf.columns:
+                if "date" in col or "datum" in col:
+                    model_gdf[col] = pd.to_datetime(model_gdf[col], errors="coerce")
+
+            # adds table to geopackage file as a layer
+            model_gdf.to_file(output_file, layer=table, driver="GPKG", engine="pyogrio")
+
+            logger.info(f"Finished export of table {table} from {service_name}")
+
+            # Include table that depend on this table
+            if DB_LAYER_MAPPING.get(table, None).get("required_sub_table", None) is not None:
+                sub_table = DB_LAYER_MAPPING.get(table, None).get("required_sub_table", None)
+                id_link_column = DB_LAYER_MAPPING.get(table, None).get("id_link_column", None)
+                sub_id_column = DB_LAYER_MAPPING.get(table, None).get("sub_id_column", None)
+                sub_columns = DB_LAYER_MAPPING.get(table, None).get("sub_columns", None)
+
+                logger.info(f"Start export of table non-geometric table {sub_table} from {service_name}")
+
+                # Modify sql to contain only id link column
+                sql_from = sql[sql.index("FROM") :]
+                sub_id_list_sql = f"SELECT {id_link_column} {sql_from}"
+
+                # Create new SQL statement
+                sub_sql = sql_builder_select_by_id_list_statement(
+                    sub_id_list_sql=sub_id_list_sql,
                     schema=DB_LAYER_MAPPING.get(table, None).get("schema", None),
-                    table_name=table,
-                    epsg_code=EPSG_CODE,
-                    polygon_wkt=bbox_model,
-                    simplify=True,
+                    sub_table=sub_table,
+                    sub_id_column=sub_id_column,
                 )
-                layer_db = DB_LAYER_MAPPING.get(table, None).get("source", None)
-                db_dict = DATABASES[layer_db]
-                logger.info(f"Retrieved {table} from database {layer_db}")
-                columns = None  # TODO willen we deze ook uit de mapping halen?
 
                 # exports data from DAMO database
-                bbox_gdf, sql2 = database_to_gdf(db_dict=db_dict, sql=sql, columns=columns)
+                sub_model_df, sub_sql2 = database_to_gdf(db_dict=db_dict, sql=sub_sql, columns=sub_columns)
 
-                # select all objects which (partly) lay within the model extent
-                gdf_model = bbox_gdf[bbox_gdf["geometry"].intersects(model_extent_gdf["geometry"][0])]
+                # Write to geopackage
+                sub_model_gdf = gpd.GeoDataFrame(sub_model_df)
+                sub_model_gdf.to_file(output_file, layer=sub_table, driver="GPKG", engine="pyogrio")
 
-                # make sure that all colums which can contain dates has the type datetime
-                for col in gdf_model.columns:
-                    if "date" in col or "datum" in col:
-                        gdf_model[col] = pd.to_datetime(gdf_model[col], errors="coerce")
+                logger.info(f"Finished export of table {sub_table} from {service_name}")
 
-                # adds table to geopackage file as a layer
-                gdf_model.to_file(output_file, layer=table, driver="GPKG", engine="pyogrio")
+                # Include table that depend on the sub-table (voor profielen, zucht)
+                if DB_LAYER_MAPPING.get(table, None).get("required_sub2_table", None) is not None:
+                    sub2_table = DB_LAYER_MAPPING.get(table, None).get("required_sub2_table", None)
+                    sub_id_link_column = DB_LAYER_MAPPING.get(table, None).get("sub_id_link_column", None)
+                    sub2_id_column = DB_LAYER_MAPPING.get(table, None).get("sub2_id_column", None)
+                    sub2_columns = DB_LAYER_MAPPING.get(table, None).get("sub2_columns", None)
 
-                logger.info(f"Finished export of table {table} from DAMO database")
-            else:
-                logger.info(f"Start export of table non-geometric table {table} from DAMO database")
+                    logger.info(f"Start export of table non-geometric table {sub2_table} from {service_name}")
+
+                    # Modify sql to contain only id link column
+                    sub_sql_from = sub_sql[sub_sql.index("FROM") :]
+                    sub2_id_list_sql = f"SELECT {sub_id_link_column} {sub_sql_from}"
+
+                    # Create new SQL statement
+                    sub2_sql = sql_builder_select_by_id_list_statement(
+                        sub_id_list_sql=sub2_id_list_sql,
+                        schema=DB_LAYER_MAPPING.get(table, None).get("schema", None),
+                        sub_table=sub2_table,
+                        sub_id_column=sub2_id_column,
+                    )
+
+                    # exports data from DAMO database
+                    sub2_model_df, sub2_sql2 = database_to_gdf(db_dict=db_dict, sql=sub2_sql, columns=sub2_columns)
+
+                    # Write to geopackage
+                    sub_model_gdf = gpd.GeoDataFrame(sub_model_df)
+                    sub_model_gdf.to_file(output_file, layer=sub_table, driver="GPKG", engine="pyogrio")
+
+                    logger.info(f"Finished export of table {sub2_table} from {service_name}")
 
         except Exception as e:
-            error = f"An error occured while exporting data of table {table} from DAMO: {e}"
+            error = f"An error occured while exporting data of table {table} from {service_name} {e}"
             logger.error(error)
-            logging_DAMO.append(error)
+            logging.append(error)
 
-    return logging_DAMO
+    return logging
