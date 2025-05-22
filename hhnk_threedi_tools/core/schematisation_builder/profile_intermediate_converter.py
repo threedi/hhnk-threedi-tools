@@ -217,58 +217,60 @@ class ProfileIntermediateConverter:
         self.hydroobject_linemerged = self._linemerge_hydroobjects(self.gecombineerde_peilen, self.hydroobject)
 
     def _linemerge_hydroobjects(self, gecombineerde_peilen, hydroobject):
-        """Merges hydroobjects within a peilgebied."""
+        """Merges hydroobjects within a peilgebied, split by primary and secondary categories."""
         merged_hydroobjects = []
-        hydroobject_map = {}  # Store a mapping of hydroobject ID -> linemergeID
+        hydroobject_map = {}
 
         for _, peilgebied in gecombineerde_peilen.iterrows():
             hydroobjects = hydroobject[hydroobject.intersects(peilgebied.geometry)]
             if hydroobjects.empty:
                 continue
 
-            # First clip #TODO check cases where hydroobject overlaps two peilgebieden
             hydroobjects = hydroobjects.clip(peilgebied.geometry)
             if hydroobjects.empty:
                 continue
 
-            # Then union
-            merged_hydroobject = hydroobjects.geometry.union_all()
+            # Split into primary and secondary
+            is_primary = hydroobjects["CATEGORIEOPPWATERLICHAAM"] == 1
+            primary = hydroobjects[is_primary]
+            secondary = hydroobjects[~is_primary | hydroobjects["CATEGORIEOPPWATERLICHAAM"].isna()]
 
-            if merged_hydroobject.geom_type == "GeometryCollection":
-                self.logger.info(
-                    f"GeometryCollection found in peilgebied {peilgebied['PeilgebiedPraktijk_ID']}. Only (Multi)LineStrings will be kept."
-                )
-                merged_hydroobject = geometrycollection_to_linestring(merged_hydroobject)
+            for category_label, group in [("primary", primary), ("secondary", secondary)]:
+                if group.empty:
+                    continue
 
-            # Upgrade to MultiLineString, even if only one LineString
-            if merged_hydroobject.geom_type == "LineString":
-                merged_hydroobject = MultiLineString([merged_hydroobject])
+                merged_geom = group.geometry.union_all()
 
-            hydroobject_codes = hydroobjects["CODE"].unique()
-            linemerge_id = str(uuid.uuid4())
+                if merged_geom.geom_type == "GeometryCollection":
+                    self.logger.info(
+                        f"GeometryCollection in peilgebied {peilgebied['PeilgebiedPraktijk_ID']} ({category_label}). Keeping only (Multi)LineStrings."
+                    )
+                    merged_geom = geometrycollection_to_linestring(merged_geom)
 
-            # Map each hydroobject code to its linemerge ID
-            for code in hydroobject_codes:
-                hydroobject_map[code] = linemerge_id
+                if merged_geom.geom_type == "LineString":
+                    merged_geom = MultiLineString([merged_geom])
 
-            # Append the merged hydroobject with additional information
-            merged_hydroobjects.append(
-                {
-                    "geometry": merged_hydroobject,
-                    "hydroobjectCODE": hydroobject_codes,
+                codes = group["CODE"].unique()
+                linemerge_id = str(uuid.uuid4())
+
+                for code in codes:
+                    hydroobject_map[code] = linemerge_id
+
+                merged_hydroobjects.append({
+                    "geometry": merged_geom,
+                    "hydroobjectCODE": codes,
                     "linemergeID": linemerge_id,
                     "peilgebiedID": peilgebied["PeilgebiedPraktijk_ID"],
-                }
-            )
+                    "categorie": category_label
+                })
 
         merged_hydroobjects_gdf = gpd.GeoDataFrame(merged_hydroobjects, crs=hydroobject.crs)
         if merged_hydroobjects_gdf.empty:
             return None
         else:
-            # Save the map of hydroobject codes to linemerge IDs
             self.hydroobject_map = hydroobject_map
             return merged_hydroobjects_gdf
-
+        
     def find_linemerge_id_by_hydroobject_code(self, code: str):
         """
         Find the linemergeID by hydroobject code.
