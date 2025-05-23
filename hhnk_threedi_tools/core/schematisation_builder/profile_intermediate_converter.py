@@ -252,6 +252,9 @@ class ProfileIntermediateConverter:
                 if merged_geom.geom_type == "LineString":
                     merged_geom = MultiLineString([merged_geom])
 
+                if merged_geom.is_empty or merged_geom.geom_type != "MultiLineString":
+                    continue
+
                 codes = group["CODE"].unique()
                 linemerge_id = str(uuid.uuid4())
 
@@ -351,6 +354,88 @@ class ProfileIntermediateConverter:
 
         # Map the deepest point to the profiellijn using its GlobalID
         self.profiellijn["diepstePunt"] = self.profiellijn["GlobalID"].map(deepest_points)
+
+    def connect_profiles_to_hydroobject_without_profiles(self):
+        """
+        Find hydroobjects that are not connected to profiles.
+        Connect them to the nearest profile on the same hydroobject linemerge.
+        """
+        self.logger.info("Finding hydroobjects without profiles...")
+        if self.hydroobject_linemerged is None:
+            raise ValueError("Linemerged hydroobjects not yet processed. Call process_linemerge() first.")
+
+        # Find hydroobjects that are not connected to profiles
+        hydroobject_ids_with_profiles = set(self.profielgroep["hydroobjectID"].unique())
+        hydroobject_without_profiles = self.hydroobject[
+            ~self.hydroobject["GlobalID"].isin(hydroobject_ids_with_profiles)
+        ]
+
+        if hydroobject_without_profiles.empty:
+            self.logger.info("No hydroobjects without profiles found.")
+            return
+
+        self.logger.info(f"Found {len(hydroobject_without_profiles)} from {len(self.hydroobject)} hydroobjects without profiles.")
+
+        # Mappings
+        code_to_linemerge_id = {code: lm_id for code, lm_id in self.hydroobject_map.items()}
+        linemergeid_to_codes = self.hydroobject_linemerged.set_index("linemergeID")["hydroobjectCODE"].to_dict()
+        code_to_globalid = dict(zip(self.hydroobject["CODE"], self.hydroobject["GlobalID"]))
+
+        # Build spatial index for profiellijn, grouped by linemergeID
+        profiellijn_by_linemerge = {}
+        for linemerge_id, codes in linemergeid_to_codes.items():
+            gids = [code_to_globalid.get(code) for code in codes if code in code_to_globalid]
+            gids = [gid for gid in gids if gid is not None]
+            profielgroep_ids = self.profielgroep[self.profielgroep["hydroobjectID"].isin(gids)]["GlobalID"].tolist()
+            profiellijn = self.profiellijn[self.profiellijn["profielgroepID"].isin(profielgroep_ids)]
+            if not profiellijn.empty:
+                profiellijn_by_linemerge[linemerge_id] = (profiellijn, profiellijn.sindex)
+
+        # Prepare lists for concat
+        profielgroep_new = []
+        profiellijn_new = []
+        profielpunt_new = []
+
+        n=0
+        for _, row in hydroobject_without_profiles.iterrows():
+            n+=1
+            if n % 100 == 0:
+                print(f"\rProcessing: {n / len(hydroobject_without_profiles) * 100:.0f}%", end="", flush=True)
+
+            linemerge_id = code_to_linemerge_id.get(row["CODE"])
+            if not linemerge_id or linemerge_id not in profiellijn_by_linemerge:
+                continue
+
+            profiellijn, sindex = profiellijn_by_linemerge[linemerge_id]
+            if profiellijn.empty:
+                continue
+
+            # Find nearest profiellijn
+            nearest_idx = list(sindex.nearest(row.geometry, return_all=True))[0]
+            nearest_profile_line = profiellijn.iloc[nearest_idx]
+
+            profielgroep_id = nearest_profile_line["profielgroepID"].iloc[0]
+
+            # Copy rows
+            profielgroep_copy = self.profielgroep[self.profielgroep["GlobalID"] == profielgroep_id].copy()
+            profiellijn_copy = self.profiellijn[self.profiellijn["profielgroepID"] == profielgroep_id].copy()
+            profielpunt_copy = self.profielpunt[self.profielpunt["profielLijnID"] == profielgroep_id].copy()
+
+            profielgroep_copy["hydroobjectID"] = row["GlobalID"]
+
+            profielgroep_new.append(profielgroep_copy)
+            profiellijn_new.append(profiellijn_copy)
+            profielpunt_new.append(profielpunt_copy)
+
+        # Concat
+        if profielgroep_new:
+            self.profielgroep = pd.concat([self.profielgroep] + profielgroep_new, ignore_index=True)
+        if profiellijn_new:
+            self.profiellijn = pd.concat([self.profiellijn] + profiellijn_new, ignore_index=True)
+        if profielpunt_new:
+            self.profielpunt = pd.concat([self.profielpunt] + profielpunt_new, ignore_index=True)
+
+        self.logger.info("Connected hydroobjects to profiles.")
 
 # General functions
 def geometrycollection_to_linestring(geometry):

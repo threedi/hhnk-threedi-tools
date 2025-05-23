@@ -81,8 +81,12 @@ def test_profile_intermediate_converter():
 
     # Compute the deepest point
     converter.compute_deepest_point_profiellijn()
-    # Check if the deepest point is computed
     assert converter.profiellijn["diepstePunt"].notnull().any()
+    assert converter.profiellijn[converter.profiellijn["code"] == 42315]["diepstePunt"].iloc[0] == -1.6
+
+    # Connect profiles to hydroobject without profiles
+    converter.connect_profiles_to_hydroobject_without_profiles()
+    # TODO test something
 
     # Write the result to a new file
     output_file_path = temp_dir_out / "output.gpkg"
