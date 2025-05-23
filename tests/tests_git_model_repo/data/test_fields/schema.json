@@ -1,0 +1,11 @@
+{
+  "test_geopackage": {
+    "properties": {
+      "id": "int",
+      "code": "str:12",
+      "water_level": "float",
+      "last_modified": "datetime"
+    },
+    "geometry": "Point"
+  }
+}
