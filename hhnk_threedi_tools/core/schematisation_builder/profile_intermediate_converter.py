@@ -235,7 +235,10 @@ class ProfileIntermediateConverter:
             primary = hydroobjects[is_primary]
             secondary = hydroobjects[~is_primary | hydroobjects["CATEGORIEOPPWATERLICHAAM"].isna()]
 
+            self.logger.info("Note: skipping secondary category hydroobjects.")
             for category_label, group in [("primary", primary), ("secondary", secondary)]:
+                if category_label == "secondary":
+                    continue
                 if group.empty:
                     continue
 
@@ -382,14 +385,22 @@ class ProfileIntermediateConverter:
         code_to_globalid = dict(zip(self.hydroobject["CODE"], self.hydroobject["GlobalID"]))
 
         # Build spatial index for profiellijn, grouped by linemergeID
+        no_profiellijn_for_linemerge = []
         profiellijn_by_linemerge = {}
         for linemerge_id, codes in linemergeid_to_codes.items():
             gids = [code_to_globalid.get(code) for code in codes if code in code_to_globalid]
-            gids = [gid for gid in gids if gid is not None]
             profielgroep_ids = self.profielgroep[self.profielgroep["hydroobjectID"].isin(gids)]["GlobalID"].tolist()
             profiellijn = self.profiellijn[self.profiellijn["profielgroepID"].isin(profielgroep_ids)]
             if not profiellijn.empty:
                 profiellijn_by_linemerge[linemerge_id] = (profiellijn, profiellijn.sindex)
+            else:
+                no_profiellijn_for_linemerge.append(linemerge_id)
+
+        if no_profiellijn_for_linemerge:
+            self.logger.warning(
+                f"Found {len(no_profiellijn_for_linemerge)} primairy linemerges without profiellijn. "
+                f"These linemerges are: {no_profiellijn_for_linemerge}"
+            )
 
         # Prepare lists for concat
         profielgroep_new = []
