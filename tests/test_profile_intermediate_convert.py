@@ -79,6 +79,11 @@ def test_profile_intermediate_converter():
     ho = hydroobject[hydroobject["CODE"] == "OAF-QJ-16158"]
     assert pg["hydroobjectID"].iloc[0] == ho["GlobalID"].iloc[0]
 
+    # Compute the deepest point
+    converter.compute_deepest_point_profiellijn()
+    # Check if the deepest point is computed
+    assert converter.profiellijn["diepstePunt"].notnull().any()
+
     # Write the result to a new file
     output_file_path = temp_dir_out / "output.gpkg"
     converter.write_outputs(output_path=output_file_path)

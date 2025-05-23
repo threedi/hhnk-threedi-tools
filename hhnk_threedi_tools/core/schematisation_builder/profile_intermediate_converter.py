@@ -242,9 +242,11 @@ class ProfileIntermediateConverter:
                 merged_geom = group.geometry.union_all()
 
                 if merged_geom.geom_type == "GeometryCollection":
+                    '''
                     self.logger.info(
                         f"GeometryCollection in peilgebied {peilgebied['PeilgebiedPraktijk_ID']} ({category_label}). Keeping only (Multi)LineStrings."
                     )
+                    '''
                     merged_geom = geometrycollection_to_linestring(merged_geom)
 
                 if merged_geom.geom_type == "LineString":
@@ -327,6 +329,28 @@ class ProfileIntermediateConverter:
                 gdf.to_file(output_path / f"{name}.gpkg", driver="GPKG")
                 self.logger.info(f"Wrote file '{name}.gpkg' to {output_path}")
 
+    def compute_deepest_point_profiellijn(self):
+        """
+        Compute the deepest point per profiellijn and add as a new column to self.profiellijn.
+        """
+        self.logger.info("Computing the deepest point per profiellijn...")
+        if self.profielpunt is None:
+            raise ValueError("profielpunt is not loaded. Call create_profile_tables() first.")
+        if "hoogte" not in self.profielpunt.columns:
+            raise ValueError("hoogte column is not present in profielpunt.")
+        if "profielLijnID" not in self.profielpunt.columns:
+            raise ValueError("profielLijnID column is not present in profielpunt.")
+        if self.profiellijn is None:
+            raise ValueError("profiellijn is not loaded. Call create_profile_tables() first.")
+
+        # Convert height to float
+        self.profielpunt["hoogte"] = pd.to_numeric(self.profielpunt["hoogte"], errors="coerce")
+
+        # Find the deepest point per profiellijn
+        deepest_points = self.profielpunt.groupby("profielLijnID")["hoogte"].min()
+
+        # Map the deepest point to the profiellijn using its GlobalID
+        self.profiellijn["diepstePunt"] = self.profiellijn["GlobalID"].map(deepest_points)
 
 # General functions
 def geometrycollection_to_linestring(geometry):
