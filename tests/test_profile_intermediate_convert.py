@@ -38,15 +38,20 @@ def test_profile_intermediate_converter():
     # Check if line merge result is stored
     assert converter.hydroobject_linemerged is not None
 
-    # TODO change test to a primaire watergang
+    # Test variables for profile on primary watergang
+    hydroobject_code = "OAF-QJ-14396"
+    peilgebied_id = 62149
+    profielpunt_id = 12578
+    profiellijn_code = 58395
+    diepste_punt = -3.16
 
-    # Check for a single hydroobject OAF-JF-3094
-    linemerge_id = converter.find_linemerge_id_by_hydroobject_code("OAF-JF-3094")
+    # Check for a single hydroobject
+    linemerge_id = converter.find_linemerge_id_by_hydroobject_code(hydroobject_code)
     assert linemerge_id is not None
     linemerge = converter.hydroobject_linemerged.query("linemergeID == @linemerge_id").iloc[0]
-    assert linemerge["categorie"] == "secondary"
-    peilgebied_id = converter.find_peilgebied_id_by_hydroobject_code("OAF-JF-3094")
-    assert peilgebied_id == 62170
+    assert linemerge["categorie"] == "primary"
+    peilgebied_id_result = converter.find_peilgebied_id_by_hydroobject_code(hydroobject_code)
+    assert peilgebied_id_result == peilgebied_id
 
     # Create profielgroep, profiellijn and profielpunt
     converter.create_profile_tables()
@@ -57,8 +62,8 @@ def test_profile_intermediate_converter():
     profielgroep = converter.profielgroep
     hydroobject = converter.hydroobject
 
-    # Filter profielpunt on id 16564
-    pp = profielpunt[profielpunt["id"] == 16564]
+    # Filter profielpunt on id
+    pp = profielpunt[profielpunt["id"] == profielpunt_id]
     assert len(pp) == 1
 
     # Get profiellijnID
@@ -67,7 +72,7 @@ def test_profile_intermediate_converter():
     # Filter profiellijn on GlobalID
     pl = profiellijn[profiellijn["GlobalID"] == lijn_id]
     assert len(pl) == 1
-    assert pl.iloc[0]["code"] == 42315
+    assert pl.iloc[0]["code"] == profiellijn_code
 
     # Get profielgroepID
     groep_id = pl.iloc[0]["profielgroepID"]
@@ -75,16 +80,16 @@ def test_profile_intermediate_converter():
     # Filter profielgroep on GlobalID
     pg = profielgroep[profielgroep["GlobalID"] == groep_id]
     assert len(pg) == 1
-    assert pg.iloc[0]["code"] == 42315
+    assert pg.iloc[0]["code"] == profiellijn_code
 
     # Check hydroobjectID of profielgroep
-    ho = hydroobject[hydroobject["CODE"] == "OAF-QJ-16158"]
+    ho = hydroobject[hydroobject["CODE"] == hydroobject_code]
     assert pg["hydroobjectID"].iloc[0] == ho["GlobalID"].iloc[0]
 
     # Compute the deepest point
     converter.compute_deepest_point_profiellijn()
     assert converter.profiellijn["diepstePunt"].notnull().any()
-    assert converter.profiellijn[converter.profiellijn["code"] == 42315]["diepstePunt"].iloc[0] == -1.6
+    assert converter.profiellijn[converter.profiellijn["code"] == profiellijn_code]["diepstePunt"].iloc[0] == diepste_punt
 
     # Connect profiles to hydroobject without profiles
     converter.connect_profiles_to_hydroobject_without_profiles()
@@ -92,9 +97,9 @@ def test_profile_intermediate_converter():
 
     # Write the result to a new file
     output_file_path = temp_dir_out / "output.gpkg"
-    #converter.write_outputs(output_path=output_file_path)
+    converter.write_outputs(output_path=output_file_path)
 
-    #assert output_file_path.exists()
+    assert output_file_path.exists()
 
 
 # %%

@@ -221,6 +221,7 @@ class ProfileIntermediateConverter:
         merged_hydroobjects = []
         hydroobject_map = {}
 
+        self.logger.info("Note: skipping secondary category hydroobjects.")
         for _, peilgebied in gecombineerde_peilen.iterrows():
             hydroobjects = hydroobject[hydroobject.intersects(peilgebied.geometry)]
             if hydroobjects.empty:
@@ -235,9 +236,8 @@ class ProfileIntermediateConverter:
             primary = hydroobjects[is_primary]
             secondary = hydroobjects[~is_primary | hydroobjects["CATEGORIEOPPWATERLICHAAM"].isna()]
 
-            self.logger.info("Note: skipping secondary category hydroobjects.")
             for category_label, group in [("primary", primary), ("secondary", secondary)]:
-                if category_label == "secondary":
+                if category_label == "secondary": # skip secondary category hydroobjects
                     continue
                 if group.empty:
                     continue
@@ -367,21 +367,28 @@ class ProfileIntermediateConverter:
         if self.hydroobject_linemerged is None:
             raise ValueError("Linemerged hydroobjects not yet processed. Call process_linemerge() first.")
 
-        # Find hydroobjects that are not connected to profiles
+        # Find primary hydroobjects that are not connected to profiles
         hydroobject_ids_with_profiles = set(self.profielgroep["hydroobjectID"].unique())
-        hydroobject_without_profiles = self.hydroobject[
-            ~self.hydroobject["GlobalID"].isin(hydroobject_ids_with_profiles)
-        ]
+        primary_hydroobjects = self.hydroobject[self.hydroobject["CATEGORIEOPPWATERLICHAAM"] == 1]
+        hydroobject_without_profiles = primary_hydroobjects[
+            ~primary_hydroobjects["GlobalID"].isin(hydroobject_ids_with_profiles)
+        ].copy()
 
         if hydroobject_without_profiles.empty:
-            self.logger.info("No hydroobjects without profiles found.")
+            self.logger.info("No primary hydroobjects without profiles found. Skipping connection step.")
             return
-
-        self.logger.info(f"Found {len(hydroobject_without_profiles)} from {len(self.hydroobject)} hydroobjects without profiles.")
+        
+        self.logger.info(f"Found {len(hydroobject_without_profiles)} from {len(primary_hydroobjects)} primary hydroobjects without profiles.")
 
         # Mappings
         code_to_linemerge_id = {code: lm_id for code, lm_id in self.hydroobject_map.items()}
-        linemergeid_to_codes = self.hydroobject_linemerged.set_index("linemergeID")["hydroobjectCODE"].to_dict()
+        linemergeid_to_codes = (
+            self.hydroobject_linemerged
+            .explode("hydroobjectCODE")
+            .groupby("linemergeID")["hydroobjectCODE"]
+            .apply(list)
+            .to_dict()
+        )
         code_to_globalid = dict(zip(self.hydroobject["CODE"], self.hydroobject["GlobalID"]))
 
         # Build spatial index for profiellijn, grouped by linemergeID
@@ -390,7 +397,7 @@ class ProfileIntermediateConverter:
         for linemerge_id, codes in linemergeid_to_codes.items():
             gids = [code_to_globalid.get(code) for code in codes if code in code_to_globalid]
             profielgroep_ids = self.profielgroep[self.profielgroep["hydroobjectID"].isin(gids)]["GlobalID"].tolist()
-            profiellijn = self.profiellijn[self.profiellijn["profielgroepID"].isin(profielgroep_ids)]
+            profiellijn = self.profiellijn[self.profiellijn["profielgroepID"].isin(profielgroep_ids)].reset_index(drop=True)
             if not profiellijn.empty:
                 profiellijn_by_linemerge[linemerge_id] = (profiellijn, profiellijn.sindex)
             else:
@@ -399,20 +406,14 @@ class ProfileIntermediateConverter:
         if no_profiellijn_for_linemerge:
             self.logger.warning(
                 f"Found {len(no_profiellijn_for_linemerge)} primairy linemerges without profiellijn. "
+                f"This means that these hydroobjects cannot be connected to profiles. "
                 f"These linemerges are: {no_profiellijn_for_linemerge}"
             )
 
-        # Prepare lists for concat
+        # Prepare list for concat
         profielgroep_new = []
-        profiellijn_new = []
-        profielpunt_new = []
 
-        n=0
         for _, row in hydroobject_without_profiles.iterrows():
-            n+=1
-            if n % 100 == 0:
-                print(f"\rProcessing: {n / len(hydroobject_without_profiles) * 100:.0f}%", end="", flush=True)
-
             linemerge_id = code_to_linemerge_id.get(row["CODE"])
             if not linemerge_id or linemerge_id not in profiellijn_by_linemerge:
                 continue
@@ -421,30 +422,37 @@ class ProfileIntermediateConverter:
             if profiellijn.empty:
                 continue
 
-            # Find nearest profiellijn
-            nearest_idx = list(sindex.nearest(row.geometry, return_all=True))[0]
-            nearest_profile_line = profiellijn.iloc[nearest_idx]
+            # Find nearest profile line
+            # 1. Buffer geometry by a small distance to get nearby candidates
+            buffered_geom = row.geometry.buffer(200) 
 
-            profielgroep_id = nearest_profile_line["profielgroepID"].iloc[0]
+            # 2. Use sindex to find intersecting geometries
+            possible_idx = list(sindex.query(buffered_geom))
+            if not possible_idx:
+                # fallback: brute force if no candidates found
+                profiellijn["distance"] = profiellijn.geometry.distance(row.geometry)
+                nearest_idx = profiellijn["distance"].idxmin()
+            else:
+                candidates = profiellijn.iloc[possible_idx].copy()
+                candidates["distance"] = candidates.geometry.distance(row.geometry)
+                nearest_idx = candidates["distance"].idxmin()
+
+            # 3. Select nearest profile line
+            nearest_profile_line = profiellijn.loc[nearest_idx]
+
+            profielgroep_id = nearest_profile_line["profielgroepID"]
 
             # Copy rows
             profielgroep_copy = self.profielgroep[self.profielgroep["GlobalID"] == profielgroep_id].copy()
-            profiellijn_copy = self.profiellijn[self.profiellijn["profielgroepID"] == profielgroep_id].copy()
-            profielpunt_copy = self.profielpunt[self.profielpunt["profielLijnID"] == profielgroep_id].copy()
-
+            profielgroep_copy["GlobalID"] = str(uuid.uuid4())  # New GlobalID for the copy
             profielgroep_copy["hydroobjectID"] = row["GlobalID"]
+            profielgroep_copy["copyOf"] = profielgroep_id
 
             profielgroep_new.append(profielgroep_copy)
-            profiellijn_new.append(profiellijn_copy)
-            profielpunt_new.append(profielpunt_copy)
 
         # Concat
         if profielgroep_new:
             self.profielgroep = pd.concat([self.profielgroep] + profielgroep_new, ignore_index=True)
-        if profiellijn_new:
-            self.profiellijn = pd.concat([self.profiellijn] + profiellijn_new, ignore_index=True)
-        if profielpunt_new:
-            self.profielpunt = pd.concat([self.profielpunt] + profielpunt_new, ignore_index=True)
 
         self.logger.info("Connected hydroobjects to profiles.")
 
