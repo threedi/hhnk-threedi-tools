@@ -27,12 +27,20 @@ tables_default = list(DB_LAYER_MAPPING.keys())
 
 # %% # TODO remove this block, only for testing
 # reload import
+import importlib
+
+import hhnk_threedi_tools
+
+importlib.reload(hhnk_threedi_tools)
+del DB_LAYER_MAPPING
+from hhnk_threedi_tools.resources.schematisation_builder.db_layer_mapping import DB_LAYER_MAPPING
 
 model_extent_polygon_fp = r"E:\02.modelrepos\zwartedijkspolder\01_source_data\polder_polygon.shp"
 model_extent_gdf = gpd.read_file(model_extent_polygon_fp)
 table_names = tables_default
-output_file = r"E:\github\wvanesse\hhnk-research-tools\tests_hrt\data\data_export2.gpkg"
-# table = "HHNK_MV_WTD"
+output_file = r"E:\github\wvanesse\hhnk-research-tools\tests_hrt\data\data_export3.gpkg"
+table = "HHNK_MV_WTD"
+EPSG_CODE = "28992"
 # db_dict = DATABASES[DB_LAYER_MAPPING.get(table, None).get("source", None)]
 # schema = DB_LAYER_MAPPING.get(table, None).get("schema", None)
 # columns = DB_LAYER_MAPPING.get(table, None).get("columns", None)
@@ -88,6 +96,7 @@ def DAMO_exporter(  # TODO rename to DB_exporter
             table_name = DB_LAYER_MAPPING.get(table, None).get("table_name", None)
         else:
             table_name = table
+
         if geomcolumn is not None:
             columns = [geomcolumn] + columns
 
@@ -152,7 +161,11 @@ def DAMO_exporter(  # TODO rename to DB_exporter
                 )
 
                 # exports data from DAMO database
-                sub_model_df, sub_sql2 = database_to_gdf(db_dict=db_dict, sql=sub_sql, columns=sub_columns)
+                sub_bbox_df, sub_sql2 = database_to_gdf(db_dict=db_dict, sql=sub_sql, columns=sub_columns)
+
+                # TODO filter pumps outside shape (in boundingbox)
+                idlist = model_gdf[id_link_column].unique().tolist()
+                sub_model_df = sub_bbox_df[sub_bbox_df["sub_id_column"] in idlist]
 
                 # Write to geopackage
                 sub_model_gdf = gpd.GeoDataFrame(sub_model_df)
