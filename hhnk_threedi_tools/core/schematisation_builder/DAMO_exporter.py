@@ -20,10 +20,24 @@ try:
 except ImportError as e:
     raise ImportError(
         "The 'local_settings_htt' module is missing. Get it from D:\github\evanderlaan\local_settings_htt.py and place it in \hhnk_threedi_tools\core\schematisation_builder"
-    ) from e
+    ) from e  # TODO kunnen we de local settings op een centrale locatie opslaan?
 
 # From mapping json list top level keys
 tables_default = list(DB_LAYER_MAPPING.keys())
+
+# %% # TODO remove this block, only for testing
+# reload import
+
+model_extent_polygon_fp = r"E:\02.modelrepos\zwartedijkspolder\01_source_data\polder_polygon.shp"
+model_extent_gdf = gpd.read_file(model_extent_polygon_fp)
+table_names = tables_default
+output_file = r"E:\github\wvanesse\hhnk-research-tools\tests_hrt\data\data_export2.gpkg"
+# table = "HHNK_MV_WTD"
+# db_dict = DATABASES[DB_LAYER_MAPPING.get(table, None).get("source", None)]
+# schema = DB_LAYER_MAPPING.get(table, None).get("schema", None)
+# columns = DB_LAYER_MAPPING.get(table, None).get("columns", None)
+# columns_all = get_table_columns(db_dict=db_dict, schema=schema, table_name=table)
+DAMO_exporter(model_extent_gdf, output_file)
 
 
 # %%
@@ -70,18 +84,22 @@ def DAMO_exporter(  # TODO rename to DB_exporter
         layer_db = DB_LAYER_MAPPING.get(table, None).get("source", None)
         geomcolumn = DB_LAYER_MAPPING.get(table, None).get("geomcolumn", None)
         columns = DB_LAYER_MAPPING.get(table, None).get("columns", None)
+        if DB_LAYER_MAPPING.get(table, None).get("table_name", None) is not None:
+            table_name = DB_LAYER_MAPPING.get(table, None).get("table_name", None)
+        else:
+            table_name = table
         if geomcolumn is not None:
             columns = [geomcolumn] + columns
 
         db_dict = DATABASES[layer_db]
         service_name = db_dict.get("service_name", None)
         try:
-            logger.info(f"Start export of table {table} from {service_name}")
+            logger.info(f"Start export of table {table_name} from {service_name}")
 
             # Build sql string for request to db for given input polygon
             sql = sql_builder_select_by_location(
                 schema=DB_LAYER_MAPPING.get(table, None).get("schema", None),
-                table_name=table,
+                table_name=table_name,
                 geomcolumn=geomcolumn,
                 epsg_code=EPSG_CODE,
                 polygon_wkt=bbox_model,
@@ -94,15 +112,21 @@ def DAMO_exporter(  # TODO rename to DB_exporter
             bbox_gdf, sql2 = database_to_gdf(db_dict=db_dict, sql=sql, columns=columns)
 
             # select all objects which (partly) lay within the model extent
-            model_gdf = bbox_gdf[bbox_gdf["geometry"].intersects(model_extent_gdf["geometry"][0])]
+            model_gdf = bbox_gdf[bbox_gdf["geometry"].intersects(model_extent_gdf["geometry"][0])].copy()
 
             # make sure that all colums which can contain dates has the type datetime
             for col in model_gdf.columns:
                 if "date" in col or "datum" in col:
                     model_gdf[col] = pd.to_datetime(model_gdf[col], errors="coerce")
 
+            # update layername if provided
+            if DB_LAYER_MAPPING.get(table, None).get("layername", None) is not None:
+                layername = DB_LAYER_MAPPING.get(table, None).get("layername", None) is not None
+            else:
+                layername = table
+
             # adds table to geopackage file as a layer
-            model_gdf.to_file(output_file, layer=table, driver="GPKG", engine="pyogrio")
+            model_gdf.to_file(output_file, layer=layername, driver="GPKG", engine="pyogrio")
 
             logger.info(f"Finished export of table {table} from {service_name}")
 
@@ -167,8 +191,11 @@ def DAMO_exporter(  # TODO rename to DB_exporter
                     logger.info(f"Finished export of table {sub2_table} from {service_name}")
 
         except Exception as e:
-            error = f"An error occured while exporting data of table {table} from {service_name} {e}"
+            error = f"An error occured while exporting data of table {table} from {service_name} {sql2} {e}"
             logger.error(error)
             logging.append(error)
 
     return logging
+
+
+# %%

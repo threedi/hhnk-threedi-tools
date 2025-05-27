@@ -1,18 +1,33 @@
 DB_LAYER_MAPPING = {
     # All non geometry tables should listed as sub tables
-    "HYDROOBJECT": {
-        "source": "aquaprd_lezen",
-        "schema": "DAMO_W",
+    # CS_OBJECTEN
+    "GEMAAL": {
+        "source": "csoprd_lezen",
+        "schema": "CS_OBJECTEN",
         "columns": None,
-        "required_sub_table": None,
+        "required_sub_table": "POMP",
+        "id_link_column": "CODE",
+        "sub_id_column": "CODEBEHEEROBJECT",
     },
-    "DUIKERSIFONHEVEL": {
+    "SLUIS": {
         "source": "csoprd_lezen",
         "schema": "CS_OBJECTEN",
         "columns": None,
         "required_sub_table": None,
     },
-    "GEMAAL": {  # TODO sub table POMP toevoegen
+    "DUIKERSIFONHEVEL": {  # TODO afsluitmiddel nodig?
+        "source": "csoprd_lezen",
+        "schema": "CS_OBJECTEN",
+        "columns": None,
+        "required_sub_table": None,
+    },
+    "STUW": {  # TODO afsluitmiddel nodig?
+        "source": "csoprd_lezen",
+        "schema": "CS_OBJECTEN",
+        "columns": None,
+        "required_sub_table": None,
+    },
+    "VISPASSAGE": {  # TODO afsluitmiddel nodig?
         "source": "csoprd_lezen",
         "schema": "CS_OBJECTEN",
         "columns": None,
@@ -22,7 +37,76 @@ DB_LAYER_MAPPING = {
         "source": "csoprd_lezen",
         "schema": "CS_OBJECTEN",
         "columns": None,
+    },
+    # BGT # TODO Gaat het goet met geometrie type alleen polygonen?
+    "HHNK_MV_WTD": {
+        "layername": "Waterdeel",  # TODO iets mee doen, check naam in huidige export
+        "source": "bgt_lezen",
+        "schema": "BGT",
+        "columns": [
+            "identificatie",
+            "status",
+        ],
+    },
+    "HHNK_MV_OWT": {
+        "layername": "Ondersteunend waterdeel",
+        "source": "bgt_lezen",
+        "schema": "BGT",
+        "columns": [
+            "identificatie",
+            "status",
+        ],
+    },
+    # DAMO_W
+    "BRUG": {
+        "source": "aquaprd_lezen",
+        "schema": "DAMO_W",
+        "columns": None,
+        "required_sub_table": "DOORSTROOMOPENING",  # TODO check
+        "id_link_column": "GLOBALID",
+        "sub_id_column": "BRUGID",
+    },
+    "PUT": {
+        "source": "aquaprd_lezen",
+        "schema": "DAMO_W",
+        "columns": None,
+    },
+    "GEMAAL_DAMO": {
+        "table_name": "GEMAAL",  # TODO iets mee doen
+        "source": "aquaprd_lezen",
+        "schema": "DAMO_W",
+        "columns": None,
+    },
+    "AQUADUCTLIJN": {
+        "source": "aquaprd_lezen",
+        "schema": "DAMO_W",
+        "columns": None,
         "required_sub_table": None,
+    },
+    "AQUADUCT": {
+        "source": "aquaprd_lezen",
+        "schema": "DAMO_W",
+        "columns": None,
+    },
+    "BODEMVAL": {
+        "source": "aquaprd_lezen",
+        "schema": "DAMO_W",
+        "columns": None,
+    },
+    "VASTEDAM": {
+        "source": "aquaprd_lezen",
+        "schema": "DAMO_W",
+        "columns": None,
+    },
+    "BERGINGSGEBIED": {
+        "source": "aquaprd_lezen",
+        "schema": "DAMO_W",
+        "columns": None,
+    },
+    "HYDROOBJECT": {
+        "source": "aquaprd_lezen",
+        "schema": "DAMO_W",
+        "columns": None,
     },
     "IWS_GEO_BESCHR_PROFIELPUNTEN": {
         "source": "aquaprd_lezen",
@@ -62,5 +146,10 @@ DB_LAYER_MAPPING = {
             "IWS_HOOGTE",
             "IWS_AFSTAND",
         ],
+    },
+    "PEILGEBIEDPRAKTIJK": {
+        "source": "aquaprd_lezen",
+        "schema": "DAMO_W",
+        "columns": None,
     },
 }
