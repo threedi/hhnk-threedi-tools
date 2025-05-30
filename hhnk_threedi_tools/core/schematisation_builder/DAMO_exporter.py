@@ -101,7 +101,7 @@ def DAMO_exporter(
 
 
 # From mapping json list top level keys
-tables_default = list(DB_LAYER_MAPPING.keys())
+# tables_default = list(DB_LAYER_MAPPING.keys())
 
 # %% # TODO remove this block, only for testing
 # reload import
@@ -115,7 +115,7 @@ from hhnk_threedi_tools.resources.schematisation_builder.db_layer_mapping import
 
 model_extent_polygon_fp = r"E:\personen\jacosta\HYDAMO\waterland_test_gemaal.gpkg"
 model_extent_gdf = gpd.read_file(model_extent_polygon_fp)
-table_names = ["GEMAAL", "DUIKERSIFONHEVEL", "GEMAAL"]
+table_names = ["GEMAAL", "DUIKERSIFONHEVEL", "HYDROOBJECT"]
 output_file = r"E:\personen\jacosta\HYDAMO\DAMO.gpkg"
 # table = "HHNK_MV_WTD"
 EPSG_CODE = "28992"
