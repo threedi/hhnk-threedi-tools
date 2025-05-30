@@ -113,10 +113,10 @@ importlib.reload(hhnk_threedi_tools)
 del DB_LAYER_MAPPING
 from hhnk_threedi_tools.resources.schematisation_builder.db_layer_mapping import DB_LAYER_MAPPING
 
-model_extent_polygon_fp = r"E:\personen\jacosta\HYDAMO\hhnk_bebiede.gpkg"
+model_extent_polygon_fp = r"E:\personen\jacosta\HYDAMO\waterland_test_gemaal.gpkg"
 model_extent_gdf = gpd.read_file(model_extent_polygon_fp)
-table_names = ["GEMAAL_DAMO"]
-output_file = r"E:\personen\jacosta\HYDAMO\data_export4.gpkg"
+table_names = ["GEMAAL", "DUIKERSIFONHEVEL", "GEMAAL"]
+output_file = r"E:\personen\jacosta\HYDAMO\DAMO.gpkg"
 # table = "HHNK_MV_WTD"
 EPSG_CODE = "28992"
 # db_dict = DATABASES[DB_LAYER_MAPPING.get(table, None).get("source", None)]
