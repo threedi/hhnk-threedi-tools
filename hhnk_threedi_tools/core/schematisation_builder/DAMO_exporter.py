@@ -13,7 +13,7 @@ from hhnk_research_tools.sql_functions import (
 from shapely.geometry import box
 
 try:
-    from hhnk_threedi_tools.resources.schematisation_builder.local_settings_htt import DATABASES, DB_LAYERS_MAPPING
+    from local_settings_htt import DATABASES, DB_LAYERS_MAPPING
 except ImportError as e:
     raise ImportError(
         "The 'local_settings_htt' module is missing. Get it from D:\github\evanderlaan\local_settings_htt.py and place it in \hhnk_threedi_tools\resources\schematisation_builder"
@@ -98,3 +98,31 @@ def DAMO_exporter(
             logging_DAMO.append(error)
 
     return logging_DAMO
+
+
+# From mapping json list top level keys
+tables_default = list(DB_LAYER_MAPPING.keys())
+
+# %% # TODO remove this block, only for testing
+# reload import
+import importlib
+
+import hhnk_threedi_tools
+
+importlib.reload(hhnk_threedi_tools)
+del DB_LAYER_MAPPING
+from hhnk_threedi_tools.resources.schematisation_builder.db_layer_mapping import DB_LAYER_MAPPING
+
+model_extent_polygon_fp = r"E:\personen\jacosta\HYDAMO\hhnk_bebiede.gpkg"
+model_extent_gdf = gpd.read_file(model_extent_polygon_fp)
+table_names = ["GEMAAL_DAMO"]
+output_file = r"E:\personen\jacosta\HYDAMO\data_export4.gpkg"
+# table = "HHNK_MV_WTD"
+EPSG_CODE = "28992"
+# db_dict = DATABASES[DB_LAYER_MAPPING.get(table, None).get("source", None)]
+# schema = DB_LAYER_MAPPING.get(table, None).get("schema", None)
+# columns = DB_LAYER_MAPPING.get(table, None).get("columns", None)
+# columns_all = get_table_columns(db_dict=db_dict, schema=schema, table_name=table)
+DAMO_exporter(model_extent_gdf, table_names, output_file)
+
+# %%
