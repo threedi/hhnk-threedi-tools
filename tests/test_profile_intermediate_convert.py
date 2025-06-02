@@ -43,7 +43,7 @@ def test_profile_intermediate_converter():
     peilgebied_id = 62149
     profielpunt_id = 12578
     profiellijn_code = 58395
-    diepste_punt = -3.16
+    diepste_punt_profiel = -3.16
 
     # Check for a single hydroobject
     linemerge_id = converter.find_linemerge_id_by_hydroobject_code(hydroobject_code)
@@ -86,20 +86,54 @@ def test_profile_intermediate_converter():
     ho = hydroobject[hydroobject["CODE"] == hydroobject_code]
     assert pg["hydroobjectID"].iloc[0] == ho["GlobalID"].iloc[0]
 
-    # Compute the deepest point
+    # Compute the deepest point of profiel
     converter.compute_deepest_point_profiellijn()
     assert converter.profiellijn["diepstePunt"].notnull().any()
-    assert converter.profiellijn[converter.profiellijn["code"] == profiellijn_code]["diepstePunt"].iloc[0] == diepste_punt
+    assert converter.profiellijn[converter.profiellijn["code"] == profiellijn_code]["diepstePunt"].iloc[0] == diepste_punt_profiel
 
-    # Connect profiles to hydroobject without profiles
-    converter.connect_profiles_to_hydroobject_without_profiles()
-    # TODO test something
+    # Test variables for profile on primary watergang without profile
+    hydroobject_code_no_profile = "OAF-Q-36452" # near end peilgebied
+    nearest_profiellijn_code_it_should_connect_to = 62421
+    deepest_point_hydroobject_no_profile = -4.57
 
+    # Check it is not connected to a profile
+    pl_2 = converter.find_profiellijn_by_hydroobject_code(hydroobject_code_no_profile)
+    assert pl_2 is None
+
+    # Now connect profiles to hydroobject without profiles
+    converter.connect_profiles_to_hydroobject_without_profiles(max_distance=250)
+
+    # Check it is connected to a profile now
+    pl_2 = converter.find_profiellijn_by_hydroobject_code(hydroobject_code_no_profile)
+    assert pl_2 is not None 
+    assert not pl_2.empty and len(pl_2) == 1
+    assert pl_2["code"].iloc[0] == nearest_profiellijn_code_it_should_connect_to
+
+    # Compute the deepest point per hydroobject
+    converter.compute_deepest_point_hydroobjects()
+    dp = converter.find_deepest_point_by_hydroobject_code(hydroobject_code_no_profile)
+    assert dp == deepest_point_hydroobject_no_profile
+    
     # Write the result to a new file
     output_file_path = temp_dir_out / "output.gpkg"
     converter.write_outputs(output_path=output_file_path)
 
     assert output_file_path.exists()
+
+    # Temp test converter to HyDAMO as well
+    from hhnk_threedi_tools.core.schematisation_builder.DAMO_HyDAMO_converter import DAMO_to_HyDAMO_Converter
+    hydamo_file_path = temp_dir_out / "HyDAMO anna paulowna.gpkg"
+    converter_hydamo = DAMO_to_HyDAMO_Converter(
+        damo_file_path=output_file_path,
+        hydamo_file_path=hydamo_file_path,
+        layers=["HYDROOBJECT", "PROFIELPUNT", "PROFIELLIJN", "PROFIELGROEP"],
+        overwrite=False,
+    )
+
+    converter_hydamo.run()
+
+    # Check if HyDAMO.gpkg is created
+    assert hydamo_file_path.exists()
 
 
 # %%

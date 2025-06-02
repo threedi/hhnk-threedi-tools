@@ -202,8 +202,10 @@ class DAMO_to_HyDAMO_Converter:
             Converted layer
         """
         for column_name in layer_gdf.columns:
-            column_name = column_name.lower()
-            layer_gdf[column_name] = self.convert_column(layer_gdf[column_name], column_name, layer_name)
+            lower_column_name = column_name.lower()
+            layer_gdf.rename(columns={column_name: lower_column_name}, inplace=True)
+            layer_gdf[lower_column_name] = self.convert_column(layer_gdf[lower_column_name], lower_column_name, layer_name)
+        
         return layer_gdf
 
     def convert_column(self, column: pd.Series, column_name: str, layer_name: str) -> pd.Series:
@@ -235,6 +237,8 @@ class DAMO_to_HyDAMO_Converter:
             self.logger.info(
                 f"field_type is None and/or column values are NaN for field {column_name} in layer {layer_name}"
             )
+            # TODO why is it a issue if there are NaN values in the column?
+            # TODO double logging
 
         return column
 
@@ -260,10 +264,8 @@ class DAMO_to_HyDAMO_Converter:
             "number": float,
         }
 
+        layer_name = layer_name.lower()
         try:
-            # make sure the layer_name and column_name are lowercase
-            layer_name = layer_name.lower()
-            column_name = column_name.lower()
             # Check if the layer_name exists in the definitions
             field_type = self.definitions[layer_name]["properties"][column_name]["type"]
 

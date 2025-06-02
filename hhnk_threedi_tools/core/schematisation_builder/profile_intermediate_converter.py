@@ -18,8 +18,9 @@ class ProfileIntermediateConverter:
     Functionalities
     ---------------
     - Read and validate layers
-    - Linemerge hydroobjects on peilvakken
     - Create profielgroep, profiellijn, and profielpunt
+    - Linemerge primary hydroobjects on peilvakken
+    - Connect primary hydroobjects without profiles to the nearest profile
     - Write output
 
     Parameters
@@ -217,39 +218,63 @@ class ProfileIntermediateConverter:
         self.hydroobject_linemerged = self._linemerge_hydroobjects(self.gecombineerde_peilen, self.hydroobject)
 
     def _linemerge_hydroobjects(self, gecombineerde_peilen, hydroobject):
-        """Merges hydroobjects within a peilgebied, split by primary and secondary categories."""
+        """
+        Merges hydroobjects within a peilgebied, assigning each hydroobject to the peilgebied
+        in which the largest part of its geometry lies. Hydroobjects are not clipped.
+        """
         merged_hydroobjects = []
         hydroobject_map = {}
 
-        self.logger.info("Note: skipping secondary category hydroobjects.")
-        for _, peilgebied in gecombineerde_peilen.iterrows():
-            hydroobjects = hydroobject[hydroobject.intersects(peilgebied.geometry)]
-            if hydroobjects.empty:
+        # Assign each hydroobject to the peilgebied where the largest part of its geometry lies
+        self.logger.info("Assigning hydroobjects to peilgebieden.")
+        # Build spatial index for peilgebieden for efficiency
+        peilgebieden_sindex = gecombineerde_peilen.sindex
+
+        # For each hydroobject, find intersecting peilgebieden and assign to the one with largest overlap
+        hydroobject_to_peilgebied = {}
+        for idx, ho_row in hydroobject.iterrows():
+            ho_geom = ho_row.geometry
+            possible_peil_idx = list(peilgebieden_sindex.query(ho_geom))
+            if not possible_peil_idx:
+                self.logger.warning(f"No peilgebied found for hydroobject with GlobalID {ho_row['GlobalID']}.")
                 continue
-
-            hydroobjects = hydroobjects.clip(peilgebied.geometry)
-            if hydroobjects.empty:
-                continue
-
-            # Split into primary and secondary
-            is_primary = hydroobjects["CATEGORIEOPPWATERLICHAAM"] == 1
-            primary = hydroobjects[is_primary]
-            secondary = hydroobjects[~is_primary | hydroobjects["CATEGORIEOPPWATERLICHAAM"].isna()]
-
-            for category_label, group in [("primary", primary), ("secondary", secondary)]:
-                if category_label == "secondary": # skip secondary category hydroobjects
+            # Find the peilgebied with the largest intersection length
+            max_length = 0
+            best_peilgebied_id = None
+            for peil_idx in possible_peil_idx:
+                peil_row = gecombineerde_peilen.iloc[peil_idx]
+                intersection = ho_geom.intersection(peil_row.geometry)
+                if intersection.is_empty:
                     continue
+                # Use length for lines
+                overlap = intersection.length
+                if overlap > max_length:
+                    max_length = overlap
+                    best_peilgebied_id = peil_row["PeilgebiedPraktijk_ID"]
+            if best_peilgebied_id is not None:
+                hydroobject_to_peilgebied[idx] = best_peilgebied_id
+
+        # Add peilgebied assignment to hydroobject
+        hydroobject = hydroobject.copy()
+        hydroobject["assigned_peilgebied"] = hydroobject.index.map(hydroobject_to_peilgebied)
+
+        # Only keep hydroobjects that have an assigned peilgebied
+        hydroobject = hydroobject[hydroobject["assigned_peilgebied"].notna()]
+
+        # Split into groups by peilgebied and category
+        for peilgebied_id, group_peilgebied in hydroobject.groupby("assigned_peilgebied"):
+            for category_label, group in [
+                ("primary", group_peilgebied[group_peilgebied["CATEGORIEOPPWATERLICHAAM"] == 1]),
+                ("secondary", group_peilgebied[(group_peilgebied["CATEGORIEOPPWATERLICHAAM"] != 1) | group_peilgebied["CATEGORIEOPPWATERLICHAAM"].isna()]),
+            ]:
+                if category_label == "secondary":
+                    continue  # skip secondary
                 if group.empty:
                     continue
 
                 merged_geom = group.geometry.union_all()
 
                 if merged_geom.geom_type == "GeometryCollection":
-                    '''
-                    self.logger.info(
-                        f"GeometryCollection in peilgebied {peilgebied['PeilgebiedPraktijk_ID']} ({category_label}). Keeping only (Multi)LineStrings."
-                    )
-                    '''
                     merged_geom = geometrycollection_to_linestring(merged_geom)
 
                 if merged_geom.geom_type == "LineString":
@@ -268,7 +293,7 @@ class ProfileIntermediateConverter:
                     "geometry": merged_geom,
                     "hydroobjectCODE": codes,
                     "linemergeID": linemerge_id,
-                    "peilgebiedID": peilgebied["PeilgebiedPraktijk_ID"],
+                    "peilgebiedID": peilgebied_id,
                     "categorie": category_label
                 })
 
@@ -313,6 +338,61 @@ class ProfileIntermediateConverter:
         else:
             self.logger.warning(f"Hydroobject code '{code}' not found in the linemerged map.")
             return None
+        
+    def find_profiellijn_by_hydroobject_code(self, code: str):
+        """
+        Find the profiellijn GeoDataFrame by hydroobject code.
+        """
+        if self.profiellijn is None:
+            raise ValueError("profiellijn is not loaded. Call create_profile_tables() first.")
+
+        # Find the hydroobjectID for the given code
+        hydroobject_id = self.hydroobject[self.hydroobject["CODE"] == code]["GlobalID"].values
+        if not hydroobject_id:
+            self.logger.warning(f"No hydroobject found with code '{code}'.")
+            return None
+    
+        # Filter profielgroep by hydroobjectID
+        profielgroep = self.profielgroep[self.profielgroep["hydroobjectID"] == hydroobject_id[0]]
+        if profielgroep.empty:
+            self.logger.warning(f"No profielgroep found for hydroobject code '{code}'.")
+            return None
+        
+        # Get the profielgroep_ids, use 'copyOf' if present, otherwise use 'GlobalID'
+        profielgroep_ids = profielgroep.apply(
+            lambda row: row["copyOf"] if "copyOf" in row and pd.notna(row["copyOf"]) else row["GlobalID"],
+            axis=1
+        ).tolist()
+
+        # Get the profiellijn that matches the profielgroep_ids
+        profiellijn = self.profiellijn[self.profiellijn["profielgroepID"].isin(profielgroep_ids)]
+
+        if profiellijn.empty:
+            self.logger.warning(f"No profiellijn found for hydroobject code '{code}'.")
+            return None
+
+        return profiellijn
+    
+    def find_deepest_point_by_hydroobject_code(self, code: str):
+        """
+        Find the deepest point for a hydroobject by its code.
+        """
+        if self.hydroobject is None:
+            raise ValueError("hydroobject is not loaded. Call load_layers() first.")
+        if self.profielgroep is None:
+            raise ValueError("profielgroep is not loaded. Call create_profile_tables() first.")
+        if "diepstePunt" not in self.hydroobject.columns:
+            raise ValueError("diepstePunt column is not present in hydroobject. Call compute_deepest_point_hydroobjects() first.")
+
+        # Find the hydroobject by code
+        hydroobject = self.hydroobject[self.hydroobject["CODE"] == code]
+        if hydroobject.empty:
+            self.logger.warning(f"No hydroobject found with code '{code}'.")
+            return None
+
+        # Get the deepest point
+        diepste_punt = hydroobject["diepstePunt"].values[0]
+        return diepste_punt
 
     def write_outputs(self, output_path: Path):
         """
@@ -358,7 +438,7 @@ class ProfileIntermediateConverter:
         # Map the deepest point to the profiellijn using its GlobalID
         self.profiellijn["diepstePunt"] = self.profiellijn["GlobalID"].map(deepest_points)
 
-    def connect_profiles_to_hydroobject_without_profiles(self):
+    def connect_profiles_to_hydroobject_without_profiles(self, max_distance=250):
         """
         Find hydroobjects that are not connected to profiles.
         Connect them to the nearest profile on the same hydroobject linemerge.
@@ -423,19 +503,27 @@ class ProfileIntermediateConverter:
                 continue
 
             # Find nearest profile line
-            # 1. Buffer geometry by a small distance to get nearby candidates
-            buffered_geom = row.geometry.buffer(200) 
+            # 1. Buffer geometry to get nearby candidates
+            buffered_geom = row.geometry.buffer(max_distance) 
 
             # 2. Use sindex to find intersecting geometries
             possible_idx = list(sindex.query(buffered_geom))
+            nearest_idx = None
             if not possible_idx:
                 # fallback: brute force if no candidates found
                 profiellijn["distance"] = profiellijn.geometry.distance(row.geometry)
-                nearest_idx = profiellijn["distance"].idxmin()
+                min_distance = profiellijn["distance"].min()
+                if min_distance < max_distance:
+                    nearest_idx = profiellijn["distance"].idxmin()
             else:
                 candidates = profiellijn.iloc[possible_idx].copy()
                 candidates["distance"] = candidates.geometry.distance(row.geometry)
-                nearest_idx = candidates["distance"].idxmin()
+                min_distance = candidates["distance"].min()
+                if min_distance < max_distance:
+                    nearest_idx = candidates["distance"].idxmin()
+
+            if nearest_idx is None:
+                continue
 
             # 3. Select nearest profile line
             nearest_profile_line = profiellijn.loc[nearest_idx]
@@ -455,6 +543,68 @@ class ProfileIntermediateConverter:
             self.profielgroep = pd.concat([self.profielgroep] + profielgroep_new, ignore_index=True)
 
         self.logger.info("Connected hydroobjects to profiles.")
+
+    def compute_deepest_point_hydroobjects(self):
+        """
+        Compute the deepest point and add as a new column to self.hydroobject.
+        """
+        self.logger.info("Computing the deepest point for hydroobjects...")
+
+        if self.hydroobject is None:
+            raise ValueError("hydroobject is not loaded. Call load_layers() first.")
+        if self.profielgroep is None:
+            raise ValueError("profielgroep is not loaded. Call create_profile_tables() first.")
+        if "hydroobjectID" not in self.profielgroep.columns:
+            raise ValueError("hydroobjectID column is not present in profielgroep.")
+
+        # filter the hydroobject on reference in profielgroep
+        # these are the hydroobjects that have a profile
+        hydroobject_with_profiles = self.hydroobject[self.hydroobject["GlobalID"].isin(self.profielgroep["hydroobjectID"])]
+        if hydroobject_with_profiles.empty:
+            self.logger.warning("No hydroobjects with profiles found. Skipping deepest point computation.")
+            return
+        
+        # Check if "diepstePunt" is already computed
+        if "diepstePunt" not in self.profiellijn.columns:
+            self.compute_deepest_point_profiellijn()
+
+        # collect the profiellijn features per hydroobject
+        hydroobject_deepest_points = []
+        for _, hydro_row in hydroobject_with_profiles.iterrows():
+            hydro_code = hydro_row["CODE"]
+
+            # Find the corresponding profiellijn
+            profiellijn = self.find_profiellijn_by_hydroobject_code(hydro_code)
+            if profiellijn is None or profiellijn.empty:
+                continue
+
+            # Find the deepest point in the profiellijn
+            diepste_punt = profiellijn["diepstePunt"].min()
+            if pd.isna(diepste_punt):
+                continue
+
+            # Append to results
+            hydroobject_deepest_points.append({
+                "GlobalID": hydro_row["GlobalID"],
+                "diepstePunt": diepste_punt
+            })
+        
+        # Create a DataFrame from the results
+        hydroobject_deepest_points_df = pd.DataFrame(hydroobject_deepest_points)
+        if hydroobject_deepest_points_df.empty:
+            self.logger.warning("No deepest points computed for hydroobjects.")
+            return
+        
+        # Merge the deepest points back to the hydroobject GeoDataFrame
+        self.hydroobject = self.hydroobject.merge(
+            hydroobject_deepest_points_df,
+            on="GlobalID",
+            how="left"
+        )
+
+        # log the number of hydroobjects with computed deepest points
+        num_deepest_points = self.hydroobject["diepstePunt"].notnull().sum()
+        self.logger.info(f"Computed deepest points for {num_deepest_points} hydroobjects.")
 
 # General functions
 def geometrycollection_to_linestring(geometry):
