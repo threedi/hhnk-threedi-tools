@@ -108,7 +108,7 @@ class ModelSchematisations:
         # This menas rasters that are not defined are not added to the schematisation.
         schema_base = self.folder.model.schema_base
         schema_new = getattr(self.folder.model, f"schema_{name}")
-        schema_new.create()
+        schema_new.mkdir()
 
         database_base = schema_base.database
 
@@ -121,7 +121,7 @@ class ModelSchematisations:
         # If database_new is defined before sqlite exists, it will not work properly
         database_new = schema_new.database
 
-        schema_new.rasters.create(parents=False)
+        schema_new.rasters.mkdir()
         # Copy rasters that are defined in the settings file
         for raster_file in RASTER_FILES:
             if not pd.isnull(row[raster_file]):
@@ -301,8 +301,8 @@ or do not use this run in the modelsplitter.
             mod_settings_default = self.folder.model.settings_default.path_if_exists
             model_sql = self.folder.model.model_sql.path_if_exists
 
-            target_path = self.folder.model.revisions.full_path(f"rev_{rev_count+1} - {commit_message[:25]}")
-            target_path.create(parents=True)
+            target_path = self.folder.model.revisions.full_path(f"rev_{rev_count + 1} - {commit_message[:25]}")
+            target_path.mkdir(parents=True)
 
             files_copied = []
             for f in [sqlite_path, mod_settings_file, mod_settings_default, model_sql]:

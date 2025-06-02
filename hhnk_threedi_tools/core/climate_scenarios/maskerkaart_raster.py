@@ -8,7 +8,8 @@ def rasterize_maskerkaart(input_file, mask_plas_raster, mask_overlast_raster, me
     rasterize_maskerkaart(input_file=batch_fd['02_output_rasters']['maskerkaart'],
                       mask_plas_path=batch_fd['02_output_rasters']['mask_plas'],
                       mask_overlast_path=batch_fd['02_output_rasters']['mask_overlast'],
-                      meta=depth_meta)"""
+                      meta=depth_meta)
+    """
     # Maak polygoon van watersysteemgerelateerde inundatie
     maskerkaart_gdf = gpd.read_file(input_file).dropna(how="any")
 

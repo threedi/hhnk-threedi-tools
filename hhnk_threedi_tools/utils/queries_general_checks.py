@@ -64,16 +64,16 @@ msg_weir_same_node = "ERROR: weir from and to the same connection node"
 msg_orifice_same_node = "ERROR: orifice from and to the same connection node"
 msg_culvert_same_node = "ERROR: culvert from and to the same connection node"
 msg_weir_start_lvl_not_close_to_init_waterlvl = (
-    "'WARNING: start level ' || {} || ' not close to initial waterlevel '" " || {} || ', ' || {}"
+    "'WARNING: start level ' || {} || ' not close to initial waterlevel ' || {} || ', ' || {}"
 )
 msg_channel_strt_end_not_same_init_waterlvl = (
-    "'WARNING: initial water level at start and end node are not equal ' " "|| {} || ', ' || {}"
+    "'WARNING: initial water level at start and end node are not equal ' || {} || ', ' || {}"
 )
 msg_orifice_strt_end_not_same_init_waterlvl = (
-    "'WARNING: initial water level at start and end node are not equal ' " "|| {} || ', ' || {}"
+    "'WARNING: initial water level at start and end node are not equal ' || {} || ', ' || {}"
 )
 msg_culvert_strt_end_not_same_init_waterlvl = (
-    "'WARNING: Initial waterlevel at start en end node not equal' || {} || " "', ' || {}"
+    "'WARNING: Initial waterlevel at start en end node not equal' || {} || ', ' || {}"
 )
 msg_imp_surface_perc = "WARNING: percentage = 100 and should be 14.4 or 11.5"
 msg_control_table_too_many_chars = "ERROR: action_table has more than 1000 characters (model will crash)"
@@ -137,12 +137,12 @@ def construct_sel_from_where_query(sel="{}", frm="{}", where="{}", left_join={},
 
 
 def construct_query_head(table, msg):
-    res = f"'{table}' as table_name,\n" f"{table}.{id_col} as id,\n" f"'{msg}' as error"
+    res = f"'{table}' as table_name,\n{table}.{id_col} as id,\n'{msg}' as error"
     return res
 
 
 def construct_query_head_no_quotes(table, msg):
-    res = f"'{table}' as table_name,\n" f"{table}.{id_col} as id,\n" f"{msg} as error"
+    res = f"'{table}' as table_name,\n{table}.{id_col} as id,\n{msg} as error"
     return res
 
 

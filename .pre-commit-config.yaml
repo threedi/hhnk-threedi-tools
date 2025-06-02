@@ -1,0 +1,11 @@
+exclude: (^.pixi/)
+repos:
+  - repo: local
+    hooks:
+      - id: ruff-format
+        name: Ruff format
+        entry: pixi run style
+        language: system
+        types_or: [python, pyi]
+        require_serial: true
+        stages: [pre-push, manual]

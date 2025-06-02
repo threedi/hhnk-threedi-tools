@@ -3,18 +3,15 @@ import shutil
 from pathlib import Path
 
 from hhnk_threedi_tools.core.folders import Folders
+from tests.config import FOLDER_NEW, FOLDER_TEST, PATH_NEW_FOLDER
 
-SUB_FOLDERS = ["01_source_data", "02_schematisation", "03_3di_results", "04_test_results"]
-
-from tests.config import FOLDER_NEW, FOLDER_TEST, PATH_NEW_FOLDER, PATH_TEST_MODEL
+SUB_FOLDERS = ["00_config", "01_source_data", "02_schematisation", "03_3di_results", "04_test_results"]
 
 
 class TestFolder:
     def test_create_project(self):
-        """tests if a new project folders are created"""
+        """Test if a new project folders are created"""
         # create a project without creating sub-dirs
-        new_folder = Folders(PATH_NEW_FOLDER, create=False)
-        assert not Path(PATH_NEW_FOLDER).exists()  # check sub-dirs empty
         new_folder = Folders(PATH_NEW_FOLDER, create=True)
 
         # check if SUB_FOLDERS exist and contain a readme.txt
@@ -23,16 +20,16 @@ class TestFolder:
             assert PATH_NEW_FOLDER.joinpath(i, "read_me.txt").exists(), f"No readme in {i}"
 
     def test_to_file_dict(self):
-        """tests if a base path dictionary can be generated"""
+        """Test if a base path dictionary can be generated"""
         files_dict = FOLDER_NEW.to_file_dict()
         assert files_dict["0d1d_results_dir"] == str(PATH_NEW_FOLDER / "03_3di_results" / "0d1d_results")
 
     def test_create_revision(self):
-        """tests if a new revision folder can be made"""
+        """Test if a new revision folder can be made"""
         if FOLDER_NEW.threedi_results.zero_d_one_d["new"].exists():
             shutil.rmtree(FOLDER_NEW.threedi_results.zero_d_one_d["new"].base)
 
-        FOLDER_NEW.threedi_results.zero_d_one_d["new"].create()
+        FOLDER_NEW.threedi_results.zero_d_one_d["new"].mkdir()
 
         assert FOLDER_NEW.threedi_results.zero_d_one_d["new"].exists() is True
 

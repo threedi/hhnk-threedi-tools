@@ -8,7 +8,7 @@ from shapely.geometry import LineString
 
 import hhnk_threedi_tools.core.checks.grid_result_metadata as grid_result_metadata
 from hhnk_threedi_tools.core.folders import Folders
-from hhnk_threedi_tools.core.result_rasters.grid_to_raster import GridToRaster
+from hhnk_threedi_tools.core.result_rasters.grid_to_raster import GridToWaterDepth, GridToWaterLevel
 
 # Local imports
 from hhnk_threedi_tools.core.result_rasters.netcdf_to_gridgpkg import NetcdfToGPKG
@@ -77,16 +77,22 @@ class OneDTwoDTest:
         # Create depth and wlvl rasters for each timestep.
         grid_gdf = gpd.read_file(self.output_fd.grid_nodes_2d.path)
         for T in self.TIMESTEPS:
-            with GridToRaster(
+            with GridToWaterLevel(
                 dem_path=self.folder.model.schema_base.rasters.dem,
                 grid_gdf=grid_gdf,
                 wlvl_column=f"wlvl_{T}h",
             ) as raster_calc:
-                raster_calc.run(
-                    output_file=getattr(self.output_fd, f"waterdiepte_T{T}"), mode="MODE_WDEPTH", overwrite=overwrite
+                level_raster = raster_calc.run(
+                    output_file=getattr(self.output_fd, f"waterstand_T{T}"),
+                    overwrite=overwrite,
                 )
-                raster_calc.run(
-                    output_file=getattr(self.output_fd, f"waterstand_T{T}"), mode="MODE_WLVL", overwrite=overwrite
+            with GridToWaterDepth(
+                dem_path=self.folder.model.schema_base.rasters.dem,
+                wlvl_path=level_raster,
+            ) as raster_calc:
+                _ = raster_calc.run(
+                    output_file=getattr(self.output_fd, f"waterdiepte_T{T}"),
+                    overwrite=overwrite,
                 )
 
     def run_flowline_stats(self):

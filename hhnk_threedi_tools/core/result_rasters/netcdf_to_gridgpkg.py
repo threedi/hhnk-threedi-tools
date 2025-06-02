@@ -7,7 +7,6 @@ import geopandas as gpd
 import hhnk_research_tools as hrt
 import numpy as np
 import pandas as pd
-from matplotlib.widgets import EllipseSelector
 from shapely.geometry import box
 
 from hhnk_threedi_tools.core.folders import Folders
@@ -125,9 +124,9 @@ Debug by checking available timeseries through the (.ts) timeseries attributes""
                 col_base = f"{int(timestep_h)}h"
             else:
                 if timestep_h < 1:
-                    col_base = f"{int(timestep_h*60)}min"
+                    col_base = f"{int(timestep_h * 60)}min"
                 else:
-                    col_base = f"{int(np.floor(timestep_h))}h{int((timestep_h%1)*60)}min"
+                    col_base = f"{int(np.floor(timestep_h))}h{int((timestep_h % 1) * 60)}min"
         return col_base
 
 
@@ -452,7 +451,7 @@ class NetcdfToGPKG:
 
         if output_file is None:
             output_file = self.output_default
-        output_file = hrt.FileGDB(output_file)
+        output_file = hrt.SpatialDatabase(output_file)
 
         create = hrt.check_create_new_file(output_file=output_file, overwrite=overwrite)
         if create:

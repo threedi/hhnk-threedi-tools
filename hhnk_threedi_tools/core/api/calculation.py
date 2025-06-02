@@ -12,7 +12,6 @@ import requests
 
 # Third-party imports
 import threedi_api_client as tac
-from IPython.core.display import HTML
 from threedi_api_client import ThreediApi
 from threedi_api_client.openapi import ApiException
 
@@ -872,7 +871,6 @@ class Simulation:
         if self.model is None:
             return "define self.model_id first"
 
-
         output_path = Path(output_folder_sqlite).joinpath("tempfiles", f"model_{self.model_id}.zip")
         output_path.parent.mkdir(parents=True, exist_ok=True)  # Create parent folder
 
@@ -928,13 +926,15 @@ class Simulation:
         self.threedi_api.simulations_actions_create(simulation_pk, data={"name": "shutdown"})
 
     def simulation_info(self, str_type="text"):
+        from IPython.core.display import HTML  # Import here to prevent IPython dep on tests
+
         sim = self.simulation
         if str_type == "text":
             newline = "\n"
             return f"Simulation: {sim.url}\
                     {newline}Scenario name: {sim.name}\
                     {newline}Organisation name: {sim.organisation_name}\
-                    {newline}Duration: {sim.duration}s ({sim.duration/3600}h)\
+                    {newline}Duration: {sim.duration}s ({sim.duration / 3600}h)\
                     {newline}Rain events: {self.data.rain}\
                     {newline}Control structures count: {len(self.data.structure_control)}\t(used={self.tracker.structure_control})\
                     {newline}Laterals count: {len(self.data.laterals)}\t(used={self.tracker.laterals})\
@@ -957,7 +957,7 @@ class Simulation:
                 f"Simulation id: <a href={sim.url}>{sim.id}</a>\
                     {newline}Scenario name: {sim.name}\
                     {newline}Organisation name: {sim.organisation_name}\
-                    {newline}Duration: {sim.duration}s ({sim.duration/3600}h)\
+                    {newline}Duration: {sim.duration}s ({sim.duration / 3600}h)\
                     {newline}Rain events: {self.data.rain}\
                     {newline}Control structures count: {len(self.data.structure_control)}\t(used={self.tracker.structure_control})\
                     {newline}Laterals count: {len(self.data.laterals)}\t(used={self.tracker.laterals})\
