@@ -27,7 +27,68 @@ tables_default = list(DB_LAYER_MAPPING.keys())
 
 
 # %%
-def DAMO_exporter(  # TODO rename to DB_exporter
+
+model_extent_polygon_fp = r"E:\02.modelrepos\castricum\01_source_data\polder_polygon.shp"
+model_extent_gdf = gpd.read_file(model_extent_polygon_fp)
+# table_names = tables_default
+# output_file = r"E:\github\wvanesse\hhnk-research-tools\tests_hrt\data\temp.gpkg"
+# buffer_distance = 0.5
+# table = "HHNK_MV_OWT"
+# EPSG_CODE = "28992"
+
+# tables = [table]
+# DAMO_exporter(model_extent_gdf, output_file, table_names=tables)
+
+# # db_dict = DATABASES[DB_LAYER_MAPPING.get(table, None).get("source", None)]
+# # schema = DB_LAYER_MAPPING.get(table, None).get("schema", None)
+# # columns = DB_LAYER_MAPPING.get(table, None).get("columns", None)
+# # columns_all = get_table_columns(db_dict=db_dict, schema=schema, table_name=table)
+# DAMO_exporter(model_extent_gdf, output_file)
+
+
+# %%
+def update_model_extent_from_combinatiepeilgebieden(
+    model_extent_gdf: gpd.GeoDataFrame,
+):
+    """
+    Update the model extent GeoDataFrame with the geometry from the Combinatiepeilgebieden table.
+
+    Parameters
+    ----------
+    model_extent_gdf : GeoDataFrame
+        GeoDataFrame of the selected polder
+
+    Returns
+    -------
+    model_extent_gdf : GeoDataFrame
+        Updated GeoDataFrame with the geometry from Combinatiepeilgebieden.
+    """
+    # Get the geometry from the Combinatiepeilgebieden table
+    db_dict = DATABASES["csoprd_lezen"]
+
+    bbox_model = box(*model_extent_gdf.buffer(10).total_bounds)
+
+    sql = sql_builder_select_by_location(
+        schema="CS_OBJECTEN", table_name="COMBINATIEPEILGEBIED", epsg_code="28992", polygon_wkt=bbox_model
+    )
+
+    cpg_gdf, _ = database_to_gdf(db_dict=db_dict, sql=sql, columns=["shape", "code"])
+
+    # Create most representatieve point per peilgebied
+    cpg_rp_gdf = cpg_gdf.copy()
+    cpg_rp_gdf["geometry"] = cpg_rp_gdf["geometry"].representative_point()
+
+    # Select points that intersect with original model extent
+    cpg_rp_gdf = cpg_rp_gdf[cpg_rp_gdf["geometry"].intersects(model_extent_gdf["geometry"].iloc[0])]
+
+    # Filter combinatiepeilgebieden en merge
+    model_extent_gdf["geometry"] = cpg_gdf[cpg_gdf["code"].isin(cpg_rp_gdf["code"])].geometry.unary_union
+
+    return model_extent_gdf
+
+
+# %%
+def DAMO_exporter(  # TODO rename to DB_exporter?
     model_extent_gdf: gpd.GeoDataFrame,
     output_file: Path,
     table_names: list[str] = tables_default,
@@ -73,6 +134,9 @@ def DAMO_exporter(  # TODO rename to DB_exporter
 
     # Apply buffer distance
     model_extent_gdf["geometry"] = model_extent_gdf.buffer(buffer_distance)
+
+    # Update model extent with geometry from Combinatiepeilgebieden
+    model_extent_gdf = update_model_extent_from_combinatiepeilgebieden(model_extent_gdf)
 
     # make bbox --> to simplify string request to DAMO db
     bbox_model = box(*model_extent_gdf.total_bounds)
