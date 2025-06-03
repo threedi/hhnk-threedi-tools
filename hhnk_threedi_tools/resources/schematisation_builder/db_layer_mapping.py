@@ -38,24 +38,18 @@ DB_LAYER_MAPPING = {
         "schema": "CS_OBJECTEN",
         "columns": None,
     },
-    # BGT # TODO Gaat het goet met geometrie type alleen polygonen?
+    # BGT
     "HHNK_MV_WTD": {
-        "layername": "Waterdeel",  # TODO iets mee doen, check naam in huidige export
+        "layername": "Waterdeel",
         "source": "bgt_lezen",
         "schema": "BGT",
-        "columns": [
-            "identificatie",
-            "status",
-        ],
+        "columns": None,
     },
     "HHNK_MV_OWT": {
         "layername": "Ondersteunend waterdeel",
         "source": "bgt_lezen",
         "schema": "BGT",
-        "columns": [
-            "identificatie",
-            "status",
-        ],
+        "columns": None,
     },
     # DAMO_W
     "BRUG": {
@@ -72,7 +66,7 @@ DB_LAYER_MAPPING = {
         "columns": None,
     },
     "GEMAAL_DAMO": {
-        "table_name": "GEMAAL",  # TODO iets mee doen
+        "table_name": "GEMAAL",
         "source": "aquaprd_lezen",
         "schema": "DAMO_W",
         "columns": None,

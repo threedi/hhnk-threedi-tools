@@ -40,7 +40,7 @@ model_extent_polygon_fp = r"E:\02.modelrepos\zwartedijkspolder\01_source_data\po
 model_extent_gdf = gpd.read_file(model_extent_polygon_fp)
 table_names = tables_default
 output_file = r"E:\github\wvanesse\hhnk-research-tools\tests_hrt\data\DAMO_export_zwartedijkspolder.gpkg"
-table = "GW_PRO"
+table = "HHNK_MV_WTD"
 EPSG_CODE = "28992"
 # db_dict = DATABASES[DB_LAYER_MAPPING.get(table, None).get("source", None)]
 # schema = DB_LAYER_MAPPING.get(table, None).get("schema", None)
@@ -137,7 +137,7 @@ def DAMO_exporter(  # TODO rename to DB_exporter
 
             # update layername if provided
             if DB_LAYER_MAPPING.get(table, None).get("layername", None) is not None:
-                layername = DB_LAYER_MAPPING.get(table, None).get("layername", None) is not None
+                layername = DB_LAYER_MAPPING.get(table, None).get("layername", None)
             else:
                 layername = table
 
@@ -210,7 +210,7 @@ def DAMO_exporter(  # TODO rename to DB_exporter
 
                     # Write to geopackage
                     sub2_model_df = gpd.GeoDataFrame(sub_model_df)
-                    sub2_model_df.to_file(output_file, layer=sub_table, driver="GPKG", engine="pyogrio")
+                    sub2_model_df.to_file(output_file, layer=sub2_table, driver="GPKG", engine="pyogrio")
 
                     logger.info(f"Finished export of table {sub2_table} from {service_name}")
 
