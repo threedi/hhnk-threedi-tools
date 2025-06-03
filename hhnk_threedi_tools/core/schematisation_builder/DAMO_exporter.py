@@ -25,30 +25,6 @@ except ImportError as e:
 # From mapping json list top level keys
 tables_default = list(DB_LAYER_MAPPING.keys())
 
-# %% # TODO remove these blocks, only for testing
-# reload import
-import importlib
-
-import hhnk_threedi_tools
-
-importlib.reload(hhnk_threedi_tools)
-del DB_LAYER_MAPPING
-from hhnk_threedi_tools.resources.schematisation_builder.db_layer_mapping import DB_LAYER_MAPPING
-
-# %%
-
-model_extent_polygon_fp = r"E:\02.modelrepos\zwartedijkspolder\01_source_data\polder_polygon.shp"
-model_extent_gdf = gpd.read_file(model_extent_polygon_fp)
-table_names = tables_default
-output_file = r"E:\github\wvanesse\hhnk-research-tools\tests_hrt\data\DAMO_export_zwartedijkspolder.gpkg"
-table = "HHNK_MV_WTD"
-EPSG_CODE = "28992"
-# db_dict = DATABASES[DB_LAYER_MAPPING.get(table, None).get("source", None)]
-# schema = DB_LAYER_MAPPING.get(table, None).get("schema", None)
-# columns = DB_LAYER_MAPPING.get(table, None).get("columns", None)
-# columns_all = get_table_columns(db_dict=db_dict, schema=schema, table_name=table)
-DAMO_exporter(model_extent_gdf, output_file)
-
 
 # %%
 def DAMO_exporter(  # TODO rename to DB_exporter
@@ -151,7 +127,7 @@ def DAMO_exporter(  # TODO rename to DB_exporter
             # adds table to geopackage file as a layer
             model_gdf.to_file(output_file, layer=layername, driver="GPKG", engine="pyogrio")
 
-            logger.info(f"Finished export of table {table} from {service_name}")
+            logger.info(f"Finished export of {len(model_gdf)} elements from table {table} from {service_name}")
 
             # Include table that depend on this table
             if DB_LAYER_MAPPING.get(table, None).get("required_sub_table", None) is not None:
@@ -185,7 +161,9 @@ def DAMO_exporter(  # TODO rename to DB_exporter
                 sub_model_gdf = gpd.GeoDataFrame(sub_model_df)
                 sub_model_gdf.to_file(output_file, layer=sub_table, driver="GPKG", engine="pyogrio")
 
-                logger.info(f"Finished export of table {sub_table} from {service_name}")
+                logger.info(
+                    f"Finished export of {len(sub_model_gdf)} elements from table {sub_table} from {service_name}"
+                )
 
                 # Include table that depend on the sub-table (voor profielen, zucht)
                 if DB_LAYER_MAPPING.get(table, None).get("required_sub2_table", None) is not None:
@@ -219,10 +197,16 @@ def DAMO_exporter(  # TODO rename to DB_exporter
                     sub2_model_df = gpd.GeoDataFrame(sub_model_df)
                     sub2_model_df.to_file(output_file, layer=sub2_table, driver="GPKG", engine="pyogrio")
 
-                    logger.info(f"Finished export of table {sub2_table} from {service_name}")
+                    logger.info(
+                        f"Finished export of {len(sub2_model_df)} elements from table {sub2_table} from {service_name}"
+                    )
 
         except Exception as e:
-            error = f"An error occured while exporting data of table {table} from {service_name} {sql2} {e}"
+            if DB_LAYER_MAPPING.get(table, None) is None:
+                error = f"{table} not found in database mapping {e}"
+            else:
+                error = f"An error occured while exporting data of table {table} from {service_name} {e}"
+
             logger.error(error)
             logging.append(error)
 
