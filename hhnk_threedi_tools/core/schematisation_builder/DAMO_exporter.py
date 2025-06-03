@@ -19,13 +19,13 @@ try:
     from hhnk_threedi_tools.resources.schematisation_builder.local_settings_htt import DATABASES
 except ImportError as e:
     raise ImportError(
-        "The 'local_settings_htt' module is missing. Get it from D:\github\evanderlaan\local_settings_htt.py and place it in \hhnk_threedi_tools\core\schematisation_builder"
-    ) from e  # TODO kunnen we de local settings op een centrale locatie opslaan?
+        r"The 'local_settings_htt' module is missing. Get it from \\corp.hhnk.nl\data\Hydrologen_data\Data\01.basisgegevens\00.HDB\SettingsAndRecourses\local_settings_htt.py and place it in \hhnk_threedi_tools\core\resources\schematisation_builder"
+    ) from e  
 
 # From mapping json list top level keys
 tables_default = list(DB_LAYER_MAPPING.keys())
 
-# %% # TODO remove this block, only for testing
+# %% # TODO remove these blocks, only for testing
 # reload import
 import importlib
 
@@ -34,12 +34,13 @@ import hhnk_threedi_tools
 importlib.reload(hhnk_threedi_tools)
 del DB_LAYER_MAPPING
 from hhnk_threedi_tools.resources.schematisation_builder.db_layer_mapping import DB_LAYER_MAPPING
+# %%
 
 model_extent_polygon_fp = r"E:\02.modelrepos\zwartedijkspolder\01_source_data\polder_polygon.shp"
 model_extent_gdf = gpd.read_file(model_extent_polygon_fp)
 table_names = tables_default
-output_file = r"E:\github\wvanesse\hhnk-research-tools\tests_hrt\data\data_export3.gpkg"
-table = "HHNK_MV_WTD"
+output_file = r"E:\github\wvanesse\hhnk-research-tools\tests_hrt\data\DAMO_export_zwartedijkspolder.gpkg"
+table = "GW_PRO"
 EPSG_CODE = "28992"
 # db_dict = DATABASES[DB_LAYER_MAPPING.get(table, None).get("source", None)]
 # schema = DB_LAYER_MAPPING.get(table, None).get("schema", None)
@@ -59,12 +60,18 @@ def DAMO_exporter(  # TODO rename to DB_exporter
     """
     Export data from DAMO for polder of interest.
 
+    A simplified SQL request based on the bounding box is used since otherwise the SQL statement
+    would become too long. For sub tables a sub-SQl list is created in the database since passing
+    an actual list may also cause the SQl to become too long. Works to up to 2 sub tables.
+
+    Defauls table list form 3Di model generation can be found under recourses/schemitasaion_builder. 
+
     Parameters
     ----------
     model_extent_gdf : GeoDataFrame
         GeoDataFrame of the selected polder
     table_names : list[str]
-        List of table names to be included in export, deafulta to all needed for model generation
+        List of table names to be included in export, deafaults to all needed for model generation
     output_file: Path
         path to output gpkg file in project directory.
     ESPG_CODE : str, default is "28992"
@@ -163,9 +170,9 @@ def DAMO_exporter(  # TODO rename to DB_exporter
                 # exports data from DAMO database
                 sub_bbox_df, sub_sql2 = database_to_gdf(db_dict=db_dict, sql=sub_sql, columns=sub_columns)
 
-                # TODO filter pumps outside shape (in boundingbox)
-                idlist = model_gdf[id_link_column].unique().tolist()
-                sub_model_df = sub_bbox_df[sub_bbox_df["sub_id_column"] in idlist]
+                # filter items outside shape (that where in boundingbox)
+                idlist = model_gdf[id_link_column.lower()].unique().tolist()
+                sub_model_df = sub_bbox_df[sub_bbox_df[sub_id_column.lower()].isin(idlist)]
 
                 # Write to geopackage
                 sub_model_gdf = gpd.GeoDataFrame(sub_model_df)
@@ -195,11 +202,15 @@ def DAMO_exporter(  # TODO rename to DB_exporter
                     )
 
                     # exports data from DAMO database
-                    sub2_model_df, sub2_sql2 = database_to_gdf(db_dict=db_dict, sql=sub2_sql, columns=sub2_columns)
+                    sub2_bbox_df, sub2_sql2 = database_to_gdf(db_dict=db_dict, sql=sub2_sql, columns=sub2_columns)
+
+                    # filter items outside shape (that where in boundingbox)
+                    idlist2 = sub_model_gdf[sub_id_link_column.lower()].unique().tolist()
+                    sub2_model_df = sub2_bbox_df[sub2_bbox_df[sub2_id_column.lower()].isin(idlist2)]
 
                     # Write to geopackage
-                    sub_model_gdf = gpd.GeoDataFrame(sub_model_df)
-                    sub_model_gdf.to_file(output_file, layer=sub_table, driver="GPKG", engine="pyogrio")
+                    sub2_model_df = gpd.GeoDataFrame(sub_model_df)
+                    sub2_model_df.to_file(output_file, layer=sub_table, driver="GPKG", engine="pyogrio")
 
                     logger.info(f"Finished export of table {sub2_table} from {service_name}")
 
