@@ -20,7 +20,7 @@ try:
 except ImportError as e:
     raise ImportError(
         r"The 'local_settings_htt' module is missing. Get it from \\corp.hhnk.nl\data\Hydrologen_data\Data\01.basisgegevens\00.HDB\SettingsAndRecourses\local_settings_htt.py and place it in \hhnk_threedi_tools\core\resources\schematisation_builder"
-    ) from e  
+    ) from e
 
 # From mapping json list top level keys
 tables_default = list(DB_LAYER_MAPPING.keys())
@@ -34,6 +34,7 @@ import hhnk_threedi_tools
 importlib.reload(hhnk_threedi_tools)
 del DB_LAYER_MAPPING
 from hhnk_threedi_tools.resources.schematisation_builder.db_layer_mapping import DB_LAYER_MAPPING
+
 # %%
 
 model_extent_polygon_fp = r"E:\02.modelrepos\zwartedijkspolder\01_source_data\polder_polygon.shp"
@@ -54,6 +55,7 @@ def DAMO_exporter(  # TODO rename to DB_exporter
     model_extent_gdf: gpd.GeoDataFrame,
     output_file: Path,
     table_names: list[str] = tables_default,
+    buffer_distance: float = 0.5,
     EPSG_CODE: str = "28992",
     logger=None,
 ) -> list:
@@ -64,16 +66,18 @@ def DAMO_exporter(  # TODO rename to DB_exporter
     would become too long. For sub tables a sub-SQl list is created in the database since passing
     an actual list may also cause the SQl to become too long. Works to up to 2 sub tables.
 
-    Defauls table list form 3Di model generation can be found under recourses/schemitasaion_builder. 
+    Defauls table list form 3Di model generation can be found under recourses/schemitasaion_builder.
 
     Parameters
     ----------
     model_extent_gdf : GeoDataFrame
         GeoDataFrame of the selected polder
-    table_names : list[str]
-        List of table names to be included in export, deafaults to all needed for model generation
     output_file: Path
         path to output gpkg file in project directory.
+    table_names : list[str]
+        List of table names to be included in export, deafaults to all needed for model generation
+    buffer_distance: float
+        Distance to buffer the polder polygon before selection
     ESPG_CODE : str, default is "28992"
         Projection string epsg code
 
@@ -90,6 +94,9 @@ def DAMO_exporter(  # TODO rename to DB_exporter
     if not logger:  # moet dit if logger is None zijn?
         logger = hrt.logging.get_logger(__name__)
     logger.info("Start export")
+
+    # Apply buffer distance
+    model_extent_gdf["geometry"] = model_extent_gdf.buffer(buffer_distance)
 
     # make bbox --> to simplify string request to DAMO db
     bbox_model = box(*model_extent_gdf.total_bounds)
