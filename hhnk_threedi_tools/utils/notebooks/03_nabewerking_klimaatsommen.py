@@ -42,7 +42,7 @@ from hhnk_threedi_tools.core.climate_scenarios.schadekaart_peilgebieden import m
 folder = Folders(notebook_data["polder_folder"])
 
 # Of handmatig;
-#folder=Folders(r"E:\02.modellen\Z0215_Purmerend_oostflank")
+# folder=Folders(r"E:\02.modellen\Z0215_Purmerend_oostflank")
 
 # %% [markdown]
 # ## Selectie neerslagzone en dem
@@ -258,7 +258,7 @@ for T in [10, 100, 1000]:
         output_nodata=-9999.00,
         dem_raster=dem,
         extra_nodata_value=0,
-        min_value=0
+        min_value=0,
     )
 
 # %% [markdown]
