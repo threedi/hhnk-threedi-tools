@@ -27,7 +27,7 @@ def maak_schade_polygon(
             raster = hrt.Raster(schade_raster_file[schade_type])
             nodata = raster.nodata
             meta = raster.metadata
-            contante_schade[schade_type] = raster.get_array()
+            contante_schade[schade_type] = raster._read_array()
             contante_schade[schade_type][contante_schade[schade_type] == nodata] = 0
 
         # Importeer peilgebieden
