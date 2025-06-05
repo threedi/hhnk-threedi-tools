@@ -60,7 +60,7 @@ def test_DAMO_exporter_polders():
     logging_DAMO = DAMO_exporter(
         model_extent_gdf=model_extent_gdf,
         output_file=output_file,
-    )
+    )  # no table , so whole set in layer mapping
 
     gdf_result = gpd.read_file(output_file, engine="pyogrio")
 
@@ -72,7 +72,8 @@ def test_DAMO_exporter_polders():
 # %%
 # Test
 if __name__ == "__main__":
-    test_DAMO_exporter_one_feature()
+    test_DAMO_exporter_one_DAMO_feature()
+    test_DAMO_exporter_GEMAAL_and_POMP_from_CSO
     test_DAMO_exporter_polders()
 
 
