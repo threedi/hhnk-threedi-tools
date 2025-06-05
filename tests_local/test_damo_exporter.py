@@ -61,3 +61,6 @@ if __name__ == "__main__":
     Path(damo_export_output_dir).mkdir(exist_ok=True, parents=True)
     test_DAMO_exporter_one_feature()
     test_DAMO_exporter_polders()
+
+
+# %%
