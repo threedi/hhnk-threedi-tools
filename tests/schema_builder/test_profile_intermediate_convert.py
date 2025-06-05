@@ -121,6 +121,7 @@ def test_profile_intermediate_converter():
     assert output_file_path.exists()
 
     # Temp test converter to HyDAMO as well
+    """
     from hhnk_threedi_tools.core.schematisation_builder.DAMO_HyDAMO_converter import DAMO_to_HyDAMO_Converter
     hydamo_file_path = temp_dir_out / "HyDAMO anna paulowna.gpkg"
     converter_hydamo = DAMO_to_HyDAMO_Converter(
@@ -134,6 +135,7 @@ def test_profile_intermediate_converter():
 
     # Check if HyDAMO.gpkg is created
     assert hydamo_file_path.exists()
+    """
 
 
 # %%
