@@ -28,7 +28,7 @@ tables_default = list(DB_LAYER_MAPPING.keys())
 
 # %%
 
-model_extent_polygon_fp = r"C:/Users/esther.vanderlaan/Documents/Github/hhnk-threedi-tools/tests/data/schema_builder/test_schematisation_builder/01_source_data/polder_polygon.shp"
+model_extent_polygon_fp = r"E:\02.modelrepos\castricum\01_source_data\polder_polygon.shp"
 
 model_extent_gdf = gpd.read_file(model_extent_polygon_fp)
 # table_names = tables_default
@@ -160,7 +160,7 @@ def export_sub_layer(
 
 
 # %%
-def DAMO_exporter(  # TODO rename to DB_exporter?
+def DB_exporter(
     model_extent_gdf: gpd.GeoDataFrame,
     output_file: Path,
     table_names: list[str] = tables_default,
@@ -241,7 +241,7 @@ def DAMO_exporter(  # TODO rename to DB_exporter?
                 simplify=True,
             )
 
-            logger.info(f"Created sql statement {table} from from {service_name}")
+            logger.info(f"Created sql statement {table} from {service_name}")
 
             # exports data from DAMO database
             bbox_gdf, sql2 = database_to_gdf(db_dict=db_dict, sql=sql, columns=columns)
@@ -289,4 +289,3 @@ def DAMO_exporter(  # TODO rename to DB_exporter?
     return logging
 
 
-# %%
