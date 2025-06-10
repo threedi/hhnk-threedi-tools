@@ -28,7 +28,8 @@ tables_default = list(DB_LAYER_MAPPING.keys())
 
 # %%
 
-model_extent_polygon_fp = r"E:\02.modelrepos\castricum\01_source_data\polder_polygon.shp"
+model_extent_polygon_fp = r"C:/Users/esther.vanderlaan/Documents/Github/hhnk-threedi-tools/tests/data/schema_builder/test_schematisation_builder/01_source_data/polder_polygon.shp"
+
 model_extent_gdf = gpd.read_file(model_extent_polygon_fp)
 # table_names = tables_default
 # output_file = r"E:\github\wvanesse\hhnk-research-tools\tests_hrt\data\temp.gpkg"
@@ -85,6 +86,77 @@ def update_model_extent_from_combinatiepeilgebieden(
     model_extent_gdf["geometry"] = cpg_gdf[cpg_gdf["code"].isin(cpg_rp_gdf["code"])].geometry.unary_union
 
     return model_extent_gdf
+
+
+def export_sub_layer(
+    table,
+    sub: str,
+    service_name: str,
+    model_gdf: gpd.GeoDataFrame,
+    output_file: Path,
+    sql: str,
+    db_dict: dict,
+    logger=None,
+):
+    """
+    Export sub layer from DAMO database based on the main table and sub table mapping.
+    This function is used to export non-geometric tables that are linked to a main table.
+    Parameters
+    ----------
+    table : str
+        Name of the main table from which the sub table is derived.
+    sub : str
+        Name of the sub table to be exported, e.g. "profielen", etc.
+    service_name : str
+        Name of the database service from which the data is exported.
+    model_gdf : GeoDataFrame
+        GeoDataFrame of the selected polder, used to filter the sub table data.
+    output_file : Path
+        Path to the output geopackage file where the sub table will be saved.
+    sql : str
+        SQL query string to select data from the main table.
+    db_dict : dict
+        Dictionary containing database connection details.
+    logger : Logger, optional
+        Logger instance for logging information and errors. If not provided, a default logger is used.
+    Returns
+    -------
+    None
+        The function writes the sub table data to the output file and logs the process.
+    """
+    sub_table = DB_LAYER_MAPPING.get(table, None).get(f"required_{sub}_table", None)
+    id_link_column = DB_LAYER_MAPPING.get(table, None).get("id_link_column", None)
+    sub_id_column = DB_LAYER_MAPPING.get(table, None).get(f"{sub}_id_column", None)
+    sub_columns = DB_LAYER_MAPPING.get(table, None).get("sub_columns", None)
+
+    logger.info(f"Start export of table non-geometric table {sub_table} from {service_name}")
+
+    # Modify sql to contain only id link column
+    sql_from = sql[sql.index("FROM") :]
+    sub_id_list_sql = f"SELECT {id_link_column} {sql_from}"
+
+    # Create new SQL statement
+    sub_sql = sql_builder_select_by_id_list_statement(
+        sub_id_list_sql=sub_id_list_sql,
+        schema=DB_LAYER_MAPPING.get(table, None).get("schema", None),
+        sub_table=sub_table,
+        sub_id_column=sub_id_column,
+    )
+
+    # exports data from DAMO database
+    sub_bbox_df, sub_sql2 = database_to_gdf(db_dict=db_dict, sql=sub_sql, columns=sub_columns)
+
+    # filter items outside shape (that where in boundingbox)
+    idlist = model_gdf[id_link_column.lower()].unique().tolist()
+    sub_model_df = sub_bbox_df[sub_bbox_df[sub_id_column.lower()].isin(idlist)]
+
+    # Write to geopackage
+    sub_model_gdf = gpd.GeoDataFrame(sub_model_df)
+    sub_model_gdf.to_file(output_file, layer=sub_table, driver="GPKG", engine="pyogrio")
+
+    logger.info(f"Finished export of {len(sub_model_gdf)} elements from table {sub_table} from {service_name}")
+
+    return sub_sql, sub_model_gdf
 
 
 # %%
@@ -195,74 +267,14 @@ def DAMO_exporter(  # TODO rename to DB_exporter?
 
             # Include table that depend on this table
             if DB_LAYER_MAPPING.get(table, None).get("required_sub_table", None) is not None:
-                sub_table = DB_LAYER_MAPPING.get(table, None).get("required_sub_table", None)
-                id_link_column = DB_LAYER_MAPPING.get(table, None).get("id_link_column", None)
-                sub_id_column = DB_LAYER_MAPPING.get(table, None).get("sub_id_column", None)
-                sub_columns = DB_LAYER_MAPPING.get(table, None).get("sub_columns", None)
-
-                logger.info(f"Start export of table non-geometric table {sub_table} from {service_name}")
-
-                # Modify sql to contain only id link column
-                sql_from = sql[sql.index("FROM") :]
-                sub_id_list_sql = f"SELECT {id_link_column} {sql_from}"
-
-                # Create new SQL statement
-                sub_sql = sql_builder_select_by_id_list_statement(
-                    sub_id_list_sql=sub_id_list_sql,
-                    schema=DB_LAYER_MAPPING.get(table, None).get("schema", None),
-                    sub_table=sub_table,
-                    sub_id_column=sub_id_column,
+                sub_sql, sub_model_gdf = export_sub_layer(
+                    table, "sub", service_name, model_gdf, output_file, sql, db_dict, logger
                 )
 
-                # exports data from DAMO database
-                sub_bbox_df, sub_sql2 = database_to_gdf(db_dict=db_dict, sql=sub_sql, columns=sub_columns)
-
-                # filter items outside shape (that where in boundingbox)
-                idlist = model_gdf[id_link_column.lower()].unique().tolist()
-                sub_model_df = sub_bbox_df[sub_bbox_df[sub_id_column.lower()].isin(idlist)]
-
-                # Write to geopackage
-                sub_model_gdf = gpd.GeoDataFrame(sub_model_df)
-                sub_model_gdf.to_file(output_file, layer=sub_table, driver="GPKG", engine="pyogrio")
-
-                logger.info(
-                    f"Finished export of {len(sub_model_gdf)} elements from table {sub_table} from {service_name}"
-                )
-
-                # Include table that depend on the sub-table (voor profielen, zucht)
                 if DB_LAYER_MAPPING.get(table, None).get("required_sub2_table", None) is not None:
-                    sub2_table = DB_LAYER_MAPPING.get(table, None).get("required_sub2_table", None)
-                    sub_id_link_column = DB_LAYER_MAPPING.get(table, None).get("sub_id_link_column", None)
-                    sub2_id_column = DB_LAYER_MAPPING.get(table, None).get("sub2_id_column", None)
-                    sub2_columns = DB_LAYER_MAPPING.get(table, None).get("sub2_columns", None)
-
-                    logger.info(f"Start export of table non-geometric table {sub2_table} from {service_name}")
-
-                    # Modify sql to contain only id link column
-                    sub_sql_from = sub_sql[sub_sql.index("FROM") :]
-                    sub2_id_list_sql = f"SELECT {sub_id_link_column} {sub_sql_from}"
-
-                    # Create new SQL statement
-                    sub2_sql = sql_builder_select_by_id_list_statement(
-                        sub_id_list_sql=sub2_id_list_sql,
-                        schema=DB_LAYER_MAPPING.get(table, None).get("schema", None),
-                        sub_table=sub2_table,
-                        sub_id_column=sub2_id_column,
-                    )
-
-                    # exports data from DAMO database
-                    sub2_bbox_df, sub2_sql2 = database_to_gdf(db_dict=db_dict, sql=sub2_sql, columns=sub2_columns)
-
-                    # filter items outside shape (that where in boundingbox)
-                    idlist2 = sub_model_gdf[sub_id_link_column.lower()].unique().tolist()
-                    sub2_model_df = sub2_bbox_df[sub2_bbox_df[sub2_id_column.lower()].isin(idlist2)]
-
-                    # Write to geopackage
-                    sub2_model_df = gpd.GeoDataFrame(sub_model_df)
-                    sub2_model_df.to_file(output_file, layer=sub2_table, driver="GPKG", engine="pyogrio")
-
-                    logger.info(
-                        f"Finished export of {len(sub2_model_df)} elements from table {sub2_table} from {service_name}"
+                    # If there is a second sub table, export it as well
+                    sub2_sql, sub2_model_gdf = export_sub_layer(
+                        table, "sub2", service_name, sub_model_gdf, output_file, sub_sql, db_dict, logger
                     )
 
         except Exception as e:
