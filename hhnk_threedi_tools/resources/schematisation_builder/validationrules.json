@@ -29,6 +29,17 @@
 							"right": 0.2
 						}
 					}
+				},
+				{
+					"id": 2,
+					"result_variable": "nr_of_profielpunten",
+					"function": {
+						"object_relation": {
+							"statistic": "count",
+							"related_object": "profielpunt",
+							"fill_value": 0
+						}
+					}
 				}
 			],
 			"validation_rules": [
@@ -53,12 +64,12 @@
 					"type": "logic",
 					"validation_rule_set": "basic",
 					"error_type": "critical",
-					"result_variable": "aantalprofielpunten_gt_4",
+					"result_variable": "nr_of_profielpunten_gt_4",
 					"error_message": "profiel heeft minder dan 4 profielpunten",
 					"active": true,
 					"function": {
 						"GT": {
-							"left": "aantalprofielpunten",
+							"left": "nr_of_profielpunten",
 							"right": 4
 						}
 					}

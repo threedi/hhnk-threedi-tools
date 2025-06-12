@@ -132,6 +132,7 @@ def test_profile_intermediate_converter():
         == lengte_nat_profiel
     )
 
+    # Compute number of profielpunt features per profiellijn (NOTE: this is also implemented in the validation module)
     converter.compute_number_of_profielpunt_features_per_profiellijn()
     assert (
         converter.profiellijn[converter.profiellijn["code"] == profiellijn_code]["aantalProfielPunten"].iloc[0]

@@ -658,6 +658,7 @@ class ProfileIntermediateConverter:
     def compute_number_of_profielpunt_features_per_profiellijn(self):
         """
         Compute the number of profielpunt features per profiellijn and add as a new column to self.profiellijn.
+        NOTE: This function is also implement in the validation module
         """
         self.logger.info("Computing the number of profielpunt features per profiellijn...")
         if self.profielpunt is None:
