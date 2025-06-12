@@ -205,8 +205,10 @@ class DAMO_to_HyDAMO_Converter:
             if column_name != "geometry":
                 lower_column_name = column_name.lower()
                 layer_gdf.rename(columns={column_name: lower_column_name}, inplace=True)
-                layer_gdf[lower_column_name] = self.convert_column(layer_gdf[lower_column_name], lower_column_name, layer_name)
-            
+                layer_gdf[lower_column_name] = self.convert_column(
+                    layer_gdf[lower_column_name], lower_column_name, layer_name
+                )
+
         return layer_gdf
 
     def convert_column(self, column: pd.Series, column_name: str, layer_name: str) -> pd.Series:
@@ -239,7 +241,9 @@ class DAMO_to_HyDAMO_Converter:
             elif field_type is str:
                 column = column.astype(str)
             else:
-                self.logger.warning(f"Field type {field_type} for column {column_name} in layer {layer_name} is not supported.")
+                self.logger.warning(
+                    f"Field type {field_type} for column {column_name} in layer {layer_name} is not supported."
+                )
 
         return column
 

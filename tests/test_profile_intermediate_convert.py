@@ -12,9 +12,15 @@ from tests.config import FOLDER_TEST, TEMP_DIR, TEST_DIRECTORY
 # %%
 def test_profile_intermediate_converter():
     """
-    Test the ProfileIntermediateConverter class.
-    - Check if the converter can load and validate layers.
-    - Check if the line merge algorithm works correctly.
+    Test the ProfileIntermediateConverter class functionality:
+    - Load and validate DAMO and CSO layers.
+    - Test line merge processing and results.
+    - Test profile creation: profielpunt, profiellijn, profielgroep.
+    - Create and test linkage between profiles and hydroobjects.
+    - Create and test connection of hydroobjects without profiles to nearest profiles on linemerge.
+    - Compute deepest points for profiellijnen and hydroobjects.
+    - Write results to output GPKG
+    - (optional) Convert to HyDAMO format.
     """
     damo_file_path = TEST_DIRECTORY / "schema_builder" / "DAMO anna paulowna.gpkg"
     cso_file_path = (
@@ -44,6 +50,8 @@ def test_profile_intermediate_converter():
     profielpunt_id = 12578
     profiellijn_code = 58395
     diepste_punt_profiel = -3.16
+    lengte_nat_profiel = 5.54
+    aantal_profielpunt_features = 34
 
     # Check for a single hydroobject
     linemerge_id = converter.find_linemerge_id_by_hydroobject_code(hydroobject_code)
@@ -89,10 +97,13 @@ def test_profile_intermediate_converter():
     # Compute the deepest point of profiel
     converter.compute_deepest_point_profiellijn()
     assert converter.profiellijn["diepstePunt"].notnull().any()
-    assert converter.profiellijn[converter.profiellijn["code"] == profiellijn_code]["diepstePunt"].iloc[0] == diepste_punt_profiel
+    assert (
+        converter.profiellijn[converter.profiellijn["code"] == profiellijn_code]["diepstePunt"].iloc[0]
+        == diepste_punt_profiel
+    )
 
     # Test variables for profile on primary watergang without profile
-    hydroobject_code_no_profile = "OAF-Q-36452" # near end peilgebied
+    hydroobject_code_no_profile = "OAF-Q-36452"  # near end peilgebied
     nearest_profiellijn_code_it_should_connect_to = 62421
     deepest_point_hydroobject_no_profile = -4.57
 
@@ -105,7 +116,7 @@ def test_profile_intermediate_converter():
 
     # Check it is connected to a profile now
     pl_2 = converter.find_profiellijn_by_hydroobject_code(hydroobject_code_no_profile)
-    assert pl_2 is not None 
+    assert pl_2 is not None
     assert not pl_2.empty and len(pl_2) == 1
     assert pl_2["code"].iloc[0] == nearest_profiellijn_code_it_should_connect_to
 
@@ -113,7 +124,23 @@ def test_profile_intermediate_converter():
     converter.compute_deepest_point_hydroobjects()
     dp = converter.find_deepest_point_by_hydroobject_code(hydroobject_code_no_profile)
     assert dp == deepest_point_hydroobject_no_profile
-    
+
+    # Compute distance wet profile
+    converter.compute_distance_wet_profile()
+    assert (
+        converter.profiellijn[converter.profiellijn["code"] == profiellijn_code]["afstandNatProfiel"].iloc[0]
+        == lengte_nat_profiel
+    )
+
+    converter.compute_number_of_profielpunt_features_per_profiellijn()
+    assert (
+        converter.profiellijn[converter.profiellijn["code"] == profiellijn_code]["aantalProfielPunten"].iloc[0]
+        == aantal_profielpunt_features
+    )
+
+    # add Z to the profile points
+    converter.add_z_to_point_geometry_based_on_column(column_name="hoogte")
+
     # Write the result to a new file
     output_file_path = temp_dir_out / "output.gpkg"
     converter.write_outputs(output_path=output_file_path)
@@ -121,9 +148,10 @@ def test_profile_intermediate_converter():
     assert output_file_path.exists()
 
     # Temp test converter to HyDAMO as well
-    """
+    # """
     from hhnk_threedi_tools.core.schematisation_builder.DAMO_HyDAMO_converter import DAMO_to_HyDAMO_Converter
-    hydamo_file_path = temp_dir_out / "HyDAMO anna paulowna.gpkg"
+
+    hydamo_file_path = temp_dir_out / "HyDAMO.gpkg"
     converter_hydamo = DAMO_to_HyDAMO_Converter(
         damo_file_path=output_file_path,
         hydamo_file_path=hydamo_file_path,
@@ -135,7 +163,30 @@ def test_profile_intermediate_converter():
 
     # Check if HyDAMO.gpkg is created
     assert hydamo_file_path.exists()
-    """
+    # """
+
+    # Temp test validate HyDAMO as well
+    # """
+    import hhnk_threedi_tools.resources.schematisation_builder as schematisation_builder_resources
+    from hhnk_threedi_tools.core.schematisation_builder.HyDAMO_validator import validate_hydamo
+
+    validation_directory_path = TEMP_DIR / f"temp_HyDAMO_validator_{hrt.current_time(date=True)}"
+    validation_rules_json_path = hrt.get_pkg_resource_path(schematisation_builder_resources, "validationrules.json")
+
+    test_coverage_location = TEST_DIRECTORY / "schema_builder" / "dtm"  # should hold index.shp
+
+    result_summary = validate_hydamo(
+        hydamo_file_path=hydamo_file_path,
+        validation_rules_json_path=validation_rules_json_path,
+        validation_directory_path=validation_directory_path,
+        coverages_dict={"AHN": test_coverage_location},
+        output_types=["geopackage", "csv", "geojson"],
+    )
+
+    assert result_summary["success"] is True
+    assert validation_directory_path.joinpath("datasets", hydamo_file_path.name).exists()
+    # TODO some checks on the output
+    # """
 
 
 # %%

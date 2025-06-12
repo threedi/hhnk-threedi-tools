@@ -46,6 +46,22 @@
 							"method": "overall"
 						}
 					}
+				},
+				{
+					"id": 1,
+					"name": "Profiel moet minimaal 4 profielpunten hebben",
+					"type": "logic",
+					"validation_rule_set": "basic",
+					"error_type": "critical",
+					"result_variable": "aantalprofielpunten_gt_4",
+					"error_message": "profiel heeft minder dan 4 profielpunten",
+					"active": true,
+					"function": {
+						"GT": {
+							"left": "aantalprofielpunten",
+							"right": 4
+						}
+					}
 				}
 			]
 		},
@@ -105,8 +121,7 @@
 					"error_type": "critical",
 					"result_variable": "bok_boven_plausibel",
 					"error_message": "bok_boven niet plausibel",
-					"exceptions": [
-					],
+					"exceptions": [],
 					"active": true,
 					"function": {
 						"BE": {
