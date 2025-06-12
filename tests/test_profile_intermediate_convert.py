@@ -185,8 +185,16 @@ def test_profile_intermediate_converter():
 
     assert result_summary["success"] is True
     assert validation_directory_path.joinpath("datasets", hydamo_file_path.name).exists()
-    # TODO some checks on the output
-    # """
+    assert validation_directory_path.joinpath("results", "results.gpkg").exists()
+
+    import geopandas as gpd
+
+    validated_profiellijn = gpd.read_file(
+        validation_directory_path.joinpath("results", "results.gpkg"), layer="PROFIELLIJN"
+    )
+    invalid_profiellijn_code = "64405"
+    invalid_profiellijn = validated_profiellijn[validated_profiellijn["code"] == invalid_profiellijn_code].iloc[0]
+    assert invalid_profiellijn["invalid"] == "0;1"  # both 0 and 1 are invalid
 
 
 # %%
