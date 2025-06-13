@@ -51,6 +51,7 @@ def test_profile_intermediate_converter():
     profiellijn_code = 58395
     diepste_punt_profiel = -3.16
     lengte_nat_profiel = 5.54
+    diepte_nat_profiel = 1.32
     aantal_profielpunt_features = 34
 
     # Check for a single hydroobject
@@ -126,10 +127,14 @@ def test_profile_intermediate_converter():
     assert dp == deepest_point_hydroobject_no_profile
 
     # Compute distance wet profile
-    converter.compute_distance_wet_profile()
+    converter.compute_distance_and_depth_wet_profile()
     assert (
         converter.profiellijn[converter.profiellijn["code"] == profiellijn_code]["afstandNatProfiel"].iloc[0]
         == lengte_nat_profiel
+    )
+    assert (
+        converter.profiellijn[converter.profiellijn["code"] == profiellijn_code]["diepteNatProfiel"].iloc[0]
+        == diepte_nat_profiel
     )
 
     # Compute number of profielpunt features per profiellijn (NOTE: this is also implemented in the validation module)
@@ -141,6 +146,9 @@ def test_profile_intermediate_converter():
 
     # add Z to the profile points
     converter.add_z_to_point_geometry_based_on_column(column_name="hoogte")
+
+    # add breedte value from hydroobject
+    converter.add_breedte_value_from_hydroobject()
 
     # Write the result to a new file
     output_file_path = temp_dir_out / "output.gpkg"
@@ -188,6 +196,7 @@ def test_profile_intermediate_converter():
     assert validation_directory_path.joinpath("datasets", hydamo_file_path.name).exists()
     assert validation_directory_path.joinpath("results", "results.gpkg").exists()
 
+    # Some checks on the validation results
     import geopandas as gpd
 
     validated_profiellijn = gpd.read_file(
@@ -195,7 +204,7 @@ def test_profile_intermediate_converter():
     )
     invalid_profiellijn_code = "64405"
     invalid_profiellijn = validated_profiellijn[validated_profiellijn["code"] == invalid_profiellijn_code].iloc[0]
-    assert invalid_profiellijn["invalid"] == "0;1"  # both 0 and 1 are invalid
+    assert invalid_profiellijn["invalid"] == "0;100"  # both 0 and 100 are invalid
 
 
 # %%

@@ -615,12 +615,16 @@ class ProfileIntermediateConverter:
         num_deepest_points = self.hydroobject["diepstePunt"].notnull().sum()
         self.logger.info(f"Computed deepest points for {num_deepest_points} hydroobjects.")
 
-    def compute_distance_wet_profile(self):
+    def compute_distance_and_depth_wet_profile(self):
         """
-        Compute the distance for the wet profile
-        It is the distance between the profielpunt features with attribute "typeProfielPunt" = 22
-        We do not actually compute distance between points,
-        but use the distance in attribute "afstand" to compute difference
+        -   Computes the distance for the wet profile.
+            It is the distance between the profielpunt features with attribute "typeProfielPunt" = 22
+            We do not actually compute the topological distance between points,
+            but we use the distance in attribute "afstand" to compute difference.
+
+        -   Also collects all profielpunt features between the features with typeProfielPunt = 22
+            and calculates the difference between the max and min value from "hoogte" column.
+            This is the depth of the wet profile.
         """
         self.logger.info("Computing distance for wet profile...")
         if self.profielpunt is None:
@@ -653,6 +657,42 @@ class ProfileIntermediateConverter:
         self.logger.info(f"Succesfully computed wet profile distances for {num_wet_profile_distances} profielLijns")
         self.logger.warning(
             f"Failed to compute wet profile distances for {len(self.profiellijn) - num_wet_profile_distances} profielLijns"
+        )
+
+        # Compute the depth of the wet profile
+        self.logger.info("Computing depth for wet profile...")
+
+        # Compute the depth of the wet profile between the profielpunt features with typeProfielPunt == 22
+        wet_profile_depths = []
+        for pl_id, group in self.profielpunt.groupby("profielLijnID"):
+            wet_points = group[group["typeProfielPunt"] == 22]
+            if len(wet_points) > 1:
+                min_afstand = wet_points["afstand"].min()
+                max_afstand = wet_points["afstand"].max()
+                # Select points between min_afstand and max_afstand (inclusive)
+                in_range = group[(group["afstand"] >= min_afstand) & (group["afstand"] <= max_afstand)]
+                if not in_range.empty:
+                    min_hoogte = in_range["hoogte"].min()
+                    max_hoogte = in_range["hoogte"].max()
+                    wet_profile_depths.append(
+                        {"profielLijnID": pl_id, "diepteNatProfiel": round(max_hoogte - min_hoogte, 2)}
+                    )
+                else:
+                    wet_profile_depths.append({"profielLijnID": pl_id, "diepteNatProfiel": np.nan})
+            else:
+                wet_profile_depths.append({"profielLijnID": pl_id, "diepteNatProfiel": np.nan})
+
+        # Merge the computed depths back to the profiellijn GeoDataFrame
+        wet_profile_depths_df = pd.DataFrame(wet_profile_depths)
+        self.profiellijn = self.profiellijn.merge(
+            wet_profile_depths_df, left_on="GlobalID", right_on="profielLijnID", how="left"
+        )
+        self.profiellijn = self.profiellijn.drop(columns=["profielLijnID"])
+
+        num_wet_profile_depths = self.profiellijn["diepteNatProfiel"].notnull().sum()
+        self.logger.info(f"Succesfully computed wet profile depths for {num_wet_profile_depths} profielLijns")
+        self.logger.warning(
+            f"Failed to compute wet profile depths for {len(self.profiellijn) - num_wet_profile_depths} profielLijns"
         )
 
     def compute_number_of_profielpunt_features_per_profiellijn(self):
@@ -708,6 +748,41 @@ class ProfileIntermediateConverter:
         )
 
         self.logger.info("Z coordinate added to profielpunt geometry.")
+
+    def add_breedte_value_from_hydroobject(self):
+        """
+        Add the 'BREEDTE' value from hydroobject to profiellijn.
+        The profielgroep is connected to the hydroobject by hydroobjectID.
+        The profiellijn is connected to the profielgroep by profielgroepID.
+        """
+        self.logger.info("Adding 'BREEDTE' value from hydroobject to profiellijn...")
+        if self.profiellijn is None:
+            raise ValueError("profielpunt is not loaded. Call create_profile_tables() first.")
+        if self.hydroobject is None:
+            raise ValueError("hydroobject is not loaded. Call load_layers() first.")
+
+        # Ensure 'BREEDTE' column exists in hydroobject
+        if "BREEDTE" not in self.hydroobject.columns:
+            raise ValueError("Column 'BREEDTE' is not present in hydroobject.")
+
+        # Merge profiellijn with profielgroep to get hydroobjectID
+        profiellijn_with_pg = self.profiellijn.merge(
+            self.profielgroep[["GlobalID", "hydroobjectID"]],
+            left_on="profielgroepID",
+            right_on="GlobalID",
+            how="left",
+            suffixes=("", "_profielgroep"),
+        )
+        # Merge with hydroobject to get BREEDTE
+        profiellijn_with_breedte = profiellijn_with_pg.merge(
+            self.hydroobject[["GlobalID", "BREEDTE"]],
+            left_on="hydroobjectID",
+            right_on="GlobalID",
+            how="left",
+            suffixes=("", "_hydroobject"),
+        )
+        # Assign the BREEDTE column to profiellijn as hydroobject_breedte
+        self.profiellijn["hydroobject_breedte"] = profiellijn_with_breedte["BREEDTE"]
 
 
 # General functions

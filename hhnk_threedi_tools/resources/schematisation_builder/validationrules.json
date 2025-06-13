@@ -31,13 +31,23 @@
 					}
 				},
 				{
-					"id": 2,
+					"id": 100,
 					"result_variable": "nr_of_profielpunten",
 					"function": {
 						"object_relation": {
 							"statistic": "count",
 							"related_object": "profielpunt",
 							"fill_value": 0
+						}
+					}
+				},
+				{
+					"id": 101,
+					"result_variable": "verschil_afstandnatprofiel_breedte",
+					"function": {
+						"difference": {
+							"left": "afstandnatprofiel",
+							"right": "hydroobject_breedte"
 						}
 					}
 				}
@@ -59,10 +69,10 @@
 					}
 				},
 				{
-					"id": 1,
+					"id": 100,
 					"name": "Profiel moet minimaal 4 profielpunten hebben",
 					"type": "logic",
-					"validation_rule_set": "basic",
+					"validation_rule_set": "hhnk",
 					"error_type": "critical",
 					"result_variable": "nr_of_profielpunten_gt_4",
 					"error_message": "profiel heeft minder dan 4 profielpunten",
@@ -71,6 +81,42 @@
 						"GT": {
 							"left": "nr_of_profielpunten",
 							"right": 4
+						}
+					}
+				},
+				{
+					"id": 101,
+					"name": "Verschil tussen afstandNatProfiel en hydroobject BREEDTE (BGT) is plausibel",
+					"type": "logic",
+					"validation_rule_set": "hhnk",
+					"error_type": "non-critical",
+					"result_variable": "verschil_afstandNatProfiel_breedte_plausibel",
+					"error_message": "verschil tussen afstandNatProfiel en hydroobject BREEDTE (BGT) is niet plausibel",
+					"active": true,
+					"function": {
+						"BE": {
+							"parameter": "verschil_afstandnatprofiel_breedte",
+							"min": -2,
+							"max": 2,
+							"inclusive": false
+						}
+					}
+				},
+				{
+					"id": 102,
+					"name": "DiepteNatProfiel is plausibel (0.2m - 20m)",
+					"type": "logic",
+					"validation_rule_set": "hhnk",
+					"error_type": "non-critical",
+					"result_variable": "dieptenatprofiel_plausibel",
+					"error_message": "diepteNatProfiel niet plausibel (0.2m - 20m)",
+					"active": true,
+					"function": {
+						"BE": {
+							"parameter": "dieptenatprofiel",
+							"min": 0.2,
+							"max": 20,
+							"inclusive": false
 						}
 					}
 				}
