@@ -695,6 +695,25 @@ class ProfileIntermediateConverter:
             f"Failed to compute wet profile depths for {len(self.profiellijn) - num_wet_profile_depths} profielLijns"
         )
 
+    def compute_jaarinwinning(self):
+        """
+        Compute the year of inwinnin of the profiellijn based on the datumInwinning
+        and add as a new column to self.profiellijn.
+        """
+        self.logger.info("Computing the year of inwinning for profiellijn...")
+        if self.profiellijn is None:
+            raise ValueError("profiellijn is not loaded. Call create_profile_tables() first.")
+        if "datumInwinning" not in self.profiellijn.columns:
+            raise ValueError("datumInwinning column is not present in profiellijn.")
+
+        # Convert datumInwinning to datetime
+        self.profiellijn["datumInwinning"] = pd.to_datetime(self.profiellijn["datumInwinning"], errors="coerce")
+
+        # Extract the year from datumInwinning
+        self.profiellijn["jaarinwinning"] = self.profiellijn["datumInwinning"].dt.year
+
+        self.logger.info("Year of inwinning computed and added to profiellijn.")
+
     def compute_number_of_profielpunt_features_per_profiellijn(self):
         """
         Compute the number of profielpunt features per profiellijn and add as a new column to self.profiellijn.

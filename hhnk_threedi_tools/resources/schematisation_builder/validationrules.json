@@ -89,7 +89,7 @@
 					"name": "Verschil tussen afstandNatProfiel en hydroobject BREEDTE (BGT) is plausibel",
 					"type": "logic",
 					"validation_rule_set": "hhnk",
-					"error_type": "non-critical",
+					"error_type": "critical",
 					"result_variable": "verschil_afstandNatProfiel_breedte_plausibel",
 					"error_message": "verschil tussen afstandNatProfiel en hydroobject BREEDTE (BGT) is niet plausibel",
 					"active": true,
@@ -107,7 +107,7 @@
 					"name": "DiepteNatProfiel is plausibel (0.2m - 20m)",
 					"type": "logic",
 					"validation_rule_set": "hhnk",
-					"error_type": "non-critical",
+					"error_type": "critical",
 					"result_variable": "dieptenatprofiel_plausibel",
 					"error_message": "diepteNatProfiel niet plausibel (0.2m - 20m)",
 					"active": true,
@@ -117,6 +117,22 @@
 							"min": 0.2,
 							"max": 20,
 							"inclusive": false
+						}
+					}
+				},
+				{
+					"id": 103,
+					"name": "Jaar inwinning niet ouder dan 2015",
+					"type": "logic",
+					"validation_rule_set": "hhnk",
+					"error_type": "non-critical",
+					"result_variable": "jaarminwinning_niet_ouder_dan_2015",
+					"error_message": "jaarinwinning is ouder dan 2015",
+					"active": true,
+					"function": {
+						"GE": {
+							"left": "jaarinwinning",
+							"right": 2015
 						}
 					}
 				}

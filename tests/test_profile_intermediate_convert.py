@@ -53,6 +53,7 @@ def test_profile_intermediate_converter():
     lengte_nat_profiel = 5.54
     diepte_nat_profiel = 1.32
     aantal_profielpunt_features = 34
+    jaarinwinning = 2012
 
     # Check for a single hydroobject
     linemerge_id = converter.find_linemerge_id_by_hydroobject_code(hydroobject_code)
@@ -149,6 +150,13 @@ def test_profile_intermediate_converter():
 
     # add breedte value from hydroobject
     converter.add_breedte_value_from_hydroobject()
+
+    # compute jaarinwinning
+    converter.compute_jaarinwinning()
+    assert (
+        converter.profiellijn[converter.profiellijn["code"] == profiellijn_code]["jaarinwinning"].iloc[0]
+        == jaarinwinning
+    )
 
     # Write the result to a new file
     output_file_path = temp_dir_out / "output.gpkg"
