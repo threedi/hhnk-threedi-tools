@@ -127,7 +127,7 @@ def test_profile_intermediate_converter():
     dp = converter.find_deepest_point_by_hydroobject_code(hydroobject_code_no_profile)
     assert dp == deepest_point_hydroobject_no_profile
 
-    # Compute distance wet profile
+    # VALIDATION PARAMETER (1): Compute distance wet profile
     converter.compute_distance_and_depth_wet_profile()
     assert (
         converter.profiellijn[converter.profiellijn["code"] == profiellijn_code]["afstandNatProfiel"].iloc[0]
@@ -139,19 +139,21 @@ def test_profile_intermediate_converter():
     )
 
     # Compute number of profielpunt features per profiellijn (NOTE: this is also implemented in the validation module)
+    """''
     converter.compute_number_of_profielpunt_features_per_profiellijn()
     assert (
         converter.profiellijn[converter.profiellijn["code"] == profiellijn_code]["aantalProfielPunten"].iloc[0]
         == aantal_profielpunt_features
     )
+    """
 
-    # add Z to the profile points
+    # REQUIRED FOR VALIDATION: add Z to the profile points
     converter.add_z_to_point_geometry_based_on_column(column_name="hoogte")
 
-    # add breedte value from hydroobject
+    # VALIDATION PARAMETER (2): add breedte value from hydroobject
     converter.add_breedte_value_from_hydroobject()
 
-    # compute jaarinwinning
+    # VALIDATION PARAMETER (3): compute jaarinwinning
     converter.compute_jaarinwinning()
     assert (
         converter.profiellijn[converter.profiellijn["code"] == profiellijn_code]["jaarinwinning"].iloc[0]

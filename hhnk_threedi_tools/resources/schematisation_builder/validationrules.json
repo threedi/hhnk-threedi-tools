@@ -50,6 +50,28 @@
 							"right": "hydroobject_breedte"
 						}
 					}
+				},
+				{
+					"id": 102,
+					"result_variable": "maximalehoogteprofiel",
+					"function": {
+						"object_relation": {
+							"statistic": "max",
+							"related_object": "profielpunt",
+							"related_parameter": "geometry.z"
+						}
+					}
+				},
+				{
+					"id": 103,
+					"result_variable": "breedteprofiel",
+					"function": {
+						"object_relation": {
+							"statistic": "max",
+							"related_object": "profielpunt",
+							"related_parameter": "afstand"
+						}
+					}
 				}
 			],
 			"validation_rules": [
@@ -80,18 +102,19 @@
 					"function": {
 						"GT": {
 							"left": "nr_of_profielpunten",
-							"right": 4
+							"right": 3
 						}
 					}
 				},
 				{
 					"id": 101,
 					"name": "Verschil tussen afstandNatProfiel en hydroobject BREEDTE (BGT) is plausibel",
+					"description": "Utgangspunt van BGT breedte is de kolom BREEDTE op hydroobject. ProfileIntermediateConverter: voegt breedte hydroobject kolom toe aan profiellijn en berekent natte profiel breedte.",
 					"type": "logic",
 					"validation_rule_set": "hhnk",
 					"error_type": "critical",
 					"result_variable": "verschil_afstandNatProfiel_breedte_plausibel",
-					"error_message": "verschil tussen afstandNatProfiel en hydroobject BREEDTE (BGT) is niet plausibel",
+					"error_message": "verschil tussen afstandNatProfiel en hydroobject BREEDTE (BGT) is niet plausibel (> 2m)",
 					"active": true,
 					"function": {
 						"BE": {
@@ -105,6 +128,7 @@
 				{
 					"id": 102,
 					"name": "DiepteNatProfiel is plausibel (0.2m - 20m)",
+					"description": "ProfileIntermediateConverter: voegt diepteNatProfiel kolom toe aan profiellijn.",
 					"type": "logic",
 					"validation_rule_set": "hhnk",
 					"error_type": "critical",
@@ -122,17 +146,52 @@
 				},
 				{
 					"id": 103,
-					"name": "Jaar inwinning niet ouder dan 2015",
+					"name": "Jaar inwinning niet ouder dan 2009",
+					"description": "ProfileIntermediateConverter: berekent jaarinwinning uit datuminwinning.",
 					"type": "logic",
 					"validation_rule_set": "hhnk",
 					"error_type": "non-critical",
-					"result_variable": "jaarminwinning_niet_ouder_dan_2015",
-					"error_message": "jaarinwinning is ouder dan 2015",
+					"result_variable": "jaarminwinning_niet_ouder_dan_2009",
+					"error_message": "jaarinwinning is ouder dan 2009",
 					"active": true,
 					"function": {
 						"GE": {
 							"left": "jaarinwinning",
-							"right": 2015
+							"right": 2009
+						}
+					}
+				},
+				{
+					"id": 104,
+					"name": "Bodemhoogte moet lager zijn dan 3mNAP en hoger dan -9mNAP",
+					"type": "logic",
+					"validation_rule_set": "hhnk",
+					"error_type": "critical",
+					"result_variable": "bodemhoogte_plausibel",
+					"error_message": "bodemhoogte niet plausibel (-9mNAP - 3mNAP)",
+					"active": true,
+					"function": {
+						"BE": {
+							"parameter": "bodemhoogte",
+							"min": -9,
+							"max": 3,
+							"inclusive": false
+						}
+					}
+				},
+				{
+					"id": 105,
+					"name": "Maximale hoogte profiel moet lager zijn dan 6mNAP",
+					"type": "logic",
+					"validation_rule_set": "hhnk",
+					"error_type": "critical",
+					"result_variable": "maximalehoogteprofiel_plausibel",
+					"error_message": "maximalehoogteprofiel niet plausibel (> 6mNAP)",
+					"active": true,
+					"function": {
+						"LT": {
+							"left": "maximalehoogteprofiel",
+							"right": 6
 						}
 					}
 				}
