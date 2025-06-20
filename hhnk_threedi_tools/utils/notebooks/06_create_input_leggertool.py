@@ -1,6 +1,7 @@
 # %%
 
-import geopandas as gpd
+from pathlib import Path
+
 import hhnk_research_tools as hrt
 import numpy as np
 import pandas as pd
@@ -10,10 +11,6 @@ import hhnk_threedi_tools.core.checks.grid_result_metadata as grid_result_metada
 from hhnk_threedi_tools.core.folders import Folders
 
 # %%
-
-# from threedigrid.admin.gridresultadmin import GridH5ResultAdmin
-# GridH5ResultAdmin(self.admin_path.file_path, self.grid_path.file_path)
-
 # Input
 folder_path = r"\\corp.hhnk.nl\data\Hydrologen_data\Data\02.modellen\Geestmerambacht_leggertool"
 berekening_naam = (
@@ -74,4 +71,19 @@ for structure_name in ["channels", "culverts", "orifices", "weirs"]:
 
 
 structure_all.to_file(f"{folder_path}\\debiet_{berekening_naam}.gpkg", driver="GPKG", layer="afvoer_debiet")
-structure_all.to_file(f"{folder_path}\\debiet_{berekening_naam}.shp", driver="ESRI Shapefile", layer="afvoer_debiet")
+# structure_all.to_file(f"{folder_path}\\debiet_{berekening_naam}.shp", driver="ESRI Shapefile", layer="afvoer_debiet")
+
+# %%
+# Kopieer standaard opmaak naar dezelfde locatie
+qgis_layer_styles_dir = Path(htt.__file__).parent.joinpath("resources", "qgis_layer_styles")
+style_source_fn = "discharge_alt_qabs_with_arrows.qml"
+
+style_dest_fn = f"debiet_{berekening_naam}.qml"
+
+style_dest_path = Path(folder_path).joinpath(style_dest_fn)
+if not style_dest_path.exists():
+    hrt.copy_file(
+        source=qgis_layer_styles_dir.joinpath(style_source_fn),
+        destination=style_dest_path,
+    )
+# %%
