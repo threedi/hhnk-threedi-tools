@@ -5,6 +5,7 @@ from pathlib import Path
 import hhnk_research_tools as hrt
 import numpy as np
 import pandas as pd
+from notebook_setup import setup_notebook
 
 import hhnk_threedi_tools as htt
 import hhnk_threedi_tools.core.checks.grid_result_metadata as grid_result_metadata
@@ -12,16 +13,19 @@ from hhnk_threedi_tools.core.folders import Folders
 
 # %%
 # Input
-folder_path = r"\\corp.hhnk.nl\data\Hydrologen_data\Data\02.modellen\Geestmerambacht_leggertool"
+# folder_dir = r"\\corp.hhnk.nl\data\Hydrologen_data\Data\02.modellen\Geestmerambacht_leggertool"
 berekening_naam = (
     "Geestmerambacht_leggertool #9 0d1d_test leggertool"  # Deze moet in map 03_3di_resultaten\0d1d_results staan
 )
+
+notebook_data = setup_notebook()
+folder_dir = notebook_data["polder_folder"]
 
 
 # %%
 
 
-folder = Folders(folder_path)
+folder = Folders(folder_dir)
 threedi_result = folder.threedi_results.zero_d_one_d[berekening_naam].grid
 
 
