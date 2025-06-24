@@ -63,11 +63,12 @@ class DAMO_to_HyDAMO_Converter:
         else:
             self.logger = hrt.logging.get_logger(__name__)
 
-        self.logger.info(f"conversion layers are {self.layers}")
         if not self.damo_file_path.exists():
             raise FileNotFoundError(f"DAMO file {self.damo_file_path} does not exist.")
         else:
             self.layers = fiona.listlayers(self.damo_file_path)
+
+        self.logger.info(f"conversion layers are {self.layers}")
 
         if hydamo_schema_path is None:
             self.hydamo_schema_path = hrt.get_pkg_resource_path(
