@@ -13,10 +13,8 @@ from hhnk_threedi_tools.core.folders import Folders
 
 # %%
 # Input
-# folder_dir = r"\\corp.hhnk.nl\data\Hydrologen_data\Data\02.modellen\Geestmerambacht_leggertool"
-berekening_naam = (
-    "Geestmerambacht_leggertool #9 0d1d_test leggertool"  # Deze moet in map 03_3di_resultaten\0d1d_results staan
-)
+# folder_dir = r"E:\02.modellen\VNK_leggertool"
+berekening_naam = "vnk_leggertool #11 0d1d_test leggertool"  # Deze moet in map 03_3di_resultaten\0d1d_results staan
 
 notebook_data = setup_notebook()
 folder_dir = notebook_data["polder_folder"]
@@ -74,7 +72,7 @@ for structure_name in ["channels", "culverts", "orifices", "weirs"]:
     structure_all = pd.concat([structure_all, structure])
 
 
-structure_all.to_file(f"{folder_path}\\debiet_{berekening_naam}.gpkg", driver="GPKG", layer="afvoer_debiet")
+structure_all.to_file(f"{folder_dir}\\debiet_{berekening_naam}.gpkg", driver="GPKG", layer="afvoer_debiet")
 # structure_all.to_file(f"{folder_path}\\debiet_{berekening_naam}.shp", driver="ESRI Shapefile", layer="afvoer_debiet")
 
 # %%
@@ -84,7 +82,7 @@ style_source_fn = "discharge_alt_qabs_with_arrows.qml"
 
 style_dest_fn = f"debiet_{berekening_naam}.qml"
 
-style_dest_path = Path(folder_path).joinpath(style_dest_fn)
+style_dest_path = Path(folder_dir).joinpath(style_dest_fn)
 if not style_dest_path.exists():
     hrt.copy_file(
         source=qgis_layer_styles_dir.joinpath(style_source_fn),
