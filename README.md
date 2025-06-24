@@ -11,3 +11,18 @@ Tools used for analysing 3Di-models.
 Used in QGIS with this plugin:
 [https://github.com/threedi/hhnk-threedi-plugin](https://github.com/threedi/hhnk-threedi-plugin)
 **Documentation**: [https://threedi.github.io/hhnk-threedi-plugin](https://threedi.github.io/hhnk-threedi-plugin)
+
+
+# Development Setup
+Development is done in vs-code with Pixi environment.
+To setup the env;
+
+`pixi install -e dev`
+`pixi shell -e dev`
+`pixi run postinstall` -> installs hrt, validatiemodule and githooks
+
+
+2025-06 -> migration towards python 3.12.
+Not all checks work yet on 3.12. The github checks therefore run on py39
+Tests this locally with
+`pixi run -e py39 tests`
