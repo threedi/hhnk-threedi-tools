@@ -41,7 +41,11 @@ def test_DAMO_HyDAMO_converter():
 
         if layer == "HYDROOBJECT":
             DAMO_hydroobject_gdf = gpd.read_file(damo_file_path, layer="HYDROOBJECT")
-            assert DAMO_hydroobject_gdf["categorieoppwaterlichaam"].apply(lambda x: isinstance(x, (int, np.integer))).all()
+            assert (
+                DAMO_hydroobject_gdf["categorieoppwaterlichaam"]
+                .apply(lambda x: isinstance(x, (int, np.integer)))
+                .all()
+            )
             assert hydamo_gdf["categorieoppwaterlichaam"].apply(lambda x: isinstance(x, str)).all()
 
             # Filter DAMO and HyDAMO on column objectid value 448639
