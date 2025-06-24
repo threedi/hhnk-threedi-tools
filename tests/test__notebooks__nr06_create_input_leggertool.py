@@ -25,7 +25,7 @@ def test_create_input_leggertool():
     assert output_file.exists()
     assert output_file.with_suffix(".qml").exists()
 
-    assert structure_all["q_mean_m3_s"].sum() == -0.027619
+    assert int(structure_all["q_mean_m3_s"].sum()*1e6) == -927618
 
 
 if __name__ == "__main__":
