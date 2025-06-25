@@ -1,3 +1,5 @@
+# %%
+
 import json
 import math
 import sqlite3
@@ -6,7 +8,11 @@ import geopandas as gpd
 import pandas as pd
 from shapely.geometry import LineString, Polygon
 
+from hhnk_threedi_tools.core.vergelijkingstool import name_date
 from hhnk_threedi_tools.core.vergelijkingstool.config import *
+
+# %%
+model_name = name_date.folder.name
 
 
 class DataSet:
@@ -77,7 +83,7 @@ class DataSet:
         :param geometry_B: Shapely geometry
         :return: Shapely geometry
         """
-        if dataset == "A" or dataset == "AB":
+        if dataset == f"{model_name} new" or dataset == f"{model_name} both":
             return geometry_A
         else:
             return geometry_B

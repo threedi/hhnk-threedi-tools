@@ -404,7 +404,7 @@ class DAMO(DataSet):
             self.logger.debug(f"Merging {layer} of A and B datasets")
 
             # Reproject crs B to A if crs are different
-            if table_A[layer].crs == table_A[layer].crs:
+            if table_A[layer].crs == table_B[layer].crs:
                 self.logger.debug(f"CRS of layer {layer} is equal")
             else:
                 table_B[layer].to_crs(crs=table_A[layer].crs)
@@ -543,7 +543,10 @@ class DAMO(DataSet):
 
                 else:
                     table_merged["geometry"] = table_merged.apply(
-                        lambda x: self.get_significant_geometry(x["in_both"], x["geometry_A"], x["geometry_B"]), axis=1
+                        lambda x: self.get_significant_geometry(
+                            x[f"{folder.name} both"], x[f"{folder.name} new"], x[f"{folder.name} old"]
+                        ),
+                        axis=1,
                     )
                 # remove all geometry columns except 'geometry'
                 table_merged = self.drop_unused_geoseries(table_merged, keep="geometry")

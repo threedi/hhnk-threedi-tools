@@ -18,7 +18,7 @@ def name(path):
 
 model_name, source_data, folder = name(path)
 
-fn_threedimodel = folder.model.schema_base.sqlite_paths[0]
+fn_threedimodel = folder.model.schema_base.content[0]
 
 
 # get de data from the old and new DAMO/Threedi database

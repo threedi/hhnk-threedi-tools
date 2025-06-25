@@ -238,17 +238,17 @@ if __name__ == "__main__":
     styling_path = Path(os.path.join(source_data, "styling"))
 
     # Define outputs
-    fn_DAMO_comparison_export = Path(os.path.join(out_put_files, "DAMO_comparison_Test_35.gpkg"))
+    fn_DAMO_comparison_export = Path(os.path.join(out_put_files, "DAMO_comparison_Test_67.gpkg"))
 
     # Layers To Compare DAMO_DAMO
     layer_selection = True
-    layers_input_damo_selection = ["AfvoergebiedAanvoergebied", "Bergingsgebied", "DuikerSifonHevel", "Stuw"]
-    layers_input_hdb_selection = ["hydro_deelgebieden", "stuwen_op_peilgrens", "Levee_overstromingsmodel"]
+    layers_input_damo_selection = ["Stuw"]
+    layers_input_hdb_selection = []
     fn_threedi_comparison_export = Path(os.path.join(out_put_files, "Threedi_comparison_Test_20.gpkg"))
 
     compare_with = "Compare with Damo"
 
-    add_symbology_both = True
+    add_symbology_both = False
     update_symbology = name_date.symbology_both(add_symbology_both)
 
     # Layers to Compare DAMO_3di
