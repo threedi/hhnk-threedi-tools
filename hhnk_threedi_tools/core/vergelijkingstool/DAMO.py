@@ -543,10 +543,7 @@ class DAMO(DataSet):
 
                 else:
                     table_merged["geometry"] = table_merged.apply(
-                        lambda x: self.get_significant_geometry(
-                            x[f"{folder.name} both"], x[f"{folder.name} new"], x[f"{folder.name} old"]
-                        ),
-                        axis=1,
+                        lambda x: self.get_significant_geometry(x["in_both"], x["geometry_A"], x["geometry_B"]), axis=1
                     )
                 # remove all geometry columns except 'geometry'
                 table_merged = self.drop_unused_geoseries(table_merged, keep="geometry")
@@ -580,13 +577,13 @@ class DAMO(DataSet):
             self.logger.debug(f"Layer name: {layer_name}")
             count_A = len(
                 table_C[layer_name].loc[
-                    (table_C[layer_name]["in_both"] == f"{folder.name} new")
+                    (table_C[layer_name]["in_both"] == f"{model_name} new")
                     | (table_C[layer_name]["in_both"] == f"{model_name} both")
                 ]
             )
             count_B = len(
                 table_C[layer_name].loc[
-                    (table_C[layer_name]["in_both"] == f"{folder.name} old")
+                    (table_C[layer_name]["in_both"] == f"{model_name} old")
                     | (table_C[layer_name]["in_both"] == f"{model_name} both")
                 ]
             )
@@ -594,7 +591,7 @@ class DAMO(DataSet):
             length_A = sum(
                 table_C[layer_name]
                 .loc[
-                    (table_C[layer_name]["in_both"] == f"{folder.name} new")
+                    (table_C[layer_name]["in_both"] == f"{model_name} new")
                     | (table_C[layer_name]["in_both"] == f"{model_name} both")
                 ]
                 .geom_length_A
@@ -602,7 +599,7 @@ class DAMO(DataSet):
             length_B = sum(
                 table_C[layer_name]
                 .loc[
-                    (table_C[layer_name]["in_both"] == f"{folder.name} old")
+                    (table_C[layer_name]["in_both"] == f"{model_name} old")
                     | (table_C[layer_name]["in_both"] == f"{model_name} both")
                 ]
                 .geom_length_B
@@ -611,7 +608,7 @@ class DAMO(DataSet):
             area_A = sum(
                 table_C[layer_name]
                 .loc[
-                    (table_C[layer_name]["in_both"] == f"{folder.name} new")
+                    (table_C[layer_name]["in_both"] == f"{model_name} new")
                     | (table_C[layer_name]["in_both"] == f"{model_name} both")
                 ]
                 .geom_area_A
@@ -619,7 +616,7 @@ class DAMO(DataSet):
             area_B = sum(
                 table_C[layer_name]
                 .loc[
-                    (table_C[layer_name]["in_both"] == f"{folder.name} old")
+                    (table_C[layer_name]["in_both"] == f"{model_name} old")
                     | (table_C[layer_name]["in_both"] == f"{model_name} both")
                 ]
                 .geom_area_B
