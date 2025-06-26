@@ -35,7 +35,7 @@ from pathlib import Path
 
 import geopandas as gpd
 
-from hhnk_threedi_tools.core.vergelijkingstool import name_date
+from hhnk_threedi_tools.core.vergelijkingstool import config, name_date, styling
 from hhnk_threedi_tools.core.vergelijkingstool.DAMO import DAMO
 from hhnk_threedi_tools.core.vergelijkingstool.styling import *
 from hhnk_threedi_tools.core.vergelijkingstool.Threedimodel import Threedimodel
@@ -238,18 +238,17 @@ if __name__ == "__main__":
     styling_path = Path(os.path.join(source_data, "styling"))
 
     # Define outputs
-    fn_DAMO_comparison_export = Path(os.path.join(out_put_files, "DAMO_comparison_Test_67.gpkg"))
+    fn_DAMO_comparison_export = Path(os.path.join(out_put_files, "DAMO_comparison_Test_110.gpkg"))
 
     # Layers To Compare DAMO_DAMO
     layer_selection = True
-    layers_input_damo_selection = ["Stuw"]
+    layers_input_damo_selection = ["Bergingsgebied"]
     layers_input_hdb_selection = []
     fn_threedi_comparison_export = Path(os.path.join(out_put_files, "Threedi_comparison_Test_20.gpkg"))
 
     compare_with = "Compare with Damo"
 
-    add_symbology_both = False
-    update_symbology = name_date.symbology_both(add_symbology_both)
+    # config.UPDATE_SYMBOLOGY = False
 
     # Layers to Compare DAMO_3di
     threedi_layer_selector = False
@@ -284,8 +283,6 @@ if __name__ == "__main__":
         damo_structure_selection=damo_structure_selection,
         structure_codes=structure_codes,
     )
-
-
 # %%
 # AfvoergebiedAanvoergebied, Bergingsgebied, DuikerSifonHevel
 # hydro_deelgebieden, stuwen_op_peilgrens, Levee_overstromingsmodel
