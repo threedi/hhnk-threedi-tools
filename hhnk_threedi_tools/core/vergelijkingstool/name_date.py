@@ -5,7 +5,6 @@ from pathlib import Path
 from hhnk_threedi_tools.core.folders import Folders
 
 path = r"E:\02.modellen\castricum"
-opacity_100 = True
 
 
 # Get the model name and the path from the model we want to work with
@@ -38,15 +37,11 @@ def date(damo_new, damo_old, hdb_new, hdb_old, threedi):
 
 
 # Define de Symbology in case we want to make it transparent or not
-def symbology_both(update_symbology):
-    update_symbology
-    if update_symbology is True:
+def symbology_both(opacity):
+    if opacity:
         return 0
-    elif update_symbology is False:
+    else:
         return 128
-
-
-update_symbology = symbology_both(opacity_100)
 
 
 source_data_old = os.path.join(source_data, "vergelijkingsTool", "old")
