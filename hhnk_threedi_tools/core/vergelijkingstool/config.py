@@ -1,13 +1,12 @@
 SQLITE_LAYERS = [
-    "v2_connection_nodes",
-    "v2_cross_section_definition",
-    "v2_obstacle",
-    "v2_channel",
-    "v2_culvert",
-    "v2_cross_section_location",
-    "v2_orifice",
-    "v2_pumpstation",
-    "v2_weir",
+    "connection_node",
+    "obstacle",
+    "channel",
+    "culvert",
+    "cross_section_location",
+    "orifice",
+    "pump",
+    "weir",
 ]
 
 SQLITE_LAYER_CROSS_SECTION_DEFINITION = "v2_cross_section_definition"
