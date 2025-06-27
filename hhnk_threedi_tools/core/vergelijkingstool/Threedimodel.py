@@ -1,3 +1,4 @@
+# %%
 # importing external dependencies
 import json
 import logging
@@ -55,24 +56,45 @@ class Threedimodel(DataSet):
             :param tabulated_string:
             :return: Maximum value in a tabulated string
             """
+            #     if tabulated_string is not None:
+            #         tabulated_array = np.fromstring(tabulated_string, dtype=float, sep=" ")
+            #         return np.max(tabulated_array)
+            #     else:
+            #         return None
+
             if tabulated_string is not None:
-                tabulated_array = np.fromstring(tabulated_string, dtype=float, sep=" ")
-                return np.max(tabulated_array)
+                # Split the column into lines and and rows
+                data = [list(map(float, line.split(","))) for line in tabulated_string.strip().split("\n")]
+
+                # Transform the data into array
+                array = np.array(data)
+
+                # split the array in x (width) and y (height)
+                x = array[:, 0]
+                y = array[:, 1]
+
+                # find max value in x (width)
+                max_x = np.max(x)
+
+                # find max value in y (height)
+                max_y = np.max(y)
+
+                return max_x, max_y
             else:
                 return None
 
-        cross_section_definition = self.data["v2_cross_section_definition"].set_index("id")
+        cross_section_definition = self.data["cross_section_location"]
 
-        cross_section_definition["cross_section_max_width"] = cross_section_definition["width"].apply(
-            max_value_from_tabulated
-        )
+        # cross_section_definition["cross_section_max_width"] = cross_section_definition["cross_section_width"].apply(
+        #     max_value_from_tabulated
+        # )
 
-        cross_section_definition["cross_section_max_height"] = cross_section_definition["height"].apply(
-            max_value_from_tabulated
+        cross_section_definition["cross_section_max_width"], cross_section_definition["cross_section_max_height"] = (
+            cross_section_definition["cross_section_table"].values[0].apply(max_value_from_tabulated)
         )
 
         for layer in self.data:
-            if "cross_section_definition_id" in list(self.data[layer].keys()):
+            if "cross_section_location" in list(self.data[layer].keys()):
                 self.data[layer] = self.data[layer].merge(
                     cross_section_definition[["cross_section_max_width", "cross_section_max_height"]],
                     how="left",
@@ -489,7 +511,9 @@ class Threedimodel(DataSet):
         model_name = name_date.model_name
         table_struc_model = {}
         table_struc_DAMO = {}
-        base_output = r"E:\02.modellen\castricum\01_source_data\vergelijkingsTool\output"
+
+        # base_output = r"E:\02.modellen\castricum\01_source_data\vergelijkingsTool\output"
+        base_output = name_date.source_data / "vergelijkingsTool\output"  # TODO THIS NEED TO BE FIX
         if threedi_layer_selector is True:
             THREEDI_STRUCTURE_LAYERS = threedi_structure_selection
             DAMO_HDB_STRUCTURE_LAYERS = damo_structure_selection
@@ -508,7 +532,7 @@ class Threedimodel(DataSet):
             table_struc_model[struc].to_csv(path_table, sep=";", index=False)
 
             # print(f'3di_type {(table_struc_model[struc])}')
-            table_struc_DAMO[struc] = DAMO.get_structure_by_code(struc, DAMO_HDB_STRUCTURE_LAYERS)
+            table_struc_DAMO[struc] = self.get_structure_by_code(struc, DAMO_HDB_STRUCTURE_LAYERS)
 
             name = "check_table_DAMO_" + struc + ".csv"
             path_table = os.path.join(base_output, name)
@@ -594,3 +618,6 @@ class Threedimodel(DataSet):
         # table_C[layer].to_csv(r"E:\02.modellen\castricum\01_source_data\vergelijkingsTool\output\TableC_threedi.csv", sep = ';')
 
         return table_C, statistics
+
+
+# %%
