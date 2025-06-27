@@ -46,11 +46,11 @@ HDB_LAYERS = [
 ]
 
 THREEDI_STRUCTURE_LAYERS = [
-    "v2_culvert",
-    "v2_pumpstation",
-    "v2_weir",
-    "v2_orifice",
-    "v2_channel",
+    "culvert",
+    "pump",
+    "weir",
+    "orifice",
+    "channel",
 ]
 
 DAMO_HDB_STRUCTURE_LAYERS = [
