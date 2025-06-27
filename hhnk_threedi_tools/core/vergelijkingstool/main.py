@@ -246,15 +246,15 @@ if __name__ == "__main__":
     layers_input_hdb_selection = []
     fn_threedi_comparison_export = Path(os.path.join(out_put_files, "Threedi_comparison_Test_20.gpkg"))
 
-    compare_with = "Compare with Damo"
-
+    # compare_with = "Compare with Damo"
+    compare_with = "Compare with 3Di"
     # config.UPDATE_SYMBOLOGY = False
 
     # Layers to Compare DAMO_3di
     threedi_layer_selector = False
     threedi_structure_selection = [
-        "v2_culvert",
-        "v2_pumpstation",
+        "culvert",
+        "pump",
     ]
     damo_structure_selection = ["duikersifonhevel", "gemaal"]
     structure_codes = ["KDU", "KGM"]
