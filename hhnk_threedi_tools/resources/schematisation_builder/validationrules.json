@@ -194,6 +194,22 @@
 							"right": 6
 						}
 					}
+				},
+				{
+					"id": 106,
+					"name": "Profiellijn mag niet te veel zigzaggen (cross Product < 0.5)",
+					"type": "logic",
+					"validation_rule_set": "hhnk",
+					"error_type": "critical",
+					"result_variable": "maximale_zizag_profiellijn",
+					"error_message": "maixmale zizag profiellijn is te groot (> 0.5)",
+					"active": true,
+					"function": {
+						"LT": {
+							"left": "max_cross_product",
+							"right": 0.5
+						}
+					}
 				}
 			]
 		},

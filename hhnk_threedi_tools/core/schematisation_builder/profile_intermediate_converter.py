@@ -6,7 +6,7 @@ import geopandas as gpd
 import hhnk_research_tools as hrt
 import numpy as np
 import pandas as pd
-from shapely.geometry import MultiLineString, Point
+from shapely.geometry import LineString, MultiLineString, Point
 from shapely.validation import make_valid
 
 
@@ -802,6 +802,58 @@ class ProfileIntermediateConverter:
         )
         # Assign the BREEDTE column to profiellijn as hydroobject_breedte
         self.profiellijn["hydroobject_breedte"] = profiellijn_with_breedte["BREEDTE"]
+
+    def _is_linestring_straight(self, line: LineString) -> float:
+        """
+        Check if a LineString is straight by checking the collinearity of each segment.
+        A LineString is considered straight if all segments are collinear, but we allow a small tolerance.
+        This tolerance is determined in the validation module (validationrules.json).
+        In this function, the maximum cross product of the segments is computed.
+        """
+
+        coords = list(line.coords)
+        if len(coords) < 3:
+            return True  # Two points always form a straight line
+
+        # Use the first segment as the reference vector
+        x0, y0 = coords[0]
+        x1, y1 = coords[1]
+        dx_ref = x1 - x0
+        dy_ref = y1 - y0
+
+        max_cross = 0
+        for i in range(1, len(coords) - 1):
+            x1, y1 = coords[i]
+            x2, y2 = coords[i + 1]
+            dx = x2 - x1
+            dy = y2 - y1
+            # Use cross product to check colinearity (should be zero if vectors are colinear)
+            cross = dx_ref * dy - dy_ref * dx
+
+            if abs(cross) > max_cross:
+                max_cross = abs(cross)
+
+        return max_cross
+
+    def add_maxcross_to_profiellijn(self):
+        """
+        Add the maximum cross product of the segments of the LineString to the profiellijn.
+        This is used to check if the LineString is straight (enough).
+        """
+        self.logger.info("Adding maximum cross product to profiellijn...")
+        if self.profiellijn is None:
+            raise ValueError("profiellijn is not loaded. Call create_profile_tables() first.")
+
+        # Ensure geometry is a LineString
+        if not all(self.profiellijn.geometry.apply(lambda geom: geom.geom_type in ["LineString", "MultiLineString"])):
+            raise ValueError("All geometries in profiellijn must be LineString or MultiLineString.")
+
+        self.logger.info(f"{self.profiellijn.geometry}")
+
+        # Apply the function to compute max cross product
+        self.profiellijn["max_cross_product"] = self.profiellijn["geometry"].apply(self._is_linestring_straight)
+
+        self.logger.info("Maximum cross product added to profiellijn.")
 
 
 # General functions

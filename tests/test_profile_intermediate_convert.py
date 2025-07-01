@@ -1,8 +1,12 @@
 # %%
+import shutil
 from pathlib import Path
 
 # %%
 import hhnk_research_tools as hrt
+
+# from tests.config import FOLDER_TEST, TEMP_DIR, TEST_DIRECTORY
+from hhnk_threedi_tools.core.folders import Folders
 
 # %%
 from hhnk_threedi_tools.core.schematisation_builder.profile_intermediate_converter import ProfileIntermediateConverter
@@ -158,6 +162,13 @@ def test_profile_intermediate_converter():
     assert (
         converter.profiellijn[converter.profiellijn["code"] == profiellijn_code]["jaarinwinning"].iloc[0]
         == jaarinwinning
+    )
+
+    # VALIDATION PARAMETER (4): compute max cross product profiellijn to check if line is straight
+    converter.add_maxcross_to_profiellijn()
+    assert (
+        converter.profiellijn[converter.profiellijn["code"] == profiellijn_code]["max_cross_product"].iloc[0]
+        is not None
     )
 
     # Write the result to a new file
