@@ -3,9 +3,11 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Optional, Tuple, Union
 
+import fiona
 import geopandas as gpd
 import hhnk_research_tools as hrt
 import pandas as pd
+import pyogrio
 
 import hhnk_threedi_tools as htt
 
@@ -47,7 +49,6 @@ class DAMO_to_HyDAMO_Converter:
         self,
         damo_file_path: Path,
         hydamo_file_path: Union[Path, hrt.SpatialDatabase],
-        layers: list,
         hydamo_schema_path: Optional[Path] = None,
         damo_schema_path: Optional[Path] = None,
         overwrite: bool = False,
@@ -55,13 +56,17 @@ class DAMO_to_HyDAMO_Converter:
     ):
         self.damo_file_path = Path(damo_file_path)
         self.hydamo_file_path = hrt.SpatialDatabase(hydamo_file_path)
-        self.layers = layers
         self.overwrite = overwrite
 
         if logger:
             self.logger = logger
         else:
             self.logger = hrt.logging.get_logger(__name__)
+
+        if not self.damo_file_path.exists():
+            raise FileNotFoundError(f"DAMO file {self.damo_file_path} does not exist.")
+        else:
+            self.layers = fiona.listlayers(self.damo_file_path)
 
         self.logger.info(f"conversion layers are {self.layers}")
 
@@ -183,7 +188,13 @@ class DAMO_to_HyDAMO_Converter:
             layer_gdf = gpd.read_file(self.damo_file_path, layer=layer_name, engine="pyogrio")
             layer_gdf = self.convert_attributes(layer_gdf, layer_name)
             layer_gdf = self.add_column_NEN3610id(layer_gdf, layer_name)
-            layer_gdf.to_file(self.hydamo_file_path.path, layer=layer_name, engine="pyogrio")
+
+            # check if layer has geometry as column
+            if "geometry" in layer_gdf.columns:
+                layer_gdf.to_file(self.hydamo_file_path.path, layer=layer_name, engine="pyogrio")
+
+            else:
+                pyogrio.write_dataframe(layer_gdf, self.hydamo_file_path.path, layer=layer_name, driver="GPKG")
 
     def convert_attributes(self, layer_gdf: gpd.GeoDataFrame, layer_name: str) -> gpd.GeoDataFrame:
         """
