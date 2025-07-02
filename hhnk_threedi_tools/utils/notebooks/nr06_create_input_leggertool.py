@@ -73,7 +73,6 @@ def create_input_leggertool(folder: Folders, berekening_naam: str, output_file: 
 
     structure_all.to_file(output_file, driver="GPKG", layer="afvoer_debiet")
 
-    # %%
     # Kopieer standaard opmaak naar dezelfde locatie
     style_src_path = hrt.get_pkg_resource_path(
         package_resource=htt.resources.qgis_layer_styles.zero_d_one_d, name="discharge_alt_qabs_with_arrows.qml"
