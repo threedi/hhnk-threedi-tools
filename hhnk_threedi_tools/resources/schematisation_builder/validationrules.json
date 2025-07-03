@@ -72,6 +72,18 @@
 							"related_parameter": "afstand"
 						}
 					}
+				},
+				{
+					"id": 104,
+					"result_variable": "maaiveldhoogte",
+					"function": {
+						"buffer": {
+							"radius": 10,
+							"percentile": 95,
+							"coverage": "AHN",
+							"fill_value": 325
+						}
+				    }
 				}
 			],
 			"validation_rules": [
@@ -93,6 +105,7 @@
 				{
 					"id": 100,
 					"name": "Profiel moet minimaal 4 profielpunten hebben",
+					"description": "Een profiel moet minimaal 4 profielpunten hebben (kan nog uitgebreider?)",
 					"type": "logic",
 					"validation_rule_set": "hhnk",
 					"error_type": "critical",
@@ -164,6 +177,7 @@
 				{
 					"id": 104,
 					"name": "Bodemhoogte moet lager zijn dan 3mNAP en hoger dan -9mNAP",
+					"description": "We nemen aan de de bodemhoogte plausibel is als die lager is dan 3mNAP en hoger dan -9mNAP",
 					"type": "logic",
 					"validation_rule_set": "hhnk",
 					"error_type": "critical",
@@ -182,6 +196,7 @@
 				{
 					"id": 105,
 					"name": "Maximale hoogte profiel moet lager zijn dan 6mNAP",
+					"description": "De maximale hoogte van een profiel moet lager zijn dan 6mNAP om plausibel te worden gezien",
 					"type": "logic",
 					"validation_rule_set": "hhnk",
 					"error_type": "critical",
@@ -198,6 +213,7 @@
 				{
 					"id": 106,
 					"name": "Profiellijn mag niet te veel zigzaggen (cross Product < 0.5)",
+					"description": "Een profiellijn hoort zo recht mogelijk te zijn. Het cross product is een indicatie van hoeveel een lijnsegment afwijkt van de lineare lijn tussen de twee uiterste punten. Bijvoorbeeld een cross product van 0.5 betekent dat een lijnsegment een afwijking van 13.89 graden maakt t.o.v. de lineare lijn.",
 					"type": "logic",
 					"validation_rule_set": "hhnk",
 					"error_type": "critical",
@@ -208,6 +224,22 @@
 						"LT": {
 							"left": "max_cross_product",
 							"right": 0.5
+						}
+					}
+				},
+				{
+					"id": 107,
+					"name": "Ingemeten profiel moet onder het maaiveld liggen",
+					"type": "logic",
+					"validation_rule_set": "hhnk",
+					"error_type": "non-critical",
+					"result_variable": "ingemeten_profiel_boven_maaiveld",
+					"error_message": "ingemeten profiel > maaiveld",
+					"active": true,
+					"function": {
+						"LT": {
+							"left": "bodemhoogte",
+							"right": "maaiveldhoogte"
 						}
 					}
 				}
