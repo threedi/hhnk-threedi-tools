@@ -31,20 +31,20 @@ tables_default = list(DB_LAYER_MAPPING.keys())
 model_extent_polygon_fp = r"E:\02.modelrepos\castricum\01_source_data\polder_polygon.shp"
 
 model_extent_gdf = gpd.read_file(model_extent_polygon_fp)
-# table_names = tables_default
-# output_file = r"E:\github\wvanesse\hhnk-research-tools\tests_hrt\data\temp.gpkg"
-# buffer_distance = 0.5
-# table = "HHNK_MV_OWT"
-# EPSG_CODE = "28992"
+table_names = tables_default
+output_file = r"C:\Users\wvanesse\Desktop\temp\temp.gpkg"
+buffer_distance = 0.5
+table = "GW_PRO"
+EPSG_CODE = "28992"
 
-# tables = [table]
-# DAMO_exporter(model_extent_gdf, output_file, table_names=tables)
+tables = [table]
 
-# # db_dict = DATABASES[DB_LAYER_MAPPING.get(table, None).get("source", None)]
-# # schema = DB_LAYER_MAPPING.get(table, None).get("schema", None)
-# # columns = DB_LAYER_MAPPING.get(table, None).get("columns", None)
-# # columns_all = get_table_columns(db_dict=db_dict, schema=schema, table_name=table)
-# DAMO_exporter(model_extent_gdf, output_file)
+db_dict = DATABASES[DB_LAYER_MAPPING.get(table, None).get("source", None)]
+# all_tables = get_tables_from_oracle_db(db_dict)
+schema = DB_LAYER_MAPPING.get(table, None).get("schema", None)
+columns = DB_LAYER_MAPPING.get(table, None).get("columns", None)
+# columns_all = get_table_columns(db_dict=db_dict, schema=schema, table_name=table)
+db_exporter(model_extent_gdf, output_file)
 
 
 # %%
@@ -89,47 +89,45 @@ def update_model_extent_from_combinatiepeilgebieden(
 
 
 def export_sub_layer(
-    table,
-    sub: str,
-    service_name: str,
+    sub_table: str,
+    id_link_column: str,
+    sub_id_column: str,
+    sub_columns: list[str],
     model_gdf: gpd.GeoDataFrame,
-    output_file: Path,
     sql: str,
     db_dict: dict,
-    logger=None,
+    schema: str,
 ):
     """
     Export sub layer from DAMO database based on the main table and sub table mapping.
     This function is used to export non-geometric tables that are linked to a main table.
+
     Parameters
     ----------
-    table : str
-        Name of the main table from which the sub table is derived.
-    sub : str
-        Name of the sub table to be exported, e.g. "profielen", etc.
-    service_name : str
-        Name of the database service from which the data is exported.
+    sub_table : str
+        Name of the sub table to be exported, e.g. "POMP", etc.
+    id_link_column : str
+        Name of the column in the parent table that links to the sub id column.
+    sub_id_column : str
+        Name of the column in the sub table that links to the parent table.
+    sub_columns : str
+        List of columns to be exported from the sub table.
+        If None, alls columns are exported.
     model_gdf : GeoDataFrame
         GeoDataFrame of the selected polder, used to filter the sub table data.
-    output_file : Path
-        Path to the output geopackage file where the sub table will be saved.
     sql : str
         SQL query string to select data from the main table.
     db_dict : dict
         Dictionary containing database connection details.
-    logger : Logger, optional
-        Logger instance for logging information and errors. If not provided, a default logger is used.
+    schema : str
+        Schema name in the database where the sub table is located.
+    sub_id_list_sql : str
+
     Returns
     -------
     None
         The function writes the sub table data to the output file and logs the process.
     """
-    sub_table = DB_LAYER_MAPPING.get(table, None).get(f"required_{sub}_table", None)
-    id_link_column = DB_LAYER_MAPPING.get(table, None).get("id_link_column", None)
-    sub_id_column = DB_LAYER_MAPPING.get(table, None).get(f"{sub}_id_column", None)
-    sub_columns = DB_LAYER_MAPPING.get(table, None).get("sub_columns", None)
-
-    logger.info(f"Start export of table non-geometric table {sub_table} from {service_name}")
 
     # Modify sql to contain only id link column
     sql_from = sql[sql.index("FROM") :]
@@ -138,7 +136,7 @@ def export_sub_layer(
     # Create new SQL statement
     sub_sql = sql_builder_select_by_id_list_statement(
         sub_id_list_sql=sub_id_list_sql,
-        schema=DB_LAYER_MAPPING.get(table, None).get("schema", None),
+        schema=schema,
         sub_table=sub_table,
         sub_id_column=sub_id_column,
     )
@@ -150,17 +148,12 @@ def export_sub_layer(
     idlist = model_gdf[id_link_column.lower()].unique().tolist()
     sub_model_df = sub_bbox_df[sub_bbox_df[sub_id_column.lower()].isin(idlist)]
 
-    # Write to geopackage
     sub_model_gdf = gpd.GeoDataFrame(sub_model_df)
-    sub_model_gdf.to_file(output_file, layer=sub_table, driver="GPKG", engine="pyogrio")
-
-    logger.info(f"Finished export of {len(sub_model_gdf)} elements from table {sub_table} from {service_name}")
 
     return sub_sql, sub_model_gdf
 
 
-# %%
-def DB_exporter(
+def db_exporter(
     model_extent_gdf: gpd.GeoDataFrame,
     output_file: Path,
     table_names: list[str] = tables_default,
@@ -216,6 +209,7 @@ def DB_exporter(
     logging = []
     for table in table_names:
         layer_db = DB_LAYER_MAPPING.get(table, None).get("source", None)
+        schema = DB_LAYER_MAPPING.get(table, None).get("schema", None)
         geomcolumn = DB_LAYER_MAPPING.get(table, None).get("geomcolumn", None)
         columns = DB_LAYER_MAPPING.get(table, None).get("columns", None)
         if DB_LAYER_MAPPING.get(table, None).get("table_name", None) is not None:
@@ -233,7 +227,7 @@ def DB_exporter(
 
             # Build sql string for request to db for given input polygon
             sql = sql_builder_select_by_location(
-                schema=DB_LAYER_MAPPING.get(table, None).get("schema", None),
+                schema=schema,
                 table_name=table_name,
                 geomcolumn=geomcolumn,
                 epsg_code=EPSG_CODE,
@@ -267,14 +261,56 @@ def DB_exporter(
 
             # Include table that depend on this table
             if DB_LAYER_MAPPING.get(table, None).get("required_sub_table", None) is not None:
+                # Get sub table information from mapping
+                sub_table = DB_LAYER_MAPPING.get(table, None).get("required_sub_table", None)
+                id_link_column = DB_LAYER_MAPPING.get(table, None).get("id_link_column", None)
+                sub_id_column = DB_LAYER_MAPPING.get(table, None).get("sub_id_column", None)
+                sub_columns = DB_LAYER_MAPPING.get(table, None).get("sub_columns", None)
+                logger.info(f"Start export of table non-geometric sub table {sub_table} from {service_name}")
+
+                # run sub export
                 sub_sql, sub_model_gdf = export_sub_layer(
-                    table, "sub", service_name, model_gdf, output_file, sql, db_dict, logger
+                    sub_table=sub_table,
+                    id_link_column=id_link_column,
+                    sub_id_column=sub_id_column,
+                    sub_columns=sub_columns,
+                    service_name=service_name,
+                    model_gdf=model_gdf,
+                    sql=sql,
+                    db_dict=db_dict,
+                    schema=schema,
+                )
+
+                # Write to geopackage
+                sub_model_gdf.to_file(output_file, layer=sub_table, driver="GPKG", engine="pyogrio")
+
+                logger.info(
+                    f"Finished export of {len(sub_model_gdf)} elements from table {sub_table} from {service_name}"
                 )
 
                 if DB_LAYER_MAPPING.get(table, None).get("required_sub2_table", None) is not None:
                     # If there is a second sub table, export it as well
+                    sub2_table = DB_LAYER_MAPPING.get(table, None).get("required_sub2_table", None)
+                    sub_id_link_column = DB_LAYER_MAPPING.get(table, None).get("sub_id_link_column", None)
+                    sub2_id_column = DB_LAYER_MAPPING.get(table, None).get("sub2_id_column", None)
+                    sub2_columns = DB_LAYER_MAPPING.get(table, None).get("sub2_columns", None)
+                    logger.info(f"Start export of table non-geometric sub table {sub2_table} from {service_name}")
+
+                    # run sub export
                     sub2_sql, sub2_model_gdf = export_sub_layer(
-                        table, "sub2", service_name, sub_model_gdf, output_file, sub_sql, db_dict, logger
+                        sub_table=sub2_table,
+                        id_link_column=sub_id_link_column,
+                        sub_id_column=sub2_id_column,
+                        sub_columns=sub2_columns,
+                        service_name=service_name,
+                        model_gdf=sub_model_gdf,
+                        sql=sub_sql,
+                        db_dict=db_dict,
+                        schema=schema,
+                    )
+
+                    logger.info(
+                        f"Finished export of {len(sub2_model_gdf)} elements from table {sub_table} from {service_name}"
                     )
 
         except Exception as e:
@@ -289,3 +325,4 @@ def DB_exporter(
     return logging
 
 
+# %%
