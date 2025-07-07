@@ -1,5 +1,10 @@
 # %%
+try:
+    from hhnk_threedi_tools.utils.notebooks.notebook_setup import setup_notebook
+except:
+    from notebook_setup import setup_notebook  # in case hhnk-threedi-tools is not part of python installation
 
+notebook_data = setup_notebook()
 
 from pathlib import Path
 
@@ -79,7 +84,17 @@ def update_sorted_actiontable(database, queries: list[str]):
         database.execute_sql_changes(query=query)
 
 
+# %% [markdown]
+# Sorteer de waarden in de control table in de modelmap met onderstaande cel
+
 # %%
+folder_dir = Path(notebook_data["polder_folder"])
+folder = Folders(folder_dir)
+queries = create_sorted_actiontable_queries(database=folder.model.schema_base.database)
+update_sorted_actiontable(database=folder.model.schema_base.database, queries=queries)
+
+
+# %% test regels
 if __name__ == "__main__":
     # %% Op een specifieke map
     folder_dir = Path(r"E:\02.modellen\VNK_zevenhuis")
@@ -96,7 +111,7 @@ if __name__ == "__main__":
     folder = Folders(folder_dir)
 
     queries = create_sorted_actiontable_queries(database=folder.model.schema_base.database)
-    update_sorted_actiontable(queries=queries)
+    update_sorted_actiontable(database=folder.model.schema_base.database, queries=queries)
 
     # %% test_purpose to relative path
     folder_dir = Path(__file__).parents[3].joinpath("tests", "data", "model_test")
