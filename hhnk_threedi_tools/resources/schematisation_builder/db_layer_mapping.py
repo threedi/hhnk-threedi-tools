@@ -67,6 +67,7 @@ DB_LAYER_MAPPING = {
     },
     "GEMAAL_DAMO": {
         "table_name": "GEMAAL",
+        "layername": "GEMAAL_DAMO",
         "source": "aquaprd_lezen",
         "schema": "DAMO_W",
         "columns": None,

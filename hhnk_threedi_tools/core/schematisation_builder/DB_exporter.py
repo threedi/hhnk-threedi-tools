@@ -8,6 +8,7 @@ import hhnk_research_tools as hrt
 import pandas as pd
 from hhnk_research_tools.sql_functions import (
     database_to_gdf,
+    get_table_domains_from_oracle,
     sql_builder_select_by_id_list_statement,
     sql_builder_select_by_location,
 )
@@ -150,6 +151,71 @@ def export_sub_layer(
     return sub_sql, sub_model_gdf
 
 
+def update_table_domains(model_gdf: gpd.GeoDataFrame, db_dict: dict, schema: str, table_name: str):
+    """
+    Convert domain codes for tables from schema DAMO W to their descriptions.
+    Original codes are preserved in a new column right after the original column.
+
+    Parameters
+    ----------
+    model_gdf : gpd.GeoDataFrame
+        geodataframe of table from DAMO W schema, e.g. HYDROOBJECT
+    db_dict : dict
+        Dictionary containing database connection details.
+    schema : str
+        Schema name in the database where the sub table is located.
+    table : str
+        Name of the table to update domains
+
+    Returns
+    -------
+    gpd.GeoDataFrame
+        geodataframe of table from DAMO W schema with updated domains
+    """
+    # Retrieve available domains
+    domains = get_table_domains_from_oracle(
+        db_dict=db_dict,
+        schema=schema,
+        table_name=table_name,
+    )
+
+    # Check if empmty
+    if domains.empty:
+        hrt.logging.get_logger(__name__).warning(
+            f"No domains found for table {table_name} in schema {schema}. Skipping domain update."
+        )
+        return model_gdf
+
+    # Ensure domain codes are strings
+    domains["codedomeinwaarde"] = domains["codedomeinwaarde"].astype(str)
+
+    # Identify columns to remap
+    domain_columns = [col for col in model_gdf.columns if col in domains["damokolomnaam"].unique()]
+
+    # Loop over each domain column
+    for col in domain_columns:
+        # if col == "categorieoppwaterlichaam":
+        #     break
+        new_code_col = f"{col}code"
+
+        # Preserve code column right after the original column
+        model_gdf.insert(
+            loc=model_gdf.columns.get_loc(col) + 1,
+            column=new_code_col,
+            value=model_gdf[col].astype(str),
+        )
+
+        # Build lookup: index=codedomeinwaarde → naamdomeinwaarde
+        lookup = domains.loc[domains["damokolomnaam"] == col, ["codedomeinwaarde", "naamdomeinwaarde"]].set_index(
+            "codedomeinwaarde"
+        )["naamdomeinwaarde"]
+
+        # Vectorized replacement (NaN if no match)
+        model_gdf[col] = model_gdf[new_code_col].map(lookup)
+
+    return model_gdf
+
+
 def db_exporter(
     model_extent_gdf: gpd.GeoDataFrame,
     output_file: Path,
@@ -214,7 +280,9 @@ def db_exporter(
         geomcolumn = DB_LAYER_MAPPING.get(table, None).get("geomcolumn", None)
         columns = DB_LAYER_MAPPING.get(table, None).get("columns", None)
         if DB_LAYER_MAPPING.get(table, None).get("table_name", None) is not None:
-            table_name = DB_LAYER_MAPPING.get(table, None).get("table_name", None)
+            table_name = DB_LAYER_MAPPING.get(table, None).get(
+                "table_name", None
+            )  # in case "GEMAAL_DAMO", table name is "GEMAAL"
         else:
             table_name = table
 
@@ -254,6 +322,16 @@ def db_exporter(
                 layername = DB_LAYER_MAPPING.get(table, None).get("layername", None)
             else:
                 layername = table
+
+            # Update table domain code to descriptions
+            if schema == "DAMO_W":
+                logger.info(f"Updating domains for {table} from {service_name}")
+                model_gdf = update_table_domains(
+                    model_gdf=model_gdf,
+                    db_dict=db_dict,
+                    schema=schema,
+                    table_name=table_name,
+                )
 
             # adds table to geopackage file as a layer
             model_gdf.to_file(output_file, layer=layername, driver="GPKG", engine="pyogrio")
@@ -322,6 +400,3 @@ def db_exporter(
             logging.append(error)
 
     return logging
-
-
-# %%
