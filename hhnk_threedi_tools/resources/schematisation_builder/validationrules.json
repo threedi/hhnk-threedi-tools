@@ -39,7 +39,8 @@
 							"related_object": "profielpunt",
 							"fill_value": 0
 						}
-					}
+					},
+					"description": "berekent aantal profielpunten op de profiellijn"
 				},
 				{
 					"id": 101,
@@ -49,7 +50,8 @@
 							"left": "afstandnatprofiel",
 							"right": "hydroobject_breedte"
 						}
-					}
+					},
+					"description": "berekent het verschil tussen de breedte van het hydroobject en de breedte van het natte profiel"
 				},
 				{
 					"id": 102,
@@ -60,7 +62,8 @@
 							"related_object": "profielpunt",
 							"related_parameter": "geometry.z"
 						}
-					}
+					},
+					"description": "berekent de maximale hoogte van het profiel op basis van de profielpunten"
 				},
 				{
 					"id": 103,
@@ -71,7 +74,8 @@
 							"related_object": "profielpunt",
 							"related_parameter": "afstand"
 						}
-					}
+					},
+					"description": "berekent de breedte van het profiel op basis van de profielpunten"
 				},
 				{
 					"id": 104,
@@ -83,7 +87,8 @@
 							"coverage": "AHN",
 							"fill_value": 325
 						}
-				    }
+				    },
+					"description": "berekent de maaiveldhoogte op basis van een buffer van 10 meter rond de profiellijn en de AHN data"
 				}
 			],
 			"validation_rules": [
@@ -230,6 +235,7 @@
 				{
 					"id": 107,
 					"name": "Ingemeten profiel moet onder het maaiveld liggen",
+					"description": "Het ingemeten profiel moet onder het maaiveld liggen. Dit is een indicatie dat het profiel niet goed is ingemeten.",
 					"type": "logic",
 					"validation_rule_set": "hhnk",
 					"error_type": "non-critical",
@@ -1231,6 +1237,7 @@
 		},
 		{
 			"object": "pomp",
+			"general_rules": [],
 			"validation_rules": [
 				{
 					"id": 0,

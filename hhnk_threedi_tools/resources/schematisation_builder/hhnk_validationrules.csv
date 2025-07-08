@@ -1,0 +1,14 @@
+,laag,type_functie,naam,beschrijving
+0,profiellijn,general_rules,nr_of_profielpunten,berekent aantal profielpunten op de profiellijn
+1,profiellijn,general_rules,verschil_afstandnatprofiel_breedte,berekent het verschil tussen de breedte van het hydroobject en de breedte van het natte profiel
+2,profiellijn,general_rules,maximalehoogteprofiel,berekent de maximale hoogte van het profiel op basis van de profielpunten
+3,profiellijn,general_rules,breedteprofiel,berekent de breedte van het profiel op basis van de profielpunten
+4,profiellijn,general_rules,maaiveldhoogte,berekent de maaiveldhoogte op basis van een buffer van 10 meter rond de profiellijn en de AHN data
+5,profiellijn,validation_rules,Profiel moet minimaal 4 profielpunten hebben,Een profiel moet minimaal 4 profielpunten hebben (kan nog uitgebreider?)
+6,profiellijn,validation_rules,Verschil tussen afstandNatProfiel en hydroobject BREEDTE (BGT) is plausibel,Utgangspunt van BGT breedte is de kolom BREEDTE op hydroobject. ProfileIntermediateConverter: voegt breedte hydroobject kolom toe aan profiellijn en berekent natte profiel breedte.
+7,profiellijn,validation_rules,DiepteNatProfiel is plausibel (0.2m - 20m),ProfileIntermediateConverter: voegt diepteNatProfiel kolom toe aan profiellijn.
+8,profiellijn,validation_rules,Jaar inwinning niet ouder dan 2009,ProfileIntermediateConverter: berekent jaarinwinning uit datuminwinning.
+9,profiellijn,validation_rules,Bodemhoogte moet lager zijn dan 3mNAP en hoger dan -9mNAP,We nemen aan de de bodemhoogte plausibel is als die lager is dan 3mNAP en hoger dan -9mNAP
+10,profiellijn,validation_rules,Maximale hoogte profiel moet lager zijn dan 6mNAP,De maximale hoogte van een profiel moet lager zijn dan 6mNAP om plausibel te worden gezien
+11,profiellijn,validation_rules,Profiellijn mag niet te veel zigzaggen (cross Product < 0.5),Een profiellijn hoort zo recht mogelijk te zijn. Het cross product is een indicatie van hoeveel een lijnsegment afwijkt van de lineare lijn tussen de twee uiterste punten. Bijvoorbeeld een cross product van 0.5 betekent dat een lijnsegment een afwijking van 13.89 graden maakt t.o.v. de lineare lijn.
+12,profiellijn,validation_rules,Ingemeten profiel moet onder het maaiveld liggen,Het ingemeten profiel moet onder het maaiveld liggen. Dit is een indicatie dat het profiel niet goed is ingemeten.
