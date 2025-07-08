@@ -30,6 +30,7 @@ tables_default = list(DB_LAYER_MAPPING.keys())
 def update_model_extent_from_combinatiepeilgebieden(
     model_extent_gdf: gpd.GeoDataFrame,
     db_dict: dict = DATABASES["csoprd_lezen"],
+    logger=None,
 ):
     """
     Update the model extent GeoDataFrame with the geometry from the Combinatiepeilgebieden table.
@@ -46,6 +47,9 @@ def update_model_extent_from_combinatiepeilgebieden(
     model_extent_gdf : GeoDataFrame
         Updated GeoDataFrame with the geometry from Combinatiepeilgebieden.
     """
+    if not logger:  # moet dit if logger is None zijn?
+        logger = hrt.logging.get_logger(__name__)
+
     # Get the geometry from the Combinatiepeilgebieden table
     if db_dict is None:
         db_dict = DATABASES["csoprd_lezen"]
@@ -53,7 +57,10 @@ def update_model_extent_from_combinatiepeilgebieden(
     bbox_model = box(*model_extent_gdf.buffer(10).total_bounds)
 
     sql = sql_builder_select_by_location(
-        schema="CS_OBJECTEN", table_name="COMBINATIEPEILGEBIED", epsg_code="28992", polygon_wkt=bbox_model
+        schema="CS_OBJECTEN",
+        table_name="COMBINATIEPEILGEBIED",
+        epsg_code="28992",
+        polygon_wkt=bbox_model,
     )
 
     cpg_gdf, _ = database_to_gdf(db_dict=db_dict, sql=sql, columns=["shape", "code"])
@@ -64,6 +71,13 @@ def update_model_extent_from_combinatiepeilgebieden(
 
     # Select points that intersect with original model extent
     cpg_rp_gdf = cpg_rp_gdf[cpg_rp_gdf["geometry"].intersects(model_extent_gdf["geometry"].iloc[0])]
+
+    # Check if this results in any peilgebieden
+    if cpg_rp_gdf.empty:
+        logger.warning(
+            "No Combinatiepeilgebieden found in the database for the given model extent. Returning original model extent."
+        )
+        return model_extent_gdf
 
     # Filter combinatiepeilgebieden en merge
     model_extent_gdf["geometry"] = cpg_gdf[cpg_gdf["code"].isin(cpg_rp_gdf["code"])].geometry.unary_union
@@ -181,14 +195,14 @@ def db_exporter(
         logger = hrt.logging.get_logger(__name__)
     logger.info("Start export")
 
-    # Apply buffer distance
-    model_extent_gdf["geometry"] = model_extent_gdf.buffer(buffer_distance)
-
     # Update model extent with geometry from Combinatiepeilgebieden
     if update_extent:
         logger.info("Updating model extent with geometry from Combinatiepeilgebieden")
         # Update model extent with geometry from Combinatiepeilgebieden
         model_extent_gdf = update_model_extent_from_combinatiepeilgebieden(model_extent_gdf)
+
+    # Apply buffer distance
+    model_extent_gdf["geometry"] = model_extent_gdf.buffer(buffer_distance)
 
     # make bbox --> to simplify string request to DAMO db
     bbox_model = box(*model_extent_gdf.total_bounds)
