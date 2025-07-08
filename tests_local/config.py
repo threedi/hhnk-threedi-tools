@@ -6,7 +6,9 @@ import hhnk_research_tools as hrt
 
 from hhnk_threedi_tools.core.folders import Folders
 
-TEST_DIRECTORY = Path(__file__).parent.absolute() / "data"
+TEST_DIRECTORY = (
+    Path(__file__).parent.parent.absolute() / "tests/data"
+)  # NOTE WE Willen we de data voor local test in de map met local tests zetten?
 
 # PATH_TEST_MODEL = TEST_DIRECTORY / "model_test"
 

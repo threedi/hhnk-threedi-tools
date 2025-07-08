@@ -27,29 +27,9 @@ tables_default = list(DB_LAYER_MAPPING.keys())
 
 
 # %%
-
-model_extent_polygon_fp = r"E:\02.modelrepos\castricum\01_source_data\polder_polygon.shp"
-
-model_extent_gdf = gpd.read_file(model_extent_polygon_fp)
-table_names = tables_default
-output_file = r"C:\Users\wvanesse\Desktop\temp\temp.gpkg"
-buffer_distance = 0.5
-table = "GW_PRO"
-EPSG_CODE = "28992"
-
-tables = [table]
-
-db_dict = DATABASES[DB_LAYER_MAPPING.get(table, None).get("source", None)]
-# all_tables = get_tables_from_oracle_db(db_dict)
-schema = DB_LAYER_MAPPING.get(table, None).get("schema", None)
-columns = DB_LAYER_MAPPING.get(table, None).get("columns", None)
-# columns_all = get_table_columns(db_dict=db_dict, schema=schema, table_name=table)
-db_exporter(model_extent_gdf, output_file)
-
-
-# %%
 def update_model_extent_from_combinatiepeilgebieden(
     model_extent_gdf: gpd.GeoDataFrame,
+    db_dict: dict = DATABASES["csoprd_lezen"],
 ):
     """
     Update the model extent GeoDataFrame with the geometry from the Combinatiepeilgebieden table.
@@ -58,6 +38,8 @@ def update_model_extent_from_combinatiepeilgebieden(
     ----------
     model_extent_gdf : GeoDataFrame
         GeoDataFrame of the selected polder
+    db_dict : dict, optional
+        Dictionary containing database connection details, by default DATABASES["csoprd_lezen"]
 
     Returns
     -------
@@ -65,7 +47,8 @@ def update_model_extent_from_combinatiepeilgebieden(
         Updated GeoDataFrame with the geometry from Combinatiepeilgebieden.
     """
     # Get the geometry from the Combinatiepeilgebieden table
-    db_dict = DATABASES["csoprd_lezen"]
+    if db_dict is None:
+        db_dict = DATABASES["csoprd_lezen"]
 
     bbox_model = box(*model_extent_gdf.buffer(10).total_bounds)
 
@@ -160,6 +143,7 @@ def db_exporter(
     buffer_distance: float = 0.5,
     EPSG_CODE: str = "28992",
     logger=None,
+    update_extent: bool = True,
 ) -> list:
     """
     Export data from DAMO for polder of interest.
@@ -201,7 +185,10 @@ def db_exporter(
     model_extent_gdf["geometry"] = model_extent_gdf.buffer(buffer_distance)
 
     # Update model extent with geometry from Combinatiepeilgebieden
-    model_extent_gdf = update_model_extent_from_combinatiepeilgebieden(model_extent_gdf)
+    if update_extent:
+        logger.info("Updating model extent with geometry from Combinatiepeilgebieden")
+        # Update model extent with geometry from Combinatiepeilgebieden
+        model_extent_gdf = update_model_extent_from_combinatiepeilgebieden(model_extent_gdf)
 
     # make bbox --> to simplify string request to DAMO db
     bbox_model = box(*model_extent_gdf.total_bounds)
@@ -274,7 +261,6 @@ def db_exporter(
                     id_link_column=id_link_column,
                     sub_id_column=sub_id_column,
                     sub_columns=sub_columns,
-                    service_name=service_name,
                     model_gdf=model_gdf,
                     sql=sql,
                     db_dict=db_dict,
@@ -302,7 +288,6 @@ def db_exporter(
                         id_link_column=sub_id_link_column,
                         sub_id_column=sub2_id_column,
                         sub_columns=sub2_columns,
-                        service_name=service_name,
                         model_gdf=sub_model_gdf,
                         sql=sub_sql,
                         db_dict=db_dict,
