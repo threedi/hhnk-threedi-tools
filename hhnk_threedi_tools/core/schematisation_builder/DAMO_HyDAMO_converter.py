@@ -202,8 +202,13 @@ class DAMO_to_HyDAMO_Converter:
             Converted layer
         """
         for column_name in layer_gdf.columns:
-            column_name = column_name.lower()
-            layer_gdf[column_name] = self.convert_column(layer_gdf[column_name], column_name, layer_name)
+            if column_name != "geometry":
+                lower_column_name = column_name.lower()
+                layer_gdf.rename(columns={column_name: lower_column_name}, inplace=True)
+                layer_gdf[lower_column_name] = self.convert_column(
+                    layer_gdf[lower_column_name], lower_column_name, layer_name
+                )
+
         return layer_gdf
 
     def convert_column(self, column: pd.Series, column_name: str, layer_name: str) -> pd.Series:
@@ -229,12 +234,16 @@ class DAMO_to_HyDAMO_Converter:
         # Convert the domain values to HyDAMO target values
         column = self.convert_domain_values(layer_name, column_name, column)
         # Convert the field type to the correct type
-        if field_type is not None and pd.notna(column).all():
-            column = column.astype(field_type)  # Convert to the field type
-        else:
-            self.logger.info(
-                f"field_type is None and/or column values are NaN for field {column_name} in layer {layer_name}"
-            )
+        if field_type is not None:
+            # Convert to the field type, but safely handle NaN values
+            if field_type in [int, float]:
+                column = pd.to_numeric(column, errors="coerce").astype(field_type, errors="ignore")
+            elif field_type is str:
+                column = column.astype(str)
+            else:
+                self.logger.warning(
+                    f"Field type {field_type} for column {column_name} in layer {layer_name} is not supported."
+                )
 
         return column
 
@@ -260,10 +269,8 @@ class DAMO_to_HyDAMO_Converter:
             "number": float,
         }
 
+        layer_name = layer_name.lower()
         try:
-            # make sure the layer_name and column_name are lowercase
-            layer_name = layer_name.lower()
-            column_name = column_name.lower()
             # Check if the layer_name exists in the definitions
             field_type = self.definitions[layer_name]["properties"][column_name]["type"]
 
