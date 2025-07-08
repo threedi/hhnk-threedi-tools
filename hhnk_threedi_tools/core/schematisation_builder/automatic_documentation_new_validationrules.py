@@ -13,7 +13,7 @@ with open(validation_rules_json_path) as val:
 
 
 # create empty dataframe
-table_rules = pd.DataFrame(columns=["laag", "type_functie", "naam", "beschrijving"])
+table_rules = pd.DataFrame(columns=["id", "laag", "type_functie", "naam", "beschrijving"])
 
 for object_layer in val_rules["objects"]:
     if object_layer.get("general_rules"):
@@ -21,6 +21,7 @@ for object_layer in val_rules["objects"]:
             # print(general_function)
             if general_function["id"] >= 100:
                 new_func = {
+                    "id": int(general_function["id"]),
                     "laag": object_layer["object"],
                     "type_functie": "general rules",
                     "naam": general_function["result_variable"],
@@ -32,6 +33,7 @@ for object_layer in val_rules["objects"]:
     for val_rule in object_layer["validation_rules"]:
         if val_rule["validation_rule_set"] == "hhnk":
             new_rule = {
+                "id": int(val_rule["id"]),
                 "laag": object_layer["object"],
                 "type_functie": "validation rules",
                 "naam": val_rule["name"],
