@@ -171,6 +171,11 @@ def test_profile_intermediate_converter():
         is not None
     )
 
+    # VALIDATION PARAMETER (5): check if profielpunt is in ascending order
+    converter.compute_if_ascending()
+    assert converter.profiellijn[converter.profiellijn["code"] == 3849]["isAscending"].iloc[0] == 1
+    assert converter.profiellijn[converter.profiellijn["code"] == 58315]["isAscending"].iloc[0] == 0
+
     # Write the result to a new file
     output_file_path = temp_dir_out / "output.gpkg"
     converter.write_outputs(output_path=output_file_path)

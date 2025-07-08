@@ -855,8 +855,58 @@ class ProfileIntermediateConverter:
 
         self.logger.info("Maximum cross product added to profiellijn.")
 
+    def compute_if_ascending(self):
+        """
+        Compute if the profielpunt features are in ascending order based on the 'hoogte' column.
+        We determine the point with the lowest height
+        And check if ascending both to the left and right of this point, based on the 'afstand' column.
+        This is used to check if the profile is ascending.
+        """
+        self.logger.info("Computing if profielpunt features are in ascending order...")
+        if self.profielpunt is None:
+            raise ValueError("profielpunt is not loaded. Call create_profile_tables() first.")
+        if "hoogte" not in self.profielpunt.columns:
+            raise ValueError("hoogte column is not present in profielpunt.")
+        if "afstand" not in self.profielpunt.columns:
+            raise ValueError("afstand column is not present in profielpunt.")
+
+        # Ensure the hoogte column is numeric
+        self.profielpunt["hoogte"] = pd.to_numeric(self.profielpunt["hoogte"], errors="coerce")
+
+        ascending_per_lijn = self.profielpunt.groupby("profielLijnID").apply(is_ascending)
+        ascending_per_lijn.name = "isAscending"
+
+        # Convert to DataFrame for merge
+        ascending_df = ascending_per_lijn.reset_index()
+
+        # Merge on GlobalID (in profiellijn) = profielLijnID (in profielpunt)
+        self.profiellijn = self.profiellijn.merge(
+            ascending_df, how="left", left_on="GlobalID", right_on="profielLijnID"
+        )
+
 
 # General functions
+def is_ascending(group):
+    if group.empty:
+        return False
+    group = group.sort_values(by="afstand").reset_index(drop=True)
+
+    min_index = group["hoogte"].idxmin()
+    left = group.loc[:min_index, "hoogte"]
+    right = group.loc[min_index:, "hoogte"]
+
+    left = left.reset_index(drop=True)
+    right = right.reset_index(drop=True)
+
+    left_descending = all(left.iloc[i] >= left.iloc[i + 1] for i in range(len(left) - 1))
+    right_ascending = all(right.iloc[i] <= right.iloc[i + 1] for i in range(len(right) - 1))
+
+    if left_descending and right_ascending:
+        return 1
+    else:
+        return 0
+
+
 def geometrycollection_to_linestring(geometry):
     """
     Filter a geometrycollection to keep only LineString or MultiLineString

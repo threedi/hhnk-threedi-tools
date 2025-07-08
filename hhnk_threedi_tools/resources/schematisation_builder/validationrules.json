@@ -87,7 +87,7 @@
 							"coverage": "AHN",
 							"fill_value": 325
 						}
-				    },
+					},
 					"description": "berekent de maaiveldhoogte op basis van een buffer van 10 meter rond de profiellijn en de AHN data"
 				}
 			],
@@ -246,6 +246,23 @@
 						"LT": {
 							"left": "bodemhoogte",
 							"right": "maaiveldhoogte"
+						}
+					}
+				},
+				{
+					"id": 108,
+					"name": "Profielpunten moeten oplopen in hoogte",
+					"description": "Een profiel hoort oplopend te zijn in hoogte aan beide kanten vanaf het diepste punt. Dit wordt gecontroleerd door de kolom isAscending toe te voegen in de profiellijn mbv de ProfileIntermediateConverter.",
+					"type": "logic",
+					"validation_rule_set": "hhnk",
+					"error_type": "non-critical",
+					"result_variable": "profielpunten_oplopend_in_hoogte",
+					"error_message": "profielpunten zijn niet oplopend in hoogte",
+					"active": true,
+					"function": {
+						"EQ": {
+							"left": "isascending",
+							"right": 1
 						}
 					}
 				}
