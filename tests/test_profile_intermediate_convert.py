@@ -182,8 +182,8 @@ def test_profile_intermediate_converter():
 
     assert output_file_path.exists()
 
-    # Temp test converter to HyDAMO as well
-    # """
+    # Commented out HyDAMO conversion and validation, as it is not part of this test.
+    """
     from hhnk_threedi_tools.core.schematisation_builder.DAMO_HyDAMO_converter import DAMO_to_HyDAMO_Converter
 
     hydamo_file_path = temp_dir_out / "HyDAMO.gpkg"
@@ -198,10 +198,8 @@ def test_profile_intermediate_converter():
 
     # Check if HyDAMO.gpkg is created
     assert hydamo_file_path.exists()
-    # """
 
     # Temp test validate HyDAMO as well
-    # """
     import hhnk_threedi_tools.resources.schematisation_builder as schematisation_builder_resources
     from hhnk_threedi_tools.core.schematisation_builder.HyDAMO_validator import validate_hydamo
 
@@ -231,6 +229,7 @@ def test_profile_intermediate_converter():
     invalid_profiellijn_code = "64405"
     invalid_profiellijn = validated_profiellijn[validated_profiellijn["code"] == invalid_profiellijn_code].iloc[0]
     assert invalid_profiellijn["invalid"] == "0;100"  # both 0 and 100 are invalid
+    """
 
 
 # %%
