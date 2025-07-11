@@ -32,7 +32,7 @@ EPSG_CODE = "28992"
 def update_model_extent_from_combinatiepeilgebieden(
     model_extent_gdf: gpd.GeoDataFrame,
     db_dict: dict = DATABASES["csoprd_lezen"],
-    logger: hrt.logging.Logger = None,
+    logger: hrt.logging = None,
 ) -> gpd.GeoDataFrame:
     """
     Update the model extent GeoDataFrame with the geometry from the Combinatiepeilgebieden table.
@@ -241,7 +241,7 @@ def db_exporter(
     table_names: list[str] = tables_default,
     buffer_distance: float = 0.5,
     epsg_code: str = EPSG_CODE,
-    logger: hrt.logging.Logger = None,
+    logger: hrt.logging = None,
     update_extent: bool = True,
 ) -> list[str]:
     """
