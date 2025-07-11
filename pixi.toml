@@ -45,8 +45,8 @@ build = { depends-on = ["build_wheels", "twine_check"] }
 [feature.py39.tasks]
 tests = "pytest --cov-report term-missing --cov=hhnk_threedi_tools --cov-report=xml"
 sort_imports = "ruff check  ./**/*.py --select I --fix --force-exclude"
-fmt = "ruff format ./**/*.py --force-exclude"
-style = {depends-on = ["sort_imports", "fmt"]} # `pixi run style`
+fmt-check = "ruff format ./**/*.py --check --force-exclude"
+style = {depends-on = ["sort_imports", "fmt-check"]} # `pixi run style`
 
 
 [dependencies]
