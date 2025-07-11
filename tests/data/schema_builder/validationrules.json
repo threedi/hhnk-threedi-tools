@@ -1129,6 +1129,40 @@
 							"tolerance": 1
 						}
 					}
+				},
+				{
+					"id": 101,
+					"name": "De capaciteit groter dan 0.92 een minder dan 700",
+					"type": "logic",
+					"validation_rule_set": "hhnk",
+					"error_type": "critical",
+					"result_variable": "logisch_capacteit",
+					"error_message": "check capacteit van de gemaal",
+					"active": true,
+					"function": {
+						"BE": {
+							"parameter": "maximalecapaciteit",
+							"min": 0.92,
+							"max": 700,
+							"inclusive": true
+						}
+					}
+				},
+				{
+					"id": 102,
+					"name": "Afstand tot as watergang moet kleiner zijn dan 1 meter",
+					"type": "topologic",
+					"validation_rule_set": "hhnk",
+					"error_type": "critical",
+					"result_variable": "gemaal_op_watergang",
+					"error_message": "gemaal niet op watergang",
+					"active": true,
+					"function": {
+						"snaps_to_hydroobject": {
+							"method": "overall",
+							"tolerance": 1
+						}
+					}
 				}
 			]
 		},
