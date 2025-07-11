@@ -177,7 +177,7 @@ class ProfileIntermediateConverter:
         self.profielpunt = self.profielpunt.drop(columns=["PRW_ID", "PBP_ID", "PRO_PRO_ID", "PRW_PRW_ID"])
 
     def assign_hydroobject_ids(self):
-        if not "GlobalID" in self.hydroobject.columns:
+        if "GlobalID" not in self.hydroobject.columns:
             self.hydroobject["GlobalID"] = [str(uuid.uuid4()) for _ in range(len(self.hydroobject))]
 
         no_match_codes = []
@@ -190,15 +190,15 @@ class ProfileIntermediateConverter:
 
             if not gids_list:
                 no_match_codes.append(row.get("code"))
-                self.profielgroep.at[idx, "hydroobjectID"] = None
+                self.profielgroep.loc[idx, "hydroobjectID"] = None
                 continue
 
-            self.profielgroep.at[idx, "hydroobjectID"] = gids_list[0]
+            self.profielgroep.loc[idx, "hydroobjectID"] = gids_list[0]
 
             if len(gids_list) > 1:
                 multiple_match_codes.append((row.get("code"), len(gids_list)))
                 for i, gid in enumerate(gids_list[1:], start=2):
-                    self.profielgroep.at[idx, f"hydroobjectID{i}"] = gid
+                    self.profielgroep.loc[idx, f"hydroobjectID{i}"] = gid
 
         warnings_list = []
         if no_match_codes:
@@ -219,7 +219,7 @@ class ProfileIntermediateConverter:
 
     def _linemerge_hydroobjects(self, gecombineerde_peilen, hydroobject):
         """
-        Merges hydroobjects within a peilgebied, assigning each hydroobject to the peilgebied
+        Merge hydroobjects within a peilgebied, assigning each hydroobject to the peilgebied
         in which the largest part of its geometry lies. Hydroobjects are not clipped.
         """
         merged_hydroobjects = []
@@ -313,9 +313,7 @@ class ProfileIntermediateConverter:
             return merged_hydroobjects_gdf
 
     def find_linemerge_id_by_hydroobject_code(self, code: str):
-        """
-        Find the linemergeID by hydroobject code.
-        """
+        """Find the linemergeID by hydroobject code."""
         if code in self.hydroobject_map:
             return self.hydroobject_map[code]
         else:
@@ -323,9 +321,7 @@ class ProfileIntermediateConverter:
             return None
 
     def find_peilgebied_id_by_hydroobject_code(self, code: str):
-        """
-        Find the peilgebiedID by hydroobject code.
-        """
+        """Find the peilgebiedID by hydroobject code."""
         if not hasattr(self, "hydroobject_linemerged"):
             self.logger.error("Linemerged hydroobjects not yet processed.")
             return None
@@ -348,9 +344,7 @@ class ProfileIntermediateConverter:
             return None
 
     def find_profiellijn_by_hydroobject_code(self, code: str):
-        """
-        Find the profiellijn GeoDataFrame by hydroobject code.
-        """
+        """Find the profiellijn GeoDataFrame by hydroobject code."""
         if self.profiellijn is None:
             raise ValueError("profiellijn is not loaded. Call create_profile_tables() first.")
 
@@ -381,9 +375,7 @@ class ProfileIntermediateConverter:
         return profiellijn
 
     def find_deepest_point_by_hydroobject_code(self, code: str):
-        """
-        Find the deepest point for a hydroobject by its code.
-        """
+        """Find the deepest point for a hydroobject by its code."""
         if self.hydroobject is None:
             raise ValueError("hydroobject is not loaded. Call load_layers() first.")
         if self.profielgroep is None:
@@ -404,9 +396,7 @@ class ProfileIntermediateConverter:
         return diepste_punt
 
     def write_outputs(self, output_path: Path):
-        """
-        Write all GeoDataFrame attributes of this class to a GeoPackage or individual files.
-        """
+        """Write all GeoDataFrame attributes of this class to a GeoPackage or individual files."""
         output_path = Path(output_path)
         geodf_attrs = {name: val for name, val in self.__dict__.items() if isinstance(val, gpd.GeoDataFrame)}
 
@@ -425,9 +415,7 @@ class ProfileIntermediateConverter:
                 self.logger.info(f"Wrote file '{name}.gpkg' to {output_path}")
 
     def compute_deepest_point_profiellijn(self):
-        """
-        Compute the deepest point per profiellijn and add as a new column to self.profiellijn.
-        """
+        """Compute the deepest point per profiellijn and add as a new column to self.profiellijn."""
         self.logger.info("Computing the deepest point per profiellijn...")
         if self.profielpunt is None:
             raise ValueError("profielpunt is not loaded. Call create_profile_tables() first.")
@@ -472,7 +460,7 @@ class ProfileIntermediateConverter:
         )
 
         # Mappings
-        code_to_linemerge_id = {code: lm_id for code, lm_id in self.hydroobject_map.items()}
+        code_to_linemerge_id = self.hydroobject_map.copy()
         linemergeid_to_codes = (
             self.hydroobject_linemerged.explode("hydroobjectCODE")
             .groupby("linemergeID")["hydroobjectCODE"]
@@ -557,9 +545,7 @@ class ProfileIntermediateConverter:
         self.logger.info("Connected hydroobjects to profiles.")
 
     def compute_deepest_point_hydroobjects(self):
-        """
-        Compute the deepest point and add as a new column to self.hydroobject.
-        """
+        """Compute the deepest point and add as a new column to self.hydroobject."""
         self.logger.info("Computing the deepest point for hydroobjects...")
 
         if self.hydroobject is None:
@@ -612,7 +598,7 @@ class ProfileIntermediateConverter:
         self.hydroobject = self.hydroobject.merge(hydroobject_deepest_points_df, on="GlobalID", how="left")
 
         # log the number of hydroobjects with computed deepest points
-        num_deepest_points = self.hydroobject["diepstePunt"].notnull().sum()
+        num_deepest_points = self.hydroobject["diepstePunt"].notna().sum()
         self.logger.info(f"Computed deepest points for {num_deepest_points} hydroobjects.")
 
     def compute_distance_and_depth_wet_profile(self):
@@ -653,7 +639,7 @@ class ProfileIntermediateConverter:
         self.profiellijn = self.profiellijn.drop(columns=["profielLijnID"])
 
         # log the number of profielLijnID with computed wet profile distances
-        num_wet_profile_distances = self.profiellijn["afstandNatProfiel"].notnull().sum()
+        num_wet_profile_distances = self.profiellijn["afstandNatProfiel"].notna().sum()
         self.logger.info(f"Succesfully computed wet profile distances for {num_wet_profile_distances} profielLijns")
         self.logger.warning(
             f"Failed to compute wet profile distances for {len(self.profiellijn) - num_wet_profile_distances} profielLijns"
@@ -689,7 +675,7 @@ class ProfileIntermediateConverter:
         )
         self.profiellijn = self.profiellijn.drop(columns=["profielLijnID"])
 
-        num_wet_profile_depths = self.profiellijn["diepteNatProfiel"].notnull().sum()
+        num_wet_profile_depths = self.profiellijn["diepteNatProfiel"].notna().sum()
         self.logger.info(f"Succesfully computed wet profile depths for {num_wet_profile_depths} profielLijns")
         self.logger.warning(
             f"Failed to compute wet profile depths for {len(self.profiellijn) - num_wet_profile_depths} profielLijns"
@@ -741,7 +727,7 @@ class ProfileIntermediateConverter:
         self.profiellijn["aantalProfielPunten"] = self.profiellijn["aantalProfielPunten"].fillna(0).astype(int)
 
         self.logger.info(
-            f"Computed the number of profielpunt features for {self.profiellijn['aantalProfielPunten'].notnull().sum()} profiellijns."
+            f"Computed the number of profielpunt features for {self.profiellijn['aantalProfielPunten'].notna().sum()} profiellijns."
         )
 
     def add_z_to_point_geometry_based_on_column(self, column_name: str):
@@ -886,7 +872,25 @@ class ProfileIntermediateConverter:
 
 
 # General functions
-def is_ascending(group):
+def is_ascending(group: pd.DataFrame) -> int:
+    """
+    Check if the 'hoogte' values in a group form a V-shape based on 'afstand' order.
+
+    The function determines whether the 'hoogte' (height) values first decrease (to a minimum)
+    and then increase, forming a V-shape when sorted by 'afstand' (distance).
+
+    Parameters
+    ----------
+    group : pd.DataFrame
+        DataFrame with at least two columns: 'afstand' and 'hoogte'.
+
+    Returns
+    -------
+    int
+        1: if the group is V-shaped (descending to minimum then ascending),
+        0: otherwise
+    Returns False if the group is empty.
+    """
     if group.empty:
         return False
     group = group.sort_values(by="afstand").reset_index(drop=True)
@@ -908,9 +912,7 @@ def is_ascending(group):
 
 
 def geometrycollection_to_linestring(geometry):
-    """
-    Filter a geometrycollection to keep only LineString or MultiLineString
-    """
+    """Filter a geometrycollection to keep only LineString or MultiLineString"""
     if geometry.geom_type == "GeometryCollection":
         fixed_geometry = [geom for geom in geometry.geoms if geom.geom_type in ["LineString", "MultiLineString"]]
         if fixed_geometry:

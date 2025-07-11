@@ -1,16 +1,10 @@
 # %%
-import shutil
 from pathlib import Path
 
-# %%
 import hhnk_research_tools as hrt
 
-# from tests.config import FOLDER_TEST, TEMP_DIR, TEST_DIRECTORY
-from hhnk_threedi_tools.core.folders import Folders
-
-# %%
 from hhnk_threedi_tools.core.schematisation_builder.profile_intermediate_converter import ProfileIntermediateConverter
-from tests.config import FOLDER_TEST, TEMP_DIR, TEST_DIRECTORY
+from tests.config import TEMP_DIR, TEST_DIRECTORY
 
 
 # %%
@@ -26,6 +20,7 @@ def test_profile_intermediate_converter():
     - Write results to output GPKG
     - (optional) Convert to HyDAMO format.
     """
+
     damo_file_path = TEST_DIRECTORY / "schema_builder" / "DAMO anna paulowna.gpkg"
     cso_file_path = (
         TEST_DIRECTORY / "schema_builder" / "CSO anna paulowna.gpkg"
@@ -56,7 +51,6 @@ def test_profile_intermediate_converter():
     diepste_punt_profiel = -3.16
     lengte_nat_profiel = 5.54
     diepte_nat_profiel = 1.32
-    aantal_profielpunt_features = 34
     jaarinwinning = 2012
 
     # Check for a single hydroobject
