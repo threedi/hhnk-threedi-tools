@@ -31,7 +31,7 @@ from hhnk_threedi_tools.core.schematisation_builder.HyDAMO_validator import vali
 # %%
 
 
-def make_validated_hydamo_package(project_folder: Path, table_names: list) -> None:
+def make_validated_hydamo_package(project_folder: Path, default_polder_polygon_path: Path, table_names: list) -> None:
     """
     Export DAMO data for given area and table layers, and saves it to a DAMO.gpkg file.
     Converts the DAMO data to HyDAMO format and saves it to a HyDAMO.gpkg file.
@@ -40,6 +40,8 @@ def make_validated_hydamo_package(project_folder: Path, table_names: list) -> No
     ----------
     project_folder : Path
         Path to the project folder where the data will be saved.
+    default_polder_polygon_path : Path
+        Path to the default location of the polder_polygon.shp file.
     table_names : list
         List of table names to export from DAMO.
     Return
@@ -63,6 +65,14 @@ def make_validated_hydamo_package(project_folder: Path, table_names: list) -> No
     damo_file_path = project_folder / "01_source_data" / "DAMO.gpkg"
     hydamo_file_path = project_folder / "01_source_data" / "HyDAMO.gpkg"
 
+    #check if polder_polygon.shp files exists and if not, copy file from default location
+    if not polder_file_path.exists():
+        logger.info(f"polder_polygon.shp not found in {project_folder}/01_source_data, copying from default location.")
+        # copy files for polder polygon from default location to project folder
+        shutil.copytree(default_polder_polygon_path, project_folder / "01_source_data", dirs_exist_ok=True)
+        logger.info(f"polder_polygon.shp copied to {project_folder}/01_source_data")
+    else:
+        logger.info(f"polder_polygon.shp found in {project_folder}/01_source_data, using this file for export.")
     # check if polder_polygon.shp exists
     if polder_file_path:
         logger.info(f"Start export from DAMO database for file: {polder_file_path}")
@@ -135,12 +145,15 @@ if __name__ == "__main__":
     # define project folder path and
     project_folder = Path("E:/09.modellen_speeltuin/test_with_pomp_table_juan")
 
+    #define location of polder_polygon.shp file of interest - default location is already set in the code
+    polder_polygon_path = Path("E:/09.modellen_speeltuin/place_polder_polygon_here_for_schematisationbuilder")
+
     # select which tables names to export from DAMO
     # only 'main'tables have to be selected (like "GEMAAL"), so no 'sub' tables (like "POMP")
     TABLE_NAMES = ["HYDROOBJECT", "DUIKERSIFONHEVEL", "GEMAAL"]
 
     # run the function to create a validated HyDAMO package
-    make_validated_hydamo_package(project_folder, TABLE_NAMES)
+    make_validated_hydamo_package(project_folder, polder_polygon_path, TABLE_NAMES)
 
 
 # %%
