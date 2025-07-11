@@ -169,7 +169,7 @@ def update_table_domains(
     db_dict: dict,
     schema: str,
     table_name: str,
-) -> gpd.DataFrame:
+) -> gpd.GeoDataFrame:
     """
     Convert domain codes for tables from schema DAMO W to their descriptions.
     Original codes are preserved in a new column right after the original column.
