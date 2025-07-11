@@ -25,6 +25,7 @@ except ImportError as e:
 
 # From mapping json list top level keys
 tables_default = list(DB_LAYER_MAPPING.keys())
+EPSG_CODE = "28992"
 
 
 # %%
@@ -32,7 +33,7 @@ def update_model_extent_from_combinatiepeilgebieden(
     model_extent_gdf: gpd.GeoDataFrame,
     db_dict: dict = DATABASES["csoprd_lezen"],
     logger=None,
-):
+) -> gpd.GeoDataFrame:
     """
     Update the model extent GeoDataFrame with the geometry from the Combinatiepeilgebieden table.
 
@@ -64,24 +65,23 @@ def update_model_extent_from_combinatiepeilgebieden(
         polygon_wkt=bbox_model,
     )
 
-    cpg_gdf, _ = database_to_gdf(db_dict=db_dict, sql=sql, columns=["shape", "code"])
+    cpgb_gdf, _ = database_to_gdf(db_dict=db_dict, sql=sql, columns=["shape", "code"])
 
     # Create most representatieve point per peilgebied
-    cpg_rp_gdf = cpg_gdf.copy()
-    cpg_rp_gdf["geometry"] = cpg_rp_gdf["geometry"].representative_point()
+    cpgb_rp_gdf = cpgb_gdf.copy()
+    cpgb_rp_gdf["geometry"] = cpgb_rp_gdf["geometry"].representative_point()
 
     # Select points that intersect with original model extent
-    cpg_rp_gdf = cpg_rp_gdf[cpg_rp_gdf["geometry"].intersects(model_extent_gdf["geometry"].iloc[0])]
+    cpgb_rp_gdf = cpgb_rp_gdf[cpgb_rp_gdf["geometry"].intersects(model_extent_gdf["geometry"].iloc[0])]
 
     # Check if this results in any peilgebieden
-    if cpg_rp_gdf.empty:
+    if cpgb_rp_gdf.empty:
         logger.warning(
             "No Combinatiepeilgebieden found in the database for the given model extent. Returning original model extent."
         )
-        return model_extent_gdf
-
-    # Filter combinatiepeilgebieden en merge
-    model_extent_gdf["geometry"] = cpg_gdf[cpg_gdf["code"].isin(cpg_rp_gdf["code"])].geometry.unary_union
+    else:
+        # Filter combinatiepeilgebieden en merge
+        model_extent_gdf["geometry"] = cpgb_gdf[cpgb_gdf["code"].isin(cpgb_rp_gdf["code"])].geometry.unary_union
 
     return model_extent_gdf
 
@@ -95,10 +95,21 @@ def export_sub_layer(
     sql: str,
     db_dict: dict,
     schema: str,
-):
+) -> tuple[str, gpd.GeoDataFrame]:
     """
-    Export sub layer from DAMO database based on the main table and sub table mapping.
+    Export sub layer from DAMO/CSO database based on the main table and sub table mapping.
     This function is used to export non-geometric tables that are linked to a main table.
+
+    It collects the information for a table without geometry that depends on another table with
+    geometry.     The function is very similar to the next one, and even uses the select SQL of the
+    parent table to make the correct selection of elements. It is not robust to put a list of IDs
+    in the SQL, because there is a chance that the string becomes too long.For profiles, there is
+    even a double dependency, so this is called twice in the db_exporter. It saves a few lines of
+    code this way.
+
+    In resources/db_layer_mapping.py, it must be specified in JSON format that there is a sub layer
+    and via which ID it can be linked.
+
 
     Parameters
     ----------
@@ -123,8 +134,10 @@ def export_sub_layer(
 
     Returns
     -------
-    None
-        The function writes the sub table data to the output file and logs the process.
+    sub_sql : str
+        Modified SQL string containing the select query used te retrieve data from the database.
+    sub_model_gdf : gpd.GeoDataFrame
+        GeoDataFrame containing the exported data from the sub table, filtered by the model extent.
     """
 
     # Modify sql to contain only id link column
@@ -151,7 +164,12 @@ def export_sub_layer(
     return sub_sql, sub_model_gdf
 
 
-def update_table_domains(model_gdf: gpd.GeoDataFrame, db_dict: dict, schema: str, table_name: str):
+def update_table_domains(
+    model_gdf: gpd.GeoDataFrame,
+    db_dict: dict,
+    schema: str,
+    table_name: str,
+) -> gpd.DataFrame:
     """
     Convert domain codes for tables from schema DAMO W to their descriptions.
     Original codes are preserved in a new column right after the original column.
@@ -172,6 +190,9 @@ def update_table_domains(model_gdf: gpd.GeoDataFrame, db_dict: dict, schema: str
     gpd.GeoDataFrame
         geodataframe of table from DAMO W schema with updated domains
     """
+
+    logger = hrt.logging.get_logger(__name__)
+
     # Retrieve available domains
     domains = get_table_domains_from_oracle(
         db_dict=db_dict,
@@ -181,9 +202,7 @@ def update_table_domains(model_gdf: gpd.GeoDataFrame, db_dict: dict, schema: str
 
     # Check if empmty
     if domains.empty:
-        hrt.logging.get_logger(__name__).warning(
-            f"No domains found for table {table_name} in schema {schema}. Skipping domain update."
-        )
+        logger.warning(f"No domains found for table {table_name} in schema {schema}. Skipping domain update.")
         return model_gdf
 
     # Ensure domain codes are strings
@@ -221,10 +240,10 @@ def db_exporter(
     output_file: Path,
     table_names: list[str] = tables_default,
     buffer_distance: float = 0.5,
-    EPSG_CODE: str = "28992",
+    epsg_code: str = EPSG_CODE,
     logger=None,
     update_extent: bool = True,
-) -> list:
+) -> list[str]:
     """
     Export data from DAMO for polder of interest.
 
@@ -232,7 +251,7 @@ def db_exporter(
     would become too long. For sub tables a sub-SQl list is created in the database since passing
     an actual list may also cause the SQl to become too long. Works to up to 2 sub tables.
 
-    Defauls table list form 3Di model generation can be found under recourses/schemitasaion_builder.
+    Defauls table list from 3Di model generation can be found under recourses/schemitasaion_builder.
 
     Parameters
     ----------
@@ -254,10 +273,10 @@ def db_exporter(
 
     Returns
     -------
-    logging_DAMO : list
+    logging_bd_exporter : list
         Error logs when a table export fails
     """
-    if not logger:  # moet dit if logger is None zijn?
+    if logger is None:
         logger = hrt.logging.get_logger(__name__)
     logger.info("Start export")
 
@@ -273,18 +292,14 @@ def db_exporter(
     # make bbox --> to simplify string request to DAMO db
     bbox_model = box(*model_extent_gdf.total_bounds)
 
-    logging = []
+    logging_bd_exporter = []
     for table in table_names:
-        layer_db = DB_LAYER_MAPPING.get(table, None).get("source", None)
-        schema = DB_LAYER_MAPPING.get(table, None).get("schema", None)
-        geomcolumn = DB_LAYER_MAPPING.get(table, None).get("geomcolumn", None)
-        columns = DB_LAYER_MAPPING.get(table, None).get("columns", None)
-        if DB_LAYER_MAPPING.get(table, None).get("table_name", None) is not None:
-            table_name = DB_LAYER_MAPPING.get(table, None).get(
-                "table_name", None
-            )  # in case "GEMAAL_DAMO", table name is "GEMAAL"
-        else:
-            table_name = table
+        table_config = DB_LAYER_MAPPING.get(table, None)
+        layer_db = table_config.get("source", None)
+        schema = table_config.get("schema", None)
+        geomcolumn = table_config.get("geomcolumn", None)
+        columns = table_config.get("columns", None)
+        table_name = table_config.get("table_name", table)
 
         if geomcolumn is not None:
             columns = [geomcolumn] + columns
@@ -299,7 +314,7 @@ def db_exporter(
                 schema=schema,
                 table_name=table_name,
                 geomcolumn=geomcolumn,
-                epsg_code=EPSG_CODE,
+                epsg_code=epsg_code,
                 polygon_wkt=bbox_model,
                 simplify=True,
             )
@@ -318,10 +333,7 @@ def db_exporter(
                     model_gdf[col] = pd.to_datetime(model_gdf[col], errors="coerce")
 
             # update layername if provided
-            if DB_LAYER_MAPPING.get(table, None).get("layername", None) is not None:
-                layername = DB_LAYER_MAPPING.get(table, None).get("layername", None)
-            else:
-                layername = table
+            layername = table_config.get("layername", table)
 
             # Update table domain code to descriptions
             if schema == "DAMO_W":
@@ -339,12 +351,12 @@ def db_exporter(
             logger.info(f"Finished export of {len(model_gdf)} elements from table {table} from {service_name}")
 
             # Include table that depend on this table
-            if DB_LAYER_MAPPING.get(table, None).get("required_sub_table", None) is not None:
+            if table_config.get("required_sub_table", None) is not None:
                 # Get sub table information from mapping
-                sub_table = DB_LAYER_MAPPING.get(table, None).get("required_sub_table", None)
-                id_link_column = DB_LAYER_MAPPING.get(table, None).get("id_link_column", None)
-                sub_id_column = DB_LAYER_MAPPING.get(table, None).get("sub_id_column", None)
-                sub_columns = DB_LAYER_MAPPING.get(table, None).get("sub_columns", None)
+                sub_table = table_config.get("required_sub_table", None)
+                id_link_column = table_config.get("id_link_column", None)
+                sub_id_column = table_config.get("sub_id_column", None)
+                sub_columns = table_config.get("sub_columns", None)
                 logger.info(f"Start export of table non-geometric sub table {sub_table} from {service_name}")
 
                 # run sub export
@@ -366,12 +378,12 @@ def db_exporter(
                     f"Finished export of {len(sub_model_gdf)} elements from table {sub_table} from {service_name}"
                 )
 
-                if DB_LAYER_MAPPING.get(table, None).get("required_sub2_table", None) is not None:
+                if table_config.get("required_sub2_table", None) is not None:
                     # If there is a second sub table, export it as well
-                    sub2_table = DB_LAYER_MAPPING.get(table, None).get("required_sub2_table", None)
-                    sub_id_link_column = DB_LAYER_MAPPING.get(table, None).get("sub_id_link_column", None)
-                    sub2_id_column = DB_LAYER_MAPPING.get(table, None).get("sub2_id_column", None)
-                    sub2_columns = DB_LAYER_MAPPING.get(table, None).get("sub2_columns", None)
+                    sub2_table = table_config.get("required_sub2_table", None)
+                    sub_id_link_column = table_config.get("sub_id_link_column", None)
+                    sub2_id_column = table_config.get("sub2_id_column", None)
+                    sub2_columns = table_config.get("sub2_columns", None)
                     logger.info(f"Start export of table non-geometric sub table {sub2_table} from {service_name}")
 
                     # run sub export
@@ -391,12 +403,12 @@ def db_exporter(
                     )
 
         except Exception as e:
-            if DB_LAYER_MAPPING.get(table, None) is None:
+            if table_config is None:
                 error = f"{table} not found in database mapping {e}"
             else:
                 error = f"An error occured while exporting data of table {table} from {service_name} {e}"
 
             logger.error(error)
-            logging.append(error)
+            logging_bd_exporter.append(error)
 
-    return logging
+    return logging_bd_exporter
