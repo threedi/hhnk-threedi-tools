@@ -28,12 +28,13 @@ pre-commit-run = "pre-commit run --all-files"
 # Upload to PyPi to make it available with pip
 upload_pypi = "twine upload --repository hhnk-threedi-tools  dist/*"
 
-[feature.dev.tasks]
 #Styling
 sort_imports = "ruff check  ./**/*.py --select I --fix --force-exclude"
 fmt = "ruff format ./**/*.py --force-exclude"
 style = {depends-on = ["sort_imports", "fmt"]} # `pixi run style`
 
+
+[feature.dev.tasks]
 build_wheels = "rm -rf dist/ && python -m build" # build wheels
 twine_check = "twine check dist/*"
 build = { depends-on = ["build_wheels", "twine_check"] }
@@ -65,6 +66,7 @@ matplotlib = "*"  # 3.9.0 gives RuntimeError: Entry point name 'inline' duplicat
 rasterstats = "*"
 rioxarray = "*"
 rtree = "*"
+ruff = "*"
 seaborn = "*"
 oracledb = "*"
 pyogrio = "*"
@@ -96,7 +98,6 @@ ipywidgets = "*"
 jupytext = "*"
 pre-commit = "*"
 twine="*"
-ruff = "*"
 
 # Datachecker
 flask = "*"  # oude datachecker
@@ -154,6 +155,7 @@ oracledb = "==2.4.1"
 seaborn = "*"
 pip = "*"
 urllib3= "1.*"
+ruff = "*"
 
 [feature.py39.pypi-dependencies]
 lazy_loader= "*"

@@ -79,7 +79,7 @@ class Breaches(Folder):
 
         """
 
-    def __init__(self, base, create=True):
+    def __init__(self, base, create= True):
         super().__init__(base, create=create)
 
         # NetCDF
