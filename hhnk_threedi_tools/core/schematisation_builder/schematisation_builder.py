@@ -24,8 +24,8 @@ import hhnk_research_tools as hrt
 # from HyDAMO_validator import validate_hydamo
 import hhnk_threedi_tools.resources.schematisation_builder as schematisation_builder_resources
 from hhnk_threedi_tools.core.folders import Project
-from hhnk_threedi_tools.core.schematisation_builder.DAMO_exporter import DB_exporter
 from hhnk_threedi_tools.core.schematisation_builder.DAMO_HyDAMO_converter import DAMO_to_HyDAMO_Converter
+from hhnk_threedi_tools.core.schematisation_builder.db_exporter import db_exporter
 from hhnk_threedi_tools.core.schematisation_builder.HyDAMO_validator import validate_hydamo
 
 # %%
@@ -65,14 +65,14 @@ def make_validated_hydamo_package(project_folder: Path, table_names: list) -> No
 
     # check if polder_polygon.shp exists
     if polder_file_path:
-        logger.info(f"Start export from DAMO database for file: {polder_file_path}")
+        logger.info(f"Start export from source databases for file: {polder_file_path}")
         # DAMO export
         gdf_polder = gpd.read_file(polder_file_path)
-        logging_DAMO = DB_exporter(
-            model_extent_gdf = gdf_polder, 
-            output_file = damo_file_path,
-            table_names= table_names
-            )
+        logging_DAMO = db_exporter(
+            model_extent_gdf=gdf_polder,
+            output_file=damo_file_path,
+            table_names=table_names,
+        )
 
         if logging_DAMO:
             logger.warning("Not all tables have been exported from the DAMO database.")

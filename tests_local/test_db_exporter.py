@@ -9,7 +9,7 @@ from config import TEMP_DIR, TEST_DIRECTORY
 
 from hhnk_threedi_tools.core.schematisation_builder.db_exporter import db_exporter
 
-TEST_DIRECTORY_SB = TEST_DIRECTORY / "schema_builder"
+TEST_DIRECTORY_SB = TEST_DIRECTORY / "schematisation_builder"
 # Create output directory for db exporter tests
 db_export_output_dir = TEMP_DIR / f"temp_db_exporter_{hrt.current_time(date=True)}"
 
