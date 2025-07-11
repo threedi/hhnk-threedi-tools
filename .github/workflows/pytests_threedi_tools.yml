@@ -35,7 +35,7 @@ jobs:
           environments: ${{ matrix.python-version }}
           
       - name: Run ruff
-        run: pixi run -e py39 style
+        run: pixi run -e py39 style-check
 
       - name: Run Tests
         run: pixi run -e py39 tests tests/

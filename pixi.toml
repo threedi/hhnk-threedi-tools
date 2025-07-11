@@ -46,7 +46,7 @@ build = { depends-on = ["build_wheels", "twine_check"] }
 tests = "pytest --cov-report term-missing --cov=hhnk_threedi_tools --cov-report=xml"
 sort_imports-check = "ruff check  ./**/*.py --select I --force-exclude"
 fmt-check = "ruff format ./**/*.py --check --force-exclude"
-style = {depends-on = ["sort_imports-check", "fmt-check"]} # `pixi run style`
+style-check = {depends-on = ["sort_imports-check", "fmt-check"]} # raises errors instead of fixing
 
 
 [dependencies]
