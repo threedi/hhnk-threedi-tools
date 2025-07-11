@@ -5,10 +5,10 @@ self.base is the directory in which it is located
 """
 
 # First-party imports
-from hhnk_research_tools import Folder
-from pathlib import Path
 import os
+from pathlib import Path
 
+from hhnk_research_tools import Folder
 
 FOLDER_STRUCTURE = """
     Main Breaches object
