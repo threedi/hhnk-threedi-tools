@@ -5,8 +5,8 @@ self.base is the directory in which it is located
 """
 
 # First-party imports
-import os
 from pathlib import Path
+import os
 
 from hhnk_research_tools import Folder
 
@@ -79,7 +79,7 @@ class Breaches(Folder):
 
         """
 
-    def __init__(self, base, create= True):
+    def __init__(self, base, create=True):
         super().__init__(base, create=create)
 
         # NetCDF
