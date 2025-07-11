@@ -44,6 +44,7 @@ build = { depends-on = ["build_wheels", "twine_check"] }
 # FIXME change env in pytests_threedi_tools.yml as well
 [feature.py39.tasks]
 tests = "pytest --cov-report term-missing --cov=hhnk_threedi_tools --cov-report=xml"
+style = {depends-on = ["sort_imports", "fmt"]} # `pixi run style`
 
 
 [dependencies]
