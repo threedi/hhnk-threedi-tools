@@ -17,10 +17,10 @@ from shapely.geometry import box
 from hhnk_threedi_tools.resources.schematisation_builder.db_layer_mapping import DB_LAYER_MAPPING
 
 try:
-    from hhnk_threedi_tools.core.schematisation_builder.local_settings_htt import DATABASES
+    from hhnk_threedi_tools.local_settings_htt import DATABASES
 except ImportError as e:
     raise ImportError(
-        r"The 'local_settings_htt' module is missing. Get it from \\corp.hhnk.nl\data\Hydrologen_data\Data\01.basisgegevens\00.HDB\SettingsAndRecourses\local_settings_htt.py and place it in \hhnk_threedi_tools\core\resources\schematisation_builder"
+        r"The 'local_settings_htt' module is missing. Get it from \\corp.hhnk.nl\data\Hydrologen_data\Data\01.basisgegevens\00.HDB\SettingsAndRecourses\local_settings_htt.py and place it in \hhnk_threedi_tools\ "
     ) from e
 
 # From mapping json list top level keys
@@ -32,7 +32,7 @@ EPSG_CODE = "28992"
 def update_model_extent_from_combinatiepeilgebieden(
     model_extent_gdf: gpd.GeoDataFrame,
     db_dict: dict = DATABASES["csoprd_lezen"],
-    logger=None,
+    logger: hrt.logging.Logger = None,
 ) -> gpd.GeoDataFrame:
     """
     Update the model extent GeoDataFrame with the geometry from the Combinatiepeilgebieden table.
@@ -241,7 +241,7 @@ def db_exporter(
     table_names: list[str] = tables_default,
     buffer_distance: float = 0.5,
     epsg_code: str = EPSG_CODE,
-    logger=None,
+    logger: hrt.logging.Logger = None,
     update_extent: bool = True,
 ) -> list[str]:
     """
@@ -273,7 +273,7 @@ def db_exporter(
 
     Returns
     -------
-    logging_bd_exporter : list
+    logging_db_exporter : list[str]
         Error logs when a table export fails
     """
     if logger is None:

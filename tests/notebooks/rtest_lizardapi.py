@@ -11,9 +11,8 @@ from tests.config import FOLDER_TEST, TEMP_DIR, TEST_DIRECTORY
 
 notebook_data = setup_notebook()
 
-from threedi_scenario_downloader import downloader as dl_new
-
 from deprecated.core.api import downloader as dl_old
+from threedi_scenario_downloader import downloader as dl_new
 
 dl_old.LIZARD_URL = "https://hhnk.lizard.net/api/v3/"
 dl_new.LIZARD_URL = "https://hhnk.lizard.net/api/v4/"
