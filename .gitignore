@@ -22,3 +22,4 @@ tests_local/data/temp
 tests_local/data
 *.log
 project.json
+tests/data/schematisation_builder/test_schematisation_builder
