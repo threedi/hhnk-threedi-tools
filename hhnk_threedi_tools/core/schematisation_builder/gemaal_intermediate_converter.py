@@ -64,12 +64,6 @@ class PompIntermediateConverter:
         self.polder_polygon = gpd.read_file(self.polder_polygon_path)
         self.logger.info("Poler polygon layer loaded successfully.")
 
-        self.peilafwijking = gpd.read_file(self.damo_file_path, layer="WS_PEILAFWIJKING_VW")
-        self.logger.info("WS_PEILAFWIJKING_VW layer loaded successfully.")
-
-        self.peilgebiedpraktijk = gpd.read_file(self.damo_file_path, layer="PEILGEBIEDPRAKTIJK_EVW")
-        self.logger.info("PEILGEBIEDPRAKTIJK_EVW layer loaded successfully.")
-
     def add_column_gemaalid(self):
         """Add gemaalid column to the pomp layer."""
         self.logger.info("Link pomp to gemaal and pick global_id as to define gemaalid in pomp layer")
@@ -127,23 +121,16 @@ class PompIntermediateConverter:
         # transform MULTIPOLYGON  to LINESTRING
         # self.polder_polygon
         if "distance_to_peilgebied" not in self.gemaal.columns:
-            # gdf_peilgebiedpraktijk_linestring = self.combinatiepeilgebied.copy()
-            gdf_peilgebiedpraktijk_linestring = self.peilgebiedpraktijk.copy()
-            gdf_peilafwijking_linestring = self.peilafwijking.copy()
+            gdf_peilgebiedpraktijk_linestring = self.combinatiepeilgebied.copy()
 
-            # Union betweeen gdf_peilgebiedpraktijk_linestring and gdf_peilafwijking_linestring
-            gdf_peilgebiedcombinatie = gpd.overlay(
-                gdf_peilgebiedpraktijk_linestring, gdf_peilafwijking_linestring, how="union"
-            )
-
-            gdf_peilgebiedcombinatie["geometry"] = gdf_peilgebiedcombinatie["geometry"].apply(
+            gdf_peilgebiedpraktijk_linestring["geometry"] = gdf_peilgebiedpraktijk_linestring["geometry"].apply(
                 lambda geom: geom.boundary if geom.type == "MultiPolygon" else geom
             )
-            gdf_peilgebiedcombinatie = gdf_peilgebiedcombinatie.explode(index_parts=True)
-            gdf_peilgebiedcombinatie = gdf_peilgebiedcombinatie.reset_index(drop=True)
+            gdf_peilgebiedpraktijk_linestring = gdf_peilgebiedpraktijk_linestring.explode(index_parts=True)
+            gdf_peilgebiedpraktijk_linestring = gdf_peilgebiedpraktijk_linestring.reset_index(drop=True)
 
             # clip linestrings to the polder_polygon
-            gdf_peilgebiedcombinatie = gpd.clip(gdf_peilgebiedcombinatie, self.polder_polygon)
+            gdf_peilgebiedcombinatie = gpd.clip(gdf_peilgebiedpraktijk_linestring, self.polder_polygon)
 
             # make spatial join between gdf_gemaal and gdf_peilgebiedpraktijk_linestring distance 10 cm
             gemaal_spatial_join = gpd.sjoin_nearest(
@@ -173,15 +160,11 @@ class PompIntermediateConverter:
 
 # %%
 if __name__ == "__main__":
-    from schematisation_builder import DAMO_exporter
-
-    project_folder = Path(r"E:\09.modellen_speeltuin\gemaal_castricum_test")
+    project_folder = Path(r"E:\09.modellen_speeltuin\test_with_pomp_table_juan")
     folder = Folders(project_folder)
     damo = folder.source_data.path / "DAMO.gpkg"
     polder_polygon = folder.source_data.polder_polygon.path
     gdf_polder = gpd.read_file(polder_polygon)
-    TABLE_NAMES = ["HYDROOBJECT", "DUIKERSIFONHEVEL", "GEMAAL"]
-    logging_DAMO = DAMO_exporter(model_extent_gdf=gdf_polder, output_file=damo, table_names=TABLE_NAMES)
 
     intermediate_convertion = PompIntermediateConverter(damo, polder_polygon)
     intersect_gemaal = intermediate_convertion.intesected_pump_peilgebiden()
