@@ -1,3 +1,4 @@
+# %%
 import json
 import xml.etree.ElementTree as ET
 from pathlib import Path
@@ -213,8 +214,13 @@ class DAMO_to_HyDAMO_Converter:
             Converted layer
         """
         for column_name in layer_gdf.columns:
-            column_name = column_name.lower()
-            layer_gdf[column_name] = self.convert_column(layer_gdf[column_name], column_name, layer_name)
+            layer_gdf = layer_gdf.rename(columns={column_name: column_name.lower()})
+            layer_gdf[column_name.lower()] = self.convert_column(
+                layer_gdf[column_name.lower()], column_name, layer_name
+            )
+
+            # column_name = column_name.lower()
+            # layer_gdf[column_name] = self.convert_column(layer_gdf[column_name], column_name, layer_name)
         return layer_gdf
 
     def convert_column(self, column: pd.Series, column_name: str, layer_name: str) -> pd.Series:
@@ -349,3 +355,6 @@ class DAMO_to_HyDAMO_Converter:
             lambda x: "NL.WBHCODE." + str(WATERSCHAPSCODE) + "." + layer_name + "." + str(x)
         )
         return layer_gdf
+
+
+# %%
