@@ -1,8 +1,9 @@
 # %%
+import logging
 import uuid
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional, cast
+from typing import Optional
 
 import geopandas as gpd
 import hhnk_research_tools as hrt
@@ -73,7 +74,7 @@ class ProfileIntermediateConverter:
         Logger for logging messages. If not provided, a default logger will be used.
     """
 
-    def __init__(self, damo_file_path: Path, ods_cso_file_path: Path, logger=None):
+    def __init__(self, damo_file_path: Path, ods_cso_file_path: Path, logger: logging.Logger = None):
         self.damo_file_path = Path(damo_file_path)
         self.ods_cso_file_path = Path(ods_cso_file_path)
 
@@ -620,9 +621,10 @@ class ProfileIntermediateConverter:
         # log the number of profielLijnID with computed wet profile distances
         num_wet_profile_distances = self.data.profiellijn["afstandNatProfiel"].notna().sum()
         self.logger.info(f"Succesfully computed wet profile distances for {num_wet_profile_distances} profielLijns")
-        self.logger.warning(
-            f"Failed to compute wet profile distances for {len(self.data.profiellijn) - num_wet_profile_distances} profielLijns"
-        )
+        if len(self.data.profiellijn) - num_wet_profile_distances > 0:
+            self.logger.warning(
+                f"Failed to compute wet profile distances for {len(self.data.profiellijn) - num_wet_profile_distances} profielLijns"
+            )
 
         # Compute the depth of the wet profile
         self.logger.info("Computing depth for wet profile...")

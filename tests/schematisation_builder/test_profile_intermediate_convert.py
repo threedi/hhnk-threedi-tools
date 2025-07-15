@@ -21,6 +21,9 @@ def test_profile_intermediate_converter():
     - (optional) Convert to HyDAMO format.
     """
     # %%
+
+    logger = hrt.logging.get_logger(__name__)
+
     damo_file_path = TEST_DIRECTORY / "schema_builder" / "DAMO anna paulowna.gpkg"
     cso_file_path = (
         TEST_DIRECTORY / "schema_builder" / "CSO anna paulowna.gpkg"
@@ -28,7 +31,9 @@ def test_profile_intermediate_converter():
     temp_dir_out = TEMP_DIR / f"temp_profile_intermediate_converter_{hrt.current_time(date=True)}"
     Path(temp_dir_out).mkdir(parents=True, exist_ok=True)
 
-    self = converter = ProfileIntermediateConverter(damo_file_path=damo_file_path, ods_cso_file_path=cso_file_path)
+    self = converter = ProfileIntermediateConverter(
+        damo_file_path=damo_file_path, ods_cso_file_path=cso_file_path, logger=logger
+    )
 
     # %%
     # Load and validate layers
