@@ -20,7 +20,7 @@ def test_profile_intermediate_converter():
     - Write results to output GPKG
     - (optional) Convert to HyDAMO format.
     """
-
+    # %%
     damo_file_path = TEST_DIRECTORY / "schema_builder" / "DAMO anna paulowna.gpkg"
     cso_file_path = (
         TEST_DIRECTORY / "schema_builder" / "CSO anna paulowna.gpkg"
@@ -28,21 +28,24 @@ def test_profile_intermediate_converter():
     temp_dir_out = TEMP_DIR / f"temp_profile_intermediate_converter_{hrt.current_time(date=True)}"
     Path(temp_dir_out).mkdir(parents=True, exist_ok=True)
 
-    converter = ProfileIntermediateConverter(damo_file_path=damo_file_path, ods_cso_file_path=cso_file_path)
+    self = converter = ProfileIntermediateConverter(damo_file_path=damo_file_path, ods_cso_file_path=cso_file_path)
 
+    # %%
     # Load and validate layers
     converter.load_layers()
 
     # Check if layers are loaded
-    assert converter.hydroobject is not None
-    assert converter.gecombineerde_peilen is not None
+    assert converter.data.hydroobject is not None
+    assert converter.data.gecombineerde_peilen is not None
 
+    # %%
     # Process line merge
     converter.process_linemerge()
 
     # Check if line merge result is stored
-    assert converter.hydroobject_linemerged is not None
+    assert converter.data.hydroobject_linemerged is not None
 
+    # %%
     # Test variables for profile on primary watergang
     hydroobject_code = "OAF-QJ-14396"
     peilgebied_id = 62149
@@ -56,7 +59,7 @@ def test_profile_intermediate_converter():
     # Check for a single hydroobject
     linemerge_id = converter.find_linemerge_id_by_hydroobject_code(hydroobject_code)
     assert linemerge_id is not None
-    linemerge = converter.hydroobject_linemerged.query("linemergeID == @linemerge_id").iloc[0]
+    linemerge = converter.data.hydroobject_linemerged.query("linemergeID == @linemerge_id").iloc[0]
     assert linemerge["categorie"] == "primary"
     peilgebied_id_result = converter.find_peilgebied_id_by_hydroobject_code(hydroobject_code)
     assert peilgebied_id_result == peilgebied_id
@@ -65,10 +68,10 @@ def test_profile_intermediate_converter():
     converter.create_profile_tables()
 
     # Tests for profile tables
-    profielpunt = converter.profielpunt
-    profiellijn = converter.profiellijn
-    profielgroep = converter.profielgroep
-    hydroobject = converter.hydroobject
+    profielpunt = converter.data.profielpunt
+    profiellijn = converter.data.profiellijn
+    profielgroep = converter.data.profielgroep
+    hydroobject = converter.data.hydroobject
 
     # Filter profielpunt on id
     pp = profielpunt[profielpunt["id"] == profielpunt_id]
@@ -96,9 +99,9 @@ def test_profile_intermediate_converter():
 
     # Compute the deepest point of profiel
     converter.compute_deepest_point_profiellijn()
-    assert converter.profiellijn["diepstePunt"].notnull().any()
+    assert converter.data.profiellijn["diepstePunt"].notnull().any()
     assert (
-        converter.profiellijn[converter.profiellijn["code"] == profiellijn_code]["diepstePunt"].iloc[0]
+        converter.data.profiellijn[converter.data.profiellijn["code"] == profiellijn_code]["diepstePunt"].iloc[0]
         == diepste_punt_profiel
     )
 
@@ -108,14 +111,14 @@ def test_profile_intermediate_converter():
     deepest_point_hydroobject_no_profile = -4.57
 
     # Check it is not connected to a profile
-    pl_2 = converter.find_profiellijn_by_hydroobject_code(hydroobject_code_no_profile)
+    pl_2 = converter._find_profiellijn_by_hydroobject_code(hydroobject_code_no_profile)
     assert pl_2 is None
 
     # Now connect profiles to hydroobject without profiles
     converter.connect_profiles_to_hydroobject_without_profiles(max_distance=250)
 
     # Check it is connected to a profile now
-    pl_2 = converter.find_profiellijn_by_hydroobject_code(hydroobject_code_no_profile)
+    pl_2 = converter._find_profiellijn_by_hydroobject_code(hydroobject_code_no_profile)
     assert pl_2 is not None
     assert not pl_2.empty and len(pl_2) == 1
     assert pl_2["code"].iloc[0] == nearest_profiellijn_code_it_should_connect_to
@@ -128,11 +131,11 @@ def test_profile_intermediate_converter():
     # VALIDATION PARAMETER (1): Compute distance wet profile
     converter.compute_distance_and_depth_wet_profile()
     assert (
-        converter.profiellijn[converter.profiellijn["code"] == profiellijn_code]["afstandNatProfiel"].iloc[0]
+        converter.data.profiellijn[converter.data.profiellijn["code"] == profiellijn_code]["afstandNatProfiel"].iloc[0]
         == lengte_nat_profiel
     )
     assert (
-        converter.profiellijn[converter.profiellijn["code"] == profiellijn_code]["diepteNatProfiel"].iloc[0]
+        converter.data.profiellijn[converter.data.profiellijn["code"] == profiellijn_code]["diepteNatProfiel"].iloc[0]
         == diepte_nat_profiel
     )
 
@@ -154,21 +157,21 @@ def test_profile_intermediate_converter():
     # VALIDATION PARAMETER (3): compute jaarinwinning
     converter.compute_jaarinwinning()
     assert (
-        converter.profiellijn[converter.profiellijn["code"] == profiellijn_code]["jaarinwinning"].iloc[0]
+        converter.data.profiellijn[converter.data.profiellijn["code"] == profiellijn_code]["jaarinwinning"].iloc[0]
         == jaarinwinning
     )
 
     # VALIDATION PARAMETER (4): compute max cross product profiellijn to check if line is straight
     converter.add_maxcross_to_profiellijn()
     assert (
-        converter.profiellijn[converter.profiellijn["code"] == profiellijn_code]["max_cross_product"].iloc[0]
+        converter.data.profiellijn[converter.data.profiellijn["code"] == profiellijn_code]["max_cross_product"].iloc[0]
         is not None
     )
 
     # VALIDATION PARAMETER (5): check if profielpunt is in ascending order
     converter.compute_if_ascending()
-    assert converter.profiellijn[converter.profiellijn["code"] == 3849]["isAscending"].iloc[0] == 1
-    assert converter.profiellijn[converter.profiellijn["code"] == 58315]["isAscending"].iloc[0] == 0
+    assert converter.data.profiellijn[converter.data.profiellijn["code"] == 3849]["isAscending"].iloc[0] == 1
+    assert converter.data.profiellijn[converter.data.profiellijn["code"] == 58315]["isAscending"].iloc[0] == 0
 
     # Write the result to a new file
     output_file_path = temp_dir_out / "output.gpkg"

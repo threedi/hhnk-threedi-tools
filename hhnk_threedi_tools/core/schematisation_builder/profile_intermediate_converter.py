@@ -1,4 +1,6 @@
+# %%
 import uuid
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 
@@ -8,6 +10,27 @@ import numpy as np
 import pandas as pd
 from shapely.geometry import LineString, MultiLineString, Point
 from shapely.validation import make_valid
+
+
+@dataclass
+class _Data:
+    """Available as .data under ProfileIntermediateConverter"""
+
+    # DAMO tables
+    hydroobject: Optional[gpd.GeoDataFrame] = None
+    hydroobject_linemerged: Optional[gpd.GeoDataFrame] = None
+    gw_pro: Optional[gpd.GeoDataFrame] = None
+    gw_prw: Optional[gpd.GeoDataFrame] = None
+    gw_pbp: Optional[gpd.GeoDataFrame] = None
+    iws_geo_beschr_profielpunten: Optional[gpd.GeoDataFrame] = None
+
+    # CSO tables
+    gecombineerde_peilen: Optional[gpd.GeoDataFrame] = None
+
+    # Output tables
+    profielgroep: Optional[gpd.GeoDataFrame] = None
+    profiellijn: Optional[gpd.GeoDataFrame] = None
+    profielpunt: Optional[gpd.GeoDataFrame] = None
 
 
 class ProfileIntermediateConverter:
@@ -42,180 +65,43 @@ class ProfileIntermediateConverter:
         else:
             self.logger = hrt.logging.get_logger(__name__)
 
-        self.hydroobject: Optional[gpd.GeoDataFrame] = None
-        self.hydroobject_linemerged: Optional[gpd.GeoDataFrame] = None
-
-        self.gw_pro: Optional[gpd.GeoDataFrame] = None
-        self.gw_prw: Optional[gpd.GeoDataFrame] = None
-        self.gw_pbp: Optional[gpd.GeoDataFrame] = None
-        self.iws_geo_beschr_profielpunten: Optional[gpd.GeoDataFrame] = None
-
-        self.gecombineerde_peilen: Optional[gpd.GeoDataFrame] = None
+        self.data = _Data()
 
     def load_layers(self):
-        """Load and preprocess necessary layers."""
+        """Step 1: Load and preprocess necessary layers. All output is stored under self.gdf.xx"""
         self.logger.info("Loading layers into ProfileIntermediateConverter...")
-        self.hydroobject = self._load_and_validate(self.damo_file_path, "hydroobject")
+        self.data.hydroobject = self._load_and_validate(self.damo_file_path, "hydroobject")
 
-        self.gw_pro = self._load_and_validate(self.damo_file_path, "gw_pro")
-        self.gw_prw = self._load_and_validate(self.damo_file_path, "gw_prw")
-        self.gw_pbp = self._load_and_validate(self.damo_file_path, "gw_pbp")
-        self.iws_geo_beschr_profielpunten = self._load_and_validate(
+        self.data.gw_pro = self._load_and_validate(self.damo_file_path, "gw_pro")
+        self.data.gw_prw = self._load_and_validate(self.damo_file_path, "gw_prw")
+        self.data.gw_pbp = self._load_and_validate(self.damo_file_path, "gw_pbp")
+        self.data.iws_geo_beschr_profielpunten = self._load_and_validate(
             self.damo_file_path, "iws_geo_beschr_profielpunten"
         )
 
         gecombineerde_peilen = self._load_and_validate(self.ods_cso_file_path, "gecombineerde_peilen")
-        self.gecombineerde_peilen = gecombineerde_peilen.explode(index_parts=False).reset_index(drop=True)
+        self.data.gecombineerde_peilen = gecombineerde_peilen.explode(index_parts=False).reset_index(drop=True)
 
-    def _load_and_validate(self, source_path, layer_name: str) -> gpd.GeoDataFrame:
+    @staticmethod
+    def _load_and_validate(source_path: Path, layer_name: str) -> gpd.GeoDataFrame:
         """Load a layer from the DAMO geopackage and apply make_valid to its geometries."""
         gdf = gpd.read_file(source_path, layer=layer_name)
         if "geometry" in gdf.columns:
             gdf["geometry"] = gdf["geometry"].apply(make_valid)
         return gdf
 
-    def create_profile_tables(self):
-        """
-        Create profielgroep, profiellijn, and profielpunten.
-        Based on the layers 'gw_pro', 'gw_prw', 'gw_pbp' and 'iws_geo_beschr_profielpunten'.
-        """
-        self.logger.info("Creating profile tables...")
-        if (
-            self.gw_pro is None
-            or self.gw_prw is None
-            or self.gw_pbp is None
-            or self.iws_geo_beschr_profielpunten is None
-        ):
-            raise ValueError("Layers not loaded. Call load_layers() first.")
-
-        # Create profielgroep and profiellijn, both are a copy of gw_pro
-        self.profielgroep = self.gw_pro.copy()
-        self.profielgroep["GlobalID"] = [str(uuid.uuid4()) for _ in range(len(self.profielgroep))]
-
-        # Rename
-        self.profielgroep = self.profielgroep.rename(columns={"PRO_ID": "code"})
-
-        # Attach profielgroep to hydroObjectID based on the geometry
-        self.assign_hydroobject_ids()
-
-        self.profielgroep["geometry"] = None  # Profielgroep has no geometry
-
-        # Drop unnecessary columns
-        self.profielgroep = self.profielgroep[["GlobalID", "code", "geometry", "hydroobjectID"]]
-
-        self.profiellijn = self.gw_pro.copy()
-        self.profiellijn["GlobalID"] = [str(uuid.uuid4()) for _ in range(len(self.profiellijn))]
-        self.profiellijn["profielgroepID"] = self.profielgroep["GlobalID"]
-
-        # Rename columns in profiellijn and drop unnecessary columns
-        self.profiellijn = self.profiellijn.rename(
-            columns={"OPRDATOP": "datumInwinning", "OSMOMSCH": "namespace", "PRO_ID": "code"}
-        )
-        self.profiellijn = self.profiellijn[
-            ["GlobalID", "code", "datumInwinning", "namespace", "geometry", "profielgroepID"]
-        ]
-
-        # Create profielpunt
-        # Geometry is in iws_geo_beschr_profielpunten
-        # Change column name PBP_PBP_ID to code
-        # Create uuid for profielpunt, in profielpunt this is GlobalID
-        self.profielpunt = self.iws_geo_beschr_profielpunten.copy()
-        self.profielpunt = self.profielpunt.rename(columns={"PBP_PBP_ID": "code"})
-        self.profielpunt["GlobalID"] = [str(uuid.uuid4()) for _ in range(len(self.profielpunt))]
-
-        # Other information is in gw_pbp
-        # We create new columns in profielpunt for the information from gw_pbp
-        # We can use the PBP_ID in gw_pbp to join the two tables to code in profielpunt
-        self.profielpunt = self.profielpunt.merge(
-            self.gw_pbp[["PBP_ID", "PRW_PRW_ID", "PBPSOORT", "IWS_VOLGNR", "IWS_HOOGTE", "IWS_AFSTAND"]],
-            left_on="code",
-            right_on="PBP_ID",
-            how="left",
-        )
-        self.profielpunt = self.profielpunt.rename(
-            columns={
-                "PBPSOORT": "typeProfielPunt",
-                "IWS_VOLGNR": "codeVolgnummer",
-                "IWS_HOOGTE": "hoogte",
-                "IWS_AFSTAND": "afstand",
-            }
-        )
-
-        # We filter profielpunt to keep only 'vaste bodem'
-        # 'vaste bodem' is denoted as Z1 in OSMOMSCH column from GW_PRW
-        #  GW_PRW can be mapped based on PRW_ID in GW_PRW and PRW_PRW_ID in profielpunt
-        # We join, then filter
-        self.profielpunt = self.profielpunt.merge(
-            self.gw_prw[["PRW_ID", "PRO_PRO_ID", "OSMOMSCH"]],
-            left_on="PRW_PRW_ID",
-            right_on="PRW_ID",
-            how="left",
-        )
-        self.profielpunt = self.profielpunt[self.profielpunt["OSMOMSCH"] == "Z1"]
-
-        # Log warning if there are still duplicates in profielpunt (based on geometry) # TODO temp validation here
-        duplicates = self.profielpunt[self.profielpunt.duplicated(subset=["geometry"], keep=False)]
-        if not duplicates.empty:
-            self.logger.warning(
-                f"Found {len(duplicates)} duplicate geometries in profielpunt. "
-                # f"Codes: {duplicates['code'].unique()}"
-            )
-
-        # Now we need to add the profielLijnID to every profielpunt
-        # We can use the PRO_PRO_ID in gw_prw to find the globalID in profiellijn with a matching PRO_ID (which was renamed to code)
-        self.profielpunt = self.profielpunt.merge(
-            self.profiellijn[["code", "GlobalID"]],
-            left_on="PRO_PRO_ID",
-            right_on="code",
-            how="left",
-            suffixes=("", "_profiellijn"),
-        )
-        self.profielpunt = self.profielpunt.rename(columns={"GlobalID_profiellijn": "profielLijnID"})
-        self.profielpunt = self.profielpunt.drop(columns=["code_profiellijn"])
-
-        # Drop columns that are not needed
-        self.profielpunt = self.profielpunt.drop(columns=["PRW_ID", "PBP_ID", "PRO_PRO_ID", "PRW_PRW_ID"])
-
-    def assign_hydroobject_ids(self):
-        if "GlobalID" not in self.hydroobject.columns:
-            self.hydroobject["GlobalID"] = [str(uuid.uuid4()) for _ in range(len(self.hydroobject))]
-
-        no_match_codes = []
-        multiple_match_codes = []
-
-        for idx, row in self.profielgroep.iterrows():
-            intersecting = self.hydroobject[self.hydroobject.intersects(row.geometry)]
-
-            gids_list = intersecting["GlobalID"].tolist()
-
-            if not gids_list:
-                no_match_codes.append(row.get("code"))
-                self.profielgroep.loc[idx, "hydroobjectID"] = None
-                continue
-
-            self.profielgroep.loc[idx, "hydroobjectID"] = gids_list[0]
-
-            if len(gids_list) > 1:
-                multiple_match_codes.append((row.get("code"), len(gids_list)))
-                for i, gid in enumerate(gids_list[1:], start=2):
-                    self.profielgroep.loc[idx, f"hydroobjectID{i}"] = gid
-
-        warnings_list = []
-        if no_match_codes:
-            warnings_list.append(f"No intersection for profielgroep with code(s): {no_match_codes}")
-        if multiple_match_codes:
-            details = ", ".join([f"{idx} ({count})" for idx, count in multiple_match_codes])
-            warnings_list.append(f"Multiple intersections for profielgroep with code(s): {details}")
-
-        if warnings_list:
-            self.logger.warning("\n".join(warnings_list))
-
     def process_linemerge(self):
-        """Run line merge algorithm and store result."""
+        """
+        Step 2:
+        Run line merge algorithm and store result.
+        """
         self.logger.info("ProfileIntermediateConverter is linemerging hydroobjects for peilgebieden...")
-        if self.hydroobject is None or self.gecombineerde_peilen is None:
-            raise ValueError("Layers not loaded. Call load_damo_layers() first.")
-        self.hydroobject_linemerged = self._linemerge_hydroobjects(self.gecombineerde_peilen, self.hydroobject)
+
+        self._ensure_loaded(["hydroobject", "gecombineerde_peilen"], previous_method="load_damo_layers")
+
+        self.data.hydroobject_linemerged = self._linemerge_hydroobjects(
+            self.data.gecombineerde_peilen, self.data.hydroobject
+        )
 
     def _linemerge_hydroobjects(self, gecombineerde_peilen, hydroobject):
         """
@@ -312,8 +198,144 @@ class ProfileIntermediateConverter:
             self.hydroobject_map = hydroobject_map
             return merged_hydroobjects_gdf
 
+    def create_profile_tables(self):
+        """
+        Step 3: Create profielgroep, profiellijn, and profielpunt.
+        Based on the layers 'gw_pro', 'gw_prw', 'gw_pbp' and 'iws_geo_beschr_profielpunten'.
+        """
+        self.logger.info("Creating profile tables...")
+        if (
+            self.data.gw_pro is None
+            or self.data.gw_prw is None
+            or self.data.gw_pbp is None
+            or self.data.iws_geo_beschr_profielpunten is None
+        ):
+            raise ValueError("Layers not loaded. Call load_layers() first.")
+
+        # Create profielgroep and profiellijn, both are a copy of gw_pro
+        self.data.profielgroep = self.data.gw_pro.copy()
+        self.data.profielgroep["GlobalID"] = [str(uuid.uuid4()) for _ in range(len(self.data.profielgroep))]
+
+        # Rename
+        self.data.profielgroep = self.data.profielgroep.rename(columns={"PRO_ID": "code"})
+
+        # Attach profielgroep to hydroObjectID based on the geometry
+        self._assign_hydroobject_ids()
+
+        self.data.profielgroep["geometry"] = None  # Profielgroep has no geometry
+
+        # Drop unnecessary columns
+        self.data.profielgroep = self.data.profielgroep[["GlobalID", "code", "geometry", "hydroobjectID"]]
+
+        self.data.profiellijn = self.data.gw_pro.copy()
+        self.data.profiellijn["GlobalID"] = [str(uuid.uuid4()) for _ in range(len(self.data.profiellijn))]
+        self.data.profiellijn["profielgroepID"] = self.data.profielgroep["GlobalID"]
+
+        # Rename columns in profiellijn and drop unnecessary columns
+        self.data.profiellijn = self.data.profiellijn.rename(
+            columns={"OPRDATOP": "datumInwinning", "OSMOMSCH": "namespace", "PRO_ID": "code"}
+        )
+        self.data.profiellijn = self.data.profiellijn[
+            ["GlobalID", "code", "datumInwinning", "namespace", "geometry", "profielgroepID"]
+        ]
+
+        # Create profielpunt
+        # Geometry is in iws_geo_beschr_profielpunten
+        # Change column name PBP_PBP_ID to code
+        # Create uuid for profielpunt, in profielpunt this is GlobalID
+        self.data.profielpunt = self.data.iws_geo_beschr_profielpunten.copy()
+        self.data.profielpunt = self.data.profielpunt.rename(columns={"PBP_PBP_ID": "code"})
+        self.data.profielpunt["GlobalID"] = [str(uuid.uuid4()) for _ in range(len(self.data.profielpunt))]
+
+        # Other information is in gw_pbp
+        # We create new columns in profielpunt for the information from gw_pbp
+        # We can use the PBP_ID in gw_pbp to join the two tables to code in profielpunt
+        self.data.profielpunt = self.data.profielpunt.merge(
+            self.data.gw_pbp[["PBP_ID", "PRW_PRW_ID", "PBPSOORT", "IWS_VOLGNR", "IWS_HOOGTE", "IWS_AFSTAND"]],
+            left_on="code",
+            right_on="PBP_ID",
+            how="left",
+        )
+        self.data.profielpunt = self.data.profielpunt.rename(
+            columns={
+                "PBPSOORT": "typeProfielPunt",
+                "IWS_VOLGNR": "codeVolgnummer",
+                "IWS_HOOGTE": "hoogte",
+                "IWS_AFSTAND": "afstand",
+            }
+        )
+
+        # We filter profielpunt to keep only 'vaste bodem'
+        # 'vaste bodem' is denoted as Z1 in OSMOMSCH column from GW_PRW
+        #  GW_PRW can be mapped based on PRW_ID in GW_PRW and PRW_PRW_ID in profielpunt
+        # We join, then filter
+        self.data.profielpunt = self.data.profielpunt.merge(
+            self.data.gw_prw[["PRW_ID", "PRO_PRO_ID", "OSMOMSCH"]],
+            left_on="PRW_PRW_ID",
+            right_on="PRW_ID",
+            how="left",
+        )
+        self.data.profielpunt = self.data.profielpunt[self.data.profielpunt["OSMOMSCH"] == "Z1"]
+
+        # Log warning if there are still duplicates in profielpunt (based on geometry) # TODO temp validation here
+        duplicates = self.data.profielpunt[self.data.profielpunt.duplicated(subset=["geometry"], keep=False)]
+        if not duplicates.empty:
+            self.logger.warning(
+                f"Found {len(duplicates)} duplicate geometries in profielpunt. "
+                # f"Codes: {duplicates['code'].unique()}"
+            )
+
+        # Now we need to add the profielLijnID to every profielpunt
+        # We can use the PRO_PRO_ID in gw_prw to find the globalID in profiellijn with a matching PRO_ID (which was renamed to code)
+        self.data.profielpunt = self.data.profielpunt.merge(
+            self.data.profiellijn[["code", "GlobalID"]],
+            left_on="PRO_PRO_ID",
+            right_on="code",
+            how="left",
+            suffixes=("", "_profiellijn"),
+        )
+        self.data.profielpunt = self.data.profielpunt.rename(columns={"GlobalID_profiellijn": "profielLijnID"})
+        self.data.profielpunt = self.data.profielpunt.drop(columns=["code_profiellijn"])
+
+        # Drop columns that are not needed
+        self.data.profielpunt = self.data.profielpunt.drop(columns=["PRW_ID", "PBP_ID", "PRO_PRO_ID", "PRW_PRW_ID"])
+
+    def _assign_hydroobject_ids(self):
+        if "GlobalID" not in self.data.hydroobject.columns:
+            self.data.hydroobject["GlobalID"] = [str(uuid.uuid4()) for _ in range(len(self.data.hydroobject))]
+
+        no_match_codes = []
+        multiple_match_codes = []
+
+        for idx, row in self.data.profielgroep.iterrows():
+            intersecting = self.data.hydroobject[self.data.hydroobject.intersects(row.geometry)]
+
+            gids_list = intersecting["GlobalID"].tolist()
+
+            if not gids_list:
+                no_match_codes.append(row.get("code"))
+                self.data.profielgroep.loc[idx, "hydroobjectID"] = None
+                continue
+
+            self.data.profielgroep.loc[idx, "hydroobjectID"] = gids_list[0]
+
+            if len(gids_list) > 1:
+                multiple_match_codes.append((row.get("code"), len(gids_list)))
+                for i, gid in enumerate(gids_list[1:], start=2):
+                    self.data.profielgroep.loc[idx, f"hydroobjectID{i}"] = gid
+
+        warnings_list = []
+        if no_match_codes:
+            warnings_list.append(f"No intersection for profielgroep with code(s): {no_match_codes}")
+        if multiple_match_codes:
+            details = ", ".join([f"{idx} ({count})" for idx, count in multiple_match_codes])
+            warnings_list.append(f"Multiple intersections for profielgroep with code(s): {details}")
+
+        if warnings_list:
+            self.logger.warning("\n".join(warnings_list))
+
     def find_linemerge_id_by_hydroobject_code(self, code: str):
-        """Find the linemergeID by hydroobject code."""
+        """Step 3: Find the linemergeID by hydroobject code."""
         if code in self.hydroobject_map:
             return self.hydroobject_map[code]
         else:
@@ -321,7 +343,7 @@ class ProfileIntermediateConverter:
             return None
 
     def find_peilgebied_id_by_hydroobject_code(self, code: str):
-        """Find the peilgebiedID by hydroobject code."""
+        """Step 4: Find the peilgebiedID by hydroobject code."""
         if not hasattr(self, "hydroobject_linemerged"):
             self.logger.error("Linemerged hydroobjects not yet processed.")
             return None
@@ -331,7 +353,7 @@ class ProfileIntermediateConverter:
             linemerge_id = self.hydroobject_map[code]
 
             # Now, lookup the peilgebiedID in the linemerged GeoDataFrame
-            match = self.hydroobject_linemerged[self.hydroobject_linemerged["linemergeID"] == linemerge_id]
+            match = self.data.hydroobject_linemerged[self.data.hydroobject_linemerged["linemergeID"] == linemerge_id]
 
             if match.empty:
                 self.logger.warning(f"No matching linemerge found for hydroobject code '{code}'.")
@@ -343,19 +365,19 @@ class ProfileIntermediateConverter:
             self.logger.warning(f"Hydroobject code '{code}' not found in the linemerged map.")
             return None
 
-    def find_profiellijn_by_hydroobject_code(self, code: str):
+    def _find_profiellijn_by_hydroobject_code(self, code: str):
         """Find the profiellijn GeoDataFrame by hydroobject code."""
-        if self.profiellijn is None:
+        if self.data.profiellijn is None:
             raise ValueError("profiellijn is not loaded. Call create_profile_tables() first.")
 
         # Find the hydroobjectID for the given code
-        hydroobject_id = self.hydroobject[self.hydroobject["CODE"] == code]["GlobalID"].values
+        hydroobject_id = self.data.hydroobject[self.data.hydroobject["CODE"] == code]["GlobalID"].values
         if not hydroobject_id:
             self.logger.warning(f"No hydroobject found with code '{code}'.")
             return None
 
         # Filter profielgroep by hydroobjectID
-        profielgroep = self.profielgroep[self.profielgroep["hydroobjectID"] == hydroobject_id[0]]
+        profielgroep = self.data.profielgroep[self.data.profielgroep["hydroobjectID"] == hydroobject_id[0]]
         if profielgroep.empty:
             self.logger.warning(f"No profielgroep found for hydroobject code '{code}'.")
             return None
@@ -366,7 +388,7 @@ class ProfileIntermediateConverter:
         ).tolist()
 
         # Get the profiellijn that matches the profielgroep_ids
-        profiellijn = self.profiellijn[self.profiellijn["profielgroepID"].isin(profielgroep_ids)]
+        profiellijn = self.data.profiellijn[self.data.profiellijn["profielgroepID"].isin(profielgroep_ids)]
 
         if profiellijn.empty:
             self.logger.warning(f"No profiellijn found for hydroobject code '{code}'.")
@@ -376,17 +398,17 @@ class ProfileIntermediateConverter:
 
     def find_deepest_point_by_hydroobject_code(self, code: str):
         """Find the deepest point for a hydroobject by its code."""
-        if self.hydroobject is None:
+        if self.data.hydroobject is None:
             raise ValueError("hydroobject is not loaded. Call load_layers() first.")
-        if self.profielgroep is None:
+        if self.data.profielgroep is None:
             raise ValueError("profielgroep is not loaded. Call create_profile_tables() first.")
-        if "diepstePunt" not in self.hydroobject.columns:
+        if "diepstePunt" not in self.data.hydroobject.columns:
             raise ValueError(
                 "diepstePunt column is not present in hydroobject. Call compute_deepest_point_hydroobjects() first."
             )
 
         # Find the hydroobject by code
-        hydroobject = self.hydroobject[self.hydroobject["CODE"] == code]
+        hydroobject = self.data.hydroobject[self.data.hydroobject["CODE"] == code]
         if hydroobject.empty:
             self.logger.warning(f"No hydroobject found with code '{code}'.")
             return None
@@ -417,23 +439,23 @@ class ProfileIntermediateConverter:
     def compute_deepest_point_profiellijn(self):
         """Compute the deepest point per profiellijn and add as a new column to self.profiellijn."""
         self.logger.info("Computing the deepest point per profiellijn...")
-        if self.profielpunt is None:
+        if self.data.profielpunt is None:
             raise ValueError("profielpunt is not loaded. Call create_profile_tables() first.")
-        if "hoogte" not in self.profielpunt.columns:
+        if "hoogte" not in self.data.profielpunt.columns:
             raise ValueError("hoogte column is not present in profielpunt.")
-        if "profielLijnID" not in self.profielpunt.columns:
+        if "profielLijnID" not in self.data.profielpunt.columns:
             raise ValueError("profielLijnID column is not present in profielpunt.")
-        if self.profiellijn is None:
+        if self.data.profiellijn is None:
             raise ValueError("profiellijn is not loaded. Call create_profile_tables() first.")
 
         # Convert height to float
-        self.profielpunt["hoogte"] = pd.to_numeric(self.profielpunt["hoogte"], errors="coerce")
+        self.data.profielpunt["hoogte"] = pd.to_numeric(self.data.profielpunt["hoogte"], errors="coerce")
 
         # Find the deepest point per profiellijn
-        deepest_points = self.profielpunt.groupby("profielLijnID")["hoogte"].min()
+        deepest_points = self.data.profielpunt.groupby("profielLijnID")["hoogte"].min()
 
         # Map the deepest point to the profiellijn using its GlobalID
-        self.profiellijn["diepstePunt"] = self.profiellijn["GlobalID"].map(deepest_points)
+        self.data.profiellijn["diepstePunt"] = self.data.profiellijn["GlobalID"].map(deepest_points)
 
     def connect_profiles_to_hydroobject_without_profiles(self, max_distance=250):
         """
@@ -441,12 +463,12 @@ class ProfileIntermediateConverter:
         Connect them to the nearest profile on the same hydroobject linemerge.
         """
         self.logger.info("Finding hydroobjects without profiles...")
-        if self.hydroobject_linemerged is None:
+        if self.data.hydroobject_linemerged is None:
             raise ValueError("Linemerged hydroobjects not yet processed. Call process_linemerge() first.")
 
         # Find primary hydroobjects that are not connected to profiles
-        hydroobject_ids_with_profiles = set(self.profielgroep["hydroobjectID"].unique())
-        primary_hydroobjects = self.hydroobject[self.hydroobject["CATEGORIEOPPWATERLICHAAM"] == 1]
+        hydroobject_ids_with_profiles = set(self.data.profielgroep["hydroobjectID"].unique())
+        primary_hydroobjects = self.data.hydroobject[self.data.hydroobject["CATEGORIEOPPWATERLICHAAM"] == 1]
         hydroobject_without_profiles = primary_hydroobjects[
             ~primary_hydroobjects["GlobalID"].isin(hydroobject_ids_with_profiles)
         ].copy()
@@ -462,22 +484,24 @@ class ProfileIntermediateConverter:
         # Mappings
         code_to_linemerge_id = self.hydroobject_map.copy()
         linemergeid_to_codes = (
-            self.hydroobject_linemerged.explode("hydroobjectCODE")
+            self.data.hydroobject_linemerged.explode("hydroobjectCODE")
             .groupby("linemergeID")["hydroobjectCODE"]
             .apply(list)
             .to_dict()
         )
-        code_to_globalid = dict(zip(self.hydroobject["CODE"], self.hydroobject["GlobalID"]))
+        code_to_globalid = dict(zip(self.data.hydroobject["CODE"], self.data.hydroobject["GlobalID"]))
 
         # Build spatial index for profiellijn, grouped by linemergeID
         no_profiellijn_for_linemerge = []
         profiellijn_by_linemerge = {}
         for linemerge_id, codes in linemergeid_to_codes.items():
             gids = [code_to_globalid.get(code) for code in codes if code in code_to_globalid]
-            profielgroep_ids = self.profielgroep[self.profielgroep["hydroobjectID"].isin(gids)]["GlobalID"].tolist()
-            profiellijn = self.profiellijn[self.profiellijn["profielgroepID"].isin(profielgroep_ids)].reset_index(
-                drop=True
-            )
+            profielgroep_ids = self.data.profielgroep[self.data.profielgroep["hydroobjectID"].isin(gids)][
+                "GlobalID"
+            ].tolist()
+            profiellijn = self.data.profiellijn[
+                self.data.profiellijn["profielgroepID"].isin(profielgroep_ids)
+            ].reset_index(drop=True)
             if not profiellijn.empty:
                 profiellijn_by_linemerge[linemerge_id] = (profiellijn, profiellijn.sindex)
             else:
@@ -531,7 +555,7 @@ class ProfileIntermediateConverter:
             profielgroep_id = nearest_profile_line["profielgroepID"]
 
             # Copy rows
-            profielgroep_copy = self.profielgroep[self.profielgroep["GlobalID"] == profielgroep_id].copy()
+            profielgroep_copy = self.data.profielgroep[self.data.profielgroep["GlobalID"] == profielgroep_id].copy()
             profielgroep_copy["GlobalID"] = str(uuid.uuid4())  # New GlobalID for the copy
             profielgroep_copy["hydroobjectID"] = row["GlobalID"]
             profielgroep_copy["copyOf"] = profielgroep_id
@@ -540,7 +564,7 @@ class ProfileIntermediateConverter:
 
         # Concat
         if profielgroep_new:
-            self.profielgroep = pd.concat([self.profielgroep] + profielgroep_new, ignore_index=True)
+            self.data.profielgroep = pd.concat([self.data.profielgroep] + profielgroep_new, ignore_index=True)
 
         self.logger.info("Connected hydroobjects to profiles.")
 
@@ -548,24 +572,24 @@ class ProfileIntermediateConverter:
         """Compute the deepest point and add as a new column to self.hydroobject."""
         self.logger.info("Computing the deepest point for hydroobjects...")
 
-        if self.hydroobject is None:
+        if self.data.hydroobject is None:
             raise ValueError("hydroobject is not loaded. Call load_layers() first.")
-        if self.profielgroep is None:
+        if self.data.profielgroep is None:
             raise ValueError("profielgroep is not loaded. Call create_profile_tables() first.")
-        if "hydroobjectID" not in self.profielgroep.columns:
+        if "hydroobjectID" not in self.data.profielgroep.columns:
             raise ValueError("hydroobjectID column is not present in profielgroep.")
 
         # filter the hydroobject on reference in profielgroep
         # these are the hydroobjects that have a profile
-        hydroobject_with_profiles = self.hydroobject[
-            self.hydroobject["GlobalID"].isin(self.profielgroep["hydroobjectID"])
+        hydroobject_with_profiles = self.data.hydroobject[
+            self.data.hydroobject["GlobalID"].isin(self.data.profielgroep["hydroobjectID"])
         ]
         if hydroobject_with_profiles.empty:
             self.logger.warning("No hydroobjects with profiles found. Skipping deepest point computation.")
             return
 
         # Check if "diepstePunt" is already computed
-        if "diepstePunt" not in self.profiellijn.columns:
+        if "diepstePunt" not in self.data.profiellijn.columns:
             self.compute_deepest_point_profiellijn()
 
         # collect the profiellijn features per hydroobject
@@ -574,7 +598,7 @@ class ProfileIntermediateConverter:
             hydro_code = hydro_row["CODE"]
 
             # Find the corresponding profiellijn
-            profiellijn = self.find_profiellijn_by_hydroobject_code(hydro_code)
+            profiellijn = self._find_profiellijn_by_hydroobject_code(hydro_code)
             if profiellijn is None or profiellijn.empty:
                 continue
 
@@ -595,10 +619,10 @@ class ProfileIntermediateConverter:
             return
 
         # Merge the deepest points back to the hydroobject GeoDataFrame
-        self.hydroobject = self.hydroobject.merge(hydroobject_deepest_points_df, on="GlobalID", how="left")
+        self.data.hydroobject = self.data.hydroobject.merge(hydroobject_deepest_points_df, on="GlobalID", how="left")
 
         # log the number of hydroobjects with computed deepest points
-        num_deepest_points = self.hydroobject["diepstePunt"].notna().sum()
+        num_deepest_points = self.data.hydroobject["diepstePunt"].notna().sum()
         self.logger.info(f"Computed deepest points for {num_deepest_points} hydroobjects.")
 
     def compute_distance_and_depth_wet_profile(self):
@@ -613,17 +637,17 @@ class ProfileIntermediateConverter:
             This is the depth of the wet profile.
         """
         self.logger.info("Computing distance for wet profile...")
-        if self.profielpunt is None:
+        if self.data.profielpunt is None:
             raise ValueError("profielpunt is not loaded. Call create_profile_tables() first.")
-        if "afstand" not in self.profielpunt.columns:
+        if "afstand" not in self.data.profielpunt.columns:
             raise ValueError("afstand column is not present in profielpunt.")
-        if "typeProfielPunt" not in self.profielpunt.columns:
+        if "typeProfielPunt" not in self.data.profielpunt.columns:
             raise ValueError("typeProfielPunt column is not present in profielpunt.")
 
         # we need to group the profielpunt by profielLijnID
         # for each group we compute the distance as abs difference between the first and last point (with typeProfielPunt = 22)
         wet_profile_distances = (
-            self.profielpunt[self.profielpunt["typeProfielPunt"] == 22]
+            self.data.profielpunt[self.data.profielpunt["typeProfielPunt"] == 22]
             .groupby("profielLijnID")["afstand"]
             .agg(lambda x: round(abs(x.iloc[-1] - x.iloc[0]), 2) if len(x) > 1 else np.nan)
             .reset_index()
@@ -632,17 +656,17 @@ class ProfileIntermediateConverter:
         # Rename the column to "afstandNatProfiel"
         wet_profile_distances = wet_profile_distances.rename(columns={"afstand": "afstandNatProfiel"})
         # Merge the distances back to the profiellijn GeoDataFrame (profiellijn globalID is profielLijnID)
-        self.profiellijn = self.profiellijn.merge(
+        self.data.profiellijn = self.data.profiellijn.merge(
             wet_profile_distances, left_on="GlobalID", right_on="profielLijnID", how="left"
         )
         # Drop the profielLijnID column as it is no longer needed
-        self.profiellijn = self.profiellijn.drop(columns=["profielLijnID"])
+        self.data.profiellijn = self.data.profiellijn.drop(columns=["profielLijnID"])
 
         # log the number of profielLijnID with computed wet profile distances
-        num_wet_profile_distances = self.profiellijn["afstandNatProfiel"].notna().sum()
+        num_wet_profile_distances = self.data.profiellijn["afstandNatProfiel"].notna().sum()
         self.logger.info(f"Succesfully computed wet profile distances for {num_wet_profile_distances} profielLijns")
         self.logger.warning(
-            f"Failed to compute wet profile distances for {len(self.profiellijn) - num_wet_profile_distances} profielLijns"
+            f"Failed to compute wet profile distances for {len(self.data.profiellijn) - num_wet_profile_distances} profielLijns"
         )
 
         # Compute the depth of the wet profile
@@ -650,7 +674,7 @@ class ProfileIntermediateConverter:
 
         # Compute the depth of the wet profile between the profielpunt features with typeProfielPunt == 22
         wet_profile_depths = []
-        for pl_id, group in self.profielpunt.groupby("profielLijnID"):
+        for pl_id, group in self.data.profielpunt.groupby("profielLijnID"):
             wet_points = group[group["typeProfielPunt"] == 22]
             if len(wet_points) > 1:
                 min_afstand = wet_points["afstand"].min()
@@ -670,15 +694,15 @@ class ProfileIntermediateConverter:
 
         # Merge the computed depths back to the profiellijn GeoDataFrame
         wet_profile_depths_df = pd.DataFrame(wet_profile_depths)
-        self.profiellijn = self.profiellijn.merge(
+        self.data.profiellijn = self.data.profiellijn.merge(
             wet_profile_depths_df, left_on="GlobalID", right_on="profielLijnID", how="left"
         )
-        self.profiellijn = self.profiellijn.drop(columns=["profielLijnID"])
+        self.data.profiellijn = self.data.profiellijn.drop(columns=["profielLijnID"])
 
-        num_wet_profile_depths = self.profiellijn["diepteNatProfiel"].notna().sum()
+        num_wet_profile_depths = self.data.profiellijn["diepteNatProfiel"].notna().sum()
         self.logger.info(f"Succesfully computed wet profile depths for {num_wet_profile_depths} profielLijns")
         self.logger.warning(
-            f"Failed to compute wet profile depths for {len(self.profiellijn) - num_wet_profile_depths} profielLijns"
+            f"Failed to compute wet profile depths for {len(self.data.profiellijn) - num_wet_profile_depths} profielLijns"
         )
 
     def compute_jaarinwinning(self):
@@ -687,16 +711,18 @@ class ProfileIntermediateConverter:
         and add as a new column to self.profiellijn.
         """
         self.logger.info("Computing the year of inwinning for profiellijn...")
-        if self.profiellijn is None:
+        if self.data.profiellijn is None:
             raise ValueError("profiellijn is not loaded. Call create_profile_tables() first.")
-        if "datumInwinning" not in self.profiellijn.columns:
+        if "datumInwinning" not in self.data.profiellijn.columns:
             raise ValueError("datumInwinning column is not present in profiellijn.")
 
         # Convert datumInwinning to datetime
-        self.profiellijn["datumInwinning"] = pd.to_datetime(self.profiellijn["datumInwinning"], errors="coerce")
+        self.data.profiellijn["datumInwinning"] = pd.to_datetime(
+            self.data.profiellijn["datumInwinning"], errors="coerce"
+        )
 
         # Extract the year from datumInwinning
-        self.profiellijn["jaarinwinning"] = self.profiellijn["datumInwinning"].dt.year
+        self.data.profiellijn["jaarinwinning"] = self.data.profiellijn["datumInwinning"].dt.year
 
         self.logger.info("Year of inwinning computed and added to profiellijn.")
 
@@ -706,28 +732,30 @@ class ProfileIntermediateConverter:
         NOTE: This function is also implement in the validation module
         """
         self.logger.info("Computing the number of profielpunt features per profiellijn...")
-        if self.profielpunt is None:
+        if self.data.profielpunt is None:
             raise ValueError("profielpunt is not loaded. Call create_profile_tables() first.")
-        if "profielLijnID" not in self.profielpunt.columns:
+        if "profielLijnID" not in self.data.profielpunt.columns:
             raise ValueError("profielLijnID column is not present in profielpunt.")
-        if self.profiellijn is None:
+        if self.data.profiellijn is None:
             raise ValueError("profiellijn is not loaded. Call create_profile_tables() first.")
 
         # Count the number of profielpunt features per profiellijn
         count_per_profiellijn = (
-            self.profielpunt.groupby("profielLijnID").size().reset_index(name="aantalProfielPunten")
+            self.data.profielpunt.groupby("profielLijnID").size().reset_index(name="aantalProfielPunten")
         )
 
         # Map the count to the profiellijn using its GlobalID
-        self.profiellijn["aantalProfielPunten"] = self.profiellijn["GlobalID"].map(
+        self.data.profiellijn["aantalProfielPunten"] = self.data.profiellijn["GlobalID"].map(
             count_per_profiellijn.set_index("profielLijnID")["aantalProfielPunten"]
         )
 
         # If NaN values are present, set them to 0
-        self.profiellijn["aantalProfielPunten"] = self.profiellijn["aantalProfielPunten"].fillna(0).astype(int)
+        self.data.profiellijn["aantalProfielPunten"] = (
+            self.data.profiellijn["aantalProfielPunten"].fillna(0).astype(int)
+        )
 
         self.logger.info(
-            f"Computed the number of profielpunt features for {self.profiellijn['aantalProfielPunten'].notna().sum()} profiellijns."
+            f"Computed the number of profielpunt features for {self.data.profiellijn['aantalProfielPunten'].notna().sum()} profiellijns."
         )
 
     def add_z_to_point_geometry_based_on_column(self, column_name: str):
@@ -736,16 +764,16 @@ class ProfileIntermediateConverter:
         The column should contain height values that will be used as Z coordinates.
         """
         self.logger.info(f"Adding Z coordinate to profielpunt geometry based on column '{column_name}'...")
-        if self.profielpunt is None:
+        if self.data.profielpunt is None:
             raise ValueError("profielpunt is not loaded. Call create_profile_tables() first.")
-        if column_name not in self.profielpunt.columns:
+        if column_name not in self.data.profielpunt.columns:
             raise ValueError(f"Column '{column_name}' is not present in profielpunt.")
 
         # Ensure the column contains numeric values
-        self.profielpunt[column_name] = pd.to_numeric(self.profielpunt[column_name], errors="coerce")
+        self.data.profielpunt[column_name] = pd.to_numeric(self.data.profielpunt[column_name], errors="coerce")
 
         # Add Z coordinate to the geometry
-        self.profielpunt["geometry"] = self.profielpunt.apply(
+        self.data.profielpunt["geometry"] = self.data.profielpunt.apply(
             lambda row: Point(row.geometry.x, row.geometry.y, row[column_name])
             if pd.notna(row[column_name])
             else row.geometry,
@@ -761,18 +789,18 @@ class ProfileIntermediateConverter:
         The profiellijn is connected to the profielgroep by profielgroepID.
         """
         self.logger.info("Adding 'BREEDTE' value from hydroobject to profiellijn...")
-        if self.profiellijn is None:
+        if self.data.profiellijn is None:
             raise ValueError("profielpunt is not loaded. Call create_profile_tables() first.")
-        if self.hydroobject is None:
+        if self.data.hydroobject is None:
             raise ValueError("hydroobject is not loaded. Call load_layers() first.")
 
         # Ensure 'BREEDTE' column exists in hydroobject
-        if "BREEDTE" not in self.hydroobject.columns:
+        if "BREEDTE" not in self.data.hydroobject.columns:
             raise ValueError("Column 'BREEDTE' is not present in hydroobject.")
 
         # Merge profiellijn with profielgroep to get hydroobjectID
-        profiellijn_with_pg = self.profiellijn.merge(
-            self.profielgroep[["GlobalID", "hydroobjectID"]],
+        profiellijn_with_pg = self.data.profiellijn.merge(
+            self.data.profielgroep[["GlobalID", "hydroobjectID"]],
             left_on="profielgroepID",
             right_on="GlobalID",
             how="left",
@@ -780,14 +808,14 @@ class ProfileIntermediateConverter:
         )
         # Merge with hydroobject to get BREEDTE
         profiellijn_with_breedte = profiellijn_with_pg.merge(
-            self.hydroobject[["GlobalID", "BREEDTE"]],
+            self.data.hydroobject[["GlobalID", "BREEDTE"]],
             left_on="hydroobjectID",
             right_on="GlobalID",
             how="left",
             suffixes=("", "_hydroobject"),
         )
         # Assign the BREEDTE column to profiellijn as hydroobject_breedte
-        self.profiellijn["hydroobject_breedte"] = profiellijn_with_breedte["BREEDTE"]
+        self.data.profiellijn["hydroobject_breedte"] = profiellijn_with_breedte["BREEDTE"]
 
     def _is_linestring_straight(self, line: LineString) -> float:
         """
@@ -827,17 +855,21 @@ class ProfileIntermediateConverter:
         This is used to check if the LineString is straight (enough).
         """
         self.logger.info("Adding maximum cross product to profiellijn...")
-        if self.profiellijn is None:
+        if self.data.profiellijn is None:
             raise ValueError("profiellijn is not loaded. Call create_profile_tables() first.")
 
         # Ensure geometry is a LineString
-        if not all(self.profiellijn.geometry.apply(lambda geom: geom.geom_type in ["LineString", "MultiLineString"])):
+        if not all(
+            self.data.profiellijn.geometry.apply(lambda geom: geom.geom_type in ["LineString", "MultiLineString"])
+        ):
             raise ValueError("All geometries in profiellijn must be LineString or MultiLineString.")
 
-        self.logger.info(f"{self.profiellijn.geometry}")
+        self.logger.info(f"{self.data.profiellijn.geometry}")
 
         # Apply the function to compute max cross product
-        self.profiellijn["max_cross_product"] = self.profiellijn["geometry"].apply(self._is_linestring_straight)
+        self.data.profiellijn["max_cross_product"] = self.data.profiellijn["geometry"].apply(
+            self._is_linestring_straight
+        )
 
         self.logger.info("Maximum cross product added to profiellijn.")
 
@@ -849,26 +881,41 @@ class ProfileIntermediateConverter:
         This is used to check if the profile is ascending.
         """
         self.logger.info("Computing if profielpunt features are in ascending order...")
-        if self.profielpunt is None:
+        if self.data.profielpunt is None:
             raise ValueError("profielpunt is not loaded. Call create_profile_tables() first.")
-        if "hoogte" not in self.profielpunt.columns:
+        if "hoogte" not in self.data.profielpunt.columns:
             raise ValueError("hoogte column is not present in profielpunt.")
-        if "afstand" not in self.profielpunt.columns:
+        if "afstand" not in self.data.profielpunt.columns:
             raise ValueError("afstand column is not present in profielpunt.")
 
         # Ensure the hoogte column is numeric
-        self.profielpunt["hoogte"] = pd.to_numeric(self.profielpunt["hoogte"], errors="coerce")
+        self.data.profielpunt["hoogte"] = pd.to_numeric(self.data.profielpunt["hoogte"], errors="coerce")
 
-        ascending_per_lijn = self.profielpunt.groupby("profielLijnID").apply(is_ascending)
+        ascending_per_lijn = self.data.profielpunt.groupby("profielLijnID").apply(is_ascending)
         ascending_per_lijn.name = "isAscending"
 
         # Convert to DataFrame for merge
         ascending_df = ascending_per_lijn.reset_index()
 
         # Merge on GlobalID (in profiellijn) = profielLijnID (in profielpunt)
-        self.profiellijn = self.profiellijn.merge(
+        self.data.profiellijn = self.data.profiellijn.merge(
             ascending_df, how="left", left_on="GlobalID", right_on="profielLijnID"
         )
+
+    def _ensure_loaded(self, layers: list, previous_method: str) -> None:
+        """
+        Ensure a table is properly loaded. Will raise ValueError when None.
+
+        Parameters
+        ----------
+        layers : list
+            These layers are checked. raises ValueError if None
+        previous_method : str
+            The previous function that should be run to load the given layer.
+        """
+        for layer in layers:
+            if getattr(self.data, layer, None) is None:
+                raise ValueError(f"Layer '{layer}' not loaded. Call {previous_method}() first.")
 
 
 # General functions
