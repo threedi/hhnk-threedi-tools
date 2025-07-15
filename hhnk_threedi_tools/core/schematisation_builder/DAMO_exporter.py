@@ -12,6 +12,8 @@ from hhnk_research_tools.sql_functions import (
 )
 from shapely.geometry import box
 
+from hhnk_threedi_tools.core.schematisation_builder.gemaal_intermediate_converter import PompIntermediateConverter
+
 try:
     from hhnk_threedi_tools.core.schematisation_builder.local_settings_htt import DATABASES, DB_LAYERS_MAPPING
 except ImportError as e:
@@ -97,4 +99,12 @@ def DAMO_exporter(
             logger.error(error)
             logging_DAMO.append(error)
 
+    intermediate = PompIntermediateConverter(output_file)
+    intermediate.add_columns_to_pomp()
+    intermediate.update_pomp_layer()
+    intermediate.intesected_pump_peilgebiden()
+
     return logging_DAMO
+
+
+# get the path from a geodataframe

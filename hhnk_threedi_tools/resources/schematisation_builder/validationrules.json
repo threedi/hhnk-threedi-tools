@@ -1175,7 +1175,7 @@
 					"active": true,
 					"function": {
 						"LE": {
-							"left": "distance_validation_rule",
+							"left": "distance_to_peilgebied",
 							"right": 0.01
 						}
 					}

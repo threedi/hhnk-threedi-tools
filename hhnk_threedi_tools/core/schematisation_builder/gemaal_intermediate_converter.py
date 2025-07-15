@@ -31,9 +31,8 @@ class PompIntermediateConverter:
         Logger for logging messages. If not provided, a default logger will be used.
     """
 
-    def __init__(self, damo_file_path: Path, polder_polygon_path: Path, logger=None):
+    def __init__(self, damo_file_path: Path, logger=None):
         self.damo_file_path = Path(damo_file_path)
-        self.polder_polygon_path = Path(polder_polygon_path)
 
         if logger:
             self.logger = logger
@@ -61,7 +60,7 @@ class PompIntermediateConverter:
         self.combinatiepeilgebied = gpd.read_file(self.damo_file_path, layer="COMBINATIEPEILGEBIED")
         self.logger.info("Combinatiepeilgebied layer loaded successfully.")
 
-        self.polder_polygon = gpd.read_file(self.polder_polygon_path)
+        self.polder_polygon = gpd.read_file(self.damo_file_path.parent / "polder_polygon.shp")
         self.logger.info("Poler polygon layer loaded successfully.")
 
     def add_column_gemaalid(self):
@@ -120,6 +119,7 @@ class PompIntermediateConverter:
     def intesected_pump_peilgebiden(self):
         # transform MULTIPOLYGON  to LINESTRING
         # self.polder_polygon
+        self.load_layers()
         if "distance_to_peilgebied" not in self.gemaal.columns:
             gdf_peilgebiedpraktijk_linestring = self.combinatiepeilgebied.copy()
 
@@ -163,10 +163,7 @@ if __name__ == "__main__":
     project_folder = Path(r"E:\09.modellen_speeltuin\test_with_pomp_table_juan")
     folder = Folders(project_folder)
     damo = folder.source_data.path / "DAMO.gpkg"
-    polder_polygon = folder.source_data.polder_polygon.path
-    gdf_polder = gpd.read_file(polder_polygon)
-
-    intermediate_convertion = PompIntermediateConverter(damo, polder_polygon)
+    intermediate_convertion = PompIntermediateConverter(damo)
     intersect_gemaal = intermediate_convertion.intesected_pump_peilgebiden()
 
 # delete specific layters that are inside geopackge.
