@@ -65,7 +65,7 @@ def make_validated_hydamo_package(project_folder: Path, default_polder_polygon_p
     damo_file_path = project_folder / "01_source_data" / "DAMO.gpkg"
     hydamo_file_path = project_folder / "01_source_data" / "HyDAMO.gpkg"
 
-    #check if polder_polygon.shp files exists and if not, copy file from default location
+    # check if polder_polygon.shp files exists and if not, copy file from default location
     if not polder_file_path.exists():
         logger.info(f"polder_polygon.shp not found in {project_folder}/01_source_data, copying from default location.")
         # copy files for polder polygon from default location to project folder
@@ -78,20 +78,20 @@ def make_validated_hydamo_package(project_folder: Path, default_polder_polygon_p
         logger.info(f"Start export from DAMO database for file: {polder_file_path}")
         # DAMO export
         gdf_polder = gpd.read_file(polder_file_path)
-        logging_DAMO = DAMO_exporter(
-            model_extent_gdf = gdf_polder, 
-            output_file = damo_file_path,
-            table_names= table_names
-            )
+        logging_DAMO = DAMO_exporter(model_extent_gdf=gdf_polder, output_file=damo_file_path, table_names=table_names)
 
         if logging_DAMO:
             logger.warning("Not all tables have been exported from the DAMO database.")
 
         # Conversion to HyDAMO
         logger.info(f"DAMO export was succesfull. Now, start conversion to HyDAMO for file: {polder_file_path}")
+        # converter = DAMO_to_HyDAMO_Converter(
+        #     damo_file_path=damo_file_path, hydamo_file_path=hydamo_file_path, layers=table_names, overwrite=True
+        # )
         converter = DAMO_to_HyDAMO_Converter(
-            damo_file_path=damo_file_path, hydamo_file_path=hydamo_file_path, layers=table_names, overwrite=True
+            damo_file_path=damo_file_path, hydamo_file_path=hydamo_file_path, overwrite=True
         )
+
         converter.run()
 
         logger.info(f"HyDAMO exported for file: {polder_file_path}")
@@ -145,7 +145,7 @@ if __name__ == "__main__":
     # define project folder path and
     project_folder = Path("E:/09.modellen_speeltuin/test_with_pomp_table_juan")
 
-    #define location of polder_polygon.shp file of interest - default location is already set in the code
+    # define location of polder_polygon.shp file of interest - default location is already set in the code
     polder_polygon_path = Path("E:/09.modellen_speeltuin/place_polder_polygon_here_for_schematisationbuilder")
 
     # select which tables names to export from DAMO
