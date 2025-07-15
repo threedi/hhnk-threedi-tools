@@ -144,8 +144,6 @@ class PompIntermediateConverter:
             if "code_left" in gemaal_spatial_join.columns:
                 gemaal_spatial_join = gemaal_spatial_join.rename(columns={"code_left": "code"})
 
-            print(gemaal_spatial_join.columns)
-
             # Join the column 'distance_to_peilgebied' from gemaal_spatial_join into gdf_gemaal based on the 'code' column
             gdf_gemaal = self.gemaal.merge(
                 gemaal_spatial_join[["code", "distance_to_peilgebied"]], on="code", how="left"
