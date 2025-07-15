@@ -1,8 +1,8 @@
 # %%
 import uuid
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional
+from typing import Optional, cast
 
 import geopandas as gpd
 import hhnk_research_tools as hrt
@@ -17,20 +17,37 @@ class _Data:
     """Available as .data under ProfileIntermediateConverter"""
 
     # DAMO tables
-    hydroobject: Optional[gpd.GeoDataFrame] = None
-    hydroobject_linemerged: Optional[gpd.GeoDataFrame] = None
-    gw_pro: Optional[gpd.GeoDataFrame] = None
-    gw_prw: Optional[gpd.GeoDataFrame] = None
-    gw_pbp: Optional[gpd.GeoDataFrame] = None
-    iws_geo_beschr_profielpunten: Optional[gpd.GeoDataFrame] = None
+    # Tables are not Optional[gpd.GeoDataFrame] because it causes issues with mypy typechecking.
+    hydroobject: gpd.GeoDataFrame = field(default_factory=gpd.GeoDataFrame)
+    hydroobject_linemerged: gpd.GeoDataFrame = field(default_factory=gpd.GeoDataFrame)
+    gw_pro: gpd.GeoDataFrame = field(default_factory=gpd.GeoDataFrame)
+    gw_prw: gpd.GeoDataFrame = field(default_factory=gpd.GeoDataFrame)
+    gw_pbp: gpd.GeoDataFrame = field(default_factory=gpd.GeoDataFrame)
+    iws_geo_beschr_profielpunten: gpd.GeoDataFrame = field(default_factory=gpd.GeoDataFrame)
 
     # CSO tables
-    gecombineerde_peilen: Optional[gpd.GeoDataFrame] = None
+    gecombineerde_peilen: gpd.GeoDataFrame = field(default_factory=gpd.GeoDataFrame)
 
     # Output tables
-    profielgroep: Optional[gpd.GeoDataFrame] = None
-    profiellijn: Optional[gpd.GeoDataFrame] = None
-    profielpunt: Optional[gpd.GeoDataFrame] = None
+    profielgroep: gpd.GeoDataFrame = field(default_factory=gpd.GeoDataFrame)
+    profiellijn: gpd.GeoDataFrame = field(default_factory=gpd.GeoDataFrame)
+    profielpunt: gpd.GeoDataFrame = field(default_factory=gpd.GeoDataFrame)
+
+    def _ensure_loaded(self, layers: list[str], previous_method: str) -> None:
+        """
+        Ensure a table is properly loaded. Will raise ValueError when Empty.
+
+        Parameters
+        ----------
+        layers : list
+            These layers are checked. raises ValueError if the table is empty without columns
+        previous_method : str
+            The previous function that should be run to load the given layer.
+        """
+        for layer in layers:
+            gdf = getattr(self, layer)
+            if gdf.empty and len(gdf.columns) == 0:
+                raise ValueError(f"Layer '{layer}' not loaded. Call {previous_method}() first.")
 
 
 class ProfileIntermediateConverter:
@@ -97,7 +114,7 @@ class ProfileIntermediateConverter:
         """
         self.logger.info("ProfileIntermediateConverter is linemerging hydroobjects for peilgebieden...")
 
-        self._ensure_loaded(["hydroobject", "gecombineerde_peilen"], previous_method="load_damo_layers")
+        self.data._ensure_loaded(["hydroobject", "gecombineerde_peilen"], previous_method="load_damo_layers")
 
         self.data.hydroobject_linemerged = self._linemerge_hydroobjects(
             self.data.gecombineerde_peilen, self.data.hydroobject
@@ -300,7 +317,7 @@ class ProfileIntermediateConverter:
         # Drop columns that are not needed
         self.data.profielpunt = self.data.profielpunt.drop(columns=["PRW_ID", "PBP_ID", "PRO_PRO_ID", "PRW_PRW_ID"])
 
-    def _assign_hydroobject_ids(self):
+    def _assign_hydroobject_ids(self) -> None:
         if "GlobalID" not in self.data.hydroobject.columns:
             self.data.hydroobject["GlobalID"] = [str(uuid.uuid4()) for _ in range(len(self.data.hydroobject))]
 
@@ -335,7 +352,11 @@ class ProfileIntermediateConverter:
             self.logger.warning("\n".join(warnings_list))
 
     def find_linemerge_id_by_hydroobject_code(self, code: str):
-        """Step 3: Find the linemergeID by hydroobject code."""
+        """
+        Utility/debug function and not used in the main class workflow.
+
+        Find the linemergeID by hydroobject code.
+        """
         if code in self.hydroobject_map:
             return self.hydroobject_map[code]
         else:
@@ -343,7 +364,11 @@ class ProfileIntermediateConverter:
             return None
 
     def find_peilgebied_id_by_hydroobject_code(self, code: str):
-        """Step 4: Find the peilgebiedID by hydroobject code."""
+        """
+        Utility/debug function and not used in the main class workflow.
+
+        Find the peilgebiedID by hydroobject code.
+        """
         if not hasattr(self, "hydroobject_linemerged"):
             self.logger.error("Linemerged hydroobjects not yet processed.")
             return None
@@ -365,7 +390,7 @@ class ProfileIntermediateConverter:
             self.logger.warning(f"Hydroobject code '{code}' not found in the linemerged map.")
             return None
 
-    def _find_profiellijn_by_hydroobject_code(self, code: str):
+    def _find_profiellijn_by_hydroobject_code(self, code: str) -> Optional[gpd.GeoDataFrame]:
         """Find the profiellijn GeoDataFrame by hydroobject code."""
         if self.data.profiellijn is None:
             raise ValueError("profiellijn is not loaded. Call create_profile_tables() first.")
@@ -397,7 +422,11 @@ class ProfileIntermediateConverter:
         return profiellijn
 
     def find_deepest_point_by_hydroobject_code(self, code: str):
-        """Find the deepest point for a hydroobject by its code."""
+        """
+        Utility/debug function and not used in the main class workflow.
+
+        Find the deepest point for a hydroobject by its code.
+        """
         if self.data.hydroobject is None:
             raise ValueError("hydroobject is not loaded. Call load_layers() first.")
         if self.data.profielgroep is None:
@@ -418,7 +447,10 @@ class ProfileIntermediateConverter:
         return diepste_punt
 
     def write_outputs(self, output_path: Path):
-        """Write all GeoDataFrame attributes of this class to a GeoPackage or individual files."""
+        """
+        Step 12:
+        Write all GeoDataFrame attributes of this class to a GeoPackage or individual files.
+        """
         output_path = Path(output_path)
         geodf_attrs = {name: val for name, val in self.__dict__.items() if isinstance(val, gpd.GeoDataFrame)}
 
@@ -436,31 +468,15 @@ class ProfileIntermediateConverter:
                 gdf.to_file(output_path / f"{name}.gpkg", driver="GPKG")
                 self.logger.info(f"Wrote file '{name}.gpkg' to {output_path}")
 
-    def compute_deepest_point_profiellijn(self):
-        """Compute the deepest point per profiellijn and add as a new column to self.profiellijn."""
-        self.logger.info("Computing the deepest point per profiellijn...")
-        if self.data.profielpunt is None:
-            raise ValueError("profielpunt is not loaded. Call create_profile_tables() first.")
-        if "hoogte" not in self.data.profielpunt.columns:
-            raise ValueError("hoogte column is not present in profielpunt.")
-        if "profielLijnID" not in self.data.profielpunt.columns:
-            raise ValueError("profielLijnID column is not present in profielpunt.")
-        if self.data.profiellijn is None:
-            raise ValueError("profiellijn is not loaded. Call create_profile_tables() first.")
-
-        # Convert height to float
-        self.data.profielpunt["hoogte"] = pd.to_numeric(self.data.profielpunt["hoogte"], errors="coerce")
-
-        # Find the deepest point per profiellijn
-        deepest_points = self.data.profielpunt.groupby("profielLijnID")["hoogte"].min()
-
-        # Map the deepest point to the profiellijn using its GlobalID
-        self.data.profiellijn["diepstePunt"] = self.data.profiellijn["GlobalID"].map(deepest_points)
-
-    def connect_profiles_to_hydroobject_without_profiles(self, max_distance=250):
+    def connect_profiles_to_hydroobject_without_profiles(self, max_distance: int = 250) -> None:
         """
-        Find hydroobjects that are not connected to profiles.
+        Step 4: Find hydroobjects that are not connected to profiles.
         Connect them to the nearest profile on the same hydroobject linemerge.
+
+        Parameters
+        ----------
+        max_distance : int [meters]
+            max search distance to connect a profile to another hydroobject.
         """
         self.logger.info("Finding hydroobjects without profiles...")
         if self.data.hydroobject_linemerged is None:
@@ -568,16 +584,12 @@ class ProfileIntermediateConverter:
 
         self.logger.info("Connected hydroobjects to profiles.")
 
-    def compute_deepest_point_hydroobjects(self):
-        """Compute the deepest point and add as a new column to self.hydroobject."""
+    def compute_deepest_point_hydroobjects(self) -> None:
+        """Step 5: Compute the deepest point and add as a new column to self.hydroobject."""
         self.logger.info("Computing the deepest point for hydroobjects...")
 
-        if self.data.hydroobject is None:
-            raise ValueError("hydroobject is not loaded. Call load_layers() first.")
-        if self.data.profielgroep is None:
-            raise ValueError("profielgroep is not loaded. Call create_profile_tables() first.")
-        if "hydroobjectID" not in self.data.profielgroep.columns:
-            raise ValueError("hydroobjectID column is not present in profielgroep.")
+        self.data._ensure_loaded(layers=["hydroobject"], previous_method="load_layers")
+        self.data._ensure_loaded(layers=["profielgroep"], previous_method="create_profile_tables")
 
         # filter the hydroobject on reference in profielgroep
         # these are the hydroobjects that have a profile
@@ -590,7 +602,7 @@ class ProfileIntermediateConverter:
 
         # Check if "diepstePunt" is already computed
         if "diepstePunt" not in self.data.profiellijn.columns:
-            self.compute_deepest_point_profiellijn()
+            self._compute_deepest_point_profiellijn()
 
         # collect the profiellijn features per hydroobject
         hydroobject_deepest_points = []
@@ -625,16 +637,34 @@ class ProfileIntermediateConverter:
         num_deepest_points = self.data.hydroobject["diepstePunt"].notna().sum()
         self.logger.info(f"Computed deepest points for {num_deepest_points} hydroobjects.")
 
-    def compute_distance_and_depth_wet_profile(self):
-        """
-        -   Computes the distance for the wet profile.
-            It is the distance between the profielpunt features with attribute "typeProfielPunt" = 22
-            We do not actually compute the topological distance between points,
-            but we use the distance in attribute "afstand" to compute difference.
+    def _compute_deepest_point_profiellijn(self) -> None:
+        """Compute the deepest point per profiellijn and add as a new column to self.data.profiellijn.
 
-        -   Also collects all profielpunt features between the features with typeProfielPunt = 22
-            and calculates the difference between the max and min value from "hoogte" column.
-            This is the depth of the wet profile.
+        Called by: self.compute_deepest_point_hydroobjects
+        """
+        self.logger.info("Computing the deepest point per profiellijn...")
+        self.data._ensure_loaded(layers=["profielpunt", "profiellijn"], previous_method="create_profile_tables")
+
+        # Convert height to float
+        self.data.profielpunt["hoogte"] = pd.to_numeric(self.data.profielpunt["hoogte"], errors="coerce")
+
+        # Find the deepest point per profiellijn
+        deepest_points = self.data.profielpunt.groupby("profielLijnID")["hoogte"].min()
+
+        # Map the deepest point to the profiellijn using its GlobalID
+        self.data.profiellijn["diepstePunt"] = self.data.profiellijn["GlobalID"].map(deepest_points)
+
+    def compute_distance_and_depth_wet_profile(self) -> None:
+        """
+        Step 6:
+        Computes the distance for the wet profile.
+        It is the distance between the profielpunt features with attribute "typeProfielPunt" = 22
+        We do not actually compute the topological distance between points,
+        but we use the distance in attribute "afstand" to compute difference.
+
+        Also collects all profielpunt features between the features with typeProfielPunt = 22
+        and calculates the difference between the max and min value from "hoogte" column.
+        This is the depth of the wet profile.
         """
         self.logger.info("Computing distance for wet profile...")
         if self.data.profielpunt is None:
@@ -701,13 +731,14 @@ class ProfileIntermediateConverter:
 
         num_wet_profile_depths = self.data.profiellijn["diepteNatProfiel"].notna().sum()
         self.logger.info(f"Succesfully computed wet profile depths for {num_wet_profile_depths} profielLijns")
-        self.logger.warning(
-            f"Failed to compute wet profile depths for {len(self.data.profiellijn) - num_wet_profile_depths} profielLijns"
-        )
+        if len(self.data.profiellijn) - num_wet_profile_depths > 0:
+            self.logger.warning(
+                f"Failed to compute wet profile depths for {len(self.data.profiellijn) - num_wet_profile_depths} profielLijns"
+            )
 
     def compute_jaarinwinning(self):
         """
-        Compute the year of inwinnin of the profiellijn based on the datumInwinning
+        Step 9: Compute the year of inwinning of the profiellijn based on the datumInwinning
         and add as a new column to self.profiellijn.
         """
         self.logger.info("Computing the year of inwinning for profiellijn...")
@@ -758,8 +789,9 @@ class ProfileIntermediateConverter:
             f"Computed the number of profielpunt features for {self.data.profiellijn['aantalProfielPunten'].notna().sum()} profiellijns."
         )
 
-    def add_z_to_point_geometry_based_on_column(self, column_name: str):
+    def add_z_to_point_geometry_based_on_column(self, column_name: str) -> None:
         """
+        Step 7:
         Add Z coordinate to the geometry of profielpunt based on a specified column.
         The column should contain height values that will be used as Z coordinates.
         """
@@ -784,6 +816,7 @@ class ProfileIntermediateConverter:
 
     def add_breedte_value_from_hydroobject(self):
         """
+        Step 8:
         Add the 'BREEDTE' value from hydroobject to profiellijn.
         The profielgroep is connected to the hydroobject by hydroobjectID.
         The profiellijn is connected to the profielgroep by profielgroepID.
@@ -851,6 +884,7 @@ class ProfileIntermediateConverter:
 
     def add_maxcross_to_profiellijn(self):
         """
+        Step 10:
         Add the maximum cross product of the segments of the LineString to the profiellijn.
         This is used to check if the LineString is straight (enough).
         """
@@ -875,6 +909,7 @@ class ProfileIntermediateConverter:
 
     def compute_if_ascending(self):
         """
+        Step 11:
         Compute if the profielpunt features are in ascending order based on the 'hoogte' column.
         We determine the point with the lowest height
         And check if ascending both to the left and right of this point, based on the 'afstand' column.
@@ -901,21 +936,6 @@ class ProfileIntermediateConverter:
         self.data.profiellijn = self.data.profiellijn.merge(
             ascending_df, how="left", left_on="GlobalID", right_on="profielLijnID"
         )
-
-    def _ensure_loaded(self, layers: list, previous_method: str) -> None:
-        """
-        Ensure a table is properly loaded. Will raise ValueError when None.
-
-        Parameters
-        ----------
-        layers : list
-            These layers are checked. raises ValueError if None
-        previous_method : str
-            The previous function that should be run to load the given layer.
-        """
-        for layer in layers:
-            if getattr(self.data, layer, None) is None:
-                raise ValueError(f"Layer '{layer}' not loaded. Call {previous_method}() first.")
 
 
 # General functions

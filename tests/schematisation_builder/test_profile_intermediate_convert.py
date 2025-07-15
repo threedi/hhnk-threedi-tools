@@ -98,7 +98,7 @@ def test_profile_intermediate_converter():
     assert pg["hydroobjectID"].iloc[0] == ho["GlobalID"].iloc[0]
 
     # Compute the deepest point of profiel
-    converter.compute_deepest_point_profiellijn()
+    converter._compute_deepest_point_profiellijn()
     assert converter.data.profiellijn["diepstePunt"].notnull().any()
     assert (
         converter.data.profiellijn[converter.data.profiellijn["code"] == profiellijn_code]["diepstePunt"].iloc[0]
