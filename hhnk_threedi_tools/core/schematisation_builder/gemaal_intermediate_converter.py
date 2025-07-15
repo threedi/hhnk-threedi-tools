@@ -16,11 +16,6 @@ from hhnk_threedi_tools.core.folders import Folders
 # %%
 
 
-def __init__(self, folder: Folders, revision=0, dem_path=None):
-    self.folder = folder
-    self.revision = revision
-
-
 class PompIntermediateConverter:
     """
     Intermediate converter for pomp data.
@@ -49,6 +44,8 @@ class PompIntermediateConverter:
         self.gemaal: Optional[gpd.GeoDataFrame] = None
         self.combinatiepeilgebied: Optional[gpd.GeoDataFrame] = None
         self.polder_polygon: Optional[gpd.GeoDataFrame] = None
+        self.peilafwijking: Optional[gpd.GeoDataFrame] = None
+        self.peilgebiedpraktijk: Optional[gpd.GeoDataFrame] = None
 
         self.logger.info(f"Initialized GemaalIntermediateConverter with DAMO file: {self.damo_file_path}")
 
@@ -66,6 +63,12 @@ class PompIntermediateConverter:
 
         self.polder_polygon = gpd.read_file(self.polder_polygon_path)
         self.logger.info("Poler polygon layer loaded successfully.")
+
+        self.peilafwijking = gpd.read_file(self.damo_file_path, layer="WS_PEILAFWIJKING_VW")
+        self.logger.info("WS_PEILAFWIJKING_VW layer loaded successfully.")
+
+        self.peilgebiedpraktijk = gpd.read_file(self.damo_file_path, layer="PEILGEBIEDPRAKTIJK_EVW")
+        self.logger.info("PEILGEBIEDPRAKTIJK_EVW layer loaded successfully.")
 
     def add_column_gemaalid(self):
         """Add gemaalid column to the pomp layer."""
@@ -120,35 +123,105 @@ class PompIntermediateConverter:
         pyogrio.write_dataframe(self.pomp, self.damo_file_path, layer="pomp", driver="GPKG", overwrite=True)
         self.logger.info("Pomp layer updated successfully.")
 
-    def polygon_to_polyline(self):
+    def intesected_pump_peilgebiden(self):
         # transform MULTIPOLYGON  to LINESTRING
-        self.polder_polygon
-        gdf_peilgebiedpraktijk_linestring = self.combinatiepeilgebied.copy()
-        gdf_peilgebiedpraktijk_linestring["geometry"] = gdf_peilgebiedpraktijk_linestring["geometry"].apply(
-            lambda geom: geom.boundary if geom.type == "MultiPolygon" else geom
-        )
-        gdf_peilgebiedpraktijk_linestring = gdf_peilgebiedpraktijk_linestring.explode(index_parts=True)
-        gdf_peilgebiedpraktijk_linestring = gdf_peilgebiedpraktijk_linestring.reset_index(drop=True)
+        # self.polder_polygon
+        if "distance_to_peilgebied" not in self.gemaal.columns:
+            # gdf_peilgebiedpraktijk_linestring = self.combinatiepeilgebied.copy()
+            gdf_peilgebiedpraktijk_linestring = self.peilgebiedpraktijk.copy()
+            gdf_peilafwijking_linestring = self.peilafwijking.copy()
 
-        # clip linestrings to the polder_polygon
-        gdf_peilgebiedpraktijk_linestring = gpd.clip(gdf_peilgebiedpraktijk_linestring, self.polder_polygon)
+            # Union betweeen gdf_peilgebiedpraktijk_linestring and gdf_peilafwijking_linestring
+            gdf_peilgebiedcombinatie = gpd.overlay(
+                gdf_peilgebiedpraktijk_linestring, gdf_peilafwijking_linestring, how="union"
+            )
 
-        # make spatial join between gdf_gemaal and gdf_peilgebiedpraktijk_linestring distance 10 cm
-        gemaal_spatial_join = gpd.sjoin_nearest(
-            self.gemaal,
-            gdf_peilgebiedpraktijk_linestring,
-            how="inner",
-            max_distance=0.01,
-            distance_col="distance_validation_rule",
-        )
+            gdf_peilgebiedcombinatie["geometry"] = gdf_peilgebiedcombinatie["geometry"].apply(
+                lambda geom: geom.boundary if geom.type == "MultiPolygon" else geom
+            )
+            gdf_peilgebiedcombinatie = gdf_peilgebiedcombinatie.explode(index_parts=True)
+            gdf_peilgebiedcombinatie = gdf_peilgebiedcombinatie.reset_index(drop=True)
 
-        # Join the column 'distance_validation_rule' from gemaal_spatial_join into gdf_gemaal based on the 'code' column
-        self.gdf_gemaal = self.gemaal.merge(
-            gemaal_spatial_join[["code", "distance_validation_rule"]], on="code", how="left"
-        )
+            # clip linestrings to the polder_polygon
+            gdf_peilgebiedcombinatie = gpd.clip(gdf_peilgebiedcombinatie, self.polder_polygon)
 
-        # save the layer in DAMO TOFIX """"SHOULD I SAVE IT IN DAMO OR HYDAMO"""
-        self.gdf_gemaal.to_file(self.damo_file_path, layer="GEMAAL", driver="GPKG")
+            # make spatial join between gdf_gemaal and gdf_peilgebiedpraktijk_linestring distance 10 cm
+            gemaal_spatial_join = gpd.sjoin_nearest(
+                self.gemaal,
+                gdf_peilgebiedcombinatie,
+                how="inner",
+                max_distance=0.01,
+                distance_col="distance_to_peilgebied",
+            )
+            # rename column code_left to code
+            if "code_left" in gemaal_spatial_join.columns:
+                gemaal_spatial_join = gemaal_spatial_join.rename(columns={"code_left": "code"})
+
+            print(gemaal_spatial_join.columns)
+
+            # Join the column 'distance_to_peilgebied' from gemaal_spatial_join into gdf_gemaal based on the 'code' column
+            gdf_gemaal = self.gemaal.merge(
+                gemaal_spatial_join[["code", "distance_to_peilgebied"]], on="code", how="left"
+            )
+
+            # save the layer in DAMO TOFIX """"SHOULD I SAVE IT IN DAMO OR HYDAMO"""
+            gdf_gemaal.to_file(self.damo_file_path, layer="GEMAAL", driver="GPKG")
+
+        else:
+            print("column distance_to_peilgebied already exists")
 
 
+# %%
+if __name__ == "__main__":
+    from schematisation_builder import DAMO_exporter
+
+    project_folder = Path(r"E:\09.modellen_speeltuin\gemaal_castricum_test")
+    folder = Folders(project_folder)
+    damo = folder.source_data.path / "DAMO.gpkg"
+    polder_polygon = folder.source_data.polder_polygon.path
+    gdf_polder = gpd.read_file(polder_polygon)
+    TABLE_NAMES = ["HYDROOBJECT", "DUIKERSIFONHEVEL", "GEMAAL"]
+    logging_DAMO = DAMO_exporter(model_extent_gdf=gdf_polder, output_file=damo, table_names=TABLE_NAMES)
+
+    intermediate_convertion = PompIntermediateConverter(damo, polder_polygon)
+    intersect_gemaal = intermediate_convertion.intesected_pump_peilgebiden()
+
+# delete specific layters that are inside geopackge.
+# # %%
+# import fiona
+
+# def delete_layer_from_geopackage(geopackage_path, layer_to_delete):
+#     with fiona.open(geopackage_path, "r") as src:
+#         schema = src.schema
+#         crs = src.crs
+#         driver = src.driver
+#         # Filter out features from the layer you want to delete
+#         features = [f for f in src if f['properties']['layer_name'] != layer_to_delete]
+
+#     with fiona.open(geopackage_path, "w", driver=driver, schema=schema, crs=crs) as dst:
+#         for feature in features:
+#             dst.write(feature)
+
+
+# layers = fiona.listlayers(damo)
+
+# print("Layers in GeoPackage:")
+# layers_to_delete = []
+# for layer in layers:
+#     print(layer)
+#     geopackge = gpd.read_file(damo, layer=layer)
+#     columns = geopackge.columns
+#     if 'code' in columns:
+#         print(layer)
+#     else:
+#         layers_to_delete.append(layer)
+#     if len(geopackge)!= 0:
+#         layers_to_delete.append(layer)
+
+# for layer_to_delete in layers_to_delete:
+#     delete_layer_from_geopackage(damo, layer_to_delete)
+
+# delete empu
+# delete_layer_from_geopackage("your_geopackage.gpkg", "your_layer_name")
+#
 # %%
