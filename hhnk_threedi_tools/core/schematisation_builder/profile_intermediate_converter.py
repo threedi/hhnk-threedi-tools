@@ -120,7 +120,7 @@ class ProfileIntermediateConverter:
             self.data.gecombineerde_peilen, self.data.hydroobject
         )
 
-    def _linemerge_hydroobjects(self, gecombineerde_peilen, hydroobject):
+    def _linemerge_hydroobjects(self, gecombineerde_peilen, hydroobject) -> gpd.GeoDataFrame:
         """
         Merge hydroobjects within a peilgebied, assigning each hydroobject to the peilgebied
         in which the largest part of its geometry lies. Hydroobjects are not clipped.
@@ -234,13 +234,9 @@ class ProfileIntermediateConverter:
         Based on the layers 'gw_pro', 'gw_prw', 'gw_pbp' and 'iws_geo_beschr_profielpunten'.
         """
         self.logger.info("Creating profile tables...")
-        if (
-            self.data.gw_pro is None
-            or self.data.gw_prw is None
-            or self.data.gw_pbp is None
-            or self.data.iws_geo_beschr_profielpunten is None
-        ):
-            raise ValueError("Layers not loaded. Call load_layers() first.")
+        self.data._ensure_loaded(
+            layers=["gw_pro", "gw_prw", "gw_pbp", "iws_geo_beschr_profielpunten"], previous_method="load_layers"
+        )
 
         # Create profielgroep and profiellijn, both are a copy of gw_pro
         self.data.profielgroep = self.data.gw_pro.copy()
@@ -375,8 +371,7 @@ class ProfileIntermediateConverter:
             max search distance to connect a profile to another hydroobject.
         """
         self.logger.info("Finding hydroobjects without profiles...")
-        if self.data.hydroobject_linemerged is None:
-            raise ValueError("Linemerged hydroobjects not yet processed. Call process_linemerge() first.")
+        self.data._ensure_loaded(layers=["hydroobject_linemerged"], previous_method="process_linemerge")
 
         # Find primary hydroobjects that are not connected to profiles
         hydroobject_ids_with_profiles = set(self.data.profielgroep["hydroobjectID"].unique())
@@ -556,8 +551,7 @@ class ProfileIntermediateConverter:
 
         Called by: compute_deepest_point_hydroobjects
         """
-        if self.data.profiellijn is None:
-            raise ValueError("profiellijn is not loaded. Call create_profile_tables() first.")
+        self.data._ensure_loaded(layers=["profiellijn"], previous_method="create_profile_tables")
 
         # Find the hydroobjectID for the given code
         hydroobject_id = self.data.hydroobject[self.data.hydroobject["CODE"] == code]["GlobalID"].values
@@ -598,8 +592,8 @@ class ProfileIntermediateConverter:
         This is the depth of the wet profile.
         """
         self.logger.info("Computing distance for wet profile...")
-        if self.data.profielpunt is None:
-            raise ValueError("profielpunt is not loaded. Call create_profile_tables() first.")
+
+        self.data._ensure_loaded(layers=["profielpunt"], previous_method="create_profile_tables")
         if "afstand" not in self.data.profielpunt.columns:
             raise ValueError("afstand column is not present in profielpunt.")
         if "typeProfielPunt" not in self.data.profielpunt.columns:
@@ -674,8 +668,7 @@ class ProfileIntermediateConverter:
         The column should contain height values that will be used as Z coordinates.
         """
         self.logger.info(f"Adding Z coordinate to profielpunt geometry based on column '{column_name}'...")
-        if self.data.profielpunt is None:
-            raise ValueError("profielpunt is not loaded. Call create_profile_tables() first.")
+        self.data._ensure_loaded(layers=["profielpunt"], previous_method="create_profile_tables")
         if column_name not in self.data.profielpunt.columns:
             raise ValueError(f"Column '{column_name}' is not present in profielpunt.")
 
@@ -700,10 +693,7 @@ class ProfileIntermediateConverter:
         The profiellijn is connected to the profielgroep by profielgroepID.
         """
         self.logger.info("Adding 'BREEDTE' value from hydroobject to profiellijn...")
-        if self.data.profiellijn is None:
-            raise ValueError("profielpunt is not loaded. Call create_profile_tables() first.")
-        if self.data.hydroobject is None:
-            raise ValueError("hydroobject is not loaded. Call load_layers() first.")
+        self.data._ensure_loaded(layers=["profiellijn", "hydroobject"], previous_method="load_layers")
 
         # Ensure 'BREEDTE' column exists in hydroobject
         if "BREEDTE" not in self.data.hydroobject.columns:
@@ -734,8 +724,7 @@ class ProfileIntermediateConverter:
         and add as a new column to self.profiellijn.
         """
         self.logger.info("Computing the year of inwinning for profiellijn...")
-        if self.data.profiellijn is None:
-            raise ValueError("profiellijn is not loaded. Call create_profile_tables() first.")
+        self.data._ensure_loaded(layers=["profiellijn"], previous_method="create_profile_tables")
         if "datumInwinning" not in self.data.profiellijn.columns:
             raise ValueError("datumInwinning column is not present in profiellijn.")
 
@@ -756,12 +745,9 @@ class ProfileIntermediateConverter:
         NOTE: This function is also implement in the validation module
         """
         self.logger.info("Computing the number of profielpunt features per profiellijn...")
-        if self.data.profielpunt is None:
-            raise ValueError("profielpunt is not loaded. Call create_profile_tables() first.")
+        self.data._ensure_loaded(layers=["profielpunt", "profiellijn"], previous_method="create_profile_tables")
         if "profielLijnID" not in self.data.profielpunt.columns:
             raise ValueError("profielLijnID column is not present in profielpunt.")
-        if self.data.profiellijn is None:
-            raise ValueError("profiellijn is not loaded. Call create_profile_tables() first.")
 
         # Count the number of profielpunt features per profiellijn
         count_per_profiellijn = (
@@ -789,8 +775,7 @@ class ProfileIntermediateConverter:
         This is used to check if the LineString is straight (enough).
         """
         self.logger.info("Adding maximum cross product to profiellijn...")
-        if self.data.profiellijn is None:
-            raise ValueError("profiellijn is not loaded. Call create_profile_tables() first.")
+        self.data._ensure_loaded(layers=["profiellijn"], previous_method="create_profile_tables")
 
         # Ensure geometry is a LineString
         if not all(
@@ -848,8 +833,7 @@ class ProfileIntermediateConverter:
         This is used to check if the profile is ascending.
         """
         self.logger.info("Computing if profielpunt features are in ascending order...")
-        if self.data.profielpunt is None:
-            raise ValueError("profielpunt is not loaded. Call create_profile_tables() first.")
+        self.data._ensure_loaded(layers=["profielpunt"], previous_method="create_profile_tables")
         if "hoogte" not in self.data.profielpunt.columns:
             raise ValueError("hoogte column is not present in profielpunt.")
         if "afstand" not in self.data.profielpunt.columns:
@@ -858,7 +842,7 @@ class ProfileIntermediateConverter:
         # Ensure the hoogte column is numeric
         self.data.profielpunt["hoogte"] = pd.to_numeric(self.data.profielpunt["hoogte"], errors="coerce")
 
-        ascending_per_lijn = self.data.profielpunt.groupby("profielLijnID").apply(self.is_ascending)
+        ascending_per_lijn = self.data.profielpunt.groupby("profielLijnID").apply(self._is_ascending)
         ascending_per_lijn.name = "isAscending"
 
         # Convert to DataFrame for merge
@@ -915,7 +899,7 @@ class ProfileIntermediateConverter:
         Write all GeoDataFrame attributes of this class to a GeoPackage or individual files.
         """
         output_path = Path(output_path)
-        geodf_attrs = {name: val for name, val in self.__dict__.items() if isinstance(val, gpd.GeoDataFrame)}
+        geodf_attrs = {name: val for name, val in self.data.__dict__.items() if isinstance(val, gpd.GeoDataFrame)}
 
         if not geodf_attrs:
             self.logger.warning("No GeoDataFrames found to write.")
@@ -931,7 +915,7 @@ class ProfileIntermediateConverter:
                 gdf.to_file(output_path / f"{name}.gpkg", driver="GPKG")
                 self.logger.info(f"Wrote file '{name}.gpkg' to {output_path}")
 
-    def find_linemerge_id_by_hydroobject_code(self, code: str):
+    def find_linemerge_id_by_hydroobject_code(self, code: str) -> str:
         """
         Utility/debug function and not used in the main class workflow.
 
@@ -949,9 +933,8 @@ class ProfileIntermediateConverter:
 
         Find the peilgebiedID by hydroobject code.
         """
-        if not hasattr(self, "hydroobject_linemerged"):
-            self.logger.error("Linemerged hydroobjects not yet processed.")
-            return None
+
+        self.data._ensure_loaded(layers=["hydroobject_linemerged"], previous_method="process_linemerge")
 
         # First, find the linemergeID for this hydroobject code
         if code in self.hydroobject_map:
@@ -976,10 +959,9 @@ class ProfileIntermediateConverter:
 
         Find the deepest point for a hydroobject by its code.
         """
-        if self.data.hydroobject is None:
-            raise ValueError("hydroobject is not loaded. Call load_layers() first.")
-        if self.data.profielgroep is None:
-            raise ValueError("profielgroep is not loaded. Call create_profile_tables() first.")
+        self.data._ensure_loaded(layers=["hydroobject"], previous_method="load_layers")
+        self.data._ensure_loaded(layers=["profielgroep"], previous_method="create_profile_tables")
+
         if "diepstePunt" not in self.data.hydroobject.columns:
             raise ValueError(
                 "diepstePunt column is not present in hydroobject. Call compute_deepest_point_hydroobjects() first."
