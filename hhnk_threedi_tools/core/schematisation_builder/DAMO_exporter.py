@@ -103,7 +103,7 @@ def DAMO_exporter(
     intermediate.add_columns_to_pomp()
     intermediate.update_pomp_layer()
     intermediate.intesected_pump_peilgebiden()
-
+    intermediate.gemaal_streefpeil_value()
     return logging_DAMO
 
 
