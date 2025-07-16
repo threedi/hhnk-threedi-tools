@@ -149,11 +149,86 @@ class PompIntermediateConverter:
                 gemaal_spatial_join[["code", "distance_to_peilgebied"]], on="code", how="left"
             )
 
-            # save the layer in DAMO TOFIX """"SHOULD I SAVE IT IN DAMO OR HYDAMO"""
+            # save the layer in DAMO
             gdf_gemaal.to_file(self.damo_file_path, layer="GEMAAL", driver="GPKG")
 
         else:
             print("column distance_to_peilgebied already exists")
+
+    def gemaal_streefpeil_value(self):
+        self.load_layers()
+        buffer_gemaal = self.gemaal.buffer(distance=1)
+
+        # Intersect buffer_gemaal with self.combinatiepeilgebied
+        buffer_gemaal_gdf = gpd.GeoDataFrame(self.gemaal.copy(), geometry=buffer_gemaal, crs=self.gemaal.crs)
+        buffer_gemaal.drop_duplicates()
+        gemaal_intersect_peilgebied = gpd.overlay(buffer_gemaal_gdf, self.combinatiepeilgebied, how="intersection")
+
+        # Rename all the columns, removing the "_1" if they have it
+        gemaal_intersect_peilgebied.columns = [
+            col[:-2] if col.endswith("_1") else col for col in gemaal_intersect_peilgebied.columns
+        ]
+
+        # Join columns 'streefpeil_zomer', 'streefpeil_winter', 'soort_streefpeilom'
+        columns_to_join = ["streefpeil_zomer", "streefpeil_winter", "soort_streefpeilom", "code_2"]
+        columns_to_keep = self.gemaal.columns.to_list() + columns_to_join
+        gemaal = gemaal_intersect_peilgebied[columns_to_keep].drop_duplicates()
+        codes = gemaal["code"].to_list()
+        for code in codes:
+            code_selection = gemaal[gemaal["code"] == code]
+
+            code_streefpeils = ", ".join(str(x) for x in code_selection["code_2"].values.tolist())
+
+            gemaal.loc[gemaal["code"] == code, "streefpeils_codes"] = code_streefpeils
+
+            if len(code_selection) > 1:
+                values_zomer = code_selection["streefpeil_zomer"].values.tolist()
+                values_winter = code_selection["streefpeil_winter"].values.tolist()
+
+                for i in range(len(values_zomer) - 1):
+                    iqual = np.equal(values_zomer[i], values_zomer[i + 1])
+                    if iqual == True:
+                        gemaal.loc[gemaal["code"] == code, "streefpeil_zomer_value_praktijk"] = values_zomer[0]
+                        gemaal.loc[gemaal["code"] == code, "streefpeil_zomer_value_afwijking"] = values_zomer[0]
+                    else:
+                        gemaal.loc[gemaal["code"] == code, "streefpeil_zomer_value_praktijk"] = values_zomer[0]
+                        gemaal.loc[gemaal["code"] == code, "streefpeil_zomer_value_afwijking"] = values_zomer[1]
+                for i in range(len(values_winter) - 1):
+                    iqual = np.equal(values_winter[i], values_winter[i + 1])
+                    if iqual == True:
+                        gemaal.loc[gemaal["code"] == code, "streefpeil_winter_value_praktijk"] = values_winter[0]
+                        gemaal.loc[gemaal["code"] == code, "streefpeil_winter_value_afwijking"] = values_winter[0]
+                    else:
+                        gemaal.loc[gemaal["code"] == code, "streefpeil_winter_value_praktijk"] = values_winter[0]
+                        gemaal.loc[gemaal["code"] == code, "streefpeil_winter_value_afwijking"] = values_winter[1]
+            else:
+                values_zomer = code_selection["streefpeil_zomer"].values.tolist()
+                values_winter = code_selection["streefpeil_winter"].values.tolist()
+                gemaal.loc[gemaal["code"] == code, "streefpeil_zomer_value_praktijk"] = values_zomer[0]
+                gemaal.loc[gemaal["code"] == code, "streefpeil_zomer_value_afwijking"] = values_zomer[0]
+                gemaal.loc[gemaal["code"] == code, "streefpeil_winter_value_praktijk"] = values_winter[0]
+                gemaal.loc[gemaal["code"] == code, "streefpeil_winter_value_afwijking"] = values_winter[0]
+
+        gemaal_disolve = gemaal.dissolve(by="code").drop(
+            columns=["streefpeil_zomer", "streefpeil_winter", "soort_streefpeilom", "code_2"]
+        )
+        # Select columns to join
+        columns_to_merge = [
+            "code",
+            "streefpeils_codes",
+            "streefpeil_zomer_value_praktijk",
+            "streefpeil_zomer_value_afwijking",
+            "streefpeil_winter_value_praktijk",
+            "streefpeil_winter_value_afwijking",
+        ]
+        gemaal_buffer_subset = gemaal_disolve.reset_index(drop=False)[columns_to_merge]
+
+        # # Merge the dataframes on the 'code' column
+        gemaal_point = self.gemaal.drop_duplicates().merge(gemaal_buffer_subset, on="code", how="left")
+
+        # save the layer in DAMO
+        gemaal_point.to_file(self.damo_file_path, layer="GEMAAL", driver="GPKG")
+        # return gemaal_point
 
 
 # %%
@@ -162,10 +237,11 @@ if __name__ == "__main__":
     folder = Folders(project_folder)
     damo = folder.source_data.path / "DAMO.gpkg"
     intermediate_convertion = PompIntermediateConverter(damo)
-    intersect_gemaal = intermediate_convertion.intesected_pump_peilgebiden()
+    pump_function = intermediate_convertion.gemaal_streefpeil_value()
+
 
 # delete specific layters that are inside geopackge.
-# # %%
+# %%
 # import fiona
 
 # def delete_layer_from_geopackage(geopackage_path, layer_to_delete):
