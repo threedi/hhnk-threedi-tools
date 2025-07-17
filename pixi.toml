@@ -98,9 +98,6 @@ threedigrid = "==2.3.5"
 threedidepth = "==0.6.3"
 lazy_loader= "*"
 
-# modellen repo deps
-gitpython="==3.1.44"
-
 # HHNK deps
 hhnk-threedi-tools = { path = ".", editable = true }
 
@@ -175,6 +172,9 @@ pip = "*"
 urllib3= "1.*"
 
 ruff = "*"
+
+# modellen repo deps
+gitpython="==3.1.44"
 
 
 [feature.py39.pypi-dependencies]
