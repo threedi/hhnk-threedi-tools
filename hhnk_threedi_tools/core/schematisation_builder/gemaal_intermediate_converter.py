@@ -150,18 +150,25 @@ class PompIntermediateConverter:
             )
 
             # save the layer in DAMO
-            gdf_gemaal.to_file(self.damo_file_path, layer="GEMAAL", driver="GPKG")
+            gdf_gemaal.drop_duplicates().to_file(self.damo_file_path, layer="GEMAAL", driver="GPKG")
 
         else:
             print("column distance_to_peilgebied already exists")
 
     def gemaal_streefpeil_value(self):
+        # load DAMO layers
         self.load_layers()
+
+        # Make a buffer using the gemaal point shapefile to be intersected with the combinatiepeilgebied
         buffer_gemaal = self.gemaal.buffer(distance=1)
 
-        # Intersect buffer_gemaal with self.combinatiepeilgebied
+        # Intersect buffer_gemaal with combinatiepeilgebied
         buffer_gemaal_gdf = gpd.GeoDataFrame(self.gemaal.copy(), geometry=buffer_gemaal, crs=self.gemaal.crs)
+
+        # drop duplicantes
         buffer_gemaal.drop_duplicates()
+
+        # intersect gemaaal buffer with the combined peilgebied
         gemaal_intersect_peilgebied = gpd.overlay(buffer_gemaal_gdf, self.combinatiepeilgebied, how="intersection")
 
         # Rename all the columns, removing the "_1" if they have it
@@ -169,46 +176,73 @@ class PompIntermediateConverter:
             col[:-2] if col.endswith("_1") else col for col in gemaal_intersect_peilgebied.columns
         ]
 
-        # Join columns 'streefpeil_zomer', 'streefpeil_winter', 'soort_streefpeilom'
+        # select columns 'streefpeil_zomer', 'streefpeil_winter', 'soort_streefpeilom' to join from gemaal_intersect_peilgebied
         columns_to_join = ["streefpeil_zomer", "streefpeil_winter", "soort_streefpeilom", "code_2"]
+
+        # gather all the columns to be used
         columns_to_keep = self.gemaal.columns.to_list() + columns_to_join
+
+        # create a subset using the desired columns, and drop duplicates from the intersection between gemaal and the combined peilgebied
         gemaal = gemaal_intersect_peilgebied[columns_to_keep].drop_duplicates()
+
+        # Select codes in a list to be used in a for loop
         codes = gemaal["code"].to_list()
         for code in codes:
+            # Select features with the same code value
             code_selection = gemaal[gemaal["code"] == code]
 
+            # Save the codes from the streefpeil to be store in a new column
             code_streefpeils = ", ".join(str(x) for x in code_selection["code_2"].values.tolist())
 
+            # Save the code from de peilgebied in the column streefpeils_code
             gemaal.loc[gemaal["code"] == code, "streefpeils_codes"] = code_streefpeils
 
-            if len(code_selection) > 1:
-                values_zomer = code_selection["streefpeil_zomer"].values.tolist()
-                values_winter = code_selection["streefpeil_winter"].values.tolist()
+            # Select the waterlevel values in zomer and in winter
+            values_zomer = code_selection["streefpeil_zomer"].values.tolist()
+            values_winter = code_selection["streefpeil_winter"].values.tolist()
 
+            # Check is the selection made previously have more than 1 feature. If there is no, the point does not fall in a boundary
+            if len(code_selection) > 1:
+                # loop over the zomer values
                 for i in range(len(values_zomer) - 1):
+                    # check if they are the same for the streefpeil praktijk and the sreefpeil afwijking
                     iqual = np.equal(values_zomer[i], values_zomer[i + 1])
+
+                    # if they are the same store the same value in two separeted columns
                     if iqual == True:
-                        gemaal.loc[gemaal["code"] == code, "streefpeil_zomer_value_praktijk"] = values_zomer[0]
-                        gemaal.loc[gemaal["code"] == code, "streefpeil_zomer_value_afwijking"] = values_zomer[0]
+                        gemaal.loc[
+                            gemaal["code"] == code,
+                            ["streefpeil_zomer_value_praktijk", "streefpeil_zomer_value_afwijking"],
+                        ] = [values_zomer[0], values_zomer[0]]
+                    # if are diferent store those values also
                     else:
                         gemaal.loc[gemaal["code"] == code, "streefpeil_zomer_value_praktijk"] = values_zomer[0]
                         gemaal.loc[gemaal["code"] == code, "streefpeil_zomer_value_afwijking"] = values_zomer[1]
+                # loop over the winter values
                 for i in range(len(values_winter) - 1):
+                    # check if they have the same values
                     iqual = np.equal(values_winter[i], values_winter[i + 1])
-                    if iqual == True:
-                        gemaal.loc[gemaal["code"] == code, "streefpeil_winter_value_praktijk"] = values_winter[0]
-                        gemaal.loc[gemaal["code"] == code, "streefpeil_winter_value_afwijking"] = values_winter[0]
-                    else:
-                        gemaal.loc[gemaal["code"] == code, "streefpeil_winter_value_praktijk"] = values_winter[0]
-                        gemaal.loc[gemaal["code"] == code, "streefpeil_winter_value_afwijking"] = values_winter[1]
-            else:
-                values_zomer = code_selection["streefpeil_zomer"].values.tolist()
-                values_winter = code_selection["streefpeil_winter"].values.tolist()
-                gemaal.loc[gemaal["code"] == code, "streefpeil_zomer_value_praktijk"] = values_zomer[0]
-                gemaal.loc[gemaal["code"] == code, "streefpeil_zomer_value_afwijking"] = values_zomer[0]
-                gemaal.loc[gemaal["code"] == code, "streefpeil_winter_value_praktijk"] = values_winter[0]
-                gemaal.loc[gemaal["code"] == code, "streefpeil_winter_value_afwijking"] = values_winter[0]
 
+                    # if they are the same store the same value in two separeted columns
+                    if iqual == True:
+                        gemaal.loc[
+                            gemaal["code"] == code,
+                            ["streefpeil_winter_value_praktijk", "streefpeil_winter_value_afwijking"],
+                        ] = [values_winter[0], values_winter[0]]
+
+                    # if are diferent store those values also
+                    else:
+                        gemaal.loc[
+                            gemaal["code"] == code,
+                            ["streefpeil_winter_value_praktijk", "streefpeil_winter_value_afwijking"],
+                        ] = [values_winter[0], values_winter[1]]
+            # If there only one value then save those values in the streefpeil praktijk
+            else:
+                gemaal.loc[gemaal["code"] == code, "streefpeil_zomer_value_praktijk"] = values_zomer[0]
+
+                gemaal.loc[gemaal["code"] == code, "streefpeil_winter_value_praktijk"] = values_winter[0]
+
+        # dissolve the values using the column code and drop the columns:"streefpeil_zomer", "streefpeil_winter", "soort_streefpeilom", "code_2"
         gemaal_disolve = gemaal.dissolve(by="code").drop(
             columns=["streefpeil_zomer", "streefpeil_winter", "soort_streefpeilom", "code_2"]
         )
@@ -221,9 +255,10 @@ class PompIntermediateConverter:
             "streefpeil_winter_value_praktijk",
             "streefpeil_winter_value_afwijking",
         ]
+        # reset the index column and select only the columns set it in the previous step
         gemaal_buffer_subset = gemaal_disolve.reset_index(drop=False)[columns_to_merge]
 
-        # # Merge the dataframes on the 'code' column
+        # Merge the dataframes on the 'code' column using the gemaal buffer subet
         gemaal_point = self.gemaal.drop_duplicates().merge(gemaal_buffer_subset, on="code", how="left")
 
         # save the layer in DAMO
