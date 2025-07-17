@@ -22,7 +22,7 @@ keywords = []
 repository = "https://github.com/threedi/hhnk-threedi-tools"
 
 [tool.setuptools]
-packages = { find = { include = ["hhnk_threedi_tools"] } }
+packages = { find = { where = ["hhnk_threedi_tools"] } }
 include-package-data = true
 
 # FORMATTING

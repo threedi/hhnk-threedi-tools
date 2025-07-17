@@ -177,7 +177,7 @@ threedidepth = "==0.6.3" # threedi_results_analysis 3.9.0
 hhnk-research-tools = { git = "https://github.com/hhnk/hhnk-research-tools.git", rev = "main" }
 hydamo_validation = { git = "https://github.com/hhnk/HyDAMOValidatieModule.git", rev = "main" }
 
-#Editable installs
+# editable installs
 hhnk_threedi_tools = { path = ".", editable = true }
 
 [feature.py39.target.win-64.pypi-dependencies]
