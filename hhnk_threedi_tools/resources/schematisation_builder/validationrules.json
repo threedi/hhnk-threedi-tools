@@ -1206,7 +1206,7 @@
 					"type": "logic",
 					"validation_rule_set": "hhnk",
 					"error_type": "non-critical",
-					"result_variable": "zomer doorstroom_gemaal",
+					"result_variable": "zomer_doorstroom_gemaal",
 					"error_message": "gemaal type anders",
 					"active": true,
 					"function": {
@@ -1222,7 +1222,7 @@
 					"type": "logic",
 					"validation_rule_set": "hhnk",
 					"error_type": "non-critical",
-					"result_variable": "winter doorstroom_gemaal",
+					"result_variable": "winter_doorstroom_gemaal",
 					"error_message": "gemaal type anders",
 					"active": true,
 					"function": {
