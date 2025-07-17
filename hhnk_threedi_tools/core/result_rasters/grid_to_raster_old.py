@@ -15,6 +15,7 @@ from scipy.spatial import Delaunay
 from threedidepth import morton
 from threedigrid.admin.constants import NO_DATA_VALUE
 
+# import logging
 from hhnk_threedi_tools.core.folders import Folders
 
 logger = hrt.logging.get_logger(__name__)

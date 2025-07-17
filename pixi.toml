@@ -32,12 +32,13 @@ pre-commit-run = "pre-commit run --all-files"
 # Upload to PyPi to make it available with pip
 upload_pypi = "twine upload --repository hhnk-threedi-tools  dist/*"
 
-[feature.dev.tasks]
 #Styling
 sort_imports = "ruff check  ./**/*.py --select I --fix --force-exclude"
 fmt = "ruff format ./**/*.py --force-exclude"
 style = {depends-on = ["sort_imports", "fmt"]} # `pixi run style`
 
+
+[feature.dev.tasks]
 build_wheels = "rm -rf dist/ && python -m build" # build wheels
 twine_check = "twine check dist/*"
 build = { depends-on = ["build_wheels", "twine_check"] }
@@ -47,6 +48,9 @@ build = { depends-on = ["build_wheels", "twine_check"] }
 # FIXME change env in pytests_threedi_tools.yml as well
 [feature.py39.tasks]
 tests = "pytest --cov-report term-missing --cov=hhnk_threedi_tools --cov-report=xml"
+sort_imports-check = "ruff check  ./**/*.py --select I --force-exclude"
+fmt-check = "ruff format ./**/*.py --check --force-exclude"
+style-check = {depends-on = ["sort_imports-check", "fmt-check"]} # raises errors instead of fixing
 
 
 [dependencies]
@@ -70,6 +74,7 @@ matplotlib = "*"  # 3.9.0 gives RuntimeError: Entry point name 'inline' duplicat
 rasterstats = "*"
 rioxarray = "*"
 rtree = "*"
+ruff = "*"
 seaborn = "*"
 oracledb = "*"
 pyogrio = "*"
@@ -89,6 +94,10 @@ threedi-scenario-downloader = "*"
 threedi_mi_utils = "==0.1.10"
 threedigrid = "==2.3.5"
 threedidepth = "==0.6.3"
+lazy_loader= "*"
+
+# modellen repo deps
+gitpython="==3.1.40"
 
 # HHNK deps
 hhnk-threedi-tools = { path = ".", editable = true }
@@ -105,7 +114,6 @@ ipywidgets = "*"
 jupytext = "*"
 pre-commit = "*"
 twine="*"
-ruff = "*"
 
 # Datachecker
 flask = "*"  # oude datachecker
@@ -144,10 +152,8 @@ jupyterlab = "==4.2.0"
 ipywidgets = "==8.1.2"
 jupytext = "==1.16.6"
 
-pytest = "==7.2.2"
+pytest = "*"
 pytest-cov = "*"
-pluggy = "==1.0.0" # pytest dependency
-iniconfig = "==2.0.0" # pytest dependency
 tqdm = "==4.64.0"
 rioxarray = "==0.15.0" # higher versions need python >=3.10
 pyogrio = "==0.7.2" # 0.9.0 doesnt work with gdal
@@ -165,9 +171,12 @@ oracledb = "==2.4.1"
 seaborn = "*"
 pip = "*"
 urllib3= "1.*"
-gitpython="==3.1.40"
+
+ruff = "*"
+
 
 [feature.py39.pypi-dependencies]
+lazy_loader= "*"
 threedi_modelchecker = "==2.6.3" # threedi_results_analysis 3.9.0
 threedi_scenario_downloader = "==1.4" # Lizard API v4 only
 threedi_schema = "==0.219.3" # threedi_results_analysis 3.9.0
@@ -175,7 +184,7 @@ threedi-api-client = "==4.1.7" # 3Di Models and Simulations 3.11.0
 threedigrid = "==2.3.3" # threedi_results_analysis 3.12.0
 threedidepth = "==0.6.3" # threedi_results_analysis 3.9.0
 hhnk-research-tools = { git = "https://github.com/hhnk/hhnk-research-tools.git", rev = "main" }
-hydamo_validation = { git = "https://github.com/hhnk/HyDAMOValidatieModule.git", rev = "main" }
+# hydamo_validation = { git = "https://github.com/hhnk/HyDAMOValidatieModule.git", rev = "main" }
 
 # editable installs
 hhnk_threedi_tools = { path = ".", editable = true }

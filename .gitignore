@@ -3,6 +3,7 @@ __pycache__
 *.aux.xml
 *.egg-info
 .ipynb_checkpoints
+.mypy_cache
 
 build
 dist
@@ -11,6 +12,7 @@ Thumbs.db
 local_settings.py
 local_settings_htt.py
 notebook_data.json
+debug.log
 
 tests/tests_git_model_repo/tmp_output*
 hhnk-research-tools

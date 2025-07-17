@@ -12,14 +12,20 @@ Used in QGIS with this plugin:
 [https://github.com/threedi/hhnk-threedi-plugin](https://github.com/threedi/hhnk-threedi-plugin)
 **Documentation**: [https://threedi.github.io/hhnk-threedi-plugin](https://threedi.github.io/hhnk-threedi-plugin)
 
-# Local installation/ development
 
-## Install
+# Development Setup
+Development is done in vs-code with Pixi environment.
+To setup the env;
 
-```shell
-# from root of this repo
-conda env create -f envs\environment_test.yml
-```
+`pixi install -e dev`
+`pixi shell -e dev`
+`pixi run postinstall` -> installs hrt, validatiemodule and githooks
+
+
+2025-06 -> migration towards python 3.12.
+Not all checks work yet on 3.12. The github checks therefore run on py39
+Tests this locally with
+`pixi run -e py39 tests`
 
 # Model Repository
 
@@ -44,18 +50,4 @@ initialize git LFS (Large File Storage), create or append to the .gitattributes 
 <root of hhnk-treedi-tools repo>/hhnk_threedi_tools/git_model_repo/bin/linux/initialize_repo.sh
 # or from other path
 <root of hhnk-treedi-tools repo>/hhnk_threedi_tools/git_model_repo/bin/linux/initialize_repo.sh <path to model repo>
-```
-
-### Configure .env file
-
-configure a `.env` file in the root of the hhnk-threedi-tools repo, with the content:
-
-```
-# `.env` file in the root of the hhnk-threedi-tools repo
-CONDA_CMD=mamba
-ACTIVE_ENV=threedipy
-```
-
-```
-mamba init
 ```
