@@ -32,8 +32,12 @@ class DAMO_to_HyDAMO_Converter:
         List of layer names to convert to HyDAMO
     hydamo_schema_path : Path
         Path to the HyDAMO schema (json file)
+    hydamo_version: str
+        Version number of the HyDAMO schema (format: 1.1, 3.2.1, 4.0, etc)
     damo_schema_path : Path
-        Path to the DAMO schema (xml file)
+        Path to the DAMO schema (xml file)    
+    damo_version: str
+        Version number of the HyDAMO schema (format: 1.1, 3.2.1, 4.0, etc)
     overwrite : bool
         If True, overwrite an existing layer in existing HyDAMO geopackage
 
@@ -49,7 +53,9 @@ class DAMO_to_HyDAMO_Converter:
         hydamo_file_path: Union[Path, hrt.SpatialDatabase],
         layers: list,
         hydamo_schema_path: Optional[Path] = None,
+        hydamo_version: str = None,
         damo_schema_path: Optional[Path] = None,
+        damo_version: str = None,
         overwrite: bool = False,
         logger=None,
     ):
@@ -66,18 +72,32 @@ class DAMO_to_HyDAMO_Converter:
         self.logger.info(f"conversion layers are {self.layers}")
 
         if hydamo_schema_path is None:
+            if "." not in hydamo_version:
+                raise ValueError("HyDAMO version number is in incorrect format. Should be: 1.1, 3.2.1, 4.0, etc.")
+            if hydamo_version not in ["2.3", "2.4"]:
+                raise ValueError(f"HyDAMO version number {hydamo_version} is not implemented or incorrect. Choose another.")
+            hydamo_name = f"HyDAMO_{hydamo_version.replace(".","_")}.json"
             self.hydamo_schema_path = hrt.get_pkg_resource_path(
-                package_resource=htt.resources.schematisation_builder, name="HyDAMO_2_3.json"
+                package_resource=htt.resources.schematisation_builder, name=hydamo_name
             )
         else:
             self.hydamo_schema_path = Path(hydamo_schema_path)
+        if not self.hydamo_schema_path.exists():
+            raise FileNotFoundError(f"{self.hydamo_schema_path} does not exist.")
 
         if damo_schema_path is None:
+            if "." not in damo_version:
+                raise ValueError("DAMO version number is in incorrect format. Should be: 1.1, 3.2.1, 4.0, etc.")
+            if damo_version not in ["2.3", "2.4.1", "2.5"]:
+                raise ValueError(f"DAMO version number {damo_version} is not implemented or incorrect. Choose another.")
+            damo_name = f"DAMO_{damo_version.replace(".","_")}.xml"
             self.damo_schema_path = hrt.get_pkg_resource_path(
-                package_resource=htt.resources.schematisation_builder, name="DAMO_2_3.xml"
+                package_resource=htt.resources.schematisation_builder, name=damo_name
             )
         else:
             self.damo_schema_path = Path(damo_schema_path)
+        if not self.damo_schema_path.exists():
+            raise FileNotFoundError(f"{self.damo_schema_path} does not exist.")
 
         self.domains, self.objects = self.retrieve_domain_mapping()
 

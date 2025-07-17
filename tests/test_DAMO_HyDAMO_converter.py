@@ -12,7 +12,6 @@ temp_dir_out = TEMP_DIR / f"temp_DAMO_HyDAMO_converter_{hrt.current_time(date=Tr
 
 # %%
 
-
 def test_DAMO_HyDAMO_converter():
     """
     - If domain values in DAMO are converted to descriptive values in HyDAMO
@@ -25,6 +24,8 @@ def test_DAMO_HyDAMO_converter():
     converter = DAMO_to_HyDAMO_Converter(
         damo_file_path=damo_file_path,
         hydamo_file_path=hydamo_file_path,
+        damo_version="2.3",
+        hydamo_version="2.3",
         layers=LAYERS,
         overwrite=False,
     )
