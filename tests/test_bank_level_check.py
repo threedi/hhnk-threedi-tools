@@ -4,6 +4,7 @@ Note: the curent tests are only ran to check if the functions work.
 They still must be checked qualitatively
 
 """
+
 import sys
 
 import pytest
@@ -14,7 +15,7 @@ from tests.config import FOLDER_TEST
 # pd.options.mode.chained_assignment = 'raise' #catch SettingWithCopyWarning
 
 
-@pytest.mark.skipif('threedigrid_builder' not in sys.modules, reason="threedigrid_builder not installed")
+@pytest.mark.skipif("threedigrid_builder" not in sys.modules, reason="threedigrid_builder not installed")
 class TestBankLevel:
     @pytest.fixture(scope="class")
     def bl_test(self):

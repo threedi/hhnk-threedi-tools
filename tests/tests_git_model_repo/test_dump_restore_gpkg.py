@@ -80,21 +80,21 @@ class TestDumpAndRestoreGeopackage:
 
         assert source.GetLayerCount() == 1
         assert layer.GetFeatureCount() == 2
-        assert layer.GetName() == 'test_geopackage'
+        assert layer.GetName() == "test_geopackage"
         assert layer.GetGeomType() == ogr.wkbPoint
         assert layer.GetLayerDefn().GetFieldCount() == 4
 
-        date_field = layer_def.GetFieldDefn(layer_def.GetFieldIndex('last_modified'))
+        date_field = layer_def.GetFieldDefn(layer_def.GetFieldIndex("last_modified"))
         assert date_field.GetType() == ogr.OFTDateTime
-        float_field = layer_def.GetFieldDefn(layer_def.GetFieldIndex('water_level'))
+        float_field = layer_def.GetFieldDefn(layer_def.GetFieldIndex("water_level"))
         assert float_field.GetType() == ogr.OFTReal
-        int_field = layer_def.GetFieldDefn(layer_def.GetFieldIndex('id'))
+        int_field = layer_def.GetFieldDefn(layer_def.GetFieldIndex("id"))
         assert int_field.GetType() == ogr.OFTInteger64
-        string_field = layer_def.GetFieldDefn(layer_def.GetFieldIndex('code'))
+        string_field = layer_def.GetFieldDefn(layer_def.GetFieldIndex("code"))
         assert string_field.GetType() == ogr.OFTString
         assert string_field.GetWidth() == 12
 
-        slayer = fiona.open(self.test_fields_gpkg, 'r')
+        slayer = fiona.open(self.test_fields_gpkg, "r")
         ref = layer.GetSpatialRef()
         assert ref.ExportToWkt() == slayer.crs_wkt
 
@@ -113,15 +113,15 @@ class TestDumpAndRestoreGeopackage:
         layers = {l.GetName(): l for l in source}
 
         assert source.GetLayerCount() == 4
-        assert layers['points'].GetFeatureCount() == 4
-        assert layers['lines'].GetFeatureCount() == 2
-        assert layers['multi_polygons'].GetFeatureCount() == 1
-        assert layers['no_geom'].GetFeatureCount() == 2
+        assert layers["points"].GetFeatureCount() == 4
+        assert layers["lines"].GetFeatureCount() == 2
+        assert layers["multi_polygons"].GetFeatureCount() == 1
+        assert layers["no_geom"].GetFeatureCount() == 2
 
-        assert layers['points'].GetGeomType() == ogr.wkbPoint
+        assert layers["points"].GetGeomType() == ogr.wkbPoint
 
         # test FID restore, the key
-        features = [f.GetFID() for f in layers['points']]
+        features = [f.GetFID() for f in layers["points"]]
 
         assert features == [1, 4, 9, 10]
 
@@ -132,59 +132,58 @@ class TestDumpAndRestoreGeopackage:
         os.makedirs(tmp_path, exist_ok=True)
 
         # make initial fill
-        slayer = fiona.open(self.test_fields_gpkg, 'r')
+        slayer = fiona.open(self.test_fields_gpkg, "r")
 
         dest_src = fiona.open(
             tmp_file_path,
-            'w',
-            driver='GPKG',
+            "w",
+            driver="GPKG",
             crs=slayer.crs,
             schema={
                 "properties": {
-                    'id': 'int',
-                    'fid': 'int',
+                    "id": "int",
+                    "fid": "int",
                 },
-                "geometry": "Point"
+                "geometry": "Point",
             },
-            layer='test_exra',
-            FID='fid',
+            layer="test_exra",
+            FID="fid",
             overwrite=True,
         )
         dest_src.close()
 
         dest_src = fiona.open(
             tmp_file_path,
-            'w',
-            driver='GPKG',
+            "w",
+            driver="GPKG",
             crs=slayer.crs,
             schema={
                 "properties": {
-                    'id': 'int',
-                    'fid': 'int',
+                    "id": "int",
+                    "fid": "int",
                 },
-                "geometry": "Point"
+                "geometry": "Point",
             },
-            layer='test_geopackage',
-            FID='fid',
+            layer="test_geopackage",
+            FID="fid",
             overwrite=True,
         )
 
         for i in range(10):
-            dest_src.write({
-                'geometry': {
-                    'type': 'Point',
-                    'coordinates': [5.0, 52.0]
-                },
-                'properties': {
-                    'id': i,
-                    'fid': i,
+            dest_src.write(
+                {
+                    "geometry": {"type": "Point", "coordinates": [5.0, 52.0]},
+                    "properties": {
+                        "id": i,
+                        "fid": i,
+                    },
                 }
-            })
+            )
         dest_src.close()
 
         # test initial fill to compare with
         source = ogr.Open(tmp_file_path, 0)
-        layer = source.GetLayer('test_geopackage')
+        layer = source.GetLayer("test_geopackage")
 
         assert source.GetLayerCount() == 2
         assert layer.GetFeatureCount() == 10
@@ -195,7 +194,7 @@ class TestDumpAndRestoreGeopackage:
         restorer.restore_layers()
 
         source = ogr.Open(tmp_file_path, 0)
-        layer = source.GetLayer('test_geopackage')
+        layer = source.GetLayer("test_geopackage")
 
         assert source.GetLayerCount() == 2
         assert layer.GetFeatureCount() == 2
