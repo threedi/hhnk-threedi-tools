@@ -35,7 +35,7 @@ class DAMO_to_HyDAMO_Converter:
     hydamo_version: str
         Version number of the HyDAMO schema (format: 1.1, 3.2.1, 4.0, etc)
     damo_schema_path : Path
-        Path to the DAMO schema (xml file)    
+        Path to the DAMO schema (xml file)
     damo_version: str
         Version number of the HyDAMO schema (format: 1.1, 3.2.1, 4.0, etc)
     overwrite : bool
@@ -75,8 +75,10 @@ class DAMO_to_HyDAMO_Converter:
             if "." not in hydamo_version:
                 raise ValueError("HyDAMO version number is in incorrect format. Should be: 1.1, 3.2.1, 4.0, etc.")
             if hydamo_version not in ["2.3", "2.4"]:
-                raise ValueError(f"HyDAMO version number {hydamo_version} is not implemented or incorrect. Choose another.")
-            hydamo_name = f"HyDAMO_{hydamo_version.replace(".","_")}.json"
+                raise ValueError(
+                    f"HyDAMO version number {hydamo_version} is not implemented or incorrect. Choose another."
+                )
+            hydamo_name = f"HyDAMO_{hydamo_version.replace('.', '_')}.json"
             self.hydamo_schema_path = hrt.get_pkg_resource_path(
                 package_resource=htt.resources.schematisation_builder, name=hydamo_name
             )
@@ -89,8 +91,10 @@ class DAMO_to_HyDAMO_Converter:
             if "." not in damo_version:
                 raise ValueError("DAMO version number is in incorrect format. Should be: 1.1, 3.2.1, 4.0, etc.")
             if damo_version not in ["2.3", "2.4.1", "2.5"]:
-                raise ValueError(f"DAMO version number {damo_version} is not implemented or incorrect. Choose another.")
-            damo_name = f"DAMO_{damo_version.replace(".","_")}.xml"
+                raise ValueError(
+                    f"DAMO version number {damo_version} is not implemented or incorrect. Choose another."
+                )
+            damo_name = f"DAMO_{damo_version.replace('.', '_')}.xml"
             self.damo_schema_path = hrt.get_pkg_resource_path(
                 package_resource=htt.resources.schematisation_builder, name=damo_name
             )

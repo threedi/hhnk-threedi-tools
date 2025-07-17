@@ -287,5 +287,3 @@ def DB_exporter(
             logging.append(error)
 
     return logging
-
-
