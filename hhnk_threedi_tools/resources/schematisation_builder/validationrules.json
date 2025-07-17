@@ -1205,9 +1205,9 @@
 					"name": "zomer praktijk streefpeil value",
 					"type": "logic",
 					"validation_rule_set": "hhnk",
-					"error_type": "critical",
+					"error_type": "non-critical",
 					"result_variable": "zomer doorstroom_gemaal",
-					"error_message": "gemaal type anders ",
+					"error_message": "gemaal type anders",
 					"active": true,
 					"function": {
 						"EQ": {
@@ -1221,9 +1221,9 @@
 					"name": "winter praktijk streefpeil value",
 					"type": "logic",
 					"validation_rule_set": "hhnk",
-					"error_type": "critical",
+					"error_type": "non-critical",
 					"result_variable": "winter doorstroom_gemaal",
-					"error_message": "gemaal type anders ",
+					"error_message": "gemaal type anders",
 					"active": true,
 					"function": {
 						"EQ": {
