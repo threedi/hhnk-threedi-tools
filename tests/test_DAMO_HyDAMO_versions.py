@@ -1,5 +1,13 @@
-import json
-from pathlib import Path
+if __name__ == "__main__":
+    from pathlib import Path
+    import sys
+
+    root = Path(__file__).resolve()
+    while root.name != "hhnk-threedi-tools" or root.parent.name == "hhnk-threedi-tools":
+        root = root.parent
+
+    if str(root) not in sys.path:
+        sys.path.insert(0, str(root))
 
 import geopandas as gpd
 import hhnk_research_tools as hrt
