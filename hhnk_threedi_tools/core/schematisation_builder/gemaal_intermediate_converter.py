@@ -118,14 +118,18 @@ class PompIntermediateConverter:
 
     def intesected_pump_peilgebiden(self):
         # transform MULTIPOLYGON  to LINESTRING
-        # self.polder_polygon
         self.load_layers()
+        # check if the columns exists.
         if "distance_to_peilgebied" not in self.gemaal.columns:
+            # make a copy of the combinatiepeilgebied.
             gdf_peilgebiedpraktijk_linestring = self.combinatiepeilgebied.copy()
 
+            # transform multiploygon to lines geom.boundary
             gdf_peilgebiedpraktijk_linestring["geometry"] = gdf_peilgebiedpraktijk_linestring["geometry"].apply(
                 lambda geom: geom.boundary if geom.type == "MultiPolygon" else geom
             )
+
+            # explode lines into part and reset index
             gdf_peilgebiedpraktijk_linestring = gdf_peilgebiedpraktijk_linestring.explode(index_parts=True)
             gdf_peilgebiedpraktijk_linestring = gdf_peilgebiedpraktijk_linestring.reset_index(drop=True)
 
