@@ -61,6 +61,17 @@ def test_profile_intermediate_converter():
     diepte_nat_profiel = 1.32
     jaarinwinning = 2012
 
+    # Test variables for profile on primary watergang without profile
+    hydroobject_code_no_profile = "OAF-Q-36452"  # near end peilgebied
+    nearest_profiellijn_code_it_should_connect_to = 62421
+    deepest_point_hydroobject_no_profile = -4.57
+
+    # Test variables for profileline ascending and descending
+    profiellijn_code_ascending = 3849
+    profiellijn_code_descending = 58315
+
+    # %%
+
     # Check for a single hydroobject
     linemerge_id = converter.find_linemerge_id_by_hydroobject_code(hydroobject_code)
     assert linemerge_id is not None
@@ -109,11 +120,6 @@ def test_profile_intermediate_converter():
         converter.data.profiellijn[converter.data.profiellijn["code"] == profiellijn_code]["diepstePunt"].iloc[0]
         == diepste_punt_profiel
     )
-
-    # Test variables for profile on primary watergang without profile
-    hydroobject_code_no_profile = "OAF-Q-36452"  # near end peilgebied
-    nearest_profiellijn_code_it_should_connect_to = 62421
-    deepest_point_hydroobject_no_profile = -4.57
 
     # Check it is not connected to a profile
     pl_2 = converter._find_profiellijn_by_hydroobject_code(hydroobject_code_no_profile)
@@ -175,8 +181,18 @@ def test_profile_intermediate_converter():
 
     # VALIDATION PARAMETER (5): check if profielpunt is in ascending order
     converter.compute_if_ascending()
-    assert converter.data.profiellijn[converter.data.profiellijn["code"] == 3849]["isAscending"].iloc[0] == 1
-    assert converter.data.profiellijn[converter.data.profiellijn["code"] == 58315]["isAscending"].iloc[0] == 0
+    assert (
+        converter.data.profiellijn[converter.data.profiellijn["code"] == profiellijn_code_ascending][
+            "isAscending"
+        ].iloc[0]
+        == 1
+    )
+    assert (
+        converter.data.profiellijn[converter.data.profiellijn["code"] == profiellijn_code_descending][
+            "isAscending"
+        ].iloc[0]
+        == 0
+    )
 
     # Write the result to a new file
     output_file_path = temp_dir_out / "output.gpkg"
