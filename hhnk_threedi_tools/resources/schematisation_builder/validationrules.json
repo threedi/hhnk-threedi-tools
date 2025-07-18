@@ -40,7 +40,7 @@
 							"fill_value": 0
 						}
 					},
-					"description": "berekent aantal profielpunten op de profiellijn"
+					"description": "berekent het aantal profielpunten op de profiellijn"
 				},
 				{
 					"id": 101,
@@ -127,7 +127,7 @@
 				{
 					"id": 101,
 					"name": "Verschil tussen afstandNatProfiel en hydroobject BREEDTE (BGT) is plausibel",
-					"description": "Utgangspunt van BGT breedte is de kolom BREEDTE op hydroobject. ProfileIntermediateConverter: voegt breedte hydroobject kolom toe aan profiellijn en berekent natte profiel breedte.",
+					"description": "Uitgangspunt van BGT breedte is de kolom BREEDTE op hydroobject. ProfileIntermediateConverter: voegt breedte hydroobject kolom toe aan profiellijn en berekent natte profiel breedte.",
 					"type": "logic",
 					"validation_rule_set": "hhnk",
 					"error_type": "critical",
@@ -182,7 +182,7 @@
 				{
 					"id": 104,
 					"name": "Bodemhoogte moet lager zijn dan 3mNAP en hoger dan -9mNAP",
-					"description": "We nemen aan de de bodemhoogte plausibel is als die lager is dan 3mNAP en hoger dan -9mNAP",
+					"description": "We nemen aan dat de bodemhoogte plausibel is als die lager is dan 3mNAP en hoger dan -9mNAP",
 					"type": "logic",
 					"validation_rule_set": "hhnk",
 					"error_type": "critical",
@@ -223,7 +223,7 @@
 					"validation_rule_set": "hhnk",
 					"error_type": "critical",
 					"result_variable": "maximale_zizag_profiellijn",
-					"error_message": "maixmale zizag profiellijn is te groot (> 0.5)",
+					"error_message": "maximale zizag profiellijn is te groot (> 0.5)",
 					"active": true,
 					"function": {
 						"LT": {
@@ -660,7 +660,7 @@
 					"validation_rule_set": "basic",
 					"error_type": "critical",
 					"result_variable": "maximalehoogteopening_plausibel",
-					"error_message": "maximalehoogteopeningniet plausibel",
+					"error_message": "maximalehoogteopening niet plausibel",
 					"active": true,
 					"filter": {
 						"ISIN": {
@@ -855,7 +855,7 @@
 				},
 				{
 					"id": 4,
-					"name": "Is de vorm opening niet driehoekig, trapezium- of  heulvormig, dan moeten de laagste en hoogste doorstroombreedtes gelijk zijn aan elkaar",
+					"name": "Is de vorm opening niet driehoekig, trapezium- of heulvormig, dan moeten de laagste en hoogste doorstroombreedtes gelijk zijn aan elkaar",
 					"type": "logic",
 					"validation_rule_set": "basic",
 					"error_type": "critical",
