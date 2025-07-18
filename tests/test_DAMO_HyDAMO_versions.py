@@ -1,6 +1,6 @@
 if __name__ == "__main__":
-    from pathlib import Path
     import sys
+    from pathlib import Path
 
     root = Path(__file__).resolve()
     while root.name != "hhnk-threedi-tools" or root.parent.name == "hhnk-threedi-tools":
