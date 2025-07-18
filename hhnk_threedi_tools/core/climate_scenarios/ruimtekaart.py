@@ -73,7 +73,7 @@ def create_ruimtekaart(pgb_file, output_path, batch_fd):
         logger.info("Aggregating '{}'".format(input_raster.base))
 
         # calculate sum per region.
-        volumes_m3[:, i] = input_raster.sum_labels(labels_raster=labels_raster, labels_index=labels_index)
+        volumes_m3[:, i] = input_raster.sum_labels(label_raster=labels_raster, label_idx=labels_index)
         volumes_m3[:, i] *= input_raster.pixelarea  # take pixelsize into account.
 
     # DAMAGE
@@ -85,7 +85,7 @@ def create_ruimtekaart(pgb_file, output_path, batch_fd):
         logger.info("Aggregating '{}'".format(input_raster.base))
 
         # calculate sum per region.
-        damages_euro[:, i] = input_raster.sum_labels(labels_raster=labels_raster, labels_index=labels_index)
+        damages_euro[:, i] = input_raster.sum_labels(label_raster=labels_raster, labels_idx=labels_index)
 
     # add the total sum per raster to the last row
     m3 = np.concatenate([volumes_m3, np.sum(volumes_m3, axis=0)[np.newaxis]], axis=0)

@@ -44,7 +44,7 @@ def main_maak_schadekaart(output_raster, schade_rasters, frequencies, output_nod
     Schades kleiner dan 1e-5 per pixel worden op 0 gezet. Dit heeft geen significant effect op de totale schade (tot enkele tientallen euros per peilgebied). Wel een aanzienlijk effect op de bestandsgrootte.
     """
     # Inladen rasters als class
-    raster_classes = [hrt.Raster(r) for r in schade_rasters]
+    raster_classes = [hrt.RasterOld(r) for r in schade_rasters]
 
     damage_raster = raster_classes[0]
     parts = damage_raster.generate_blocks()
