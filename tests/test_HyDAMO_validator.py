@@ -1,11 +1,24 @@
 # %%
 
+import sys
+
 import hhnk_research_tools as hrt
+import pytest
 
 import hhnk_threedi_tools.resources.schematisation_builder as schematisation_builder_resources
+
+if __name__ == "__main__":
+    from pathlib import Path
+
+    root = str(Path(__file__).resolve().parents[2])
+    if root not in sys.path:
+        sys.path.insert(0, root)
+
 from tests.config import TEMP_DIR, TEST_DIRECTORY
 
 
+# TODO remove skip when py312 implemented.
+@pytest.mark.skipif(sys.version_info < (3, 12), reason="Requires Python 3.12 or higher")
 def test_HyDAMO_validator():
     from hhnk_threedi_tools.core.schematisation_builder.HyDAMO_validator import validate_hydamo
 

@@ -42,7 +42,7 @@ from hhnk_threedi_tools.core.climate_scenarios.schadekaart_peilgebieden import m
 folder = Folders(notebook_data["polder_folder"])
 
 # Of handmatig;
-# folder=Folders(r"E:\02.modellen\model_test_v2")
+# folder=Folders(r"E:\02.modellen\Z0215_Purmerend_oostflank")
 
 # %% [markdown]
 # ## Selectie neerslagzone en dem
@@ -84,7 +84,7 @@ polder_shape = folder.source_data.polder_polygon.load()
 
 precip_zones_raster = hrt.get_pkg_resource_path(package_resource=htt.resources, name="precipitation_zones_hhnk.tif")
 precip_zones_raster = hrt.Raster(precip_zones_raster)
-neerslag_array = precip_zones_raster.get_array(band_count=3)
+neerslag_array = precip_zones_raster._read_array()
 
 
 freqs_xlsx = hrt.get_pkg_resource_path(package_resource=htt.resources, name="precipitation_frequency.xlsx")
@@ -198,16 +198,16 @@ maskerkaart.command(
 # Omzetten polygon in raster voor diepteraster
 mask_depth = rasterize_maskerkaart(
     input_file=batch_fd.output.maskerkaart.base,
-    mask_plas_path=batch_fd.output.mask_depth_plas,
-    mask_overlast_path=batch_fd.output.mask_depth_overlast,
+    mask_plas_raster=batch_fd.output.mask_depth_plas,
+    mask_overlast_raster=batch_fd.output.mask_depth_overlast,
     meta=batch_fd.downloads.piek_glg_T10.depth_max.metadata,
 )
 
 # Omzetten polygon in raster voor schaderaster (kan verschillen van diepte met andere resolutie)
 mask_damage = rasterize_maskerkaart(
     input_file=batch_fd.output.maskerkaart.path,
-    mask_plas_path=batch_fd.output.mask_damage_plas,
-    mask_overlast_path=batch_fd.output.mask_damage_overlast,
+    mask_plas_raster=batch_fd.output.mask_damage_plas,
+    mask_overlast_raster=batch_fd.output.mask_damage_overlast,
     meta=batch_fd.downloads.piek_glg_T10.damage_total.metadata,
 )
 
@@ -232,7 +232,7 @@ for raster_type, raster_name in zip(["depth_max", "damage_total"], ["depth", "da
 if not batch_fd.output.ruimtekaart.exists():
     # if True:
     ruimtekaart.create_ruimtekaart(
-        pgb_path=batch_fd.output.temp.peilgebieden,
+        pgb_file=batch_fd.output.temp.peilgebieden,
         output_path=batch_fd.output.ruimtekaart.base,
         batch_fd=batch_fd,
     )
@@ -258,6 +258,7 @@ for T in [10, 100, 1000]:
         output_nodata=-9999.00,
         dem_raster=dem,
         extra_nodata_value=0,
+        min_value=0,
     )
 
 # %% [markdown]
@@ -319,7 +320,7 @@ else:
 # #### Maak masker voor plas en overlast
 
 # %%
-input_raster = hrt.Raster(batch_fd.output.cw_schade_totaal.path)
+input_raster = hrt.RasterOld(batch_fd.output.cw_schade_totaal.path)
 
 # Creeer masker voor plas en overlast
 for mask_type in ["plas", "overlast"]:
@@ -361,7 +362,7 @@ for mask_type, mask_name in zip(["plas", "overlast"], ["mv", "ws"]):
     schade_raster = getattr(batch_fd.output, f"cw_schade_{mask_type}")
 
     # Calculate sum per region
-    accum = schade_raster.sum_labels(labels_raster=labels_raster, labels_index=labels_index)
+    accum = schade_raster.sum_labels(label_raster=labels_raster, label_idx=labels_index)
 
     schade_gdf[f"cw_{mask_name}"] = accum
 
@@ -384,7 +385,7 @@ schade_per_polder.to_csv(batch_fd.output.schade_polder.base)
 # .\01. DAMO HDB en Datachecker\peilgebieden\geen_schade.shp
 
 # %%
-raster = hrt.Raster(str(batch_fd.output.cw_schade_plas))
+raster = hrt.RasterOld(str(batch_fd.output.cw_schade_plas))
 
 dv = 0.04  # discontovoet [%]
 n = 50  # investeringstermijn [jaren]
@@ -406,7 +407,7 @@ maskerkaart_union = gpd.GeoDataFrame(geometry=[maskerkaart_union])
 maskerkaart_union["val"] = 1
 
 mask = hrt.gdf_to_raster(
-    maskerkaart_union, value_field="val", raster_out="", nodata=0, metadata=damage_meta, epsg=28992, driver="MEM"
+    maskerkaart_union, value_field="val", raster_out="", nodata=0, metadata=raster.metadata, epsg=28992, driver="MEM"
 )
 mask = mask > 0
 
@@ -414,7 +415,7 @@ mask = mask > 0
 for mask_type, mask_name in zip(["plas", "overlast"], ["mv", "ws"]):
     schade_raster = getattr(batch_fd.output, f"cw_schade_{mask_type}")
     output = batch_fd.output.full_path(f"cw_schade_{mask_type}_correctie.tif")
-    array = schade_raster.get_array()
+    array = schade_raster._read_array()
     array[mask] = raster.nodata
     hrt.save_raster_array_to_tiff(output, array, raster.nodata, raster.metadata)
 
