@@ -17,24 +17,24 @@ FOLDER_STRUCTURE = """
         │ ├── gridadmin.h5
         │ ├── gridadmin.sqlite
         │ └── results_3di.nc
-        │    
-        ├── 02_JPEG
-        │ ├── overstroming.png
-        │ ├── breach.name.png
-        │ └── agg.png
-        ├── 03_ssm
-        │ ├── max_flow_velocity.tif
-        │ └── max_raste_of_rise.tif
-        │ └── max_waterdepth.tif
-        │ └── max_waterlevel.tif
-        └── 04_wss
+        └── 02_WSS
         │ ├── dem_clip.vrt
         │ ├── grid_raw.gpkg
         │ ├── mask_flood.gpkg
         │ └── max_wdepth_orig.tif
         │ ├── new_grid.gpkg
         │ ├── nodeid.tif
-        │ └── landuse_2021_clip.vrt
+        │ └── landuse_2021_clip.vrt  
+        ├── 03_SSM
+        │ ├── max_flow_velocity.tif
+        │ └── max_raste_of_rise.tif
+        │ └── max_waterdepth.tif
+        │ └── max_waterlevel.tif
+         ├── 04_JPEG
+        │ ├── overstroming.png
+        │ ├── breach.name.png
+        │ └── agg.png
+        
 
     """
 
@@ -64,9 +64,9 @@ class Breaches(Folder):
                                 Folders:	  
                                     Folders
                                     ├── 01_NetCDF
-                                    ├── 02_JPEG
+                                    ├── 02_WSS
                                     ├── 03_SSM
-                                    └── 04_WSS
+                                    └── 04_JPEG
                            
                                 Files:	[]
                                 Layers:	[]
@@ -99,9 +99,9 @@ class Breaches(Folder):
         return f"""  
                {self.space}Folders
                {self.space}├── 01_NetCDF (.netcdf)
-               {self.space}├── 02_JPEG (.jpeg)
+               {self.space}├── 02_WSS (.wss)
                {self.space}├── 03_SSM (.ssm)
-               {self.space}└── 04_WSS (.wss)
+               {self.space}└── 04_JPEG (.jpeg)
                """
 
     def to_file_dict(self):
@@ -140,7 +140,7 @@ class Breaches(Folder):
     @classmethod
     def is_valid(self, folderpath):
         """Check if folder stucture is available in input folder."""
-        SUB_FOLDERS = ["01_NetCDF", "02_JPEG", "03_SSM", "04_WSS"]
+        SUB_FOLDERS = ["01_NetCDF", "02_WSS", "03_SSM", "04_JPEG"]
         return all([Path(folderpath).joinpath(i).exists() for i in SUB_FOLDERS])
 
 
@@ -185,14 +185,14 @@ class JPEG(Folder):
     """
 
     def __init__(self, base, create):
-        super().__init__(os.path.join(base, "02_JPEG"), create)
+        super().__init__(os.path.join(base, "04_JPEG"), create)
 
         if create:
             self.create_readme()
 
     def create_readme(self):
         readme_txt = (
-            "This folder is the default folder where the images and maps "
+            "This folder is the default folder where all the images including the waterdepth maps, graph and others"
             "are stored. The inner structure of these result folders "
             "is automatically generated"
         )
@@ -222,9 +222,9 @@ class SSM(Folder):
 
     def create_readme(self):
         readme_txt = (
-            "Expected files are:tif files"
-            "In this folder we are going to store the raster downloaded from lizard "
-            "which include: max_flow_velocity, max_rate_rise, max_waterdepth, waterlelvel"
+            "This folder is the default folder where all the files to calculate the waterdepth raster including the waterdepth raster"
+            "are stored. The inner structure of these result folders "
+            "is automatically generated"
         )
         with open(os.path.join(self.base, "read_me.txt"), mode="w") as f:
             f.write(readme_txt)
@@ -237,14 +237,14 @@ class WSS(Folder):
     """
 
     def __init__(self, base, create):
-        super().__init__(os.path.join(base, "04_WSS"), create)
+        super().__init__(os.path.join(base, "02_WSS"), create)
 
         if create:
             self.create_readme()
 
     def create_readme(self):
         readme_txt = (
-            "This folder is the default folder where all the files to calculate the waterdepth raster including the waterdepth raster"
+            "This folder is the default folder where the images and maps "
             "are stored. The inner structure of these result folders "
             "is automatically generated"
         )
