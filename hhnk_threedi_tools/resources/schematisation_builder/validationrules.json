@@ -1129,7 +1129,109 @@
 							"tolerance": 1
 						}
 					}
-				}
+				},
+				{
+					"id": 101,
+					"name": "De capaciteit groter dan 0.92 een minder dan 700",
+					"type": "logic",
+					"validation_rule_set": "hhnk",
+					"error_type": "critical",
+					"result_variable": "logisch_capacteit",
+					"error_message": "check capacteit van de gemaal",
+					"active": true,
+					"function": {
+						"BE": {
+							"parameter": "maximalecapaciteit",
+							"min": 0.92,
+							"max": 700,
+							"inclusive": true
+						}
+					}
+				},
+				{
+					"id": 102,
+					"name": "Afstand tot as watergang moet kleiner zijn dan 1 meter",
+					"type": "topologic",
+					"validation_rule_set": "hhnk",
+					"error_type": "critical",
+					"result_variable": "gemaal_op_watergang",
+					"error_message": "gemaal niet op watergang",
+					"active": true,
+					"function": {
+						"snaps_to_hydroobject": {
+							"method": "overall",
+							"tolerance": 1
+						}
+					}
+				},
+				{
+					"id": 103,
+					"name": "Waar een gemaal een grens van een peilgebiedpraktijk doorkruist, moet een peilscheidend kunstwerk liggen",
+					"type": "topologic",
+					"validation_rule_set": "hhnk",
+					"error_type": "critical",
+					"result_variable": "gemmaal_op_peilscheiding",
+					"error_message": "gemaal niet op peilscheiding",
+					"active": true,
+					"function": {
+						"structures_at_boundaries": {
+							"areas": "peilgebiedpraktijk",
+							"structures": [
+								"gemaal"
+							],
+							"tolerance": 0.01,
+							"distance": 25
+						}
+					}
+				},
+				{
+					"id": 104,
+					"name": "afstand tot as peilgebied minder than 10 cm",
+					"type": "logic",
+					"validation_rule_set": "hhnk",
+					"error_type": "critical",
+					"result_variable": "Gemaal_op_peilgebieden",
+					"error_message": "Gemaal niet op peilgebieden",
+					"active": true,
+					"function": {
+						"LE": {
+							"left": "distance_to_peilgebied",
+							"right": 0.01
+						}
+					}
+				},
+				{
+					"id": 105,
+					"name": "zomer praktijk streefpeil value",
+					"type": "logic",
+					"validation_rule_set": "hhnk",
+					"error_type": "non-critical",
+					"result_variable": "zomer_doorstroom_gemaal",
+					"error_message": "gemaal type anders",
+					"active": true,
+					"function": {
+						"EQ": {
+							"left": "streefpeil_zomer_value_praktijk",
+							"right": "streefpeil_zomer_value_afwijking"
+						}
+					}
+				},
+				{
+					"id": 106,
+					"name": "winter praktijk streefpeil value",
+					"type": "logic",
+					"validation_rule_set": "hhnk",
+					"error_type": "non-critical",
+					"result_variable": "winter_doorstroom_gemaal",
+					"error_message": "gemaal type anders",
+					"active": true,
+					"function": {
+						"EQ": {
+							"left": "streefpeil_winter_value_praktijk",
+							"right": "streefpeil_winter_value_afwijking"
+						}
+					}
+				}				
 			]
 		},
 		{
