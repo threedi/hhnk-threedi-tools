@@ -36,6 +36,8 @@ jobs:
           
       - name: Run Tests
         run: pixi run -e py39 tests tests/
+        env: 
+          SKIP_DATABASE: "1"
 
       - name: Upload coverage
         uses: codecov/codecov-action@v5

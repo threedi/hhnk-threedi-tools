@@ -2,7 +2,7 @@
 """DAMO exporter based on model extent"""
 
 from pathlib import Path
-
+import os
 import geopandas as gpd
 import hhnk_research_tools as hrt
 import pandas as pd
@@ -19,9 +19,12 @@ from hhnk_threedi_tools.resources.schematisation_builder.db_layer_mapping import
 try:
     from hhnk_threedi_tools.local_settings_htt import DATABASES
 except ImportError as e:
-    raise ImportError(
-        r"The 'local_settings_htt' module is missing. Get it from \\corp.hhnk.nl\data\Hydrologen_data\Data\01.basisgegevens\00.HDB\SettingsAndRecourses\local_settings_htt.py and place it in \hhnk_threedi_tools\ "
-    ) from e
+    if os.getenv("SKIP_DATABASE", "0") == "1":
+        DATABASES = None  # No DB in CI environment
+    else:
+        raise ImportError(
+            r"The 'local_settings_htt' module is missing. Get it from \\corp.hhnk.nl\data\Hydrologen_data\Data\01.basisgegevens\00.HDB\SettingsAndRecourses\local_settings_htt.py and place it in \hhnk_threedi_tools\ "
+        )
 
 # From mapping json list top level keys
 tables_default = list(DB_LAYER_MAPPING.keys())
