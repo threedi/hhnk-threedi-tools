@@ -141,7 +141,7 @@ class PompIntermediateConverter:
                 self.gemaal,
                 gdf_peilgebiedcombinatie,
                 how="inner",
-                max_distance=0.01,
+                max_distance=1000,
                 distance_col="distance_to_peilgebied",
             )
             # rename column code_left to code
@@ -278,43 +278,4 @@ if __name__ == "__main__":
     intermediate_convertion = PompIntermediateConverter(damo)
     pump_function = intermediate_convertion.gemaal_streefpeil_value()
 
-
-# delete specific layters that are inside geopackge.
-# %%
-# import fiona
-
-# def delete_layer_from_geopackage(geopackage_path, layer_to_delete):
-#     with fiona.open(geopackage_path, "r") as src:
-#         schema = src.schema
-#         crs = src.crs
-#         driver = src.driver
-#         # Filter out features from the layer you want to delete
-#         features = [f for f in src if f['properties']['layer_name'] != layer_to_delete]
-
-#     with fiona.open(geopackage_path, "w", driver=driver, schema=schema, crs=crs) as dst:
-#         for feature in features:
-#             dst.write(feature)
-
-
-# layers = fiona.listlayers(damo)
-
-# print("Layers in GeoPackage:")
-# layers_to_delete = []
-# for layer in layers:
-#     print(layer)
-#     geopackge = gpd.read_file(damo, layer=layer)
-#     columns = geopackge.columns
-#     if 'code' in columns:
-#         print(layer)
-#     else:
-#         layers_to_delete.append(layer)
-#     if len(geopackge)!= 0:
-#         layers_to_delete.append(layer)
-
-# for layer_to_delete in layers_to_delete:
-#     delete_layer_from_geopackage(damo, layer_to_delete)
-
-# delete empu
-# delete_layer_from_geopackage("your_geopackage.gpkg", "your_layer_name")
-#
 # %%
