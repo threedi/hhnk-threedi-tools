@@ -1,18 +1,24 @@
 # %%
 
-from pathlib import Path
-import pytest
-import sys
 import os
+import sys
+from pathlib import Path
+
+import pytest
 
 if sys.version_info < (3, 12) and not os.environ.get("SKIP_DATABASE"):
     os.environ["SKIP_DATABASE"] = "1"
 
 # import hhnk_research_tools as hrt
-from hhnk_threedi_tools.core.schematisation_builder.schematisation_builder import DATABASES, make_validated_hydamo_package
 from config import TEST_DIRECTORY
 
+from hhnk_threedi_tools.core.schematisation_builder.schematisation_builder import (
+    DATABASES,
+    make_validated_hydamo_package,
+)
+
 skip_db = DATABASES == {}
+
 
 @pytest.mark.skipif(skip_db, reason="Skipping DB test because no local_settings_htt.py or DATABASES available.")
 def test_schematisation_builder():
@@ -37,7 +43,9 @@ def test_schematisation_builder():
     assert hydamo_file_path.exists()
     assert logger_file_path.exists()
     assert validation_result_file_path.exists()
-#%%
+
+
+# %%
 if __name__ == "__main__":
     test_schematisation_builder()
 

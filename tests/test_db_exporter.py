@@ -1,24 +1,26 @@
 # %%
 """Tests for database (db) exporter function"""
-from pathlib import Path
+
 import os
 import sys
+from pathlib import Path
 
 if sys.version_info < (3, 12) and not os.environ.get("SKIP_DATABASE"):
     os.environ["SKIP_DATABASE"] = "1"
 
-import pytest
 import geopandas as gpd
 import hhnk_research_tools as hrt
-from tests.config import TEMP_DIR, TEST_DIRECTORY
+import pytest
 
 from hhnk_threedi_tools.core.schematisation_builder.DB_exporter import DATABASES, db_exporter
+from tests.config import TEMP_DIR, TEST_DIRECTORY
 
 TEST_DIRECTORY_SB = TEST_DIRECTORY / "schematisation_builder"
 # Create output directory for db exporter tests
 db_export_output_dir = TEMP_DIR / f"temp_db_exporter_{hrt.current_time(date=True)}"
 
 skip_db = DATABASES == {}
+
 
 @pytest.mark.skipif(skip_db, reason="Skipping DB test because no local_settings_htt.py or DATABASES available.")
 def test_db_exporter_one_feature():
@@ -43,6 +45,7 @@ def test_db_exporter_one_feature():
     assert gdf_result.loc[0, "code"] == "KGM-Q-29234"
     assert logging_DAMO == []
 
+
 @pytest.mark.skipif(skip_db, reason="Skipping DB test because no local_settings_htt.py or DATABASES available.")
 def test_db_exporter_GEMAAL_and_POMP_from_CSO():
     model_extent_path = TEST_DIRECTORY_SB / "area_test_sql_helsdeur.gpkg"
@@ -64,6 +67,7 @@ def test_db_exporter_GEMAAL_and_POMP_from_CSO():
     assert gemaal_gdf.loc[0, "code"] == "KGM-Q-29234"
     assert len(pomp_gdf) == 4
     assert logging_DAMO == []  # test geen errors
+
 
 @pytest.mark.skipif(skip_db, reason="Skipping DB test because no local_settings_htt.py or DATABASES available.")
 def test_db_exporter_polder():
