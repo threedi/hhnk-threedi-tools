@@ -12,12 +12,13 @@
 #             sys.path.insert(0, str(root))
 
 from pathlib import Path
+
 # import pytest
 import geopandas as gpd
 import hhnk_research_tools as hrt
 from config import TEMP_DIR, TEST_DIRECTORY
 
-from hhnk_threedi_tools.core.schematisation_builder.DB_exporter import db_exporter, DATABASES
+from hhnk_threedi_tools.core.schematisation_builder.DB_exporter import DATABASES, db_exporter
 
 TEST_DIRECTORY_SB = TEST_DIRECTORY / "schematisation_builder"
 # Create output directory for db exporter tests
@@ -25,6 +26,7 @@ db_export_output_dir = TEMP_DIR / f"temp_db_exporter_{hrt.current_time(date=True
 
 skip_db = DATABASES is None or DATABASES == {}
 print(skip_db)
+
 
 # @pytest.mark.skipif(skip_db, reason="Skipping DB test because no local_settings_htt.py or DATABASES available.")
 def test_db_exporter_one_feature():
