@@ -21,7 +21,7 @@ try:
     from hhnk_threedi_tools.local_settings_htt import DATABASES
 except ImportError as e:
     if os.getenv("SKIP_DATABASE", "0") == "1":
-        DATABASES = None  # No DB in CI environment
+        DATABASES = {}  # No DB in CI environment
     else:
         raise ImportError(
             r"The 'local_settings_htt' module is missing. Get it from \\corp.hhnk.nl\data\Hydrologen_data\Data\01.basisgegevens\00.HDB\SettingsAndRecourses\local_settings_htt.py and place it in \hhnk_threedi_tools\ "
@@ -35,7 +35,7 @@ EPSG_CODE = "28992"
 # %%
 def update_model_extent_from_combinatiepeilgebieden(
     model_extent_gdf: gpd.GeoDataFrame,
-    db_dict: dict = DATABASES["csoprd_lezen"],
+    db_dict: dict = DATABASES.get("csoprd_lezen"),
     logger: hrt.logging = None,
 ) -> gpd.GeoDataFrame:
     """

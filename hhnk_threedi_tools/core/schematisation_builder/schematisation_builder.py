@@ -25,7 +25,7 @@ import hhnk_research_tools as hrt
 import hhnk_threedi_tools.resources.schematisation_builder as schematisation_builder_resources
 from hhnk_threedi_tools.core.folders import Project
 from hhnk_threedi_tools.core.schematisation_builder.DAMO_HyDAMO_converter import DAMO_to_HyDAMO_Converter
-from hhnk_threedi_tools.core.schematisation_builder.DB_exporter import db_exporter
+from hhnk_threedi_tools.core.schematisation_builder.DB_exporter import DATABASES, db_exporter
 from hhnk_threedi_tools.core.schematisation_builder.HyDAMO_validator import validate_hydamo
 
 # %%
