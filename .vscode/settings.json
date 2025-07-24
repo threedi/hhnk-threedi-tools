@@ -26,5 +26,10 @@
         "**/.ruff_cache": true,
         ".coverage": true,
     },
+    "search.exclude": {
+        "**/.pixi": true,
+        "pixi.lock": true,
+        "/dist": true,
+    },
     "jupyter.interactiveWindow.textEditor.executeSelection": true,
 }
