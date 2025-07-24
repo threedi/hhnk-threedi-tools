@@ -1,5 +1,5 @@
 {
-	"schema": "1.2",
+	"schema": "1.5",
 	"hydamo_version": "2.2",
 	"status_object": [
 		"planvorming",
@@ -32,6 +32,66 @@
 				},
 				{
 					"id": 100,
+					"result_variable": "isascending",
+					"function": {
+						"custom_hydamo": {
+							"custom_function_name": "on_profiellijn_compute_if_ascending"
+						}
+					},
+					"description": "verifieert of de profielpunten in oplopende volgorde zijn"
+				},
+				{
+					"id": 101,
+					"result_variable": "hydroobject_breedte",
+					"function": {
+						"custom_hydamo": {
+							"custom_function_name": "on_profiellijn_add_breedte_value_from_hydroobject"
+						}
+					},
+					"description": "voegt de breedte van het hydroobject toe aan de profiellijn"
+				},
+				{
+					"id": 102,
+					"result_variable": "jaarinwinning",
+					"function": {
+						"custom_hydamo": {
+							"custom_function_name": "on_profiellijn_compute_jaarinwinning"
+						}
+					},
+					"description": "berekent de jaar van inwinning van de profiellijn"
+				},
+				{
+					"id": 103,
+					"result_variable": "max_cross_product",
+					"function": {
+						"custom_hydamo": {
+							"custom_function_name": "on_profiellijn_compute_max_cross_product"
+						}
+					},
+					"description": "berekent de maximale schuinheid van de profiellijn (afwijking per profielsegment van de rechte lijn tussen de uiterste punten van de profiellijn)"
+				},
+				{
+					"id": 104,
+					"result_variable": "afstandnatprofiel",
+					"function": {
+						"custom_hydamo": {
+							"custom_function_name": "on_profiellijn_compute_wet_profile_distance"
+						}
+					},
+					"description": "berekent de afstand van het natte profiel op de profiellijn"
+				},
+				{
+					"id": 105,
+					"result_variable": "dieptenatprofiel",
+					"function": {
+						"custom_hydamo": {
+							"custom_function_name": "on_profiellijn_compute_wet_profile_depth"
+						}
+					},
+					"description": "berekent de diepte van het natte profiel op de profiellijn"
+				},
+				{
+					"id": 106,
 					"result_variable": "nr_of_profielpunten",
 					"function": {
 						"object_relation": {
@@ -43,7 +103,7 @@
 					"description": "berekent het aantal profielpunten op de profiellijn"
 				},
 				{
-					"id": 101,
+					"id": 107,
 					"result_variable": "verschil_afstandnatprofiel_breedte",
 					"function": {
 						"difference": {
@@ -54,7 +114,7 @@
 					"description": "berekent het verschil tussen de breedte van het hydroobject en de breedte van het natte profiel"
 				},
 				{
-					"id": 102,
+					"id": 108,
 					"result_variable": "maximalehoogteprofiel",
 					"function": {
 						"object_relation": {
@@ -66,7 +126,7 @@
 					"description": "berekent de maximale hoogte van het profiel op basis van de profielpunten"
 				},
 				{
-					"id": 103,
+					"id": 109,
 					"result_variable": "breedteprofiel",
 					"function": {
 						"object_relation": {
@@ -78,7 +138,7 @@
 					"description": "berekent de breedte van het profiel op basis van de profielpunten"
 				},
 				{
-					"id": 104,
+					"id": 110,
 					"result_variable": "maaiveldhoogte",
 					"function": {
 						"buffer": {

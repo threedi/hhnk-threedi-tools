@@ -172,6 +172,7 @@ class DAMO_to_HyDAMO_Converter:
         self.hydamo_file_path.parent.mkdir(parents=True, exist_ok=True)
 
         for layer_name in self.layers:
+            layer_name = layer_name.lower()
             self.logger.info(f"Conversion of {layer_name}")
             if not self.overwrite and self.hydamo_file_path.exists():
                 if layer_name in self.hydamo_file_path.available_layers():
@@ -271,7 +272,6 @@ class DAMO_to_HyDAMO_Converter:
             "number": float,
         }
 
-        layer_name = layer_name.lower()
         try:
             # Check if the layer_name exists in the definitions
             field_type = self.definitions[layer_name]["properties"][column_name]["type"]

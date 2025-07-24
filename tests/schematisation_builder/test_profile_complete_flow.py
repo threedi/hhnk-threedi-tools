@@ -1,8 +1,12 @@
 # %%
 from pathlib import Path
 
+import geopandas as gpd
 import hhnk_research_tools as hrt
 
+import hhnk_threedi_tools.resources.schematisation_builder as schematisation_builder_resources
+from hhnk_threedi_tools.core.schematisation_builder.DAMO_HyDAMO_converter import DAMO_to_HyDAMO_Converter
+from hhnk_threedi_tools.core.schematisation_builder.HyDAMO_validator import validate_hydamo
 from hhnk_threedi_tools.core.schematisation_builder.profile_intermediate_converter import ProfileIntermediateConverter
 from tests.config import TEMP_DIR, TEST_DIRECTORY
 
@@ -20,8 +24,6 @@ def test_profile_intermediate_converter():
     - Write results to output GPKG
     - (optional) Convert to HyDAMO format.
     """
-    # %%
-
     logger = hrt.logging.get_logger(__name__)
 
     damo_file_path = TEST_DIRECTORY / "schema_builder" / "DAMO anna paulowna.gpkg"
@@ -35,22 +37,19 @@ def test_profile_intermediate_converter():
         damo_file_path=damo_file_path, ods_cso_file_path=cso_file_path, logger=logger
     )
 
-    # %%
     # Load and validate layers
-    converter.load_layers()
+    converter.load_layers()  # STEP 1 in run method
 
     # Check if layers are loaded
     assert converter.data.hydroobject is not None
     assert converter.data.gecombineerde_peilen is not None
 
-    # %%
     # Process line merge
-    converter.process_linemerge()
+    converter.process_linemerge()  # STEP 2 in run method
 
     # Check if line merge result is stored
     assert converter.data.hydroobject_linemerged is not None
 
-    # %%
     # Test variables for profile on primary watergang
     hydroobject_code = "OAF-QJ-14396"
     peilgebied_id = 62149
@@ -58,8 +57,13 @@ def test_profile_intermediate_converter():
     profiellijn_code = 58395
     diepste_punt_profiel = -3.16
     lengte_nat_profiel = 5.54
+    hydroobject_breedte = 5.27
+    breedte_profiel = 15.54
+    nr_of_profielpunten = 34
     diepte_nat_profiel = 1.32
+    max_hoogte_profiel = -0.85
     jaarinwinning = 2012
+    max_cross_product = 0.0029
 
     # Test variables for profile on primary watergang without profile
     hydroobject_code_no_profile = "OAF-Q-36452"  # near end peilgebied
@@ -70,8 +74,6 @@ def test_profile_intermediate_converter():
     profiellijn_code_ascending = 3849
     profiellijn_code_descending = 58315
 
-    # %%
-
     # Check for a single hydroobject
     linemerge_id = converter.find_linemerge_id_by_hydroobject_code(hydroobject_code)
     assert linemerge_id is not None
@@ -81,7 +83,7 @@ def test_profile_intermediate_converter():
     assert peilgebied_id_result == peilgebied_id
 
     # Create profielgroep, profiellijn and profielpunt
-    converter.create_profile_tables()
+    converter.create_profile_tables()  # STEP 3 in run method
 
     # Tests for profile tables
     profielpunt = converter.data.profielpunt
@@ -114,7 +116,7 @@ def test_profile_intermediate_converter():
     assert pg["hydroobjectID"].iloc[0] == ho["GlobalID"].iloc[0]
 
     # Compute the deepest point of profiel
-    converter._compute_deepest_point_profiellijn()
+    converter._compute_deepest_point_profiellijn()  # HELPER method, not in run method
     assert converter.data.profiellijn["diepstePunt"].notnull().any()
     assert (
         converter.data.profiellijn[converter.data.profiellijn["code"] == profiellijn_code]["diepstePunt"].iloc[0]
@@ -126,83 +128,26 @@ def test_profile_intermediate_converter():
     assert pl_2 is None
 
     # Now connect profiles to hydroobject without profiles
-    converter.connect_profiles_to_hydroobject_without_profiles(max_distance=250)
+    converter.connect_profiles_to_hydroobject_without_profiles(max_distance=250)  # STEP 4 in run method
 
     # Check it is connected to a profile now
-    pl_2 = converter._find_profiellijn_by_hydroobject_code(hydroobject_code_no_profile)
+    pl_2 = converter._find_profiellijn_by_hydroobject_code(
+        hydroobject_code_no_profile
+    )  # HELPER method, not in run method
     assert pl_2 is not None
     assert not pl_2.empty and len(pl_2) == 1
     assert pl_2["code"].iloc[0] == nearest_profiellijn_code_it_should_connect_to
 
     # Compute the deepest point per hydroobject
-    converter.compute_deepest_point_hydroobjects()
+    converter.compute_deepest_point_hydroobjects()  # HELPER method, not in run method
     dp = converter.find_deepest_point_by_hydroobject_code(hydroobject_code_no_profile)
     assert dp == deepest_point_hydroobject_no_profile
 
-    # VALIDATION PARAMETER (1): Compute distance wet profile
-    converter.compute_distance_and_depth_wet_profile()
-    assert (
-        converter.data.profiellijn[converter.data.profiellijn["code"] == profiellijn_code]["afstandNatProfiel"].iloc[0]
-        == lengte_nat_profiel
-    )
-    assert (
-        converter.data.profiellijn[converter.data.profiellijn["code"] == profiellijn_code]["diepteNatProfiel"].iloc[0]
-        == diepte_nat_profiel
-    )
-
-    # Compute number of profielpunt features per profiellijn (NOTE: this is also implemented in the validation module)
-    """''
-    converter.compute_number_of_profielpunt_features_per_profiellijn()
-    assert (
-        converter.profiellijn[converter.profiellijn["code"] == profiellijn_code]["aantalProfielPunten"].iloc[0]
-        == aantal_profielpunt_features
-    )
-    """
-
-    # REQUIRED FOR VALIDATION: add Z to the profile points
-    converter.add_z_to_point_geometry_based_on_column(column_name="hoogte")
-
-    # VALIDATION PARAMETER (2): add breedte value from hydroobject
-    converter.add_breedte_value_from_hydroobject()
-
-    # VALIDATION PARAMETER (3): compute jaarinwinning
-    converter.compute_jaarinwinning()
-    assert (
-        converter.data.profiellijn[converter.data.profiellijn["code"] == profiellijn_code]["jaarinwinning"].iloc[0]
-        == jaarinwinning
-    )
-
-    # VALIDATION PARAMETER (4): compute max cross product profiellijn to check if line is straight
-    converter.add_maxcross_to_profiellijn()
-    assert (
-        converter.data.profiellijn[converter.data.profiellijn["code"] == profiellijn_code]["max_cross_product"].iloc[0]
-        is not None
-    )
-
-    # VALIDATION PARAMETER (5): check if profielpunt is in ascending order
-    converter.compute_if_ascending()
-    assert (
-        converter.data.profiellijn[converter.data.profiellijn["code"] == profiellijn_code_ascending][
-            "isAscending"
-        ].iloc[0]
-        == 1
-    )
-    assert (
-        converter.data.profiellijn[converter.data.profiellijn["code"] == profiellijn_code_descending][
-            "isAscending"
-        ].iloc[0]
-        == 0
-    )
-
     # Write the result to a new file
     output_file_path = temp_dir_out / "output.gpkg"
-    converter.write_outputs(output_path=output_file_path)
+    converter.write_outputs(output_path=output_file_path)  # STEP 5 in run method
 
     assert output_file_path.exists()
-
-    # Commented out HyDAMO conversion and validation, as it is not part of this test.
-    """
-    from hhnk_threedi_tools.core.schematisation_builder.DAMO_HyDAMO_converter import DAMO_to_HyDAMO_Converter
 
     hydamo_file_path = temp_dir_out / "HyDAMO.gpkg"
     converter_hydamo = DAMO_to_HyDAMO_Converter(
@@ -217,10 +162,7 @@ def test_profile_intermediate_converter():
     # Check if HyDAMO.gpkg is created
     assert hydamo_file_path.exists()
 
-    # Temp test validate HyDAMO as well
-    import hhnk_threedi_tools.resources.schematisation_builder as schematisation_builder_resources
-    from hhnk_threedi_tools.core.schematisation_builder.HyDAMO_validator import validate_hydamo
-
+    # Test validate HyDAMO as well
     validation_directory_path = TEMP_DIR / f"temp_HyDAMO_validator_{hrt.current_time(date=True)}"
     validation_rules_json_path = hrt.get_pkg_resource_path(schematisation_builder_resources, "validationrules.json")
 
@@ -238,18 +180,70 @@ def test_profile_intermediate_converter():
     assert validation_directory_path.joinpath("datasets", hydamo_file_path.name).exists()
     assert validation_directory_path.joinpath("results", "results.gpkg").exists()
 
-    # Some checks on the validation results
-    import geopandas as gpd
-
+    # Some checks on the general and validation rule results
     validated_profiellijn = gpd.read_file(
         validation_directory_path.joinpath("results", "results.gpkg"), layer="PROFIELLIJN"
     )
-    invalid_profiellijn_code = "64405"
-    invalid_profiellijn = validated_profiellijn[validated_profiellijn["code"] == invalid_profiellijn_code].iloc[0]
-    assert invalid_profiellijn["invalid"] == "0;100"  # both 0 and 100 are invalid
-    """
+
+    assert not validated_profiellijn.empty
+
+    # some checks on the general rules
+    filtered_ascending = validated_profiellijn[validated_profiellijn["code"] == str(profiellijn_code_ascending)]
+    filtered_descending = validated_profiellijn[validated_profiellijn["code"] == str(profiellijn_code_descending)]
+    filtered_profiellijn = validated_profiellijn[validated_profiellijn["code"] == str(profiellijn_code)]
+
+    assert not filtered_ascending.empty, f"No profiellijn found with code {profiellijn_code_ascending}"
+    assert not filtered_descending.empty, f"No profiellijn found with code {profiellijn_code_descending}"
+    assert not filtered_profiellijn.empty, f"No profiellijn found with code {profiellijn_code}"
+
+    ## 100
+    assert filtered_ascending["general_100_isascending"].iloc[0] == 1
+    assert filtered_descending["general_100_isascending"].iloc[0] == 0
+
+    ## 101
+    assert filtered_profiellijn["general_101_hydroobject_breedte"].iloc[0] == hydroobject_breedte
+
+    ## 102
+    assert filtered_profiellijn["general_102_jaarinwinning"].iloc[0] == jaarinwinning
+
+    ## 103
+    assert (
+        round(
+            filtered_profiellijn["general_103_max_cross_product"].iloc[0],
+            4,
+        )
+        == max_cross_product
+    )
+
+    ## 104
+    assert filtered_profiellijn["general_104_afstandnatprofiel"].iloc[0] == lengte_nat_profiel
+
+    ## 105
+    assert filtered_profiellijn["general_105_dieptenatprofiel"].iloc[0] == diepte_nat_profiel
+
+    # 106
+    assert filtered_profiellijn["general_106_nr_of_profielpunten"].iloc[0] == nr_of_profielpunten
+
+    # 108
+    assert (
+        round(
+            filtered_profiellijn["general_108_maximalehoogteprofiel"].iloc[0],
+            2,
+        )
+        == max_hoogte_profiel
+    )
+
+    ## 109
+    assert (
+        round(
+            filtered_profiellijn["general_109_breedteprofiel"].iloc[0],
+            2,
+        )
+        == breedte_profiel
+    )
 
 
+#
 # %%
 if __name__ == "__main__":
     test_profile_intermediate_converter()
