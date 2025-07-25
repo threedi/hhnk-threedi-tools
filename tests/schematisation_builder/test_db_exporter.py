@@ -2,11 +2,7 @@
 """Tests for database (db) exporter function"""
 
 import os
-import sys
 from pathlib import Path
-
-if sys.version_info < (3, 12) and not os.environ.get("SKIP_DATABASE"):
-    os.environ["SKIP_DATABASE"] = "1"
 
 import geopandas as gpd
 import hhnk_research_tools as hrt
@@ -97,7 +93,7 @@ def test_db_exporter_polder():
 # %%
 # Test
 if __name__ == "__main__":
-    print(os.environ.get("SKIP_DATABASE"))
+    print(os.getenv("SKIP_DATABASE"))
 
     Path(db_export_output_dir).mkdir(exist_ok=True, parents=True)
     test_db_exporter_one_feature()

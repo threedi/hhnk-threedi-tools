@@ -7,6 +7,7 @@ from pathlib import Path
 import geopandas as gpd
 import hhnk_research_tools as hrt
 import pandas as pd
+from dotenv import load_dotenv
 from hhnk_research_tools.sql_functions import (
     database_to_gdf,
     get_table_domains_from_oracle,
@@ -20,7 +21,8 @@ from hhnk_threedi_tools.resources.schematisation_builder.db_layer_mapping import
 try:
     from hhnk_threedi_tools.local_settings_htt import DATABASES
 except ImportError as e:
-    if os.getenv("SKIP_DATABASE", "0") == "1":
+    load_dotenv()
+    if os.getenv("SKIP_DATABASE") == "1":
         DATABASES = {}  # No DB in CI environment
     else:
         raise ImportError(

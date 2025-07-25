@@ -19,9 +19,6 @@ from pathlib import Path
 import geopandas as gpd
 import hhnk_research_tools as hrt
 
-# from DAMO_exporter import DAMO_exporter
-# from DAMO_HyDAMO_converter import DAMO_to_HyDAMO_Converter
-# from HyDAMO_validator import validate_hydamo
 import hhnk_threedi_tools.resources.schematisation_builder as schematisation_builder_resources
 from hhnk_threedi_tools.core.folders import Project
 from hhnk_threedi_tools.core.schematisation_builder.DAMO_HyDAMO_converter import DAMO_to_HyDAMO_Converter

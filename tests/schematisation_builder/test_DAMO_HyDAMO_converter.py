@@ -20,7 +20,7 @@ def test_DAMO_HyDAMO_converter():
     - If correct HyDAMO field types are assigned to the attributes based on the HyDAMO schema
     """
     damo_file_path = TEST_DIRECTORY / "schematisation_builder" / "DAMO.gpkg"
-    hydamo_file_path = temp_dir_out / "HyDAMO.gpkg"
+    hydamo_file_path = temp_dir_out / f"HyDAMO_{hrt.current_time(date=True)}.gpkg"
 
     converter = DAMO_to_HyDAMO_Converter(
         damo_file_path=damo_file_path,

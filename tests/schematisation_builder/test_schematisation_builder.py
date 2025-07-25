@@ -1,13 +1,26 @@
 # %%
 
+import os
+import sys
 from pathlib import Path
 
+import dotenv
+import pytest
+
 # import hhnk_research_tools as hrt
-from hhnk_threedi_tools.core.schematisation_builder.schematisation_builder import make_validated_hydamo_package
 from tests.config import TEMP_DIR, TEST_DIRECTORY
 
+dotenv.load_dotenv()
 
+
+@pytest.mark.skipif(sys.version_info < (3, 12), reason="Requires Python 3.12 or higher")
+@pytest.mark.skipif(
+    os.getenv("SKIP_DATABASE") == "1",
+    reason="Skipping DB test because no local_settings_htt.py or DATABASES available.",
+)
 def test_schematisation_builder():
+    from hhnk_threedi_tools.core.schematisation_builder.schematisation_builder import make_validated_hydamo_package
+
     # define project folder path and
     project_folder = TEST_DIRECTORY / "test_schematisation_builder"
 
