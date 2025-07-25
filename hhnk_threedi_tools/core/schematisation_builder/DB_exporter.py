@@ -75,23 +75,25 @@ def update_model_extent_from_combinatiepeilgebieden(
         polygon_wkt=bbox_model,
     )
 
-    cpgb_gdf, _ = database_to_gdf(db_dict=db_dict, sql=sql, columns=["shape", "code"])
+    pgb_combi_gdf, _ = database_to_gdf(db_dict=db_dict, sql=sql, columns=["shape", "code"])
 
-    # Create most representatieve point per peilgebied
-    cpgb_rp_gdf = cpgb_gdf.copy()
-    cpgb_rp_gdf["geometry"] = cpgb_rp_gdf["geometry"].representative_point()
+    # Create most representatieve point (rp) per peilgebied
+    pgb_combi_rp_gdf = pgb_combi_gdf.copy()
+    pgb_combi_rp_gdf["geometry"] = pgb_combi_rp_gdf["geometry"].representative_point()
 
     # Select points that intersect with original model extent
-    cpgb_rp_gdf = cpgb_rp_gdf[cpgb_rp_gdf["geometry"].intersects(model_extent_gdf["geometry"].iloc[0])]
+    pgb_combi_rp_gdf = pgb_combi_rp_gdf[pgb_combi_rp_gdf["geometry"].intersects(model_extent_gdf["geometry"].iloc[0])]
 
     # Check if this results in any peilgebieden
-    if cpgb_rp_gdf.empty:
+    if pgb_combi_rp_gdf.empty:
         logger.warning(
             "No Combinatiepeilgebieden found in the database for the given model extent. Returning original model extent."
         )
     else:
         # Filter combinatiepeilgebieden en merge
-        model_extent_gdf["geometry"] = cpgb_gdf[cpgb_gdf["code"].isin(cpgb_rp_gdf["code"])].geometry.unary_union
+        model_extent_gdf["geometry"] = pgb_combi_gdf[
+            pgb_combi_gdf["code"].isin(pgb_combi_rp_gdf["code"])
+        ].geometry.unary_union
 
     return model_extent_gdf
 
@@ -113,7 +115,7 @@ def export_sub_layer(
     It collects the information for a table without geometry that depends on another table with
     geometry.     The function is very similar to the next one, and even uses the select SQL of the
     parent table to make the correct selection of elements. It is not robust to put a list of IDs
-    in the SQL, because there is a chance that the string becomes too long.For profiles, there is
+    in the SQL, because there is a chance that the string becomes too long. For profiles, there is
     even a double dependency, so this is called twice in the db_exporter. It saves a few lines of
     code this way.
 
@@ -306,7 +308,7 @@ def db_exporter(
 
     logging_bd_exporter = []
     for table in table_names:
-        table_config = DB_LAYER_MAPPING.get(table)
+        table_config: dict = DB_LAYER_MAPPING.get(table)
         if table_config is None:
             # FIXME wvg: wil je hier een warning / error en de loop verder skippen?
             table_config = {}  # explicit check for mypy
@@ -420,6 +422,7 @@ def db_exporter(
                         f"Finished export of {len(sub2_model_gdf)} elements from table {sub_table} from {service_name}"
                     )
 
+                    # FIXME wvg: missing sub2_model_gdf.to_file() to output_file
         except Exception as e:
             if table_config is None:
                 error = f"{table} not found in database mapping {e}"
