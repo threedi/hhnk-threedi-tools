@@ -382,6 +382,29 @@ class ProfileIntermediateConverter:
         if warnings_list:
             self.logger.warning("\n".join(warnings_list))
 
+    def _add_z_to_point_geometry_based_on_column(self, column_name: str) -> None:
+        """
+        Add Z coordinate to the geometry of profielpunt based on a specified column.
+        The column should contain height values that will be used as Z coordinates.
+        """
+        self.logger.info(f"Adding Z coordinate to profielpunt geometry based on column '{column_name}'...")
+        self.data._ensure_loaded(layers=["profielpunt"], previous_method="create_profile_tables")
+        if column_name not in self.data.profielpunt.columns:
+            raise ValueError(f"Column '{column_name}' is not present in profielpunt.")
+
+        # Ensure the column contains numeric values
+        self.data.profielpunt[column_name] = pd.to_numeric(self.data.profielpunt[column_name], errors="coerce")
+
+        # Add Z coordinate to the geometry
+        self.data.profielpunt["geometry"] = self.data.profielpunt.apply(
+            lambda row: Point(row.geometry.x, row.geometry.y, row[column_name])
+            if pd.notna(row[column_name])
+            else row.geometry,
+            axis=1,
+        )
+
+        self.logger.info("Z coordinate added to profielpunt geometry.")
+
     def connect_profiles_to_hydroobject_without_profiles(self, max_distance: int = 250) -> None:
         """
         Find hydroobjects that are not connected to profiles.
@@ -497,29 +520,6 @@ class ProfileIntermediateConverter:
 
         self.logger.info("Connected hydroobjects to profiles.")
 
-    def _add_z_to_point_geometry_based_on_column(self, column_name: str) -> None:
-        """
-        Add Z coordinate to the geometry of profielpunt based on a specified column.
-        The column should contain height values that will be used as Z coordinates.
-        """
-        self.logger.info(f"Adding Z coordinate to profielpunt geometry based on column '{column_name}'...")
-        self.data._ensure_loaded(layers=["profielpunt"], previous_method="create_profile_tables")
-        if column_name not in self.data.profielpunt.columns:
-            raise ValueError(f"Column '{column_name}' is not present in profielpunt.")
-
-        # Ensure the column contains numeric values
-        self.data.profielpunt[column_name] = pd.to_numeric(self.data.profielpunt[column_name], errors="coerce")
-
-        # Add Z coordinate to the geometry
-        self.data.profielpunt["geometry"] = self.data.profielpunt.apply(
-            lambda row: Point(row.geometry.x, row.geometry.y, row[column_name])
-            if pd.notna(row[column_name])
-            else row.geometry,
-            axis=1,
-        )
-
-        self.logger.info("Z coordinate added to profielpunt geometry.")
-
     def write_outputs(self, output_path: Path):
         """
         Write all GeoDataFrame attributes of this class to a GeoPackage or individual files.
@@ -541,41 +541,7 @@ class ProfileIntermediateConverter:
                 gdf.to_file(output_path / f"{name}.gpkg", driver="GPKG")
                 self.logger.info(f"Wrote file '{name}.gpkg' to {output_path}")
 
-    ### HELPER FUNTIONS ###
-
-    def _find_profiellijn_by_hydroobject_code(self, code: str) -> Optional[gpd.GeoDataFrame]:
-        """
-        Find the profiellijn GeoDataFrame by hydroobject code.
-
-        Called by: compute_deepest_point_hydroobjects
-        """
-        self.data._ensure_loaded(layers=["profiellijn"], previous_method="create_profile_tables")
-
-        # Find the hydroobjectID for the given code
-        hydroobject_id = self.data.hydroobject[self.data.hydroobject["CODE"] == code]["GlobalID"].values
-        if not hydroobject_id:
-            self.logger.warning(f"No hydroobject found with code '{code}'.")
-            return None
-
-        # Filter profielgroep by hydroobjectID
-        profielgroep = self.data.profielgroep[self.data.profielgroep["hydroobjectID"] == hydroobject_id[0]]
-        if profielgroep.empty:
-            self.logger.warning(f"No profielgroep found for hydroobject code '{code}'.")
-            return None
-
-        # Get the profielgroep_ids, use 'copyOf' if present, otherwise use 'GlobalID'
-        profielgroep_ids = profielgroep.apply(
-            lambda row: row["copyOf"] if "copyOf" in row and pd.notna(row["copyOf"]) else row["GlobalID"], axis=1
-        ).tolist()
-
-        # Get the profiellijn that matches the profielgroep_ids
-        profiellijn = self.data.profiellijn[self.data.profiellijn["profielgroepID"].isin(profielgroep_ids)]
-
-        if profiellijn.empty:
-            self.logger.warning(f"No profiellijn found for hydroobject code '{code}'.")
-            return None
-
-        return profiellijn
+    ### HELPER FUNCTIONS ###
 
     def find_linemerge_id_by_hydroobject_code(self, code: str) -> str:
         """
@@ -708,3 +674,37 @@ class ProfileIntermediateConverter:
 
         # Map the deepest point to the profiellijn using its GlobalID
         self.data.profiellijn["diepstePunt"] = self.data.profiellijn["GlobalID"].map(deepest_points)
+
+    def _find_profiellijn_by_hydroobject_code(self, code: str) -> Optional[gpd.GeoDataFrame]:
+        """
+        Find the profiellijn GeoDataFrame by hydroobject code.
+
+        Called by: compute_deepest_point_hydroobjects
+        """
+        self.data._ensure_loaded(layers=["profiellijn"], previous_method="create_profile_tables")
+
+        # Find the hydroobjectID for the given code
+        hydroobject_id = self.data.hydroobject[self.data.hydroobject["CODE"] == code]["GlobalID"].values
+        if not hydroobject_id:
+            self.logger.warning(f"No hydroobject found with code '{code}'.")
+            return None
+
+        # Filter profielgroep by hydroobjectID
+        profielgroep = self.data.profielgroep[self.data.profielgroep["hydroobjectID"] == hydroobject_id[0]]
+        if profielgroep.empty:
+            self.logger.warning(f"No profielgroep found for hydroobject code '{code}'.")
+            return None
+
+        # Get the profielgroep_ids, use 'copyOf' if present, otherwise use 'GlobalID'
+        profielgroep_ids = profielgroep.apply(
+            lambda row: row["copyOf"] if "copyOf" in row and pd.notna(row["copyOf"]) else row["GlobalID"], axis=1
+        ).tolist()
+
+        # Get the profiellijn that matches the profielgroep_ids
+        profiellijn = self.data.profiellijn[self.data.profiellijn["profielgroepID"].isin(profielgroep_ids)]
+
+        if profiellijn.empty:
+            self.logger.warning(f"No profiellijn found for hydroobject code '{code}'.")
+            return None
+
+        return profiellijn
