@@ -1,18 +1,25 @@
 # %%
+import sys
 from pathlib import Path
 
 import geopandas as gpd
 import hhnk_research_tools as hrt
+import pytest
 
 import hhnk_threedi_tools.resources.schematisation_builder as schematisation_builder_resources
-from hhnk_threedi_tools.core.schematisation_builder.DAMO_HyDAMO_converter import DAMO_to_HyDAMO_Converter
-from hhnk_threedi_tools.core.schematisation_builder.HyDAMO_validator import validate_hydamo
-from hhnk_threedi_tools.core.schematisation_builder.profile_intermediate_converter import ProfileIntermediateConverter
 from tests.config import TEMP_DIR, TEST_DIRECTORY
 
 
 # %%
+# TODO remove skip when py312 implemented.
+@pytest.mark.skipif(sys.version_info < (3, 12), reason="Requires Python 3.12 or higher")
 def test_profile_intermediate_converter():
+    from hhnk_threedi_tools.core.schematisation_builder.DAMO_HyDAMO_converter import DAMO_to_HyDAMO_Converter
+    from hhnk_threedi_tools.core.schematisation_builder.HyDAMO_validator import validate_hydamo
+    from hhnk_threedi_tools.core.schematisation_builder.profile_intermediate_converter import (
+        ProfileIntermediateConverter,
+    )
+
     """
     Test the ProfileIntermediateConverter class functionality:
     - Load and validate DAMO and CSO layers.
