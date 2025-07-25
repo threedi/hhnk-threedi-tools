@@ -2,7 +2,9 @@
 """DAMO exporter based on model extent"""
 
 import os
+from logging import Logger
 from pathlib import Path
+from typing import Optional
 
 import geopandas as gpd
 import hhnk_research_tools as hrt
@@ -26,7 +28,7 @@ except ImportError as e:
         DATABASES = {}  # No DB in CI environment
     else:
         raise ImportError(
-            r"The 'local_settings_htt' module is missing. Get it from \\corp.hhnk.nl\data\Hydrologen_data\Data\01.basisgegevens\00.HDB\SettingsAndRecourses\local_settings_htt.py and place it in \hhnk_threedi_tools\ "
+            r"The 'local_settings_htt' module is missing. Get it from \\corp.hhnk.nl\data\Hydrologen_data\Data\01.basisgegevens\00.HDB\SettingsAndRecourses\local_settings_htt.py and place it in \hhnk_threedi_tools\local_settings_htt.py "
         )
 
 # From mapping json list top level keys
@@ -38,7 +40,7 @@ EPSG_CODE = "28992"
 def update_model_extent_from_combinatiepeilgebieden(
     model_extent_gdf: gpd.GeoDataFrame,
     db_dict: dict = DATABASES.get("csoprd_lezen"),
-    logger: hrt.logging = None,
+    logger: Optional[Logger] = None,
 ) -> gpd.GeoDataFrame:
     """
     Update the model extent GeoDataFrame with the geometry from the Combinatiepeilgebieden table.
@@ -47,15 +49,17 @@ def update_model_extent_from_combinatiepeilgebieden(
     ----------
     model_extent_gdf : GeoDataFrame
         GeoDataFrame of the selected polder
-    db_dict : dict, optional
-        Dictionary containing database connection details, by default DATABASES["csoprd_lezen"]
+    db_dict : dict, default is DATABASES["csoprd_lezen"]
+        Dictionary containing database connection details
+    logger : Optional[Logger], optional
+        Logger to use for logging, if None a new logger is created.
 
     Returns
     -------
     model_extent_gdf : GeoDataFrame
         Updated GeoDataFrame with the geometry from Combinatiepeilgebieden.
     """
-    if not logger:  # moet dit if logger is None zijn?
+    if logger is None:
         logger = hrt.logging.get_logger(__name__)
 
     # Get the geometry from the Combinatiepeilgebieden table
@@ -231,9 +235,7 @@ def update_table_domains(
         )
 
         # Build lookup: index=codedomeinwaarde → naamdomeinwaarde
-        lookup = domains.loc[domains["damokolomnaam"] == col, ["codedomeinwaarde", "naamdomeinwaarde"]].set_index(
-            "codedomeinwaarde"
-        )["naamdomeinwaarde"]
+        lookup = domains.loc[domains["damokolomnaam"] == col].set_index("codedomeinwaarde")["naamdomeinwaarde"]
 
         # Vectorized replacement (NaN if no match)
         model_gdf[col] = model_gdf[new_code_col].map(lookup)
@@ -247,7 +249,7 @@ def db_exporter(
     table_names: list[str] = tables_default,
     buffer_distance: float = 0.5,
     epsg_code: str = EPSG_CODE,
-    logger: hrt.logging = None,
+    logger: Optional[Logger] = None,
     update_extent: bool = True,
 ) -> list[str]:
     """
@@ -269,8 +271,12 @@ def db_exporter(
         List of table names to be included in export, deafaults to all needed for model generation
     buffer_distance: float
         Distance to buffer the polder polygon before selection
-    ESPG_CODE : str, default is "28992"
+    epsg_code : str, default is "28992"
         Projection string epsg code
+    logger : Optional[Logger], default is None
+        Logger to use for logging, if None a new logger is created.
+    update_extent : bool, default is True
+        If True, the model extent will be updated with update_model_extent_from_combinatiepeilgebieden
 
     Writes
     ------
@@ -300,11 +306,16 @@ def db_exporter(
 
     logging_bd_exporter = []
     for table in table_names:
-        table_config = DB_LAYER_MAPPING.get(table, None)
-        layer_db = table_config.get("source", None)
-        schema = table_config.get("schema", None)
-        geomcolumn = table_config.get("geomcolumn", None)
-        columns = table_config.get("columns", None)
+        table_config = DB_LAYER_MAPPING.get(table)
+        if table_config is None:
+            # FIXME wvg: wil je hier een warning / error en de loop verder skippen?
+            table_config = {}  # explicit check for mypy
+        layer_db = table_config.get("source")
+        schema = table_config.get("schema")
+        geomcolumn = table_config.get("geomcolumn")
+        columns = table_config.get("columns")
+        # FIXME wvg: table_name = table_config.get("table_name", table) gaat nu alleen voor gemaal werken.
+        # FIXME Lijkt beetje dubbelop om de name weer op te vragen.
         table_name = table_config.get("table_name", table)
 
         if geomcolumn is not None:
@@ -384,6 +395,7 @@ def db_exporter(
                     f"Finished export of {len(sub_model_gdf)} elements from table {sub_table} from {service_name}"
                 )
 
+                # TODO wvg: samenvoegen met vorige if in een loop.
                 if table_config.get("required_sub2_table", None) is not None:
                     # If there is a second sub table, export it as well
                     sub2_table = table_config.get("required_sub2_table", None)
