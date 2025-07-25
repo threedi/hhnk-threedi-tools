@@ -8,7 +8,7 @@ from hhnk_threedi_tools.resources import schematisation_builder as sb_resources
 
 
 # %%
-def main():
+def export_validation_rules_overview():
     json_path = hrt.get_pkg_resource_path(sb_resources, "validationrules.json")
     with open(json_path) as f:
         rules = json.load(f)
@@ -48,4 +48,4 @@ def main():
 
 # %%
 if __name__ == "__main__":
-    main()
+    export_validation_rules_overview()
