@@ -26,3 +26,28 @@ To setup the env;
 Not all checks work yet on 3.12. The github checks therefore run on py39
 Tests this locally with
 `pixi run -e py39 tests`
+
+# Model Repository
+
+## Initialize a model repository
+
+Run this after cloning a model repository or creating a new one. This will add the nescessary git hooks (to .get/hooks),
+initialize git LFS (Large File Storage), create or append to the .gitattributes and .gitignore file.
+
+### Windows
+
+```shell
+# from the root of the model repository
+<root of hhnk-treedi-tools repo>\hhnk_threedi_tools\git_model_repo\bin\initialize_repo.bat
+# or from other path
+<root of hhnk-treedi-tools repo>\hhnk_threedi_tools\git_model_repo\bin\initialize_repo.bat <path to model repo>
+``` 
+
+### Or on Mac/ Linux
+
+```shell
+# from the root of the model repository
+<root of hhnk-treedi-tools repo>/hhnk_threedi_tools/git_model_repo/bin/linux/initialize_repo.sh
+# or from other path
+<root of hhnk-treedi-tools repo>/hhnk_threedi_tools/git_model_repo/bin/linux/initialize_repo.sh <path to model repo>
+```

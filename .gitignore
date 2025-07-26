@@ -8,15 +8,25 @@ __pycache__
 build
 dist
 Thumbs.db
+
 local_settings.py
 local_settings_htt.py
 notebook_data.json
 debug.log
 
+tests/tests_git_model_repo/tmp_output*
+hhnk-research-tools
+
 # Pytests
 .coverage
 coverage.xml
+
 hhnk_threedi_tools/breaches/api_ldo_key.txt
 hhnk_threedi_tools/tests/data/new_project/
 tests_local/data/temp
 tests_local/data
+
+git_log.log
+.env
+.DS_Store
+.idea
