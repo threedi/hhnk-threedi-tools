@@ -90,10 +90,11 @@ threedi_mi_utils = "==0.1.10"
 threedigrid = "==2.3.5"
 threedigrid-builder = ">=1.24.3"
 threedidepth = "==0.6.3"
-lazy_loader= "*"
 
 # HHNK deps
 hhnk-threedi-tools = { path = ".", editable = true }
+lazy_loader= "*"
+dotenv = "*"
 
 [feature.dev.dependencies]
 jupyterlab = "*"
@@ -171,10 +172,10 @@ threedigrid = "==2.3.3" # threedi_results_analysis 3.12.0
 threedidepth = "==0.6.3" # threedi_results_analysis 3.9.0
 hhnk-research-tools = { git = "https://github.com/hhnk/hhnk-research-tools.git", rev = "main" }
 # hydamo_validation = { git = "https://github.com/hhnk/HyDAMOValidatieModule.git", rev = "main" }
+dotenv = "*"
 
 #Editable installs
 hhnk_threedi_tools = { path = ".", editable = true }
-
 
 [environments]
 dev = ["dev"]
