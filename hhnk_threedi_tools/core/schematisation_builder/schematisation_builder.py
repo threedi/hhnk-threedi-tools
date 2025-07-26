@@ -19,13 +19,10 @@ from pathlib import Path
 import geopandas as gpd
 import hhnk_research_tools as hrt
 
-# from DAMO_exporter import DAMO_exporter
-# from DAMO_HyDAMO_converter import DAMO_to_HyDAMO_Converter
-# from HyDAMO_validator import validate_hydamo
 import hhnk_threedi_tools.resources.schematisation_builder as schematisation_builder_resources
 from hhnk_threedi_tools.core.folders import Project
-from hhnk_threedi_tools.core.schematisation_builder.DAMO_exporter import DAMO_exporter
 from hhnk_threedi_tools.core.schematisation_builder.DAMO_HyDAMO_converter import DAMO_to_HyDAMO_Converter
+from hhnk_threedi_tools.core.schematisation_builder.DB_exporter import DATABASES, db_exporter
 from hhnk_threedi_tools.core.schematisation_builder.HyDAMO_validator import validate_hydamo
 
 # %%
@@ -65,10 +62,14 @@ def make_validated_hydamo_package(project_folder: Path, table_names: list) -> No
 
     # check if polder_polygon.shp exists
     if polder_file_path:
-        logger.info(f"Start export from DAMO database for file: {polder_file_path}")
+        logger.info(f"Start export from source databases for file: {polder_file_path}")
         # DAMO export
         gdf_polder = gpd.read_file(polder_file_path)
-        logging_DAMO = DAMO_exporter(gdf_polder, table_names, damo_file_path)
+        logging_DAMO = db_exporter(
+            model_extent_gdf=gdf_polder,
+            output_file=damo_file_path,
+            table_names=table_names,
+        )
 
         if logging_DAMO:
             logger.warning("Not all tables have been exported from the DAMO database.")
@@ -86,8 +87,6 @@ def make_validated_hydamo_package(project_folder: Path, table_names: list) -> No
         logger.error("No polder_polygon.shp available, so co file selected for export.")
         # stop the script
         raise SystemExit
-
-    # %%
 
     if hydamo_file_path:
         logger.info(f"Start validation of HyDAMO file: {hydamo_file_path}")
@@ -131,10 +130,11 @@ def make_validated_hydamo_package(project_folder: Path, table_names: list) -> No
 
 if __name__ == "__main__":
     # define project folder path and
-    project_folder = Path("E:/09.modellen_speeltuin/test_nieuwe_manier_validationrules5")
+    project_folder = Path("E:/09.modellen_speeltuin/test_with_pomp_table_juan")
 
     # select which tables names to export from DAMO
-    TABLE_NAMES = ["HYDROOBJECT", "DUIKERSIFONHEVEL"]
+    # only 'main'tables have to be selected (like "GEMAAL"), so no 'sub' tables (like "POMP")
+    TABLE_NAMES = ["HYDROOBJECT", "DUIKERSIFONHEVEL", "GEMAAL"]
 
     # run the function to create a validated HyDAMO package
     make_validated_hydamo_package(project_folder, TABLE_NAMES)

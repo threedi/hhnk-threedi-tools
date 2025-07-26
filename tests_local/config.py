@@ -6,7 +6,7 @@ import hhnk_research_tools as hrt
 
 from hhnk_threedi_tools.core.folders import Folders
 
-TEST_DIRECTORY = Path(__file__).parent.absolute() / "data"
+TEST_DIRECTORY = Path(__file__).parents[1].absolute() / "tests/data"
 
 # PATH_TEST_MODEL = TEST_DIRECTORY / "model_test"
 
