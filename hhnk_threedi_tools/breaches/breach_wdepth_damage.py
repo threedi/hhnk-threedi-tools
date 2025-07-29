@@ -1,0 +1,395 @@
+# %%
+import geopandas as gpd
+import os
+from pathlib import Path
+import hhnk_research_tools as hrt
+from osgeo import gdal
+from hhnk_threedi_tools.core.result_rasters.netcdf_to_gridgpkg import NetcdfToGPKG
+from hhnk_threedi_tools.core.result_rasters.grid_to_raster import (
+    GridToWaterDepth,
+    GridToWaterLevel,
+)
+import pandas as pd
+from hhnk_threedi_tools.breaches.breaches import Breaches
+
+schadeschatter_path = Path(r"E:\01.basisgegevens\hhnk_schadeschatter")
+import sys
+
+if str(schadeschatter_path) not in sys.path:
+    sys.path.append(str(schadeschatter_path))
+import matplotlib.pyplot as plt
+
+
+# %%
+def clip_DEM(inputraster, outputraster, projection, shapefile, resolution):
+    if not os.path.exists(outputraster):
+        options = gdal.WarpOptions(
+            cutlineDSName=shapefile,
+            cropToCutline=(True),
+            format="VRT",
+            dstSRS=projection,
+            xRes=resolution,
+            yRes=resolution,
+        )
+        outimage = gdal.Warp(
+            srcDSOrSrcDSTab=inputraster, destNameOrDestDS=outputraster, options=options
+        )
+    else:
+        print(f"The raster {outputraster} already exists")
+
+
+# This function select from the grid.gpkg the data that has water
+def grid_selection(grid_gdf, output_scenario_wss):
+    # select grids to be used to rasteriezed water depth
+    active_cells = grid_gdf[grid_gdf["vol_max"] > 1.5]
+
+    if (len(active_cells["vol_max"])) == 0:
+        print(f"There is no inundation for de polder {output_scenario_wss.parent.name}")
+
+    else:
+        # buffer active cells
+        active_cells_buffer = gpd.GeoDataFrame.buffer(active_cells, 1)
+        # add geomtery to active cells.
+        cells_buffer_gdf = gpd.GeoDataFrame(geometry=active_cells_buffer)
+
+        # Add a column to disolve grids and create a single shape
+        cells_buffer_gdf["disolve"] = 1
+        cells_disolve = cells_buffer_gdf.dissolve(by="disolve")
+
+        # explode the shape file in case there are many.
+        buffer_explode = cells_disolve.explode()
+
+        # clip grid_gdf witht  the previous shapefile to select the grid to be used for rasterized
+        grid_selection = grid_gdf.clip(buffer_explode)
+
+        # Selct the id from selection from clipped grid
+        filter_id = grid_selection["id"]
+        grid_gdf_new = grid_gdf[grid_gdf["id"].isin(filter_id)]
+
+        # Save the new grid to a file
+        new_grid_output = os.path.join(output_scenario_wss, "new_grid.gpkg")
+        grid_gdf_new.to_file(new_grid_output, driver="GPKG", engine="pyogrio")
+
+        # disolve grid selection
+        grid_gdf_new["disolve"] = 1
+        mask = grid_gdf_new.dissolve(by="disolve")
+
+        # save file
+        mask_path = os.path.join(output_scenario_wss, "mask_flood.gpkg")
+        mask.to_file(mask_path, driver="GPKG")
+        return grid_gdf
+
+
+# %%
+def get_paths(
+    base_folder, scenario_name: list = None, specific_scenario=False, skip: list = None
+):
+    items = os.listdir(base_folder)
+    models = []
+    region_paths = []
+
+    for item in items:
+        path = Path(os.path.join(base_folder, item))
+        if os.path.isdir(path):
+            models.append(path)
+        else:
+            continue
+    # model_scenarios = ["ROR-PRI-HELDERSE_ZEEWERING_4-T10"]
+    for model in models:
+        if specific_scenario:
+            model_scenarios = scenario_name
+        else:
+            model_scenarios = os.listdir(model)
+
+        for model_scenario in model_scenarios:
+            if model_scenario in skip:
+                continue
+
+            path = Path(os.path.join(model, model_scenario))
+            if path.exists():
+                region_paths.append(path)
+        else:
+            continue
+
+    return region_paths
+
+
+# %%
+def calculate_depth_raster(region_paths, dem_path, OVERWRITE):
+    # Set variables for depth raster
+    EPSG = "EPSG:28992"
+    spatialResolution = 0.5
+    DEM_location = str(dem_path)
+
+    # loop over the pregion_paths
+    for region_path in region_paths:
+        # Define output folder and result file
+        breach = Breaches(region_path)
+        output_scenario_wss = breach.wss.path
+        netcdf_folder = breach.netcdf.path
+        print(f"start calculation for scenario {output_scenario_wss.parent.name}")
+
+        # Define names of the outputfiles
+        output_file = os.path.join(output_scenario_wss, "grid_raw.gpkg")
+        mask_flood = os.path.join(output_scenario_wss, "mask_flood.gpkg")
+        dem_clip_output = os.path.join(output_scenario_wss, "dem_clip.vrt")
+        output_file_depth = Path(
+            os.path.join(output_scenario_wss, "max_wdepth_orig.tif")
+        )
+        output_waterlevel_raster = Path(
+            os.path.join(output_scenario_wss, "max_waterlevel_orig.tif")
+        )
+
+        # start the convertion from netcdf to gpkg
+        if not os.path.exists(output_file):
+            print(f"Creating grid_raw for {breach.name}")
+            NetcdfToGPKG(hrt.ThreediResult(netcdf_folder)).run(
+                output_file=output_file,
+                timesteps_seconds=["max"],
+                wlvl_correction=False,
+                overwrite=OVERWRITE,
+            )
+
+            # read the grid result
+            grid_gdf = gpd.read_file(output_file, driver="GPKG", engine="pyogrio")
+
+            # select the grid with water
+            new_grid_gdf = grid_selection(grid_gdf, output_scenario_wss)
+
+            if new_grid_gdf is None:
+                continue
+
+        else:
+            # read the grid in case it exists
+            grid_gdf = gpd.read_file(output_file, driver="GPKG", engine="pyogrio")
+            print(f"The grid for scenario {breach.name} already exists")
+
+        # clip the DEM to be used to calculate the depth raster
+        clip_DEM(DEM_location, dem_clip_output, EPSG, mask_flood, spatialResolution)
+
+        # Check if the output depth raster exists
+        if not os.path.exists(output_file_depth):
+            print(
+                f"Calculating max level raster for scenario {netcdf_folder.parent.name} has started"
+            )
+            calculator_kwargs = {
+                "dem_path": dem_clip_output,
+                "grid_gdf": new_grid_gdf,
+                "wlvl_column": "wlvl_max",
+            }
+
+            # Init calculator
+            with GridToWaterLevel(**calculator_kwargs) as self:
+                self.run(output_file=output_waterlevel_raster, overwrite=True)
+
+            calculator_kwargs = {
+                "dem_path": dem_clip_output,
+                "wlvl_path": output_waterlevel_raster,
+            }
+            with GridToWaterDepth(**calculator_kwargs) as self:
+                print(
+                    f"Calculating max water depth raster for scenario {netcdf_folder.parent.name} has started"
+                )
+                self.run(output_file=output_file_depth, overwrite=True)
+
+        else:
+            print(
+                f"the {output_file_depth.stem} already exists, check in case to need replacement"
+            )
+            continue
+
+
+def indirect_direct(folder_output, calculation_type, self_wss):
+    if calculation_type == "sum":
+        name = "damage_orig_lizard.tif"
+        damage_output_file = os.path.join((folder_output), name)
+        print(f"Calculating {name}")
+    else:
+        name = calculation_type + "_cost_damage.tif"
+        damage_output_file = os.path.join((folder_output), name)
+        print(f"Calculating {name}")
+
+    if not os.path.exists(damage_output_file):
+        self_wss.run(
+            output_raster=hrt.Raster(damage_output_file),
+            calculation_type=calculation_type,
+            verbose=True,
+            overwrite=False,
+        )
+    else:
+        print(f"the output file {damage_output_file} already exists")
+
+
+def calculate_damage_raster(region_paths):
+    # Landuse paramenters for cliping damage calculation
+    cfg_file = schadeschatter_path / "01_data/cfg/cfg_lizard.cfg"
+    EPSG = "EPSG:28992"
+
+    # Set variable for damage
+    wss_settings = {
+        "inundation_period": 48,  # uren
+        "herstelperiode": "10 dagen",
+        "maand": "sep",
+        "cfg_file": cfg_file,
+        "dmg_type": "gem",
+    }
+
+    # define calculation types
+    calculation_types = ["sum", "direct", "indirect"]
+
+    # loop over the pregion_paths
+    for region_path in region_paths:
+        # Define output folder and results file
+        breach = Breaches(region_path)
+        output_scenario_wss = breach.wss.path
+        mask_flood = os.path.join(output_scenario_wss, "mask_flood.gpkg")
+        out_landuse = os.path.join(output_scenario_wss, "landuse_2021_clip.vrt")
+        depth_file = os.path.join(output_scenario_wss, "max_wdepth_orig.tif")
+
+        open_depth_raster = gdal.Open(depth_file)
+        spatialResolution = open_depth_raster.GetGeoTransform()[1]
+        open_depth_raster = None
+
+        # clip landuse
+        clip_DEM(landuse_file, out_landuse, EPSG, mask_flood, spatialResolution)
+
+        # set the file to run damage raster calculation
+        self_wss = hrt.Waterschadeschatter(
+            depth_file=Path(depth_file),
+            landuse_file=out_landuse,
+            wss_settings=wss_settings,
+        )
+
+        for calculation_type in calculation_types:
+            indirect_direct(output_scenario_wss, calculation_type, self_wss)
+            print(calculation_type)
+
+
+def sum_total_raster(calculation_type, region_paths):
+    # loop over the pregion_paths
+    for region_path in region_paths:
+        # Define output folder and result file
+        breach = Breaches(region_path)
+        output_scenario_wss = breach.wss.path
+    if calculation_type == "sum":
+        name = "damage_orig_lizard.tif"
+        raster_path = os.path.join(output_scenario_wss, name)
+        print(f"Calculating {name}")
+    else:
+        name = calculation_type + "_cost_damage.tif"
+        raster_path = os.path.join(output_scenario_wss, name)
+        print(f"Calculating {name}")
+    # raster_path = r"E:\03.resultaten\Normering Regionale Keringen\output\IPO_AB_WE_WIP_DONE\IPO_AB_1053_JA\03_3di_results\1d2d_results\wss\damage_orig_lizard_IPO_AB_1053_JA.tif"
+    raster_resolution = gdal.Open(raster_path, gdal.GA_ReadOnly)
+    raster = hrt.Raster(raster_path)
+    area_pixel = pow(hrt.RasterMetadata(raster_resolution).pixel_width, 2)
+    sum_values = raster.sum()
+    total_cost = sum_values * area_pixel
+
+    return total_cost
+
+
+def save_damage_csv(region_paths):
+    for region_path in region_paths:
+        breach = Breaches(region_path)
+        breach_name = breach.name
+        output_scenario_wss = breach.wss.path
+        name = "damage_orig_lizard.tif"
+        damage_output_file = output_scenario_wss / name
+        if damage_output_file.exists():
+            calculation_types = ["sum", "direct", "indirect"]
+            # Initialize values
+            results = {
+                "scenario": breach_name,
+                "direct": 0,
+                "indirect": 0,
+                "total_damage_raster": 0,
+            }
+
+            for calculation_type in calculation_types:
+                value = sum_total_raster(calculation_type, region_paths)
+                if calculation_type == "direct":
+                    results["direct"] = value
+                elif calculation_type == "indirect":
+                    results["indirect"] = value
+                elif calculation_type == "sum":
+                    results["total_damage_raster"] = value
+
+                # Calculate totals and differences
+                results["total_sum"] = results["direct"] + results["indirect"]
+                results["difference"] = (
+                    results["total_damage_raster"] - results["total_sum"]
+                )
+
+            # Append to DataFrame
+            final_result = pd.DataFrame(results, index=[0])
+
+            csv_path = os.path.join(output_scenario_wss, "total_costs_area.csv")
+            final_result.to_csv(csv_path)
+
+
+def create_pgn_dagame(region_paths):
+    for region_path in region_paths:
+        # Define output folder and result file
+        breach = Breaches(region_path)
+        output_scenario_wss = breach.wss.path
+        csv_path = output_scenario_wss / "total_costs_area.csv"
+        breach_name = breach.name
+        jpeg_output = breach.jpeg.path
+        png_name = breach_name + "_bar_graph.png"
+
+        if csv_path.exists():
+            df_data_path = os.path.join(output_scenario_wss, "total_costs_area.csv")
+            df_data = pd.read_csv(df_data_path)
+            df_no_unamaed = df_data.drop(["Unnamed: 0"], axis=1)
+            df_no_total = df_no_unamaed.drop(["total_sum"], axis=1)
+            df_no_diference = df_no_total.drop(["difference"], axis=1)
+            df_data = df_no_diference.T
+            df_selection = df_data[1:4]
+            color = ["orange", "yellow", "red"]
+
+            df_selection["color"] = color
+            # e[1:4][[0]].plot(kind ='bar', color= color)
+
+            y = df_selection[0]
+            plt.bar(x=df_selection.index, height=y, color=color)
+
+            plt.xticks(color="black", rotation="horizontal")
+            title = f"Direct, Indirect een Totaal Kost bij de Scenario {df_data.loc['scenario'].values[0]}"
+            plt.title(title, fontweight="bold")
+            plt.xlabel("Cost Type", fontweight="bold")
+            plt.ylabel("Euros €", fontweight="bold")
+            path_png = os.path.join(jpeg_output, png_name)
+            # plt.gcf().subplots_adjust(bottom=0.15)
+
+            for i, v in enumerate(y):
+                label = " € " + str(round(v, 3))
+                plt.text(i, v, str(label), ha="center", fontsize=9)
+            print(f"graph done for {breach_name}")
+            plt.savefig(path_png)
+            plt.clf()
+
+
+# %%
+if __name__ == "__main__":
+    dem_path = r"E:\02.modellen\RegionalFloodModel\work in progress\schematisation\rasters\dem_1_met_amstelmeer.tif"
+    landuse_file = r"E:\01.basisgegevens\rasters\landgebruik\landuse2021_tiles\combined_rasters.vrt"
+    base_folder = (
+        r"E:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\output"
+    )
+    skip = [
+        "ROR-PRI-HONDSBOSSCHE_ZEEWERING_4-T10",
+        "ROR-PRI-HONDSBOSSCHE_ZEEWERING_4-T100",
+    ]
+    # I have to structure better this code, the idea is that it finish everything in one go.
+    # So frist: calculate damage, second csv, and the create pgn. This process needs to be done by scenario
+    region_paths = get_paths(
+        base_folder, scenario_name=None, specific_scenario=False, skip=skip
+    )
+    calculate_damage_raster(region_paths)
+    save_damage_csv(region_paths)
+    create_pgn_dagame(region_paths)
+    OVERWRITE = True
+# S# %%
+
+# %%
