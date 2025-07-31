@@ -60,6 +60,9 @@ def make_validated_hydamo_package(project_folder: Path, table_names: list) -> No
     damo_file_path = project_folder / "01_source_data" / "DAMO.gpkg"
     hydamo_file_path = project_folder / "01_source_data" / "HyDAMO.gpkg"
 
+    damo_version = "2.4.1"
+    hydamo_version = "2.4"
+
     # check if polder_polygon.shp exists
     if polder_file_path:
         logger.info(f"Start export from source databases for file: {polder_file_path}")
@@ -77,7 +80,12 @@ def make_validated_hydamo_package(project_folder: Path, table_names: list) -> No
         # Conversion to HyDAMO
         logger.info(f"DAMO export was succesfull. Now, start conversion to HyDAMO for file: {polder_file_path}")
         converter = DAMO_to_HyDAMO_Converter(
-            damo_file_path=damo_file_path, hydamo_file_path=hydamo_file_path, layers=table_names, overwrite=True
+            damo_file_path=damo_file_path,
+            damo_version=damo_version,
+            hydamo_file_path=hydamo_file_path,
+            hydamo_version=hydamo_version,
+            layers=table_names,
+            overwrite=True,
         )
         converter.run()
 
@@ -131,7 +139,6 @@ def make_validated_hydamo_package(project_folder: Path, table_names: list) -> No
 if __name__ == "__main__":
     # define project folder path and
     project_folder = Path("E:/09.modellen_speeltuin/test_with_pomp_table_juan")
-
     # select which tables names to export from DAMO
     # only 'main'tables have to be selected (like "GEMAAL"), so no 'sub' tables (like "POMP")
     TABLE_NAMES = ["HYDROOBJECT", "DUIKERSIFONHEVEL", "GEMAAL"]
