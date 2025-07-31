@@ -36,6 +36,11 @@ class DAMO_to_HyDAMO_Converter:
         Path to the DAMO schema (xml file)
     overwrite : bool
         If True, overwrite an existing layer in existing HyDAMO geopackage
+    convert_domain_values : bool
+        If True, convert the domain values in the DAMO layer to descriptive values in HyDAMO.
+        If False, the domain values are not converted.
+    logger : hrt.logging.Logger, optional
+        Logger to use for logging. If None, a default logger is created.
 
     Sources
     -------
@@ -51,12 +56,14 @@ class DAMO_to_HyDAMO_Converter:
         hydamo_schema_path: Optional[Path] = None,
         damo_schema_path: Optional[Path] = None,
         overwrite: bool = False,
+        convert_domain_values: bool = True,
         logger=None,
     ):
         self.damo_file_path = Path(damo_file_path)
         self.hydamo_file_path = hrt.SpatialDatabase(hydamo_file_path)
         self.layers = layers
         self.overwrite = overwrite
+        self.convert_domain_values = convert_domain_values
 
         if logger:
             self.logger = logger
@@ -235,7 +242,8 @@ class DAMO_to_HyDAMO_Converter:
         # Get the field type of the attribute from the HyDAMO schema
         field_type = self._get_field_type(column_name, layer_name)
         # Convert the domain values to HyDAMO target values
-        column = self._convert_domain_values(layer_name, column_name, column)
+        if self.convert_domain_values:
+            column = self._convert_domain_values(layer_name, column_name, column)
         # Convert the field type to the correct type
         if field_type is not None:
             # Convert to the field type, but safely handle NaN values
