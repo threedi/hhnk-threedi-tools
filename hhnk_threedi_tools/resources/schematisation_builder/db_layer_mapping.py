@@ -1,3 +1,10 @@
+"""This script contains the mapping of database layers to their respective source tables and
+schemas. It is used to define which data to export from which database for the schematisation
+builder. It includes information about the source, schema, columns, and any required sub-tables
+or links to other tables. This mapping is the default set of data used in the `db_exporter` function
+that exports everything needed for model generation (available in the databases of HHNK).
+"""
+
 DB_LAYER_MAPPING = {
     # All non geometry tables should listed as sub tables
     # CS_OBJECTEN
@@ -67,6 +74,7 @@ DB_LAYER_MAPPING = {
     },
     "GEMAAL_DAMO": {
         "table_name": "GEMAAL",
+        "layername": "GEMAAL_DAMO",
         "source": "aquaprd_lezen",
         "schema": "DAMO_W",
         "columns": None,

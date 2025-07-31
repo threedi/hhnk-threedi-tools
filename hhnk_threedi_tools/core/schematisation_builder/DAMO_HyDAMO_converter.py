@@ -103,19 +103,19 @@ class DAMO_to_HyDAMO_Converter:
         if not self.damo_schema_path.exists():
             raise FileNotFoundError(f"{self.damo_schema_path} does not exist.")
 
-        self.domains, self.objects = self.retrieve_domain_mapping()
+        self.domains, self.objects = self._retrieve_domain_mapping()
 
         # Read JSON definitions
         with open(self.hydamo_schema_path, "r") as json_file:
             hydamo_schema = json.load(json_file)
 
-        self.definitions = hydamo_schema.get("definitions", {})
+        self.definitions: dict = hydamo_schema.get("definitions", {})
 
     def run(self) -> None:
         """self.convert_layers writes to self.hydamo_file_path.path"""
         self.convert_layers()
 
-    def retrieve_domain_mapping(self) -> Tuple[dict, dict]:
+    def _retrieve_domain_mapping(self) -> Tuple[dict, dict]:
         """
         Retrieve the domain mapping from the DAMO schema.
 
@@ -189,13 +189,14 @@ class DAMO_to_HyDAMO_Converter:
         Open layer by layer and convert the layer to HyDAMO and write to the target HyDAMO geopackage.
 
         Writes
-        -------
+        ------
         self.hydamo_file_path.path : Path
             GPKG file containing HyDAMO layers contained in self.layers
         """
         self.hydamo_file_path.parent.mkdir(parents=True, exist_ok=True)
 
         for layer_name in self.layers:
+            layer_name = layer_name.lower()
             self.logger.info(f"Conversion of {layer_name}")
             if not self.overwrite and self.hydamo_file_path.exists():
                 if layer_name in self.hydamo_file_path.available_layers():
@@ -205,11 +206,11 @@ class DAMO_to_HyDAMO_Converter:
                     return
 
             layer_gdf = gpd.read_file(self.damo_file_path, layer=layer_name, engine="pyogrio")
-            layer_gdf = self.convert_attributes(layer_gdf, layer_name)
-            layer_gdf = self.add_column_NEN3610id(layer_gdf, layer_name)
+            layer_gdf = self._convert_attributes(layer_gdf, layer_name)
+            layer_gdf = self._add_column_NEN3610id(layer_gdf, layer_name)
             layer_gdf.to_file(self.hydamo_file_path.path, layer=layer_name, engine="pyogrio")
 
-    def convert_attributes(self, layer_gdf: gpd.GeoDataFrame, layer_name: str) -> gpd.GeoDataFrame:
+    def _convert_attributes(self, layer_gdf: gpd.GeoDataFrame, layer_name: str) -> gpd.GeoDataFrame:
         """
         Convert the attributes of the layer to HyDAMO.
 
@@ -222,15 +223,22 @@ class DAMO_to_HyDAMO_Converter:
 
         Returns
         -------
-        gpd.GeoDataFrame
+        layer_gdf : gpd.GeoDataFrame
             Converted layer
         """
         for column_name in layer_gdf.columns:
-            column_name = column_name.lower()
-            layer_gdf[column_name] = self.convert_column(layer_gdf[column_name], column_name, layer_name)
+            if column_name != "geometry":
+                lower_column_name = column_name.lower()
+                layer_gdf.rename(columns={column_name: lower_column_name}, inplace=True)
+                layer_gdf[lower_column_name] = self._convert_column(
+                    column=layer_gdf[lower_column_name],
+                    column_name=lower_column_name,
+                    layer_name=layer_name,
+                )
+
         return layer_gdf
 
-    def convert_column(self, column: pd.Series, column_name: str, layer_name: str) -> pd.Series:
+    def _convert_column(self, column: pd.Series, column_name: str, layer_name: str) -> pd.Series:
         """
         Convert the attribute column to HyDAMO.
 
@@ -239,7 +247,7 @@ class DAMO_to_HyDAMO_Converter:
         column : pd.Series
             Attribute column to convert
         column_name : str
-            Name of the attribute column
+            Name of the attribute column (is already lowered)
         layer_name : str
             Name of the layer
 
@@ -249,29 +257,33 @@ class DAMO_to_HyDAMO_Converter:
             Converted attribute column
         """
         # Get the field type of the attribute from the HyDAMO schema
-        field_type = self.get_field_type(column_name, layer_name)
+        field_type = self._get_field_type(column_name, layer_name)
         # Convert the domain values to HyDAMO target values
-        column = self.convert_domain_values(layer_name, column_name, column)
+        column = self._convert_domain_values(layer_name, column_name, column)
         # Convert the field type to the correct type
-        if field_type is not None and pd.notna(column).all():
-            column = column.astype(field_type)  # Convert to the field type
-        else:
-            self.logger.info(
-                f"field_type is None and/or column values are NaN for field {column_name} in layer {layer_name}"
-            )
+        if field_type is not None:
+            # Convert to the field type, but safely handle NaN values
+            if field_type in [int, float]:
+                column = pd.to_numeric(column, errors="coerce").astype(field_type, errors="ignore")
+            elif field_type is str:
+                column = column.astype(str)
+            else:
+                self.logger.warning(
+                    f"Field type {field_type} for column {column_name} in layer {layer_name} is not supported."
+                )
 
         return column
 
-    def get_field_type(self, column_name: str, layer_name: str) -> str:
+    def _get_field_type(self, column_name: str, layer_name: str) -> str:
         """
         Retrieve the field type of a specific attribute in a definition.
 
         Parameters
         ----------
-        layer_name : str
-            The name of the object (e.g., 'hydroobject').
         column_name : str
             The name of the field (e.g., 'nen3610id').
+        layer_name : str
+            The name of the object (e.g., 'hydroobject').
 
         Returns
         -------
@@ -285,9 +297,6 @@ class DAMO_to_HyDAMO_Converter:
         }
 
         try:
-            # make sure the layer_name and column_name are lowercase
-            layer_name = layer_name.lower()
-            column_name = column_name.lower()
             # Check if the layer_name exists in the definitions
             field_type = self.definitions[layer_name]["properties"][column_name]["type"]
 
@@ -302,11 +311,13 @@ class DAMO_to_HyDAMO_Converter:
         finally:
             return field_type
 
-    def convert_domain_values(self, object_name: str, column_name: str, column: pd.Series) -> pd.Series:
+    def _convert_domain_values(self, object_name: str, column_name: str, column: pd.Series) -> pd.Series:
         """
         Check if the column_name corresponds to a field in the specified object that is a domain.
         If it is a domain, convert the values of the column using the associated domain.
         Else, return the column as is.
+
+        Called by: self._convert_column
 
         Parameters
         ----------
@@ -340,7 +351,7 @@ class DAMO_to_HyDAMO_Converter:
         # If no domain is found, return the column as is
         return column
 
-    def add_column_NEN3610id(self, layer_gdf, layer_name):
+    def _add_column_NEN3610id(self, layer_gdf: gpd.GeoDataFrame, layer_name: str):
         """
         Add the NEN3610id column to the layer.
         It is a concatenation of 'NL.WBHCODE.', the WATERSCHAPSCODE, the object name and the value of the column 'code'.
@@ -348,17 +359,15 @@ class DAMO_to_HyDAMO_Converter:
 
         Parameters
         ----------
-        layer_gdf : geopandas.GeoDataFrame
+        layer_gdf : gpd.GeoDataFrame
             Layer to add the NEN3610id column to
         layer_name : str
             Name of the layer
 
         Returns
         -------
-        geopandas.GeoDataFrame
+        layer_gdf : gpd.GeoDataFrame
             Layer with the NEN3610id column
         """
-        layer_gdf["NEN3610id"] = layer_gdf["code"].apply(
-            lambda x: "NL.WBHCODE." + str(WATERSCHAPSCODE) + "." + layer_name + "." + str(x)
-        )
+        layer_gdf["NEN3610id"] = layer_gdf["code"].apply(lambda x: f"NL.WBHCODE.{WATERSCHAPSCODE}.{layer_name}.{x}")
         return layer_gdf
