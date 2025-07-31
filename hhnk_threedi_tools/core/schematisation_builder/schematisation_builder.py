@@ -86,6 +86,7 @@ def make_validated_hydamo_package(project_folder: Path, table_names: list) -> No
             hydamo_version=hydamo_version,
             layers=table_names,
             overwrite=True,
+            convert_domain_values=False,
         )
         converter.run()
 
