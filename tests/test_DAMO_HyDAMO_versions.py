@@ -9,9 +9,9 @@ if __name__ == "__main__":
     if str(root) not in sys.path:
         sys.path.insert(0, str(root))
 
+import fiona
 import geopandas as gpd
 import hhnk_research_tools as hrt
-import fiona
 
 import hhnk_threedi_tools.resources.schematisation_builder as schematisation_builder_resources
 from hhnk_threedi_tools.core.schematisation_builder.DAMO_HyDAMO_converter import DAMO_to_HyDAMO_Converter
@@ -19,6 +19,7 @@ from tests.config import TEMP_DIR, TEST_DIRECTORY
 
 LAYERS = ["profielpunt"]
 temp_dir_out = TEMP_DIR / f"temp_DAMO_HyDAMO_converter_{hrt.current_time(date=True)}"
+
 
 def test_DAMO_HyDAMO_versions():
     damo_file_path = TEST_DIRECTORY / "schema_builder" / "DAMO.gpkg"
@@ -62,7 +63,7 @@ def test_DAMO_HyDAMO_versions():
         assert "typeprofielpunt" in HyDAMO_profielpunt_gdf.columns
         assert HyDAMO_profielpunt_gdf["typeprofielpunt"].apply(lambda x: isinstance(x, (str))).all()
         if row_id:
-            assert HyDAMO_profielpunt_gdf.loc[row_id,"typeprofielpunt"] == "linker insteek landzijde"
+            assert HyDAMO_profielpunt_gdf.loc[row_id, "typeprofielpunt"] == "linker insteek landzijde"
 
     if damo_version == "2.4.1":
         assert "profielTypePunt" in DAMO_profielpunt_gdf.columns
@@ -74,9 +75,10 @@ def test_DAMO_HyDAMO_versions():
         assert "profieltypepunt" in HyDAMO_profielpunt_gdf.columns
         assert HyDAMO_profielpunt_gdf["profieltypepunt"].apply(lambda x: isinstance(x, (str))).all()
         if row_id:
-            assert HyDAMO_profielpunt_gdf.loc[row_id,"profieltypepunt"] == "linker insteek sloot binnendijks"
+            assert HyDAMO_profielpunt_gdf.loc[row_id, "profieltypepunt"] == "linker insteek sloot binnendijks"
+
 
 # %%
 if __name__ == "__main__":
     test_DAMO_HyDAMO_versions()
-#%%
+# %%
