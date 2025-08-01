@@ -150,7 +150,7 @@ if __name__ == "__main__":
 
     # select which tables names to export from DAMO
     # only 'main'tables have to be selected (like "GEMAAL"), so no 'sub' tables (like "POMP")
-    TABLE_NAMES = ["HYDROOBJECT", "DUIKERSIFONHEVEL", "GEMAAL"]
+    TABLE_NAMES = ["HYDROOBJECT", "DUIKERSIFONHEVEL", "GEMAAL", "COMBINATIEPEILGEBIED"]
 
     # run the function to create a validated HyDAMO package
     make_validated_hydamo_package(project_folder, polder_polygon_path, TABLE_NAMES)
