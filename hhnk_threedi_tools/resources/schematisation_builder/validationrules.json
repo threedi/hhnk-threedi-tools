@@ -1202,36 +1202,20 @@
 				},
 				{
 					"id": 105,
-					"name": "zomer praktijk streefpeil value",
+					"name": "gemaal functie type validation",
 					"type": "logic",
 					"validation_rule_set": "hhnk",
 					"error_type": "non-critical",
-					"result_variable": "zomer_doorstroom_gemaal",
+					"result_variable": "gemaal_functie_type_doorstroom/Onderbemalen",
 					"error_message": "gemaal type anders",
 					"active": true,
 					"function": {
 						"EQ": {
-							"left": "streefpeil_zomer_value_praktijk",
-							"right": "streefpeil_zomer_value_afwijking"
+							"left": "gemaal_functie_test",
+							"right": "functiegemaalcode"
 						}
 					}
-				},
-				{
-					"id": 106,
-					"name": "winter praktijk streefpeil value",
-					"type": "logic",
-					"validation_rule_set": "hhnk",
-					"error_type": "non-critical",
-					"result_variable": "winter_doorstroom_gemaal",
-					"error_message": "gemaal type anders",
-					"active": true,
-					"function": {
-						"EQ": {
-							"left": "streefpeil_winter_value_praktijk",
-							"right": "streefpeil_winter_value_afwijking"
-						}
-					}
-				}				
+				}	
 			]
 		},
 		{
