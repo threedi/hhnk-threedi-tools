@@ -1206,16 +1206,17 @@
 					"type": "logic",
 					"validation_rule_set": "hhnk",
 					"error_type": "non-critical",
-					"result_variable": "gemaal_functie_type_doorstroom/Onderbemalen",
+					"result_variable": "gemaal_functie_type_4",
 					"error_message": "gemaal type anders",
 					"active": true,
 					"function": {
 						"EQ": {
 							"left": "gemaal_functie_test",
-							"right": "functiegemaalcode"
+							"right": "functiegemaalcode_damo"
 						}
 					}
-				}	
+				}
+					
 			]
 		},
 		{
