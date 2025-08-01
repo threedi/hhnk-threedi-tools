@@ -111,7 +111,7 @@ class PompIntermediateConverter:
         pyogrio.write_dataframe(self.pomp, self.damo_file_path, layer="pomp", driver="GPKG", overwrite=True)
         self.logger.info("Pomp layer updated successfully.")
 
-    def intesected_pump_peilgebieden(self):
+    def intersected_pump_peilgebieden(self):
         # transform MULTIPOLYGON  to LINESTRING
         self.load_layers()
         # check if the columns exists.

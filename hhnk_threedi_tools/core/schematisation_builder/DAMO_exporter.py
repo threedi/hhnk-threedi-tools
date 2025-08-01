@@ -102,7 +102,7 @@ def DAMO_exporter(
     intermediate = PompIntermediateConverter(output_file)
     intermediate.add_columns_to_pomp()
     intermediate.update_pomp_layer()
-    intermediate.intesected_pump_peilgebiden()
+    intermediate.intersected_pump_peilgebieden()
     intermediate.gemaal_streefpeil_value()
     return logging_DAMO
 
