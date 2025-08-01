@@ -1,16 +1,12 @@
 # %%
-import uuid
-import xml.etree.ElementTree as ET
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Optional
 
 import geopandas as gpd
 import hhnk_research_tools as hrt
 import numpy as np
-import pandas as pd
 import pyogrio
 
-import hhnk_threedi_tools as htt
 from hhnk_threedi_tools.core.folders import Folders
 
 # %%
@@ -21,12 +17,11 @@ class PompIntermediateConverter:
     Intermediate converter for pomp data.
     From CSO format to DAMO/intermediate format, ready for converting to HyDAMO.
     Add column "distance_validation_rule" to the gemaal layer.
+
     Parameters
     ----------
     damo_file_path : Path
         Path to the DAMO geopackage file.
-    poler_polygon :  Path
-        Path to the poler_polygon
     logger : logging.Logger, optional
         Logger for logging messages. If not provided, a default logger will be used.
     """
@@ -61,7 +56,7 @@ class PompIntermediateConverter:
         self.logger.info("Combinatiepeilgebied layer loaded successfully.")
 
         self.polder_polygon = gpd.read_file(self.damo_file_path.parent / "polder_polygon.shp")
-        self.logger.info("Poler polygon layer loaded successfully.")
+        self.logger.info("Polder polygon layer loaded successfully.")
 
     def add_column_gemaalid(self):
         """Add gemaalid column to the pomp layer."""
@@ -116,7 +111,7 @@ class PompIntermediateConverter:
         pyogrio.write_dataframe(self.pomp, self.damo_file_path, layer="pomp", driver="GPKG", overwrite=True)
         self.logger.info("Pomp layer updated successfully.")
 
-    def intesected_pump_peilgebiden(self):
+    def intesected_pump_peilgebieden(self):
         # transform MULTIPOLYGON  to LINESTRING
         self.load_layers()
         # check if the columns exists.
@@ -169,9 +164,6 @@ class PompIntermediateConverter:
         # Intersect buffer_gemaal with combinatiepeilgebied
         buffer_gemaal_gdf = gpd.GeoDataFrame(self.gemaal.copy(), geometry=buffer_gemaal, crs=self.gemaal.crs)
 
-        # drop duplicantes
-        buffer_gemaal.drop_duplicates()
-
         # intersect gemaaal buffer with the combined peilgebied
         gemaal_intersect_peilgebied = gpd.overlay(buffer_gemaal_gdf, self.combinatiepeilgebied, how="intersection")
 
@@ -181,7 +173,7 @@ class PompIntermediateConverter:
         ]
 
         # select columns 'streefpeil_zomer', 'streefpeil_winter', 'soort_streefpeilom' to join from gemaal_intersect_peilgebied
-        columns_to_join = ["streefpeil_zomer", "streefpeil_winter", "soort_streefpeilom", "code_2"]
+        columns_to_join = ["streefpeil_zomer", "streefpeil_winter", "soort_streefpeilom", "peilgebied_soort", "code_2"]
 
         # gather all the columns to be used
         columns_to_keep = self.gemaal.columns.to_list() + columns_to_join
@@ -195,69 +187,34 @@ class PompIntermediateConverter:
             # Select features with the same code value
             code_selection = gemaal[gemaal["code"] == code]
 
-            # Save the codes from the streefpeil to be store in a new column
-            code_streefpeils = ", ".join(str(x) for x in code_selection["code_2"].values.tolist())
+            # Save the codes from the peilgebiede to be store in a new column that columns come from code_2 (code of the peilgebied)
+            pgd_codes = ", ".join(str(x) for x in code_selection["code_2"].values.tolist())
+            values_zomer = ", ".join(str(x) for x in code_selection["streefpeil_zomer"].values.tolist())
+            values_winter = ", ".join(str(x) for x in code_selection["streefpeil_winter"].values.tolist())
+            peil_gebied_soort = ", ".join(str(x) for x in code_selection["peilgebied_soort"].values.tolist())
+            soort_streefpeilom = ", ".join(str(x) for x in code_selection["soort_streefpeilom"].values.tolist())
 
-            # Save the code from de peilgebied in the column streefpeils_code
-            gemaal.loc[gemaal["code"] == code, "streefpeils_codes"] = code_streefpeils
-
-            # Select the waterlevel values in zomer and in winter
-            values_zomer = code_selection["streefpeil_zomer"].values.tolist()
-            values_winter = code_selection["streefpeil_winter"].values.tolist()
-
-            # Check is the selection made previously have more than 1 feature. If there is no, the point does not fall in a boundary
-            if len(code_selection) > 1:
-                # loop over the zomer values
-                for i in range(len(values_zomer) - 1):
-                    # check if they are the same for the streefpeil praktijk and the sreefpeil afwijking
-                    iqual = np.equal(values_zomer[i], values_zomer[i + 1])
-
-                    # if they are the same store the same value in two separeted columns
-                    if iqual == True:
-                        gemaal.loc[
-                            gemaal["code"] == code,
-                            ["streefpeil_zomer_value_praktijk", "streefpeil_zomer_value_afwijking"],
-                        ] = [values_zomer[0], values_zomer[0]]
-                    # if are diferent store those values also
-                    else:
-                        gemaal.loc[gemaal["code"] == code, "streefpeil_zomer_value_praktijk"] = values_zomer[0]
-                        gemaal.loc[gemaal["code"] == code, "streefpeil_zomer_value_afwijking"] = values_zomer[1]
-                # loop over the winter values
-                for i in range(len(values_winter) - 1):
-                    # check if they have the same values
-                    iqual = np.equal(values_winter[i], values_winter[i + 1])
-
-                    # if they are the same store the same value in two separeted columns
-                    if iqual == True:
-                        gemaal.loc[
-                            gemaal["code"] == code,
-                            ["streefpeil_winter_value_praktijk", "streefpeil_winter_value_afwijking"],
-                        ] = [values_winter[0], values_winter[0]]
-
-                    # if are diferent store those values also
-                    else:
-                        gemaal.loc[
-                            gemaal["code"] == code,
-                            ["streefpeil_winter_value_praktijk", "streefpeil_winter_value_afwijking"],
-                        ] = [values_winter[0], values_winter[1]]
-            # If there only one value then save those values in the streefpeil praktijk
-            else:
-                gemaal.loc[gemaal["code"] == code, "streefpeil_zomer_value_praktijk"] = values_zomer[0]
-
-                gemaal.loc[gemaal["code"] == code, "streefpeil_winter_value_praktijk"] = values_winter[0]
+            # Save the code from de peilgebied in the column pgd_codes
+            gemaal.loc[gemaal["code"] == code, "pgd_codes"] = pgd_codes
+            gemaal.loc[gemaal["code"] == code, "streefpeil_peilgebide_zomer"] = values_zomer
+            gemaal.loc[gemaal["code"] == code, "streefpeil_peilgebide_winter"] = values_winter
+            gemaal.loc[gemaal["code"] == code, "soort_streefpeilom_comb"] = soort_streefpeilom
+            gemaal.loc[gemaal["code"] == code, "peilgebied_soort_comb"] = peil_gebied_soort
 
         # dissolve the values using the column code and drop the columns:"streefpeil_zomer", "streefpeil_winter", "soort_streefpeilom", "code_2"
         gemaal_disolve = gemaal.dissolve(by="code").drop(
             columns=["streefpeil_zomer", "streefpeil_winter", "soort_streefpeilom", "code_2"]
         )
+
+        # fucntie gemaal: 1 Sumply, 2, dranage: To avoid the level raises to much, 3.
         # Select columns to join
         columns_to_merge = [
             "code",
-            "streefpeils_codes",
-            "streefpeil_zomer_value_praktijk",
-            "streefpeil_zomer_value_afwijking",
-            "streefpeil_winter_value_praktijk",
-            "streefpeil_winter_value_afwijking",
+            "pgd_codes",
+            "streefpeil_peilgebide_zomer",
+            "streefpeil_peilgebide_winter",
+            "soort_streefpeilom_comb",
+            "peilgebied_soort_comb",
         ]
         # reset the index column and select only the columns set it in the previous step
         gemaal_buffer_subset = gemaal_disolve.reset_index(drop=False)[columns_to_merge]
@@ -266,7 +223,9 @@ class PompIntermediateConverter:
         gemaal_point = self.gemaal.drop_duplicates().merge(gemaal_buffer_subset, on="code", how="left")
 
         # save the layer in DAMO
-        gemaal_point.to_file(self.damo_file_path, layer="GEMAAL", driver="GPKG")
+        # gemaal_point.to_file(self.damo_file_path, layer="GEMAAL", driver="GPKG")
+
+        return gemaal_point
         # return gemaal_point
 
 
