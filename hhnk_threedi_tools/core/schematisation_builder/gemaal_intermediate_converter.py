@@ -222,6 +222,17 @@ class PompIntermediateConverter:
         # Merge the dataframes on the 'code' column using the gemaal buffer subet
         gemaal_point = self.gemaal.drop_duplicates().merge(gemaal_buffer_subset, on="code", how="left")
 
+        # Add the column 'gemaal_functie_value' based on the 'soort_streefpeilom_comb' column, use the list gemaal_functie_test to store the values
+        gemaal_functie_test = []
+        for zomer_values in gemaal_point["streefpeil_peilgebide_zomer"]:
+            diff = np.diff([float(zomer_value) for zomer_value in zomer_values.split(",")])
+            if len(diff) <= 1 and (not (diff.tolist()) or diff.tolist()[0] == 0):
+                gemaal_functie_test.append(4)
+            else:
+                gemaal_functie_test.append(999)
+        # add the gemaal_functie_test to the gemaal_point dataframe
+        gemaal_point["gemaal_functie_test"] = gemaal_functie_test
+
         # save the layer in DAMO
         # gemaal_point.to_file(self.damo_file_path, layer="GEMAAL", driver="GPKG")
 
@@ -236,5 +247,3 @@ if __name__ == "__main__":
     damo = folder.source_data.path / "DAMO.gpkg"
     intermediate_convertion = PompIntermediateConverter(damo)
     pump_function = intermediate_convertion.gemaal_streefpeil_value()
-
-# %%
