@@ -229,12 +229,14 @@ class PompIntermediateConverter:
             if len(diff) <= 1 and (not (diff.tolist()) or diff.tolist()[0] == 0):
                 gemaal_functie_test.append(4)
             else:
-                gemaal_functie_test.append(999)
+                gemaal_functie_test.append(-999)
         # add the gemaal_functie_test to the gemaal_point dataframe
         gemaal_point["gemaal_functie_test"] = gemaal_functie_test
+        # copy column functiegemaalcode in new column functiegemaalcode_DAMO
+        gemaal_point["functiegemaalcode_damo"] = gemaal_point["functiegemaal"]
 
         # save the layer in DAMO
-        # gemaal_point.to_file(self.damo_file_path, layer="GEMAAL", driver="GPKG")
+        gemaal_point.to_file(self.damo_file_path, layer="GEMAAL", driver="GPKG")
 
         return gemaal_point
         # return gemaal_point
