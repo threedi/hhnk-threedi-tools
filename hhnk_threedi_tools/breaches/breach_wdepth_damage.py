@@ -387,6 +387,7 @@ if __name__ == "__main__":
     skip = [
         "ROR-PRI-HONDSBOSSCHE_ZEEWERING_4-T10",
         "ROR-PRI-HONDSBOSSCHE_ZEEWERING_4-T100",
+        "ROR-PRI-DURGERDAMMERDIJK_0.5-T100000",
     ]
 
     # I have to structure better this code, the idea is that it finish everything in one go.
@@ -398,6 +399,4 @@ if __name__ == "__main__":
     save_damage_csv(region_paths)
     create_pgn_dagame(region_paths)
     OVERWRITE = True
-# %%
-
 # %%
