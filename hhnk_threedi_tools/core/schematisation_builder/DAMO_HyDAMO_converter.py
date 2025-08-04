@@ -1,16 +1,21 @@
+# %%
 import importlib.resources as importlib_resources
 import json
+import os
 import xml.etree.ElementTree as ET
+from functools import cached_property
 from pathlib import Path
-from typing import Optional, Tuple, Union
+from typing import Literal, Optional, Tuple, Union
 
 import geopandas as gpd
 import hhnk_research_tools as hrt
 import pandas as pd
 
-import hhnk_threedi_tools as htt
-
 WATERSCHAPSCODE = 12  # Hoogheemraadschap Hollands Noorderkwartier
+SCHEMA_VERSIONS = {  # Available versions of (hy)damo schematisation that are implemented
+    "DAMO": ["2.3", "2.4.1", "2.5"],
+    "HyDAMO": ["2.3", "2.4"],
+}
 
 
 class DAMO_to_HyDAMO_Converter:
@@ -59,75 +64,72 @@ class DAMO_to_HyDAMO_Converter:
         hydamo_file_path: Union[Path, hrt.SpatialDatabase],
         layers: list,
         hydamo_schema_path: Optional[Path] = None,
-        hydamo_version: str = "2.4",
+        hydamo_version: Literal["2.3", "2.4"] = "2.4",
         damo_schema_path: Optional[Path] = None,
-        damo_version: str = "2.4.1",
+        damo_version: Literal["2.3", "2.4.1", "2.5"] = "2.4.1",
         overwrite: bool = False,
         convert_domain_values: bool = True,
         logger=None,
     ):
-        self.damo_file_path = Path(damo_file_path)
-        self.hydamo_file_path = hrt.SpatialDatabase(hydamo_file_path)
-        self.layers = layers
-        self.overwrite = overwrite
-        self.convert_domain_values = convert_domain_values
-
         if logger:
             self.logger = logger
         else:
             self.logger = hrt.logging.get_logger(__name__)
 
+        self.damo_file_path = Path(damo_file_path)
+        self.hydamo_file_path = hrt.SpatialDatabase(hydamo_file_path)
+        self.layers = layers
+        self.overwrite = overwrite
+        self.convert_domain_values = convert_domain_values
+        self.damo_version = damo_version
+
+        self.hydamo_schema_path = self._get_schema_path(
+            schema_path=hydamo_schema_path, schema_basename="HyDAMO", schema_version=hydamo_version
+        )
+
+        if convert_domain_values:
+            self.damo_schema_path = self._get_schema_path(
+                schema_path=damo_schema_path, schema_basename="DAMO", schema_version=damo_version
+            )
+            self.domains, self.objects = self._retrieve_damo_domain_mapping()
+
         self.logger.info(f"conversion layers are {self.layers}")
 
-        ## Load DAMO schema
-        if self.convert_domain_values:
-            if damo_schema_path is None:
-                if "." not in damo_version:
-                    raise ValueError("DAMO version number is in incorrect format. Should be: 1.1, 3.2.1, 4.0, etc.")
-                if damo_version not in ["2.3", "2.4.1", "2.5"]:
-                    raise ValueError(
-                        f"DAMO version number {damo_version} is not implemented or incorrect. Choose another."
-                    )
-                damo_name = f"DAMO_{damo_version.replace('.', '_')}.xml"
-                self.damo_schema_path = hrt.get_pkg_resource_path(
-                    package_resource=htt.resources.schematisation_builder, name=damo_name
-                )
-            else:
-                self.damo_schema_path = Path(damo_schema_path)
-            if not self.damo_schema_path.exists():
-                raise FileNotFoundError(f"{self.damo_schema_path} does not exist.")
-
-            self.domains, self.objects = self._retrieve_domain_mapping()
-
-        ## Load HyDAMO schema
-        if hydamo_schema_path is None:
-            if "." not in hydamo_version:
-                raise ValueError("HyDAMO version number is in incorrect format. Should be: 1.1, 3.2.1, 4.0, etc.")
-            if hydamo_version not in ["2.3", "2.4"]:
-                raise ValueError(
-                    f"HyDAMO version number {hydamo_version} is not implemented or incorrect. Choose another."
-                )
-            hydamo_name = f"HyDAMO_{hydamo_version}.json"
-            # Reference the JSON file from the installed hydamo_validation package
-            self.hydamo_schema_path = importlib_resources.files("hydamo_validation.schemas.hydamo").joinpath(
-                hydamo_name
-            )
-        else:
-            self.hydamo_schema_path = Path(hydamo_schema_path)
-        if not self.hydamo_schema_path.exists():
-            raise FileNotFoundError(f"{self.hydamo_schema_path} does not exist.")
-
-        # Read JSON definitions
+    @cached_property
+    def hydamo_definitions(self) -> dict:
+        """Definitions of the hydamo schematisation."""
         with open(self.hydamo_schema_path, "r") as json_file:
             hydamo_schema = json.load(json_file)
 
-        self.definitions: dict = hydamo_schema.get("definitions", {})
+        return hydamo_schema.get("definitions", {})
 
-    def run(self) -> None:
-        """self.convert_layers writes to self.hydamo_file_path.path"""
-        self.convert_layers()
+    def _get_schema_path(
+        self,
+        schema_path,
+        schema_basename: Literal["DAMO", "HyDAMO"],
+        schema_version: str,
+    ) -> Path:
+        """Return Path to schematisation settings from package resources when schema_path is not provided."""
+        if schema_path is None:
+            if schema_version not in SCHEMA_VERSIONS[schema_basename]:
+                raise ValueError(
+                    f"{schema_basename} version number {schema_version} is not implemented or incorrect. Options are; {SCHEMA_VERSIONS[schema_basename]}"
+                )
+            if schema_basename == "DAMO":
+                package_resource = "hhnk_threedi_tools.resources.schematisation_builder"
+                schema_name = f"{schema_basename}_{schema_version.replace('.', '_')}.xml"
+            elif schema_basename == "HyDAMO":
+                package_resource = "hydamo_validation.schemas.hydamo"
+                schema_name = f"HyDAMO_{schema_version}.json"
 
-    def _retrieve_domain_mapping(self) -> Tuple[dict, dict]:
+            schema_path = importlib_resources.files(package_resource).joinpath(schema_name)
+
+        if not schema_path.exists():
+            raise FileNotFoundError(f"{schema_path} does not exist.")
+
+        return schema_path
+
+    def _retrieve_damo_domain_mapping(self) -> Tuple[dict, dict]:
         """
         Retrieve the domain mapping from the DAMO schema.
 
@@ -311,7 +313,7 @@ class DAMO_to_HyDAMO_Converter:
 
         try:
             # Check if the layer_name exists in the definitions
-            field_type = self.definitions[layer_name]["properties"][column_name]["type"]
+            field_type = self.hydamo_definitions[layer_name]["properties"][column_name]["type"]
 
             field_type = field_types_dict.get(field_type, None)
             if field_type is None:
@@ -384,3 +386,10 @@ class DAMO_to_HyDAMO_Converter:
         """
         layer_gdf["NEN3610id"] = layer_gdf["code"].apply(lambda x: f"NL.WBHCODE.{WATERSCHAPSCODE}.{layer_name}.{x}")
         return layer_gdf
+
+    def run(self) -> None:
+        """Caller for the class that starts the conversion.
+
+        Output is written to self.hydamo_file_path.path
+        """
+        self.convert_layers()
