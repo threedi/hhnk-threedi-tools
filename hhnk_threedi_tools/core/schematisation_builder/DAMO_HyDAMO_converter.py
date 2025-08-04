@@ -1,6 +1,7 @@
 # %%
 import importlib.resources as importlib_resources
 import json
+import logging
 import os
 import xml.etree.ElementTree as ET
 from functools import cached_property
@@ -60,16 +61,16 @@ class DAMO_to_HyDAMO_Converter:
 
     def __init__(
         self,
-        damo_file_path: Path,
+        damo_file_path: os.PathLike,
         hydamo_file_path: Union[Path, hrt.SpatialDatabase],
-        layers: list,
+        layers: list[str],
         hydamo_schema_path: Optional[Path] = None,
-        hydamo_version: Literal["2.3", "2.4"] = "2.4",
+        hydamo_version: str = "2.4",
         damo_schema_path: Optional[Path] = None,
-        damo_version: Literal["2.3", "2.4.1", "2.5"] = "2.4.1",
+        damo_version: str = "2.4.1",
         overwrite: bool = False,
         convert_domain_values: bool = True,
-        logger=None,
+        logger: Optional[logging.Logger] = None,
     ):
         if logger:
             self.logger = logger
@@ -122,7 +123,7 @@ class DAMO_to_HyDAMO_Converter:
                 package_resource = "hydamo_validation.schemas.hydamo"
                 schema_name = f"HyDAMO_{schema_version}.json"
 
-            schema_path = importlib_resources.files(package_resource).joinpath(schema_name)
+            schema_path = Path(str(importlib_resources.files(package_resource).joinpath(schema_name)))
 
         if not schema_path.exists():
             raise FileNotFoundError(f"{schema_path} does not exist.")
