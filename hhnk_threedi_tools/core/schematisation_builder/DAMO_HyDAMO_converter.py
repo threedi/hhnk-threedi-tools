@@ -1,3 +1,4 @@
+import importlib.resources as importlib_resources
 import json
 import xml.etree.ElementTree as ET
 from pathlib import Path
@@ -78,6 +79,27 @@ class DAMO_to_HyDAMO_Converter:
 
         self.logger.info(f"conversion layers are {self.layers}")
 
+        ## Load DAMO schema
+        if self.convert_domain_values:
+            if damo_schema_path is None:
+                if "." not in damo_version:
+                    raise ValueError("DAMO version number is in incorrect format. Should be: 1.1, 3.2.1, 4.0, etc.")
+                if damo_version not in ["2.3", "2.4.1", "2.5"]:
+                    raise ValueError(
+                        f"DAMO version number {damo_version} is not implemented or incorrect. Choose another."
+                    )
+                damo_name = f"DAMO_{damo_version.replace('.', '_')}.xml"
+                self.damo_schema_path = hrt.get_pkg_resource_path(
+                    package_resource=htt.resources.schematisation_builder, name=damo_name
+                )
+            else:
+                self.damo_schema_path = Path(damo_schema_path)
+            if not self.damo_schema_path.exists():
+                raise FileNotFoundError(f"{self.damo_schema_path} does not exist.")
+
+            self.domains, self.objects = self._retrieve_domain_mapping()
+
+        ## Load HyDAMO schema
         if hydamo_schema_path is None:
             if "." not in hydamo_version:
                 raise ValueError("HyDAMO version number is in incorrect format. Should be: 1.1, 3.2.1, 4.0, etc.")
@@ -85,32 +107,15 @@ class DAMO_to_HyDAMO_Converter:
                 raise ValueError(
                     f"HyDAMO version number {hydamo_version} is not implemented or incorrect. Choose another."
                 )
-            hydamo_name = f"HyDAMO_{hydamo_version.replace('.', '_')}.json"
-            self.hydamo_schema_path = hrt.get_pkg_resource_path(
-                package_resource=htt.resources.schematisation_builder, name=hydamo_name
+            hydamo_name = f"HyDAMO_{hydamo_version}.json"
+            # Reference the JSON file from the installed hydamo_validation package
+            self.hydamo_schema_path = importlib_resources.files("hydamo_validation.schemas.hydamo").joinpath(
+                hydamo_name
             )
         else:
             self.hydamo_schema_path = Path(hydamo_schema_path)
         if not self.hydamo_schema_path.exists():
             raise FileNotFoundError(f"{self.hydamo_schema_path} does not exist.")
-
-        if damo_schema_path is None:
-            if "." not in damo_version:
-                raise ValueError("DAMO version number is in incorrect format. Should be: 1.1, 3.2.1, 4.0, etc.")
-            if damo_version not in ["2.3", "2.4.1", "2.5"]:
-                raise ValueError(
-                    f"DAMO version number {damo_version} is not implemented or incorrect. Choose another."
-                )
-            damo_name = f"DAMO_{damo_version.replace('.', '_')}.xml"
-            self.damo_schema_path = hrt.get_pkg_resource_path(
-                package_resource=htt.resources.schematisation_builder, name=damo_name
-            )
-        else:
-            self.damo_schema_path = Path(damo_schema_path)
-        if not self.damo_schema_path.exists():
-            raise FileNotFoundError(f"{self.damo_schema_path} does not exist.")
-
-        self.domains, self.objects = self._retrieve_domain_mapping()
 
         # Read JSON definitions
         with open(self.hydamo_schema_path, "r") as json_file:
