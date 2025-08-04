@@ -178,6 +178,5 @@ dotenv = "*"
 hhnk_threedi_tools = { path = ".", editable = true }
 
 [environments]
-dev = ["dev"]
-test = { features=["test"], no-default-feature = false }
-py39 = { features=["py39"], no-default-feature = true }
+default = ["dev"]
+py39 = { features=["py39"], no-default-feature = true } #required for some tests
