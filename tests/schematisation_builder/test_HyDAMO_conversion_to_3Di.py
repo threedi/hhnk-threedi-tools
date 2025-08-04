@@ -8,7 +8,7 @@ from tests.config import TEMP_DIR, TEST_DIRECTORY
 
 def test_HyDAMO_conversion_to_3Di():
     output_schematisation_directory = TEMP_DIR / f"temp_HyDAMO_converter_to_3Di_{hrt.current_time(date=True)}"
-    hydamo_file_path = TEST_DIRECTORY / "schema_builder" / "HyDAMO.gpkg"
+    hydamo_file_path = TEST_DIRECTORY / "schematisation_builder" / "HyDAMO.gpkg"
     hydamo_layers = ["HYDROOBJECT"]
     empty_schematisation_file_path = None  # Use default from htt.resources
 
