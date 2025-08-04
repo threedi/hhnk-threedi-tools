@@ -248,7 +248,7 @@ def update_table_domains(
 def db_exporter(
     model_extent_gdf: gpd.GeoDataFrame,
     output_file: Path,
-    table_names: list[str] = tables_default,
+    table_names: list[str] = None,
     buffer_distance: float = 0.5,
     epsg_code: str = EPSG_CODE,
     logger: Optional[Logger] = None,
@@ -270,7 +270,7 @@ def db_exporter(
     output_file: Path
         path to output gpkg file in project directory.
     table_names : list[str]
-        List of table names to be included in export, deafaults to all needed for model generation
+        List of table names to be included in export, deafaults to all needed for model generation (pass None).
     buffer_distance: float
         Distance to buffer the polder polygon before selection
     epsg_code : str, default is "28992"
@@ -293,6 +293,10 @@ def db_exporter(
     if logger is None:
         logger = hrt.logging.get_logger(__name__)
     logger.info("Start export")
+
+    if table_names is None:
+        logger.info("No table names provided, using default tables for schematisation builder.")
+        table_names = tables_default
 
     # Update model extent with geometry from Combinatiepeilgebieden
     if update_extent:
@@ -418,11 +422,12 @@ def db_exporter(
                         schema=schema,
                     )
 
+                    sub_model_gdf.to_file(output_file, layer=sub2_table, driver="GPKG", engine="pyogrio")
+
                     logger.info(
                         f"Finished export of {len(sub2_model_gdf)} elements from table {sub_table} from {service_name}"
                     )
 
-                    # FIXME wvg: missing sub2_model_gdf.to_file() to output_file
         except Exception as e:
             if table_config is None:
                 error = f"{table} not found in database mapping {e}"
@@ -432,4 +437,93 @@ def db_exporter(
             logger.error(error)
             logging_bd_exporter.append(error)
 
+    # Finished export logging
+    logger.info(f"Finisched export in {output_file}")
+
     return logging_bd_exporter
+
+# %%
+
+from tests_local.config import TEST_DIRECTORY
+
+model_extent_path = TEST_DIRECTORY / r"model_test\01_source_data\polder_polygon.shp"
+output_file = r"C:\Users\wvanesse\Desktop\temp\test_export.gpkg"
+
+model_extent_gdf = gpd.read_file(model_extent_path, engine="pyogrio")
+table_names = ["HYDROOBJECT", "DUIKERSIFONHEVEL"]
+table = table_names[0]
+epsg_code = "28992"
+
+# %%
+   if schema == "DAMO_W":
+        if column_list is None:
+            column_list = get_table_columns(db_dict=db_dict, schema=schema, table_name=table_name)
+
+        # make all items list columnlist lowercase
+        column_list = [c.lower() for c in column_list]
+
+        # standard queries
+        map_query = f"""
+                SELECT *
+                FROM DAMO_W.DAMOKOLOM
+                WHERE LOWER(DAMOTABELNAAM) = '{table_name.lower()}'
+                AND DAMODOMEINNAAM IS NOT NULL
+                """
+        domain_query = """
+                SELECT *
+                FROM DAMO_W.DAMODOMEINWAARDE
+                """
+        
+        domain2_query = "SELECT * FROM DAMO_W.DAMODOMEIN"
+        # Query database
+        with oracledb.connect(**db_dict) as con:
+            cur = oracledb.Cursor(con)
+            map_df = execute_sql_selection(map_query, conn=con)
+            map_df.columns = map_df.columns.str.lower()
+            map_df = map_df.applymap(lambda x: x.lower() if isinstance(x, str) else x)
+            # select relevant domains for columns
+            map_df = map_df[map_df["damokolomnaam"].isin(column_list)]
+
+            # List domains from DAMO
+            domain_df = execute_sql_selection(domain_query, conn=con)
+            domain_df.columns = domain_df.columns.str.lower()
+            domain_df = domain_df.applymap(lambda x: x.lower() if isinstance(x, str) else x)
+
+            # List domains from DAMO alternative
+            domain2_query = execute_sql_selection(domain2_sql, conn=con)
+            domain2_query.columns = domain2_query.columns.str.lower()
+            domain2_query = domain2_query.applymap(lambda x: x.lower() if isinstance(x, str) else x)
+
+        domains = pd.DataFrame()
+        for i in map_df["damodomeinnaam"].unique():
+            # Select relevant domains
+            domain_rules = domain_df[domain_df["damodomeinnaam"] == i]
+            domain_rules = domain_rules[
+                [
+                    "damodomeinnaam",
+                    "codedomeinwaarde",
+                    "naamdomeinwaarde",
+                    "fieldtype",
+                ]
+            ]
+            # select relevant mapping columns
+            mapping = map_df[map_df["damodomeinnaam"] == i]
+            mapping = mapping[
+                [
+                    "damotabelnaam",
+                    "damokolomnaam",
+                    "damodomeinnaam",
+                    "definitie",
+                ]
+            ]
+
+            # join mapping and domain
+            df = mapping.merge(domain_rules, on="damodomeinnaam", how="left")
+
+            domains = pd.concat([domains, df], ignore_index=True)
+
+        return domains
+
+    else:
+        logger.warning("Schema not supported, only DAMO_W contains domains.")
+        return None

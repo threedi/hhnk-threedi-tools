@@ -62,7 +62,7 @@ def test_db_exporter_GEMAAL_and_POMP_from_CSO():
 def test_db_exporter_polder():
     """Test the db_exporter function using all defeault tables for the test polder."""
 
-    model_extent_path = TEST_DIRECTORY_SB / r"test_schematisation_builder\01_source_data\polder_polygon.shp"
+    model_extent_path = TEST_DIRECTORY / r"model_test\01_source_data\polder_polygon.shp"
     output_file = db_export_output_dir / "test_export.gpkg"
 
     model_extent_gdf = gpd.read_file(model_extent_path, engine="pyogrio")
@@ -70,7 +70,7 @@ def test_db_exporter_polder():
 
     logging_DAMO = db_exporter(
         model_extent_gdf=model_extent_gdf,
-        table_names=table_names,
+        table_names=None,
         output_file=output_file,
     )
 

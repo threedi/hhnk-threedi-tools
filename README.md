@@ -16,7 +16,7 @@ Used in QGIS with this plugin:
 # Development Setup
 Development is done in vs-code with Pixi environment.
 To setup the env;
-
+in vscode, command prompt
 `pixi install -e dev`
 `pixi shell -e dev`
 `pixi run postinstall` -> installs hrt, validatiemodule and githooks
