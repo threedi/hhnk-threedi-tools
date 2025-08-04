@@ -5,9 +5,9 @@ from pathlib import Path
 
 import geopandas as gpd
 import hhnk_research_tools as hrt
-from config import TEMP_DIR, TEST_DIRECTORY
 
-from hhnk_threedi_tools.core.schematisation_builder.db_exporter import db_exporter
+from hhnk_threedi_tools.core.schematisation_builder.DB_exporter import db_exporter
+from tests_local.config import TEMP_DIR, TEST_DIRECTORY
 
 TEST_DIRECTORY_SB = TEST_DIRECTORY / "schematisation_builder"
 # Create output directory for db exporter tests

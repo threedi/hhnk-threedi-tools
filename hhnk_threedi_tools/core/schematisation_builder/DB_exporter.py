@@ -21,7 +21,7 @@ from shapely.geometry import box
 from hhnk_threedi_tools.resources.schematisation_builder.db_layer_mapping import DB_LAYER_MAPPING
 
 try:
-    from hhnk_threedi_tools.local_settings_htt import DATABASES
+    from local_settings_htt import DATABASES
 except ImportError as e:
     load_dotenv()
     if os.getenv("SKIP_DATABASE") == "1":
