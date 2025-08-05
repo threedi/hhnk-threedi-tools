@@ -67,7 +67,8 @@ class DAMO_to_HyDAMO_Converter:
         if not self.damo_file_path.exists():
             raise FileNotFoundError(f"DAMO file {self.damo_file_path} does not exist.")
         else:
-            self.layers = fiona.listlayers(self.damo_file_path)
+            self.layers = hrt.SpatialDatabase(self.damo_file_path).available_layers()
+
 
         self.logger.info(f"conversion layers are {self.layers}")
 
