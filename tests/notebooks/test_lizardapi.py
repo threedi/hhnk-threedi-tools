@@ -14,7 +14,10 @@ def test_lizardapi():
 
     from threedi_scenario_downloader import downloader as dl_new
 
-    from deprecated.core.api import downloader as dl_old
+    try:
+        from deprecated.core.api import downloader as dl_old
+    except:
+        pass
 
     dl_old.LIZARD_URL = "https://hhnk.lizard.net/api/v3/"
     dl_new.LIZARD_URL = "https://hhnk.lizard.net/api/v4/"
