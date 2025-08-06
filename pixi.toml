@@ -119,10 +119,10 @@ django = "<4"  # datachecker (<4 wegens compatibility met 3Di modules)
 # hhnk-research-tools = { path = "../hhnk-research-tools", editable = true }
 build = "*"
 
-
-[feature.test.pypi-dependencies]
-hhnk-research-tools = { git = "https://github.com/hhnk/hhnk-research-tools.git", rev = "main" }
-hydamo_validation = { git = "https://github.com/hhnk/HyDAMOValidatieModule.git", rev = "main" }
+# Unused currently
+# [feature.test.pypi-dependencies]
+# hhnk-research-tools = { git = "https://github.com/hhnk/hhnk-research-tools.git", rev = "main" }
+# hydamo_validation = { git = "https://github.com/hhnk/HyDAMOValidatieModule.git", rev = "main" }
 
 
 # Temporary old py39 env to have working tests
@@ -179,4 +179,5 @@ hhnk_threedi_tools = { path = ".", editable = true }
 
 [environments]
 default = ["dev"]
+# test = ["test"]
 py39 = { features=["py39"], no-default-feature = true } #required for some tests
