@@ -26,12 +26,6 @@ from hhnk_threedi_tools.core.climate_scenarios.maskerkaart_raster import rasteri
 from hhnk_threedi_tools.core.climate_scenarios.schadekaart_peilgebieden import maak_schade_polygon
 
 plt.ioff()  # turn off inline plots, only show when asked
-# Folders inladen
-# folder = Folders(notebook_data['polder_folder'])
-
-# Of handmatig;
-# folder=Folders(r"E:\02.modellen\model_test_v2")
-folder = htt.Folders(r"C:\Users\wietse\Documents\GitHub\hhnk-threedi-tools\tests\data\model_test")
 
 
 class KlimaatsommenSettings:
@@ -189,7 +183,7 @@ class KlimaatsommenWidgets:
             layout=self.item_layout(grid_area="wss_landuse_label"),
         )
 
-        landuse_path = folder.model.schema_base.rasters.landuse.view_name_with_parents(3)
+        landuse_path = self.folder.model.schema_base.rasters.landuse.view_name_with_parents(3)
         self.wss_landuse_text = widgets.Text(value=landuse_path, layout=self.item_layout(grid_area="wss_landuse_text"))
 
         self.precip_figure = widgets.Output(layout=self.item_layout(grid_area="precip_figure"))

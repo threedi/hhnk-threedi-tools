@@ -16,7 +16,7 @@ from tests.config import FOLDER_TEST, TEMP_DIR, TEST_DIRECTORY
 
 def test_klimaatsommenprep_verify():
     """Raises because not all 18 scenarios downloaded"""
-    with pytest.raises(Exception):
+    with pytest.raises(FileNotFoundError):
         klimaatsommenprep = KlimaatsommenPrep(
             folder=FOLDER_TEST,
             batch_name="batch_test",
@@ -29,12 +29,22 @@ def test_klimaatsommenprep_verify():
 def test_klimaatsommenprep():
     """Test creation of gpkg and rasters"""
     # %%
-    klimaatsommenprep = KlimaatsommenPrep(
-        folder=FOLDER_TEST,
-        batch_name="batch_test",
-        cfg_file="cfg_lizard.cfg",
-        landuse_file=FOLDER_TEST.model.schema_base.rasters.landuse,
-        verify=False,
+
+    folder = FOLDER_TEST
+    batch_name = "batch_test"
+    cfg_file = "cfg_lizard.cfg"
+    landuse_file = FOLDER_TEST.model.schema_base.rasters.landuse
+    verify = False
+    min_block_size = 1024
+    use_aggregate = False
+    old_wlvl = False
+
+    self = klimaatsommenprep = KlimaatsommenPrep(
+        folder=folder,
+        batch_name=batch_name,
+        cfg_file=cfg_file,
+        landuse_file=landuse_file,
+        verify=verify,
     )
 
     # Rebase the batch_fd so it will always create all output.
