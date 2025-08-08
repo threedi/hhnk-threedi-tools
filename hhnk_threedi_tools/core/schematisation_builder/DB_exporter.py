@@ -21,7 +21,7 @@ from shapely.geometry import box
 from hhnk_threedi_tools.resources.schematisation_builder.db_layer_mapping import DB_LAYER_MAPPING
 
 try:
-    from hhnk_threedi_tools.local_settings_htt import DATABASES
+    from local_settings_htt import DATABASES
 except ImportError as e:
     load_dotenv()
     if os.getenv("SKIP_DATABASE") == "1":
@@ -233,14 +233,37 @@ def update_table_domains(
         model_gdf.insert(
             loc=model_gdf.columns.get_loc(col) + 1,
             column=new_code_col,
-            value=model_gdf[col].astype(str),
+            value=model_gdf[col],
         )
+        model_gdf[col] = ""
 
-        # Build lookup: index=codedomeinwaarde → naamdomeinwaarde
-        lookup = domains.loc[domains["damokolomnaam"] == col].set_index("codedomeinwaarde")["naamdomeinwaarde"]
+        text_types = ["text", "esrifieldtypestring"]
+        int_types = ["short", "esrifieldtypesmallinteger"]
+
+        # Filter domains for the current column
+        lookup = domains.loc[domains["damokolomnaam"] == col].set_index("codedomeinwaarde")
+
+        # correctly set dtypes
+        if lookup["fieldtype"].iloc[0] in text_types:
+            model_gdf[new_code_col] = model_gdf[new_code_col].astype(str)
+            lookup.index = lookup.index.astype(str)
+        elif lookup["fieldtype"].iloc[0] in int_types:
+            model_gdf[new_code_col] = model_gdf[new_code_col].fillna(-9999).astype(int)
+            lookup.index = lookup.index.astype(int)
+
+        # Prepare mapping dictionary
+        mapping = lookup["naamdomeinwaarde"]
+        # Check if mapping is unique
+        if not mapping.is_unique:
+            logger.warning(
+                f"Non-unique mapping found for column {col} in table {table_name}. Using first occurrence for mapping, probably from DAMO."
+            )
+            # TODO uitzoeken waarom er veel dubbelingen in de  domainen zitten (staat uit bij Geo)
+            mapping = mapping.groupby(mapping.index).first()
 
         # Vectorized replacement (NaN if no match)
-        model_gdf[col] = model_gdf[new_code_col].map(lookup)
+
+        model_gdf[col] = model_gdf[new_code_col].map(mapping)
 
     return model_gdf
 
@@ -248,7 +271,7 @@ def update_table_domains(
 def db_exporter(
     model_extent_gdf: gpd.GeoDataFrame,
     output_file: Path,
-    table_names: list[str] = tables_default,
+    table_names: list[str] = None,
     buffer_distance: float = 0.5,
     epsg_code: str = EPSG_CODE,
     logger: Optional[Logger] = None,
@@ -270,7 +293,7 @@ def db_exporter(
     output_file: Path
         path to output gpkg file in project directory.
     table_names : list[str]
-        List of table names to be included in export, deafaults to all needed for model generation
+        List of table names to be included in export, deafaults to all needed for model generation (pass None).
     buffer_distance: float
         Distance to buffer the polder polygon before selection
     epsg_code : str, default is "28992"
@@ -293,6 +316,10 @@ def db_exporter(
     if logger is None:
         logger = hrt.logging.get_logger(__name__)
     logger.info("Start export")
+
+    if table_names is None:
+        logger.info("No table names provided, using default tables for schematisation builder.")
+        table_names = tables_default
 
     # Update model extent with geometry from Combinatiepeilgebieden
     if update_extent:
@@ -420,6 +447,8 @@ def db_exporter(
                     # Write to geopackage
                     sub2_model_gdf.to_file(output_file, layer=sub2_table, driver="GPKG", engine="pyogrio")
 
+                    sub_model_gdf.to_file(output_file, layer=sub2_table, driver="GPKG", engine="pyogrio")
+
                     logger.info(
                         f"Finished export of {len(sub2_model_gdf)} elements from table {sub2_table} from {service_name}"
                     )
@@ -433,4 +462,22 @@ def db_exporter(
             logger.error(error)
             logging_bd_exporter.append(error)
 
+    # Finished export logging
+    logger.info(f"Finisched export in {output_file}")
+
     return logging_bd_exporter
+
+
+# %%
+
+from tests_local.config import TEST_DIRECTORY
+
+model_extent_path = TEST_DIRECTORY / r"model_test\01_source_data\polder_polygon.shp"
+output_file = r"C:\Users\wvanesse\Desktop\temp\test_export.gpkg"
+
+model_extent_gdf = gpd.read_file(model_extent_path, engine="pyogrio")
+table_names = ["HYDROOBJECT"]
+table = table_names[0]
+epsg_code = "28992"
+
+# %%
