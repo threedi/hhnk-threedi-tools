@@ -233,14 +233,37 @@ def update_table_domains(
         model_gdf.insert(
             loc=model_gdf.columns.get_loc(col) + 1,
             column=new_code_col,
-            value=model_gdf[col].astype(str),
+            value=model_gdf[col],
         )
+        model_gdf[col] = ""
 
-        # Build lookup: index=codedomeinwaarde → naamdomeinwaarde
-        lookup = domains.loc[domains["damokolomnaam"] == col].set_index("codedomeinwaarde")["naamdomeinwaarde"]
+        text_types = ["text", "esrifieldtypestring"]
+        int_types = ["short", "esrifieldtypesmallinteger"]
+
+        # Filter domains for the current column
+        lookup = domains.loc[domains["damokolomnaam"] == col].set_index("codedomeinwaarde")
+
+        # correctly set dtypes
+        if lookup["fieldtype"].iloc[0] in text_types:
+            model_gdf[new_code_col] = model_gdf[new_code_col].astype(str)
+            lookup.index = lookup.index.astype(str)
+        elif lookup["fieldtype"].iloc[0] in int_types:
+            model_gdf[new_code_col] = model_gdf[new_code_col].fillna(-9999).astype(int)
+            lookup.index = lookup.index.astype(int)
+
+        # Prepare mapping dictionary
+        mapping = lookup["naamdomeinwaarde"]
+        # Check if mapping is unique
+        if not mapping.is_unique:
+            logger.warning(
+                f"Non-unique mapping found for column {col} in table {table_name}. Using first occurrence for mapping, probably from DAMO."
+            )
+            # TODO uitzoeken waarom er veel dubbelingen in de  domainen zitten (staat uit bij Geo)
+            mapping = mapping.groupby(mapping.index).first()
 
         # Vectorized replacement (NaN if no match)
-        model_gdf[col] = model_gdf[new_code_col].map(lookup)
+
+        model_gdf[col] = model_gdf[new_code_col].map(mapping)
 
     return model_gdf
 
@@ -442,6 +465,7 @@ def db_exporter(
 
     return logging_bd_exporter
 
+
 # %%
 
 from tests_local.config import TEST_DIRECTORY
@@ -450,80 +474,8 @@ model_extent_path = TEST_DIRECTORY / r"model_test\01_source_data\polder_polygon.
 output_file = r"C:\Users\wvanesse\Desktop\temp\test_export.gpkg"
 
 model_extent_gdf = gpd.read_file(model_extent_path, engine="pyogrio")
-table_names = ["HYDROOBJECT", "DUIKERSIFONHEVEL"]
+table_names = ["HYDROOBJECT"]
 table = table_names[0]
 epsg_code = "28992"
 
 # %%
-   if schema == "DAMO_W":
-        if column_list is None:
-            column_list = get_table_columns(db_dict=db_dict, schema=schema, table_name=table_name)
-
-        # make all items list columnlist lowercase
-        column_list = [c.lower() for c in column_list]
-
-        # standard queries
-        map_query = f"""
-                SELECT *
-                FROM DAMO_W.DAMOKOLOM
-                WHERE LOWER(DAMOTABELNAAM) = '{table_name.lower()}'
-                AND DAMODOMEINNAAM IS NOT NULL
-                """
-        domain_query = """
-                SELECT *
-                FROM DAMO_W.DAMODOMEINWAARDE
-                """
-        
-        domain2_query = "SELECT * FROM DAMO_W.DAMODOMEIN"
-        # Query database
-        with oracledb.connect(**db_dict) as con:
-            cur = oracledb.Cursor(con)
-            map_df = execute_sql_selection(map_query, conn=con)
-            map_df.columns = map_df.columns.str.lower()
-            map_df = map_df.applymap(lambda x: x.lower() if isinstance(x, str) else x)
-            # select relevant domains for columns
-            map_df = map_df[map_df["damokolomnaam"].isin(column_list)]
-
-            # List domains from DAMO
-            domain_df = execute_sql_selection(domain_query, conn=con)
-            domain_df.columns = domain_df.columns.str.lower()
-            domain_df = domain_df.applymap(lambda x: x.lower() if isinstance(x, str) else x)
-
-            # List domains from DAMO alternative
-            domain2_query = execute_sql_selection(domain2_sql, conn=con)
-            domain2_query.columns = domain2_query.columns.str.lower()
-            domain2_query = domain2_query.applymap(lambda x: x.lower() if isinstance(x, str) else x)
-
-        domains = pd.DataFrame()
-        for i in map_df["damodomeinnaam"].unique():
-            # Select relevant domains
-            domain_rules = domain_df[domain_df["damodomeinnaam"] == i]
-            domain_rules = domain_rules[
-                [
-                    "damodomeinnaam",
-                    "codedomeinwaarde",
-                    "naamdomeinwaarde",
-                    "fieldtype",
-                ]
-            ]
-            # select relevant mapping columns
-            mapping = map_df[map_df["damodomeinnaam"] == i]
-            mapping = mapping[
-                [
-                    "damotabelnaam",
-                    "damokolomnaam",
-                    "damodomeinnaam",
-                    "definitie",
-                ]
-            ]
-
-            # join mapping and domain
-            df = mapping.merge(domain_rules, on="damodomeinnaam", how="left")
-
-            domains = pd.concat([domains, df], ignore_index=True)
-
-        return domains
-
-    else:
-        logger.warning("Schema not supported, only DAMO_W contains domains.")
-        return None
