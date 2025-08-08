@@ -33,7 +33,9 @@ def test_DAMO_HyDAMO_converter():
     assert hydamo_file_path.exists()
 
     # Check if fields have proper field types
-    for layer in LAYERS:
+    hydamo_layers = hrt.SpatialDatabase(hydamo_file_path).available_layers()
+    for layer in hydamo_layers:
+        print(f"Checking layer: {layer}")
         hydamo_gdf = gpd.read_file(hydamo_file_path, layer=layer)
         # Check if NEN3610id column is added in each layer
         assert "NEN3610id" in hydamo_gdf.columns
