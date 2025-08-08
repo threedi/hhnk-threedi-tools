@@ -16,7 +16,7 @@ from tests.config import TEMP_DIR, TEST_DIRECTORY
 def test_profile_intermediate_converter():
     from hhnk_threedi_tools.core.schematisation_builder.DAMO_HyDAMO_converter import DAMO_to_HyDAMO_Converter
     from hhnk_threedi_tools.core.schematisation_builder.HyDAMO_validator import validate_hydamo
-    from hhnk_threedi_tools.core.schematisation_builder.profile_intermediate_converter import (
+    from hhnk_threedi_tools.core.schematisation_builder.intermediate_converter import (
         ProfileIntermediateConverter,
     )
 
@@ -33,16 +33,11 @@ def test_profile_intermediate_converter():
     """
     logger = hrt.logging.get_logger(__name__)
 
-    damo_file_path = TEST_DIRECTORY / "schema_builder" / "DAMO anna paulowna.gpkg"
-    cso_file_path = (
-        TEST_DIRECTORY / "schema_builder" / "CSO anna paulowna.gpkg"
-    )  # TODO fake data, not extracted from CSO
+    raw_export_file_path = TEST_DIRECTORY / "schematisation_builder" / "raw_export.gpkg"
     temp_dir_out = TEMP_DIR / f"temp_profile_intermediate_converter_{hrt.current_time(date=True)}"
     Path(temp_dir_out).mkdir(parents=True, exist_ok=True)
 
-    self = converter = ProfileIntermediateConverter(
-        damo_file_path=damo_file_path, ods_cso_file_path=cso_file_path, logger=logger
-    )
+    converter = ProfileIntermediateConverter(raw_export_file_path=raw_export_file_path, logger=logger)
 
     # Load and validate layers
     converter.load_layers()  # STEP 1 in run method
@@ -58,33 +53,34 @@ def test_profile_intermediate_converter():
     assert converter.data.hydroobject_linemerged is not None
 
     # Test variables for profile on primary watergang
-    hydroobject_code = "OAF-QJ-14396"
-    peilgebied_id = 62149
-    profielpunt_id = 12578
-    profiellijn_code = 58395
-    diepste_punt_profiel = -3.16
-    lengte_nat_profiel = 5.54
-    hydroobject_breedte = 5.27
-    breedte_profiel = 15.54
-    nr_of_profielpunten = 34
-    diepte_nat_profiel = 1.32
-    max_hoogte_profiel = -0.85
-    jaarinwinning = 2012
-    max_cross_product = 0.0029
+    hydroobject_code = "OAF-Q-35669"  #
+    peilgebied_id = 49637  #
+    profielpunt_code = 1706671  #
+    profiellijn_code = 49937  #
+    diepste_punt_profiel = -1.51  #
+    lengte_nat_profiel = 9.07 - 4.83  #
+    hydroobject_breedte = 4.03  #
+    breedte_profiel = 13.56  #
+    nr_of_profielpunten = 15  #
+    diepte_nat_profiel = -0.52 - diepste_punt_profiel  #
+    max_hoogte_profiel = 0.21  #
+    jaarinwinning = 2013  #
+    max_cross_product = 0.0029  # TODO
 
     # Test variables for profile on primary watergang without profile
-    hydroobject_code_no_profile = "OAF-Q-36452"  # near end peilgebied
-    nearest_profiellijn_code_it_should_connect_to = 62421
-    deepest_point_hydroobject_no_profile = -4.57
+    hydroobject_code_no_profile_should_connect = "OAF-J-2354"  #
+    nearest_profiellijn_code_it_should_connect_to = 49930  #
+    deepest_point_hydroobject_no_profile = -1.35  #
+    hydroobject_code_no_profile_should_not_connect = "OAF-Q-36736"  #
 
     # Test variables for profileline ascending and descending
-    profiellijn_code_ascending = 3849
-    profiellijn_code_descending = 58315
+    profiellijn_code_ascending = 49939  # TODO
+    profiellijn_code_descending = 49939  # TODO
 
     # Check for a single hydroobject
     linemerge_id = converter.find_linemerge_id_by_hydroobject_code(hydroobject_code)
     assert linemerge_id is not None
-    linemerge = converter.data.hydroobject_linemerged.query("linemergeID == @linemerge_id").iloc[0]
+    linemerge = converter.data.hydroobject_linemerged.query("linemergeid == @linemerge_id").iloc[0]
     assert linemerge["categorie"] == "primary"
     peilgebied_id_result = converter.find_peilgebied_id_by_hydroobject_code(hydroobject_code)
     assert peilgebied_id_result == peilgebied_id
@@ -98,60 +94,62 @@ def test_profile_intermediate_converter():
     profielgroep = converter.data.profielgroep
     hydroobject = converter.data.hydroobject
 
-    # Filter profielpunt on id
-    pp = profielpunt[profielpunt["id"] == profielpunt_id]
+    # Filter profielpunt on code
+    pp = profielpunt[profielpunt["code"] == profielpunt_code]
     assert len(pp) == 1
 
     # Get profiellijnID
-    lijn_id = pp.iloc[0]["profielLijnID"]
+    lijn_id = pp.iloc[0]["profiellijnid"]
 
-    # Filter profiellijn on GlobalID
-    pl = profiellijn[profiellijn["GlobalID"] == lijn_id]
+    # Filter profiellijn on globalid
+    pl = profiellijn[profiellijn["globalid"] == lijn_id]
     assert len(pl) == 1
     assert pl.iloc[0]["code"] == profiellijn_code
 
-    # Get profielgroepID
-    groep_id = pl.iloc[0]["profielgroepID"]
+    # Get profielgroepid
+    groep_id = pl.iloc[0]["profielgroepid"]
 
-    # Filter profielgroep on GlobalID
-    pg = profielgroep[profielgroep["GlobalID"] == groep_id]
+    # Filter profielgroep on globalid
+    pg = profielgroep[profielgroep["globalid"] == groep_id]
     assert len(pg) == 1
     assert pg.iloc[0]["code"] == profiellijn_code
 
-    # Check hydroobjectID of profielgroep
-    ho = hydroobject[hydroobject["CODE"] == hydroobject_code]
-    assert pg["hydroobjectID"].iloc[0] == ho["GlobalID"].iloc[0]
+    # Check hydroobjectid of profielgroep
+    ho = hydroobject[hydroobject["code"] == hydroobject_code]
+    assert pg["hydroobjectid"].iloc[0] == ho["globalid"].iloc[0]
 
     # Compute the deepest point of profiel
-    converter._compute_deepest_point_profiellijn()  # HELPER method, not in run method
-    assert converter.data.profiellijn["diepstePunt"].notnull().any()
+    converter._compute_deepest_point_profiellijn()
+    assert converter.data.profiellijn["diepstepunt"].notnull().any()
     assert (
-        converter.data.profiellijn[converter.data.profiellijn["code"] == profiellijn_code]["diepstePunt"].iloc[0]
+        converter.data.profiellijn[converter.data.profiellijn["code"] == profiellijn_code]["diepstepunt"].iloc[0]
         == diepste_punt_profiel
     )
 
     # Check it is not connected to a profile
-    pl_2 = converter._find_profiellijn_by_hydroobject_code(hydroobject_code_no_profile)
-    assert pl_2 is None
+    pl_2 = converter._find_profiellijn_by_hydroobject_code(hydroobject_code_no_profile_should_connect)
+    assert pl_2 is None, f"pl_2 code column value: {pl_2['code'].iloc[0]}"
 
     # Now connect profiles to hydroobject without profiles
-    converter.connect_profiles_to_hydroobject_without_profiles(max_distance=250)  # STEP 4 in run method
+    converter.connect_profiles_to_hydroobject_without_profiles(max_distance=500)  # STEP 4 in run method
 
     # Check it is connected to a profile now
-    pl_2 = converter._find_profiellijn_by_hydroobject_code(
-        hydroobject_code_no_profile
-    )  # HELPER method, not in run method
+    pl_2 = converter._find_profiellijn_by_hydroobject_code(hydroobject_code_no_profile_should_connect)
     assert pl_2 is not None
     assert not pl_2.empty and len(pl_2) == 1
     assert pl_2["code"].iloc[0] == nearest_profiellijn_code_it_should_connect_to
 
     # Compute the deepest point per hydroobject
-    converter.compute_deepest_point_hydroobjects()  # HELPER method, not in run method
-    dp = converter.find_deepest_point_by_hydroobject_code(hydroobject_code_no_profile)
+    converter.compute_deepest_point_hydroobjects()
+    dp = converter.find_deepest_point_by_hydroobject_code(hydroobject_code_no_profile_should_connect)
     assert dp == deepest_point_hydroobject_no_profile
 
+    # Check the profile that should not connect
+    pl_3 = converter._find_profiellijn_by_hydroobject_code(hydroobject_code_no_profile_should_not_connect)
+    assert pl_3 is None
+
     # Write the result to a new file
-    output_file_path = temp_dir_out / "output.gpkg"
+    output_file_path = temp_dir_out / "damo.gpkg"
     converter.write_outputs(output_path=output_file_path)  # STEP 5 in run method
 
     assert output_file_path.exists()
@@ -173,7 +171,7 @@ def test_profile_intermediate_converter():
     validation_directory_path = TEMP_DIR / f"temp_HyDAMO_validator_{hrt.current_time(date=True)}"
     validation_rules_json_path = hrt.get_pkg_resource_path(schematisation_builder_resources, "validationrules.json")
 
-    test_coverage_location = TEST_DIRECTORY / "schema_builder" / "dtm"  # should hold index.shp
+    test_coverage_location = TEST_DIRECTORY / "schematisation_builder" / "dtm"  # should hold index.shp
 
     result_summary = validate_hydamo(
         hydamo_file_path=hydamo_file_path,

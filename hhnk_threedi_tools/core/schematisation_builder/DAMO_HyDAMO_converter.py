@@ -72,7 +72,7 @@ class DAMO_to_HyDAMO_Converter:
         damo_version: str = "2.4.1",
         overwrite: bool = False,
         add_status_object: bool = True,
-        convert_domain_values: bool = True,
+        convert_domain_values: bool = False,
         logger: Optional[logging.Logger] = None,
     ):
         if logger:
