@@ -89,6 +89,13 @@ class DAMO_to_HyDAMO_Converter:
         )
 
         if convert_domain_values:
+            if damo_schema_path is None:
+                raise NotImplementedError(
+                    "DAMO schema path must be provided to convert domain values. "
+                    "It is not included in the repository to avoid unnecessary storage usage. "
+                    "Please specify a valid DAMO schema path."
+                )
+
             self.damo_schema_path = self._get_schema_path(
                 schema_path=damo_schema_path, schema_basename="DAMO", schema_version=damo_version
             )
