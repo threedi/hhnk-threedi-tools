@@ -1,20 +1,23 @@
 # %%
-"""
-Check if the lizard v4 downloader pruduces the desired results.
-"""
-
 import hhnk_research_tools as hrt
-import numpy as np
+import pytest
 
 from hhnk_threedi_tools.utils.notebooks.notebook_setup import setup_notebook
 from tests.config import FOLDER_TEST, TEMP_DIR, TEST_DIRECTORY
 
-notebook_data = setup_notebook()
-from threedi_scenario_downloader import downloader as dl_new
 
+@pytest.mark.skipif(True, reason="This test is not implemented")
+def test_lizardapi():
+    """Check if the lizard v4 downloader pruduces the desired results."""
 
-def rtest_lizard_api():
-    from deprecated.core.api import downloader as dl_old
+    notebook_data = setup_notebook()
+
+    from threedi_scenario_downloader import downloader as dl_new
+
+    try:
+        from deprecated.core.api import downloader as dl_old
+    except:
+        pass
 
     dl_old.LIZARD_URL = "https://hhnk.lizard.net/api/v3/"
     dl_new.LIZARD_URL = "https://hhnk.lizard.net/api/v4/"
