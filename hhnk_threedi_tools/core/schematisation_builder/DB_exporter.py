@@ -417,12 +417,13 @@ def db_exporter(
                         db_dict=db_dict,
                         schema=schema,
                     )
+                    # Write to geopackage
+                    sub2_model_gdf.to_file(output_file, layer=sub2_table, driver="GPKG", engine="pyogrio")
 
                     logger.info(
-                        f"Finished export of {len(sub2_model_gdf)} elements from table {sub_table} from {service_name}"
+                        f"Finished export of {len(sub2_model_gdf)} elements from table {sub2_table} from {service_name}"
                     )
 
-                    # FIXME wvg: missing sub2_model_gdf.to_file() to output_file
         except Exception as e:
             if table_config is None:
                 error = f"{table} not found in database mapping {e}"
