@@ -12,6 +12,7 @@ Use the schematisation builder plugin in QGIS to build the schematisation based 
 """
 
 # %%
+import json
 import logging
 import shutil
 from pathlib import Path
@@ -28,7 +29,9 @@ from hhnk_threedi_tools.core.schematisation_builder.HyDAMO_validator import vali
 # %%
 
 
-def make_validated_hydamo_package(project_folder: Path, table_names: list) -> None:
+def make_validated_hydamo_package(
+    project_folder: Path, table_names: list, damo_version: str = "2.4.1", hydamo_version: str = "2.4"
+) -> None:
     """
     Export DAMO data for given area and table layers, and saves it to a DAMO.gpkg file.
     Converts the DAMO data to HyDAMO format and saves it to a HyDAMO.gpkg file.
@@ -51,20 +54,17 @@ def make_validated_hydamo_package(project_folder: Path, table_names: list) -> No
         If the HyDAMO file is not found in the project folder.
 
     """
-    Project(str(project_folder))
+    project = Project(str(project_folder))
+    polder_file_path = project.folders.source_data.polder_polygon.path
+    damo_file_path = project.folders.source_data.damo.path
+    hydamo_file_path = project.folders.source_data.hydamo.path
+
     # initialize logger
     logger = hrt.logging.get_logger(__name__, filepath=Path(project_folder) / "log.log")
     logger.setLevel(logging.INFO)
 
-    polder_file_path = project_folder / "01_source_data" / "polder_polygon.shp"
-    damo_file_path = project_folder / "01_source_data" / "DAMO.gpkg"
-    hydamo_file_path = project_folder / "01_source_data" / "HyDAMO.gpkg"
-
-    damo_version = "2.4.1"
-    hydamo_version = "2.4"
-
     # check if polder_polygon.shp exists
-    if polder_file_path:
+    if polder_file_path.exists():
         logger.info(f"Start export from source databases for file: {polder_file_path}")
         # DAMO export
         gdf_polder = gpd.read_file(polder_file_path)
@@ -74,7 +74,7 @@ def make_validated_hydamo_package(project_folder: Path, table_names: list) -> No
             table_names=table_names,
         )
 
-        if logging_DAMO:
+        if len(logging_DAMO) > 0:
             logger.warning("Not all tables have been exported from the DAMO database.")
 
         # Conversion to HyDAMO
@@ -97,7 +97,7 @@ def make_validated_hydamo_package(project_folder: Path, table_names: list) -> No
         # stop the script
         raise SystemExit
 
-    if hydamo_file_path:
+    if hydamo_file_path.exists():
         logger.info(f"Start validation of HyDAMO file: {hydamo_file_path}")
 
         # HyDAMO validation
@@ -114,7 +114,11 @@ def make_validated_hydamo_package(project_folder: Path, table_names: list) -> No
 
         coverage_location = validation_directory_path / "dtm"  # r"data/test_HyDAMO_validator/dtm"
         if not Path(coverage_location).exists():  # copy it from static data folder
-            shutil.copytree(r"D:/github/evanderlaan/data/test_HyDAMO_validator/dtm_orgineel", coverage_location)
+            static_data = json.loads(
+                hrt.get_pkg_resource_path(schematisation_builder_resources, "static_data_paths.json").read_text()
+            )
+            dtm_path = Path(static_data["dtm_path"])
+            shutil.copytree(dtm_path, coverage_location)
 
         result_summary = validate_hydamo(
             hydamo_file_path=hydamo_file_path,
