@@ -65,7 +65,7 @@ def test_profile_intermediate_converter():
     diepte_nat_profiel = -0.52 - diepste_punt_profiel  #
     max_hoogte_profiel = 0.21  #
     jaarinwinning = 2013  #
-    max_cross_product = 0.0029  # TODO
+    max_cross_product = 0.0044  #
 
     # Test variables for profile on primary watergang without profile
     hydroobject_code_no_profile_should_connect = "OAF-J-2354"  #
@@ -74,8 +74,8 @@ def test_profile_intermediate_converter():
     hydroobject_code_no_profile_should_not_connect = "OAF-Q-36736"  #
 
     # Test variables for profileline ascending and descending
-    profiellijn_code_ascending = 49939  # TODO
-    profiellijn_code_descending = 49939  # TODO
+    profiellijn_code_ascending = 84837  #
+    profiellijn_code_descending = 49937  #
 
     # Check for a single hydroobject
     linemerge_id = converter.find_linemerge_id_by_hydroobject_code(hydroobject_code)

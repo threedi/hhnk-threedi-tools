@@ -144,6 +144,12 @@ class IntermediateConverter:
             axis=1,
         )
 
+    def _drop_z_from_linestringz_geometry(self) -> None:
+        self.logger.info("Dropping Z coordinate from linestringZ geometry...")
+        self.data.profiellijn["geometry"] = self.data.profiellijn["geometry"].apply(
+            lambda geom: LineString([(x, y) for x, y, z in geom.coords]) if geom.has_z else geom
+        )
+
     def _linemerge_hydroobjects(self, gecombineerde_peilen, hydroobject) -> gpd.GeoDataFrame:
         merged_hydroobjects = []
         hydroobject_map = {}
@@ -504,7 +510,10 @@ class ProfileIntermediateConverter(IntermediateConverter):
 
         # Drop columns that are not needed
         self.data.profielpunt = self.data.profielpunt.drop(columns=["prw_id", "pbp_id", "pro_pro_id", "prw_prw_id"])
+
+        # Geometry in correct format
         self._add_z_to_point_geometry_based_on_column("hoogte")
+        self._drop_z_from_linestringz_geometry()
 
         # Drop profielgroep and profiellijn features with no match with hydroobjects based on no_match_codes
         self.data.profielgroep = self.data.profielgroep[~self.data.profielgroep["code"].isin(no_match_codes)]
