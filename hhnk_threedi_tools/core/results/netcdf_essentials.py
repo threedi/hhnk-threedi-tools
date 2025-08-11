@@ -42,10 +42,22 @@ DEFAULT_NESS_FP = Path(__file__).parents[2].absolute() / r"resources\netcdf_esse
 
 @dataclass
 class ColumnIdx:
-    """Find index of columns in dataframe so we can insert new column
-    at the correct location. This way we can group column types.
-    e.g.
+    """
+    Utility class to find the index of columns in a GeoDataFrame for inserting new columns at logical positions.
+    This helps group related column types together, e.g.:
     wlvl_1h wlvl_3h wlvl_1h_corr wlvl_3h_corr diff_1h diff_15h
+
+    Attributes
+    ----------
+    gdf : gpd.GeoDataFrame
+        The GeoDataFrame whose columns are being indexed.
+
+    Methods
+    -------
+    _get_idx(search_str)
+        Returns the index for inserting a column matching the search pattern.
+    Properties for common column types:
+        wlvl, wlvl_corr, diff, vol, infilt, incept, rain, q, u1, storage
     TODO uitbreiden met extra elementen
     """
 
@@ -102,29 +114,49 @@ class ColumnIdx:
 @dataclass
 class NetcdfEssentials:
     """
-    Class to retrieve essential data from NetCDf and store into Geopackage
-
-    Replaces classes NedcdfToGPKG and NetcdfTimeSeries.
-
-    Transform netcdf into a gpkg. Can also correct waterlevels
-    based on conditions. These are passed when running the function
-    .run, to turn this behaviour off, use wlvl_correction=False there.
-
-    Input layers can be passed directly, or when using the htt.Folders
-    structure, use the .from_folder classmethod.
-
     Parameters
     ----------
     threedi_result : hrt.ThreediResult
-        path to folder with netcdf and h5 result.
+        Path or object for the NetCDF and HDF5 result files.
     waterdeel_path : str, optional
-        path to waterdeel. If None is passed it wont be used in the selection of cells
+        Path to waterdeel layer. If None, not used for cell selection.
     waterdeel_layer : str, optional
-        layername if waterdeel is part of a gpkg
+        Layer name for waterdeel if part of a GeoPackage.
     panden_path : str, optional
-        path to panden. If None is passed it wont be used in the selection of cells
+        Path to panden layer. If None, not used for cell selection.
     panden_layer : str, optional
-        layername if panden is part of a gpkg
+        Layer name for panden if part of a GeoPackage.
+    user_defined_timesteps : list[int], optional
+        List of output timesteps (seconds or "max").
+    ness_fp : str, optional
+        Path to netcdf_essentials.csv file with relevant attributes.
+    use_aggregate : bool, default False
+        If True, use aggregate NetCDF results.
+
+    Methods
+    -------
+    from_folder(folder, threedi_result, use_aggregate, **kwargs)
+        Initialize from a Folders structure.
+    run(...)
+        Main method to process NetCDF and export to GeoPackage.
+    create_base_gdf()
+        Create base GeoDataFrames for grid, nodes, lines, and metadata.
+    add_correction_parameters(...)
+        Add columns to grid_gdf for waterlevel correction logic.
+    correct_waterlevels(...)
+        Apply waterlevel correction for selected cells.
+    append_data(...)
+        Insert timeseries data into GeoDataFrames.
+    process_ness(ness)
+        Process ness DataFrame to retrieve timeseries and indices.
+    get_output_timesteps(user_defined_timesteps)
+        Set output timesteps for export.
+    load_default_ness(ness_fp)
+        Load netcdf_essentials.csv as DataFrame.
+    _calculate_layer_area_per_cell(...)
+        Calculate area and percentage of a layer per grid cell.
+    _attronly_schema(df)
+        Helper for saving attributes without geometry.
     """
 
     threedi_result: hrt.ThreediResult
@@ -192,8 +224,8 @@ class NetcdfEssentials:
         """Check if we have a normal or aggregated netcdf"""
         return str(type(self.grid)) == "<class 'threedigrid.admin.gridresultadmin.GridH5AggregateResultAdmin'>"
 
-    def load_default_ness(self, ness_fp=None):
-        """Relevant data for HHNK models"""
+    def load_default_ness(self, ness_fp=None) -> pd.DataFrame:
+        """Load relevant data for HHNK models"""
         logger = hrt.logging.get_logger(__name__)
         if ness_fp is None:
             ness = pd.read_csv(DEFAULT_NESS_FP)
@@ -202,14 +234,14 @@ class NetcdfEssentials:
             ness = pd.read_csv(ness_fp)
         return ness
 
-    def _create_column_base(self, time_seconds):
-        """Return a base column name with hours and minutes."""
-        # time_seconds = self.timestamps[np.argmin(np.abs(self.timestamps - time_seconds))]
-        if time_seconds == "max":
+    def _create_column_base(self, time_seconds) -> str:
+        """Create a base column name with hours and minutes based ib tune ub seconds."""
+        # Check if time_seconds is a string or int
+        if isinstance(time_seconds, str):
             col_base = time_seconds
         else:
             timestep_h = time_seconds / 3600
-
+            # Round to nearest hour or minute
             if timestep_h % 1 == 0:  # round hours
                 col_base = f"{int(timestep_h)}h"
             else:
@@ -266,8 +298,20 @@ class NetcdfEssentials:
             return grid_gdf_merged[[area_col, perc_col]]
         return np.nan
 
-    def _set_active_attributes(self, ness):
-        """Set active attributes in ness dataframe"""
+    def _set_active_attributes(self, ness) -> pd.DataFrame:
+        """
+        Take attributes from provided ness settings and check wether
+        grid/result has these attributes available and if so for either
+        1d or 2d.
+
+        This ensures that only relevant attributes are processed.
+
+        Parameters
+        ----------
+        ness : pd.DataFrame
+            DataFrame with attributes and subsets to check against the grid.
+            Should contain columns: 'attribute', 'subset', 'element', 'attribute_name'.
+        """
         logger = hrt.logging.get_logger(__name__)
         ness["active"] = True
         if not self.grid.has_1d:
@@ -284,8 +328,16 @@ class NetcdfEssentials:
         logger.info(f"Active attributes: {active_attributes.tolist()}")
         return ness
 
-    def _get_ts(self, ness):
-        """Retrieve timeseries for rows in ness dataframe"""
+    def _get_ts(self, ness) -> pd.DataFrame:
+        """
+        Retrieve timeseries for rows in ness dataframe and add them to the dataframe.
+
+        Parameters
+        ----------
+        ness : pd.DataFrame
+            DataFrame with attributes and subsets to check against the grid.
+            Should contain columns: 'attribute', 'subset', 'element', 'attribute_name'.
+        """
         logger = hrt.logging.get_logger(__name__)
         # initialise data column
         ness["count"] = None
@@ -308,13 +360,20 @@ class NetcdfEssentials:
 
         return ness
 
-    def _get_ts_index(self, time_seconds: int):
-        """Retrieve indices of requested output time_seconds"""
+    def _get_ts_index(self, time_seconds: int) -> int:
+        """
+        Retrieve indices of requested output time_seconds
+
+        Parameters
+        ----------
+        time_seconds : int
+            The time in seconds for which to retrieve the index.
+        """
         abs_diff = np.abs(self.timestamps - time_seconds)
         # geeft 1 index voor de gevraagde timestep gelijk voor alle elementen
         ts_indx = np.argmin(abs_diff)
-        if np.min(abs_diff) > 30:  # seconds diff. # TODO gebruik hier de helft van de opgegeven output time_seconds
-            raise ValueError(
+        if np.min(abs_diff) > 30:  # seconds diff. # TODO gebruik hier de helft van de opgegeven output time_seconds?
+            raise ValueError(  # TODO toevoegen aan logging? Maar hoe omgaan met raise?
                 f"""Provided time_seconds {time_seconds} not found in netcdf timeseries.
                     Closest timestep is {self.timestamps[ts_indx]} seconds at index {ts_indx}. \
                     Debug by checking available timeseries through the (.timestamps) timeseries attributes"""
@@ -322,7 +381,7 @@ class NetcdfEssentials:
 
         return ts_indx
 
-    def _attronly_schema(self, df):
+    def _attronly_schema(self, df) -> dict:
         """
         Needed to save attributes without geometry
         see: https://gis.stackexchange.com/questions/396752
@@ -345,14 +404,39 @@ class NetcdfEssentials:
             },
         }
 
-    def process_ness(self, ness):
-        """Process ness dataframe to retrieve timeseries and indices"""
+    def process_ness(self, ness) -> pd.DataFrame:
+        """
+        Process ness dataframe to set active attributes and retrieve data.
+
+        Parameters
+        ----------
+        ness : pd.DataFrame
+            DataFrame with attributes and subsets to check against the grid.
+            Should contain columns: 'attribute', 'subset', 'element', 'attribute_name'.
+        """
         ness = self._set_active_attributes(ness)
         ness = self._get_ts(ness)
         return ness
 
-    def create_base_gdf(self):
-        """Create base grid from netcdf"""
+    def create_base_gdf(self) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame, gpd.GeoDataFrame, gpd.GeoDataFrame]:
+        """
+        Create empty GeoDataFrames for grid, nodes, and lines.
+        Populates them with geometries and relevant metadata from the grid.
+        If the grid has 2D cells, it creates polygons for each cell.
+        If the grid has 1D nodes, it creates points for each node.
+        If the grid has 1D lines, it creates lines for each line segment.
+
+        Returns
+        -------
+        grid_gdf : gpd.GeoDataFrame
+            GeoDataFrame with grid cells.
+        node_gdf : gpd.GeoDataFrame
+            GeoDataFrame with 1D nodes.
+        line_gdf : gpd.GeoDataFrame
+            GeoDataFrame with 1D lines.
+        metadata : dict
+            Dictionary with metadata about the model and grid.
+        """
         logger = hrt.logging.get_logger(__name__)
 
         # Create empty GeoDataFrames for grid, node and line
@@ -485,6 +569,17 @@ class NetcdfEssentials:
     ) -> gpd.GeoDataFrame:
         """Determine which cells should have their waterlevel replaced by their neighbours.
 
+        Parameters
+        ----------
+        grid_gdf : gpd.GeoDataFrame
+            GeoDataFrame with grid cells.
+        replace_dem_below_perc : float, optional
+            Percentage of minimal DEM area in waterlevel, if less replaced, by default 50.
+        replace_water_above_perc : float, optional
+            Percentage of water area above which the waterlevel should be replaced, by default 95.
+        replace_pand_above_perc : float, optional
+            Percentage of panden area above which the waterlevel should be replaced, by default 99.
+
         Returns
         -------
         gpd.GeoDataFrame
@@ -526,16 +621,18 @@ class NetcdfEssentials:
 
         return grid_gdf
 
-    def get_output_timesteps(self, user_defined_timesteps: list[int]):
+    def get_output_timesteps(self, user_defined_timesteps: list[int]) -> list[int]:
         """
-        Stel de output timesteps goed in
+        Set output timesteps for export.
+
 
         In ieder geval:
         * Opgegeven timesteps door gebruiker, incl. max
         * Timesteps nodig voor tests 0d1d en 1d2d
         * Misschien gewoon alle? Maar dan wel iets uniforms?
 
-        TODO
+        TODO WE ik ben nog zoekende of ik dit wil. Omdat ik de hele tijdserie ophaal kan ik ook
+        de index van het max bepalen en de data ophalen voor die index.
         NOTE hoe kom ik aan output timestep uit de settings?
         NOTE misschien optie maken voor alle tijstappen?
         NOTE de ness als input?
@@ -546,16 +643,26 @@ class NetcdfEssentials:
 
         return timesteps_seconds_output
 
-    def append_data(self, ness, gdf, timesteps_seconds_output: list):
-        """Insert data at given timesteps to geodataframe."""
+    def append_data(self, ness, gdf, timesteps_seconds_output: list) -> gpd.GeoDataFrame:
+        """
+        Insert data at given timesteps to geodataframe.
+
+        Parameters
+        ----------
+        ness : pd.DataFrame
+            DataFrame with attributes and subsets to check against the grid.
+            Should contain columns: 'attribute', 'subset', 'element', 'attribute_name', 'data'.
+        gdf : gpd.GeoDataFrame
+            GeoDataFrame to append data to.
+        timesteps_seconds_output : list[Union[int, str]]
+            List of timesteps in seconds for which to append data.
+            Can contain int values or "max" for maximum value over the time series.
+        """
 
         col_idx = ColumnIdx(gdf=gdf)
-
         for i, row in ness.iterrows():
-            # break
             if row["active"] and row["geom_type"] == gdf.geometry.geom_type.unique()[0]:
                 for key in timesteps_seconds_output:
-                    # break
                     # TODO min negatieve max etc
                     if key == "max":  # isinstance(time_seconds, str):
                         gdf.insert(
@@ -628,14 +735,17 @@ class NetcdfEssentials:
 
         Parameters
         ----------
-        output_file, by default None
+        ness_fp : str, optional
+            Path to netcdf_essentials.csv file with relevant attributes.
+            If None, the default file will be used.
+            default is: hhnk_threedi_tools.data.netcdf_essentials.csv
+        output_file : str or hrt.File, optional
+            Path to output file where the grid will be saved as a GeoPackage.
             When None is passed the output will be placed in the same directory as the netcdf.
             default name is: grid_wlvl.gpkg
-        timesteps_seconds, by default ["max"]
-            time in seconds since start of calculation. Will create cols for each item in list.
-            options:
-                int value - seconds since start
-                "max" - maximum wlvl over calculation
+        user_defined_timesteps : list[int], optional
+            List of output timesteps in seconds or "max" to include maximum waterlevel over calculation.
+            If None, only uses max.
         replace_dem_below_perc : float, optional, by default 50
             if cell area has no dem (isna) above this value waterlevels will be replaced
         replace_water_above_perc : float, optional, by default 95
@@ -646,7 +756,6 @@ class NetcdfEssentials:
             applies waterlevel correction when true.
         overwrite : bool, optional, by default False
             overwrite output if it exists
-        # TODO bijwerken
         """
 
         if output_file is None:
