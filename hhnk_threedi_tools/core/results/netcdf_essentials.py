@@ -1,4 +1,30 @@
 # %%
+"""
+Code below is used to transform netcdf files into geopackage files.
+It retrieves essential data from the netcdf files and stores it in a geopackage.
+
+The idea is, to extent the functionality to include other derived data, such as
+those needed for het Leggertool, the various checks and 'klimaattoets' statistics.
+These functionalities can be added to other scripts, but it would be nice to keep all
+data in the same geopackage.
+
+The geopackage can then be used for all relevant data annd replace the netCDF, saving considarable
+disk space and making it easier and faster to work with the results.
+
+The code below includes the extraction of relevant data that is listed in the
+netcdf_essentials.csv file. This file is used to define the relevant data and can be extended
+to include other data that is needed for the various checks and statistics.
+
+The code also includes the correction of waterlevels based on the
+waterdeel and panden layers. These layers are used to determine which cells need to be corrected.
+This is done by checking the percentage of the cell that is covered by water or panden.
+
+
+@author: Wouter van Esse
+
+"""
+
+import logging
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Union
@@ -10,6 +36,8 @@ import pandas as pd
 from shapely.geometry import LineString, Point, box
 
 from hhnk_threedi_tools.core.folders import Folders
+
+DEFAULT_NESS_FP = Path(__file__).parents[2].absolute() / r"resources\netcdf_essentials.csv"
 
 
 @dataclass
@@ -74,7 +102,7 @@ class ColumnIdx:
 @dataclass
 class NetcdfEssentials:
     """
-    Class te retrieve essential data from NetCDf and store into Geopackage
+    Class to retrieve essential data from NetCDf and store into Geopackage
 
     Replaces classes NedcdfToGPKG and NetcdfTimeSeries.
 
@@ -157,7 +185,7 @@ class NetcdfEssentials:
     @property
     def output_default(self):
         """Default output if no path is specified."""
-        return self.threedi_result.full_path("grid_wlvl.gpkg")  # TODO
+        return self.threedi_result.full_path("netcdf_essentials.gpkg")
 
     @property
     def typecheck_aggregate(self) -> bool:
@@ -166,11 +194,10 @@ class NetcdfEssentials:
 
     def load_default_ness(self, ness_fp=None):
         """Relevant data for HHNK models"""
+        logger = hrt.logging.get_logger(__name__)
         if ness_fp is None:
-            # ness = pd.read_csv("./netcdf_essentials.csv")
-            ness = pd.read_csv(
-                r"E:\github\wvanesse\hhnk-threedi-tools\hhnk_threedi_tools\core\result_rasters\netcdf_essentials.csv"
-            )  # TODO hoe ga ik dit meegeven? Bij input? Of default ergens in de module?
+            ness = pd.read_csv(DEFAULT_NESS_FP)
+            logger.info(f"Loading default ness from {DEFAULT_NESS_FP}")
         else:
             ness = pd.read_csv(ness_fp)
         return ness
@@ -241,6 +268,7 @@ class NetcdfEssentials:
 
     def _set_active_attributes(self, ness):
         """Set active attributes in ness dataframe"""
+        logger = hrt.logging.get_logger(__name__)
         ness["active"] = True
         if not self.grid.has_1d:
             ness.loc[(ness["subset"] == "1D_All"), "active"] = False
@@ -250,14 +278,19 @@ class NetcdfEssentials:
             ness.loc[(ness["attribute"] == "intercepted_volume"), "active"] = False
         if not self.grid.has_max_infiltration_capacity:
             ness.loc[(ness["attribute"] == "infiltration_rate_simple"), "active"] = False
+
+        # list active attributes for logging, concatenate attribute_name and subset from dataframe
+        active_attributes = ness[ness["active"]]["attribute_name"] + " - " + ness[ness["active"]]["subset"]
+        logger.info(f"Active attributes: {active_attributes.tolist()}")
         return ness
 
     def _get_ts(self, ness):
         """Retrieve timeseries for rows in ness dataframe"""
+        logger = hrt.logging.get_logger(__name__)
         # initialise data column
         ness["count"] = None
         ness["data"] = None
-
+        # Retrieve timeseries for each row in ness
         for i, row in ness.iterrows():
             if row["active"]:
                 data = getattr(
@@ -271,6 +304,7 @@ class NetcdfEssentials:
                 # add data as nested array to dataframe
                 ness.at[i, "data"] = data  # noqa: PD008 .loc werkt niet met nested array
                 ness.loc[i, "count"] = data.shape[0]
+                logger.info(f"Retrieved {row['attribute']} for {data.shape[0]} {row['element']} in {row['subset']}")
 
         return ness
 
@@ -317,9 +351,11 @@ class NetcdfEssentials:
         ness = self._get_ts(ness)
         return ness
 
-    def create_base_gdf(self):  # NOTE WE layername wordt belangrijk voor raster creatie
+    def create_base_gdf(self):
         """Create base grid from netcdf"""
+        logger = hrt.logging.get_logger(__name__)
 
+        # Create empty GeoDataFrames for grid, node and line
         grid_gdf = gpd.GeoDataFrame()
         node_gdf = gpd.GeoDataFrame()
         line_gdf = gpd.GeoDataFrame()
@@ -342,9 +378,11 @@ class NetcdfEssentials:
 
             grid_gdf["dem_minimal_m"] = self.grid.cells.subset(
                 "2D_OPEN_WATER"
-            ).z_coordinate  # TODO in de testdata is dit alleen nan, misschien dmax? Dit zou bottom level zijn?
+            ).z_coordinate  # FIXME in de testdata is dit alleen nan, misschien dmax? Dit zou bottom level zijn?
 
             grid_gdf["dem_area"] = self.grid.cells.subset("2D_OPEN_WATER").sumax
+
+            logger.info(f"Created grid with {len(grid_gdf)} cells.")
 
         if self.grid.has_1d:
             # =========================
@@ -374,6 +412,8 @@ class NetcdfEssentials:
             node_gdf["drain_level"] = self.grid.nodes.subset("1D_All").drain_level
             node_gdf["zoom_category"] = self.grid.nodes.subset("1D_All").zoom_category
             node_gdf["calculation_type"] = self.grid.nodes.subset("1D_All").calculation_type
+
+            logger.info(f"Created {len(node_gdf)} nodes.")
 
             # =========================
             # LINES 1D_All
@@ -407,6 +447,8 @@ class NetcdfEssentials:
             line_gdf["end_node"] = self.grid.lines.subset("1D_All").line[1]  # TODO check start and end node
             line_gdf["zoom_category"] = self.grid.lines.subset("1D_All").zoom_category
 
+            logger.info(f"Created {len(node_gdf)} lines.")
+
         # =========================
         # METADATA
         # =========================
@@ -426,9 +468,12 @@ class NetcdfEssentials:
         }
         meta_gdf = gpd.GeoDataFrame(meta_dict, index=[0])  # zodat ik hem weg kan schrijven naar geopackage
         meta_gdf["geometry"] = None
+        meta_gdf.set_geometry("geometry")
         meta_gdf.set_geometry("geometry", inplace=True)
 
-        # TODO breaches?
+        logger.info(f"Created metadata for result from model {self.grid.model_name} # {self.grid.revision_nr}")
+
+        # TODO breaches
         return grid_gdf, node_gdf, line_gdf, meta_gdf
 
     def add_correction_parameters(
@@ -445,8 +490,11 @@ class NetcdfEssentials:
         gpd.GeoDataFrame
             extened grid_gdf with correction parameters columns.
         """
+        grid_gdf["dem_minimal_m"] = self.grid.cells.subset("2D_open_water").z_coordinate
         # Percentage of dem in a calculation cell
         # so we can make a selection of cells on model edge that need to be ignored
+        grid_gdf["dem_area"] = self.grid.cells.subset("2D_open_water").sumax
+        # Percentage dem in calculation cell
         grid_gdf["dem_perc"] = grid_gdf["dem_area"] / grid_gdf.area * 100
 
         grid_gdf[["water_area", "water_perc"]] = self._calculate_layer_area_per_cell(
@@ -492,7 +540,9 @@ class NetcdfEssentials:
         NOTE misschien optie maken voor alle tijstappen?
         NOTE de ness als input?
         """
+        logger = hrt.logging.get_logger(__name__)
         timesteps_seconds_output = user_defined_timesteps  # voorlopig even zo
+        logger.info(f"Using user defined timesteps: {timesteps_seconds_output}")
 
         return timesteps_seconds_output
 
@@ -533,9 +583,6 @@ class NetcdfEssentials:
         # Create copy and set_index the id field so we can use the neighbours_ids column easily
         grid_gdf_local = grid_gdf.copy()
         grid_gdf_local.set_index("id", inplace=True)
-
-        # # Also correct max
-        # timesteps_seconds_output.append("max")
 
         for timestep in timesteps_seconds_output:
             base_col = self._create_column_base(time_seconds=timestep)
@@ -604,7 +651,14 @@ class NetcdfEssentials:
 
         if output_file is None:
             output_file = self.output_default
-        output_file = hrt.FileGDB(output_file)  # TODO FileGDB??
+        output_file = hrt.SpatialDatabase(output_file)
+
+        # initialize logger
+        logger = hrt.logging.get_logger(
+            __name__, filepath=Path(output_file.path).parent.absolute() / "NetCDFEssentials.log"
+        )
+        logger.setLevel(logging.INFO)
+        logger.info(f"Starting NetcdfEssentials with result: {self.threedi_result}")
 
         create = hrt.check_create_new_file(output_file=output_file, overwrite=overwrite)
         if create:
@@ -615,19 +669,20 @@ class NetcdfEssentials:
 
             grid_gdf, node_gdf, line_gdf, meta_gdf = self.create_base_gdf()
 
-            if wlvl_correction:
-                grid_gdf = self.add_correction_parameters(
-                    grid_gdf=grid_gdf,
-                    replace_dem_below_perc=replace_dem_below_perc,
-                    replace_water_above_perc=replace_water_above_perc,
-                    replace_pand_above_perc=replace_pand_above_perc,
-                )
+            # if wlvl_correction:
 
             grid_gdf = self.append_data(ness=ness, gdf=grid_gdf, timesteps_seconds_output=timesteps_seconds_output)
             node_gdf = self.append_data(ness=ness, gdf=node_gdf, timesteps_seconds_output=timesteps_seconds_output)
             line_gdf = self.append_data(ness=ness, gdf=line_gdf, timesteps_seconds_output=timesteps_seconds_output)
 
             if wlvl_correction:
+                logger.info("Correcting 2D waterlevels")
+                grid_gdf = self.add_correction_parameters(
+                    grid_gdf=grid_gdf,
+                    replace_dem_below_perc=replace_dem_below_perc,
+                    replace_water_above_perc=replace_water_above_perc,
+                    replace_pand_above_perc=replace_pand_above_perc,
+                )
                 grid_gdf = self.correct_waterlevels(
                     grid_gdf=grid_gdf, timesteps_seconds_output=timesteps_seconds_output
                 )
@@ -638,20 +693,23 @@ class NetcdfEssentials:
             line_gdf.to_file(output_file.path, layer="line_1d", engine="pyogrio", overwrite=overwrite)
             meta_gdf.to_file(
                 output_file.path,
+                engine="fiona",
                 layer="metadata",
                 driver="GPKG",
-                schema=self._attronly_schema(meta_gdf),
+                schema=self._attronly_schema(meta_gdf),  # not supported by pyogrio
                 overwrite=overwrite,
+                crs=f"EPSG:{self.grid.epsg_code}",
             )
+            logger.info(f"Saved NetCDF essentials to {output_file.path}")
         else:
-            print("Output file already exists. Set overwrite to True to overwrite.")
+            logger.warning(f"Output file {output_file.path} already exists. Set overwrite to True to overwrite.")
 
 
 # %% Working code example small model
 if __name__ == "__main__":
     from hhnk_threedi_tools import Folders
 
-    folder_path = r"../tests\data\model_test"
+    folder_path = r"tests\data\model_test"
     folder = Folders(folder_path)
 
     user_defined_timesteps = ["max", 3600, 5400]
