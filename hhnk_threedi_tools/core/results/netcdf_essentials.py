@@ -340,7 +340,7 @@ class NetcdfEssentials:
         """
         logger = hrt.logging.get_logger(__name__)
         # initialise data column
-        ness["count"] = None
+        ness["amount"] = None
         ness["data"] = None
         # Retrieve timeseries for each row in ness
         for i, row in ness.iterrows():
@@ -355,7 +355,7 @@ class NetcdfEssentials:
                 data[data == -9999.0] = np.nan
                 # add data as nested array to dataframe
                 ness.at[i, "data"] = data  # noqa: PD008 .loc werkt niet met nested array
-                ness.loc[i, "count"] = data.shape[0]
+                ness.loc[i, "amount"] = data.shape[0]
                 logger.info(f"Retrieved {row['attribute']} for {data.shape[0]} {row['element']} in {row['subset']}")
 
         return ness
@@ -638,7 +638,12 @@ class NetcdfEssentials:
         NOTE de ness als input?
         """
         logger = hrt.logging.get_logger(__name__)
-        timesteps_seconds_output = user_defined_timesteps  # voorlopig even zo
+        if user_defined_timesteps is None:
+            # Add only maximum
+            timesteps_seconds_output = ["max"]
+            logger.info("No output timesteps provided, using only max")
+        else:
+            timesteps_seconds_output = user_defined_timesteps  # TODO dichtsbijzijnde zoeken ofzo?
         logger.info(f"Using user defined timesteps: {timesteps_seconds_output}")
 
         return timesteps_seconds_output
@@ -777,8 +782,6 @@ class NetcdfEssentials:
             ness = self.process_ness(ness=ness)
 
             grid_gdf, node_gdf, line_gdf, meta_gdf = self.create_base_gdf()
-
-            # if wlvl_correction:
 
             grid_gdf = self.append_data(ness=ness, gdf=grid_gdf, timesteps_seconds_output=timesteps_seconds_output)
             node_gdf = self.append_data(ness=ness, gdf=node_gdf, timesteps_seconds_output=timesteps_seconds_output)
