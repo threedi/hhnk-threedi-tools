@@ -1,6 +1,7 @@
 # %%
 import importlib.resources as importlib_resources
 import json
+import logging
 import xml.etree.ElementTree as ET
 from functools import cached_property
 from pathlib import Path
@@ -71,14 +72,11 @@ class DAMO_to_HyDAMO_Converter:
     def __init__(
         self,
         damo_file_path: os.PathLike,
-        damo_file_path: os.PathLike,
         hydamo_file_path: Union[Path, hrt.SpatialDatabase],
         layers: list[str] = None,
         hydamo_schema_path: Optional[Path] = None,
         hydamo_version: str = "2.4",
-        hydamo_version: str = "2.4",
         damo_schema_path: Optional[Path] = None,
-        damo_version: str = "2.4.1",
         damo_version: str = "2.4.1",
         overwrite: bool = False,
         add_status_object: bool = True,
@@ -122,35 +120,7 @@ class DAMO_to_HyDAMO_Converter:
             hydamo_schema = json.load(json_file)
 
         return hydamo_schema.get("definitions", {})
-        return hydamo_schema.get("definitions", {})
 
-    def _get_schema_path(
-        self,
-        schema_path,
-        schema_basename: Literal["DAMO", "HyDAMO"],
-        schema_version: str,
-    ) -> Path:
-        """Return Path to schematisation settings from package resources when schema_path is not provided."""
-        if schema_path is None:
-            if schema_version not in SCHEMA_VERSIONS[schema_basename]:
-                raise ValueError(
-                    f"{schema_basename} version number {schema_version} is not implemented or incorrect. Options are; {SCHEMA_VERSIONS[schema_basename]}"
-                )
-            if schema_basename == "DAMO":
-                package_resource = "hhnk_threedi_tools.resources.schematisation_builder"
-                schema_name = f"{schema_basename}_{schema_version.replace('.', '_')}.xml"
-            elif schema_basename == "HyDAMO":
-                package_resource = "hydamo_validation.schemas.hydamo"
-                schema_name = f"HyDAMO_{schema_version}.json"
-
-            schema_path = Path(str(importlib_resources.files(package_resource).joinpath(schema_name)))
-
-        if not schema_path.exists():
-            raise FileNotFoundError(f"{schema_path} does not exist.")
-
-        return schema_path
-
-    def _retrieve_damo_domain_mapping(self) -> Tuple[dict, dict]:
     def _get_schema_path(
         self,
         schema_path,
