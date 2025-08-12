@@ -73,11 +73,10 @@ def test_db_exporter_polder():
     output_file = db_export_output_dir / "test_export.gpkg"
 
     model_extent_gdf = gpd.read_file(model_extent_path, engine="pyogrio")
-    table_names = ["HYDROOBJECT", "DUIKERSIFONHEVEL"]
 
     logging_DAMO = db_exporter(
         model_extent_gdf=model_extent_gdf,
-        table_names=table_names,
+        table_names=None,
         output_file=output_file,
     )
 
