@@ -2,9 +2,12 @@
 
 import sys
 
+import sys
+
 import geopandas as gpd
 import hhnk_research_tools as hrt
 import numpy as np
+import pytest
 import pytest
 
 from hhnk_threedi_tools.core.schematisation_builder.DAMO_HyDAMO_converter import DAMO_to_HyDAMO_Converter
@@ -15,6 +18,7 @@ temp_dir_out = TEMP_DIR / f"temp_DAMO_HyDAMO_converter_{hrt.current_time(date=Tr
 # %%
 
 
+@pytest.mark.skipif(sys.version_info < (3, 12), reason="Requires Python 3.12 or higher")
 @pytest.mark.skipif(sys.version_info < (3, 12), reason="Requires Python 3.12 or higher")
 def test_DAMO_HyDAMO_converter():
     """
@@ -72,6 +76,7 @@ def test_DAMO_HyDAMO_converter():
         damo_file_path=damo_file_path,
         hydamo_file_path=hydamo_file_path_2,
         overwrite=False,
+        convert_domain_values=False,
         convert_domain_values=False,
     )
     converter.run()
