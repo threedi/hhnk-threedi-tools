@@ -12,6 +12,7 @@ Thumbs.db
 local_settings.py
 local_settings_htt.py
 notebook_data.json
+static_data_paths.json
 debug.log
 
 # Pytests
