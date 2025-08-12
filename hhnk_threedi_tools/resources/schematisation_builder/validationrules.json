@@ -1800,6 +1800,53 @@
 					}
 				}
 			]
+		},
+		{"object": "combinatiepeilgebied",
+				"general_rules": [
+					{
+						"id": 100,
+						"result_variable": "streefpeil_winter",
+						"function": {
+							"join_parameter": {
+								"join_object": "streefpeil",
+								"join_parameter": "waterhoogte",
+								"fill_value": 0
+							}
+						}
+					},
+					{						
+						"id": 101,
+						"result_variable": "type_streefpeil",
+						"function": {
+							"join_parameter": {
+								"join_object": "streefpeil",
+								"join_parameter": "soortstreefpeil",
+								"fill_value": 0
+							}
+						}
+					}
+				],
+				"validation_rules": [
+					{
+					"id": 0,
+					"name": "streefpeil valt niet buiten min/max",
+					"type": "logic",
+					"validation_rule_set": "hhnk",
+					"error_type": "critical",
+					"result_variable": "streefpeil_plausibel",
+					"error_message": "streefpeil_niet_plausibel",
+					"active": true,
+					"function": {
+							"BE": {
+							"parameter": "streefpeil_winter",
+							"min": -6,
+							"max": 10,
+							"inclusive": false
+						}
+					}
+				}
+				]		
 		}
 	]
-}
+}			
+	

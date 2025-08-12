@@ -130,11 +130,11 @@ def make_validated_hydamo_package(project_folder: Path, table_names: list) -> No
 
 if __name__ == "__main__":
     # define project folder path and
-    project_folder = Path("E:/09.modellen_speeltuin/test_with_pomp_table_juan")
+    project_folder = Path("E:/09.modellen_speeltuin/test_jk1")
 
     # select which tables names to export from DAMO
     # only 'main'tables have to be selected (like "GEMAAL"), so no 'sub' tables (like "POMP")
-    TABLE_NAMES = ["HYDROOBJECT", "DUIKERSIFONHEVEL", "GEMAAL"]
+    TABLE_NAMES = ["HYDROOBJECT", "DUIKERSIFONHEVEL", "COMBINATIEPEILGEBIED", "PEILGEBIEDPRAKTIJK"]
 
     # run the function to create a validated HyDAMO package
     make_validated_hydamo_package(project_folder, TABLE_NAMES)

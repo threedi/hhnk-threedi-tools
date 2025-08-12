@@ -17,6 +17,7 @@
 				{ "$ref": "#/definitions/bijzonderhydraulischobject" },
 				{ "$ref": "#/definitions/bodemval" },
 				{ "$ref": "#/definitions/brug" },
+				{ "$ref": "#/definitions/combinatiepeilgebied"},
 				{ "$ref": "#/definitions/doorstroomopening" },
 				{ "$ref": "#/definitions/duikersifonhevel" },
 				{ "$ref": "#/definitions/gemaal" },
@@ -56,6 +57,182 @@
 	},
 	"definitions":
 	{
+		"combinatiepeilgebied" :
+		{
+			"type" :"object",
+			"properties":
+			{
+				"bevat":
+				{
+					"type" : "string",
+					"maxlength" : 38,
+					"pattern" : "^[{]?[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}[}]?$",
+					"maxItems": 1
+				},
+				"code":
+				{
+					"type" : "string",
+					"maxlength" : 50,
+					"maxItems": 1
+				},
+				"created_date":
+				{
+					"type" : "string",
+					"format" : "date-time",
+					"maxItems": 1
+				},
+				"datuminwinning":
+				{
+					"type" : "string",
+					"maxItems": 1
+				},
+				"streefpeil_winter":
+				{
+					"type" : "integer",
+					"maxItems": 1
+				},	
+				"streefpeil_zomer":
+				{
+					"type" : "integer",
+					"maxItems": 1
+				},
+				"type_streefpeil":
+				{
+					"type" : "string",
+					"enum" : [ "Dynamisch bovengrens","Dynamisch bovengrens winter","Dynamisch bovengrens zomer","Dynamisch ondergrens","Dynamisch ondergrens winter","Dynamisch ondergrens zomer","Onbekend","Schouw","Vast","Winter","Zomer" ],
+					"minItems": 1,
+					"maxItems": 1
+				},	
+				"detailniveaugeometrie":
+				{
+					"type" : "integer",
+					"maxlength" : 10,
+					"maxItems": 1
+				},
+				"dimensie":
+				{
+					"type" : "integer",
+					"maxItems": 1
+				},
+				"featuretype":
+				{
+					"type" : "string",
+					"maxlength" : 256,
+					"maxItems": 1
+				},
+				"globalid":
+				{
+					"type" : "string",
+					"maxlength" : 38,
+					"pattern" : "^[{]?[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}[}]?$",
+					"uniqueItems" : true,
+					"minItems": 1,
+					"maxItems": 1
+				},
+				"hyperlink":
+				{
+					"type" : "string",
+					"maxlength" : 256,
+					"maxItems": 1
+				},
+				"inwinnendeinstantie":
+				{
+					"type" : "string",
+					"maxItems": 1
+				},
+				"inwinningsmethode":
+				{
+					"type" : "integer",
+					"maxItems": 1
+				},
+				"last_edited_date":
+				{
+					"type" : "string",
+					"format" : "date-time",
+					"maxItems": 1
+				},
+				"lvpublicatiedatum":
+				{
+					"type" : "string",
+					"format" : "date-time",
+					"maxItems": 1
+				},
+				"metendeinstantie":
+				{
+					"type" : "string",
+					"maxItems": 1
+				},
+				"naam":
+				{
+					"type" : "string",
+					"maxlength" : 100,
+					"maxItems": 1
+				},
+				"namespace":
+				{
+					"type" : "string",
+					"maxlength" : 50,
+					"maxItems": 1
+				},
+				"nauwkeurigheidxy":
+				{
+					"type" : "integer",
+					"maxItems": 1
+				},
+				"nauwkeurigheidz":
+				{
+					"type" : "integer",
+					"maxItems": 1
+				},
+				"nen3610id":
+				{
+					"type" : "string",
+					"maxlength" : 256,
+					"uniqueItems" : true,
+					"minItems": 1,
+					"maxItems": 1
+				},
+				"objectid":
+				{
+					"type" : "integer",
+					"maxlength" : 10,
+					"uniqueItems" : true,
+					"minItems": 1,
+					"maxItems": 1
+				},
+				"opmerking":
+				{
+					"type" : "string",
+					"maxlength" : 2000,
+					"maxItems": 1
+				},
+				"shape":
+				{
+					"type" : ["Polygon","MultiPolygon"],
+					"minItems": 1,
+					"maxItems": 1
+				},
+				"statusobject":
+				{
+					"type" : "string",
+					"enum" : [ "buiten bedrijf","gerealiseerd","niet meer aanwezig","onbekend","planvorming","realisatie","te verwijderen" ],
+					"maxItems": 1
+				},
+				"statuspeilgebied":
+				{
+					"type" : "string",
+					"enum" : [ "Onbekend","Ontwerp","Overig","Praktijk","Vigerend definitief","Vigerend interim" ],
+					"maxItems": 1
+				},
+				"voertafop":
+				{
+					"type" : "string",
+					"maxlength" : 38,
+					"pattern" : "^[{]?[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}[}]?$",
+					"maxItems": 1
+				}
+			}
+		}, 
 		"admingrenswaterschap" : 
 		{
 			"type": "object",
@@ -5434,6 +5611,14 @@
 					"maxlength" : 10,
 					"uniqueItems" : true,
 					"minItems": 1,
+					"maxItems": 1
+				},
+				"combinatiepeilgebiedid":
+				{
+					"type" : "string",
+					"VerwijstNaar" : "combinatiepeilgebied",
+					"maxlength" : 38,
+					"pattern" : "^[{]?[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}[}]?$",
 					"maxItems": 1
 				},
 				"peilafwijkinggebiedid":
