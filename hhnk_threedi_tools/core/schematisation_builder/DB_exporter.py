@@ -28,7 +28,7 @@ except ImportError as e:
         DATABASES = {}  # No DB in CI environment
     else:
         raise ImportError(
-            r"The 'local_settings_htt' module is missing. Get it from \\corp.hhnk.nl\data\Hydrologen_data\Data\01.basisgegevens\00.HDB\SettingsAndRecourses\local_settings_htt.py and place it in \hhnk_threedi_tools\local_settings_htt.py "
+            r"The 'local_settings_htt' module is missing. You may find it on C:\SettingsAndRecourses\local_settings_htt.py"
         )
 
 # From mapping json list top level keys
