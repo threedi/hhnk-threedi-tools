@@ -225,8 +225,6 @@ def update_table_domains(
 
     # Loop over each domain column
     for col in domain_columns:
-        # if col == "categorieoppwaterlichaam":
-        #     break
         new_code_col = f"{col}code"
 
         # Preserve code column right after the original column
