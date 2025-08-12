@@ -9,7 +9,7 @@ import hhnk_research_tools as hrt
 import pytest
 
 from hhnk_threedi_tools.core.schematisation_builder.DB_exporter import DATABASES, db_exporter
-from tests.config import TEMP_DIR, TEST_DIRECTORY
+from tests.config import FOLDER_TEST, TEMP_DIR, TEST_DIRECTORY
 
 TEST_DIRECTORY_SB = TEST_DIRECTORY / "schematisation_builder"
 # Create output directory for db exporter tests
@@ -93,7 +93,7 @@ def test_db_exporter_polder():
 def test_db_exporter_domains():
     """Test the db_exporter function using all defeault tables for the test polder."""
 
-    model_extent_path = TEST_DIRECTORY / r"model_test\01_source_data\polder_polygon.shp"
+    model_extent_path = FOLDER_TEST.source_data.polder_polygon.path
     output_file = db_export_output_dir / "test_export_domain.gpkg"
 
     model_extent_gdf = gpd.read_file(model_extent_path, engine="pyogrio")
@@ -103,6 +103,7 @@ def test_db_exporter_domains():
         model_extent_gdf=model_extent_gdf,
         table_names=table_names,
         output_file=output_file,
+        update_extent=True,
     )
 
     assert output_file.exists() is True

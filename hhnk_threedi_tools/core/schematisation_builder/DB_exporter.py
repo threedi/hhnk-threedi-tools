@@ -36,6 +36,9 @@ tables_default = list(DB_LAYER_MAPPING.keys())
 EPSG_CODE = "28992"
 
 
+logger = hrt.logging.get_logger(__name__)
+
+
 # %%
 def update_model_extent_from_combinatiepeilgebieden(
     model_extent_gdf: gpd.GeoDataFrame,
@@ -194,7 +197,7 @@ def update_table_domains(
         Dictionary containing database connection details.
     schema : str
         Schema name in the database where the sub table is located.
-    table : str
+    table_name : str
         Name of the table to update domains
 
     Returns
@@ -203,67 +206,60 @@ def update_table_domains(
         geodataframe of table from DAMO W schema with updated domains
     """
 
-    logger = hrt.logging.get_logger(__name__)
-
-    # Retrieve available domains
     domains = get_table_domains_from_oracle(
         db_dict=db_dict,
         schema=schema,
         table_name=table_name,
     )
+    model_gdf_mapped = model_gdf.copy()
 
-    # Check if empmty
     if domains.empty:
         logger.warning(f"No domains found for table {table_name} in schema {schema}. Skipping domain update.")
-        return model_gdf
+    else:
+        # Ensure domain codes are strings
+        domains["codedomeinwaarde"] = domains["codedomeinwaarde"].astype(str)
 
-    # Ensure domain codes are strings
-    domains["codedomeinwaarde"] = domains["codedomeinwaarde"].astype(str)
+        # Remap the columns with a domain.
+        domain_columns = [col for col in model_gdf_mapped.columns if col in domains["damokolomnaam"].unique()]
+        for domain_str_col in domain_columns:
+            domain_code_col = f"{domain_str_col}__code"
 
-    # Identify columns to remap
-    domain_columns = [col for col in model_gdf.columns if col in domains["damokolomnaam"].unique()]
-
-    # Loop over each domain column
-    for col in domain_columns:
-        new_code_col = f"{col}code"
-
-        # Preserve code column right after the original column
-        model_gdf.insert(
-            loc=model_gdf.columns.get_loc(col) + 1,
-            column=new_code_col,
-            value=model_gdf[col],
-        )
-        model_gdf[col] = ""
-
-        text_types = ["text", "esrifieldtypestring"]
-        int_types = ["short", "esrifieldtypesmallinteger"]
-
-        # Filter domains for the current column
-        lookup = domains.loc[domains["damokolomnaam"] == col].set_index("codedomeinwaarde")
-
-        # correctly set dtypes
-        if lookup["fieldtype"].iloc[0] in text_types:
-            model_gdf[new_code_col] = model_gdf[new_code_col].astype(str)
-            lookup.index = lookup.index.astype(str)
-        elif lookup["fieldtype"].iloc[0] in int_types:
-            model_gdf[new_code_col] = model_gdf[new_code_col].fillna(-9999).astype(int)
-            lookup.index = lookup.index.astype(int)
-
-        # Prepare mapping dictionary
-        mapping = lookup["naamdomeinwaarde"]
-        # Check if mapping is unique
-        if not mapping.is_unique:
-            logger.warning(
-                f"Non-unique mapping found for column {col} in table {table_name}. Using first occurrence for mapping, probably from DAMO."
+            # Preserve code column right after the original column
+            model_gdf_mapped.insert(
+                loc=model_gdf_mapped.columns.get_loc(domain_str_col) + 1,
+                column=domain_code_col,
+                value=model_gdf_mapped[domain_str_col],
             )
-            # TODO uitzoeken waarom er veel dubbelingen in de  domainen zitten (staat uit bij Geo)
-            mapping = mapping.groupby(mapping.index).first()
 
-        # Vectorized replacement (NaN if no match)
+            text_types = ["text", "esrifieldtypestring"]
+            int_types = ["short", "esrifieldtypesmallinteger"]
 
-        model_gdf[col] = model_gdf[new_code_col].map(mapping)
+            # Filter domains for the current column
+            lookup = domains.loc[domains["damokolomnaam"] == domain_str_col].set_index("codedomeinwaarde")
 
-    return model_gdf
+            # correctly set dtypes
+            if lookup["fieldtype"].iloc[0] in text_types:
+                model_gdf_mapped[domain_code_col] = model_gdf_mapped[domain_code_col].astype(str)
+                lookup.index = lookup.index.astype(str)
+            elif lookup["fieldtype"].iloc[0] in int_types:
+                model_gdf_mapped[domain_code_col] = (
+                    pd.to_numeric(model_gdf_mapped[domain_code_col], errors="coerce").fillna(-9999).astype(int)
+                )
+                lookup.index = lookup.index.astype(int)
+
+            # Prepare mapping dictionary
+            mapping = lookup["naamdomeinwaarde"]
+            if not mapping.is_unique:
+                logger.warning(
+                    f"Non-unique mapping found for column {domain_str_col} in table {table_name}. Using first occurrence for mapping, probably from DAMO."
+                )
+                # TODO uitzoeken waarom er veel dubbelingen in de  domainen zitten (staat uit bij Geo)
+                mapping = mapping.groupby(mapping.index).first()
+
+            # Vectorized replacement (NaN if no match)
+            model_gdf_mapped[domain_str_col] = model_gdf_mapped[domain_code_col].map(mapping)
+
+    return model_gdf_mapped
 
 
 def db_exporter(
@@ -461,6 +457,6 @@ def db_exporter(
             logging_bd_exporter.append(error)
 
     # Finished export logging
-    logger.info(f"Finisched export in {output_file}")
+    logger.info(f"Finished export in {output_file}")
 
     return logging_bd_exporter
