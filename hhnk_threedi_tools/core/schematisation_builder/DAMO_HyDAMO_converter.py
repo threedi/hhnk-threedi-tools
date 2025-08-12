@@ -2,6 +2,7 @@
 import importlib.resources as importlib_resources
 import json
 import logging
+import os
 import xml.etree.ElementTree as ET
 from functools import cached_property
 from pathlib import Path
@@ -42,12 +43,8 @@ class DAMO_to_HyDAMO_Converter:
         Path to the HyDAMO schema (json file)
     hydamo_version: str
         Version number of the HyDAMO schema (format: 1.1, 3.2.1, 4.0, etc)
-    hydamo_version: str
-        Version number of the HyDAMO schema (format: 1.1, 3.2.1, 4.0, etc)
     damo_schema_path : Path
         Path to the DAMO schema (xml file)
-    damo_version: str
-        Version number of the HyDAMO schema (format: 1.1, 3.2.1, 4.0, etc)
     damo_version: str
         Version number of the HyDAMO schema (format: 1.1, 3.2.1, 4.0, etc)
     overwrite : bool
