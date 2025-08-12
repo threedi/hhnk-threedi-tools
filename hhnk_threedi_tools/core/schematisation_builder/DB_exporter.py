@@ -444,11 +444,13 @@ def db_exporter(
                         db_dict=db_dict,
                         schema=schema,
                     )
+                    # Write to geopackage
+                    sub2_model_gdf.to_file(output_file, layer=sub2_table, driver="GPKG", engine="pyogrio")
 
                     sub_model_gdf.to_file(output_file, layer=sub2_table, driver="GPKG", engine="pyogrio")
 
                     logger.info(
-                        f"Finished export of {len(sub2_model_gdf)} elements from table {sub_table} from {service_name}"
+                        f"Finished export of {len(sub2_model_gdf)} elements from table {sub2_table} from {service_name}"
                     )
 
         except Exception as e:
