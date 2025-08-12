@@ -466,18 +466,3 @@ def db_exporter(
     logger.info(f"Finisched export in {output_file}")
 
     return logging_bd_exporter
-
-
-# %%
-
-from tests_local.config import TEST_DIRECTORY
-
-model_extent_path = TEST_DIRECTORY / r"model_test\01_source_data\polder_polygon.shp"
-output_file = r"C:\Users\wvanesse\Desktop\temp\test_export.gpkg"
-
-model_extent_gdf = gpd.read_file(model_extent_path, engine="pyogrio")
-table_names = ["HYDROOBJECT"]
-table = table_names[0]
-epsg_code = "28992"
-
-# %%
