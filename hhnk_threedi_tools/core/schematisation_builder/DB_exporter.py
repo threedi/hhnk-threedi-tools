@@ -1,5 +1,6 @@
 # %%
 """DAMO exporter based on model extent"""
+# TODO convert to class
 
 import os
 from logging import Logger
@@ -240,7 +241,6 @@ def update_table_domains(
             # correctly set dtypes
             if lookup["fieldtype"].iloc[0] in text_types:
                 model_gdf_mapped[domain_code_col] = model_gdf_mapped[domain_code_col].astype(str)
-                lookup.index = lookup.index.astype(str)
             elif lookup["fieldtype"].iloc[0] in int_types:
                 model_gdf_mapped[domain_code_col] = (
                     pd.to_numeric(model_gdf_mapped[domain_code_col], errors="coerce").fillna(-9999).astype(int)

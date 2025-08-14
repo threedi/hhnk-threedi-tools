@@ -78,8 +78,5 @@ if __name__ == "__main__":
     test_db_exporter_one_feature()
     test_db_exporter_polder()
 
-    # else:
-    #     print("Skipping DB test because no local_settings_htt.py or DATABASES available.")
-
 
 # %%
