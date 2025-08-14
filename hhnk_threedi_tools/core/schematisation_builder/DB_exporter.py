@@ -1,5 +1,6 @@
 # %%
 """DAMO exporter based on model extent"""
+# TODO convert to class
 
 import os
 from logging import Logger
@@ -12,7 +13,7 @@ import pandas as pd
 from dotenv import load_dotenv
 from hhnk_research_tools.sql_functions import (
     database_to_gdf,
-    get_table_domains_from_oracle,
+    get_table_domains_from_DAMO,
     sql_builder_select_by_id_list_statement,
     sql_builder_select_by_location,
 )
@@ -28,12 +29,15 @@ except ImportError as e:
         DATABASES = {}  # No DB in CI environment
     else:
         raise ImportError(
-            r"The 'local_settings_htt' module is missing. Get it from \\corp.hhnk.nl\data\Hydrologen_data\Data\01.basisgegevens\00.HDB\SettingsAndRecourses\local_settings_htt.py and place it in \hhnk_threedi_tools\local_settings_htt.py "
+            r"The 'local_settings_htt' module is missing. You may find it on C:\SettingsAndRecourses\local_settings_htt.py"
         )
 
 # From mapping json list top level keys
 tables_default = list(DB_LAYER_MAPPING.keys())
 EPSG_CODE = "28992"
+
+
+logger = hrt.logging.get_logger(__name__)
 
 
 # %%
@@ -171,6 +175,15 @@ def export_sub_layer(
     idlist = model_gdf[id_link_column.lower()].unique().tolist()
     sub_model_df = sub_bbox_df[sub_bbox_df[sub_id_column.lower()].isin(idlist)]
 
+    # Update table domain code to descriptions
+    if schema == "DAMO_W":
+        logger.info(f"Updating domains for {sub_table}")
+        sub_model_gdf = update_table_domains(
+            model_gdf=sub_model_df,
+            db_dict=db_dict,
+            table_name=sub_table,
+        )
+
     sub_model_gdf = gpd.GeoDataFrame(sub_model_df)
 
     return sub_sql, sub_model_gdf
@@ -179,7 +192,6 @@ def export_sub_layer(
 def update_table_domains(
     model_gdf: gpd.GeoDataFrame,
     db_dict: dict,
-    schema: str,
     table_name: str,
 ) -> gpd.GeoDataFrame:
     """
@@ -192,9 +204,7 @@ def update_table_domains(
         geodataframe of table from DAMO W schema, e.g. HYDROOBJECT
     db_dict : dict
         Dictionary containing database connection details.
-    schema : str
-        Schema name in the database where the sub table is located.
-    table : str
+    table_name : str
         Name of the table to update domains
 
     Returns
@@ -203,52 +213,65 @@ def update_table_domains(
         geodataframe of table from DAMO W schema with updated domains
     """
 
-    logger = hrt.logging.get_logger(__name__)
-
-    # Retrieve available domains
-    domains = get_table_domains_from_oracle(
+    domains = get_table_domains_from_DAMO(
         db_dict=db_dict,
-        schema=schema,
         table_name=table_name,
     )
+    model_gdf_mapped = model_gdf.copy()
 
-    # Check if empmty
     if domains.empty:
-        logger.warning(f"No domains found for table {table_name} in schema {schema}. Skipping domain update.")
-        return model_gdf
+        logger.warning(f"No domains found for table {table_name}. Skipping domain update.")
+    else:
+        # Ensure domain codes are strings
+        domains["codedomeinwaarde"] = domains["codedomeinwaarde"].astype(str)
 
-    # Ensure domain codes are strings
-    domains["codedomeinwaarde"] = domains["codedomeinwaarde"].astype(str)
+        # Remap the columns with a domain.
+        domain_columns = [col for col in model_gdf_mapped.columns if col in domains["damokolomnaam"].unique()]
+        for domain_str_col in domain_columns:
+            domain_code_col = f"{domain_str_col}code"  # code directly after is similar to CSO
 
-    # Identify columns to remap
-    domain_columns = [col for col in model_gdf.columns if col in domains["damokolomnaam"].unique()]
+            # Preserve code column right after the original column
+            model_gdf_mapped.insert(
+                loc=model_gdf_mapped.columns.get_loc(domain_str_col) + 1,
+                column=domain_code_col,
+                value=model_gdf_mapped[domain_str_col],
+            )
 
-    # Loop over each domain column
-    for col in domain_columns:
-        # if col == "categorieoppwaterlichaam":
-        #     break
-        new_code_col = f"{col}code"
+            text_types = ["text", "esrifieldtypestring"]
+            int_types = ["short", "esrifieldtypesmallinteger"]
 
-        # Preserve code column right after the original column
-        model_gdf.insert(
-            loc=model_gdf.columns.get_loc(col) + 1,
-            column=new_code_col,
-            value=model_gdf[col].astype(str),
-        )
+            # Filter domains for the current column
+            lookup = domains.loc[domains["damokolomnaam"] == domain_str_col].set_index("codedomeinwaarde")
 
-        # Build lookup: index=codedomeinwaarde → naamdomeinwaarde
-        lookup = domains.loc[domains["damokolomnaam"] == col].set_index("codedomeinwaarde")["naamdomeinwaarde"]
+            # correctly set dtypes
+            if lookup["fieldtype"].iloc[0] in text_types:
+                model_gdf_mapped[domain_code_col] = model_gdf_mapped[domain_code_col].astype(str)
+            elif lookup["fieldtype"].iloc[0] in int_types:
+                model_gdf_mapped[domain_code_col] = (
+                    pd.to_numeric(model_gdf_mapped[domain_code_col], errors="coerce").fillna(-9999).astype(int)
+                )
+                lookup.index = lookup.index.astype(int)
 
-        # Vectorized replacement (NaN if no match)
-        model_gdf[col] = model_gdf[new_code_col].map(lookup)
+            # Prepare mapping dictionary
+            mapping = lookup["naamdomeinwaarde"]
+            if not mapping.is_unique:
+                logger.warning(
+                    f"Non-unique mapping found for column {domain_str_col} in table {table_name}. Using first occurrence for mapping, probably from DAMO."
+                )
+                # TODO (#26141) uitzoeken waarom er veel dubbelingen in de  domainen zitten (staat uit bij Geo)
+                # https://dev.azure.com/HHNK/Intern/_workitems/edit/26141
+                mapping = mapping.groupby(mapping.index).first()
 
-    return model_gdf
+            # Vectorized replacement (NaN if no match)
+            model_gdf_mapped[domain_str_col] = model_gdf_mapped[domain_code_col].map(mapping)
+
+    return model_gdf_mapped
 
 
 def db_exporter(
     model_extent_gdf: gpd.GeoDataFrame,
     output_file: Path,
-    table_names: list[str] = tables_default,
+    table_names: list[str] = None,
     buffer_distance: float = 0.5,
     epsg_code: str = EPSG_CODE,
     logger: Optional[Logger] = None,
@@ -270,7 +293,7 @@ def db_exporter(
     output_file: Path
         path to output gpkg file in project directory.
     table_names : list[str]
-        List of table names to be included in export, deafaults to all needed for model generation
+        List of table names to be included in export, deafaults to all needed for model generation (pass None).
     buffer_distance: float
         Distance to buffer the polder polygon before selection
     epsg_code : str, default is "28992"
@@ -294,6 +317,10 @@ def db_exporter(
         logger = hrt.logging.get_logger(__name__)
     logger.info("Start export")
 
+    if table_names is None:
+        logger.info("No table names provided, using default tables for schematisation builder.")
+        table_names = tables_default
+
     # Update model extent with geometry from Combinatiepeilgebieden
     if update_extent:
         logger.info("Updating model extent with geometry from Combinatiepeilgebieden")
@@ -306,7 +333,7 @@ def db_exporter(
     # make bbox --> to simplify string request to DAMO db
     bbox_model = box(*model_extent_gdf.total_bounds)
 
-    logging_bd_exporter = []
+    logging_db_exporter = []
     for table in table_names:
         table_config: dict = DB_LAYER_MAPPING.get(table)
         if table_config is None:
@@ -360,7 +387,6 @@ def db_exporter(
                 model_gdf = update_table_domains(
                     model_gdf=model_gdf,
                     db_dict=db_dict,
-                    schema=schema,
                     table_name=table_name,
                 )
 
@@ -431,6 +457,12 @@ def db_exporter(
                 error = f"An error occured while exporting data of table {table} from {service_name} {e}"
 
             logger.error(error)
-            logging_bd_exporter.append(error)
+            logging_db_exporter.append(error)
 
-    return logging_bd_exporter
+    # Finished export logging
+    logger.info(f"Finished export in {output_file}")
+
+    return logging_db_exporter
+
+
+# %%
