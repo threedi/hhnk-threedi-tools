@@ -13,7 +13,7 @@ import pandas as pd
 from dotenv import load_dotenv
 from hhnk_research_tools.sql_functions import (
     database_to_gdf,
-    get_table_domains_from_oracle,
+    get_table_domains_from_DAMO,
     sql_builder_select_by_id_list_statement,
     sql_builder_select_by_location,
 )
@@ -175,6 +175,15 @@ def export_sub_layer(
     idlist = model_gdf[id_link_column.lower()].unique().tolist()
     sub_model_df = sub_bbox_df[sub_bbox_df[sub_id_column.lower()].isin(idlist)]
 
+    # Update table domain code to descriptions
+    if schema == "DAMO_W":
+        logger.info(f"Updating domains for {sub_table}")
+        sub_model_gdf = update_table_domains(
+            model_gdf=sub_model_df,
+            db_dict=db_dict,
+            table_name=sub_table,
+        )
+
     sub_model_gdf = gpd.GeoDataFrame(sub_model_df)
 
     return sub_sql, sub_model_gdf
@@ -183,7 +192,6 @@ def export_sub_layer(
 def update_table_domains(
     model_gdf: gpd.GeoDataFrame,
     db_dict: dict,
-    schema: str,
     table_name: str,
 ) -> gpd.GeoDataFrame:
     """
@@ -196,8 +204,6 @@ def update_table_domains(
         geodataframe of table from DAMO W schema, e.g. HYDROOBJECT
     db_dict : dict
         Dictionary containing database connection details.
-    schema : str
-        Schema name in the database where the sub table is located.
     table_name : str
         Name of the table to update domains
 
@@ -207,15 +213,14 @@ def update_table_domains(
         geodataframe of table from DAMO W schema with updated domains
     """
 
-    domains = get_table_domains_from_oracle(
+    domains = get_table_domains_from_DAMO(
         db_dict=db_dict,
-        schema=schema,
         table_name=table_name,
     )
     model_gdf_mapped = model_gdf.copy()
 
     if domains.empty:
-        logger.warning(f"No domains found for table {table_name} in schema {schema}. Skipping domain update.")
+        logger.warning(f"No domains found for table {table_name}. Skipping domain update.")
     else:
         # Ensure domain codes are strings
         domains["codedomeinwaarde"] = domains["codedomeinwaarde"].astype(str)
@@ -328,7 +333,7 @@ def db_exporter(
     # make bbox --> to simplify string request to DAMO db
     bbox_model = box(*model_extent_gdf.total_bounds)
 
-    logging_bd_exporter = []
+    logging_db_exporter = []
     for table in table_names:
         table_config: dict = DB_LAYER_MAPPING.get(table)
         if table_config is None:
@@ -382,7 +387,6 @@ def db_exporter(
                 model_gdf = update_table_domains(
                     model_gdf=model_gdf,
                     db_dict=db_dict,
-                    schema=schema,
                     table_name=table_name,
                 )
 
@@ -411,16 +415,6 @@ def db_exporter(
                     db_dict=db_dict,
                     schema=schema,
                 )
-
-                # Update table domain code to descriptions
-                if schema == "DAMO_W":
-                    logger.info(f"Updating domains for {sub_table} from {service_name}")
-                    sub_model_gdf = update_table_domains(
-                        model_gdf=sub_model_gdf,
-                        db_dict=db_dict,
-                        schema=schema,
-                        table_name=sub_table,
-                    )
 
                 # Write to geopackage
                 sub_model_gdf.to_file(output_file, layer=sub_table, driver="GPKG", engine="pyogrio")
@@ -452,16 +446,6 @@ def db_exporter(
                     # Write to geopackage
                     sub2_model_gdf.to_file(output_file, layer=sub2_table, driver="GPKG", engine="pyogrio")
 
-                    # Update table domain code to descriptions
-                    if schema == "DAMO_W":
-                        logger.info(f"Updating domains for {sub2_table} from {service_name}")
-                        sub2_model_gdf = update_table_domains(
-                            model_gdf=sub2_model_gdf,
-                            db_dict=db_dict,
-                            schema=schema,
-                            table_name=sub2_table,
-                        )
-
                     logger.info(
                         f"Finished export of {len(sub2_model_gdf)} elements from table {sub2_table} from {service_name}"
                     )
@@ -473,12 +457,12 @@ def db_exporter(
                 error = f"An error occured while exporting data of table {table} from {service_name} {e}"
 
             logger.error(error)
-            logging_bd_exporter.append(error)
+            logging_db_exporter.append(error)
 
     # Finished export logging
     logger.info(f"Finished export in {output_file}")
 
-    return logging_bd_exporter
+    return logging_db_exporter
 
 
 # %%
