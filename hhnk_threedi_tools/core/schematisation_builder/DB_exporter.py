@@ -222,7 +222,7 @@ def update_table_domains(
         # Remap the columns with a domain.
         domain_columns = [col for col in model_gdf_mapped.columns if col in domains["damokolomnaam"].unique()]
         for domain_str_col in domain_columns:
-            domain_code_col = f"{domain_str_col}__code"
+            domain_code_col = f"{domain_str_col}code"  # code directly after is similar to CSO
 
             # Preserve code column right after the original column
             model_gdf_mapped.insert(
@@ -253,7 +253,8 @@ def update_table_domains(
                 logger.warning(
                     f"Non-unique mapping found for column {domain_str_col} in table {table_name}. Using first occurrence for mapping, probably from DAMO."
                 )
-                # TODO uitzoeken waarom er veel dubbelingen in de  domainen zitten (staat uit bij Geo)
+                # TODO (#26141) uitzoeken waarom er veel dubbelingen in de  domainen zitten (staat uit bij Geo)
+                # https://dev.azure.com/HHNK/Intern/_workitems/edit/26141
                 mapping = mapping.groupby(mapping.index).first()
 
             # Vectorized replacement (NaN if no match)
@@ -411,6 +412,16 @@ def db_exporter(
                     schema=schema,
                 )
 
+                # Update table domain code to descriptions
+                if schema == "DAMO_W":
+                    logger.info(f"Updating domains for {sub_table} from {service_name}")
+                    sub_model_gdf = update_table_domains(
+                        model_gdf=sub_model_gdf,
+                        db_dict=db_dict,
+                        schema=schema,
+                        table_name=sub_table,
+                    )
+
                 # Write to geopackage
                 sub_model_gdf.to_file(output_file, layer=sub_table, driver="GPKG", engine="pyogrio")
 
@@ -441,7 +452,15 @@ def db_exporter(
                     # Write to geopackage
                     sub2_model_gdf.to_file(output_file, layer=sub2_table, driver="GPKG", engine="pyogrio")
 
-                    sub_model_gdf.to_file(output_file, layer=sub2_table, driver="GPKG", engine="pyogrio")
+                    # Update table domain code to descriptions
+                    if schema == "DAMO_W":
+                        logger.info(f"Updating domains for {sub2_table} from {service_name}")
+                        sub2_model_gdf = update_table_domains(
+                            model_gdf=sub2_model_gdf,
+                            db_dict=db_dict,
+                            schema=schema,
+                            table_name=sub2_table,
+                        )
 
                     logger.info(
                         f"Finished export of {len(sub2_model_gdf)} elements from table {sub2_table} from {service_name}"
@@ -460,3 +479,6 @@ def db_exporter(
     logger.info(f"Finished export in {output_file}")
 
     return logging_bd_exporter
+
+
+# %%
