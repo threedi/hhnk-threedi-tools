@@ -1215,8 +1215,23 @@
 							"right": "functiegemaalcode_damo"
 						}
 					}
+				},
+				{
+					"id": 106,
+					"name": "aantal peilgebieden per gemaal",
+					"type": "logic",
+					"validation_rule_set": "hhnk",
+					"error_type": "critical",
+					"result_variable": "aantal_peilgebieden",
+					"error_message": "aantal peilgebieden meer dan 2",
+					"active": true,
+					"function": {
+						"LE": {
+							"left": "aantal_peilgebieden",
+							"right": 2
+						}
+					}
 				}
-					
 			]
 		},
 		{
