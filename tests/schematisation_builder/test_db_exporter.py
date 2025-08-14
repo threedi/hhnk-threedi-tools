@@ -26,6 +26,7 @@ def test_db_exporter_one_feature():
     """
     model_extent_path = TEST_DIRECTORY_SB / "area_test_sql_helsdeur.gpkg"
     output_file = db_export_output_dir / "test_damo_gemaal_helsdeur.gpkg"
+    db_export_output_dir.mkdir(exist_ok=True)
 
     model_extent_gdf = gpd.read_file(model_extent_path, engine="pyogrio")
     table_names = ["GEMAAL_DAMO", "GEMAAL"]
@@ -37,7 +38,7 @@ def test_db_exporter_one_feature():
         update_extent=False,
     )
 
-    assert output_file.exists() is True
+    assert output_file.exists()
 
     gemaal_damo_gdf = gpd.read_file(output_file, layer="GEMAAL_DAMO")
     gemaal_cso_gdf = gpd.read_file(output_file, layer="GEMAAL")
@@ -52,7 +53,7 @@ def test_db_exporter_one_feature():
 
 @pytest.mark.skipif(skip_db, reason="Skipping DB test because no local_settings_htt.py or DATABASES available.")
 def test_db_exporter_polder():
-    """Test the db_exporter function using all defeault tables for the test polder."""
+    """Test the db_exporter function using all default tables for the test polder."""
 
     model_extent_path = TEST_DIRECTORY / r"model_test\01_source_data\polder_polygon.shp"
     output_file = db_export_output_dir / "test_export.gpkg"
@@ -65,7 +66,7 @@ def test_db_exporter_polder():
         output_file=output_file,
     )
 
-    assert output_file.exists() is True
+    assert output_file.exists()
     assert logging_DAMO == []
 
 
