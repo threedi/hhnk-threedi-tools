@@ -69,10 +69,6 @@ def make_validated_hydamo_package(
     logger = hrt.logging.get_logger(__name__, filepath=Path(project_folder) / "log.log")
     logger.setLevel(logging.INFO)
 
-    polder_file_path = project_folder / "01_source_data" / "polder_polygon.shp"
-    damo_file_path = project_folder / "01_source_data" / "DAMO.gpkg"
-    hydamo_file_path = project_folder / "01_source_data" / "HyDAMO.gpkg"
-
     # check if polder_polygon.shp files exists and if not, copy file from default location
     if not polder_file_path.exists():
         logger.info(f"polder_polygon.shp not found in {project_folder}/01_source_data, copying from default location.")

@@ -14,8 +14,6 @@ import hhnk_research_tools as hrt
 import pandas as pd
 import pyogrio
 
-import hhnk_threedi_tools as htt
-
 WATERSCHAPSCODE = 12  # Hoogheemraadschap Hollands Noorderkwartier
 SCHEMA_VERSIONS = {  # Available versions of (hy)damo schematisation that are implemented
     "DAMO": ["2.3", "2.4.1", "2.5"],
