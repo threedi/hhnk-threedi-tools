@@ -4,6 +4,7 @@ import sys
 
 import geopandas as gpd
 import hhnk_research_tools as hrt
+import numpy as np
 import pytest
 
 from hhnk_threedi_tools.core.schematisation_builder.DAMO_HyDAMO_converter import DAMO_to_HyDAMO_Converter
@@ -24,8 +25,6 @@ def test_DAMO_HyDAMO_converter():
     objectid = 356339
 
     damo_file_path = TEST_DIRECTORY / "schematisation_builder" / "DAMO.gpkg"
-    DAMO_hydroobject_gdf = gpd.read_file(damo_file_path, layer="HYDROOBJECT")
-    DAMO_hydroobject_gdf = DAMO_hydroobject_gdf[DAMO_hydroobject_gdf["objectid"] == objectid]
 
     ### Outcommented code to test HyDAMO conversion with convert_domain_values set to True
     # hydamo_file_path = temp_dir_out / f"HyDAMO_{hrt.current_time(date=True)}.gpkg"
@@ -75,17 +74,38 @@ def test_DAMO_HyDAMO_converter():
     )
     converter.run()
 
-    # Check if the value for column categorieoppwaterlichaam is not converted to a descriptive value
-    # In DAMO the value is 1, in HyDAMO the value is still 1, but string type
-    HyDAMO_hydroobject_gdf = gpd.read_file(hydamo_file_path_2, layer="HYDROOBJECT")
-    HyDAMO_hydroobject_gdf = HyDAMO_hydroobject_gdf[HyDAMO_hydroobject_gdf["objectid"] == objectid]
-    assert DAMO_hydroobject_gdf["categorieoppwaterlichaamcode"].values[0] == str(1) and HyDAMO_hydroobject_gdf[
-        "categorieoppwaterlichaamcode"
-    ].values[0] == str(1), (
-        f"Expected both values to be 1, but got "
-        f"DAMO: {DAMO_hydroobject_gdf['categorieoppwaterlichaamcode'].values[0]}, "
-        f"HyDAMO: {HyDAMO_hydroobject_gdf['categorieoppwaterlichaamcode'].values[0]}"
-    )
+    # Check if HyDAMO.gpkg is created
+    assert hydamo_file_path_2.exists()
+
+    hydamo_layers = hrt.SpatialDatabase(hydamo_file_path_2).available_layers()
+    for layer in hydamo_layers:
+        print(f"Checking layer: {layer}")
+        hydamo_gdf = gpd.read_file(hydamo_file_path_2, layer=layer)
+
+        # Check if NEN3610id column is added in each layer
+        assert "NEN3610id" in hydamo_gdf.columns
+
+        if layer == "HYDROOBJECT":
+            damo_gdf = gpd.read_file(damo_file_path, layer="HYDROOBJECT")
+
+            DAMO_hydroobject_obj_gdf = damo_gdf[damo_gdf["objectid"] == objectid]
+            HyDAMO_hydroobject_obj_gdf = hydamo_gdf[hydamo_gdf["objectid"] == objectid]
+
+            assert DAMO_hydroobject_obj_gdf["categorieoppwaterlichaamcode"].values[0] == str(
+                1
+            ) and HyDAMO_hydroobject_obj_gdf["categorieoppwaterlichaamcode"].values[0] == str(1), (
+                f"Expected both values to be 1, but got "
+                f"DAMO: {DAMO_hydroobject_obj_gdf['categorieoppwaterlichaamcode'].values[0]}, "
+                f"HyDAMO: {HyDAMO_hydroobject_obj_gdf['categorieoppwaterlichaamcode'].values[0]}"
+            )
+
+        if layer == "POMP":
+            # Check if the field type of the column 'pompcapaciteit' is float
+            assert hydamo_gdf["maximalecapaciteit"].dtype == "float64"
+
+        if layer == "GEMAAL":
+            # Check if the field type of the column 'gemaalcapiciteit' is float
+            assert hydamo_gdf["maximalecapaciteit"].dtype == "float64"
 
 
 # %%
