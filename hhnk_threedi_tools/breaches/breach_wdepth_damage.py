@@ -388,6 +388,7 @@ if __name__ == "__main__":
         "ROR-PRI-HONDSBOSSCHE_ZEEWERING_4-T10",
         "ROR-PRI-HONDSBOSSCHE_ZEEWERING_4-T100",
         "ROR-PRI-DURGERDAMMERDIJK_0.5-T100000",
+        "ROR-PRI-KATWOUDERZEEDIJK_1-T100",
     ]
 
     # I have to structure better this code, the idea is that it finish everything in one go.
