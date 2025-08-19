@@ -84,7 +84,7 @@ class DAMO_to_HyDAMO_Converter:
         else:
             self.logger = hrt.logging.get_logger(__name__)
 
-        self.damo_file_path = Path(damo_file_path)
+        self.damo_file_path = hrt.SpatialDatabase(damo_file_path)
         self.hydamo_file_path = hrt.SpatialDatabase(hydamo_file_path)
         self.layers = layers
         self.overwrite = overwrite
@@ -224,7 +224,9 @@ class DAMO_to_HyDAMO_Converter:
         self.hydamo_file_path.parent.mkdir(parents=True, exist_ok=True)
 
         if self.layers is None:
-            self.layers = self.hydamo_file_path.available_layers()
+            self.layers = self.damo_file_path.available_layers()
+            # drop layer_styles from self.layers
+            self.layers = [layer for layer in self.layers if layer != "layer_styles"]
 
         for layer_name in self.layers:
             layer_name = layer_name.lower()
@@ -416,6 +418,19 @@ class DAMO_to_HyDAMO_Converter:
             layer_gdf["NEN3610id"] = layer_gdf["code"].apply(
                 lambda x: f"NL.WBHCODE.{WATERSCHAPSCODE}.{layer_name}.{x}"
             )
+        elif "id" in layer_gdf.columns:
+            layer_gdf["NEN3610id"] = layer_gdf["id"].apply(lambda x: f"NL.WBHCODE.{WATERSCHAPSCODE}.{layer_name}.{x}")
+        elif "objectid" in layer_gdf.columns:
+            layer_gdf["NEN3610id"] = layer_gdf["objectid"].apply(
+                lambda x: f"NL.WBHCODE.{WATERSCHAPSCODE}.{layer_name}.{x}"
+            )
+        elif "naam" in layer_gdf.columns:
+            layer_gdf["NEN3610id"] = layer_gdf["naam"].apply(
+                lambda x: f"NL.WBHCODE.{WATERSCHAPSCODE}.{layer_name}.{x}"
+            )
+        else:
+            self.logger.warning(f"No valid column found for NEN3610id in layer {layer_name}")
+
         return layer_gdf
 
     def _add_column_status_object(self, layer_gdf: gpd.GeoDataFrame, layer_name: str) -> gpd.GeoDataFrame:

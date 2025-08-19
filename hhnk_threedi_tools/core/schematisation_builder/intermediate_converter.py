@@ -12,6 +12,8 @@ import pandas as pd
 from shapely.geometry import LineString, MultiLineString, Point
 from shapely.validation import make_valid
 
+CRS = "EPSG:28992"
+
 
 @dataclass
 class _Data:
@@ -31,7 +33,7 @@ class _Data:
     iws_geo_beschr_profielpunten: gpd.GeoDataFrame = field(default_factory=gpd.GeoDataFrame)
 
     # CSO tables
-    combinatiepeilgebied: gpd.GeoDataFrame = field(default_factory=gpd.GeoDataFrame)
+    peilgebiedpraktijk: gpd.GeoDataFrame = field(default_factory=gpd.GeoDataFrame)
     polder: gpd.GeoDataFrame = field(default_factory=gpd.GeoDataFrame)
 
     # Output tables
@@ -64,9 +66,11 @@ class IntermediateConverter:
 
     _executed = set()  # keeps track of executed converters (child classes)
 
-    def __init__(self, raw_export_file_path: Path, polder_path: Path, logger: Optional[logging.Logger] = None):
+    def __init__(
+        self, raw_export_file_path: Path, polder_path: Optional[Path] = None, logger: Optional[logging.Logger] = None
+    ):
         self.raw_export_file_path = Path(raw_export_file_path)
-        self.polder_path = Path(polder_path)
+        self.polder_path = Path(polder_path) if polder_path else None
         self.logger = logger or logging.getLogger(__name__)
         self.data = _Data()
 
@@ -86,15 +90,22 @@ class IntermediateConverter:
             self.logger.warning("No GeoDataFrames found to write.")
             return
 
-        if output_path.suffix == ".gpkg":
-            for name, gdf in geodf_attrs.items():
-                gdf.to_file(output_path, layer=name, driver="GPKG")
-                self.logger.info(f"Wrote layer '{name}' to {output_path}")
-        else:
+        if not output_path.suffix == ".gpkg":
             output_path.mkdir(parents=True, exist_ok=True)
-            for name, gdf in geodf_attrs.items():
-                gdf.to_file(output_path / f"{name}.gpkg", driver="GPKG")
-                self.logger.info(f"Wrote file '{name}.gpkg' to {output_path}")
+            output_path = output_path / f"{output_path.name}.gpkg"
+
+        for name, gdf in geodf_attrs.items():
+            if isinstance(gdf, gpd.GeoDataFrame) and "geometry" in gdf.columns:
+                gdf.to_file(output_path, layer=name, engine="pyogrio")
+            else:  # dataframe handling
+                gdf_no_geom = gpd.GeoDataFrame(gdf, geometry=[None] * len(gdf), crs=CRS)
+                gdf_no_geom.to_file(output_path, layer=name, engine="pyogrio", driver="GPKG")
+                if gdf_no_geom.empty:
+                    self.logger.warning(f"Layer {name} is empty.")
+                else:
+                    self.logger.info(f"Layer {name} has no geometry.")
+
+            self.logger.info(f"Wrote layer '{name}' to {output_path}")
 
     # ---------- Generic Helpers ----------
 
@@ -166,10 +177,10 @@ class IntermediateConverter:
             lambda geom: LineString([(x, y) for x, y, z in geom.coords]) if geom.has_z else geom
         )
 
-    def _linemerge_hydroobjects(self, combinatiepeilgebied, hydroobject) -> gpd.GeoDataFrame:
+    def _linemerge_hydroobjects(self, peilgebiedpraktijk, hydroobject) -> gpd.GeoDataFrame:
         merged_hydroobjects = []
         hydroobject_map = {}
-        peilgebieden_sindex = combinatiepeilgebied.sindex
+        peilgebieden_sindex = peilgebiedpraktijk.sindex
 
         hydroobject_to_peilgebied = {}
         for idx, ho_row in hydroobject.iterrows():
@@ -181,7 +192,7 @@ class IntermediateConverter:
             max_length = 0
             best_peilgebied_id = None
             for peil_idx in possible_peil_idx:
-                peil_row = combinatiepeilgebied.iloc[peil_idx]
+                peil_row = peilgebiedpraktijk.iloc[peil_idx]
                 intersection = ho_geom.intersection(peil_row.geometry)
                 if intersection.is_empty:
                     continue
@@ -451,8 +462,8 @@ class PeilgebiedIntermediateConverter(IntermediateConverter):
     def load_layers(self):
         self.logger.info("Loading peilgebied-specific layers...")
         self.data.polder = self._load_and_validate(self.polder_path)
-        combinatiepeilgebied = self._load_and_validate(self.raw_export_file_path, "COMBINATIEPEILGEBIED")
-        self.data.combinatiepeilgebied = combinatiepeilgebied.explode(index_parts=False).reset_index(drop=True)
+        peilgebiedpraktijk = self._load_and_validate(self.raw_export_file_path, "PEILGEBIEDPRAKTIJK")
+        self.data.peilgebiedpraktijk = peilgebiedpraktijk.explode(index_parts=False).reset_index(drop=True)
 
     # TODO implement logic later
 
@@ -477,14 +488,14 @@ class ProfileIntermediateConverter(IntermediateConverter):
         self.data.iws_geo_beschr_profielpunten = self._load_and_validate(
             self.raw_export_file_path, "iws_geo_beschr_profielpunten"
         )
-        combinatiepeilgebied = self._load_and_validate(self.raw_export_file_path, "COMBINATIEPEILGEBIED")
-        self.data.combinatiepeilgebied = combinatiepeilgebied.explode(index_parts=False).reset_index(drop=True)
+        peilgebiedpraktijk = self._load_and_validate(self.raw_export_file_path, "peilgebiedpraktijk")
+        self.data.peilgebiedpraktijk = peilgebiedpraktijk.explode(index_parts=False).reset_index(drop=True)
 
     def process_linemerge(self):
         self.logger.info("ProfileIntermediateConverter is linemerging hydroobjects for peilgebieden...")
-        self.data._ensure_loaded(["hydroobject", "combinatiepeilgebied"], previous_method="load_damo_layers")
+        self.data._ensure_loaded(["hydroobject", "peilgebiedpraktijk"], previous_method="load_damo_layers")
         self.data.hydroobject_linemerged = self._linemerge_hydroobjects(
-            self.data.combinatiepeilgebied, self.data.hydroobject
+            self.data.peilgebiedpraktijk, self.data.hydroobject
         )
 
     def create_profile_tables(self):

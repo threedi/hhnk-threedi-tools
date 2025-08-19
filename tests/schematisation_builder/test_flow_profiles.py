@@ -44,7 +44,7 @@ def test_profile_intermediate_converter():
 
     # Check if layers are loaded
     assert converter.data.hydroobject is not None
-    assert converter.data.gecombineerde_peilen is not None
+    assert converter.data.peilgebiedpraktijk is not None
 
     # Process line merge
     converter.process_linemerge()  # STEP 2 in run method

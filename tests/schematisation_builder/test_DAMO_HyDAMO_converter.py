@@ -79,7 +79,6 @@ def test_DAMO_HyDAMO_converter():
 
     hydamo_layers = hrt.SpatialDatabase(hydamo_file_path_2).available_layers()
     for layer in hydamo_layers:
-        print(f"Checking layer: {layer}")
         hydamo_gdf = gpd.read_file(hydamo_file_path_2, layer=layer)
 
         # Check if NEN3610id column is added in each layer
