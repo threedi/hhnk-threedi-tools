@@ -85,9 +85,7 @@ def make_validated_hydamo_package(project_folder: Path, default_polder_polygon_p
 
         # Conversion to HyDAMO
         logger.info(f"DAMO export was succesfull. Now, start conversion to HyDAMO for file: {polder_file_path}")
-        # converter = DAMO_to_HyDAMO_Converter(
-        #     damo_file_path=damo_file_path, hydamo_file_path=hydamo_file_path, layers=table_names, overwrite=True
-        # )
+
         converter = DAMO_to_HyDAMO_Converter(
             damo_file_path=damo_file_path, hydamo_file_path=hydamo_file_path, overwrite=True
         )
