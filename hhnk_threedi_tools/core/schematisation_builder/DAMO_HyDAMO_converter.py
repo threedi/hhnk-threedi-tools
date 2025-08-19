@@ -69,7 +69,6 @@ class DAMO_to_HyDAMO_Converter:
         else:
             self.layers = hrt.SpatialDatabase(self.damo_file_path).available_layers()
 
-
         self.logger.info(f"conversion layers are {self.layers}")
 
         if hydamo_schema_path is None:

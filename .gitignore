@@ -12,6 +12,7 @@ local_settings.py
 local_settings_htt.py
 notebook_data.json
 debug.log
+static_data_paths.json
 
 # Pytests
 .coverage
