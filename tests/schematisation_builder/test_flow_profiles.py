@@ -36,8 +36,11 @@ def test_profile_intermediate_converter():
     raw_export_file_path = TEST_DIRECTORY / "schematisation_builder" / "raw_export.gpkg"
     temp_dir_out = TEMP_DIR / f"temp_profile_intermediate_converter_{hrt.current_time(date=True)}"
     Path(temp_dir_out).mkdir(parents=True, exist_ok=True)
+    output_file_path = temp_dir_out / "damo.gpkg"
 
-    converter = ProfileIntermediateConverter(raw_export_file_path=raw_export_file_path, logger=logger)
+    converter = ProfileIntermediateConverter(
+        raw_export_file_path=raw_export_file_path, output_file_path=output_file_path, logger=logger
+    )
 
     # Load and validate layers
     converter.load_layers()  # STEP 1 in run method
@@ -149,8 +152,7 @@ def test_profile_intermediate_converter():
     assert pl_3 is None
 
     # Write the result to a new file
-    output_file_path = temp_dir_out / "damo.gpkg"
-    converter.write_outputs(output_path=output_file_path)  # STEP 5 in run method
+    converter.write_outputs()  # STEP 5 in run method
 
     assert output_file_path.exists()
 
