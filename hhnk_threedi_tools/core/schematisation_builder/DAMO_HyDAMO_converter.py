@@ -19,6 +19,7 @@ SCHEMA_VERSIONS = {  # Available versions of (hy)damo schematisation that are im
     "DAMO": ["2.3", "2.4.1", "2.5"],
     "HyDAMO": ["2.3", "2.4"],
 }
+CRS = "EPSG:28992"
 
 
 class DAMO_to_HyDAMO_Converter:
@@ -54,6 +55,11 @@ class DAMO_to_HyDAMO_Converter:
         If False, the domain values are not converted.
     logger : hrt.logging.Logger, optional
         Logger to use for logging. If None, a default logger is created.
+    convert_domain_values : bool
+        If True, convert the domain values in the DAMO layer to descriptive values in HyDAMO.
+        If False, the domain values are not converted.
+    logger : hrt.logging.Logger, optional
+        Logger to use for logging. If None, a default logger is created.
 
     Sources
     -------
@@ -65,13 +71,14 @@ class DAMO_to_HyDAMO_Converter:
         self,
         damo_file_path: os.PathLike,
         hydamo_file_path: Union[Path, hrt.SpatialDatabase],
-        layers: list[str],
+        layers: list[str] = None,
         hydamo_schema_path: Optional[Path] = None,
         hydamo_version: str = "2.4",
         damo_schema_path: Optional[Path] = None,
         damo_version: str = "2.4.1",
         overwrite: bool = False,
-        convert_domain_values: bool = True,
+        add_status_object: bool = True,
+        convert_domain_values: bool = False,
         logger: Optional[logging.Logger] = None,
     ):
         if logger:
@@ -83,6 +90,7 @@ class DAMO_to_HyDAMO_Converter:
         self.hydamo_file_path = hrt.SpatialDatabase(hydamo_file_path)
         self.layers = layers
         self.overwrite = overwrite
+        self.add_status_object = add_status_object
         self.convert_domain_values = convert_domain_values
         self.damo_version = damo_version
 
@@ -102,8 +110,6 @@ class DAMO_to_HyDAMO_Converter:
                 schema_path=damo_schema_path, schema_basename="DAMO", schema_version=damo_version
             )
             self.domains, self.objects = self._retrieve_damo_domain_mapping()
-
-        self.logger.info(f"conversion layers are {self.layers}")
 
     @cached_property
     def hydamo_definitions(self) -> dict:
@@ -219,6 +225,9 @@ class DAMO_to_HyDAMO_Converter:
         """
         self.hydamo_file_path.parent.mkdir(parents=True, exist_ok=True)
 
+        if self.layers is None:
+            self.layers = fiona.listlayers(self.damo_file_path, engine="pyogrio")
+
         for layer_name in self.layers:
             layer_name = layer_name.lower()
             self.logger.info(f"Conversion of {layer_name}")
@@ -230,12 +239,20 @@ class DAMO_to_HyDAMO_Converter:
                     return
 
             layer_gdf = gpd.read_file(self.damo_file_path, layer=layer_name, engine="pyogrio")
-            layer_gdf = self.convert_attributes(layer_gdf, layer_name)
-            layer_gdf = self.add_column_NEN3610id(layer_gdf, layer_name)
+            layer_gdf = self._convert_attributes(layer_gdf, layer_name)
+            layer_gdf = self._add_column_NEN3610id(layer_gdf, layer_name)
+            if self.add_status_object:
+                layer_gdf = self._add_column_status_object(layer_gdf, layer_name)
 
-            # check if layer has geometry as column
-            if "geometry" in layer_gdf.columns:
+            if isinstance(layer_gdf, gpd.GeoDataFrame) and layer_gdf.geometry.name in layer_gdf.columns:
                 layer_gdf.to_file(self.hydamo_file_path.path, layer=layer_name, engine="pyogrio")
+            else:  # dataframe handling
+                gdf_no_geom = gpd.GeoDataFrame(layer_gdf, geometry=[None] * len(layer_gdf), crs=CRS)
+                gdf_no_geom.to_file(self.hydamo_file_path.path, layer=layer_name, engine="pyogrio", driver="GPKG")
+                if gdf_no_geom.empty:
+                    self.logger.warning(f"Layer {layer_name} is empty.")
+                else:
+                    self.logger.info(f"Layer {layer_name} has no geometry.")
 
     def _convert_attributes(self, layer_gdf: gpd.GeoDataFrame, layer_name: str) -> gpd.GeoDataFrame:
         """
@@ -330,11 +347,11 @@ class DAMO_to_HyDAMO_Converter:
 
             field_type = field_types_dict.get(field_type, None)
             if field_type is None:
-                self.logger.info(
+                self.logger.debug(
                     f"Field type is not find in field_types_dict for field {column_name} in layer {layer_name}"
                 )
         except Exception as e:
-            self.logger.info(f"Field {column_name} not found in schema definitions for layer {layer_name}")
+            self.logger.debug(f"Field {column_name} not found in schema definitions for layer {layer_name}")
             field_type = None
         finally:
             return field_type
@@ -397,7 +414,47 @@ class DAMO_to_HyDAMO_Converter:
         layer_gdf : gpd.GeoDataFrame
             Layer with the NEN3610id column
         """
-        layer_gdf["NEN3610id"] = layer_gdf["code"].apply(lambda x: f"NL.WBHCODE.{WATERSCHAPSCODE}.{layer_name}.{x}")
+        if "code" in layer_gdf.columns:
+            layer_gdf["NEN3610id"] = layer_gdf["code"].apply(
+                lambda x: f"NL.WBHCODE.{WATERSCHAPSCODE}.{layer_name}.{x}"
+            )
+        return layer_gdf
+
+    def _add_column_status_object(self, layer_gdf: gpd.GeoDataFrame, layer_name: str) -> gpd.GeoDataFrame:
+        """
+        Add the statusobject column to the layer.
+        - if not exists, add it with value 'gerealiseerd'.
+        - else, fillna with 'gerealiseerd'.
+        - check if existing values are within valid options ['gerealiseerd', 'planvorming'] and logs warning if not.
+        - for now, also replace invalid values with 'gerealiseerd'.
+
+        Parameters
+        ----------
+        layer_gdf : gpd.GeoDataFrame
+            Layer to add the statusobject column to
+        layer_name : str
+            Name of the layer
+
+        Returns
+        -------
+        layer_gdf : gpd.GeoDataFrame
+            Layer with the statusobject column
+        """
+        if "statusobject" not in layer_gdf.columns:
+            layer_gdf["statusobject"] = "gerealiseerd"
+        else:
+            layer_gdf["statusobject"] = layer_gdf["statusobject"].fillna("gerealiseerd")
+            # Check if existing values are within valid options
+            valid_options = ["gerealiseerd", "planvorming"]
+            invalid_values = layer_gdf["statusobject"].loc[~layer_gdf["statusobject"].isin(valid_options)]
+            if not invalid_values.empty:
+                self.logger.warning(
+                    f"Invalid statusobject values found in layer {layer_name}. For now set to 'gerealiseerd', invalid values: {invalid_values.tolist()}"
+                )
+                layer_gdf["statusobject"] = layer_gdf["statusobject"].where(
+                    layer_gdf["statusobject"].isin(valid_options), "gerealiseerd"
+                )
+
         return layer_gdf
 
     def run(self) -> None:

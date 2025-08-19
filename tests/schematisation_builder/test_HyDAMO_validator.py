@@ -39,6 +39,11 @@ def test_HyDAMO_validator():
     assert validation_directory_path.joinpath("datasets", "HyDAMO.gpkg").exists()
     # TODO some checks on the output
 
+    # TODO brug and stuw is removed from HyDAMO package
+    # We do not have a kunstwerkopening layer from our export
+
+    # TODO gemaal removed for now, no pomp layer
+
 
 if __name__ == "__main__":
     test_HyDAMO_validator()
