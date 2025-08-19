@@ -8,11 +8,9 @@ from functools import cached_property
 from pathlib import Path
 from typing import Literal, Optional, Tuple, Union
 
-import fiona
 import geopandas as gpd
 import hhnk_research_tools as hrt
 import pandas as pd
-import pyogrio
 
 WATERSCHAPSCODE = 12  # Hoogheemraadschap Hollands Noorderkwartier
 SCHEMA_VERSIONS = {  # Available versions of (hy)damo schematisation that are implemented
@@ -226,7 +224,7 @@ class DAMO_to_HyDAMO_Converter:
         self.hydamo_file_path.parent.mkdir(parents=True, exist_ok=True)
 
         if self.layers is None:
-            self.layers = fiona.listlayers(self.damo_file_path, engine="pyogrio")
+            self.layers = self.hydamo_file_path.available_layers()
 
         for layer_name in self.layers:
             layer_name = layer_name.lower()
