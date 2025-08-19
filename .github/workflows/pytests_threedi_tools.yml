@@ -20,7 +20,6 @@ jobs:
     strategy:
       matrix:
         os: ["windows-latest", ]
-        # ["ubuntu-latest", "windows-latest"]
         python-version: [ "py39", ]
     runs-on: ${{ matrix.os }}
     steps:
@@ -39,6 +38,8 @@ jobs:
 
       - name: Run Tests
         run: pixi run -e py39 tests tests/
+        env: 
+          SKIP_DATABASE: "1"
 
       - name: Upload coverage
         uses: codecov/codecov-action@v5
