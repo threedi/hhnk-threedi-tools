@@ -348,6 +348,15 @@ class PompIntermediateConverter:
         # copy column functiegemaalcode in new column functiegemaalcode_DAMO
         gemaal_point["functiegemaalcode_damo"] = gemaal_point["functiegemaal"]
 
+        # Add the column 'aantal_peilgebieden' based on the 'pgd_codes' column
+        for count_peilgebieden in gemaal_point["pgd_codes"]:
+            if count_peilgebieden is not None and count_peilgebieden != "":
+                # count the number of peilgebieden
+                count = len(count_peilgebieden.split(","))
+                gemaal_point.loc[gemaal_point["pgd_codes"] == count_peilgebieden, "aantal_peilgebieden"] = count
+            else:
+                gemaal_point.loc[gemaal_point["pgd_codes"] == count_peilgebieden, "aantal_peilgebieden"] = 999
+
         # save the layer in DAMO
         gemaal_point.to_file(self.damo_file_path, layer="GEMAAL", driver="GPKG")
 
