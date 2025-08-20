@@ -3,11 +3,12 @@ import logging
 import os
 from collections import OrderedDict
 from datetime import time
+import typing
+from pathlib import Path
 
 if __name__ == "__main__":
     import sys
-
-    sys.path.append(os.path.join(os.path.dirname(__file__), "../../../"))
+    sys.path.append(Path(__file__).parent.parent.parent.parent.as_posix())
 
 import fiona
 
@@ -17,9 +18,28 @@ from hhnk_threedi_tools.git_model_repo.utils.timer_log import SubTimer
 log = logging.getLogger(__name__)
 
 
-def format_json(obj, parent_key="", depth=0):
-    """Formatteer een JSON-object met een maximale diepte van 2, voor betere leesbaarheid in git diff."""
-    INDENT = " "  # Twee spaties per indentatieniveau
+def format_json(
+        obj: typing.Any,
+        parent_key: str = "",
+        depth: int = 0,
+):
+    """Format a JSON object for improved readability in git diff.
+
+    Parameters
+    ----------
+    obj : Any
+        The JSON object to format.
+    parent_key : str, optional
+        The key of the parent object (default is "").
+    depth : int, optional
+        The current depth in the JSON structure (default is 0).
+
+    Returns
+    -------
+    str
+        The formatted JSON string.
+    """
+    indent = " "  # one space for indentation level
 
     if not isinstance(obj, (dict, list)) or depth > 2 or parent_key in ["crs"]:
         return json.dumps(obj)
@@ -27,20 +47,60 @@ def format_json(obj, parent_key="", depth=0):
     if isinstance(obj, list):
         formatted_items = [format_json(item, "", depth + 1) for item in obj]
         return (
-            "[\n" + ",\n".join(INDENT * (depth + 1) + item for item in formatted_items) + "\n" + INDENT * depth + "]"
+            "[\n" + ",\n".join(indent * (depth + 1) + item for item in formatted_items) + "\n" + indent * depth + "]"
         )
-
-    if isinstance(obj, dict):
+    elif isinstance(obj, dict):
         formatted_items = [f'"{key}": {format_json(value, key, depth + 1)}' for key, value in obj.items()]
         return (
-            "{\n" + ",\n".join(INDENT * (depth + 1) + item for item in formatted_items) + "\n" + INDENT * depth + "}"
+            "{\n" + ",\n".join(indent * (depth + 1) + item for item in formatted_items) + "\n" + indent * depth + "}"
         )
 
 
 class GeoPackageDump(object):
-    """basic version using Fiona"""
+    """
+    Basic version using Fiona for dumping GeoPackage files.
+
+    Parameters
+    ----------
+    file_path : str
+        Path to the GeoPackage file.
+    output_path : str, optional
+        Path to the output directory. If None, a default directory is created next to the input file.
+
+    Attributes
+    ----------
+    file_path : str
+        Path to the GeoPackage file.
+    output_path : str
+        Path to the output directory.
+    changed_files : list of str
+        List of files that have changed after dumping.
+
+    Methods
+    -------
+    get_schema_layer(layer_name)
+        Get the schema of a specific layer as a dictionary.
+    get_schema()
+        Get the schema of all layers as an OrderedDict.
+    dump_schema()
+        Dump the schema to a JSON file.
+    dump_layers(reformat=True)
+        Dump all layers and features to GeoJSON files.
+    dump()
+        Dump both the schema and layers.
+    """
 
     def __init__(self, file_path, output_path=None):
+        """
+        Initialize the GeoPackageDump object.
+
+        Parameters
+        ----------
+        file_path : str
+            Path to the GeoPackage file.
+        output_path : str, optional
+            Path to the output directory. If None, a default directory is created.
+        """
         self.file_path = file_path
 
         if output_path is None:
@@ -52,13 +112,30 @@ class GeoPackageDump(object):
         self.changed_files = []
 
     def get_schema_layer(self, layer_name):
-        """get schema of the geopackage datamodel as dictionary."""
+        """Get the schema of a specific layer in the GeoPackage.
+
+        Parameters
+        ----------
+        layer_name : str
+            Name of the layer.
+
+        Returns
+        -------
+        dict
+            The schema of the layer.
+        """
 
         f = fiona.open(self.file_path, "r", layer=layer_name)
         return f.schema
 
     def get_schema(self):
-        """get schema of the geopackage datamodel as dictionary."""
+        """Get the schema of all layers in the GeoPackage.
+
+        Returns
+        -------
+        OrderedDict
+            Dictionary with layer names as keys and their schemas as values.
+        """
 
         layers = fiona.listlayers(self.file_path)
         schema = OrderedDict()
@@ -67,19 +144,34 @@ class GeoPackageDump(object):
         return schema
 
     def dump_schema(self):
-        """Dump the schema of the geopackage datamodel to a json file."""
+        """Dump the schema of the GeoPackage to a JSON file.
+
+        Returns
+        -------
+        None
+        """
         file_path = os.path.join(self.output_path, "schema.json")
         cd = FileChangeDetection(file_path)
 
         schema = self.get_schema()
-        with open(os.path.join(self.output_path, "schema.json"), "w") as fp:
+        with file_path.open("w") as fp:
             json.dump(schema, fp, indent=2)
 
         if cd.has_changed():
             self.changed_files.append(file_path)
 
     def dump_layers(self, reformat=True):
-        """Dump the layers and features of the geopackage to a Geojson file."""
+        """Dump all layers and features of the GeoPackage to GeoJSON files.
+
+        Parameters
+        ----------
+        reformat : bool, optional
+            Whether to reformat the output JSON for readability (default is True).
+
+        Returns
+        -------
+        None
+        """
 
         layers = fiona.listlayers(self.file_path)
 
@@ -114,13 +206,13 @@ class GeoPackageDump(object):
             # reformat json is experiment to check what is most useful for git diff
             if reformat:
                 with SubTimer(f"reformat json {layer_name}"):
-                    f = open(output_file_path, "r")
+                    f = output_file_path.open("r")
                     data = json.load(f)
                     f.close()
                     if len(data.get("features", [])) == 0:
-                        os.remove(output_file_path)
+                        output_file_path.unlink()  # remove empty files
                     else:
-                        f = open(output_file_path, "w")
+                        f = output_file_path.open("w")
                         f.write(format_json(data))
                         f.close()
 
@@ -128,6 +220,11 @@ class GeoPackageDump(object):
                 self.changed_files.append(output_file_path)
 
     def dump(self):
-        """Dump the geopackage to a Geojson file."""
+        """Dump the GeoPackage schema and layers to files.
+
+        Returns
+        -------
+        None
+        """
         self.dump_schema()
         self.dump_layers()

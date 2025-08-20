@@ -1,3 +1,5 @@
+# TODO: update this readme with use of pixi
+
 # For development
 
 ## Install

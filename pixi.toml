@@ -122,6 +122,8 @@ fastapi = "*"  # nieuwe datachecker
 uvicorn = "*"  # nieuwe datachecker
 django = "<4"  # datachecker (<4 wegens compatibility met 3Di modules)
 
+# for development in pycharm
+pixi-pycharm = ">=0.0.8,<0.0.9"
 
 [feature.dev.pypi-dependencies]
 # Editable installs, not installed on test. #FIXME doesnt work on Github Actions.
@@ -172,10 +174,6 @@ pip = "*"
 urllib3= "1.*"
 
 ruff = "*"
-
-# modellen repo deps
-gitpython="==3.1.44"
-
 
 [feature.py39.pypi-dependencies]
 lazy_loader= "*"

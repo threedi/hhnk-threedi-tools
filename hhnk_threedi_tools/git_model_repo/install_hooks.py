@@ -1,59 +1,78 @@
 import logging
-import os
 import sys
+from pathlib import Path
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), os.pardir, os.pardir))
+if __name__ == "__main__":
+    # add the path of the parent directory to the python path
+    sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from hhnk_threedi_tools.git_model_repo.utils.get_git_root import get_git_root
 
 log = logging.getLogger(__name__)
 
 
-def install_git_hook(repo_path, hook_name, script_path, windows=False):
-    hook_path = os.path.join(repo_path, ".git", "hooks", hook_name)
+def install_git_hook(repo_path: Path, hook_name: str, script_path: Path, windows: bool = False):
+    """Install a git hook script in the repository.
 
-    if os.path.isfile(hook_path):
-        # check if already added
-        with open(hook_path, "r") as hook_file:
-            if script_path in hook_file.read():
+    Parameters
+    ----------
+    repo_path : Path
+        Path to the git repository.
+    hook_name : str
+        Name of the git hook (e.g., 'pre-commit').
+    script_path : Path
+        Path to the hook script to be executed.
+    windows : bool, optional
+        Whether to use Windows-specific settings (default is False).
+
+    Returns
+    -------
+    None
+    """
+    hook_path = repo_path / ".git" / "hooks" / hook_name
+
+    if hook_path.is_file():
+        with hook_path.open("r") as hook_file:
+            if str(script_path) in hook_file.read():
                 print(f"Hook {hook_name} already installed in {hook_path}")
             else:
-                with open(hook_path, "a") as hook_file:
+                with hook_path.open("a") as hook_file_append:
                     print(f"add instructions to {hook_path}")
-                    hook_file.write(f"\n\n# Added by hhnk_threedi_tools/git_model_repo/install_hooks.py\n")
-                    hook_file.write(f'hook_dir=$(realpath "$0")\n"{script_path}" {hook_name} "$hook_dir" "$(pwd)"\n')
-                    if windows:
-                        pass
-                    else:
-                        # Maak het script uitvoerbaar
-                        os.chmod(hook_path, 0o775)
-
+                    hook_file_append.write("\n\n# Added by hhnk_threedi_tools/git_model_repo/install_hooks.py\n")
+                    hook_file_append.write(f'hook_dir=$(realpath "$0")\n"{script_path}" {hook_name} "$hook_dir" "$(pwd)"\n')
+                if not windows:
+                    hook_path.chmod(0o775)
     else:
-        with open(hook_path, "w") as hook_file:
+        with hook_path.open("w") as hook_file:
             print(f"create {hook_path}")
-            hook_file.write(f"#!/bin/sh\n\n")
-            hook_file.write(f"# created by hhnk_threedi_tools/git_model_repo/install_hooks.py\n")
+            hook_file.write("#!/bin/sh\n\n")
+            hook_file.write("# created by hhnk_threedi_tools/git_model_repo/install_hooks.py\n")
             hook_file.write(f'hook_dir=$(realpath "$0")\n"{script_path}" {hook_name} "$hook_dir" "$(pwd)"\n')
-            if windows:
-                pass
-            else:
-                # Maak het script uitvoerbaar
-                os.chmod(hook_path, 0o775)
+            if not windows:
+                hook_path.chmod(0o775)
 
 
-def install_hooks(git_root_dir):
-    """Install git hooks in git_root_dir."""
+def install_hooks(git_root_dir: Path):
+    """Install git hooks in the specified git repository root directory.
+
+    Parameters
+    ----------
+    git_root_dir : Path
+        Path to the root of the git repository.
+
+    Returns
+    -------
+    None
+    """
     print("installing hooks for ", git_root_dir)
 
-    # check if git_root_dir is a git repository
     root = get_git_root(git_root_dir)
     if root is None:
         raise ValueError(f"{git_root_dir} is not a git repository")
     if root != git_root_dir:
-        # print warning and ask to continue
         log.warning(f"{git_root_dir} is not the root of a git repository. Changed directory to {root}")
-        doContinue = input("Do you want to continue? [y/N]")
-        if not doContinue or doContinue[0].lower() != "y":
+        do_continue = input("Do you want to continue? [y/N]")
+        if not do_continue or do_continue[0].lower() != "y":
             exit(1)
 
     hooks = [
@@ -67,28 +86,22 @@ def install_hooks(git_root_dir):
         "prepare-commit-msg",
     ]
 
-    # check if windows or linux
     if sys.platform == "win32":
-        script_cmd = os.path.join(os.path.dirname(__file__), "bin", "run_hook.bat")
-        script_cmd = os.path.abspath(script_cmd)
-
+        script_cmd = Path(__file__).parent / "bin" / "run_hook.bat"
+        script_cmd = script_cmd.resolve()
         for hook in hooks:
             install_git_hook(root, hook, script_cmd, windows=True)
-
     elif sys.platform in ["linux", "darwin"]:
-        script_sh = os.path.join(os.path.dirname(__file__), "bin", "linux", "run_hook.sh")
-        script_sh = os.path.abspath(script_sh)
-
+        script_sh = Path(__file__).parent / "bin" / "linux" / "run_hook.sh"
+        script_sh = script_sh.resolve()
         for hook in hooks:
             install_git_hook(root, hook, script_sh)
-
     else:
         raise ValueError(f"unknown platform {sys.platform}")
 
-    # create or add to .gitignore all *_backup.gpkg and *_backup.xlsx files
-    ignore_file = os.path.join(root, ".gitignore")
-    if os.path.isfile(ignore_file):
-        with open(ignore_file, "r") as f:
+    ignore_file = root / ".gitignore"
+    if ignore_file.is_file():
+        with ignore_file.open("r") as f:
             lines = f.readlines()
     else:
         lines = []
@@ -104,9 +117,9 @@ def install_hooks(git_root_dir):
         if not any([l.startswith(ignore) for l in lines]):
             lines.append(f"{ignore}\n")
 
-    with open(ignore_file, "w") as f:
+    with ignore_file.open("w") as f:
         f.writelines(lines)
 
 
 if __name__ == "__main__":
-    install_hooks(sys.argv[1])
+    install_hooks(Path(sys.argv[1]))

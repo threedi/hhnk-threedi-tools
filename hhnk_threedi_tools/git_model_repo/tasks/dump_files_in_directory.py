@@ -1,5 +1,6 @@
 import logging
-import os
+from pathlib import Path
+from typing import List, Optional
 
 from git import Repo
 
@@ -12,74 +13,93 @@ log = logging.getLogger(__name__)
 
 
 def dump_files_in_directory(
-    directory: str, root_repo: str = None, output_path: str = None, excel_dump: bool = True, gpkg_dump: bool = True
-) -> [str]:
-    """Dump all files in a directory to a json file. Checks on gitignore and file extension.
+    directory: Path,
+    root_repo: Optional[Path] = None,
+    output_path: Optional[Path] = None,
+    excel_dump: bool = True,
+    gpkg_dump: bool = True
+) -> List[Path]:
+    """Dump all files in a directory to a JSON file, checking gitignore and file extension.
 
-    Args:
-        directory (str): Path to the directory with files (also in subdirs) to dump.
-        root_repo (str, optional): Path to the root of the git repo. Defaults to None (root will be searched).
-        output_path (str, optional): Path to the output directory. Defaults to None. used for testing.
-        excel_dump (bool, optional): Dump Excel files. Defaults to True.
-        gpkg_dump (bool, optional): Dump geopackage files. Defaults to True.
+    The function recursively walks through the directory, processes files based on extension,
+    and uses the appropriate dumper class for Excel and GeoPackage files. Skips files ignored
+    by git and files that are not modified.
 
+    Parameters
+    ----------
+    directory : Path
+        Path to the directory with files (including subdirectories) to dump.
+    root_repo : Path, optional
+        Path to the root of the git repository. If None, the root will be searched.
+    output_path : Path, optional
+        Path to the output directory. If None, output will be stored in the same directory.
+        Used for testing.
+    excel_dump : bool, optional
+        Whether to dump Excel files. Default is True.
+    gpkg_dump : bool, optional
+        Whether to dump GeoPackage files. Default is True.
+
+    Returns
+    -------
+    List[Path]
+        List of paths to changed files.
     """
-    changed_files = []
+    changed_files: List[Path] = []
 
-    out_dir = None
     if root_repo is None:
         root_repo = directory
 
-    repo = Repo(root_repo)
+    repo = Repo(str(root_repo))
 
-    # loop recursively over all files in the directory
-    for root, dirs, files in os.walk(directory, topdown=True):
-        # remove ignored directories
+    for root, dirs, files in directory.walk(top_down=True):
+        # Remove ignored directories
         dirs[:] = [d for d in dirs if not repo.ignored(d) and d != ".git"]
 
         for file_name in files:
-            file_path = os.path.join(root, file_name)
-            # relative path for printing
-            rel_file_path = os.path.relpath(file_path, directory)
+            file_path = root / file_name
+            rel_file_path = file_path.relative_to(directory)
             log.debug("Checking file '%s'", rel_file_path)
-            # currently only model schematisation
-            if rel_file_path[:2] not in ["02"]:
+            # Only process files starting with "02"
+            if not str(rel_file_path).startswith("02"):
                 continue
 
+            actual_file_path = file_path
             if output_path:
-                file_path = os.path.join(output_path, rel_file_path)
-            if os.path.isfile(file_path):
-                if repo.ignored(file_path):
+                actual_file_path = output_path / rel_file_path
+
+            if actual_file_path.is_file():
+                if repo.ignored(str(actual_file_path)):
                     log.info("Skipping ignored file '%s'", rel_file_path)
                     continue
 
-                if not is_file_git_modified(repo, rel_file_path):
+                if not is_file_git_modified(repo, str(rel_file_path)):
                     log.info("Skip not modified file '%s'", rel_file_path)
                     continue
 
                 if file_name.endswith(".gpkg") and gpkg_dump:
-                    out_dir = os.path.join(os.path.dirname(file_path), rreplace(file_name, ".", "_", 1))
-                    log.info("dump geopackage '%s'", file_path)
-                    dumper = GeoPackageDump(file_path, out_dir)
+                    out_dir = actual_file_path.parent / rreplace(file_name, ".", "_", 1)
+                    log.info("Dump geopackage '%s'", actual_file_path)
+                    dumper = GeoPackageDump(str(actual_file_path), str(out_dir))
                     dumper.dump_schema()
                     dumper.dump_layers()
                     log.info("Dumped geopackage file '%s', %i changed files", rel_file_path, len(dumper.changed_files))
-                    changed_files.extend(dumper.changed_files)
+                    changed_files.extend([Path(f) for f in dumper.changed_files])
                 elif file_name.endswith(".xlsx") and excel_dump:
-                    out_dir = os.path.join(os.path.dirname(file_path), rreplace(file_name, ".", "_", 1))
-                    dumper = ExcelDump(file_path, out_dir)
+                    out_dir = actual_file_path.parent / rreplace(file_name, ".", "_", 1)
+                    dumper = ExcelDump(actual_file_path, out_dir)
                     dumper.dump_schema()
                     dumper.dump_sheets()
                     log.info("Dumped excel file '%s', %i changed files", rel_file_path, len(dumper.changed_files))
-                    changed_files.extend(dumper.changed_files)
+
+                    changed_files.extend([f for f in dumper.changed_files])
                 else:
                     log.debug("Skipping file '%s'", rel_file_path)
 
     return changed_files
 
 
+# todo: remove. This was for development
 if __name__ == "__main__":
-    import sys
-
     logging.basicConfig(level=logging.INFO)
-    dump_files_in_directory(os.path.join(os.path.dirname(__file__), "../../../../callantsoog-test/"))
+    test_dir = Path(__file__).parent.parent.parent.parent / "callantsoog-test"
+    dump_files_in_directory(test_dir)

@@ -28,6 +28,7 @@ if not exist "%path_file%" (
     (
         echo *.nc filter=lfs diff=lfs merge=lfs -text
         echo *.tiff filter=lfs diff=lfs merge=lfs -text
+        echo *.tif filter=lfs diff=lfs merge=lfs -text
         echo *.gpkg filter=lfs diff=lfs merge=lfs -text
         echo *.sqlite filter=lfs diff=lfs merge=lfs -text
         echo *.xlsx filter=lfs diff=lfs merge=lfs -text

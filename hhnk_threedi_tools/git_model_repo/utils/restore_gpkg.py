@@ -1,38 +1,81 @@
 import json
-import os
-
+from pathlib import Path
 import fiona
 
 
 class GeoPackageRestore(object):
-    def __init__(self, gpkg_path, output_file_path=None):
-        """Restore a GeoPackage from the schema and geojson dump.
-        :param gpkg_path: path to the folder containing the geojson files and the schema.json file
-        :param output_file_path: path to the output gpkg file. If None, the output file will be stored in the same
-                                 directory as the parent of the input directory.
-                                 This parameter is especially usefull for testing
+    """Restore a GeoPackage from schema and GeoJSON files.
+
+    Parameters
+    ----------
+    gpkg_path : Path
+        Path to the folder containing the GeoJSON files and the schema.json file.
+    output_file_path : Path, optional
+        Path to the output GeoPackage file. If None, the output file will be stored
+        in the parent directory of the input directory.
+
+    Attributes
+    ----------
+    gpkg_path : Path
+        Path to the input folder.
+    output_file_path : Path
+        Path to the output GeoPackage file.
+
+    Methods
+    -------
+    read_schema()
+        Read the schema from the schema.json file.
+    restore_layers()
+        Restore all layers from GeoJSON files into the GeoPackage.
+    restore()
+        Restore the GeoPackage from the directory.
+    """
+
+    def __init__(self, gpkg_path: Path, output_file_path: Path = None):
+        """Initialize the GeoPackageRestore object.
+
+        Parameters
+        ----------
+        gpkg_path : Path
+            Path to the folder containing the GeoJSON files and the schema.json file.
+        output_file_path : Path, optional
+            Path to the output GeoPackage file. If None, the output file will be stored
+            in the parent directory of the input directory.
         """
-        self.gpkg_path = gpkg_path
+        self.gpkg_path = Path(gpkg_path)
         if output_file_path is None:
-            filename = os.path.basename(gpkg_path.rtrim("_gpkg")) + "_restored.gpkg"
-            output_file_path = os.path.join(os.path.dirname(gpkg_path), os.pardir, filename)
+            filename = self.gpkg_path.name.rstrip("_gpkg") + "_restored.gpkg"
+            output_file_path = self.gpkg_path.parent.parent / filename
+        self.output_file_path = Path(output_file_path)
 
-        self.output_file_path = output_file_path
+    def read_schema(self) -> dict:
+        """Read the schema from the schema.json file.
 
-    def read_schema(self):
-        """Restore a GeoPackage from a backup."""
-        return json.load(open(os.path.join(self.gpkg_path, "schema.json")))
+        Returns
+        -------
+        dict
+            The schema dictionary loaded from schema.json.
+        """
+        schema_file = self.gpkg_path / "schema.json"
+        with schema_file.open("r") as f:
+            return json.load(f)
 
     def restore_layers(self):
+        """Restore all layers from GeoJSON files into the GeoPackage.
+
+        Returns
+        -------
+        None
+        """
         schema = self.read_schema()
-
         for layer_name, layer_schema in schema.items():
-            layer = fiona.open(os.path.join(self.gpkg_path, layer_name + ".geojson"), "r", layer=layer_name)
+            geojson_file = self.gpkg_path / f"{layer_name}.geojson"
+            layer = fiona.open(geojson_file.as_posix(), "r", layer=layer_name)
 
-            # make sure th fid is copied too (fiona does not do this by default)
+            # Ensure the fid is copied too (fiona does not do this by default)
             layer_schema["properties"]["fid"] = "int"
             dest_src = fiona.open(
-                self.output_file_path,
+                self.output_file_path.as_posix(),
                 "w",
                 driver="GPKG",
                 crs=layer.crs,
@@ -49,5 +92,11 @@ class GeoPackageRestore(object):
             layer.close()
 
     def restore(self):
-        """Restore a GeoPackage from directory with schema and geojson files."""
+        """
+        Restore the GeoPackage from directory with schema and GeoJSON files.
+
+        Returns
+        -------
+        None
+        """
         self.restore_layers()
