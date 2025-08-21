@@ -1,13 +1,15 @@
-import os
+from pathlib import Path
 
 import fiona
 from osgeo import ogr
 
 from hhnk_threedi_tools.git_model_repo.utils.dump_gpkg import GeoPackageDump
 from hhnk_threedi_tools.git_model_repo.utils.restore_gpkg import GeoPackageRestore
-from tests.tests_git_model_repo.get_local_output_dir_for_development import get_local_development_output_dir
+from tests.tests_git_model_repo.helpers import get_local_development_output_dir
 
 """ 
+Note
+----
 important for dump and restore (checked in tests):
 - layers, layer names and multiple layers in one gpkg
 - field and field definitions
@@ -20,62 +22,61 @@ dir = get_local_development_output_dir(clean=True)
 
 
 class TestDumpAndRestoreGeopackage:
-    test_fields_gpkg = os.path.join(os.path.dirname(__file__), "data", "test_geopackage.gpkg")
-    test_multilayer_gpgk = os.path.join(os.path.dirname(__file__), "data", "test_geopackage_with_multiple_layers.gpkg")
+    test_fields_gpkg = Path(__file__).parent / "data" / "test_geopackage.gpkg"
+    test_multilayer_gpgk = Path(__file__).parent / "data" / "test_geopackage_with_multiple_layers.gpkg"
 
-    test_fields_geojson_dir = os.path.join(os.path.dirname(__file__), "data", "test_fields")
-    test_multilayer_geojson_dir = os.path.join(os.path.dirname(__file__), "data", "test_multilayer")
+    test_fields_geojson_dir = Path(__file__).parent / "data" / "test_fields"
+    test_multilayer_geojson_dir = Path(__file__).parent / "data" / "test_multilayer"
 
     def test_dump_schema_single_layer(self, tmp_path):
-        tmp_path = dir
+        tmp_path = Path(dir)
 
         dumper = GeoPackageDump(self.test_fields_gpkg, tmp_path)
         dumper.dump_schema()
 
-        assert os.path.exists(os.path.join(tmp_path, "schema.json"))
+        assert (tmp_path / "schema.json").exists()
 
     def test_dump_schema_multilayer(self, tmp_path):
-        tmp_path = dir
+        tmp_path = Path(dir)
 
         dumper = GeoPackageDump(self.test_multilayer_gpgk, tmp_path)
         dumper.dump_schema()
 
-        assert os.path.exists(os.path.join(tmp_path, "schema.json"))
+        assert (tmp_path / "schema.json").exists()
 
     def test_dump_layers_single_layer(self, tmp_path):
-        tmp_path = dir
+        tmp_path = Path(dir)
 
         dumper = GeoPackageDump(self.test_fields_gpkg, tmp_path)
         dumper.dump_layers()
 
-        assert os.path.exists(os.path.join(tmp_path, "test_geopackage.geojson"))
+        assert (tmp_path / "test_geopackage.geojson").exists()
 
     def test_dump_layers_multilayer(self, tmp_path):
-        tmp_path = dir
+        tmp_path = Path(dir)
 
         dumper = GeoPackageDump(self.test_multilayer_gpgk, tmp_path)
         dumper.dump_layers()
 
-        assert os.path.exists(os.path.join(tmp_path, "points.geojson"))
-        assert os.path.exists(os.path.join(tmp_path, "lines.geojson"))
-        assert os.path.exists(os.path.join(tmp_path, "multi_polygons.geojson"))
-        assert os.path.exists(os.path.join(tmp_path, "no_geom.geojson"))
+        assert (tmp_path / "points.geojson").exists()
+        assert (tmp_path / "lines.geojson").exists()
+        assert (tmp_path / "multi_polygons.geojson").exists()
+        assert (tmp_path / "no_geom.geojson").exists()
 
     def test_restore_check_fields(self, tmp_path):
-        tmp_path = dir
+        tmp_path = Path(dir)
 
-        tmp_file_path = os.path.join(tmp_path, "test_geopackage_restored.gpkg")
-        os.makedirs(tmp_path, exist_ok=True)
+        tmp_file_path = tmp_path / "test_geopackage_restored.gpkg"
+        tmp_path.mkdir(parents=True, exist_ok=True)
 
         restorer = GeoPackageRestore(self.test_fields_geojson_dir, tmp_file_path)
         restorer.restore_layers()
 
-        assert os.path.exists(tmp_file_path)
+        assert tmp_file_path.exists()
 
-        source = ogr.Open(tmp_file_path, 0)
+        source = ogr.Open(str(tmp_file_path), 0)
         layers = [l for l in source]
         layer = layers[0]
-        # field definitions
         layer_def = layer.GetLayerDefn()
 
         assert source.GetLayerCount() == 1
@@ -94,22 +95,22 @@ class TestDumpAndRestoreGeopackage:
         assert string_field.GetType() == ogr.OFTString
         assert string_field.GetWidth() == 12
 
-        slayer = fiona.open(self.test_fields_gpkg, "r")
+        slayer = fiona.open(str(self.test_fields_gpkg), "r")
         ref = layer.GetSpatialRef()
         assert ref.ExportToWkt() == slayer.crs_wkt
 
     def test_restore_check_multilayer(self, tmp_path):
-        tmp_path = dir
+        tmp_path = Path(dir)
 
-        tmp_file_path = os.path.join(tmp_path, "test_multi_restored.gpkg")
-        os.makedirs(tmp_path, exist_ok=True)
+        tmp_file_path = tmp_path / "test_multi_restored.gpkg"
+        tmp_path.mkdir(parents=True, exist_ok=True)
 
         restorer = GeoPackageRestore(self.test_multilayer_geojson_dir, tmp_file_path)
         restorer.restore_layers()
 
-        assert os.path.exists(tmp_file_path)
+        assert tmp_file_path.exists()
 
-        source = ogr.Open(tmp_file_path, 0)
+        source = ogr.Open(str(tmp_file_path), 0)
         layers = {l.GetName(): l for l in source}
 
         assert source.GetLayerCount() == 4
@@ -120,22 +121,19 @@ class TestDumpAndRestoreGeopackage:
 
         assert layers["points"].GetGeomType() == ogr.wkbPoint
 
-        # test FID restore, the key
         features = [f.GetFID() for f in layers["points"]]
-
         assert features == [1, 4, 9, 10]
 
     def test_restore_overwrite(self, tmp_path):
-        tmp_path = dir
+        tmp_path = Path(dir)
 
-        tmp_file_path = os.path.join(tmp_path, "test_overwrite_restored.gpkg")
-        os.makedirs(tmp_path, exist_ok=True)
+        tmp_file_path = tmp_path / "test_overwrite_restored.gpkg"
+        tmp_path.mkdir(parents=True, exist_ok=True)
 
-        # make initial fill
-        slayer = fiona.open(self.test_fields_gpkg, "r")
+        slayer = fiona.open(str(self.test_fields_gpkg), "r")
 
         dest_src = fiona.open(
-            tmp_file_path,
+            str(tmp_file_path),
             "w",
             driver="GPKG",
             crs=slayer.crs,
@@ -153,7 +151,7 @@ class TestDumpAndRestoreGeopackage:
         dest_src.close()
 
         dest_src = fiona.open(
-            tmp_file_path,
+            str(tmp_file_path),
             "w",
             driver="GPKG",
             crs=slayer.crs,
@@ -181,19 +179,17 @@ class TestDumpAndRestoreGeopackage:
             )
         dest_src.close()
 
-        # test initial fill to compare with
-        source = ogr.Open(tmp_file_path, 0)
+        source = ogr.Open(str(tmp_file_path), 0)
         layer = source.GetLayer("test_geopackage")
 
         assert source.GetLayerCount() == 2
         assert layer.GetFeatureCount() == 10
         assert layer.GetLayerDefn().GetFieldCount() == 1
 
-        # overwrite with restore
         restorer = GeoPackageRestore(self.test_fields_geojson_dir, tmp_file_path)
         restorer.restore_layers()
 
-        source = ogr.Open(tmp_file_path, 0)
+        source = ogr.Open(str(tmp_file_path), 0)
         layer = source.GetLayer("test_geopackage")
 
         assert source.GetLayerCount() == 2

@@ -1,14 +1,8 @@
 import json
 import logging
-import os
-from collections import OrderedDict
-from datetime import time
 import typing
+from collections import OrderedDict
 from pathlib import Path
-
-if __name__ == "__main__":
-    import sys
-    sys.path.append(Path(__file__).parent.parent.parent.parent.as_posix())
 
 import fiona
 
@@ -16,7 +10,6 @@ from hhnk_threedi_tools.git_model_repo.utils.file_change_detection import FileCh
 from hhnk_threedi_tools.git_model_repo.utils.timer_log import SubTimer
 
 log = logging.getLogger(__name__)
-
 
 def format_json(
         obj: typing.Any,
@@ -39,11 +32,9 @@ def format_json(
     str
         The formatted JSON string.
     """
-    indent = " "  # one space for indentation level
-
+    indent = " "
     if not isinstance(obj, (dict, list)) or depth > 2 or parent_key in ["crs"]:
         return json.dumps(obj)
-
     if isinstance(obj, list):
         formatted_items = [format_json(item, "", depth + 1) for item in obj]
         return (
@@ -55,63 +46,40 @@ def format_json(
             "{\n" + ",\n".join(indent * (depth + 1) + item for item in formatted_items) + "\n" + indent * depth + "}"
         )
 
-
-class GeoPackageDump(object):
-    """
-    Basic version using Fiona for dumping GeoPackage files.
-
-    Parameters
-    ----------
-    file_path : str
-        Path to the GeoPackage file.
-    output_path : str, optional
-        Path to the output directory. If None, a default directory is created next to the input file.
+class GeoPackageDump:
+    """Basic version using Fiona for dumping GeoPackage files.
 
     Attributes
     ----------
-    file_path : str
+    file_path : Path
         Path to the GeoPackage file.
-    output_path : str
+    output_path : Path
         Path to the output directory.
-    changed_files : list of str
+    changed_files : list of Path
         List of files that have changed after dumping.
-
-    Methods
-    -------
-    get_schema_layer(layer_name)
-        Get the schema of a specific layer as a dictionary.
-    get_schema()
-        Get the schema of all layers as an OrderedDict.
-    dump_schema()
-        Dump the schema to a JSON file.
-    dump_layers(reformat=True)
-        Dump all layers and features to GeoJSON files.
-    dump()
-        Dump both the schema and layers.
     """
 
-    def __init__(self, file_path, output_path=None):
-        """
-        Initialize the GeoPackageDump object.
+    def __init__(self, file_path: Path, output_path: Path = None):
+        """Initialize the GeoPackageDump object.
 
         Parameters
         ----------
-        file_path : str
+        file_path : Path
             Path to the GeoPackage file.
-        output_path : str, optional
+        output_path : Path, optional
             Path to the output directory. If None, a default directory is created.
         """
         self.file_path = file_path
 
         if output_path is None:
-            base = os.path.splitext(os.path.basename(file_path))
-            output_path = os.path.join(os.path.dirname(file_path), f"{base[0]}_{base[1]}")
+            base = file_path.stem
+            output_path = file_path.parent / f"{base}_output"
         self.output_path = output_path
-        os.makedirs(self.output_path, exist_ok=True)
+        self.output_path.mkdir(exist_ok=True)
 
         self.changed_files = []
 
-    def get_schema_layer(self, layer_name):
+    def get_schema_layer(self, layer_name: str):
         """Get the schema of a specific layer in the GeoPackage.
 
         Parameters
@@ -124,8 +92,7 @@ class GeoPackageDump(object):
         dict
             The schema of the layer.
         """
-
-        f = fiona.open(self.file_path, "r", layer=layer_name)
+        f = fiona.open(str(self.file_path), "r", layer=layer_name)
         return f.schema
 
     def get_schema(self):
@@ -136,8 +103,7 @@ class GeoPackageDump(object):
         OrderedDict
             Dictionary with layer names as keys and their schemas as values.
         """
-
-        layers = fiona.listlayers(self.file_path)
+        layers = fiona.listlayers(str(self.file_path))
         schema = OrderedDict()
         for layer_name in layers:
             schema[layer_name] = self.get_schema_layer(layer_name)
@@ -150,7 +116,7 @@ class GeoPackageDump(object):
         -------
         None
         """
-        file_path = os.path.join(self.output_path, "schema.json")
+        file_path = self.output_path / "schema.json"
         cd = FileChangeDetection(file_path)
 
         schema = self.get_schema()
@@ -160,7 +126,7 @@ class GeoPackageDump(object):
         if cd.has_changed():
             self.changed_files.append(file_path)
 
-    def dump_layers(self, reformat=True):
+    def dump_layers(self, reformat: bool = True):
         """Dump all layers and features of the GeoPackage to GeoJSON files.
 
         Parameters
@@ -172,23 +138,21 @@ class GeoPackageDump(object):
         -------
         None
         """
-
-        layers = fiona.listlayers(self.file_path)
+        layers = fiona.listlayers(str(self.file_path))
 
         for layer_name in layers:
             log.info("dump layer %s", layer_name)
 
-            layer = fiona.open(self.file_path, "r", layer=layer_name)
-            output_file_path = os.path.join(self.output_path, f"{layer.name}.geojson")
+            layer = fiona.open(str(self.file_path), "r", layer=layer_name)
+            output_file_path = self.output_path / f"{layer.name}.geojson"
 
             cd = FileChangeDetection(output_file_path)
 
             with SubTimer(f"dump layer {layer_name}"):
-                # make sure th fid is copied too (fiona does not do this by default)
                 schema = layer.schema
                 schema["properties"]["fid"] = "int"
                 dest_src = fiona.open(
-                    output_file_path,
+                    str(output_file_path),
                     "w",
                     driver="GeoJSON",
                     crs=layer.crs,
@@ -203,18 +167,15 @@ class GeoPackageDump(object):
 
                 dest_src.close()
 
-            # reformat json is experiment to check what is most useful for git diff
             if reformat:
                 with SubTimer(f"reformat json {layer_name}"):
-                    f = output_file_path.open("r")
-                    data = json.load(f)
-                    f.close()
+                    with output_file_path.open("r") as f:
+                        data = json.load(f)
                     if len(data.get("features", [])) == 0:
-                        output_file_path.unlink()  # remove empty files
+                        output_file_path.unlink()
                     else:
-                        f = output_file_path.open("w")
-                        f.write(format_json(data))
-                        f.close()
+                        with output_file_path.open("w") as f:
+                            f.write(format_json(data))
 
             if cd.has_changed():
                 self.changed_files.append(output_file_path)
