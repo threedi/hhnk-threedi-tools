@@ -112,13 +112,27 @@ class StructureControl:
         control_merge_structure["initial_wlvl"] = self.l.control_nodes["initial_waterlevel"]
         return gpd.GeoDataFrame(control_merge_structure, geometry=geom, crs=DEF_TRGT_CRS)
 
-    def get_action_values(self, row):
+    # def get_action_values(self, row):
+    #     """-> start, min, max values in action table"""
+    #     if row["target_type"] == "v2_weir":
+    #         action_values = [float(b.split(";")[1]) for b in row["action_table"].split("#")]
+    #     else:
+    #         action_values = [float(b.split(";")[1].split(" ")[0]) for b in row["action_table"].split("#")]
+    #     return action_values[0], min(action_values), max(action_values)
+    def get_action_values(self, row: gpd.GeoDataFrame) -> tuple:
         """-> start, min, max values in action table"""
-        if row["target_type"] == "v2_weir":
-            action_values = [float(b.split(";")[1]) for b in row["action_table"].split("#")]
-        else:
-            action_values = [float(b.split(";")[1].split(" ")[0]) for b in row["action_table"].split("#")]
-        return action_values[0], min(action_values), max(action_values)
+        try:
+            if pd.isna(row["action_table"]):
+                return (None, None, None)
+            if row["target_type"] == "v2_weir":
+                action_values = [float(b.split(";")[1]) for b in row["action_table"].split("#")]
+            else:
+                action_values = [float(b.split(";")[1].split(" ")[0]) for b in row["action_table"].split("#")]
+            if len(action_values) == 0:
+                return (None, None, None)
+            return (action_values[0], min(action_values), max(action_values))
+        except Exception:
+            return (None, None, None)
 
     def append_hdb_layer(self):
         if self.layers.hdb_control is not None:
