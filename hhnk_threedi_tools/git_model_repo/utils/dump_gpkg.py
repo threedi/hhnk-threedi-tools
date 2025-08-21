@@ -11,10 +11,11 @@ from hhnk_threedi_tools.git_model_repo.utils.timer_log import SubTimer
 
 log = logging.getLogger(__name__)
 
+
 def format_json(
-        obj: typing.Any,
-        parent_key: str = "",
-        depth: int = 0,
+    obj: typing.Any,
+    parent_key: str = "",
+    depth: int = 0,
 ):
     """Format a JSON object for improved readability in git diff.
 
@@ -45,6 +46,7 @@ def format_json(
         return (
             "{\n" + ",\n".join(indent * (depth + 1) + item for item in formatted_items) + "\n" + indent * depth + "}"
         )
+
 
 class GeoPackageDump:
     """Basic version using Fiona for dumping GeoPackage files.

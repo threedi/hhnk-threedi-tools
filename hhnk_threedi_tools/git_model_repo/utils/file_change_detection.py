@@ -1,7 +1,8 @@
 import hashlib
 from pathlib import Path
-from git import Repo
+
 import git
+from git import Repo
 
 
 class FileChangeDetection(object):

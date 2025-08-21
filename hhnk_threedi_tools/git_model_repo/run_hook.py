@@ -1,6 +1,6 @@
-from pathlib import Path
 import logging
 import sys
+from pathlib import Path
 
 if __name__ == "__main__":
     # add the path of the parent directory to the python path
@@ -44,24 +44,31 @@ def run_hook(hook_name: str, hook_dir: str, *args: str):
 
         if hook_name == "pre-commit":
             from hhnk_threedi_tools.git_model_repo.hooks.pre_commit import run
+
             run(root)
         elif hook_name == "commit-msg":
             from hhnk_threedi_tools.git_model_repo.hooks.commit_msg import run
+
             run(root, args[0])
         elif hook_name == "prepare-commit-msg":
             from hhnk_threedi_tools.git_model_repo.hooks.prepare_commit_msg import run
+
             run(root, args[0])
         elif hook_name == "post-commit":
             from hhnk_threedi_tools.git_model_repo.hooks.post_commit import run
+
             run(root)
         elif hook_name == "post-checkout":
             from hhnk_threedi_tools.git_model_repo.hooks.post_checkout import run
+
             run(root)
         elif hook_name == "post-merge":
             from hhnk_threedi_tools.git_model_repo.hooks.post_merge import run
+
             run(root)
         elif hook_name == "post-rewrite":
             from hhnk_threedi_tools.git_model_repo.hooks.post_rewrite import run
+
             run(root)
         else:
             raise ValueError(f"Unknown hook name {hook_name}")

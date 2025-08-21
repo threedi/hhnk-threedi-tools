@@ -37,6 +37,7 @@ class ExcelDump(object):
     dump_sheets()
         Dump all sheets and their data to JSON files.
     """
+
     def __init__(self, file_path: Path, output_path: Optional[Path] = None):
         """Initialize the ExcelDump object.
 

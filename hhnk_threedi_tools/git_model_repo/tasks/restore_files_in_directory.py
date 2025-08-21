@@ -9,7 +9,7 @@ from hhnk_threedi_tools.git_model_repo.utils.rreplace import rreplace
 log = logging.getLogger(__name__)
 
 
-def get_file_names_from_path(path: typing.Union[Path|str]) -> tuple[Path, Path, Path]:
+def get_file_names_from_path(path: typing.Union[Path | str]) -> tuple[Path, Path, Path]:
     """
     Get the temporary, original, and backup file names based on a given path.
 
@@ -32,16 +32,11 @@ def get_file_names_from_path(path: typing.Union[Path|str]) -> tuple[Path, Path, 
     backup_filename = rreplace(tmp_filename, "~.", "_backup.", 1)
 
     p = Path(path)
-    return (
-        p.parent / tmp_filename,
-        p.parent / orig_filename,
-        p.parent / backup_filename
-    )
+    return (p.parent / tmp_filename, p.parent / orig_filename, p.parent / backup_filename)
 
 
 def restore_files_in_directory(
-        directory: typing.Union[str, Path],
-        output_file_path: typing.Optional[typing.Union[str, Path]] = None
+    directory: typing.Union[str, Path], output_file_path: typing.Optional[typing.Union[str, Path]] = None
 ):
     """Restore all files previously dumped to original files in a directory.
 

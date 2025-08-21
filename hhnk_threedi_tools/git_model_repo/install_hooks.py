@@ -39,7 +39,9 @@ def install_git_hook(repo_path: Path, hook_name: str, script_path: Path, windows
                 with hook_path.open("a") as hook_file_append:
                     print(f"add instructions to {hook_path}")
                     hook_file_append.write("\n\n# Added by hhnk_threedi_tools/git_model_repo/install_hooks.py\n")
-                    hook_file_append.write(f'hook_dir=$(realpath "$0")\n"{script_path}" {hook_name} "$hook_dir" "$(pwd)"\n')
+                    hook_file_append.write(
+                        f'hook_dir=$(realpath "$0")\n"{script_path}" {hook_name} "$hook_dir" "$(pwd)"\n'
+                    )
                 if not windows:
                     hook_path.chmod(0o775)
     else:

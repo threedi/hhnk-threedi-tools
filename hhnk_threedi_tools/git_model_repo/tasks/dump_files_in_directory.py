@@ -17,7 +17,7 @@ def dump_files_in_directory(
     root_repo: Optional[Path] = None,
     output_path: Optional[Path] = None,
     excel_dump: bool = True,
-    gpkg_dump: bool = True
+    gpkg_dump: bool = True,
 ) -> List[Path]:
     """Dump all files in a directory to a JSON file, checking gitignore and file extension.
 
