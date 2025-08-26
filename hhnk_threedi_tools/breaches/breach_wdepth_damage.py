@@ -427,10 +427,12 @@ if __name__ == "__main__":
 
     # I have to structure better this code, the idea is that it finish everything in one go.
     # So frist: calculate damage, second csv, and the create pgn. This process needs to be done by scenario
-    region_paths = get_paths(base_folder, scenario_name=None, specific_scenario=False, skip=skip)
+    scenario_name = "ROR-PRI-WATERKERING_ENKHUIZEN_0.5-T10"
+    specefic_scenario = True
+    region_paths = get_paths(base_folder, scenario_name=None, specific_scenario=specefic_scenario, skip=skip)
 
     # calculate_depth_raster(region_paths, dem_path, OVERWRITE, EPSG, spatialResolution)
-    # calculate_damage_raster(region_paths, landuse_file, cfg_file, EPSG)
+    calculate_damage_raster(region_paths, landuse_file, cfg_file, EPSG)
     save_damage_csv(region_paths)
     create_pgn_dagame(region_paths)
 # %%
