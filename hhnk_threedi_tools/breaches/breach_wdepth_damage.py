@@ -252,27 +252,27 @@ def calculate_damage_raster(region_paths, landuse_file, cfg_file, EPSG="EPSG:289
 
 
 # This function sum values per pixel in the damage rasters and returns the total cost
-def sum_total_raster(calculation_type, region_paths):
+def sum_total_raster(calculation_type, region_path):
     # loop over the pregion_paths
-    for region_path in region_paths:
-        # Define output folder and result file
-        breach = Breaches(region_path)
-        output_scenario_wss = breach.wss.path
-        # Define the raster path based on the calculation type
-        if calculation_type == "sum":
-            name = "damage_orig_lizard.tif"
-            raster_path = os.path.join(output_scenario_wss, name)
-            print(f"Calculating {name}")
-        else:
-            name = calculation_type + "_cost_damage.tif"
-            raster_path = os.path.join(output_scenario_wss, name)
-            print(f"Calculating {name}")
-        # Open Damage Raster, get pixel width, calculate area and sum values
-        raster_resolution = gdal.Open(raster_path, gdal.GA_ReadOnly)
-        raster = hrt.Raster(raster_path)
-        area_pixel = pow(hrt.RasterMetadata(raster_resolution).pixel_width, 2)
-        sum_values = raster.sum()
-        total_cost = sum_values * area_pixel
+
+    # Define output folder and result file
+    breach = Breaches(region_path)
+    output_scenario_wss = breach.wss.path
+    # Define the raster path based on the calculation type
+    if calculation_type == "sum":
+        name = "damage_orig_lizard.tif"
+        raster_path = os.path.join(output_scenario_wss, name)
+        print(f"Calculating {name} for {breach.name}")
+    else:
+        name = calculation_type + "_cost_damage.tif"
+        raster_path = os.path.join(output_scenario_wss, name)
+        print(f"Calculating {name}")
+    # Open Damage Raster, get pixel width, calculate area and sum values
+    raster_resolution = gdal.Open(raster_path, gdal.GA_ReadOnly)
+    raster = hrt.Raster(raster_path)
+    area_pixel = pow(hrt.RasterMetadata(raster_resolution).pixel_width, 2)
+    sum_values = raster.sum()
+    total_cost = sum_values * area_pixel
 
     return total_cost
 
@@ -284,38 +284,43 @@ def save_damage_csv(region_paths):
         breach = Breaches(region_path)
         breach_name = breach.name
         output_scenario_wss = breach.wss.path
-        name = "damage_orig_lizard.tif"
-        damage_output_file = output_scenario_wss / name
+        csv_path = os.path.join(output_scenario_wss, "total_costs_area.csv")
+        if not os.path.exists(csv_path):
+            print(f"Creating csv file for {breach_name}")
+            name = "damage_orig_lizard.tif"
+            damage_output_file = output_scenario_wss / name
 
-        # Check if the damage output file exists and set the columns of the csv file
-        if damage_output_file.exists():
-            calculation_types = ["sum", "direct", "indirect"]
-            # Initialize values
-            results = {
-                "scenario": breach_name,
-                "direct": 0,
-                "indirect": 0,
-                "total_damage_raster": 0,
-            }
-            # Loop through calculation types and calculate total costs
-            for calculation_type in calculation_types:
-                value = sum_total_raster(calculation_type, region_paths)
-                if calculation_type == "direct":
-                    results["direct"] = value
-                elif calculation_type == "indirect":
-                    results["indirect"] = value
-                elif calculation_type == "sum":
-                    results["total_damage_raster"] = value
+            # Check if the damage output file exists and set the columns of the csv file
+            if damage_output_file.exists():
+                calculation_types = ["sum", "direct", "indirect"]
+                # Initialize values
+                results = {
+                    "scenario": breach_name,
+                    "direct": 0,
+                    "indirect": 0,
+                    "total_damage_raster": 0,
+                }
+                # Loop through calculation types and calculate total costs
+                for calculation_type in calculation_types:
+                    value = sum_total_raster(calculation_type, region_path)
+                    if calculation_type == "direct":
+                        results["direct"] = value
+                    elif calculation_type == "indirect":
+                        results["indirect"] = value
+                    elif calculation_type == "sum":
+                        results["total_damage_raster"] = value
 
-                # Calculate totals and differences
-                results["total_sum"] = results["direct"] + results["indirect"]
-                results["difference"] = results["total_damage_raster"] - results["total_sum"]
+                    # Calculate totals and differences
+                    results["total_sum"] = results["direct"] + results["indirect"]
+                    results["difference"] = results["total_damage_raster"] - results["total_sum"]
 
-            # Append to DataFrame
-            final_result = pd.DataFrame(results, index=[0])
-            # Save the DataFrame to a CSV file
-            csv_path = os.path.join(output_scenario_wss, "total_costs_area.csv")
-            final_result.to_csv(csv_path)
+                # Append to DataFrame
+                final_result = pd.DataFrame(results, index=[0])
+                # Save the DataFrame to a CSV file
+                final_result.to_csv(csv_path)
+        else:
+            print(f"The csv output file {csv_path} exists, check in case to need replacement")
+            continue
 
 
 # Create BAR graph for damage and save it as png
@@ -388,7 +393,36 @@ if __name__ == "__main__":
         "ROR-PRI-HONDSBOSSCHE_ZEEWERING_4-T10",
         "ROR-PRI-HONDSBOSSCHE_ZEEWERING_4-T100",
         "ROR-PRI-DURGERDAMMERDIJK_0.5-T100000",
-        "ROR-PRI-KATWOUDERZEEDIJK_1-T100",
+        "ROR-PRI-KATWOUDERZEEDIJK_1-T100000",
+        "ROR-PRI-HELDERSE_ZEEWERING_1.5-T10",
+        "ROR-PRI-HELDERSE_ZEEWERING_4-T10",
+        "ROR-PRI-HELDERSE_ZEEWERING_4-T100",
+        "ROR-PRI-HELDERSE_ZEEWERING_4-T100000",
+        "ROR-PRI-KOEGRASZEEDIJK_(1E_WK)_0.5-T100000",
+        "ROR-PRI-BALGZANDDIJK_3-T3000",
+        "ROR-PRI-BALGZANDDIJK_3_EN_BALGDIJK-T10",
+        "ROR-PRI-BALGZANDDIJK_3_EN_BALGDIJK-T100",
+        "ROR-PRI-BALGZANDDIJK_3_EN_BALGDIJK-T1000",
+        "ROR-PRI-BALGZANDDIJK_3_EN_BALGDIJK-T10000",
+        "ROR-PRI-BALGZANDDIJK_3_EN_BALGDIJK-T100000",
+        "ROR-PRI-BALGZANDDIJK_3_EN_BALGDIJK-T3000",
+        "ROR-PRI-BALGZANDDIJK_7-T10000",
+        "ROR-PRI-DUINEN_TEXEL_2.3-T3000",
+        "ROR-PRI-DUINEN_TEXEL_2.3-T100000",
+        "ROR-PRI-DUINEN_TEXEL_2.3-T10000",
+        "ROR-PRI-DUINEN_TEXEL_2.3-T1000",
+        "ROR-PRI-DUINEN_TEXEL_2.3-T100",
+        "ROR-PRI-DUINEN_TEXEL_2.3-T10",
+        "ROR-PRI-DUINEN_TEXEL_2.2-T3000",
+        "ROR-PRI-DUINEN_TEXEL_2.2-T100000",
+        "ROR-PRI-DUINEN_TEXEL_2.2-T10000",
+        "ROR-PRI-DUINEN_TEXEL_2.2-T1000",
+        "ROR-PRI-DUINEN_TEXEL_21-T10",
+        "ROR-PRI-DUINEN_TEXEL_21-T100",
+        "ROR-PRI-EIJERLANDSE_ZEEDIJK_1-T1000",
+        "ROR-PRI-EIJERLANDSE_ZEEDIJK_1-T10000",
+        "ROR-PRI-EIJERLANDSE_ZEEDIJK_1-T100000",
+        "ROR-PRI-EIJERLANDSE_ZEEDIJK_1-T3000",
     ]
 
     # I have to structure better this code, the idea is that it finish everything in one go.
@@ -396,8 +430,7 @@ if __name__ == "__main__":
     region_paths = get_paths(base_folder, scenario_name=None, specific_scenario=False, skip=skip)
 
     # calculate_depth_raster(region_paths, dem_path, OVERWRITE, EPSG, spatialResolution)
-    calculate_damage_raster(region_paths, landuse_file, cfg_file, EPSG)
+    # calculate_damage_raster(region_paths, landuse_file, cfg_file, EPSG)
     save_damage_csv(region_paths)
     create_pgn_dagame(region_paths)
-    OVERWRITE = True
 # %%
