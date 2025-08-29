@@ -224,11 +224,13 @@ class DAMO_to_HyDAMO_Converter:
         self.hydamo_file_path.parent.mkdir(parents=True, exist_ok=True)
 
         if self.layers is None:
-            self.layers = self.damo_file_path.available_layers()
-            # drop layer_styles from self.layers
-            self.layers = [layer for layer in self.layers if layer != "layer_styles"]
+            # self.layers = self.damo_file_path.available_layers()
 
-        for layer_name in self.layers:
+            # drop layer_styles from self.layers
+            self.layers = [layer for layer in self.damo_file_path.available_layers() if layer != "layer_styles"]
+            self.logger.info(f"layers to be converted: {self.layers}")
+
+        for layer_name in self.damo_file_path.available_layers():
             layer_name = layer_name.lower()
             self.logger.info(f"Conversion of {layer_name}")
             if not self.overwrite and self.hydamo_file_path.exists():
@@ -476,5 +478,6 @@ class DAMO_to_HyDAMO_Converter:
         Output is written to self.hydamo_file_path.path
         """
         self.convert_layers()
+
 
 # %%
