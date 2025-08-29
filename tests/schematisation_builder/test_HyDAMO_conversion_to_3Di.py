@@ -7,9 +7,11 @@ from tests.config import TEMP_DIR, TEST_DIRECTORY
 
 
 def test_HyDAMO_conversion_to_3Di():
+    channel_code = "OAF-QJ-16532"
+
     output_schematisation_directory = TEMP_DIR / f"temp_HyDAMO_converter_to_3Di_{hrt.current_time(date=True)}"
     hydamo_file_path = TEST_DIRECTORY / "schematisation_builder" / "HyDAMO.gpkg"
-    hydamo_layers = ["HYDROOBJECT"]
+    hydamo_layers = ["hydroobject"]
     empty_schematisation_file_path = None  # Use default from htt.resources
 
     convert_to_3Di(
@@ -35,9 +37,10 @@ def test_HyDAMO_conversion_to_3Di():
 
     # Check if feature with code OAF-Q-121848 is present in the channel layer
     channel_layer = output_schematisation_layers["channel"]
-    assert channel_layer[channel_layer["code"] == "OAF-Q-121848"].shape[0] == 1
+    assert channel_layer[channel_layer["code"] == channel_code].shape[0] == 1
 
 
 # %%
 if __name__ == "__main__":
     test_HyDAMO_conversion_to_3Di()
+# %%
