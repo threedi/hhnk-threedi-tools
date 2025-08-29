@@ -11,16 +11,17 @@ data in the same geopackage.
 The geopackage can then be used for all relevant data annd replace the netCDF, saving considarable
 disk space and making it easier and faster to work with the results.
 
-The code below includes the extraction of relevant data that is listed in the
-netcdf_essentials.csv file. This file is used to define the relevant data and can be extended
+The code below relies on netcdfTimeseries Class for extraction of relevant data that is listed in the
+netcdf_essentials.csv (config) file. This file is used to define the relevant data and can be extended
 to include other data that is needed for the various checks and statistics.
 
-The code also includes the correction of waterlevels based on the
-waterdeel and panden layers. These layers are used to determine which cells need to be corrected.
-This is done by checking the percentage of the cell that is covered by water or panden.
+The code  includes the correction of waterlevels based on the waterdeel and panden layers. These l
+ayers are used to determine which cells need to be corrected. This is done by checking the percentage
+of the cell that is covered by water or panden.
 
 
-@author: Wouter van Esse
+@author: Wietse van Gerwen / Wouter van Esse
+@organization: Hoogheemraadschap Hollands Noorderkwartier
 
 """
 
@@ -36,8 +37,10 @@ import pandas as pd
 from shapely.geometry import LineString, Point, box
 
 from hhnk_threedi_tools.core.folders import Folders
+from hhnk_threedi_tools.core.results import netcdf_timeseries as net_ts
 
 DEFAULT_NESS_FP = Path(__file__).parents[2].absolute() / r"resources\netcdf_essentials.csv"
+MINMAX_ELEMENTS = ["u1", "q"]  # TODO use to get both min and max values
 
 
 @dataclass
@@ -170,14 +173,13 @@ class NetcdfEssentials:
     ness_fp: str = None
     use_aggregate: bool = False  # NOTE dus ik moet als gebruiker aangeven of ik aggregate result gebruik
 
-    def __post_init__(self):
-        self._ts = None
+    # def __post_init__(self):
+    # NOTE wat moet hier?
 
-        # Check if result is aggregate # TODO add somehow check that it contains attributes
-        self.aggregate: bool = self.typecheck_aggregate
-
-        # Check if result has breaches
-        self.breaches: bool = self.grid.has_breaches
+    def grid(self) -> Union[net_ts.NetcdfTimeSeries, net_ts.NetcdfAggregateTimeSeries]:
+        """Instance of NetcdfTimeSeries or NetcdfAggregateTimeSeries"""
+        grid = net_ts.NetcdfTimeSeries(threedi_result=self.threedi_result, use_aggregate=self.use_aggregate).grid
+        return grid
 
     @classmethod
     def from_folder(cls, folder: Folders, threedi_result: hrt.ThreediResult, use_aggregate: bool = False, **kwargs):
@@ -203,26 +205,9 @@ class NetcdfEssentials:
         return self.ness
 
     @property
-    def grid(self):
-        """Instance of threedigrid.admin.gridresultadmin.GridH5ResultAdmin or GridH5AggregateResultAdmin"""
-        if self.use_aggregate is False:
-            return self.threedi_result.grid
-        return self.threedi_result.aggregate_grid
-
-    @property
-    def timestamps(self):
-        """Retrieve timestamps for timeseries"""
-        return self.grid.nodes.timestamps
-
-    @property
     def output_default(self):
         """Default output if no path is specified."""
         return self.threedi_result.full_path("netcdf_essentials.gpkg")
-
-    @property
-    def typecheck_aggregate(self) -> bool:
-        """Check if we have a normal or aggregated netcdf"""
-        return str(type(self.grid)) == "<class 'threedigrid.admin.gridresultadmin.GridH5AggregateResultAdmin'>"
 
     def load_default_ness(self, ness_fp=None) -> pd.DataFrame:
         """Load relevant data for HHNK models"""
@@ -235,7 +220,7 @@ class NetcdfEssentials:
         return ness
 
     def _create_column_base(self, time_seconds) -> str:
-        """Create a base column name with hours and minutes based ib tune ub seconds."""
+        """Create a base column name with hours and minutes based time_seconds."""
         # Check if time_seconds is a string or int
         if isinstance(time_seconds, str):
             col_base = time_seconds
@@ -251,7 +236,7 @@ class NetcdfEssentials:
                     col_base = f"{int(np.floor(timestep_h))}h{int((timestep_h % 1) * 60)}min"
         return col_base
 
-    def _calculate_layer_area_per_cell(
+    def _calculate_layer_area_per_cell(  # TODO move to correct waterlevels
         self,
         grid_gdf: gpd.GeoDataFrame,
         layer_path: Union[Path, hrt.File],
@@ -328,59 +313,6 @@ class NetcdfEssentials:
         logger.info(f"Active attributes: {active_attributes.tolist()}")
         return ness
 
-    def _get_ts(self, ness) -> pd.DataFrame:
-        """
-        Retrieve timeseries for rows in ness dataframe and add them to the dataframe.
-
-        Parameters
-        ----------
-        ness : pd.DataFrame
-            DataFrame with attributes and subsets to check against the grid.
-            Should contain columns: 'attribute', 'subset', 'element', 'attribute_name'.
-        """
-        logger = hrt.logging.get_logger(__name__)
-        # initialise data column
-        ness["amount"] = None
-        ness["data"] = None
-        # Retrieve timeseries for each row in ness
-        for i, row in ness.iterrows():
-            if row["active"]:
-                data = getattr(
-                    getattr(self.grid, row["element"])
-                    .subset(row["subset"])
-                    .timeseries(indexes=slice(0, len(self.timestamps))),
-                    row["attribute"],
-                ).T
-                # Replace -9999 with nan values to prevent -9999 being used in replacing values.
-                data[data == -9999.0] = np.nan
-                # add data as nested array to dataframe
-                ness.at[i, "data"] = data  # noqa: PD008 .loc werkt niet met nested array
-                ness.loc[i, "amount"] = data.shape[0]
-                logger.info(f"Retrieved {row['attribute']} for {data.shape[0]} {row['element']} in {row['subset']}")
-
-        return ness
-
-    def _get_ts_index(self, time_seconds: int) -> int:
-        """
-        Retrieve indices of requested output time_seconds
-
-        Parameters
-        ----------
-        time_seconds : int
-            The time in seconds for which to retrieve the index.
-        """
-        abs_diff = np.abs(self.timestamps - time_seconds)
-        # geeft 1 index voor de gevraagde timestep gelijk voor alle elementen
-        ts_indx = np.argmin(abs_diff)
-        if np.min(abs_diff) > 30:  # seconds diff. # TODO gebruik hier de helft van de opgegeven output time_seconds?
-            raise ValueError(  # TODO toevoegen aan logging? Maar hoe omgaan met raise?
-                f"""Provided time_seconds {time_seconds} not found in netcdf timeseries.
-                    Closest timestep is {self.timestamps[ts_indx]} seconds at index {ts_indx}. \
-                    Debug by checking available timeseries through the (.timestamps) timeseries attributes"""
-            )
-
-        return ts_indx
-
     def _attronly_schema(self, df) -> dict:
         """
         Needed to save attributes without geometry
@@ -414,8 +346,35 @@ class NetcdfEssentials:
             DataFrame with attributes and subsets to check against the grid.
             Should contain columns: 'attribute', 'subset', 'element', 'attribute_name'.
         """
+        logger = hrt.logging.get_logger(__name__)
+
         ness = self._set_active_attributes(ness)
-        ness = self._get_ts(ness)
+
+        # initialise data column
+        ness["amount"] = None
+        ness["data"] = None
+        # Retrieve timeseries for each row in ness
+        for i, row in ness.iterrows():
+            if row["active"]:
+                data = net_ts.get_ts(
+                    attribute=row["attribute"],
+                    element=row["element"],
+                    subset=row["subset"],
+                )
+                getattr(
+                    getattr(self.grid, row["element"])
+                    .subset(row["subset"])
+                    .timeseries(indexes=slice(0, len(self.timestamps))),
+                    row["attribute"],
+                ).T
+                # Replace -9999 with nan values to prevent -9999 being used in replacing values.
+                data[data == -9999.0] = np.nan
+                # add data as nested array to dataframe
+                ness.at[i, "data"] = data  # noqa: PD008 .loc werkt niet met nested array
+                ness.loc[i, "amount"] = data.shape[0]
+                logger.info(f"Retrieved {row['attribute']} for {data.shape[0]} {row['element']} in {row['subset']}")
+
+        return ness
         return ness
 
     def create_base_gdf(self) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame, gpd.GeoDataFrame, gpd.GeoDataFrame]:
@@ -566,7 +525,7 @@ class NetcdfEssentials:
         replace_dem_below_perc: float = 50,
         replace_water_above_perc: float = 95,
         replace_pand_above_perc: float = 99,
-    ) -> gpd.GeoDataFrame:
+    ) -> gpd.GeoDataFrame:  # TODO move to correct waterlevels
         """Determine which cells should have their waterlevel replaced by their neighbours.
 
         Parameters
@@ -688,7 +647,7 @@ class NetcdfEssentials:
 
         return gdf
 
-    def correct_waterlevels(self, grid_gdf, timesteps_seconds_output: list):
+    def correct_waterlevels(self, grid_gdf, timesteps_seconds_output: list):  # TODO move to correct waterlevels
         """Correct the waterlevel for the given timesteps. Results are only corrected
         for cells where the 'replace_all' value is not False.
         """

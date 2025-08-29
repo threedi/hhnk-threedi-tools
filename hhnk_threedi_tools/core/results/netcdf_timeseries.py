@@ -69,6 +69,8 @@ class NetcdfTimeSeries:
         """
         logger = hrt.logging.get_logger(__name__)
 
+        # TODO check if attribute, element and subset are valid
+
         ts = getattr(
             getattr(self.grid, element).subset(subset).timeseries(indexes=slice(0, len(self.timestamps))),
             attribute,
