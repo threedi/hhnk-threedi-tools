@@ -238,7 +238,7 @@ class DAMO_to_HyDAMO_Converter:
                     )
                     return
 
-            layer_gdf = gpd.read_file(self.damo_file_path, layer=layer_name, engine="pyogrio")
+            layer_gdf = gpd.read_file(self.damo_file_path.path, layer=layer_name, engine="pyogrio")
             layer_gdf = self._convert_attributes(layer_gdf, layer_name)
             layer_gdf = self._add_column_NEN3610id(layer_gdf, layer_name)
             if self.add_status_object:
@@ -476,3 +476,5 @@ class DAMO_to_HyDAMO_Converter:
         Output is written to self.hydamo_file_path.path
         """
         self.convert_layers()
+
+# %%
