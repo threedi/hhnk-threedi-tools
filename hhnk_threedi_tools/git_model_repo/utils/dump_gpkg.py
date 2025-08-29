@@ -9,7 +9,7 @@ import fiona
 from hhnk_threedi_tools.git_model_repo.utils.file_change_detection import FileChangeDetection
 from hhnk_threedi_tools.git_model_repo.utils.timer_log import SubTimer
 
-log = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def format_json(
@@ -143,7 +143,7 @@ class GeoPackageDump:
         layers = fiona.listlayers(str(self.file_path))
 
         for layer_name in layers:
-            log.info("dump layer %s", layer_name)
+            logger.info("dump layer %s", layer_name)
 
             layer = fiona.open(str(self.file_path), "r", layer=layer_name)
             output_file_path = self.output_path / f"{layer.name}.geojson"

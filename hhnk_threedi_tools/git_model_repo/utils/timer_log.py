@@ -1,7 +1,7 @@
 import logging
 import time
 
-log = logging.getLogger("performance")
+logger = logging.getLogger("performance")
 
 
 class SubTimer:
@@ -48,7 +48,7 @@ class SubTimer:
         self.process_duration: float = time.process_time()
 
         if name:
-            log.debug(f"{name} started")
+            logger.debug(f"{name} started")
 
     def __enter__(self) -> "SubTimer":
         """Enter the runtime context related to this object.
@@ -81,6 +81,6 @@ class SubTimer:
         -------
         None
         """
-        log.info(
+        logger.info(
             f"{self.name} finished - duration: {time.time() - self.start:.2f}, process_duration: {time.process_time() - self.process_duration:.2f}"
         )

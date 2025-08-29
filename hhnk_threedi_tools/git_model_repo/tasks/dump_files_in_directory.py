@@ -9,7 +9,7 @@ from hhnk_threedi_tools.git_model_repo.utils.dump_xlsx import ExcelDump
 from hhnk_threedi_tools.git_model_repo.utils.file_change_detection import is_file_git_modified
 from hhnk_threedi_tools.git_model_repo.utils.rreplace import rreplace
 
-log = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def dump_files_in_directory(
@@ -58,7 +58,7 @@ def dump_files_in_directory(
         for file_name in files:
             file_path = root / file_name
             rel_file_path = file_path.relative_to(directory)
-            log.debug("Checking file '%s'", rel_file_path)
+            logger.debug("Checking file '%s'", rel_file_path)
             # Only process files starting with "02"
             if not str(rel_file_path).startswith("02"):
                 continue
@@ -69,31 +69,31 @@ def dump_files_in_directory(
 
             if actual_file_path.is_file():
                 if repo.ignored(str(actual_file_path)):
-                    log.info("Skipping ignored file '%s'", rel_file_path)
+                    logger.info("Skipping ignored file '%s'", rel_file_path)
                     continue
 
                 if not is_file_git_modified(repo, str(rel_file_path)):
-                    log.info("Skip not modified file '%s'", rel_file_path)
+                    logger.info("Skip not modified file '%s'", rel_file_path)
                     continue
 
                 if file_name.endswith(".gpkg") and gpkg_dump:
                     out_dir = actual_file_path.parent / rreplace(file_name, ".", "_", 1)
-                    log.info("Dump geopackage '%s'", actual_file_path)
+                    logger.info("Dump geopackage '%s'", actual_file_path)
                     dumper = GeoPackageDump(str(actual_file_path), str(out_dir))
                     dumper.dump_schema()
                     dumper.dump_layers()
-                    log.info("Dumped geopackage file '%s', %i changed files", rel_file_path, len(dumper.changed_files))
+                    logger.info("Dumped geopackage file '%s', %i changed files", rel_file_path, len(dumper.changed_files))
                     changed_files.extend([Path(f) for f in dumper.changed_files])
                 elif file_name.endswith(".xlsx") and excel_dump:
                     out_dir = actual_file_path.parent / rreplace(file_name, ".", "_", 1)
                     dumper = ExcelDump(actual_file_path, out_dir)
                     dumper.dump_schema()
                     dumper.dump_sheets()
-                    log.info("Dumped excel file '%s', %i changed files", rel_file_path, len(dumper.changed_files))
+                    logger.info("Dumped excel file '%s', %i changed files", rel_file_path, len(dumper.changed_files))
 
                     changed_files.extend([f for f in dumper.changed_files])
                 else:
-                    log.debug("Skipping file '%s'", rel_file_path)
+                    logger.debug("Skipping file '%s'", rel_file_path)
 
     return changed_files
 

@@ -2,7 +2,7 @@
 
 De modellen staan in Azure devops. Inloggen bij Azure Devops kan via `https://dev.azure.com/hhnk/threedimodels`.
 Modellen kunnen uitgecheckt worden met Github Desktop (of andere git tools of de command line). Modellen worden
-per persoon uitgecheckt in de map `E:\github\<gebruikersnaam>\`.
+per persoon uitgecheckt in de map `E:\github\<gebruikersnaam>\3di\<model_name>`.
 
 ### Azure devops
 
@@ -72,7 +72,7 @@ Branches van het basismodel kunnen als deze af zijn via een `pull request` worde
 
 Afspraken over naamgeving van branches en scenarios:
 
-- werk branches beginnen met `work_<basismodel>_<naam>`
+- werk branches beginnen met `work_<naam>`
 - de scenario branches (als het geen workbranch is) beginnen met `scenario_<naam>`
 
 ### Main branch

@@ -2,11 +2,11 @@ import logging
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
-log = logging.getLogger("")
+logger = logging.getLogger("")
 
 
 def setup_logging(level: int = logging.INFO):
-    """Setup logging to git_log.log file in the root of the repo.
+    """Setup logging to git_logger.log file in the root of the repo.
 
     Parameters
     ----------
@@ -17,7 +17,7 @@ def setup_logging(level: int = logging.INFO):
     -------
     None
     """
-    log.setLevel(level)
+    logger.setLevel(level)
 
     log_file_path = Path(__file__).parent.parent / "git_log.log"
     handler = RotatingFileHandler(
@@ -25,7 +25,7 @@ def setup_logging(level: int = logging.INFO):
         maxBytes=1024 * 1024,  # 1 mb
         backupCount=1,
     )
-    log.addHandler(handler)
+    logger.addHandler(handler)
 
     formatter = logging.Formatter(
         "%(asctime)s %(levelname)-8s - [%(filename)s-%(lineno)s] - %(message)s",
@@ -33,4 +33,4 @@ def setup_logging(level: int = logging.INFO):
     )
     handler.setFormatter(formatter)
 
-    log.debug("Logging setup")
+    logger.debug("Logging setup")

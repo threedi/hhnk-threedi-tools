@@ -7,7 +7,7 @@ from hhnk_threedi_tools.git_model_repo.tasks.dump_files_in_directory import dump
 from hhnk_threedi_tools.git_model_repo.utils.show_message_mbox import show_message_mbox
 from hhnk_threedi_tools.git_model_repo.utils.timer_log import SubTimer
 
-log = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def run(repo_root: Path):
@@ -27,7 +27,7 @@ def run(repo_root: Path):
     -------
     None
     """
-    log.info("Running pre-commit hook")
+    logger.info("Running pre-commit hook")
 
     with SubTimer("dump_files_in_directory"):
         changed_files: List[Path] = dump_files_in_directory(repo_root)
@@ -40,7 +40,7 @@ def run(repo_root: Path):
         stderr = "Volgende bestanden nog aangepast/ toegevoegd:\n%s" % "".join(
             [f"- {f.relative_to(repo_root)}\n" for f in changed_files]
         )
-        log.info(stderr)
+        logger.info(stderr)
         # write to stderr to show the user what files are changed
         print(stderr)
         exit(1)

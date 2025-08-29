@@ -1,7 +1,7 @@
 import logging
 from pathlib import Path
 
-log = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def run(repo_root: Path, commit_msg_rel_file_path: str = None):

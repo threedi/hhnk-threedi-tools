@@ -4,7 +4,7 @@ from pathlib import Path
 from hhnk_threedi_tools.git_model_repo.tasks.restore_files_in_directory import restore_files_in_directory
 from hhnk_threedi_tools.git_model_repo.utils.timer_log import SubTimer
 
-log = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def run(repo_root: Path):
@@ -22,7 +22,7 @@ def run(repo_root: Path):
     -------
     None
     """
-    log.info("Running post-checkout hook")
+    logger.info("Running post-checkout hook")
 
     with SubTimer("restore_files_in_directory"):
         restore_files_in_directory(repo_root)

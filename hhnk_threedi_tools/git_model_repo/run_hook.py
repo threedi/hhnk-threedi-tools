@@ -9,7 +9,7 @@ if __name__ == "__main__":
 from hhnk_threedi_tools.git_model_repo.utils.get_git_root import get_git_root
 from hhnk_threedi_tools.git_model_repo.utils.setup_logging import setup_logging
 
-log = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 setup_logging(logging.INFO)
 
 
@@ -34,7 +34,7 @@ def run_hook(hook_name: str, hook_dir: str, *args: str):
     ValueError
         If the hook name is unknown or if the directory is not in a git repository.
     """
-    log.info(f"Running hook {hook_name} in directory {hook_dir}. extra args: {args}")
+    logger.info(f"Running hook {hook_name} in directory {hook_dir}. extra args: {args}")
 
     try:
         root = get_git_root(hook_dir)
@@ -73,7 +73,7 @@ def run_hook(hook_name: str, hook_dir: str, *args: str):
         else:
             raise ValueError(f"Unknown hook name {hook_name}")
     except Exception as e:
-        log.exception(e)
+        logger.exception(e)
         raise e
 
 

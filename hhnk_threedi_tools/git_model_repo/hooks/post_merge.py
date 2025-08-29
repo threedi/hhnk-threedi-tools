@@ -4,7 +4,7 @@ from pathlib import Path
 from hhnk_threedi_tools.git_model_repo.tasks.restore_files_in_directory import restore_files_in_directory
 from hhnk_threedi_tools.git_model_repo.utils.timer_log import SubTimer
 
-log = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def run(repo_root: Path):

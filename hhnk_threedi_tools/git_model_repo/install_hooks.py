@@ -8,7 +8,7 @@ if __name__ == "__main__":
 
 from hhnk_threedi_tools.git_model_repo.utils.get_git_root import get_git_root
 
-log = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def install_git_hook(repo_path: Path, hook_name: str, script_path: Path, windows: bool = False):
@@ -72,7 +72,7 @@ def install_hooks(git_root_dir: Path):
     if root is None:
         raise ValueError(f"{git_root_dir} is not a git repository")
     if root != git_root_dir:
-        log.warning(f"{git_root_dir} is not the root of a git repository. Changed directory to {root}")
+        logger.warning(f"{git_root_dir} is not the root of a git repository. Changed directory to {root}")
         do_continue = input("Do you want to continue? [y/N]")
         if not do_continue or do_continue[0].lower() != "y":
             exit(1)

@@ -6,7 +6,7 @@ from hhnk_threedi_tools.git_model_repo.utils.restore_gpkg import GeoPackageResto
 from hhnk_threedi_tools.git_model_repo.utils.restore_xlsx import ExcelRestore
 from hhnk_threedi_tools.git_model_repo.utils.rreplace import rreplace
 
-log = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def get_file_names_from_path(path: typing.Union[Path | str]) -> tuple[Path, Path, Path]:
@@ -64,14 +64,14 @@ def restore_files_in_directory(
         root: Path = Path(root)
         # if endswith _gpkg or _xlsx and is empty, remove the directory
         if len(files) == 0 and (str(root).endswith("_gpkg") or str(root).endswith("_xlsx")):
-            log.info("removing empty directory %s", root)
+            logger.info("removing empty directory %s", root)
             root.rmdir()
 
         for file_name in files:
             # if ends on _backup.xlsx or _backup.gpkg, remove the file
             if file_name.endswith("_backup.xlsx") or file_name.endswith("_backup.gpkg"):
                 fn = root / file_name
-                log.info("removing backup file %s", fn)
+                logger.info("removing backup file %s", fn)
                 fn.unlink()
 
         for rel_path in dirs:
@@ -82,9 +82,9 @@ def restore_files_in_directory(
                     if output_file_path is None:
                         tmp_file_path, orig_file_path, backup_file_path = get_file_names_from_path(path)
 
-                        log.info("restoring geopackage %s", orig_file_path)
+                        logger.info("restoring geopackage %s", orig_file_path)
 
-                        log.debug("first restore geopackage from geojson %s", tmp_file_path)
+                        logger.debug("first restore geopackage from geojson %s", tmp_file_path)
                         # restore the geopackage
                         restorer = GeoPackageRestore(path, tmp_file_path)
                         restorer.restore()
@@ -92,13 +92,13 @@ def restore_files_in_directory(
                         # move the restored file to original location and the original (LFS) file to backup location
                         if backup_file_path.exists():
                             backup_file_path.unlink()
-                        log.debug("moving %s to %s", orig_file_path, backup_file_path)
+                        logger.debug("moving %s to %s", orig_file_path, backup_file_path)
                         orig_file_path.rename(backup_file_path)
-                        log.debug("moving %s to %s", tmp_file_path, orig_file_path)
+                        logger.debug("moving %s to %s", tmp_file_path, orig_file_path)
                         tmp_file_path.rename(orig_file_path)
 
                     else:
-                        log.info("restoring geopackage %s", output_file_path)
+                        logger.info("restoring geopackage %s", output_file_path)
                         # restore the geopackage
                         restorer = GeoPackageRestore(path, output_file_path)
                         restorer.restore()
@@ -107,9 +107,9 @@ def restore_files_in_directory(
                     if output_file_path is None:
                         tmp_file_path, orig_file_path, backup_file_path = get_file_names_from_path(path)
 
-                        log.info("restoring excel %s", orig_file_path)
+                        logger.info("restoring excel %s", orig_file_path)
 
-                        log.debug("first restore excel from json %s", tmp_file_path)
+                        logger.debug("first restore excel from json %s", tmp_file_path)
                         # restore the Excel
                         restorer = ExcelRestore(path, tmp_file_path)
                         restorer.restore()
@@ -117,12 +117,12 @@ def restore_files_in_directory(
                         # move the restored file to original location and the original (LFS) file to backup location
                         if backup_file_path.exists():
                             backup_file_path.unlink()
-                        log.debug("moving %s to %s", orig_file_path, backup_file_path)
+                        logger.debug("moving %s to %s", orig_file_path, backup_file_path)
                         orig_file_path.rename(backup_file_path)
-                        log.debug("moving %s to %s", tmp_file_path, orig_file_path)
+                        logger.debug("moving %s to %s", tmp_file_path, orig_file_path)
                         tmp_file_path.rename(orig_file_path)
 
                     else:
-                        log.info("restoring excel %s", output_file_path)
+                        logger.info("restoring excel %s", output_file_path)
                         restorer = ExcelRestore(path, output_file_path)
                         restorer.restore()

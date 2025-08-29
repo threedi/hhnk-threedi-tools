@@ -39,7 +39,7 @@ class TestDumpAndRestoreGeopackage:
     def test_dump_schema_multilayer(self, tmp_path):
         tmp_path = Path(dir)
 
-        dumper = GeoPackageDump(self.test_multilayer_gpgk, tmp_path)
+        dumper = GeoPackageDump(self.test_multilayer_gpkg, tmp_path)
         dumper.dump_schema()
 
         assert (tmp_path / "schema.json").exists()
@@ -55,7 +55,7 @@ class TestDumpAndRestoreGeopackage:
     def test_dump_layers_multilayer(self, tmp_path):
         tmp_path = Path(dir)
 
-        dumper = GeoPackageDump(self.test_multilayer_gpgk, tmp_path)
+        dumper = GeoPackageDump(self.test_multilayer_gpkg, tmp_path)
         dumper.dump_layers()
 
         assert (tmp_path / "points.geojson").exists()
