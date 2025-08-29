@@ -1,6 +1,7 @@
 [project]
 channels = ["conda-forge"]
 name = "hhnk-threedi-tools"
+
 platforms = ["win-64", "linux-64", "osx-arm64"]
 repository = "https://github.com/threedi/hhnk-threedi-tools"
 
@@ -96,10 +97,11 @@ threedi-scenario-downloader = "*"
 threedi_mi_utils = "==0.1.10"
 threedigrid = "==2.3.5"
 threedidepth = "==0.6.3"
-lazy_loader= "*"
 
 # HHNK deps
 hhnk-threedi-tools = { path = ".", editable = true }
+lazy_loader= "*"
+dotenv = "*"
 
 [target.win-64.pypi-dependencies]
 threedigrid-builder = ">=1.24.3"
@@ -132,10 +134,10 @@ pixi-pycharm = ">=0.0.8,<0.0.9"
 # hhnk-research-tools = { path = "../hhnk-research-tools", editable = true }
 build = "*"
 
-
-[feature.test.pypi-dependencies]
-hhnk-research-tools = { git = "https://github.com/hhnk/hhnk-research-tools.git", rev = "main" }
-hydamo_validation = { git = "https://github.com/hhnk/HyDAMOValidatieModule.git", rev = "main" }
+# Unused currently
+# [feature.test.pypi-dependencies]
+# hhnk-research-tools = { git = "https://github.com/hhnk/hhnk-research-tools.git", rev = "main" }
+# hydamo_validation = { git = "https://github.com/hhnk/HyDAMOValidatieModule.git", rev = "main" }
 
 
 # Temporary old py39 env to have working tests
@@ -185,9 +187,11 @@ threedigrid = "==2.3.3" # threedi_results_analysis 3.12.0
 threedidepth = "==0.6.3" # threedi_results_analysis 3.9.0
 hhnk-research-tools = { git = "https://github.com/hhnk/hhnk-research-tools.git", rev = "main" }
 # hydamo_validation = { git = "https://github.com/hhnk/HyDAMOValidatieModule.git", rev = "main" }
+dotenv = "*"
 
 # editable installs
 hhnk_threedi_tools = { path = ".", editable = true }
+
 
 [feature.py39.target.win-64.pypi-dependencies]
 threedigrid_builder = "==1.14.4" # threedi_results_analysis 3.9.2
@@ -196,6 +200,6 @@ threedigrid_builder = "==1.14.4" # threedi_results_analysis 3.9.2
 threedigrid_builder = "==1.14.4" # threedi_results_analysis 3.9.2
 
 [environments]
-dev = ["dev"]
-test = { features=["test"], no-default-feature = false }
-py39 = { features=["py39"], no-default-feature = true }
+default = ["dev"]
+# test = ["test"]
+py39 = { features=["py39"], no-default-feature = true } #required for some tests

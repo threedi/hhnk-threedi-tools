@@ -14,16 +14,16 @@ Used in QGIS with this plugin:
 
 
 # Development Setup
-Development is done in vs-code with Pixi environment.
-To setup the env;
+Development is done in VS-Code with a Pixi environment.
+To setup the env open the cloned hhnk-threedi-tools folder in VS-Code or in a terminal in the folder and execute:\
+`pixi install`\
+`pixi run postinstall` -> does a local install of hhnk-research-tools and HyDAMOValidatieModule. Also installs githooks to do ruff checks before push.
 
-`pixi install -e dev`
-`pixi shell -e dev`
-`pixi run postinstall` -> installs hrt, validatiemodule and githooks
-
+Use `pixi shell` to open the command prompt with the python enviroment initialized.
 
 2025-06 -> migration towards python 3.12.
 Not all checks work yet on 3.12. The github checks therefore run on py39
+
 Tests this locally with
 `pixi run -e py39 tests`
 
@@ -51,3 +51,7 @@ initialize git LFS (Large File Storage), create or append to the .gitattributes 
 # or from other path
 <root of hhnk-treedi-tools repo>/hhnk_threedi_tools/git_model_repo/bin/linux/initialize_repo.sh <path to model repo>
 ```
+
+Tests this locally with\
+`pixi run -e py39 tests`
+

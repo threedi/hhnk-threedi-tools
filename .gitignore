@@ -4,6 +4,7 @@ __pycache__
 *.egg-info
 .ipynb_checkpoints
 .mypy_cache
+.env
 
 build
 dist
@@ -12,6 +13,7 @@ Thumbs.db
 local_settings.py
 local_settings_htt.py
 notebook_data.json
+static_data_paths.json
 debug.log
 
 tests/tests_git_model_repo/tmp_output*
@@ -30,3 +32,10 @@ git_log.log
 .env
 .DS_Store
 .idea
+
+*.log
+project.json
+tests/data/schematisation_builder/test_schematisation_builder
+
+empty.gpkg
+
