@@ -37,7 +37,7 @@ import pandas as pd
 from shapely.geometry import LineString, Point, box
 
 from hhnk_threedi_tools.core.folders import Folders
-from hhnk_threedi_tools.core.results import netcdf_timeseries as net_ts
+from hhnk_threedi_tools.core.results import netcdf_timeseries
 
 DEFAULT_NESS_FP = Path(__file__).parents[2].absolute() / r"resources\netcdf_essentials.csv"
 MINMAX_ELEMENTS = ["u1", "q"]  # TODO use to get both min and max values
@@ -174,14 +174,9 @@ class NetcdfEssentials:
     use_aggregate: bool = False  # NOTE dus ik moet als gebruiker aangeven of ik aggregate result gebruik
 
     # def __post_init__(self):
-    # NOTE wat moet hier?
+    # # NOTE wat moet hier?
 
-    def grid(self) -> Union[net_ts.NetcdfTimeSeries, net_ts.NetcdfAggregateTimeSeries]:
-        """Instance of NetcdfTimeSeries or NetcdfAggregateTimeSeries"""
-        grid = net_ts.NetcdfTimeSeries(threedi_result=self.threedi_result, use_aggregate=self.use_aggregate).grid
-        return grid
-
-    @classmethod
+    @classmethod  # # NOTE deels dubbel met timeseries, kan dat slimmer?
     def from_folder(cls, folder: Folders, threedi_result: hrt.ThreediResult, use_aggregate: bool = False, **kwargs):
         """Initialize from folder structure."""
         waterdeel_path = folder.source_data.damo
@@ -198,6 +193,20 @@ class NetcdfEssentials:
             panden_layer=panden_layer,
             use_aggregate=use_aggregate,
         )
+
+    @property
+    def nc_ts(self):
+        nc_ts = netcdf_timeseries.NetcdfTimeSeries(
+            threedi_result=self.threedi_result, use_aggregate=self.use_aggregate
+        )
+        return nc_ts
+
+    @property
+    def grid(self):  # NOTE dubbel met timeseries, kan dat slimmer?
+        """Instance of threedigrid.admin.gridresultadmin.GridH5ResultAdmin or GridH5AggregateResultAdmin"""
+        if self.use_aggregate is False:
+            return self.threedi_result.grid
+        return self.threedi_result.aggregate_grid
 
     @property
     def ness(self):
@@ -217,6 +226,8 @@ class NetcdfEssentials:
             logger.info(f"Loading default ness from {DEFAULT_NESS_FP}")
         else:
             ness = pd.read_csv(ness_fp)
+            logger.info(f"Loading ness from {ness_fp}")
+
         return ness
 
     def _create_column_base(self, time_seconds) -> str:
@@ -356,7 +367,7 @@ class NetcdfEssentials:
         # Retrieve timeseries for each row in ness
         for i, row in ness.iterrows():
             if row["active"]:
-                data = net_ts.get_ts(
+                data = self.nc_ts.get_ts(
                     attribute=row["attribute"],
                     element=row["element"],
                     subset=row["subset"],
@@ -364,7 +375,7 @@ class NetcdfEssentials:
                 getattr(
                     getattr(self.grid, row["element"])
                     .subset(row["subset"])
-                    .timeseries(indexes=slice(0, len(self.timestamps))),
+                    .timeseries(indexes=slice(0, len(self.nc_ts.timestamps))),
                     row["attribute"],
                 ).T
                 # Replace -9999 with nan values to prevent -9999 being used in replacing values.
@@ -638,7 +649,7 @@ class NetcdfEssentials:
                         # Make pretty column names
                         col_sub = self._create_column_base(time_seconds=key)
                         # Find index of timestep
-                        data_timestep = row["data"][:, self._get_ts_index(time_seconds=key)]
+                        data_timestep = row["data"][:, self.nc_ts.get_ts_index(time_seconds=key)]
                         gdf.insert(
                             getattr(col_idx, row["attribute_name"]),
                             f"{row['attribute_name']}_{col_sub}",
@@ -775,71 +786,6 @@ class NetcdfEssentials:
         else:
             logger.warning(f"Output file {output_file.path} already exists. Set overwrite to True to overwrite.")
 
-
-# %% Working code example small model
-if __name__ == "__main__":
-    from hhnk_threedi_tools import Folders
-
-    folder_path = r"tests\data\model_test"
-    folder = Folders(folder_path)
-
-    user_defined_timesteps = ["max", 3600, 5400]
-    output_file = None
-    ness_fp = None
-    wlvl_correction = True
-    overwrite = True
-    self = NetcdfEssentials.from_folder(
-        folder=folder, threedi_result=folder.threedi_results.batch["batch_test"].downloads.piek_glg_T10.netcdf
-    )
-
-    self.run(
-        output_file=output_file,
-        user_defined_timesteps=user_defined_timesteps,
-        wlvl_correction=wlvl_correction,
-        overwrite=overwrite,
-    )
-
-# %% Performance test (large model including sewerage)
-if __name__ == "__main__":
-    from hhnk_threedi_tools import Folders
-
-    folder_path = r"E:\02.modellen\BWN_Castricum_Integraal_10m"
-    folder = Folders(folder_path)
-    threedi_result = folder.threedi_results.batch["rev1"].downloads.piek_ghg_T1000
-
-    user_defined_timesteps = [3600, 5400]
-    output_file = r"E:\02.modellen\BWN_Castricum_Integraal_10m\test_netcdfessentials_piek_ghg_T1000.gpkg"
-    wlvl_correction = False
-    overwrite = True
-    self = NetcdfEssentials(threedi_result=threedi_result.netcdf, use_aggregate=False)
-    self.run(
-        output_file=output_file,
-        user_defined_timesteps=user_defined_timesteps,
-        wlvl_correction=wlvl_correction,
-        overwrite=overwrite,
-    )
-# NOTE op volle server geeft dit al memory issues, duurt nu 20 s
-
-# %% Working code example with aggregate result TODO
-if __name__ == "__main__":
-    from hhnk_threedi_tools import Folders
-
-    folder_path = r"E:\02.modellen\HKC23010_Eijerland_WP"
-    folder = Folders(folder_path)
-
-    threedi_result = folder.threedi_results.batch["bwn_gxg"].downloads.piek_ghg_T10
-
-    # # get and correct waterlevels
-    #  timesteps_seconds = ["max", 3600, 5400]
-    # grid_gdf = netcdf_gpkg.get_waterlevels(grid_gdf=grid_gdf, timesteps_seconds=timesteps_seconds)
-    # grid_gdf = netcdf_gpkg.correct_waterlevels(grid_gdf=grid_gdf, timesteps_seconds=timesteps_seconds)
-
-    output_file = None
-    wlvl_correction = False
-    overwrite = True
-    self = NetcdfEssentials(threedi_result=threedi_result.netcdf, use_aggregate=True)
-    timesteps_seconds = ["max"]
-    self.run(wlvl_correction=wlvl_correction)
 
 # %% TODO test model zonder maaiveld
 
