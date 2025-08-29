@@ -17,17 +17,17 @@ if __name__ == "__main__":
 
 
 def test_netcdf_timeseries():
-    netcdf_timeseries = netcdf_timeseries.NetcdfTimeSeries.from_folder(
+    netcdf_ts = netcdf_timeseries.NetcdfTimeSeries.from_folder(
         folder=FOLDER_TEST,
         threedi_result=FOLDER_TEST.threedi_results.batch["batch_test"].downloads.piek_glg_T10.netcdf,
     )
 
-    assert netcdf_timeseries.get_ts_index(time_seconds=3600) == 12
+    assert netcdf_ts.get_ts_index(time_seconds=3600) == 12
 
     attribute = "s1"
     element = "nodes"
     subset = "2D_OPEN_WATER"
-    ts = netcdf_timeseries.get_ts(attribute=attribute, element=element, subset=subset)
+    ts = netcdf_ts.get_ts(attribute=attribute, element=element, subset=subset)
 
     assert ts.shape == (422, 577)
 
