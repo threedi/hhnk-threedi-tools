@@ -21,7 +21,7 @@ from hhnk_threedi_tools.core.folders import Folders
 from hhnk_threedi_tools.core.folders_modelbuilder import FoldersModelbuilder
 
 from hhnk_threedi_tools.core.results.netcdf_timeseries import NetcdfTimeSeries
-# from hhnk_threedi_tools.core.results.netcdf_essentials import NetcdfEssentials
+from hhnk_threedi_tools.core.results.netcdf_essentials import NetcdfEssentials
 
 from hhnk_threedi_tools.core.result_rasters.grid_to_raster import GridToWaterDepth, GridToWaterLevel
 from hhnk_threedi_tools.core.result_rasters.grid_to_raster_old import GridToRaster  # TODO deprecate
