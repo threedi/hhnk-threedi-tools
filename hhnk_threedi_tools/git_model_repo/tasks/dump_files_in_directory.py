@@ -82,7 +82,9 @@ def dump_files_in_directory(
                     dumper = GeoPackageDump(str(actual_file_path), str(out_dir))
                     dumper.dump_schema()
                     dumper.dump_layers()
-                    logger.info("Dumped geopackage file '%s', %i changed files", rel_file_path, len(dumper.changed_files))
+                    logger.info(
+                        "Dumped geopackage file '%s', %i changed files", rel_file_path, len(dumper.changed_files)
+                    )
                     changed_files.extend([Path(f) for f in dumper.changed_files])
                 elif file_name.endswith(".xlsx") and excel_dump:
                     out_dir = actual_file_path.parent / rreplace(file_name, ".", "_", 1)
