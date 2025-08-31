@@ -23,7 +23,7 @@ dir = get_local_development_output_dir(clean=True)
 
 class TestDumpAndRestoreGeopackage:
     test_fields_gpkg = Path(__file__).parent / "data" / "test_geopackage.gpkg"
-    test_multilayer_gpgk = Path(__file__).parent / "data" / "test_geopackage_with_multiple_layers.gpkg"
+    test_multilayer_gpkg = Path(__file__).parent / "data" / "test_geopackage_with_multiple_layers.gpkg"
 
     test_fields_geojson_dir = Path(__file__).parent / "data" / "test_fields"
     test_multilayer_geojson_dir = Path(__file__).parent / "data" / "test_multilayer"
