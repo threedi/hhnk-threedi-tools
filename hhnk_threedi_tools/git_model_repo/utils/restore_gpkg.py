@@ -1,6 +1,6 @@
 import json
-from pathlib import Path
 import typing
+from pathlib import Path
 
 import geopandas as gpd
 
