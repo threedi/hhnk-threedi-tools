@@ -1,0 +1,26 @@
+{
+  "points": {
+    "properties": {
+      "id": "int"
+    },
+    "geometry": "Point"
+  },
+  "lines": {
+    "properties": {},
+    "geometry": "LineString"
+  },
+  "multi_polygons": {
+    "properties": {
+      "code": "str"
+    },
+    "geometry": "Polygon"
+  },
+  "no_geom": {
+    "properties": {
+      "id": "int",
+      "code": "str:12",
+      "other_field": "str:12"
+    },
+    "geometry": "None"
+  }
+}

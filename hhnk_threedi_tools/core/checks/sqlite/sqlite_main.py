@@ -19,7 +19,6 @@ import pandas as pd
 import xarray as xr
 from shapely import wkt
 from shapely.geometry import Point
-from threedigrid_builder import make_gridadmin
 
 from hhnk_threedi_tools.core.checks.sqlite.structure_control import StructureControl
 
@@ -117,7 +116,6 @@ DAMO_LINK_ON = "CODE"
 DATACHECKER_FIELDS = ["code", "aanname"]
 DATACHECKER_LINK_ON = "code"
 DATACHECKER_ASSUMPTION_FIELD = "aanname"
-
 
 # weir heights
 OUTPUT_COLS = [
@@ -426,6 +424,10 @@ class SqliteCheck:
 
     def create_grid_from_sqlite(self, output_folder):
         """Create grid from sqlite, this includes cells, lines and nodes."""
+
+        # make package work, also without threedigrid_builder (requires package build which is not always possible)
+        from threedigrid_builder import make_gridadmin
+
         grid = make_gridadmin(self.model.base, self.dem.base)
 
         # using output here results in error, so we use the returned dict
@@ -728,6 +730,5 @@ if __name__ == "__main__":
     database = folder.model.schema_base.database
     self.run_cross_section_no_vertex(database)
     self.verify_inputs("run_imp_surface_area")
-
 
 # %%
