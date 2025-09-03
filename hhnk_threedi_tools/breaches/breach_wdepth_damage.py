@@ -19,6 +19,8 @@ from hhnk_threedi_tools.core.result_rasters.netcdf_to_gridgpkg import NetcdfToGP
 schadeschatter_path = Path(r"E:\01.basisgegevens\hhnk_schadeschatter")
 if str(schadeschatter_path) not in sys.path:
     sys.path.append(str(schadeschatter_path))
+import faulthandler
+faulthandler.enable()
 
 
 # %%
@@ -43,7 +45,7 @@ def grid_selection(grid_gdf, output_scenario_wss):
     # select grids to be used to rasteriezed water depth
     active_cells = grid_gdf[grid_gdf["vol_max"] > 1.5]
 
-    if active_cells.empty == 0:
+    if active_cells.empty:
         print(f"There is no inundation for de polder {output_scenario_wss.parent.name}")
         return None
     else:
@@ -113,7 +115,7 @@ def get_paths(base_folder, scenario_name: list = None, specific_scenario=False, 
 # %%
 def calculate_depth_raster(region_paths, dem_path, OVERWRITE, EPSG, spatialResolution):
     # Set variables for depth raster
-    DEM_location = str(dem_path)
+    DEM_location = (dem_path)
 
     # loop over the pregion_paths
     for region_path in region_paths:
@@ -154,11 +156,14 @@ def calculate_depth_raster(region_paths, dem_path, OVERWRITE, EPSG, spatialResol
             grid_gdf = gpd.read_file(output_file, driver="GPKG", engine="pyogrio")
             print(f"The grid for scenario {breach.name} already exists")
 
-        # clip the DEM to be used to calculate the depth raster
-        clip_DEM(DEM_location, dem_clip_output, EPSG, mask_flood, spatialResolution)
-
+        
         # Check if the output depth raster exists
         if not os.path.exists(output_file_depth):
+            # clip the DEM to be used to calculate the depth raster
+            clip_DEM(DEM_location, dem_clip_output, EPSG, mask_flood, spatialResolution)
+            
+            new_grid_gdf  =gpd.read_file(os.path.join(output_scenario_wss, "new_grid.gpkg"),driver="GPKG", engine="pyogrio")
+
             print(f"Calculating max level raster for scenario {netcdf_folder.parent.name} has started")
             # Set the parameters for the calculator
             calculator_kwargs = {
@@ -168,9 +173,11 @@ def calculate_depth_raster(region_paths, dem_path, OVERWRITE, EPSG, spatialResol
             }
 
             # Initialize the GridToWaterLevel class and run the calculation
-            with GridToWaterLevel(**calculator_kwargs) as self:
+            print("Starting breach_wdepth_damage script...")
+            faulthandler.enable()
+            with GridToWpaterLevel(**calculator_kwargs) as self:
                 self.run(output_file=output_waterlevel_raster, overwrite=True)
-
+            print("Starting breach_wdepth_damage script...")
             calculator_kwargs = {
                 "dem_path": dem_clip_output,
                 "wlvl_path": output_waterlevel_raster,
@@ -231,6 +238,7 @@ def calculate_damage_raster(region_paths, landuse_file, cfg_file, EPSG="EPSG:289
         mask_flood = os.path.join(output_scenario_wss, "mask_flood.gpkg")
         out_landuse = os.path.join(output_scenario_wss, "landuse_2021_clip.vrt")
         depth_file = os.path.join(output_scenario_wss, "max_wdepth_orig.tif")
+        depth_file_out = os.path.join(output_scenario_wss, "max_wdepth_orig_bounds_fix.tif")
 
         open_depth_raster = gdal.Open(depth_file)
         spatialResolution = open_depth_raster.GetGeoTransform()[1]
@@ -238,10 +246,12 @@ def calculate_damage_raster(region_paths, landuse_file, cfg_file, EPSG="EPSG:289
 
         # clip landuse
         clip_DEM(landuse_file, out_landuse, EPSG, mask_flood, spatialResolution)
+        # clip landuse
+        clip_DEM(depth_file, depth_file_out, EPSG, mask_flood, spatialResolution)
 
         # set the file to run damage raster calculation
         self_wss = hrt.Waterschadeschatter(
-            depth_file=Path(depth_file),
+            depth_file=Path(depth_file_out),
             landuse_file=out_landuse,
             wss_settings=wss_settings,
         )
@@ -389,49 +399,47 @@ if __name__ == "__main__":
     spatialResolution = 0.5
 
     # Define scenarios to skip
-    skip = [
-        "ROR-PRI-HONDSBOSSCHE_ZEEWERING_4-T10",
-        "ROR-PRI-HONDSBOSSCHE_ZEEWERING_4-T100",
-        "ROR-PRI-DURGERDAMMERDIJK_0.5-T100000",
-        "ROR-PRI-KATWOUDERZEEDIJK_1-T100000",
-        "ROR-PRI-HELDERSE_ZEEWERING_1.5-T10",
-        "ROR-PRI-HELDERSE_ZEEWERING_4-T10",
-        "ROR-PRI-HELDERSE_ZEEWERING_4-T100",
-        "ROR-PRI-HELDERSE_ZEEWERING_4-T100000",
-        "ROR-PRI-KOEGRASZEEDIJK_(1E_WK)_0.5-T100000",
-        "ROR-PRI-BALGZANDDIJK_3-T3000",
-        "ROR-PRI-BALGZANDDIJK_3_EN_BALGDIJK-T10",
-        "ROR-PRI-BALGZANDDIJK_3_EN_BALGDIJK-T100",
-        "ROR-PRI-BALGZANDDIJK_3_EN_BALGDIJK-T1000",
-        "ROR-PRI-BALGZANDDIJK_3_EN_BALGDIJK-T10000",
-        "ROR-PRI-BALGZANDDIJK_3_EN_BALGDIJK-T100000",
-        "ROR-PRI-BALGZANDDIJK_3_EN_BALGDIJK-T3000",
-        "ROR-PRI-BALGZANDDIJK_7-T10000",
-        "ROR-PRI-DUINEN_TEXEL_2.3-T3000",
-        "ROR-PRI-DUINEN_TEXEL_2.3-T100000",
-        "ROR-PRI-DUINEN_TEXEL_2.3-T10000",
-        "ROR-PRI-DUINEN_TEXEL_2.3-T1000",
-        "ROR-PRI-DUINEN_TEXEL_2.3-T100",
-        "ROR-PRI-DUINEN_TEXEL_2.3-T10",
-        "ROR-PRI-DUINEN_TEXEL_2.2-T3000",
-        "ROR-PRI-DUINEN_TEXEL_2.2-T100000",
-        "ROR-PRI-DUINEN_TEXEL_2.2-T10000",
-        "ROR-PRI-DUINEN_TEXEL_2.2-T1000",
-        "ROR-PRI-DUINEN_TEXEL_21-T10",
-        "ROR-PRI-DUINEN_TEXEL_21-T100",
-        "ROR-PRI-EIJERLANDSE_ZEEDIJK_1-T1000",
-        "ROR-PRI-EIJERLANDSE_ZEEDIJK_1-T10000",
-        "ROR-PRI-EIJERLANDSE_ZEEDIJK_1-T100000",
-        "ROR-PRI-EIJERLANDSE_ZEEDIJK_1-T3000",
-    ]
-
+   
+    skip = []
     # I have to structure better this code, the idea is that it finish everything in one go.
     # So frist: calculate damage, second csv, and the create pgn. This process needs to be done by scenario
-    scenario_name = "ROR-PRI-WATERKERING_ENKHUIZEN_0.5-T10"
+    scenario_name = ['ROR-PRI-HONDSBOSSCHE_ZEEWERING_4-T10',
+ 'ROR-PRI-HONDSBOSSCHE_ZEEWERING_4-T100',
+ 'ROR-PRI-DURGERDAMMERDIJK_0.5-T100000',
+ 'ROR-PRI-KATWOUDERZEEDIJK_1-T100000',
+ 'ROR-PRI-HELDERSE_ZEEWERING_1.5-T10',
+ 'ROR-PRI-HELDERSE_ZEEWERING_4-T10',
+ 'ROR-PRI-HELDERSE_ZEEWERING_4-T100',
+ 'ROR-PRI-HELDERSE_ZEEWERING_4-T100000',
+ 'ROR-PRI-KOEGRASZEEDIJK_(1E_WK)_0.5-T100000',
+ 'ROR-PRI-BALGZANDDIJK_3-T3000',
+#  'ROR-PRI-BALGZANDDIJK_3_EN_BALGDIJK-T10',
+ 'ROR-PRI-BALGZANDDIJK_3_EN_BALGDIJK-T100',
+ 'ROR-PRI-BALGZANDDIJK_3_EN_BALGDIJK-T1000',
+ 'ROR-PRI-BALGZANDDIJK_3_EN_BALGDIJK-T10000',
+ 'ROR-PRI-BALGZANDDIJK_3_EN_BALGDIJK-T100000',
+ 'ROR-PRI-BALGZANDDIJK_3_EN_BALGDIJK-T3000',
+ 'ROR-PRI-BALGZANDDIJK_7-T10000',
+ 'ROR-PRI-DUINEN_TEXEL_2.2-T1000',
+ 'ROR-PRI-DUINEN_TEXEL_2.2-T10000',
+ 'ROR-PRI-DUINEN_TEXEL_2.2-T100000',
+ 'ROR-PRI-DUINEN_TEXEL_2.2-T3000',
+ 'ROR-PRI-DUINEN_TEXEL_2.3-T10',
+ 'ROR-PRI-DUINEN_TEXEL_2.3-T100',
+ 'ROR-PRI-DUINEN_TEXEL_2.3-T1000',
+ 'ROR-PRI-DUINEN_TEXEL_2.3-T10000',
+ 'ROR-PRI-DUINEN_TEXEL_2.3-T100000',
+ 'ROR-PRI-DUINEN_TEXEL_2.3-T3000',
+ 'ROR-PRI-DUINEN_TEXEL_21-T10',
+ 'ROR-PRI-DUINEN_TEXEL_21-T100',
+ 'ROR-PRI-EIJERLANDSE_ZEEDIJK_1-T1000',
+ 'ROR-PRI-EIJERLANDSE_ZEEDIJK_1-T10000',
+ 'ROR-PRI-EIJERLANDSE_ZEEDIJK_1-T100000',
+ 'ROR-PRI-EIJERLANDSE_ZEEDIJK_1-T3000']
     specefic_scenario = True
-    region_paths = get_paths(base_folder, scenario_name=None, specific_scenario=specefic_scenario, skip=skip)
+    region_paths = get_paths(base_folder, scenario_name=scenario_name, specific_scenario=specefic_scenario, skip=skip)
 
-    # calculate_depth_raster(region_paths, dem_path, OVERWRITE, EPSG, spatialResolution)
+    calculate_depth_raster(region_paths, dem_path, OVERWRITE, EPSG, spatialResolution)
     calculate_damage_raster(region_paths, landuse_file, cfg_file, EPSG)
     save_damage_csv(region_paths)
     create_pgn_dagame(region_paths)
