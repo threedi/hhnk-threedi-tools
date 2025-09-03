@@ -20,6 +20,7 @@ schadeschatter_path = Path(r"E:\01.basisgegevens\hhnk_schadeschatter")
 if str(schadeschatter_path) not in sys.path:
     sys.path.append(str(schadeschatter_path))
 import faulthandler
+
 faulthandler.enable()
 
 
@@ -115,7 +116,7 @@ def get_paths(base_folder, scenario_name: list = None, specific_scenario=False, 
 # %%
 def calculate_depth_raster(region_paths, dem_path, OVERWRITE, EPSG, spatialResolution):
     # Set variables for depth raster
-    DEM_location = (dem_path)
+    DEM_location = dem_path
 
     # loop over the pregion_paths
     for region_path in region_paths:
@@ -156,13 +157,14 @@ def calculate_depth_raster(region_paths, dem_path, OVERWRITE, EPSG, spatialResol
             grid_gdf = gpd.read_file(output_file, driver="GPKG", engine="pyogrio")
             print(f"The grid for scenario {breach.name} already exists")
 
-        
         # Check if the output depth raster exists
         if not os.path.exists(output_file_depth):
             # clip the DEM to be used to calculate the depth raster
             clip_DEM(DEM_location, dem_clip_output, EPSG, mask_flood, spatialResolution)
-            
-            new_grid_gdf  =gpd.read_file(os.path.join(output_scenario_wss, "new_grid.gpkg"),driver="GPKG", engine="pyogrio")
+
+            new_grid_gdf = gpd.read_file(
+                os.path.join(output_scenario_wss, "new_grid.gpkg"), driver="GPKG", engine="pyogrio"
+            )
 
             print(f"Calculating max level raster for scenario {netcdf_folder.parent.name} has started")
             # Set the parameters for the calculator
@@ -399,43 +401,45 @@ if __name__ == "__main__":
     spatialResolution = 0.5
 
     # Define scenarios to skip
-   
+
     skip = []
     # I have to structure better this code, the idea is that it finish everything in one go.
     # So frist: calculate damage, second csv, and the create pgn. This process needs to be done by scenario
-    scenario_name = ['ROR-PRI-HONDSBOSSCHE_ZEEWERING_4-T10',
- 'ROR-PRI-HONDSBOSSCHE_ZEEWERING_4-T100',
- 'ROR-PRI-DURGERDAMMERDIJK_0.5-T100000',
- 'ROR-PRI-KATWOUDERZEEDIJK_1-T100000',
- 'ROR-PRI-HELDERSE_ZEEWERING_1.5-T10',
- 'ROR-PRI-HELDERSE_ZEEWERING_4-T10',
- 'ROR-PRI-HELDERSE_ZEEWERING_4-T100',
- 'ROR-PRI-HELDERSE_ZEEWERING_4-T100000',
- 'ROR-PRI-KOEGRASZEEDIJK_(1E_WK)_0.5-T100000',
- 'ROR-PRI-BALGZANDDIJK_3-T3000',
-#  'ROR-PRI-BALGZANDDIJK_3_EN_BALGDIJK-T10',
- 'ROR-PRI-BALGZANDDIJK_3_EN_BALGDIJK-T100',
- 'ROR-PRI-BALGZANDDIJK_3_EN_BALGDIJK-T1000',
- 'ROR-PRI-BALGZANDDIJK_3_EN_BALGDIJK-T10000',
- 'ROR-PRI-BALGZANDDIJK_3_EN_BALGDIJK-T100000',
- 'ROR-PRI-BALGZANDDIJK_3_EN_BALGDIJK-T3000',
- 'ROR-PRI-BALGZANDDIJK_7-T10000',
- 'ROR-PRI-DUINEN_TEXEL_2.2-T1000',
- 'ROR-PRI-DUINEN_TEXEL_2.2-T10000',
- 'ROR-PRI-DUINEN_TEXEL_2.2-T100000',
- 'ROR-PRI-DUINEN_TEXEL_2.2-T3000',
- 'ROR-PRI-DUINEN_TEXEL_2.3-T10',
- 'ROR-PRI-DUINEN_TEXEL_2.3-T100',
- 'ROR-PRI-DUINEN_TEXEL_2.3-T1000',
- 'ROR-PRI-DUINEN_TEXEL_2.3-T10000',
- 'ROR-PRI-DUINEN_TEXEL_2.3-T100000',
- 'ROR-PRI-DUINEN_TEXEL_2.3-T3000',
- 'ROR-PRI-DUINEN_TEXEL_21-T10',
- 'ROR-PRI-DUINEN_TEXEL_21-T100',
- 'ROR-PRI-EIJERLANDSE_ZEEDIJK_1-T1000',
- 'ROR-PRI-EIJERLANDSE_ZEEDIJK_1-T10000',
- 'ROR-PRI-EIJERLANDSE_ZEEDIJK_1-T100000',
- 'ROR-PRI-EIJERLANDSE_ZEEDIJK_1-T3000']
+    scenario_name = [
+        "ROR-PRI-HONDSBOSSCHE_ZEEWERING_4-T10",
+        "ROR-PRI-HONDSBOSSCHE_ZEEWERING_4-T100",
+        "ROR-PRI-DURGERDAMMERDIJK_0.5-T100000",
+        "ROR-PRI-KATWOUDERZEEDIJK_1-T100000",
+        "ROR-PRI-HELDERSE_ZEEWERING_1.5-T10",
+        "ROR-PRI-HELDERSE_ZEEWERING_4-T10",
+        "ROR-PRI-HELDERSE_ZEEWERING_4-T100",
+        "ROR-PRI-HELDERSE_ZEEWERING_4-T100000",
+        "ROR-PRI-KOEGRASZEEDIJK_(1E_WK)_0.5-T100000",
+        "ROR-PRI-BALGZANDDIJK_3-T3000",
+        #  'ROR-PRI-BALGZANDDIJK_3_EN_BALGDIJK-T10',
+        "ROR-PRI-BALGZANDDIJK_3_EN_BALGDIJK-T100",
+        "ROR-PRI-BALGZANDDIJK_3_EN_BALGDIJK-T1000",
+        "ROR-PRI-BALGZANDDIJK_3_EN_BALGDIJK-T10000",
+        "ROR-PRI-BALGZANDDIJK_3_EN_BALGDIJK-T100000",
+        "ROR-PRI-BALGZANDDIJK_3_EN_BALGDIJK-T3000",
+        "ROR-PRI-BALGZANDDIJK_7-T10000",
+        "ROR-PRI-DUINEN_TEXEL_2.2-T1000",
+        "ROR-PRI-DUINEN_TEXEL_2.2-T10000",
+        "ROR-PRI-DUINEN_TEXEL_2.2-T100000",
+        "ROR-PRI-DUINEN_TEXEL_2.2-T3000",
+        "ROR-PRI-DUINEN_TEXEL_2.3-T10",
+        "ROR-PRI-DUINEN_TEXEL_2.3-T100",
+        "ROR-PRI-DUINEN_TEXEL_2.3-T1000",
+        "ROR-PRI-DUINEN_TEXEL_2.3-T10000",
+        "ROR-PRI-DUINEN_TEXEL_2.3-T100000",
+        "ROR-PRI-DUINEN_TEXEL_2.3-T3000",
+        "ROR-PRI-DUINEN_TEXEL_21-T10",
+        "ROR-PRI-DUINEN_TEXEL_21-T100",
+        "ROR-PRI-EIJERLANDSE_ZEEDIJK_1-T1000",
+        "ROR-PRI-EIJERLANDSE_ZEEDIJK_1-T10000",
+        "ROR-PRI-EIJERLANDSE_ZEEDIJK_1-T100000",
+        "ROR-PRI-EIJERLANDSE_ZEEDIJK_1-T3000",
+    ]
     specefic_scenario = True
     region_paths = get_paths(base_folder, scenario_name=scenario_name, specific_scenario=specefic_scenario, skip=skip)
 
