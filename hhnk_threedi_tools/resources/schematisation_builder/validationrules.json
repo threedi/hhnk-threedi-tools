@@ -1803,32 +1803,10 @@
 		},
 		{"object": "combinatiepeilgebied",
 				"general_rules": [
-					{
-						"id": 100,
-						"result_variable": "streefpeil_winter",
-						"function": {
-							"join_parameter": {
-								"join_object": "streefpeil",
-								"join_parameter": "waterhoogte",
-								"fill_value": 0
-							}
-						}
-					},
-					{						
-						"id": 101,
-						"result_variable": "type_streefpeil",
-						"function": {
-							"join_parameter": {
-								"join_object": "streefpeil",
-								"join_parameter": "soortstreefpeil",
-								"fill_value": 0
-							}
-						}
-					}
 				],
 				"validation_rules": [
 					{
-					"id": 0,
+					"id": 100,
 					"name": "streefpeil valt niet buiten min/max",
 					"type": "logic",
 					"validation_rule_set": "hhnk",
@@ -1844,8 +1822,78 @@
 							"inclusive": false
 						}
 					}
+				}, 
+				{
+					"id": 101,
+					"name": "streefpeil winter lager dan streefpeil zomer",
+					"type": "logic",
+					"validation_rule_set": "hhnk",
+					"error_type": "critical",
+					"result_variable": "winter_lt_zomer",
+					"error_message": "streefpeil_winter >= streefpeil_zomer",
+					"active": true,
+					"function": {
+						"LT": {
+							"left": "streefpeil_winter",
+							"right": "streefpeil_zomer"
+						}
+					}
+				},
+				{
+					"id": 102,
+					"name": "zomerpeil binnen onder- en bovengrens",
+					"type": "logic",
+					"validation_rule_set": "hhnk",
+					"error_type": "critical",
+					"result_variable": "zomerpeil_correct",
+					"error_message": "zomerpeil_buiten_grenzen",
+					"active": true,
+					"function": {
+							"BE": {
+							"parameter": "streefpeil_zomer",
+							"min": "streefpeil_zomer_ondergrens",
+							"max": "streefpeil_zomer_bovengrens",
+							"inclusive": true
+						}
+					}
+				},
+				{
+					"id": 103,
+					"name": "winterpeil binnen onder- en bovengrens",
+					"type": "logic",
+					"validation_rule_set": "hhnk",
+					"error_type": "critical",
+					"result_variable": "winterpeil_correct",
+					"error_message": "winterpeil_buiten_grenzen",
+					"active": true,
+					"function": {
+							"BE": {
+							"parameter": "streefpeil_winter",
+							"min": "streefpeil_winter_ondergrens",
+							"max": "streefpeil_winter_bovengrens",
+							"inclusive": true
+						}
+					}
+				},
+				{
+					"id": 104,
+					"name": "Winterpeil lager dan zomerpeil",
+					"type": "logic",
+					"validation_rule_set": "hhnk",
+					"error_type": "critical",
+					"result_variable": "winter_peil_verwacht",
+					"error_message": "winterpeil_niet_lager_dan_zomerpeil",
+					"active": true,
+					"function": {
+							"BE": {
+							"parameter": "streefpeil_winter",
+							"min": "streefpeil_winter",
+							"max": "streefpeil_zomer",
+							"inclusive": true
+						}
+					}
 				}
-				]		
+			]		
 		}
 	]
 }			
