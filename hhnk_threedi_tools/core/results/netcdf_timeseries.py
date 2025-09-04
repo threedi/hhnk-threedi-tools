@@ -148,20 +148,24 @@ class NetcdfTimeSeries:
             elif method == "median":
                 output = np.nanmedian(abs(ts), axis=1)
 
-            # TODO process timestep size in this step!!!!
-            elif method == "sum":
-                output = np.nansum(abs(ts), axis=1)
-            elif method == "sum_pos":
-                # filter negative values
-                ts_pos = ts.copy()
-                ts_pos[ts_pos < 0] = np.nan
-                output = np.nansum(ts_pos, axis=1)
+            if "sum" in method:
+                # find timestep size in seconds, add 0 at start to keep same length
+                timesteps_result = np.diff(np.insert(self.timestamps, 0, 0))
+                ts_summed = ts * timesteps_result  # multiply each column with its timestep size
 
-            elif method == "sum_neg":
-                # filter positive values
-                ts_neg = ts.copy()
-                ts_neg[ts_neg > 0] = np.nan
-                output = np.nansum(ts_neg, axis=1)
+                if method == "sum":
+                    output = np.nansum(abs(ts_summed), axis=1)
+                elif method == "sum_pos":
+                    # filter negative values
+                    ts_sum_pos = ts_summed.copy()
+                    ts_sum_pos[ts_sum_pos < 0] = np.nan
+                    output = np.nansum(ts_sum_pos, axis=1)
+
+                elif method == "sum_neg":
+                    # filter positive values
+                    ts_sum_neg = ts_summed.copy()
+                    ts_sum_neg[ts_sum_neg > 0] = np.nan
+                    output = np.nansum(ts_sum_neg, axis=1)
             return output
 
         else:
