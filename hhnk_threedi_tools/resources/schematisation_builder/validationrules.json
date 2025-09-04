@@ -1801,8 +1801,20 @@
 				}
 			]
 		},
-		{"object": "combinatiepeilgebied",
+		{
+			"object": "combinatiepeilgebied",
 				"general_rules": [
+					{
+					"id": 100,
+					"result_variable": "aantal_intersecties",
+					"function": {
+						"custom_hydamo": {
+							"custom_function_name": "intersected_peilgebieden"
+						}
+					},
+					"description": "verifieert of de profielpunten in oplopende volgorde zijn"
+				}		
+
 				],
 				"validation_rules": [
 					{
@@ -1823,22 +1835,6 @@
 						}
 					}
 				}, 
-				{
-					"id": 101,
-					"name": "streefpeil winter lager dan streefpeil zomer",
-					"type": "logic",
-					"validation_rule_set": "hhnk",
-					"error_type": "critical",
-					"result_variable": "winter_lt_zomer",
-					"error_message": "streefpeil_winter >= streefpeil_zomer",
-					"active": true,
-					"function": {
-						"LT": {
-							"left": "streefpeil_winter",
-							"right": "streefpeil_zomer"
-						}
-					}
-				},
 				{
 					"id": 102,
 					"name": "zomerpeil binnen onder- en bovengrens",

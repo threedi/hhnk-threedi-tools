@@ -63,7 +63,7 @@ class DAMO_to_HyDAMO_Converter:
 
     def __init__(
         self,
-        damo_file_path: os.PathLike,
+        damo_file_path: Union[Path, hrt.SpatialDatabase],
         hydamo_file_path: Union[Path, hrt.SpatialDatabase],
         layers: list[str] = None,
         hydamo_schema_path: Optional[Path] = None,
@@ -80,7 +80,7 @@ class DAMO_to_HyDAMO_Converter:
         else:
             self.logger = hrt.logging.get_logger(__name__)
 
-        self.damo_file_path = Path(damo_file_path)
+        self.damo_file_path = hrt.SpatialDatabase(damo_file_path)
         self.hydamo_file_path = hrt.SpatialDatabase(hydamo_file_path)
         self.layers = layers
         self.overwrite = overwrite
@@ -222,7 +222,8 @@ class DAMO_to_HyDAMO_Converter:
         if self.layers is None:
             self.layers = fiona.listlayers(self.damo_file_path, engine="pyogrio")
 
-        for layer_name in self.layers:
+        # for layer_name in self.layers:
+        for layer_name in self.damo_file_path.available_layers():
             layer_name = layer_name.lower()
             self.logger.info(f"Conversion of {layer_name}")
             if not self.overwrite and self.hydamo_file_path.exists():
@@ -232,7 +233,7 @@ class DAMO_to_HyDAMO_Converter:
                     )
                     return
 
-            layer_gdf = gpd.read_file(self.damo_file_path, layer=layer_name, engine="pyogrio")
+            layer_gdf = gpd.read_file(self.damo_file_path.path, layer=layer_name, engine="pyogrio")
             layer_gdf = self._convert_attributes(layer_gdf, layer_name)
             layer_gdf = self._add_column_NEN3610id(layer_gdf, layer_name)
             if self.add_status_object:
