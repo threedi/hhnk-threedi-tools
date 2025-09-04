@@ -59,6 +59,7 @@ def test_netcdf_essentials():
     assert grid_gdf.shape[0] == 422  # 422 2d nodes
     assert node_gdf.shape[0] == 157  # 157 1d nodes
     assert line_gdf.shape[0] == 291
+    assert meta_gdf["model_slug"][0] == "model_test_v2__1d2d_glg-14"
 
     # Test that error is raised when trying to get waterlevels with invalid timesteps
     with pytest.raises(ValueError):
@@ -78,6 +79,7 @@ def test_netcdf_essentials():
 
     assert int(grid_gdf.loc[1, "wlvl_1h30min"] * 1e5) == 160608
     assert int(grid_gdf.loc[1, "wlvl_corr_1h30min"] * 1e5) == 66456
+    assert int(grid_gdf.loc[1, "rain_sum"]) == 39
 
     # Test run statement
     output_file = TEMP_DIR.joinpath(f"nc_ess_{hrt.current_time('%H%M%S')}.gpkg")
