@@ -25,6 +25,7 @@ of the cell that is covered by water or panden.
 
 """
 
+import json
 import logging
 from dataclasses import dataclass
 from pathlib import Path
@@ -38,9 +39,11 @@ from shapely.geometry import LineString, Point, box
 
 from hhnk_threedi_tools.core.folders import Folders
 from hhnk_threedi_tools.core.results import netcdf_timeseries
+from hhnk_threedi_tools.resources.netcdf_essentials_default import DEFAULT_NESS
 
 DEFAULT_NESS_FP = Path(__file__).parents[2].absolute() / r"resources\netcdf_essentials.csv"
-MINMAX_ELEMENTS = ["u1", "q"]  # TODO use to get both min and max values
+
+logger = hrt.logging.get_logger(__name__)
 
 
 @dataclass
@@ -132,7 +135,7 @@ class NetcdfEssentials:
     user_defined_timesteps : list[int], optional
         List of output timesteps (seconds or "max").
     ness_fp : str, optional
-        Path to netcdf_essentials.csv file with relevant attributes.
+        Path to json file with relevant attributes.
     use_aggregate : bool, default False
         If True, use aggregate NetCDF results.
 
@@ -151,11 +154,8 @@ class NetcdfEssentials:
     append_data(...)
         Insert timeseries data into GeoDataFrames.
     process_ness(ness)
-        Process ness DataFrame to retrieve timeseries and indices.
-    get_output_timesteps(user_defined_timesteps)
-        Set output timesteps for export.
     load_default_ness(ness_fp)
-        Load netcdf_essentials.csv as DataFrame.
+        Load default ness settings as DataFrame.
     _calculate_layer_area_per_cell(...)
         Calculate area and percentage of a layer per grid cell.
     _attronly_schema(df)
@@ -218,14 +218,17 @@ class NetcdfEssentials:
         """Default output if no path is specified."""
         return self.threedi_result.full_path("netcdf_essentials.gpkg")
 
-    def load_default_ness(self, ness_fp=None) -> pd.DataFrame:
+    def load_ness(self, ness_fp=None) -> pd.DataFrame:
         """Load relevant data for HHNK models"""
-        logger = hrt.logging.get_logger(__name__)
+
         if ness_fp is None:
-            ness = pd.read_csv(DEFAULT_NESS_FP)
-            logger.info(f"Loading default ness from {DEFAULT_NESS_FP}")
+            # Convert Ness json to pandas dataframe
+            ness = pd.DataFrame(DEFAULT_NESS)
+            logger.info("Loading default ness from resources.")
         else:
-            ness = pd.read_csv(ness_fp)
+            with open(ness_fp, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            ness = pd.DataFrame(data)
             logger.info(f"Loading ness from {ness_fp}")
 
         return ness
@@ -379,13 +382,11 @@ class NetcdfEssentials:
                     row["attribute"],
                 ).T
                 # Replace -9999 with nan values to prevent -9999 being used in replacing values.
-                data[data == -9999.0] = np.nan
+                data[data == -9999.0] = np.nan  # TODO kan dit weg, zit al in get_ts?
                 # add data as nested array to dataframe
                 ness.at[i, "data"] = data  # noqa: PD008 .loc werkt niet met nested array
                 ness.loc[i, "amount"] = data.shape[0]
-                logger.info(f"Retrieved {row['attribute']} for {data.shape[0]} {row['element']} in {row['subset']}")
 
-        return ness
         return ness
 
     def create_base_gdf(self) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame, gpd.GeoDataFrame, gpd.GeoDataFrame]:
@@ -636,29 +637,44 @@ class NetcdfEssentials:
 
         col_idx = ColumnIdx(gdf=gdf)
         for i, row in ness.iterrows():
+            # if row["attribute"] == 'q':
+            #     break # TODO REMOVE
             if row["active"] and row["geom_type"] == gdf.geometry.geom_type.unique()[0]:
+                # processing user specified timesteps
                 for key in timesteps_seconds_output:
-                    # TODO min negatieve max etc
-                    if key == "max":  # isinstance(time_seconds, str):
-                        gdf.insert(
-                            getattr(col_idx, row["attribute_name"]),
-                            f"{row['attribute_name']}_{key}",
-                            np.nanmax(abs(row["data"]), axis=1),
-                        )
-                    elif isinstance(key, int):
+                    if isinstance(key, int):
                         # Make pretty column names
                         col_sub = self._create_column_base(time_seconds=key)
                         # Find index of timestep
                         data_timestep = row["data"][:, self.nc_ts.get_ts_index(time_seconds=key)]
-                        gdf.insert(
-                            getattr(col_idx, row["attribute_name"]),
-                            f"{row['attribute_name']}_{col_sub}",
-                            data_timestep,
-                        )
+                    elif isinstance(key, str):
+                        logger.debug(f"Adding user specified method: {key} for {row['attribute_name']}")
+                        data_timestep = self.nc_ts.get_ts_methods(method=key, ts=row["data"])
+                        col_sub = key
+
+                    # insert value in gdf
+                    gdf.insert(
+                        getattr(col_idx, row["attribute_name"]),
+                        f"{row['attribute_name']}_{col_sub}",
+                        data_timestep,
+                    )
+                # processing default methods from ness
+                for method in row["methods"]:
+                    if method in timesteps_seconds_output:
+                        continue  # already processed
+                    else:
+                        logger.debug(f"Adding default method: {method} for {row['attribute_name']}")
+                        data_method = self.nc_ts.get_ts_methods(method=method, ts=row["data"])
+
+                    gdf.insert(
+                        getattr(col_idx, row["attribute_name"]),
+                        f"{row['attribute_name']}_{method}",
+                        data_method,
+                    )  # TODO waarom sum neg altijd als 0 weggeschreven?
 
         return gdf
 
-    def correct_waterlevels(self, grid_gdf, timesteps_seconds_output: list):  # TODO move to correct waterlevels
+    def correct_waterlevels(self, grid_gdf, timesteps_seconds_output: list):  # TODO move to correct waterlevels?
         """Correct the waterlevel for the given timesteps. Results are only corrected
         for cells where the 'replace_all' value is not False.
         """
@@ -748,7 +764,7 @@ class NetcdfEssentials:
         if create:
             timesteps_seconds_output = self.get_output_timesteps(user_defined_timesteps)
 
-            ness = self.load_default_ness(ness_fp=ness_fp)
+            ness = self.load_ness(ness_fp=ness_fp)
             ness = self.process_ness(ness=ness)
 
             grid_gdf, node_gdf, line_gdf, meta_gdf = self.create_base_gdf()
@@ -787,6 +803,71 @@ class NetcdfEssentials:
             logger.warning(f"Output file {output_file.path} already exists. Set overwrite to True to overwrite.")
 
 
+# TODO remove below
+# %% Working code example small model
+if __name__ == "__main__":
+    from hhnk_threedi_tools import Folders
+
+    folder_path = r"tests\data\model_test"
+    folder = Folders(folder_path)
+
+    user_defined_timesteps = ["max", 3600, 5400]
+    output_file = None
+    ness_fp = None
+    wlvl_correction = True
+    overwrite = True
+    self = NetcdfEssentials.from_folder(
+        folder=folder, threedi_result=folder.threedi_results.batch["batch_test"].downloads.piek_glg_T10.netcdf
+    )
+
+    self.run(
+        output_file=output_file,
+        user_defined_timesteps=user_defined_timesteps,
+        wlvl_correction=wlvl_correction,
+        overwrite=overwrite,
+    )
+
+# %% Performance test (large model including sewerage)
+if __name__ == "__main__":
+    from hhnk_threedi_tools import Folders
+
+    folder_path = r"E:\02.modellen\BWN_Castricum_Integraal_10m"
+    folder = Folders(folder_path)
+    threedi_result = folder.threedi_results.batch["rev1"].downloads.piek_ghg_T1000
+
+    user_defined_timesteps = [3600, 5400]
+    output_file = r"E:\02.modellen\BWN_Castricum_Integraal_10m\test_netcdfessentials_piek_ghg_T1000.gpkg"
+    wlvl_correction = False
+    overwrite = True
+    self = NetcdfEssentials(threedi_result=threedi_result.netcdf, use_aggregate=False)
+    self.run(
+        output_file=output_file,
+        user_defined_timesteps=user_defined_timesteps,
+        wlvl_correction=wlvl_correction,
+        overwrite=overwrite,
+    )
+# NOTE op volle server geeft dit al memory issues, duurt nu 20 s
+
+# %% Working code example with aggregate result TODO
+if __name__ == "__main__":
+    from hhnk_threedi_tools import Folders
+
+    folder_path = r"E:\02.modellen\HKC23010_Eijerland_WP"
+    folder = Folders(folder_path)
+
+    threedi_result = folder.threedi_results.batch["bwn_gxg"].downloads.piek_ghg_T10
+
+    # # get and correct waterlevels
+    #  timesteps_seconds = ["max", 3600, 5400]
+    # grid_gdf = netcdf_gpkg.get_waterlevels(grid_gdf=grid_gdf, timesteps_seconds=timesteps_seconds)
+    # grid_gdf = netcdf_gpkg.correct_waterlevels(grid_gdf=grid_gdf, timesteps_seconds=timesteps_seconds)
+
+    output_file = None
+    wlvl_correction = False
+    overwrite = True
+    self = NetcdfEssentials(threedi_result=threedi_result.netcdf, use_aggregate=True)
+    timesteps_seconds = ["max"]
+    self.run(wlvl_correction=wlvl_correction)
 # %% TODO test model zonder maaiveld
 
 # %% TODO test model met bressen

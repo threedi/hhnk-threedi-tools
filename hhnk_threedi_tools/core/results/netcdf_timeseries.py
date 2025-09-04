@@ -6,12 +6,33 @@ import numpy as np
 
 from hhnk_threedi_tools.core.folders import Folders
 
+"""Module for handling timeseries data from 2D netCDF results.
+
+Classes
+-------
+NetcdfTimeSeries
+    Class to manage and retrieve timeseries data from netCDF results.
+
+Methods
+-------
+get_ts(attribute, element, subset)
+    Retrieve timeseries data for a specific attribute, element type, and subset.    
+get_ts_index(time_seconds)
+    Retrieve the index of a specific time in seconds.
+get_output_timesteps(user_defined_timesteps)
+    Convert user defined output timesteps to timestep in ncdf indices.
+
+"""
+AVAILABLE_METHODS = ["mean", "median", "max", "max_abs", "min", "sum", "sum_pos", "sum_neg"]
+logger = hrt.logging.get_logger(__name__)
+
 
 @dataclass
 class NetcdfTimeSeries:
     """Timeseries contained in a netcdf"""
 
     threedi_result: hrt.ThreediResult  # type threedigrid.admin.gridresultadmin.GridH5ResultAdmin
+    user_defined_timesteps: list[int] | None = None
     use_aggregate: bool = False
 
     def __post_init__(self):
@@ -67,7 +88,6 @@ class NetcdfTimeSeries:
         np.ndarray
             A 2D numpy array with shape (number of elements, number of timestamps).
         """
-        logger = hrt.logging.get_logger(__name__)
 
         # TODO check if attribute, element and subset are valid
 
@@ -101,6 +121,51 @@ class NetcdfTimeSeries:
             )
 
         return ts_indx
+
+    def get_ts_methods(self, method: str, ts: np.ndarray) -> np.ndarray:
+        """
+        Get value from data using specified method.
+
+        Parameters
+        ----------
+        method : str
+            The method to apply to the timeseries data. Options include:
+            'mean', 'median', 'max', 'max_abs', 'min', 'min_abs', 'sum', 'sum_pos', 'sum_neg'.
+        ts : np.ndarray
+            A 2D numpy array with shape (number of elements, number of timestamps).
+        """
+
+        if method in AVAILABLE_METHODS:
+            # handle method for timeseries
+            if method == "max":
+                output = np.nanmax(ts, axis=1)
+            if method == "max_abs":
+                output = np.nanmax(abs(ts), axis=1)
+            elif method == "min":
+                output = np.nanmin(ts, axis=1)
+            elif method == "mean":
+                output = np.nanmean(abs(ts), axis=1)
+            elif method == "median":
+                output = np.nanmedian(abs(ts), axis=1)
+
+            # TODO process timestep size in this step!!!!
+            elif method == "sum":
+                output = np.nansum(abs(ts), axis=1)
+            elif method == "sum_pos":
+                # filter negative values
+                ts_pos = ts.copy()
+                ts_pos[ts_pos < 0] = np.nan
+                output = np.nansum(ts_pos, axis=1)
+
+            elif method == "sum_neg":
+                # filter positive values
+                ts_neg = ts.copy()
+                ts_neg[ts_neg > 0] = np.nan
+                output = np.nansum(ts_neg, axis=1)
+            return output
+
+        else:
+            logger.error(f"Key {method} not recognized, should be int or any of {AVAILABLE_METHODS}.")
 
 
 # %%

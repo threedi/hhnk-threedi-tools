@@ -43,7 +43,7 @@ def test_netcdf_essentials():
     )
 
     # Load timeseries data from netcdf into ness dataframe
-    ness = netcdf_gpkg.load_default_ness()
+    ness = netcdf_gpkg.load_ness()
     ness = netcdf_gpkg.process_ness(ness=ness)
 
     # Check data is loaded correctly
@@ -80,7 +80,7 @@ def test_netcdf_essentials():
     assert int(grid_gdf.loc[1, "wlvl_corr_1h30min"] * 1e5) == 66456
 
     # Test run statement
-    output_file = TEMP_DIR.joinpath(f"grid_wlvl_{hrt.current_time('%H%M%S')}.gpkg")
+    output_file = TEMP_DIR.joinpath(f"nc_ess_{hrt.current_time('%H%M%S')}.gpkg")
     netcdf_gpkg.run(output_file=output_file)
 
     assert output_file.exists()
