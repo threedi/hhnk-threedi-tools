@@ -12,7 +12,7 @@ import pandas as pd
 from dotenv import load_dotenv
 from hhnk_research_tools.sql_functions import (
     database_to_gdf,
-    get_table_domains_from_oracle,
+    get_tables_from_oracle_db,
     sql_builder_select_by_id_list_statement,
     sql_builder_select_by_location,
 )
@@ -206,7 +206,7 @@ def update_table_domains(
     logger = hrt.logging.get_logger(__name__)
 
     # Retrieve available domains
-    domains = get_table_domains_from_oracle(
+    domains = get_tables_from_oracle_db(
         db_dict=db_dict,
         schema=schema,
         table_name=table_name,
