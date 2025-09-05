@@ -94,6 +94,9 @@ def make_validated_hydamo_package(
         # Conversion to HyDAMO
         logger.info(f"DAMO export was succesfull. Now, start conversion to HyDAMO for file: {polder_file_path}")
 
+        # add polder polygon to damo file path
+        gdf_polder.to_file(damo_file_path, layer="polder", driver="GPKG")
+
         converter = DAMO_to_HyDAMO_Converter(
             damo_file_path=damo_file_path,
             damo_version=damo_version,
@@ -166,7 +169,7 @@ if __name__ == "__main__":
 
     # select which tables names to export from DAMO
     # only 'main'tables have to be selected (like "GEMAAL"), so no 'sub' tables (like "POMP")
-    TABLE_NAMES = ["HYDROOBJECT", "DUIKERSIFONHEVEL", "GEMAAL", "COMBINATIEPEILGEBIED"]
+    TABLE_NAMES = ["HYDROOBJECT", "GEMAAL", "COMBINATIEPEILGEBIED"]
 
     # run the function to create a validated HyDAMO package
     make_validated_hydamo_package(project_folder, polder_polygon_path, TABLE_NAMES)
