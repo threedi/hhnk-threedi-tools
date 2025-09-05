@@ -1812,9 +1812,18 @@
 							"custom_function_name": "intersected_peilgebieden"
 						}
 					},
-					"description": "verifieert of de profielpunten in oplopende volgorde zijn"
-				}		
-
+					"description": "controler als de peilgebieden van een combinatiepeilgebied elkaar niet overlappen"
+					},
+					{
+					"id": 101,
+					"result_variable": "intersectie_codes",
+					"function": {
+						"custom_hydamo": {
+							"custom_function_name": "intersected_peilgebieden"
+						}
+					},
+					"description": "controler als de peilgebieden van een combinatiepeilgebied elkaar niet overlappen"
+					}
 				],
 				"validation_rules": [
 					{
@@ -1895,13 +1904,13 @@
 					"type": "logic",
 					"validation_rule_set": "hhnk",
 					"error_type": "critical",
-					"result_variable": "intersectiepeilgebieden",
+					"result_variable": "Geïntersecteerd_peilgebied",
 					"error_message": "peilgebieden overlappen",
 					"active": true,
 					"function": {
 							"GT": {
-							"left": 1,
-							"right": "aantal_intersecties"
+							"left": "aantal_intersecties",
+							"right": 1
 						}
 					}
 				}
