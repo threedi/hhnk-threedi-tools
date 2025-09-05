@@ -8,7 +8,7 @@ from hhnk_threedi_tools.resources import schematisation_builder as sb_resources
 
 
 # %%
-def export_validation_rules_overview():
+def export_new_validation_rules_and_functions_overview():
     json_path = hrt.get_pkg_resource_path(sb_resources, "validationrules.json")
     with open(json_path) as f:
         rules = json.load(f)
@@ -46,6 +46,32 @@ def export_validation_rules_overview():
     df.to_csv(output_path, index=False)
 
 
+def export_validation_rules_overview(rule_set: str = "basic"):
+    json_path = hrt.get_pkg_resource_path(sb_resources, "validationrules.json")
+    with open(json_path) as f:
+        rules = json.load(f)
+
+    rows = []
+
+    for obj in rules["objects"]:
+        for rule in obj["validation_rules"]:
+            if rule["validation_rule_set"] == rule_set:
+                rows.append(
+                    {
+                        "id": int(rule["id"]),
+                        "laag": obj["object"],
+                        "type_functie": "validation rules",
+                        "naam": rule["name"],
+                    }
+                )
+
+    df = pd.DataFrame(rows, columns=["id", "laag", "type_functie", "naam"])
+    output_path = hrt.get_pkg_resource_path(sb_resources, f"{rule_set}_validationrules.csv")
+    df.to_csv(output_path, index=False)
+
+
 # %%
 if __name__ == "__main__":
-    export_validation_rules_overview()
+    export_new_validation_rules_and_functions_overview()
+    export_validation_rules_overview("basic")
+# %%

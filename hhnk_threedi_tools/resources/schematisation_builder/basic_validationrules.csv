@@ -1,0 +1,61 @@
+id,laag,type_functie,naam
+0,profiellijn,validation rules,Profiel moet intersecten met een waterlijn
+0,duikersifonhevel,validation rules,BOK bovenstrooms plausibel (-8m - maaiveld)
+1,duikersifonhevel,validation rules,BOK benedenstrooms plausibel (-8m - maaiveld)
+2,duikersifonhevel,validation rules,BOK bovenstrooms onder maaiveld
+3,duikersifonhevel,validation rules,BOK benedenstrooms onder maaiveld
+4,duikersifonhevel,validation rules,Lengte groter dan 1 m
+5,duikersifonhevel,validation rules,Een ronde duikersifonhevel heeft een breedte die gelijk is aan de hoogte
+6,duikersifonhevel,validation rules,Dit object moet precies samenvallen met het hydroobject
+7,duikersifonhevel,validation rules,Het bodemverhang van een duiker moet liggen tussen -2 cm/m (omhoog) en 5 cm/m (omlaag)
+8,duikersifonhevel,validation rules,Het bodemverval over een duiker mag niet groter zijn dan 50 cm
+9,duikersifonhevel,validation rules,Een duikersifonhevel zal geen overlap met een andere duikersifonhevel hebben
+10,duikersifonhevel,validation rules,De BOK bovenstrooms mag slechts minimaal lager liggen dan de bovenstroomse bodemhoogte van het hydroobject
+11,duikersifonhevel,validation rules,De BOK benedenstrooms mag slechts minimaal lager liggen dan de bendenstroomse bodemhoogte van het hydroobject
+0,regelmiddel,validation rules,minimalehoogtebovenkant plausibel (-8m - 325m)
+1,regelmiddel,validation rules,maximalehoogtebovenkant plausibel (-8m - 325m)
+2,regelmiddel,validation rules,hoogte plausibel (10cm - 10m)
+3,regelmiddel,validation rules,breedte plausibel (30cm - 50m)
+4,regelmiddel,validation rules,De minimale hoogteopening van een regelmiddel is groter of gelijk aan nul
+5,regelmiddel,validation rules,De maximalehoogteopening bij een onderlaat zou kleiner of gelijk zijn aan de hoogte van de kunstwerkopening laagstedoormstroomhoogte
+6,regelmiddel,validation rules,De minimale hoogte van een overlaat zou hoger moeten zijn dan de laagstedoorstroomhoogte van de kunstwerkopening
+7,regelmiddel,validation rules,De maximale hoogte van een overlaat zou lager moeten zijn dan de hoogstedoorstroomhoogte van de kunstwerkopening
+0,kunstwerkopening,validation rules,hoogstedoorstroomhoogte plausibel (-8m - 325m)
+1,kunstwerkopening,validation rules,laagstedoorstroomhoogte plausibel (-8m - 325m)
+2,kunstwerkopening,validation rules,"De laagste doorstroombreedte moet kleiner zijn dan de hoogste doorstroombreedte, bij een driehoekige of trapeziumvormige opening"
+3,kunstwerkopening,validation rules,De laagste doorstroomhoogte moet kleiner zijn dan de hoogste doorstroomhoogte
+4,kunstwerkopening,validation rules,"Is de vorm opening niet driehoekig, trapezium- of heulvormig, dan moeten de laagste en hoogste doorstroombreedtes gelijk zijn aan elkaar"
+0,stuw,validation rules,Constructie hoogte plausibel (-8m - 325m)
+1,stuw,validation rules,Constructie moet lager liggen dan omringend maaiveld
+2,stuw,validation rules,De kruinbreedte moet groter dan 0.3 zijn
+3,stuw,validation rules,Afstand tot as watergang moet kleiner zijn dan 1 meter
+4,stuw,validation rules,kruinbreedte is groter of gelijk aan de doorstroombreedte
+5,stuw,validation rules,De hoogste doorstroomhoogte van de kunstwerkopening zal lager of gelijk zijn aan de constructiehoogte
+6,stuw,validation rules,Er mogen niet meerdere stuwen op (nagenoeg) dezelfde locatie liggen
+7,stuw,validation rules,Een regelbare stuw heeft minimaal 1 kunstwerkopening waaraan een regelmiddel is gekoppeld
+8,stuw,validation rules,Een stuw zal geen overlap met een andere stuw hebben
+0,brug,validation rules,hoogtebovenzijde plausibel (-8m - 325m)
+1,brug,validation rules,hoogteonderzijde plausibel (-8m - 325m)
+2,brug,validation rules,lengte plausibel (1m - 30m)
+3,brug,validation rules,Een brug moet een plausibele laagste doorstroombreedte hebben
+4,brug,validation rules,Een brug moet een plausibele hoogste doorstroombreedte hebben
+0,pomp,validation rules,De capaciteit groter dan 0
+0,gemaal,validation rules,Het aantal pompen is groter dan nul
+1,gemaal,validation rules,Totale capaciteit is groter dan nul
+2,gemaal,validation rules,Een gemaal zal geen overlap met een ander gemaal hebben
+0,hydroobject,validation rules,Hydroobject heeft voldoende lengte voor modelverwerking
+1,hydroobject,validation rules,Een hydroobject wordt gescheiden bij een samenkomst of opsplitsing
+2,hydroobject,validation rules,Hydroobject kruist zichzelf alleen in combinatie met een duikersifonhevel of aquaduct
+3,hydroobject,validation rules,"Hydroobject vormt een consistent geheel, er zijn geen ""doodlopende"" routes"
+4,hydroobject,validation rules,"Waar een hydroobject een grens van een peilgebiedpraktijk doorkruist, moet een peilscheidend kunstwerk liggen"
+5,hydroobject,validation rules,"Een stuw, gemaal of bodemval moet een hydroobject opsplitsen"
+6,hydroobject,validation rules,"Waar een hydroobject een grens van een peilafwijkinggebied doorkruist, moet een peilscheidend kunstwerk liggen"
+0,sturing,validation rules,Er mag geen overlap of gat in de periode zitten van meerdere sturingen met dezelfde prioriteit per gestuurd object
+1,sturing,validation rules,de gestuurde pomp moet bestaan
+2,sturing,validation rules,het regelmiddel moet bestaan
+3,sturing,validation rules,de gestuurde hydrologische randvoorwaarde moet bestaan
+4,sturing,validation rules,vaste waarde pomp zal binnen het fysieke bereik van de stuurvariabele passen
+5,sturing,validation rules,vaste waarde onderlaat zal binnen het fysieke bereik van de stuurvariabele passen
+6,sturing,validation rules,vaste waarde overlaat zal binnen het fysieke bereik van de stuurvariabele passen
+7,sturing,validation rules,gestuurde pomp heeft juiste stuurvariabele
+8,sturing,validation rules,gestuurde regelmiddel heeft juiste stuurvariabele

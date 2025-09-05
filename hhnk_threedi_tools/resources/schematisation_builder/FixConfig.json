@@ -1,0 +1,78 @@
+{
+	"schema": "1.5",
+	"hydamo_version": "2.2",
+    "objects":[
+    {
+        "object": "profiellijn",
+        "validation_rule":[
+        {
+            "validation_rule_id": 103,
+            "validation_rule_name": "Jaar inwinning niet ouder dan 2009",
+            "result_variable":  "jaarminwinning_niet_ouder_dan_2009",
+            "fixes": [
+                {
+                    "validatiefix_id": 1,
+                    "validatiefix_name": "remove_old_profiles",
+                    "validatieregel_id": 103,
+                    "parameters": []
+                },
+                {
+                    "validatiefix_id": 2,
+                    "validatiefix_name": "verwijderingen naar niet-bestaande profielen",
+                    "parameters": [
+                        {
+                            "parameter_naam": "buffer",
+                            "parameter_waarde": 0.1,
+                            "related_object": "hydroobject"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "validation_rule_id": 104,
+            "validation_rule_name": "Geen dubbele profielen",
+            "result_variable":  "geen_dubbele_profielen",
+            "fixes": [
+                {
+                    "validatiefix_id": 1,
+                    "validatiefix_name": "remove_duplicate_profiles",
+                    "validatieregel_id": 104,
+                    "parameters": []
+                }
+            ]
+        }
+    ]
+    },
+    {
+        "object": "hydroobject",
+       "validation_rule":[
+        {
+            "validation_rule_id": 103,
+            "validation_rule_name": "Jaar inwinning niet ouder dan 2009",
+            "result_variable":  "jaarminwinning_niet_ouder_dan_2009",
+            "fixes": [
+                {
+                    "validatiefix_id": 1,
+                    "validatiefix_name": "remove_old_profiles",
+                    "validatieregel_id": 103,
+                    "parameters": []
+                },
+                {
+                    "validatiefix_id": 2,
+                    "validatiefix_name": "verwijderingen naar niet-bestaande profielen",
+                    "parameters": [
+                        {
+                            "parameter_naam": "buffer",
+                            "parameter_waarde": 0.1,
+                            "related_object": "hydroobject"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+    }
+    ]
+
+}
