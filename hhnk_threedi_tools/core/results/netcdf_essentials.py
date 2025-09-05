@@ -64,7 +64,6 @@ class ColumnIdx:
         Returns the index for inserting a column matching the search pattern.
     Properties for common column types:
         wlvl, wlvl_corr, diff, vol, infilt, incept, rain, q, u1, storage
-    TODO uitbreiden met extra elementen
     """
 
     gdf: gpd.GeoDataFrame
@@ -167,16 +166,14 @@ class NetcdfEssentials:
     waterdeel_layer: str = None
     panden_path: str = None
     panden_layer: str = None
-    user_defined_timesteps: list[int] = (
-        None  # TODO ik ga max altijd opslaan bij q en u moet nog iets met abs en een richting
-    )
+    user_defined_timesteps: list[int] = None
     ness_fp: str = None
-    use_aggregate: bool = False  # NOTE dus ik moet als gebruiker aangeven of ik aggregate result gebruik
+    use_aggregate: bool = False  # NOTE dus ik moet als gebruiker aangeven of ik aggregate result gebruik? Liever gebruiken als geschikbaar.
 
     # def __post_init__(self):
-    # # NOTE wat moet hier?
+    # # TODO wat moet hier?
 
-    @classmethod  # # NOTE deels dubbel met timeseries, kan dat slimmer?
+    @classmethod  # # TODO deels dubbel met timeseries, kan dat slimmer?
     def from_folder(cls, folder: Folders, threedi_result: hrt.ThreediResult, use_aggregate: bool = False, **kwargs):
         """Initialize from folder structure."""
         waterdeel_path = folder.source_data.damo
@@ -216,7 +213,7 @@ class NetcdfEssentials:
     @property
     def output_default(self):
         """Default output if no path is specified."""
-        return self.threedi_result.full_path("netcdf_essentials.gpkg")
+        return self.threedi_result.full_path("threedi_results.gpkg")
 
     def load_ness(self, ness_fp=None) -> pd.DataFrame:
         """Load relevant data for HHNK models"""
@@ -250,7 +247,7 @@ class NetcdfEssentials:
                     col_base = f"{int(np.floor(timestep_h))}h{int((timestep_h % 1) * 60)}min"
         return col_base
 
-    def _calculate_layer_area_per_cell(  # TODO move to correct waterlevels
+    def _calculate_layer_area_per_cell(  # TODO move to correct waterlevels?
         self,
         grid_gdf: gpd.GeoDataFrame,
         layer_path: Union[Path, hrt.File],
@@ -381,8 +378,6 @@ class NetcdfEssentials:
                     .timeseries(indexes=slice(0, len(self.nc_ts.timestamps))),
                     row["attribute"],
                 ).T
-                # Replace -9999 with nan values to prevent -9999 being used in replacing values.
-                data[data == -9999.0] = np.nan  # TODO kan dit weg, zit al in get_ts?
                 # add data as nested array to dataframe
                 ness.at[i, "data"] = data  # noqa: PD008 .loc werkt niet met nested array
                 ness.loc[i, "amount"] = data.shape[0]
@@ -499,7 +494,7 @@ class NetcdfEssentials:
             line_gdf["exchange_level"] = self.grid.lines.subset("1D_All").dpumax
             line_gdf["line_type_kcu"] = self.grid.lines.subset("1D_All").kcu
             line_gdf["start_node"] = self.grid.lines.subset("1D_All").line[0]
-            line_gdf["end_node"] = self.grid.lines.subset("1D_All").line[1]  # TODO check start and end node
+            line_gdf["end_node"] = self.grid.lines.subset("1D_All").line[1]
             line_gdf["zoom_category"] = self.grid.lines.subset("1D_All").zoom_category
 
             logger.info(f"Created {len(node_gdf)} lines.")
@@ -537,7 +532,7 @@ class NetcdfEssentials:
         replace_dem_below_perc: float = 50,
         replace_water_above_perc: float = 95,
         replace_pand_above_perc: float = 99,
-    ) -> gpd.GeoDataFrame:  # TODO move to correct waterlevels
+    ) -> gpd.GeoDataFrame:  # TODO move to correct waterlevels?
         """Determine which cells should have their waterlevel replaced by their neighbours.
 
         Parameters
@@ -637,8 +632,6 @@ class NetcdfEssentials:
 
         col_idx = ColumnIdx(gdf=gdf)
         for i, row in ness.iterrows():
-            # if row["attribute"] == 'q':
-            #     break # TODO REMOVE
             if row["active"] and row["geom_type"] == gdf.geometry.geom_type.unique()[0]:
                 # processing user specified timesteps
                 for key in timesteps_seconds_output:
@@ -670,7 +663,7 @@ class NetcdfEssentials:
                         getattr(col_idx, row["attribute_name"]),
                         f"{row['attribute_name']}_{method}",
                         data_method,
-                    )  # TODO waarom sum neg altijd als 0 weggeschreven?
+                    )
 
         return gdf
 
@@ -846,9 +839,9 @@ if __name__ == "__main__":
         wlvl_correction=wlvl_correction,
         overwrite=overwrite,
     )
-# NOTE op volle server geeft dit al memory issues, duurt nu 20 s
+# NOTE op volle server geeft dit al memory issues, duurt nu 1m 40 s
 
-# %% Working code example with aggregate result TODO
+# %% Working code example with aggregate result # TODO aggregate
 if __name__ == "__main__":
     from hhnk_threedi_tools import Folders
 
