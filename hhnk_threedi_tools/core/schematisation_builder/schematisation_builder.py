@@ -82,7 +82,7 @@ def make_validated_hydamo_package(
         logger.info(f"DAMO export was succesfull. Now, start conversion to HyDAMO for file: {polder_file_path}")
 
         # add polder polygon to damo file path
-        gdf_polder.to_file(damo_file_path, layer="polder_polygon", driver="GPKG")
+        gdf_polder.to_file(damo_file_path, layer="polder", driver="GPKG")
 
         converter = DAMO_to_HyDAMO_Converter(
             damo_file_path=damo_file_path,
