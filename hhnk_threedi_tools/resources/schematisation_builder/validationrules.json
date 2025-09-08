@@ -1359,6 +1359,26 @@
 							"fill_value": 0
 						}
 					}
+				},
+				{
+					"id": 100,
+					"result_variable": "distance_to_peilgebied",
+					"function": {
+						"custom_hydamo": {
+							"custom_function_name": "distance_to_peilgebied"
+						}
+					},
+					"description": "Calculate the distance from each gemaal to the nearest peilgebied"
+				},
+				{
+					"id": 101,
+					"result_variable": "aantal_peilgebieden",
+					"function": {
+						"custom_hydamo": {
+							"custom_function_name": "gemaal_streefpeil_value"
+						}
+					},
+					"description": "Calculate the distance from each gemaal to the nearest peilgebied"
 				}
 			],
 			"validation_rules": [
@@ -1445,7 +1465,7 @@
 				},
 				{
 					"id": 103,
-					"name": "Waar een gemaal een grens van een peilgebiedpraktijk doorkruist, moet een peilscheidend kunstwerk liggen",
+					"name": "Gemaalgrens Kunstwerk moet op peilscheiding liggen",
 					"type": "topologic",
 					"validation_rule_set": "hhnk",
 					"error_type": "critical",
@@ -1465,7 +1485,7 @@
 				},
 				{
 					"id": 104,
-					"name": "afstand tot as peilgebied minder than 10 cm",
+					"name": "afstand_to_peilgebied",
 					"type": "logic",
 					"validation_rule_set": "hhnk",
 					"error_type": "critical",
@@ -1475,28 +1495,12 @@
 					"function": {
 						"LE": {
 							"left": "distance_to_peilgebied",
-							"right": 0.01
+							"right": "0.01"
 						}
 					}
 				},
 				{
 					"id": 105,
-					"name": "gemaal functie type validation",
-					"type": "logic",
-					"validation_rule_set": "hhnk",
-					"error_type": "non-critical",
-					"result_variable": "gemaal_functie_type_4",
-					"error_message": "gemaal type anders",
-					"active": true,
-					"function": {
-						"EQ": {
-							"left": "gemaal_functie_test",
-							"right": "functiegemaalcode_damo"
-						}
-					}
-				},
-				{
-					"id": 106,
 					"name": "aantal peilgebieden per gemaal",
 					"type": "logic",
 					"validation_rule_set": "hhnk",
