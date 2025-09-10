@@ -285,19 +285,24 @@ class GridToWaterLevel:
 
             return level_da
 
-        # get dem as xarray
-        dem = self.dem_raster.open_rxr(chunksize)
-
         # init result raster
         create = hrt.check_create_new_file(output_file=output_file, overwrite=overwrite)
 
         if create:
+            # get dem as xarray
+            dem = self.dem_raster.open_rxr(chunksize=chunksize)
+            print(dem)
+
             # create empty result array
             result = xr.full_like(dem, dem.rio.nodata)
 
-            result = xr.map_blocks(calc_level, obj=result, args=[dem, self.interpolator], template=result)
+            result2 = xr.map_blocks(calc_level, obj=result, args=[dem, self.interpolator], template=result)
 
-            self.wlvl_raster = hrt.Raster.write(output_file, result=result, nodata=dem.rio.nodata, chunksize=chunksize)
+            self.wlvl_raster = hrt.Raster.write(
+                output_file, result=result2, nodata=dem.rio.nodata, chunksize=chunksize
+            )
+        else:
+            self.wlvl_raster = hrt.Raster(output_file)
 
         return self.wlvl_raster
 
@@ -340,8 +345,8 @@ class GridToWaterDepth:
         create = hrt.check_create_new_file(output_file=self.depth_raster.path, overwrite=overwrite)
 
         if create:
-            dem = self.dem_raster.open_rxr(chunksize)
-            level = self.wlvl_raster.open_rxr(chunksize)
+            dem = self.dem_raster.open_rxr(chunksize=chunksize)
+            level = self.wlvl_raster.open_rxr(chunksize=chunksize)
 
             # create empty result array
             result = level - dem
@@ -368,10 +373,12 @@ if __name__ == "__main__":
 
     folder_path = r"E:\02.modellen\23_Katvoed"
     folder = Folders(folder_path)
-    threedi_result = folder.threedi_results.one_d_two_d["ghg_blok_t1000"]
+    output_fd = folder.output.one_d_two_d[0]
+    threedi_result = folder.threedi_results.one_d_two_d[0]
 
     # grid_gdf = gpd.read_file(threedi_result.path/"grid_raw.gpkg", driver="GPKG")
-    grid_gdf = threedi_result.full_path("grid_corr.gpkg").load()
+    # grid_gdf = threedi_result.full_path("grid_corr.gpkg").load()
+    grid_gdf = gpd.read_file(output_fd.grid_nodes_2d.path)
 
     calculator_kwargs = {
         "dem_path": folder.model.schema_base.rasters.dem.base,
@@ -383,3 +390,5 @@ if __name__ == "__main__":
     with GridToWaterLevel(**calculator_kwargs) as self:
         self.run(output_file=threedi_result.full_path("wdepth_orig.tif"), overwrite=OVERWRITE)
         print("Done.")
+
+# %%

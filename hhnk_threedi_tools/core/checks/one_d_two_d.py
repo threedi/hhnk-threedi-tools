@@ -27,6 +27,8 @@ from hhnk_threedi_tools.variables.one_d_two_d import (
     vel_m_s_col,
 )
 
+logger = hrt.logging.get_logger(__name__, level="DEBUG")
+
 
 class OneDTwoDTest:
     TIMESTEPS = [1, 3, 15]  # hours, 1=start rain, 3=end rain, 15=end calculation
@@ -58,7 +60,7 @@ class OneDTwoDTest:
     def from_path(cls, path_to_polder, **kwargs):
         return cls(Folders(path_to_polder), **kwargs)
 
-    def run_wlvl_depth_at_timesteps(self, overwrite=False):
+    def run_wlvl_depth_at_timesteps(self, chunksize=1024, overwrite=False):
         """Transform netcdf to grid gpkg and apply wlvl correction
         Then create waterlevel and depth rasters at 3 timesteps:
         1h : start rain
@@ -71,27 +73,46 @@ class OneDTwoDTest:
         netcdf_gpkg.run(
             output_file=self.output_fd.grid_nodes_2d,
             timesteps_seconds=[T * 3600 for T in self.TIMESTEPS],
-            overwrite=True,
+            overwrite=overwrite,
         )
 
         # Create depth and wlvl rasters for each timestep.
-        grid_gdf = gpd.read_file(self.output_fd.grid_nodes_2d.path)
+        grid_gdf = gpd.read_file(self.output_fd.grid_nodes_2d.path, engine="pyogrio")
         for T in self.TIMESTEPS:
-            with GridToWaterLevel(
+            # with GridToWaterLevel(
+            #     dem_path=self.folder.model.schema_base.rasters.dem,
+            #     grid_gdf=grid_gdf,
+            #     wlvl_column=f"wlvl_{T}h",
+            # ) as raster_calc:
+            #     output_file = getattr(self.output_fd, f"waterstand_T{T}")
+            #     logger.debug(f"Creating waterlevel raster {output_file}")
+            #     level_raster = raster_calc.run(
+            #         output_file=output_file,
+            #         chunksize=chunksize,
+            #         overwrite=overwrite,
+            #     )
+
+            raster_calc = GridToWaterLevel(
                 dem_path=self.folder.model.schema_base.rasters.dem,
                 grid_gdf=grid_gdf,
                 wlvl_column=f"wlvl_{T}h",
-            ) as raster_calc:
-                level_raster = raster_calc.run(
-                    output_file=getattr(self.output_fd, f"waterstand_T{T}"),
-                    overwrite=overwrite,
-                )
+            )
+            output_file = getattr(self.output_fd, f"waterstand_T{T}")
+            logger.debug(f"Creating waterlevel raster {output_file}")
+            level_raster = raster_calc.run(
+                output_file=output_file,
+                chunksize=chunksize,
+                overwrite=overwrite,
+            )
             with GridToWaterDepth(
                 dem_path=self.folder.model.schema_base.rasters.dem,
                 wlvl_path=level_raster,
             ) as raster_calc:
+                output_file = getattr(self.output_fd, f"waterdiepte_T{T}")
+                logger.debug(f"Creating waterdepth raster {output_file}")
                 _ = raster_calc.run(
-                    output_file=getattr(self.output_fd, f"waterdiepte_T{T}"),
+                    output_file=output_file,
+                    chunksize=chunksize,
                     overwrite=overwrite,
                 )
 
@@ -228,10 +249,12 @@ class OneDTwoDTest:
 if __name__ == "__main__":
     from pathlib import Path
 
-    TEST_MODEL = Path(__file__).parents[3].joinpath(r"tests/data/model_test/")
+    TEST_MODEL = Path(r"E:\02.modellen\Schermer_leggertool")
     folder = Folders(TEST_MODEL)
     self = OneDTwoDTest.from_path(TEST_MODEL)
-
-    overwrite = True
-
-    output = self.run_wlvl_depth_at_timesteps()
+    T = 1
+    chunksize = 1024
+    overwrite = False
+    # %%
+    # output = self.run_flowline_stats()
+    output = self.run_wlvl_depth_at_timesteps(chunksize=512)
