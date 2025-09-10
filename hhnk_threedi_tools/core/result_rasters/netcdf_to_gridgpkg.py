@@ -13,6 +13,7 @@ from hhnk_threedi_tools.core.folders import Folders
 
 logger = hrt.logging.get_logger(__name__, level="DEBUG")
 
+
 class ThreediGrid:
     """TODO Deprecated, remove in later release."""
 
@@ -474,7 +475,6 @@ class NetcdfToGPKG:
 
             if wlvl_correction:
                 grid_gdf = self.correct_waterlevels(grid_gdf=grid_gdf, timesteps_seconds=timesteps_seconds)
-
 
             # Save to file
             logger.debug(f"Saving grid gdf to {output_file.path}.")
