@@ -272,13 +272,13 @@ class DAMO_to_HyDAMO_Converter:
         layer_gdf : gpd.GeoDataFrame
             Converted layer
         """
-        for column_name in layer_gdf.columns:
-            if column_name != "geometry":
-                lower_column_name = column_name.lower()
-                layer_gdf.rename(columns={column_name: lower_column_name}, inplace=True)
-                layer_gdf[lower_column_name] = self._convert_column(
-                    column=layer_gdf[lower_column_name],
-                    column_name=lower_column_name,
+        for column_name_orig in layer_gdf.columns:
+            if column_name_orig != "geometry":
+                column_name = column_name_orig.lower()
+                layer_gdf.rename(columns={column_name_orig: column_name}, inplace=True)
+                layer_gdf[column_name] = self._convert_column(
+                    column=layer_gdf[column_name],
+                    column_name=column_name,
                     layer_name=layer_name,
                 )
 
@@ -303,7 +303,14 @@ class DAMO_to_HyDAMO_Converter:
             Converted attribute column
         """
         # Get the field type of the attribute from the HyDAMO schema
-        field_type = self._get_field_type(column_name, layer_name)
+        field_types_dict = {
+            "string": str,
+            "integer": int,
+            "number": float,
+        }
+        field_type = self.hydamo_definitions[layer_name]["properties"][column_name]["type"]
+        field_type = field_types_dict.get(field_type, None)
+
         # Convert the domain values to HyDAMO target values
         if self.convert_domain_values:
             column = self._convert_domain_values(layer_name, column_name, column)
@@ -320,43 +327,6 @@ class DAMO_to_HyDAMO_Converter:
                 )
 
         return column
-
-    def _get_field_type(self, column_name: str, layer_name: str) -> str:
-        """
-        Retrieve the field type of a specific attribute in a definition.
-
-        Parameters
-        ----------
-        column_name : str
-            The name of the field (e.g., 'nen3610id').
-        layer_name : str
-            The name of the object (e.g., 'hydroobject').
-
-        Returns
-        -------
-        field_type : str or None
-            The type of the field if found, else None.
-        """
-        field_types_dict = {
-            "string": str,
-            "integer": int,
-            "number": float,
-        }
-
-        try:
-            # Check if the layer_name exists in the definitions
-            field_type = self.hydamo_definitions[layer_name]["properties"][column_name]["type"]
-
-            field_type = field_types_dict.get(field_type, None)
-            if field_type is None:
-                self.logger.debug(
-                    f"Field type is not find in field_types_dict for field {column_name} in layer {layer_name}"
-                )
-        except Exception as e:
-            self.logger.debug(f"Field {column_name} not found in schema definitions for layer {layer_name}")
-            field_type = None
-        finally:
-            return field_type
 
     def _convert_domain_values(self, object_name: str, column_name: str, column: pd.Series) -> pd.Series:
         """
