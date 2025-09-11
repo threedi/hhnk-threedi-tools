@@ -19,6 +19,12 @@ SCHEMA_VERSIONS = {  # Available versions of (hy)damo schematisation that are im
 }
 CRS = "EPSG:28992"
 
+FIELD_TYPES_DICT = {
+    "string": str,
+    "integer": int,
+    "number": float,
+}
+
 
 class DAMO_to_HyDAMO_Converter:
     """
@@ -36,8 +42,9 @@ class DAMO_to_HyDAMO_Converter:
         Path to the source DAMO geopackage
     hydamo_file_path : Path
         Path to the target HyDAMO geopackage. Converted to hrt.SpatialDatabase after initialization
-    layers : list
+    layers : list[str], default is None
         List of layer names to convert to HyDAMO
+        If None, all layers in the DAMO geopackage are converted except 'layer_styles'
     hydamo_schema_path : Path
         Path to the HyDAMO schema (json file)
     hydamo_version: str
@@ -69,7 +76,7 @@ class DAMO_to_HyDAMO_Converter:
         self,
         damo_file_path: os.PathLike,
         hydamo_file_path: Union[Path, hrt.SpatialDatabase],
-        layers: list[str] = None,
+        layers: Optional[list[str]] = None,
         hydamo_schema_path: Optional[Path] = None,
         hydamo_version: str = "2.4",
         damo_schema_path: Optional[Path] = None,
@@ -224,13 +231,9 @@ class DAMO_to_HyDAMO_Converter:
         self.hydamo_file_path.parent.mkdir(parents=True, exist_ok=True)
 
         if self.layers is None:
-            # self.layers = self.damo_file_path.available_layers()
-
-            # drop layer_styles from self.layers
             self.layers = [layer for layer in self.damo_file_path.available_layers() if layer != "layer_styles"]
-            self.logger.info(f"layers to be converted: {self.layers}")
 
-        for layer_name in self.damo_file_path.available_layers():
+        for layer_name in self.layers:
             layer_name = layer_name.lower()
             self.logger.info(f"Conversion of {layer_name}")
             if not self.overwrite and self.hydamo_file_path.exists():
@@ -238,7 +241,7 @@ class DAMO_to_HyDAMO_Converter:
                     self.logger.info(
                         f"Layer {layer_name} already exists in {self.hydamo_file_path.path}. Skipping conversion."
                     )
-                    return
+                    continue
 
             layer_gdf = gpd.read_file(self.damo_file_path.path, layer=layer_name, engine="pyogrio")
             layer_gdf = self._convert_attributes(layer_gdf, layer_name)
@@ -276,6 +279,10 @@ class DAMO_to_HyDAMO_Converter:
             if column_name_orig != "geometry":
                 column_name = column_name_orig.lower()
                 layer_gdf.rename(columns={column_name_orig: column_name}, inplace=True)
+
+                if column_name not in self.hydamo_definitions[layer_name]["properties"].keys():
+                    self.logger.info(f"{layer_name}/{column_name} - Column not found in HyDAMO schema. Skipping.")
+                    continue
                 layer_gdf[column_name] = self._convert_column(
                     column=layer_gdf[column_name],
                     column_name=column_name,
@@ -302,33 +309,25 @@ class DAMO_to_HyDAMO_Converter:
         column : pd.Series
             Converted attribute column
         """
+        self.logger.info(f"{layer_name}/{column_name} - Start conversion")
+
         # Get the field type of the attribute from the HyDAMO schema
-        field_types_dict = {
-            "string": str,
-            "integer": int,
-            "number": float,
-        }
-        field_type = self.hydamo_definitions[layer_name]["properties"][column_name]["type"]
-        field_type = field_types_dict.get(field_type, None)
+        field_type_str = self.hydamo_definitions[layer_name]["properties"][column_name]["type"]
+        field_type = FIELD_TYPES_DICT[field_type_str]
 
         # Convert the domain values to HyDAMO target values
         if self.convert_domain_values:
-            column = self._convert_domain_values(layer_name, column_name, column)
+            column = self._convert_domain_values(column=column, layer_name=layer_name, column_name=column_name)
+
         # Convert the field type to the correct type
-        if field_type is not None:
-            # Convert to the field type, but safely handle NaN values
-            if field_type in [int, float]:
-                column = pd.to_numeric(column, errors="coerce").astype(field_type, errors="ignore")
-            elif field_type is str:
-                column = column.astype(str)
-            else:
-                self.logger.warning(
-                    f"Field type {field_type} for column {column_name} in layer {layer_name} is not supported."
-                )
+        if field_type in [int, float]:
+            column = pd.to_numeric(column, errors="coerce").astype(field_type, errors="ignore")
+        elif field_type is str:
+            column = column.astype(str)
 
         return column
 
-    def _convert_domain_values(self, object_name: str, column_name: str, column: pd.Series) -> pd.Series:
+    def _convert_domain_values(self, column: pd.Series, layer_name: str, column_name: str) -> pd.Series:
         """
         Check if the column_name corresponds to a field in the specified object that is a domain.
         If it is a domain, convert the values of the column using the associated domain.
@@ -336,34 +335,19 @@ class DAMO_to_HyDAMO_Converter:
 
         Called by: self._convert_column
 
-        Parameters
-        ----------
-        object_name : str
-            Name of the object containing the field.
-        column_name : str
-            Name of the column to check and convert.
-        column : pd.Series
-            Attribute column to convert.
-
         Returns
         -------
         pd.Series
             Converted attribute column if it corresponds to a domain, else the original column.
         """
-        # Check if the object_name exists and contains the column_name
-        object_name = object_name.lower()
-        if object_name in self.objects.keys():
-            fields = self.objects[object_name]
-            if column_name in fields.keys():
-                field_domain = fields[column_name]
-                # If field_domain corresponds to a domain, perform the conversion
-                if field_domain in self.domains.keys():
-                    domain = self.domains[field_domain]
-                    mapped_column = column.map(domain)
-                    self.logger.info(
-                        f"Converted domain values of column {column_name} in object {object_name} using domain {field_domain}"
-                    )
-                    return mapped_column
+        layer_name_lower = layer_name.lower()
+        field_domain = self.objects.get(layer_name_lower, {}).get(column_name)
+        if field_domain is not None:
+            domain = self.domains.get(field_domain)
+            if domain:
+                mapped_column = column.map(domain)
+                self.logger.info(f"{layer_name}/{column_name} - Converted domain values using domain {field_domain}")
+                return mapped_column
 
         # If no domain is found, return the column as is
         return column
@@ -386,21 +370,12 @@ class DAMO_to_HyDAMO_Converter:
         layer_gdf : gpd.GeoDataFrame
             Layer with the NEN3610id column
         """
-        if "code" in layer_gdf.columns:
-            layer_gdf["NEN3610id"] = layer_gdf["code"].apply(
-                lambda x: f"NL.WBHCODE.{WATERSCHAPSCODE}.{layer_name}.{x}"
+        try:
+            name = next((col for col in ["code", "id", "objectid", "naam"] if col in layer_gdf.columns))
+            layer_gdf["NEN3610id"] = layer_gdf[name].apply(
+                lambda x: f"NL.WBHCODE.{WATERSCHAPSCODE}.{layer_name}.{x}",
             )
-        elif "id" in layer_gdf.columns:
-            layer_gdf["NEN3610id"] = layer_gdf["id"].apply(lambda x: f"NL.WBHCODE.{WATERSCHAPSCODE}.{layer_name}.{x}")
-        elif "objectid" in layer_gdf.columns:
-            layer_gdf["NEN3610id"] = layer_gdf["objectid"].apply(
-                lambda x: f"NL.WBHCODE.{WATERSCHAPSCODE}.{layer_name}.{x}"
-            )
-        elif "naam" in layer_gdf.columns:
-            layer_gdf["NEN3610id"] = layer_gdf["naam"].apply(
-                lambda x: f"NL.WBHCODE.{WATERSCHAPSCODE}.{layer_name}.{x}"
-            )
-        else:
+        except StopIteration:
             self.logger.warning(f"No valid column found for NEN3610id in layer {layer_name}")
 
         return layer_gdf
