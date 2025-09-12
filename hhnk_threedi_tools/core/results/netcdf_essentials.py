@@ -41,7 +41,7 @@ from hhnk_threedi_tools.core.folders import Folders
 from hhnk_threedi_tools.core.results import netcdf_timeseries
 from hhnk_threedi_tools.resources.netcdf_essentials_default import DEFAULT_NESS
 
-DEFAULT_NESS_FP = Path(__file__).parents[2].absolute() / r"resources\netcdf_essentials.csv"
+AVAILABLE_SIMULATION_TYPES = ["0d1d_test", "1d2d_test", "klimaattoets", "breach"]
 
 logger = hrt.logging.get_logger(__name__)
 
@@ -123,6 +123,11 @@ class NetcdfEssentials:
     ----------
     threedi_result : hrt.ThreediResult
         Path or object for the NetCDF and HDF5 result files.
+    simulation_type : str, optional
+        Calculation type to specify retrieval of which results,
+        options are 0d1d_test, 1d2d_test, klimaattoets, breach.
+        Pass None to retrieve default set specified in resources/netcdf_essentials
+        and user specified timesteps.
     waterdeel_path : str, optional
         Path to waterdeel layer. If None, not used for cell selection.
     waterdeel_layer : str, optional
@@ -162,6 +167,7 @@ class NetcdfEssentials:
     """
 
     threedi_result: hrt.ThreediResult
+    simulation_type: str = None
     waterdeel_path: str = None
     waterdeel_layer: str = None
     panden_path: str = None
@@ -308,7 +314,6 @@ class NetcdfEssentials:
             DataFrame with attributes and subsets to check against the grid.
             Should contain columns: 'attribute', 'subset', 'element', 'attribute_name'.
         """
-        logger = hrt.logging.get_logger(__name__)
         ness["active"] = True
         if not self.grid.has_1d:
             ness.loc[(ness["subset"] == "1D_All"), "active"] = False
@@ -357,8 +362,6 @@ class NetcdfEssentials:
             DataFrame with attributes and subsets to check against the grid.
             Should contain columns: 'attribute', 'subset', 'element', 'attribute_name'.
         """
-        logger = hrt.logging.get_logger(__name__)
-
         ness = self._set_active_attributes(ness)
 
         # initialise data column
@@ -403,8 +406,6 @@ class NetcdfEssentials:
         metadata : dict
             Dictionary with metadata about the model and grid.
         """
-        logger = hrt.logging.get_logger(__name__)
-
         # Create empty GeoDataFrames for grid, node and line
         grid_gdf = gpd.GeoDataFrame()
         node_gdf = gpd.GeoDataFrame()
@@ -587,9 +588,13 @@ class NetcdfEssentials:
 
         return grid_gdf
 
-    def get_output_timesteps(self, user_defined_timesteps: list[int]) -> list[int]:
+    def get_output_timesteps(
+        self,
+        simulation_type: str = None,
+        user_defined_timesteps: list[int] = None,
+    ) -> list[int]:
         """
-        Set output timesteps for export.
+        Set required output for different simulation types
 
 
         In ieder geval:
@@ -603,7 +608,12 @@ class NetcdfEssentials:
         NOTE misschien optie maken voor alle tijstappen?
         NOTE de ness als input?
         """
-        logger = hrt.logging.get_logger(__name__)
+        if simulation_type is None:
+            if user_defined_timesteps is None:
+                logger.info(
+                    "No simulation type or user defined timesteps provided, using only user defined timesteps."
+                )
+
         if user_defined_timesteps is None:
             # Add only maximum
             timesteps_seconds_output = ["max"]
@@ -633,24 +643,25 @@ class NetcdfEssentials:
         col_idx = ColumnIdx(gdf=gdf)
         for i, row in ness.iterrows():
             if row["active"] and row["geom_type"] == gdf.geometry.geom_type.unique()[0]:
-                # processing user specified timesteps
-                for key in timesteps_seconds_output:
-                    if isinstance(key, int):
-                        # Make pretty column names
-                        col_sub = self._create_column_base(time_seconds=key)
-                        # Find index of timestep
-                        data_timestep = row["data"][:, self.nc_ts.get_ts_index(time_seconds=key)]
-                    elif isinstance(key, str):
-                        logger.debug(f"Adding user specified method: {key} for {row['attribute_name']}")
-                        data_timestep = self.nc_ts.get_ts_methods(method=key, ts=row["data"])
-                        col_sub = key
+                if timesteps_seconds_output is not None:
+                    # processing user specified timesteps
+                    for key in timesteps_seconds_output:
+                        if isinstance(key, int):
+                            # Make pretty column names
+                            col_sub = self._create_column_base(time_seconds=key)
+                            # Find index of timestep
+                            data_timestep = row["data"][:, self.nc_ts.get_ts_index(time_seconds=key)]
+                        elif isinstance(key, str):
+                            logger.debug(f"Adding user specified method: {key} for {row['attribute_name']}")
+                            data_timestep = self.nc_ts.get_ts_methods(method=key, ts=row["data"])
+                            col_sub = key
 
-                    # insert value in gdf
-                    gdf.insert(
-                        getattr(col_idx, row["attribute_name"]),
-                        f"{row['attribute_name']}_{col_sub}",
-                        data_timestep,
-                    )
+                        # insert value in gdf
+                        gdf.insert(
+                            getattr(col_idx, row["attribute_name"]),
+                            f"{row['attribute_name']}_{col_sub}",
+                            data_timestep,
+                        )
                 # processing default methods from ness
                 for method in row["methods"]:
                     if method in timesteps_seconds_output:
@@ -709,6 +720,7 @@ class NetcdfEssentials:
         ness_fp=None,
         output_file=None,
         user_defined_timesteps: list[int] = None,
+        simulation_type: str = None,
         replace_dem_below_perc: float = 50,
         replace_water_above_perc: float = 95,
         replace_pand_above_perc: float = 99,
@@ -730,6 +742,11 @@ class NetcdfEssentials:
         user_defined_timesteps : list[int], optional
             List of output timesteps in seconds or "max" to include maximum waterlevel over calculation.
             If None, only uses max.
+        simulation_type : str, optional
+            Calculation type to specify retrieval of which results,
+            options are 0d1d_test, 1d2d_test, klimaattoets, breach.
+            Pass None to retrieve default set specified in resources/netcdf_essentials
+            and user specified timesteps.
         replace_dem_below_perc : float, optional, by default 50
             if cell area has no dem (isna) above this value waterlevels will be replaced
         replace_water_above_perc : float, optional, by default 95
@@ -755,7 +772,7 @@ class NetcdfEssentials:
 
         create = hrt.check_create_new_file(output_file=output_file, overwrite=overwrite)
         if create:
-            timesteps_seconds_output = self.get_output_timesteps(user_defined_timesteps)
+            timesteps_seconds_output = self.get_output_timesteps(simulation_type, user_defined_timesteps)
 
             ness = self.load_ness(ness_fp=ness_fp)
             ness = self.process_ness(ness=ness)

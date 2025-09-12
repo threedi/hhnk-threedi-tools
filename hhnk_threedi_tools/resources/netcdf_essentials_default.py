@@ -76,7 +76,7 @@ DEFAULT_NESS = [
         "attribute_name": "q",
         "attribute": "q",
         "subset": "1D_All",
-        "methods": ["max", "min", "sum", "sum_pos", "sum_neg"],
+        "methods": ["min", "max", "max_abs", "sum", "sum_pos", "sum_neg"],
         "aggregation_name": "q_avg",
     },
     {
@@ -86,7 +86,7 @@ DEFAULT_NESS = [
         "attribute_name": "u1",
         "attribute": "u1",
         "subset": "1D_All",
-        "methods": ["max", "min", "max_abs"],
+        "methods": ["min", "max", "max_abs"],
         "aggregation_name": "u1_max",
     },
 ]
