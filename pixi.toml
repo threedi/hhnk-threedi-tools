@@ -36,9 +36,9 @@ twine_check = "twine check dist/*"
 build = { depends-on = ["build_wheels", "twine_check"] }
 
 
-# FIXME set env to 'test' here once we switch to py312. Run tests with; pixi run -e py39 tests
-# FIXME change env in pytests_threedi_tools.yml as well
-[feature.py39.tasks]
+# Run tests with; pixi run tests
+# FIXME change env in pytests_threedi_tools.yml to 'test' as well # WE: ik kan dit bestand niet vinden
+[feature.test.tasks]
 tests = "pytest --cov-report term-missing --cov=hhnk_threedi_tools --cov-report=xml"
 sort_imports-check = "ruff check  ./**/*.py --select I --force-exclude"
 fmt-check = "ruff format ./**/*.py --check --force-exclude"
@@ -115,65 +115,12 @@ django = "<4"  # datachecker (<4 wegens compatibility met 3Di modules)
 # hhnk-research-tools = { path = "../hhnk-research-tools", editable = true }
 build = "*"
 
-# Unused currently
-# [feature.test.pypi-dependencies]
-# hhnk-research-tools = { git = "https://github.com/hhnk/hhnk-research-tools.git", rev = "main" }
-# hydamo_validation = { git = "https://github.com/hhnk/HyDAMOValidatieModule.git", rev = "main" }
-
-
-# Temporary old py39 env to have working tests
-[feature.py39.dependencies]
-python = "==3.9.18" # equals MI python version
-geopandas = "==0.14.1"
-pandas = "==2.0.2"
-scipy = "==1.10.1"
-h5py = "*" # Incompatible met rest van env; conda solved naar 3.11.0
-fiona = "==1.9.5"
-shapely = "==2.0.2"
-
-#User folder
-jupyterlab = "==4.2.0"
-ipywidgets = "==8.1.2"
-jupytext = "==1.16.6"
-
-pytest = "*"
-pytest-cov = "*"
-tqdm = "==4.64.0"
-rioxarray = "==0.15.0" # higher versions need python >=3.10
-pyogrio = "==0.7.2" # 0.9.0 doesnt work with gdal
-rasterio = "==1.3.10" # rxr dep
-affine = "==2.4.0" # rxr dep
-dask = "==2024.6.2" # rxr dep
-matplotlib = "3.8.*" # 3.9.0 gives RuntimeError: Entry point name 'inline' duplicated
-# See also: https://discourse.matplotlib.org/t/latest-versions-via-pip-jupyterlab-import-of-matplotlib-broken/24477/7
-
-xarray = "==2024.3.0"
-openpyxl = "==3.1.2"
-cached_property = "==1.5.2"
-rtree = "==1.0.1"
-oracledb = "==2.4.1"
-seaborn = "*"
-pip = "*"
-urllib3= "1.*"
-ruff = "*"
-
-[feature.py39.pypi-dependencies]
-lazy_loader= "*"
-threedi_modelchecker = "==2.6.3" # threedi_results_analysis 3.9.0
-threedi_scenario_downloader = "==1.4" # Lizard API v4 only
-threedi_schema = "==0.219.3" # threedi_results_analysis 3.9.0
-threedi-api-client = "==4.1.7" # 3Di Models and Simulations 3.11.0
-threedigrid_builder = "==1.14.4" # threedi_results_analysis 3.9.2
-threedigrid = "==2.3.3" # threedi_results_analysis 3.12.0
-threedidepth = "==0.6.3" # threedi_results_analysis 3.9.0
+# Use mains from hrt and hydamo in tests
+[feature.test.pypi-dependencies]
 hhnk-research-tools = { git = "https://github.com/hhnk/hhnk-research-tools.git", rev = "main" }
-# hydamo_validation = { git = "https://github.com/hhnk/HyDAMOValidatieModule.git", rev = "main" }
-dotenv = "*"
+hydamo_validation = { git = "https://github.com/hhnk/HyDAMOValidatieModule.git", rev = "main" }
 
-#Editable installs
-hhnk_threedi_tools = { path = ".", editable = true }
 
 [environments]
 default = ["dev"]
-# test = ["test"]
-py39 = { features=["py39"], no-default-feature = true } #required for some tests
+test = ["test"]
