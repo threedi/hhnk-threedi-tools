@@ -31,7 +31,7 @@ def clip_DEM(inputraster, outputraster, projection, shapefile, resolution, raste
         options = gdal.WarpOptions(
             cutlineDSName=shapefile,
             cropToCutline=(True),
-            format= raster_format,
+            format=raster_format,
             dstSRS=projection,
             xRes=resolution,
             yRes=resolution,
@@ -45,16 +45,16 @@ def clip_DEM(inputraster, outputraster, projection, shapefile, resolution, raste
 def grid_selection(grid_gdf, output_scenario_wss):
     # select grids to be used to rasteriezed water depth
 
-    #ROR
+    # ROR
     # active_cells = grid_gdf[grid_gdf["vol_max"] > 1.5]
 
-    #IPO due to different versions
-    if "vol_netcdf_m3" in grid_gdf.columns: 
-                vol_max = "vol_netcdf_m3"
-    else: 
+    # IPO due to different versions
+    if "vol_netcdf_m3" in grid_gdf.columns:
+        vol_max = "vol_netcdf_m3"
+    else:
         vol_max = "vol_max"
 
-    active_cells = grid_gdf[grid_gdf[f'{vol_max}'] > 1.5]
+    active_cells = grid_gdf[grid_gdf[f"{vol_max}"] > 1.5]
     if active_cells.empty:
         print(f"There is no inundation for de polder {output_scenario_wss.parent.name}")
         return None
@@ -122,7 +122,6 @@ def get_paths(base_folder, scenario_name: list = None, specific_scenario=False, 
     return region_paths
 
 
-
 def calculate_depth_raster(region_paths, dem_path, OVERWRITE, EPSG, spatialResolution):
     # Set variables for depth raster
     DEM_location = dem_path
@@ -143,10 +142,8 @@ def calculate_depth_raster(region_paths, dem_path, OVERWRITE, EPSG, spatialResol
         print(output_file_depth)
         output_waterlevel_raster = Path(os.path.join(output_scenario_wss, "max_waterlevel_orig.tif"))
 
-
         # start the convertion from netcdf to gpkg
         if not os.path.exists(output_file):
-
             print(f"Creating grid_raw for {breach.name}")
             NetcdfToGPKG(hrt.ThreediResult(netcdf_folder)).run(
                 output_file=output_file,
@@ -167,9 +164,9 @@ def calculate_depth_raster(region_paths, dem_path, OVERWRITE, EPSG, spatialResol
         else:
             # read the grid in case it exists
             grid_gdf = gpd.read_file(output_file, driver="GPKG", engine="pyogrio")
-            if "vol_netcdf_m3" in grid_gdf.columns: 
+            if "vol_netcdf_m3" in grid_gdf.columns:
                 vol_max = "vol_netcdf_m3"
-            else: 
+            else:
                 vol_max = "vol_max"
 
             if grid_gdf[grid_gdf[f"{vol_max}"] > 1.5].empty:
@@ -180,7 +177,7 @@ def calculate_depth_raster(region_paths, dem_path, OVERWRITE, EPSG, spatialResol
         if not os.path.exists(output_file_depth):
             print(os.path.exists(output_file_depth))
             # clip the DEM to be used to calculate the depth raster
-            clip_DEM(DEM_location, dem_clip_output, EPSG, mask_flood, spatialResolution, raster_format='GTiff')
+            clip_DEM(DEM_location, dem_clip_output, EPSG, mask_flood, spatialResolution, raster_format="GTiff")
 
             new_grid_gdf = gpd.read_file(
                 os.path.join(output_scenario_wss, "new_grid.gpkg"), driver="GPKG", engine="pyogrio"
@@ -196,11 +193,11 @@ def calculate_depth_raster(region_paths, dem_path, OVERWRITE, EPSG, spatialResol
             }
 
             # Initialize the GridToWaterLevel class and run the calculation
-            
+
             faulthandler.enable()
             with GridToWaterLevel(**calculator_kwargs) as self:
                 self.run(output_file=output_waterlevel_raster, overwrite=True)
-            
+
             calculator_kwargs = {
                 "dem_path": dem_clip_output,
                 "wlvl_path": output_waterlevel_raster,
@@ -268,9 +265,9 @@ def calculate_damage_raster(region_paths, landuse_file, cfg_file, EPSG="EPSG:289
         open_depth_raster = None
 
         # clip landuse
-        clip_DEM(landuse_file, out_landuse, EPSG, mask_flood, spatialResolution, raster_format='GTiff')
+        clip_DEM(landuse_file, out_landuse, EPSG, mask_flood, spatialResolution, raster_format="GTiff")
         # clip depth
-        clip_DEM(depth_file, depth_file_out, EPSG, mask_flood, spatialResolution,  raster_format='GTiff')
+        clip_DEM(depth_file, depth_file_out, EPSG, mask_flood, spatialResolution, raster_format="GTiff")
 
         # set the file to run damage raster calculation
         self_wss = hrt.Waterschadeschatter(
@@ -346,8 +343,8 @@ def save_damage_csv(region_paths):
                     # Calculate totals and differences
                     results["total_sum"] = results["direct"] + results["indirect"]
                     results["difference"] = results["total_damage_raster"] - results["total_sum"]
-                    
-                    #TODO fix indirect raster calculation and delete this line.
+
+                    # TODO fix indirect raster calculation and delete this line.
                     results["indirect_fix"] = results["total_damage_raster"] - results["direct"]
                 # Append to DataFrame
                 final_result = pd.DataFrame(results, index=[0])
@@ -377,9 +374,9 @@ def create_pgn_dagame(region_paths):
             df_no_diference = df_no_total.drop(["difference"], axis=1)
             df_indirect_fix = df_no_diference.drop(["indirect"], axis=1)
 
-            #TODO fix indirect raster calculation and delete this two lines.
-            df_indirect_fix = df_indirect_fix.iloc[:,[0,1,3,2]]
-            df_indirect_fix.rename(columns={"indirect_fix": 'indirect'})
+            # TODO fix indirect raster calculation and delete this two lines.
+            df_indirect_fix = df_indirect_fix.iloc[:, [0, 1, 3, 2]]
+            df_indirect_fix.rename(columns={"indirect_fix": "indirect"})
 
             # Transpose the DataFrame and select the first three rows for plotting
             df_data = df_indirect_fix.T
@@ -389,33 +386,31 @@ def create_pgn_dagame(region_paths):
             # Add column  color column into the dataframe
             df_selection["color"] = color
             y = df_selection[0]
-            
-            plt.style.use('seaborn-v0_8-whitegrid')
-            plt.figure(figsize=(9,7)) # Width: 10 inches, Height: 6 inches
+
+            plt.style.use("seaborn-v0_8-whitegrid")
+            plt.figure(figsize=(9, 7))  # Width: 10 inches, Height: 6 inches
             # Plot bar column with the selected values
             plt.bar(x=df_selection.index, height=y, color=color, width=0.5)
 
             plt.xticks(color="black", rotation="horizontal")
 
             # Set the title of the graph
-            scenario = df_data.loc['scenario'].values[0]
+            scenario = df_data.loc["scenario"].values[0]
             title = f"Direct, Indirect en Totaal Kost\nbij de Scenario {scenario}"
-            plt.title(title, fontweight="semibold", size =  11, loc='center')
-
+            plt.title(title, fontweight="semibold", size=11, loc="center")
 
             # Add labels to the axes
-            plt.xlabel("Cost Type", fontweight="semibold", size =  10)
-            plt.ylabel("Euros €", fontweight="semibold", size =  10)
+            plt.xlabel("Cost Type", fontweight="semibold", size=10)
+            plt.ylabel("Euros €", fontweight="semibold", size=10)
             # Optional: reduce space around the bars
-            
+
             # Set path to save the graph
             path_png = os.path.join(jpeg_output, png_name)
 
             # Set values in the columns
             for i, v in enumerate(y):
-                
                 formatted_label = f"€ {v:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
-                plt.text(i, v + v*0.0070, formatted_label, ha="center", va="bottom", fontsize=9.5)
+                plt.text(i, v + v * 0.0070, formatted_label, ha="center", va="bottom", fontsize=9.5)
 
             print(f"graph done for {breach_name}")
 
@@ -438,15 +433,14 @@ if __name__ == "__main__":
     cfg_file = schadeschatter_path / "01_data/cfg/cfg_lizard.cfg"
     # ipo_paths_path = r"E:\03.resultaten\Normering Regionale Keringen\output\ipo_scenarios_paths.csv"
     region_paths = [
-        
-            r'E:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\output\ROR_PRI-dijktrajecten_12-1_12-2_13-6_13-7_Deel_Zuid\ROR-PRI-OOSTERDIJK_VAN_DRECHTERLAND_0.5-T1000',
+        r"E:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\output\ROR_PRI-dijktrajecten_12-1_12-2_13-6_13-7_Deel_Zuid\ROR-PRI-OOSTERDIJK_VAN_DRECHTERLAND_0.5-T1000",
     ]
     # Set the parameters for the calculation
     OVERWRITE = False
     EPSG = "EPSG:28992"
 
-    #This scenarios need to be recalculated
-    # r'E:\03.resultaten\Normering Regionale Keringen\output\IPO_SBLZ_JA_WIP_DONE\IPO_SBLZ_1097_JA', 
+    # This scenarios need to be recalculated
+    # r'E:\03.resultaten\Normering Regionale Keringen\output\IPO_SBLZ_JA_WIP_DONE\IPO_SBLZ_1097_JA',
     # r'E:\03.resultaten\Normering Regionale Keringen\output\IPO_VRNKWE_WIP_DONE\IPO_VRNK_WEST_355_WE'
     # r"E:\03.resultaten\Normering Regionale Keringen\output\IPO_SBLZ_JA_WIP_DONE\IPO_SBLZ_908_JA",
     # r"E:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\output\ROR_PRI-dijktrajecten_12-1_12-2_13-6_13-7_Deel_Zuid\ROR-PRI-OOSTERDIJK_VAN_DRECHTERLAND_0.5-T10",
@@ -458,7 +452,7 @@ if __name__ == "__main__":
     skip = []
     # I have to structure better this code, the idea is that it finish everything in one go.
     # So frist: calculate damage, second csv, and the create pgn. This process needs to be done by scenario
-    #TODO IPO SBLZ 908, ipo_vrnk_west_355
+    # TODO IPO SBLZ 908, ipo_vrnk_west_355
     specefic_scenario = False
     # region_paths = get_paths(base_folder, scenario_name=None, specific_scenario=specefic_scenario, skip=skip)
 
