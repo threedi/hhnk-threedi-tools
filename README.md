@@ -21,7 +21,9 @@ To setup the env open the cloned hhnk-threedi-tools folder in VS-Code or in a te
 
 Use `pixi shell` to open the command prompt with the python enviroment initialized.
 
-2025-06 -> migration towards python 3.12.
-Not all checks work yet on 3.12. The github checks therefore run on py39
-Tests this locally with\
-`pixi run -e py39 tests`
+# Run tests locally
+To run test locally:
+* Copy .env.example and rename to symple .env. This will ensure tests that required database access are skipped.
+* Run `pixi run tests`
+
+2025-09: Beware that the test environment uses the mains from `hhnk-research-tools` and `hydamo_validation`, not local editable installs.
