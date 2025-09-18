@@ -7,8 +7,12 @@ import geopandas as gpd
 import hhnk_research_tools as hrt
 import pytest
 
+# Import DATABASES to check if database settings are available
+from hhnk_threedi_tools.core.schematisation_builder.DB_exporter import DATABASES
 from hhnk_threedi_tools.core.schematisation_builder.main import SchematisationBuilder
 from tests.config import TEMP_DIR, TEST_DIRECTORY
+
+skip_db = DATABASES == {}
 
 
 @pytest.mark.skipif(skip_db, reason="Skipping DB test because no local_settings_htt.py or DATABASES available.")
