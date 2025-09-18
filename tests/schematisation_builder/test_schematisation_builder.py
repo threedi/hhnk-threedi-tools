@@ -19,9 +19,15 @@ dotenv.load_dotenv()
     reason="Skipping DB test because no local_settings_htt.py or DATABASES available.",
 )
 def test_main():
-    from hhnk_threedi_tools.core.schematisation_builder.main import SchematisationBuilder
+    """Test the main functionality of the SchematisationBuilder class.
+    This test runs the full process of creating a HyDAMO package from a DAMO/CSO databases.
+    It checks if the output files are created and contain expected layers, columns and data.
+    """
 
     logger = hrt.logging.get_logger(__name__)
+
+    # import SchematisationBuilder here to avoid import issues related to missing database settings
+    from hhnk_threedi_tools.core.schematisation_builder.main import SchematisationBuilder
 
     # create temporary project folder path
     temp_project_folder = TEMP_DIR / f"temp_schematisation_builder_{hrt.current_time(date=True)}"
