@@ -3,20 +3,24 @@
 import os
 from pathlib import Path
 
+import dotenv
 import geopandas as gpd
 import hhnk_research_tools as hrt
 import pytest
 
 # Import DATABASES to check if database settings are available
-from hhnk_threedi_tools.core.schematisation_builder.DB_exporter import DATABASES
-from hhnk_threedi_tools.core.schematisation_builder.main import SchematisationBuilder
 from tests.config import TEMP_DIR, TEST_DIRECTORY
 
-skip_db = DATABASES == {}
+dotenv.load_dotenv()
 
 
-@pytest.mark.skipif(skip_db, reason="Skipping DB test because no local_settings_htt.py or DATABASES available.")
+@pytest.mark.skipif(
+    os.getenv("SKIP_DATABASE") == "1",
+    reason="Skipping DB test because no local_settings_htt.py or DATABASES available.",
+)
 def test_main():
+    from hhnk_threedi_tools.core.schematisation_builder.main import SchematisationBuilder
+
     logger = hrt.logging.get_logger(__name__)
 
     # create temporary project folder path
