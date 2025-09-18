@@ -74,8 +74,8 @@ class DAMO_to_HyDAMO_Converter:
 
     def __init__(
         self,
-        damo_file_path: os.PathLike,
-        hydamo_file_path: Union[Path, hrt.SpatialDatabase],
+        damo_file_path: os.PathLike = None,
+        hydamo_file_path: Union[Path, hrt.SpatialDatabase] = None,
         layers: Optional[list[str]] = None,
         hydamo_schema_path: Optional[Path] = None,
         hydamo_version: str = "2.4",
@@ -91,8 +91,10 @@ class DAMO_to_HyDAMO_Converter:
         else:
             self.logger = hrt.logging.get_logger(__name__)
 
-        self.damo_file_path = hrt.SpatialDatabase(damo_file_path)
-        self.hydamo_file_path = hrt.SpatialDatabase(hydamo_file_path)
+        if damo_file_path:
+            self.damo_file_path = hrt.SpatialDatabase(damo_file_path)
+        if hydamo_file_path:
+            self.hydamo_file_path = hrt.SpatialDatabase(hydamo_file_path)
         self.layers = layers
         self.overwrite = overwrite
         self.add_status_object = add_status_object
@@ -115,7 +117,7 @@ class DAMO_to_HyDAMO_Converter:
             self.damo_schema_path = self._get_schema_path(
                 schema_path=damo_schema_path, schema_basename="DAMO", schema_version=damo_version
             )
-            self.domains, self.objects = self._retrieve_damo_domain_mapping()
+            self.domains, self.objects = self.retrieve_damo_domain_mapping()
         else:
             self.logger.info("Domain value conversion is disabled.")
 
@@ -154,7 +156,7 @@ class DAMO_to_HyDAMO_Converter:
 
         return schema_path
 
-    def _retrieve_damo_domain_mapping(self) -> Tuple[dict, dict]:
+    def retrieve_damo_domain_mapping(self) -> Tuple[dict, dict]:
         """
         Retrieve the domain mapping from the DAMO schema.
 

@@ -6,6 +6,27 @@ import pandas as pd
 from hhnk_threedi_tools.core.schematisation_builder.DAMO_HyDAMO_converter import DAMO_to_HyDAMO_Converter
 from hhnk_threedi_tools.core.schematisation_builder.raw_export_to_DAMO_converter import RawExportToDAMOConverter
 
+POMP_COLUMNS = [
+    "code",
+    "created_date",
+    "featuretype",
+    "gemaalid",
+    "globalid",
+    "last_edited_date",
+    "maximalecapaciteit",
+    "minimalecapaciteit",
+    "nen3610id",
+    "objectid",
+    "opmerking",
+    "opstellingpomp",
+    "pompcurve",
+    "pomprichting",
+    "rioolgemaalid",
+    "soortaandrijving",
+    "typepomp",
+    "typepompschakeling",
+]  # Columns according to DAMO schema 2.4.1
+
 
 class GemaalConverter(RawExportToDAMOConverter):
     """Gemaal-specific converter implementation."""
@@ -21,7 +42,6 @@ class GemaalConverter(RawExportToDAMOConverter):
         self.update_gemaal_layer()  # STEP 2
         self.write_outputs()  # STEP 3
         self.mark_executed()
-        self.logger.info("GemaalConverter run completed.")
 
     def load_layers(self):
         self.logger.info("Loading gemaal-specific layers...")
@@ -31,28 +51,29 @@ class GemaalConverter(RawExportToDAMOConverter):
 
     def update_gemaal_layer(self):
         self.logger.info("Updating gemaal layer...")
-        self.data._ensure_loaded(["gemaal"], previous_method="load_layers")
 
-        # Ensure the pomp layer is loaded
+        # Ensure the pomp layer is loaded or create it if missing/empty
         try:
             self.data._ensure_loaded(["pomp"], previous_method="load_layers")
+            pomp_empty = self.data.pomp is None or self.data.pomp.empty
         except ValueError:
+            pomp_empty = True
+
+        if pomp_empty:
             self.logger.info("Pomp layer is empty or not loaded. Creating a dummy pomp layer...")
             self._make_pomp_layer()
         else:
-            self.logger.info("Pomp layer already exists. Proceeding to update with gemaalid.")
-            # Add gemaalid column to the pomp layer
+            self.logger.info("Pomp layer already exists. Updating with gemaalid...")
             self._add_column_gemaalid()
 
-        # Add globalid column to the pomp layer if globalid does not exist
+        # Add globalid column to the pomp layer if needed
         self._add_column_globalid()
 
-        self.logger.info("Pomp layer updated successfully.")
+        # Adjust maximalecapaciteit for pompen linked to a single gemaal
+        self._adjust_pomp_maximalecapaciteit()
 
     def _add_column_gemaalid(self):
         """Add gemaalid column to the pomp layer."""
-        self.logger.info("Link pomp to gemaal and pick global_id as to define gemaalid in pomp layer")
-
         # Merge pomp with gemaal based on CODEBEHEEROBJECT (pomp) and code (gemaal)
         merged = self.data.pomp.merge(
             self.data.gemaal[["code", "globalid"]], left_on="codebeheerobject", right_on="code", how="left"
@@ -61,15 +82,11 @@ class GemaalConverter(RawExportToDAMOConverter):
         # Assign the globalid from gemaal as gemaalid in pomp
         self.data.pomp["gemaalid"] = merged["globalid"]
 
-        self.logger.info("gemaalid column added successfully.")
-
     def _add_column_globalid(self):
         """Add globalid column to the pomp layer."""
-        self.logger.info("Adding 'globalid' column to the pomp layer")
         if "globalid" not in self.data.pomp.columns:
             # Generate a unique globalid for each pomp
             self.data.pomp["globalid"] = [str(uuid.uuid4()) for _ in range(len(self.data.pomp))]
-            self.logger.info("'globalid' column added successfully.")
         elif self.data.pomp["globalid"].isnull().any():
             # If globalid column exists but has null values, fill them with unique globalids
             self.logger.info("Filling null values in 'globalid' column with unique globalids")
@@ -87,8 +104,6 @@ class GemaalConverter(RawExportToDAMOConverter):
         - the gemaal has a maximalecapaciteit value.
         - the gemaal has only one pomp linked to it (i.e. aantalpompen = 1).
         """
-
-        self.logger.info("Start adjusting 'maximalecapaciteit' in the pomp layer based on gemaal data...")
 
         # list gemaalid's which have one pomp linked to it
         gemaalid_counts = self.data.pomp["gemaalid"].value_counts()
@@ -119,10 +134,6 @@ class GemaalConverter(RawExportToDAMOConverter):
                 )
                 self.logger.warning(f"Skipping update for gemaalid {gemaalid} in pomp layer.")
 
-        self.logger.info(
-            f"Finished adjusting 'maximalecapaciteit' in the pomp layer for {len(gemaalid_one_pomp)} pompen."
-        )
-
     def _make_pomp_layer(self):
         """
         Create the pomp layer with necessary columns according to the DAMO schema.
@@ -131,21 +142,16 @@ class GemaalConverter(RawExportToDAMOConverter):
 
         If the layer already exists and is not empty, this function is not executed.
         """
-        self.logger.info("Start creating pomp layer with necessary columns according to DAMO schema...")
 
         # read the DAMO_2.3.xml schema in resource folder with function in damo_to_hydamo_converter.py
-        converter = DAMO_to_HyDAMO_Converter(
-            damo_file_path=self.damo_file_path,
-            hydamo_file_path=self.hydamo_file_path,
-            overwrite=True,
-            damo_schema_path=self.damo_schema_path,
-        )
+        converter = DAMO_to_HyDAMO_Converter()
 
-        DAMO_schema_domains, DAMO_schema_objects = converter.retrieve_domain_mapping()
-        pomp_columns = list(DAMO_schema_objects["pomp"].keys())
+        # TODO wietse retrieving the pump columns from schema will only work if we have the damo schema locally
+        # _, DAMO_schema_objects = converter.retrieve_domain_mapping()
+        # pomp_columns = list(DAMO_schema_objects["pomp"].keys())
 
         # create a new GeoDataFrame with the pomp columns and geometry column
-        self.data.pomp = gpd.GeoDataFrame(columns=pomp_columns)
+        self.data.pomp = gpd.GeoDataFrame(columns=POMP_COLUMNS)
 
         # add at least one gemaal to the pomp layer
         if self.data.gemaal is not None and not self.data.gemaal.empty:

@@ -1,6 +1,9 @@
 import uuid
 
+import geopandas as gpd
+import numpy as np
 import pandas as pd
+from shapely.geometry import LineString, MultiLineString, Point
 
 from hhnk_threedi_tools.core.schematisation_builder.raw_export_to_DAMO_converter import RawExportToDAMOConverter
 
@@ -256,3 +259,129 @@ class ProfielConverter(RawExportToDAMOConverter):
             self.data.profielgroep = pd.concat([self.data.profielgroep] + profielgroep_new, ignore_index=True)
 
         self.logger.info("Connected hydroobjects to profiles.")
+
+    def _assign_hydroobject_ids(self) -> list[str]:
+        """
+        Assign hydroobject globalids to profielgroep features based on spatial intersection.
+
+        Returns
+        -------
+        list[str]
+            Codes of profielgroep features with no intersecting hydroobject.
+        """
+        profielgroep = self.data.profielgroep
+        hydroobject = self.data.hydroobject
+
+        if "globalid" not in hydroobject.columns:
+            hydroobject["globalid"] = [str(uuid.uuid4()) for _ in range(len(hydroobject))]
+
+        no_match_codes = []
+        multiple_match_codes = []
+
+        for idx, row in profielgroep.iterrows():
+            intersecting = hydroobject[hydroobject.intersects(row.geometry)]
+            gids_list = intersecting["globalid"].tolist()
+
+            if not gids_list:
+                no_match_codes.append(row.get("code"))
+                profielgroep.loc[idx, "hydroobjectid"] = np.nan
+                continue
+
+            profielgroep.loc[idx, "hydroobjectid"] = gids_list[0]
+
+            if len(gids_list) > 1:
+                multiple_match_codes.append((row.get("code"), len(gids_list)))
+                for i, gid in enumerate(gids_list[1:], start=2):
+                    profielgroep.loc[idx, f"hydroobjectid{i}"] = gid
+
+        if no_match_codes:
+            self.logger.warning(f"No intersection for profielgroep with code(s): {no_match_codes}")
+        if multiple_match_codes:
+            details = ", ".join([f"{idx} ({count})" for idx, count in multiple_match_codes])
+            self.logger.warning(f"Multiple intersections for profielgroep with code(s): {details}")
+
+        return no_match_codes
+
+    def _add_z_to_point_geometry_based_on_column(self, column_name: str) -> None:
+        self.logger.info(f"Adding Z coordinate to profielpunt geometry based on column '{column_name}'...")
+        if column_name not in self.data.profielpunt.columns:
+            raise ValueError(f"Column '{column_name}' is not present in profielpunt.")
+
+        self.data.profielpunt[column_name] = pd.to_numeric(self.data.profielpunt[column_name], errors="coerce")
+        self.data.profielpunt["geometry"] = self.data.profielpunt.apply(
+            lambda row: Point(row.geometry.x, row.geometry.y, row[column_name])
+            if pd.notna(row[column_name])
+            else row.geometry,
+            axis=1,
+        )
+
+    def _drop_z_from_linestringz_geometry(self) -> None:
+        self.logger.info("Dropping Z coordinate from linestringZ geometry...")
+        self.data.profiellijn["geometry"] = self.data.profiellijn["geometry"].apply(
+            lambda geom: LineString([(x, y) for x, y, z in geom.coords]) if geom.has_z else geom
+        )
+
+    def _linemerge_hydroobjects(self, peilgebiedpraktijk, hydroobject) -> gpd.GeoDataFrame:
+        merged_hydroobjects = []
+        hydroobject_map = {}
+        peilgebieden_sindex = peilgebiedpraktijk.sindex
+
+        hydroobject_to_peilgebied = {}
+        for idx, ho_row in hydroobject.iterrows():
+            ho_geom = ho_row.geometry
+            possible_peil_idx = list(peilgebieden_sindex.query(ho_geom))
+            if not possible_peil_idx:
+                self.logger.warning(f"No peilgebied found for hydroobject with globalid {ho_row['globalid']}.")
+                continue
+            max_length = 0
+            best_peilgebied_id = None
+            for peil_idx in possible_peil_idx:
+                peil_row = peilgebiedpraktijk.iloc[peil_idx]
+                intersection = ho_geom.intersection(peil_row.geometry)
+                if intersection.is_empty:
+                    continue
+                overlap = intersection.length
+                if overlap > max_length:
+                    max_length = overlap
+                    best_peilgebied_id = peil_row["objectid"]
+            if best_peilgebied_id is not None:
+                hydroobject_to_peilgebied[idx] = best_peilgebied_id
+
+        hydroobject = hydroobject.copy()
+        hydroobject["assigned_peilgebied"] = hydroobject.index.map(hydroobject_to_peilgebied)
+        hydroobject = hydroobject[hydroobject["assigned_peilgebied"].notna()]
+
+        for peilgebied_id, group_peilgebied in hydroobject.groupby("assigned_peilgebied"):
+            primary_group = group_peilgebied[group_peilgebied["categorieoppwaterlichaamcode"] == str(1)]
+            if primary_group.empty:
+                continue
+
+            merged_geom = primary_group.geometry.union_all()
+            if merged_geom.geom_type == "GeometryCollection":
+                merged_geom = self._geometrycollection_to_linestring(merged_geom)
+            if merged_geom.geom_type == "LineString":
+                merged_geom = MultiLineString([merged_geom])
+            if merged_geom.is_empty or merged_geom.geom_type != "MultiLineString":
+                continue
+
+            codes = primary_group["code"].unique()
+            linemerge_id = str(uuid.uuid4())
+            for code in codes:
+                hydroobject_map[code] = linemerge_id
+
+            merged_hydroobjects.append(
+                {
+                    "geometry": merged_geom,
+                    "hydroobjectcode": codes,
+                    "linemergeid": linemerge_id,
+                    "peilgebiedid": peilgebied_id,
+                    "categorie": "primary",
+                }
+            )
+
+        merged_hydroobjects_gdf = gpd.GeoDataFrame(merged_hydroobjects, crs=hydroobject.crs)
+        if merged_hydroobjects_gdf.empty:
+            return None
+        else:
+            self.hydroobject_map = hydroobject_map
+            return merged_hydroobjects_gdf

@@ -8,6 +8,7 @@ from typing import Optional
 import geopandas as gpd
 import numpy as np
 import pandas as pd
+import shapely
 from shapely.geometry import LineString, MultiLineString, Point
 from shapely.validation import make_valid
 
@@ -84,17 +85,17 @@ class RawExportToDAMOConverter:
         return cls in RawExportToDAMOConverter._executed
 
     def write_outputs(self):
-        geodf_attrs = {name: val for name, val in self.data.__dict__.items() if isinstance(val, gpd.GeoDataFrame)}
+        output_gdf_dict = {name: val for name, val in self.data.__dict__.items() if isinstance(val, gpd.GeoDataFrame)}
 
-        if not geodf_attrs:
+        if not output_gdf_dict:
             self.logger.warning("No GeoDataFrames found to write.")
             return
 
-        if not self.output_file_path.suffix == ".gpkg":
+        if self.output_file_path.suffix != ".gpkg":
             self.output_file_path.mkdir(parents=True, exist_ok=True)
             self.output_file_path = self.output_file_path / f"{self.output_file_path.name}.gpkg"
 
-        for name, gdf in geodf_attrs.items():
+        for name, gdf in output_gdf_dict.items():
             if isinstance(gdf, gpd.GeoDataFrame) and "geometry" in gdf.columns:
                 gdf.to_file(self.output_file_path, layer=name, engine="pyogrio")
             else:  # dataframe handling
@@ -117,7 +118,7 @@ class RawExportToDAMOConverter:
         return gdf
 
     @staticmethod
-    def _geometrycollection_to_linestring(geometry):
+    def _geometrycollection_to_linestring(geometry: "shapely.Geometry") -> "shapely.Geometry":
         if geometry.geom_type == "GeometryCollection":
             fixed_geometry = [geom for geom in geometry.geoms if geom.geom_type in ["LineString", "MultiLineString"]]
             if fixed_geometry:
@@ -126,121 +127,6 @@ class RawExportToDAMOConverter:
             else:
                 return geometry
         return geometry
-
-    def _assign_hydroobject_ids(self) -> None:
-        if "globalid" not in self.data.hydroobject.columns:
-            self.data.hydroobject["globalid"] = [str(uuid.uuid4()) for _ in range(len(self.data.hydroobject))]
-
-        no_match_codes = []
-        multiple_match_codes = []
-
-        for idx, row in self.data.profielgroep.iterrows():
-            intersecting = self.data.hydroobject[self.data.hydroobject.intersects(row.geometry)]
-            gids_list = intersecting["globalid"].tolist()
-
-            if not gids_list:
-                no_match_codes.append(row.get("code"))
-                self.data.profielgroep.loc[idx, "hydroobjectid"] = np.nan
-                continue
-
-            self.data.profielgroep.loc[idx, "hydroobjectid"] = gids_list[0]
-
-            if len(gids_list) > 1:
-                multiple_match_codes.append((row.get("code"), len(gids_list)))
-                for i, gid in enumerate(gids_list[1:], start=2):
-                    self.data.profielgroep.loc[idx, f"hydroobjectid{i}"] = gid
-
-        if no_match_codes:
-            self.logger.warning(f"No intersection for profielgroep with code(s): {no_match_codes}")
-        if multiple_match_codes:
-            details = ", ".join([f"{idx} ({count})" for idx, count in multiple_match_codes])
-            self.logger.warning(f"Multiple intersections for profielgroep with code(s): {details}")
-
-        return no_match_codes
-
-    def _add_z_to_point_geometry_based_on_column(self, column_name: str) -> None:
-        self.logger.info(f"Adding Z coordinate to profielpunt geometry based on column '{column_name}'...")
-        if column_name not in self.data.profielpunt.columns:
-            raise ValueError(f"Column '{column_name}' is not present in profielpunt.")
-
-        self.data.profielpunt[column_name] = pd.to_numeric(self.data.profielpunt[column_name], errors="coerce")
-        self.data.profielpunt["geometry"] = self.data.profielpunt.apply(
-            lambda row: Point(row.geometry.x, row.geometry.y, row[column_name])
-            if pd.notna(row[column_name])
-            else row.geometry,
-            axis=1,
-        )
-
-    def _drop_z_from_linestringz_geometry(self) -> None:
-        self.logger.info("Dropping Z coordinate from linestringZ geometry...")
-        self.data.profiellijn["geometry"] = self.data.profiellijn["geometry"].apply(
-            lambda geom: LineString([(x, y) for x, y, z in geom.coords]) if geom.has_z else geom
-        )
-
-    def _linemerge_hydroobjects(self, peilgebiedpraktijk, hydroobject) -> gpd.GeoDataFrame:
-        merged_hydroobjects = []
-        hydroobject_map = {}
-        peilgebieden_sindex = peilgebiedpraktijk.sindex
-
-        hydroobject_to_peilgebied = {}
-        for idx, ho_row in hydroobject.iterrows():
-            ho_geom = ho_row.geometry
-            possible_peil_idx = list(peilgebieden_sindex.query(ho_geom))
-            if not possible_peil_idx:
-                self.logger.warning(f"No peilgebied found for hydroobject with globalid {ho_row['globalid']}.")
-                continue
-            max_length = 0
-            best_peilgebied_id = None
-            for peil_idx in possible_peil_idx:
-                peil_row = peilgebiedpraktijk.iloc[peil_idx]
-                intersection = ho_geom.intersection(peil_row.geometry)
-                if intersection.is_empty:
-                    continue
-                overlap = intersection.length
-                if overlap > max_length:
-                    max_length = overlap
-                    best_peilgebied_id = peil_row["objectid"]
-            if best_peilgebied_id is not None:
-                hydroobject_to_peilgebied[idx] = best_peilgebied_id
-
-        hydroobject = hydroobject.copy()
-        hydroobject["assigned_peilgebied"] = hydroobject.index.map(hydroobject_to_peilgebied)
-        hydroobject = hydroobject[hydroobject["assigned_peilgebied"].notna()]
-
-        for peilgebied_id, group_peilgebied in hydroobject.groupby("assigned_peilgebied"):
-            primary_group = group_peilgebied[group_peilgebied["categorieoppwaterlichaamcode"] == str(1)]
-            if primary_group.empty:
-                continue
-
-            merged_geom = primary_group.geometry.union_all()
-            if merged_geom.geom_type == "GeometryCollection":
-                merged_geom = self._geometrycollection_to_linestring(merged_geom)
-            if merged_geom.geom_type == "LineString":
-                merged_geom = MultiLineString([merged_geom])
-            if merged_geom.is_empty or merged_geom.geom_type != "MultiLineString":
-                continue
-
-            codes = primary_group["code"].unique()
-            linemerge_id = str(uuid.uuid4())
-            for code in codes:
-                hydroobject_map[code] = linemerge_id
-
-            merged_hydroobjects.append(
-                {
-                    "geometry": merged_geom,
-                    "hydroobjectcode": codes,
-                    "linemergeid": linemerge_id,
-                    "peilgebiedid": peilgebied_id,
-                    "categorie": "primary",
-                }
-            )
-
-        merged_hydroobjects_gdf = gpd.GeoDataFrame(merged_hydroobjects, crs=hydroobject.crs)
-        if merged_hydroobjects_gdf.empty:
-            return None
-        else:
-            self.hydroobject_map = hydroobject_map
-            return merged_hydroobjects_gdf
 
     def find_linemerge_id_by_hydroobject_code(self, code: str) -> str:
         """

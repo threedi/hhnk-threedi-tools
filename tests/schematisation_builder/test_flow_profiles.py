@@ -13,15 +13,15 @@ from tests.config import TEMP_DIR, TEST_DIRECTORY
 # %%
 # TODO remove skip when py312 implemented.
 @pytest.mark.skipif(sys.version_info < (3, 12), reason="Requires Python 3.12 or higher")
-def test_profile_intermediate_converter():
+def test_profiel_flow():
     from hhnk_threedi_tools.core.schematisation_builder.DAMO_HyDAMO_converter import DAMO_to_HyDAMO_Converter
     from hhnk_threedi_tools.core.schematisation_builder.HyDAMO_validator import validate_hydamo
-    from hhnk_threedi_tools.core.schematisation_builder.raw_export_to_damo_converter import (
-        ProfileIntermediateConverter,
+    from hhnk_threedi_tools.core.schematisation_builder.raw_export_to_DAMO_converters.profiel_converter import (
+        ProfielConverter,
     )
 
     """
-    Test the ProfileIntermediateConverter class functionality:
+    Test the ProfielConverter class functionality:
     - Load and validate DAMO and CSO layers.
     - Test line merge processing and results.
     - Test profile creation: profielpunt, profiellijn, profielgroep.
@@ -34,11 +34,11 @@ def test_profile_intermediate_converter():
     logger = hrt.logging.get_logger(__name__)
 
     raw_export_file_path = TEST_DIRECTORY / "schematisation_builder" / "raw_export.gpkg"
-    temp_dir_out = TEMP_DIR / f"temp_profile_intermediate_converter_{hrt.current_time(date=True)}"
+    temp_dir_out = TEMP_DIR / f"temp_profiel_flow_{hrt.current_time(date=True)}"
     Path(temp_dir_out).mkdir(parents=True, exist_ok=True)
     output_file_path = temp_dir_out / "damo.gpkg"
 
-    converter = ProfileIntermediateConverter(
+    converter = ProfielConverter(
         raw_export_file_path=raw_export_file_path, output_file_path=output_file_path, logger=logger
     )
 
@@ -253,6 +253,6 @@ def test_profile_intermediate_converter():
 #
 # %%
 if __name__ == "__main__":
-    test_profile_intermediate_converter()
+    test_profiel_flow()
 
 # %%

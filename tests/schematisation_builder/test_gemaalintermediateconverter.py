@@ -7,7 +7,9 @@ import hhnk_research_tools as hrt
 import pytest
 
 import hhnk_threedi_tools.resources.schematisation_builder as schematisation_builder_resources
-from hhnk_threedi_tools.core.schematisation_builder.raw_export_to_damo_converter import GemaalIntermediateConverter
+from hhnk_threedi_tools.core.schematisation_builder.raw_export_to_DAMO_converters.gemaal_converter import (
+    GemaalConverter,
+)
 from tests.config import TEMP_DIR, TEST_DIRECTORY
 
 
@@ -20,7 +22,7 @@ def test_gemaal_intermediate_converter():
     Path(temp_dir_out).mkdir(parents=True, exist_ok=True)
     output_file_path = temp_dir_out / "damo.gpkg"
 
-    converter = GemaalIntermediateConverter(
+    converter = GemaalConverter(
         raw_export_file_path=raw_export_file_path, output_file_path=output_file_path, logger=logger
     )
     converter.run()
@@ -47,12 +49,17 @@ def test_gemaal_intermediate_converter():
     assert pomp_layer["globalid"].is_unique, "Pomp layer 'globalid' column has duplicate values."
 
     # For each pomp check the gemaalid
-    for idx, row in pomp_layer.iterrows():
-        gemaal_id = row.get("gemaalid")
-        if gemaal_id is not None:
-            assert gemaal_id in gemaal_layer["globalid"].values, (
-                f"Pomp layer row {idx} has invalid 'gemaalid': {gemaal_id}"
-            )
+    # Join pomp_layer with gemaal_layer on 'gemaalid' and 'globalid'
+    joined = pomp_layer.merge(
+        gemaal_layer[["globalid"]],
+        left_on="gemaalid",
+        right_on="globalid",
+        how="left",
+        indicator=True,
+    )
+    # Assert all gemaalid values in pomp_layer exist in gemaal_layer globalid
+    invalid_rows = joined[joined["_merge"] == "left_only"]
+    assert invalid_rows.empty, f"Pomp layer has rows with invalid 'gemaalid': {invalid_rows['gemaalid'].tolist()}"
 
 
 # %%
