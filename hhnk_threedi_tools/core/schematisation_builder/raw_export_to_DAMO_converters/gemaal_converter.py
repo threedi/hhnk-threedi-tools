@@ -3,7 +3,6 @@ import uuid
 import geopandas as gpd
 import pandas as pd
 
-from hhnk_threedi_tools.core.schematisation_builder.DAMO_HyDAMO_converter import DAMO_to_HyDAMO_Converter
 from hhnk_threedi_tools.core.schematisation_builder.raw_export_to_DAMO_converter import RawExportToDAMOConverter
 
 POMP_COLUMNS = [
@@ -144,7 +143,7 @@ class GemaalConverter(RawExportToDAMOConverter):
         """
 
         # read the DAMO_2.3.xml schema in resource folder with function in damo_to_hydamo_converter.py
-        converter = DAMO_to_HyDAMO_Converter()
+        # converter = DAMO_to_HyDAMO_Converter()
 
         # TODO wietse retrieving the pump columns from schema will only work if we have the damo schema locally
         # _, DAMO_schema_objects = converter.retrieve_domain_mapping()

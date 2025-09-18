@@ -14,7 +14,7 @@ from tests.config import TEMP_DIR, TEST_DIRECTORY
 
 
 # %%
-def test_gemaal_intermediate_converter():
+def test_gemaal_converter():
     logger = hrt.logging.get_logger(__name__)
 
     raw_export_file_path = TEST_DIRECTORY / "schematisation_builder" / "raw_export.gpkg"
@@ -64,6 +64,6 @@ def test_gemaal_intermediate_converter():
 
 # %%
 if __name__ == "__main__":
-    test_gemaal_intermediate_converter()
+    test_gemaal_converter()
 
 # %%
