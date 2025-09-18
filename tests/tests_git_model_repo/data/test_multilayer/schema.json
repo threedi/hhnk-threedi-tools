@@ -1,26 +1,26 @@
 {
   "points": {
+    "geometry": "Point",
     "properties": {
-      "id": "int"
-    },
-    "geometry": "Point"
+      "id": "int64"
+    }
   },
   "lines": {
-    "properties": {},
-    "geometry": "LineString"
+    "geometry": "LineString",
+    "properties": {}
   },
   "multi_polygons": {
+    "geometry": "Polygon",
     "properties": {
-      "code": "str"
-    },
-    "geometry": "Polygon"
+      "code": "object"
+    }
   },
   "no_geom": {
+    "geometry": null,
     "properties": {
-      "id": "int",
-      "code": "str:12",
-      "other_field": "str:12"
-    },
-    "geometry": "None"
+      "id": "int64",
+      "code": "object",
+      "other_field": "object"
+    }
   }
 }

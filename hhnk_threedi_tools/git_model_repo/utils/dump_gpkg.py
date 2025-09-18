@@ -95,11 +95,12 @@ class GeoPackageDump:
         dict
             The schema of the layer.
         """
-        df = pyogrio.read_info(str(self.file_path), layer=layer_name)
+        info = pyogrio.read_info(str(self.file_path), layer=layer_name)
         schema = {
-            "geometry": df["geometry_type"],
-            "properties": {field["name"]: field["type"] for field in df["fields"]},
+            "geometry": info["geometry_type"],
+            "properties": {f[0]: f[1] for f in zip(info["fields"], info["dtypes"])},
         }
+
         return schema
 
     def get_schema(self) -> OrderedDict:
@@ -110,9 +111,9 @@ class GeoPackageDump:
         OrderedDict
             Dictionary with layer names as keys and their schemas as values.
         """
-        layers = pyogrio.list_layers(str(self.file_path))
+        layers = gpd.list_layers(str(self.file_path))
         schema = OrderedDict()
-        for layer in layers:
+        for i, layer in layers.iterrows():
             schema[layer["name"]] = self.get_schema_layer(layer["name"])
         return schema
 
@@ -145,20 +146,23 @@ class GeoPackageDump:
         -------
         None
         """
-        layers = pyogrio.list_layers(str(self.file_path))
+        # todo: check if sourcefile has changed since last dump
+        layers = gpd.list_layers(str(self.file_path))
 
-        for layer in layers:
+        for i, layer in layers.iterrows():
             layer_name = layer["name"]
             logger.info("dump layer %s", layer_name)
 
             with SubTimer(f"dump layer {layer_name}"):
                 gdf = gpd.read_file(self.file_path, layer=layer_name)
                 # Add fid column for compatibility
-                gdf["fid"] = gdf.index.astype(int)
+                # gdf["fid"] = gdf.index.astype(int)
                 output_file_path = self.output_path / f"{layer_name}.geojson"
+                # initialize change detection before write (get hash)
                 cd = FileChangeDetection(output_file_path)
+                gdf = gpd.GeoDataFrame(gdf)
                 # Set coordinate precision to 6 using GeoPandas to_file options
-                gdf.to_file(output_file_path, driver="GeoJSON", driver_options={"COORDINATE_PRECISION": 6})
+                gdf.to_file(str(output_file_path), driver="GeoJSON", COORDINATE_PRECISION=6)
 
             if reformat:
                 with SubTimer(f"reformat json {layer_name}"):
@@ -170,6 +174,7 @@ class GeoPackageDump:
                         with output_file_path.open("w") as f:
                             f.write(format_json(data))
 
+            # compare hash after write with hash before write
             if cd.has_changed():
                 self.changed_files.append(output_file_path)
 

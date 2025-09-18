@@ -74,14 +74,9 @@ class GeoPackageRestore:
             geojson_file = self.gpkg_path / f"{layer_name}.geojson"
             if not geojson_file.exists():
                 continue
-            gdf = gpd.read_file(geojson_file)
+            gdf = gpd.read_file(geojson_file).astype(schema[layer_name]["properties"])
             # Write to GeoPackage, append if file exists, otherwise create
-            gdf.to_file(
-                self.output_file_path,
-                layer=layer_name,
-                driver="GPKG",
-                index=False,
-            )
+            gdf.to_file(self.output_file_path, layer=layer_name, driver="GPKG", index=False)
 
     def restore(self) -> None:
         """Restore the GeoPackage from directory with schema and GeoJSON files.
