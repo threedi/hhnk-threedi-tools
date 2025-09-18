@@ -5,7 +5,7 @@ from pathlib import Path
 from config import TEST_DIRECTORY
 
 # import hhnk_research_tools as hrt
-from hhnk_threedi_tools.core.schematisation_builder.schematisation_builder import make_validated_hydamo_package
+from hhnk_threedi_tools.core.schematisation_builder.main import make_validated_hydamo_package
 
 
 def test_schematisation_builder():

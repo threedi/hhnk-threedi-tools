@@ -5,8 +5,6 @@ from pathlib import Path
 import hhnk_research_tools as hrt
 from hydamo_validation import validator
 
-# TODO make import work by local installation of HyDAMOValidatieModule
-
 
 def validate_hydamo(
     hydamo_file_path: Path,

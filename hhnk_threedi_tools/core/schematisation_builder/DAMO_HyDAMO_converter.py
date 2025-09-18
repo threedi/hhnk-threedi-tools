@@ -104,6 +104,7 @@ class DAMO_to_HyDAMO_Converter:
         )
 
         if convert_domain_values:
+            self.logger.info("Domain value conversion is enabled.")
             if damo_schema_path is None:
                 raise NotImplementedError(
                     "DAMO schema path must be provided to convert domain values. "
@@ -115,6 +116,8 @@ class DAMO_to_HyDAMO_Converter:
                 schema_path=damo_schema_path, schema_basename="DAMO", schema_version=damo_version
             )
             self.domains, self.objects = self._retrieve_damo_domain_mapping()
+        else:
+            self.logger.info("Domain value conversion is disabled.")
 
     @cached_property
     def hydamo_definitions(self) -> dict:
@@ -145,6 +148,7 @@ class DAMO_to_HyDAMO_Converter:
 
             schema_path = Path(str(importlib_resources.files(package_resource).joinpath(schema_name)))
 
+        schema_path = Path(schema_path)
         if not schema_path.exists():
             raise FileNotFoundError(f"{schema_path} does not exist.")
 
@@ -230,8 +234,17 @@ class DAMO_to_HyDAMO_Converter:
         """
         self.hydamo_file_path.parent.mkdir(parents=True, exist_ok=True)
 
+        # Only convert layers that exist in the HyDAMO schema
+        hydamo_layer_names = set(self.hydamo_definitions.keys())
+
         if self.layers is None:
-            self.layers = [layer for layer in self.damo_file_path.available_layers() if layer != "layer_styles"]
+            self.layers = [
+                layer
+                for layer in self.damo_file_path.available_layers()
+                if layer != "layer_styles" and layer.lower() in hydamo_layer_names
+            ]
+        else:
+            self.layers = [layer for layer in self.layers if layer.lower() in hydamo_layer_names]
 
         for layer_name in self.layers:
             layer_name = layer_name.lower()
@@ -275,19 +288,23 @@ class DAMO_to_HyDAMO_Converter:
         layer_gdf : gpd.GeoDataFrame
             Converted layer
         """
+        unmatched_columns = []
         for column_name_orig in layer_gdf.columns:
             if column_name_orig != "geometry":
                 column_name = column_name_orig.lower()
                 layer_gdf.rename(columns={column_name_orig: column_name}, inplace=True)
 
                 if column_name not in self.hydamo_definitions[layer_name]["properties"].keys():
-                    self.logger.info(f"{layer_name}/{column_name} - Column not found in HyDAMO schema. Skipping.")
+                    unmatched_columns.append(column_name)
                     continue
                 layer_gdf[column_name] = self._convert_column(
                     column=layer_gdf[column_name],
                     column_name=column_name,
                     layer_name=layer_name,
                 )
+
+        if unmatched_columns and self.convert_domain_values:
+            self.logger.info(f"{layer_name} - Columns not found in HyDAMO schema and skipped: {unmatched_columns}")
 
         return layer_gdf
 
@@ -309,8 +326,6 @@ class DAMO_to_HyDAMO_Converter:
         column : pd.Series
             Converted attribute column
         """
-        self.logger.info(f"{layer_name}/{column_name} - Start conversion")
-
         # Get the field type of the attribute from the HyDAMO schema
         field_type_str = self.hydamo_definitions[layer_name]["properties"][column_name]["type"]
         field_type = FIELD_TYPES_DICT[field_type_str]
@@ -342,11 +357,14 @@ class DAMO_to_HyDAMO_Converter:
         """
         layer_name_lower = layer_name.lower()
         field_domain = self.objects.get(layer_name_lower, {}).get(column_name)
+
         if field_domain is not None:
             domain = self.domains.get(field_domain)
             if domain:
                 mapped_column = column.map(domain)
-                self.logger.info(f"{layer_name}/{column_name} - Converted domain values using domain {field_domain}")
+                self.logger.info(
+                    f"{layer_name}/{column_name} - Converted domain values using domain {field_domain}: {domain}"
+                )
                 return mapped_column
 
         # If no domain is found, return the column as is

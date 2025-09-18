@@ -26,21 +26,23 @@ def test_DAMO_HyDAMO_converter():
 
     damo_file_path = TEST_DIRECTORY / "schematisation_builder" / "DAMO.gpkg"
 
-    ### Outcommented code to test HyDAMO conversion with convert_domain_values set to True
+    ### Outcommented because the DAMO schema file is not available in the repo
+    # DAMO_hydroobject_gdf = gpd.read_file(damo_file_path, layer="HYDROOBJECT")
     # hydamo_file_path = temp_dir_out / f"HyDAMO_{hrt.current_time(date=True)}.gpkg"
 
     # converter = DAMO_to_HyDAMO_Converter(
     #     damo_file_path=damo_file_path,
     #     hydamo_file_path=hydamo_file_path,
-    #     layers=LAYERS,
     #     overwrite=False,
+    #     convert_domain_values=True,
+    #     damo_schema_path=r"...\DAMO_241.xml",
     # )
     # converter.run()
 
     # # Check if HyDAMO.gpkg is created
     # assert hydamo_file_path.exists()
 
-    # HyDAMO_hydroobject_gdf = gpd.read_file(hydamo_file_path, layer=LAYERS[0])
+    # HyDAMO_hydroobject_gdf = gpd.read_file(hydamo_file_path, layer="HYDROOBJECT")
 
     # # Check if the column NEN3610id is added to the layer
     # assert "NEN3610id" in HyDAMO_hydroobject_gdf.columns
@@ -51,8 +53,10 @@ def test_DAMO_HyDAMO_converter():
     # # Filter DAMO and HyDAMO on column objectid value
     # # Check if the value for column categorieoppwaterlichaam is converted to a descriptive value
     # # In DAMO the value is 1, in HyDAMO the value is 'primair'
+    # DAMO_hydroobject_gdf = DAMO_hydroobject_gdf[DAMO_hydroobject_gdf["objectid"] == objectid]
     # HyDAMO_hydroobject_gdf = HyDAMO_hydroobject_gdf[HyDAMO_hydroobject_gdf["objectid"] == objectid]
 
+    ### Outcommented next assertion because the DAMO values has become strings instead of integers
     # assert (
     #     DAMO_hydroobject_gdf["categorieoppwaterlichaam"].values[0] == 1
     #     and HyDAMO_hydroobject_gdf["categorieoppwaterlichaam"].values[0] == "primair"

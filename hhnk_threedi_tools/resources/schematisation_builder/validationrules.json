@@ -1340,6 +1340,8 @@
 				{
 					"id": 0,
 					"result_variable": "pomp_aantal_pompen",
+					"name": "Aantal gekoppelde pompen",
+					"description": "Berekent het aantal pompen dat aan het gemaal is gekoppeld",
 					"function": {
 						"object_relation": {
 							"statistic": "count",
@@ -1351,6 +1353,8 @@
 				{
 					"id": 1,
 					"result_variable": "pomp_capaciteit",
+					"name": "Totale capaciteit van gekoppelde pompen",
+					"description": "Som van de maximale capaciteit van alle gekoppelde pompen",
 					"function": {
 						"object_relation": {
 							"statistic": "sum",
@@ -1363,28 +1367,31 @@
 				{
 					"id": 100,
 					"result_variable": "distance_to_peilgebied",
+					"name": "Afstand tot dichtstbijzijnde peilgebied",
+					"description": "Berekent de afstand van het gemaal tot het dichtstbijzijnde peilgebied",
 					"function": {
 						"custom_hydamo": {
 							"custom_function_name": "distance_to_peilgebied"
 						}
-					},
-					"description": "Calculate the distance from each gemaal to the nearest peilgebied"
+					}
 				},
 				{
 					"id": 101,
 					"result_variable": "aantal_peilgebieden",
+					"name": "Aantal peilgebieden per gemaal",
+					"description": "Berekent het aantal peilgebieden dat aan het gemaal is gekoppeld",
 					"function": {
 						"custom_hydamo": {
 							"custom_function_name": "gemaal_streefpeil_value"
 						}
-					},
-					"description": "Calculate the distance from each gemaal to the nearest peilgebied"
+					}
 				}
 			],
 			"validation_rules": [
 				{
 					"id": 0,
-					"name": "Het aantal pompen is groter dan nul",
+					"name": "Aantal pompen groter dan nul",
+					"description": "Het gemaal moet minimaal één gekoppelde pomp hebben",
 					"type": "logic",
 					"validation_rule_set": "basic",
 					"error_type": "critical",
@@ -1400,7 +1407,8 @@
 				},
 				{
 					"id": 1,
-					"name": "Totale capaciteit is groter dan nul",
+					"name": "Totale capaciteit groter dan nul",
+					"description": "De totale capaciteit van alle pompen bij het gemaal moet groter zijn dan nul",
 					"type": "logic",
 					"validation_rule_set": "basic",
 					"error_type": "critical",
@@ -1416,7 +1424,8 @@
 				},
 				{
 					"id": 2,
-					"name": "Een gemaal zal geen overlap met een ander gemaal hebben",
+					"name": "Geen overlap met ander gemaal",
+					"description": "Het gemaal mag niet overlappen met een ander gemaal",
 					"type": "topologic",
 					"validation_rule_set": "basic",
 					"error_type": "critical",
@@ -1431,11 +1440,12 @@
 				},
 				{
 					"id": 101,
-					"name": "De capaciteit groter dan 0.92 een minder dan 700",
+					"name": "Capaciteit binnen logisch bereik",
+					"description": "De maximale capaciteit van het gemaal ligt tussen 0.92 en 700",
 					"type": "logic",
 					"validation_rule_set": "hhnk",
 					"error_type": "critical",
-					"result_variable": "logisch_capacteit",
+					"result_variable": "logische_capacteit",
 					"error_message": "check capacteit van de gemaal",
 					"active": true,
 					"function": {
@@ -1449,7 +1459,8 @@
 				},
 				{
 					"id": 102,
-					"name": "Afstand tot as watergang moet kleiner zijn dan 1 meter",
+					"name": "Gemaal op watergang",
+					"description": "Het gemaal moet binnen 1 meter van de as van de watergang liggen",
 					"type": "topologic",
 					"validation_rule_set": "hhnk",
 					"error_type": "critical",
@@ -1465,7 +1476,8 @@
 				},
 				{
 					"id": 103,
-					"name": "Gemaalgrens Kunstwerk moet op peilscheiding liggen",
+					"name": "Gemaal op peilscheiding",
+					"description": "Het gemaal moet op de grens van een peilgebiedpraktijk liggen",
 					"type": "topologic",
 					"validation_rule_set": "hhnk",
 					"error_type": "critical",
@@ -1485,7 +1497,8 @@
 				},
 				{
 					"id": 104,
-					"name": "afstand_to_peilgebied",
+					"name": "Afstand tot peilgebied",
+					"description": "De afstand van het gemaal tot het peilgebied moet kleiner of gelijk zijn aan 0.01",
 					"type": "logic",
 					"validation_rule_set": "hhnk",
 					"error_type": "critical",
@@ -1501,7 +1514,8 @@
 				},
 				{
 					"id": 105,
-					"name": "aantal peilgebieden per gemaal",
+					"name": "Aantal peilgebieden per gemaal maximaal 2",
+					"description": "Een gemaal mag aan maximaal 2 peilgebieden gekoppeld zijn",
 					"type": "logic",
 					"validation_rule_set": "hhnk",
 					"error_type": "critical",

@@ -19,7 +19,7 @@ dotenv.load_dotenv()
     reason="Skipping DB test because no local_settings_htt.py or DATABASES available.",
 )
 def test_schematisation_builder():
-    from hhnk_threedi_tools.core.schematisation_builder.schematisation_builder import make_validated_hydamo_package
+    from hhnk_threedi_tools.core.schematisation_builder.main import make_validated_hydamo_package
 
     # define project folder path and
     project_folder = TEST_DIRECTORY / "test_schematisation_builder"
