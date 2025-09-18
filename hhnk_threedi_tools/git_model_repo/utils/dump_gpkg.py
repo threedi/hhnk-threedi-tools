@@ -116,7 +116,7 @@ class GeoPackageDump:
             layers = gpd.list_layers(str(self.file_path))
         else:
             # for older versions of geopandas
-            layers = pd.DataFrame(pyogrio.list_layers(str(self.file_path)), columns=['name', 'geometry_type'])
+            layers = pd.DataFrame(pyogrio.list_layers(str(self.file_path)), columns=["name", "geometry_type"])
 
         schema = OrderedDict()
         for i, layer in layers.iterrows():
