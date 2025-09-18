@@ -12,7 +12,7 @@
             "fixes": [
                 {
                     "validatiefix_id": 1,
-                    "validatiefix_name": "remove_old_profiles",
+                    "validatiefix_name": "remove_features",
                     "validatieregel_id": 103,
                     "parameters": []
                 },

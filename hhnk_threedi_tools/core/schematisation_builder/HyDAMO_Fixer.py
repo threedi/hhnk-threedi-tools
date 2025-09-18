@@ -6,8 +6,9 @@ import hhnk_research_tools as hrt
 from HyDAMO_validator import validate_hydamo
 
 import hhnk_threedi_tools.resources.schematisation_builder as schematisation_builder_resources
+from hhnk_threedi_tools.core.schematisation_builder import functions_HyDAMO_Fixer
 from hhnk_threedi_tools.resources.schematisation_builder.db_layer_mapping import DB_LAYER_MAPPING
-import functions_HyDAMO_Fixer
+
 
 class HyDAMO_Fixer:
     """Class to fix HyDAMO data.
@@ -27,21 +28,36 @@ class HyDAMO_Fixer:
 
     """
 
-    def __init__(self, hydamo_file_path: Path, 
-                 validation_result_path: Path, 
-                 db_layer_mapping: dict,
-                 project_folder: Path = None, 
-                 logger) -> None:
+    def __init__(
+        self,
+        hydamo_file_path: Path,
+        db_layer_mapping: dict = None,
+        project_folder: Path = None,
+        logger: hrt.logging.Logger = None,
+    ) -> None:
         if logger:
             self.logger = logger
         else:
             self.logger = hrt.logging.get_logger(__name__)
 
-        #NOTE: maybe better to pass project folder and get paths from there?
-        self.project_folder = project folder
+        if not db_layer_mapping:
+            self.db_layer_mapping = DB_LAYER_MAPPING
+        else:
+            self.logger.info("Using custom db_layer_mapping.")
+            self.db_layer_mapping = db_layer_mapping
+
+        # NOTE: maybe better to pass project folder and get paths from there?
+        self.project_folder = project_folder
         self.hydamo_file = gpd.read_file(hydamo_file_path)
-        self.validation_result = gpd.read_file(validation_result_path)
-        self.db_layer_mapping = db_layer_mapping
+        self.validation_result_path = (
+            project_folder / "01_source_data" / "hydamo_validation" / "results" / "results.gpkg"
+        )
+        if not Path(self.validation_result_path).exists():
+            self.logger.error(f"Validation result file not found: {self.validation_result_path}")
+            raise FileNotFoundError(f"Validation result file not found: {self.validation_result_path}")
+        else:
+            self.validation_result = gpd.read_file(self.validation_result_path)
+            self.logger.info(f"Validation result file loaded: {self.validation_result_path}")
 
         self.config_path = hrt.get_pkg_resource_path(schematisation_builder_resources, "FixConfig.json")
         with open(self.config_path) as f:
@@ -70,7 +86,8 @@ class HyDAMO_Fixer:
                             return False, failed_codes
 
     def specific_hydamo_layer_validation(self, layer: str) -> bool:
-        "validation of layer which will be used before the fixing process starts"
+        """Validate layer before the fixing process starts"""
+        self.logger.info(f"Starting validation for layer: {layer}")
         # check which layers have to be included for validation, since some depend on multiple layers in the validation
         needed_layers = [layer]
         table_config = self.db_layer_mapping.get(layer)
@@ -121,7 +138,7 @@ class HyDAMO_Fixer:
             (self.hydamo_file["layer"] == layer) & (self.hydamo_file["id"].isin(list_features))
         ]
         return selected_features
-    
+
     def fix_features(self, layer: str, list_features: list, validatiefix_name: str) -> None:
         """Apply fixes to the selected features based on predefined rules.
 
@@ -139,7 +156,7 @@ class HyDAMO_Fixer:
         # Apply the fix function to the selected features
         self.logger.info(f"Applying the fix {validatiefix_name} to {len(list_features)} features in layer {layer}.")
         self.hydamo_file = func(self.hydamo_file, layer, list_features, self.logger)
-        
+
     def run(self) -> None:
         """Run the HyDAMO fixing process."""
         for obj in self.fix_config["objects"]:
@@ -159,13 +176,16 @@ class HyDAMO_Fixer:
                 # Show features to user (outside this class, e.g., in QGIS)
 
                 # For now, we assume user confirms automatic fixing
+                # When in Qgis this have to be done in another fuction
                 for rule in obj["validation_rule"]:
-                    fixes = rule['fixes']
+                    fixes = rule["fixes"]
                     if len(fixes) > 2:
-                        #TODO: give choice to user. Which feature to fix with which function?
-                        self.logger.warning(f"Multiple fixes found for rule {rule['validation_rule_id']}. For now using the first one.")
-                    
-                    validation_fix_name = fixes[0]['validationfix_name']
+                        # TODO: give choice to user. Which feature to fix with which function?
+                        self.logger.warning(
+                            f"Multiple fixes found for rule {rule['validation_rule_id']}. For now using the first one."
+                        )
+
+                    validation_fix_name = fixes[0]["validationfix_name"]
                     self.fix_features(layer, list_features, validation_fix_name)
             else:
                 self.logger.info(f"No fix needed for layer {layer}.")
@@ -177,9 +197,15 @@ class HyDAMO_Fixer:
 
 
 if __name__ == "__main__":
-    hydamo_file_path = Path("path/to/hydamo_file.geojson")
+    hydamo_file_path = Path(
+        r"C:\Users\esther.vanderlaan\Documents\HHNK - modelbuilder\Test\model_test\01_source_data\HyDAMO.gpkg"
+    )
     validation_result_path = Path("path/to/validation_result.geojson")
-    fixer = HyDAMO_Fixer(hydamo_file_path, validation_result_path, logger=None)
 
-    pass
-    # TODO add example usage
+    #  hydamo_file_path: Path,
+    #     validation_result_path: Path,
+    #     db_layer_mapping: dict,
+    #     project_folder: Path = None,
+    #     logger: hrt.logging.Logger = None,
+
+    fixer = HyDAMO_Fixer(hydamo_file_path, validation_result_path, logger=None)
