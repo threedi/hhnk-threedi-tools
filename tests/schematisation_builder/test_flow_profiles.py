@@ -16,7 +16,7 @@ from tests.config import TEMP_DIR, TEST_DIRECTORY
 def test_profile_intermediate_converter():
     from hhnk_threedi_tools.core.schematisation_builder.DAMO_HyDAMO_converter import DAMO_to_HyDAMO_Converter
     from hhnk_threedi_tools.core.schematisation_builder.HyDAMO_validator import validate_hydamo
-    from hhnk_threedi_tools.core.schematisation_builder.intermediate_converter import (
+    from hhnk_threedi_tools.core.schematisation_builder.raw_export_to_damo_converter import (
         ProfileIntermediateConverter,
     )
 

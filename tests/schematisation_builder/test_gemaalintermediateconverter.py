@@ -7,7 +7,7 @@ import hhnk_research_tools as hrt
 import pytest
 
 import hhnk_threedi_tools.resources.schematisation_builder as schematisation_builder_resources
-from hhnk_threedi_tools.core.schematisation_builder.intermediate_converter import GemaalIntermediateConverter
+from hhnk_threedi_tools.core.schematisation_builder.raw_export_to_damo_converter import GemaalIntermediateConverter
 from tests.config import TEMP_DIR, TEST_DIRECTORY
 
 
