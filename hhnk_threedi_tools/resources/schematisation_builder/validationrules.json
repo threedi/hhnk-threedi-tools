@@ -1476,27 +1476,6 @@
 				},
 				{
 					"id": 103,
-					"name": "Gemaal op peilscheiding",
-					"description": "Het gemaal moet op de grens van een peilgebiedpraktijk liggen",
-					"type": "topologic",
-					"validation_rule_set": "hhnk",
-					"error_type": "critical",
-					"result_variable": "gemmaal_op_peilscheiding",
-					"error_message": "gemaal niet op peilscheiding",
-					"active": true,
-					"function": {
-						"structures_at_boundaries": {
-							"areas": "peilgebiedpraktijk",
-							"structures": [
-								"gemaal"
-							],
-							"tolerance": 0.01,
-							"distance": 25
-						}
-					}
-				},
-				{
-					"id": 104,
 					"name": "Afstand tot peilgebied",
 					"description": "De afstand van het gemaal tot het peilgebied moet kleiner of gelijk zijn aan 0.01",
 					"type": "logic",
@@ -1513,7 +1492,7 @@
 					}
 				},
 				{
-					"id": 105,
+					"id": 104,
 					"name": "Aantal peilgebieden per gemaal maximaal 2",
 					"description": "Een gemaal mag aan maximaal 2 peilgebieden gekoppeld zijn",
 					"type": "logic",
