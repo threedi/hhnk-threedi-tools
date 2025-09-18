@@ -5,13 +5,13 @@
   {
    "type": "Feature",
    "id": 1,
-   "properties": {"id": 1, "code": "code_test", "water_level": 3.41, "last_modified": "2023-12-05T09:00:13.271"},
+   "properties": {"id": 1, "code": "code_test", "water_level": 3.41, "last_modified": "2023-12-05T09:00:13.271000"},
    "geometry": {"type": "Point", "coordinates": [-1.607196, -0.06072]}
   },
   {
    "type": "Feature",
    "id": 2,
-   "properties": {"id": 4, "code": "code voor 4", "water_level": 2.89, "last_modified": "2023-12-06T00:00:00"},
+   "properties": {"id": 4, "code": "code voor 4", "water_level": 2.89, "last_modified": "2023-12-06T01:00:00.001000"},
    "geometry": {"type": "Point", "coordinates": [-1.467016, -0.073463]}
   }
  ]

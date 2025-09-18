@@ -5,6 +5,7 @@ from collections import OrderedDict
 from pathlib import Path
 
 import geopandas as gpd
+import pandas as pd
 import pyogrio
 
 from hhnk_threedi_tools.git_model_repo.utils.file_change_detection import FileChangeDetection
@@ -111,7 +112,12 @@ class GeoPackageDump:
         OrderedDict
             Dictionary with layer names as keys and their schemas as values.
         """
-        layers = gpd.list_layers(str(self.file_path))
+        if hasattr(gpd, "list_layers"):
+            layers = gpd.list_layers(str(self.file_path))
+        else:
+            # for older versions of geopandas
+            layers = pd.DataFrame(pyogrio.list_layers(str(self.file_path)), columns=['name', 'geometry_type'])
+
         schema = OrderedDict()
         for i, layer in layers.iterrows():
             schema[layer["name"]] = self.get_schema_layer(layer["name"])
@@ -147,7 +153,11 @@ class GeoPackageDump:
         None
         """
         # todo: check if sourcefile has changed since last dump
-        layers = gpd.list_layers(str(self.file_path))
+        if hasattr(gpd, "list_layers"):
+            layers = gpd.list_layers(str(self.file_path))
+        else:
+            # for older versions of geopandas
+            layers = pd.DataFrame(pyogrio.list_layers(str(self.file_path)), columns=["name", "geometry_type"])
 
         for i, layer in layers.iterrows():
             layer_name = layer["name"]
