@@ -11,7 +11,7 @@ from shapely.geometry import box
 
 from hhnk_threedi_tools.core.folders import Folders
 
-logger = hrt.logging.get_logger(__name__, level="DEBUG")
+logger = hrt.logging.get_logger(__name__, level="INFO")
 
 
 class ThreediGrid:

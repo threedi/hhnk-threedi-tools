@@ -27,7 +27,7 @@ from hhnk_threedi_tools.variables.one_d_two_d import (
     vel_m_s_col,
 )
 
-logger = hrt.logging.get_logger(__name__, level="DEBUG")
+logger = hrt.logging.get_logger(__name__, level="INFO")
 
 
 class OneDTwoDTest:
@@ -79,31 +79,18 @@ class OneDTwoDTest:
         # Create depth and wlvl rasters for each timestep.
         grid_gdf = gpd.read_file(self.output_fd.grid_nodes_2d.path, engine="pyogrio")
         for T in self.TIMESTEPS:
-            # with GridToWaterLevel(
-            #     dem_path=self.folder.model.schema_base.rasters.dem,
-            #     grid_gdf=grid_gdf,
-            #     wlvl_column=f"wlvl_{T}h",
-            # ) as raster_calc:
-            #     output_file = getattr(self.output_fd, f"waterstand_T{T}")
-            #     logger.debug(f"Creating waterlevel raster {output_file}")
-            #     level_raster = raster_calc.run(
-            #         output_file=output_file,
-            #         chunksize=chunksize,
-            #         overwrite=overwrite,
-            #     )
-
-            raster_calc = GridToWaterLevel(
+            with GridToWaterLevel(
                 dem_path=self.folder.model.schema_base.rasters.dem,
                 grid_gdf=grid_gdf,
                 wlvl_column=f"wlvl_{T}h",
-            )
-            output_file = getattr(self.output_fd, f"waterstand_T{T}")
-            logger.debug(f"Creating waterlevel raster {output_file}")
-            level_raster = raster_calc.run(
-                output_file=output_file,
-                chunksize=chunksize,
-                overwrite=overwrite,
-            )
+            ) as raster_calc:
+                output_file = getattr(self.output_fd, f"waterstand_T{T}")
+                logger.debug(f"Creating waterlevel raster {output_file}")
+                level_raster = raster_calc.run(
+                    output_file=output_file,
+                    chunksize=chunksize,
+                    overwrite=overwrite,
+                )
             with GridToWaterDepth(
                 dem_path=self.folder.model.schema_base.rasters.dem,
                 wlvl_path=level_raster,
@@ -252,9 +239,11 @@ if __name__ == "__main__":
     TEST_MODEL = Path(r"E:\02.modellen\Schermer_leggertool")
     folder = Folders(TEST_MODEL)
     self = OneDTwoDTest.from_path(TEST_MODEL)
-    T = 1
-    chunksize = 1024
-    overwrite = False
-    # %%
-    # output = self.run_flowline_stats()
-    output = self.run_wlvl_depth_at_timesteps(chunksize=512)
+    # T = 1
+    # chunksize = 1024
+    # overwrite = False
+# %%
+# output = self.run_flowline_stats()
+# output = self.run_wlvl_depth_at_timesteps(chunksize=2048)
+
+# %%
