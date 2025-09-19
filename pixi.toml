@@ -28,28 +28,13 @@ upload_pypi = "twine upload --repository hhnk-threedi-tools  dist/*"
 sort_imports = "ruff check  ./**/*.py --select I --fix --force-exclude"
 fmt = "ruff format ./**/*.py --force-exclude"
 style = {depends-on = ["sort_imports", "fmt"]} # `pixi run style`
+tests = "pytest --cov-report term-missing --cov=hhnk_threedi_tools --cov-report=xml"
 
 
 [feature.dev.tasks]
 build_wheels = "rm -rf dist/ && python -m build" # build wheels
 twine_check = "twine check dist/*"
 build = { depends-on = ["build_wheels", "twine_check"] }
-
-
-# To run tests for python 3.12 with; pixi run tests
-# FIXME change env in pytests_threedi_tools.yml under .github to 'test' as well once all tests have been updated to python 3.12
-[feature.test.tasks]
-tests = "pytest --cov-report term-missing --cov=hhnk_threedi_tools --cov-report=xml"
-sort_imports-check = "ruff check  ./**/*.py --select I --force-exclude"
-fmt-check = "ruff format ./**/*.py --check --force-exclude"
-style-check = {depends-on = ["sort_imports-check", "fmt-check"]} # raises errors instead of fixing
-
-# To run tests with pythin 3.9 use; pixi run -e py39 tests
-[feature.py39.tasks]
-tests = "pytest --cov-report term-missing --cov=hhnk_threedi_tools --cov-report=xml"
-sort_imports-check = "ruff check  ./**/*.py --select I --force-exclude"
-fmt-check = "ruff format ./**/*.py --check --force-exclude"
-style-check = {depends-on = ["sort_imports-check", "fmt-check"]} # raises errors instead of fixing
 
 
 [dependencies]
@@ -93,6 +78,7 @@ threedi_mi_utils = "==0.1.10"
 threedigrid = "==2.3.5"
 threedigrid-builder = ">=1.24.3"
 threedidepth = "==0.6.3"
+hhnk-research-tools = { git = "https://github.com/hhnk/hhnk-research-tools.git", rev = "main" }
 
 # HHNK deps
 hhnk-threedi-tools = { path = ".", editable = true }
@@ -118,13 +104,7 @@ django = "<4"  # datachecker (<4 wegens compatibility met 3Di modules)
 [feature.dev.pypi-dependencies]
 # Editable installs, not installed on test. #FIXME doesnt work on Github Actions.
 # https://github.com/prefix-dev/pixi/issues/2763
-# FIXME disabled. should run pixi run postinstall
-# hhnk-research-tools = { path = "../hhnk-research-tools", editable = true }
 build = "*"
-
-# Use mains from hrt and hydamo in tests
-[feature.test.pypi-dependencies]
-hhnk-research-tools = { git = "https://github.com/hhnk/hhnk-research-tools.git", rev = "main" }
 hydamo_validation = { git = "https://github.com/hhnk/HyDAMOValidatieModule.git", rev = "main" }
 
 
@@ -173,14 +153,11 @@ threedi-api-client = "==4.1.7" # 3Di Models and Simulations 3.11.0
 threedigrid_builder = "==1.14.4" # threedi_results_analysis 3.9.2
 threedigrid = "==2.3.3" # threedi_results_analysis 3.12.0
 threedidepth = "==0.6.3" # threedi_results_analysis 3.9.0
-hhnk-research-tools = { git = "https://github.com/hhnk/hhnk-research-tools.git", rev = "main" }
-hydamo_validation = { git = "https://github.com/hhnk/HyDAMOValidatieModule.git", rev = "main" } 
 dotenv = "*"
 
 #Editable installs
-hhnk_threedi_tools = { path = ".", editable = true }
+# hhnk_threedi_tools = { path = ".", editable = true } #TODO kan dit weg
 
 [environments]
 default = ["dev"]
 py39 = { features=["py39"], no-default-feature = true }
-test = ["test"]
