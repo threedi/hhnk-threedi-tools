@@ -78,7 +78,7 @@ threedi_mi_utils = "==0.1.10"
 threedigrid = "==2.3.5"
 threedigrid-builder = ">=1.24.3"
 threedidepth = "==0.6.3"
-hhnk-research-tools = { git = "https://github.com/hhnk/hhnk-research-tools.git", rev = "main" }
+# hhnk-research-tools = { git = "https://github.com/hhnk/hhnk-research-tools.git", rev = "main" }
 
 # HHNK deps
 hhnk-threedi-tools = { path = ".", editable = true }
@@ -156,6 +156,7 @@ threedidepth = "==0.6.3" # threedi_results_analysis 3.9.0
 dotenv = "*"
 
 #Editable installs
+hhnk-research-tools = { git = "https://github.com/hhnk/hhnk-research-tools.git", rev = "main" }
 # hhnk_threedi_tools = { path = ".", editable = true } #TODO kan dit weg
 
 [environments]
