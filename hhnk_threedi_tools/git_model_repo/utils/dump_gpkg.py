@@ -4,7 +4,9 @@ import typing
 from collections import OrderedDict
 from pathlib import Path
 
-import fiona
+import geopandas as gpd
+import pandas as pd
+import pyogrio
 
 from hhnk_threedi_tools.git_model_repo.utils.file_change_detection import FileChangeDetection
 from hhnk_threedi_tools.git_model_repo.utils.timer_log import SubTimer
@@ -16,7 +18,7 @@ def format_json(
     obj: typing.Any,
     parent_key: str = "",
     depth: int = 0,
-):
+) -> str:
     """Format a JSON object for improved readability in git diff.
 
     Parameters
@@ -49,7 +51,7 @@ def format_json(
 
 
 class GeoPackageDump:
-    """Basic version using Fiona for dumping GeoPackage files.
+    """Basic version using GeoPandas and Pyogrio for dumping GeoPackage files.
 
     Attributes
     ----------
@@ -61,7 +63,7 @@ class GeoPackageDump:
         List of files that have changed after dumping.
     """
 
-    def __init__(self, file_path: Path, output_path: Path = None):
+    def __init__(self, file_path: Path, output_path: typing.Optional[Path] = None) -> None:
         """Initialize the GeoPackageDump object.
 
         Parameters
@@ -81,7 +83,7 @@ class GeoPackageDump:
 
         self.changed_files = []
 
-    def get_schema_layer(self, layer_name: str):
+    def get_schema_layer(self, layer_name: str) -> dict:
         """Get the schema of a specific layer in the GeoPackage.
 
         Parameters
@@ -94,10 +96,15 @@ class GeoPackageDump:
         dict
             The schema of the layer.
         """
-        f = fiona.open(str(self.file_path), "r", layer=layer_name)
-        return f.schema
+        info = pyogrio.read_info(str(self.file_path), layer=layer_name)
+        schema = {
+            "geometry": info["geometry_type"],
+            "properties": {f[0]: f[1] for f in zip(info["fields"], info["dtypes"])},
+        }
 
-    def get_schema(self):
+        return schema
+
+    def get_schema(self) -> OrderedDict:
         """Get the schema of all layers in the GeoPackage.
 
         Returns
@@ -105,13 +112,18 @@ class GeoPackageDump:
         OrderedDict
             Dictionary with layer names as keys and their schemas as values.
         """
-        layers = fiona.listlayers(str(self.file_path))
+        if hasattr(gpd, "list_layers"):
+            layers = gpd.list_layers(str(self.file_path))
+        else:
+            # for older versions of geopandas
+            layers = pd.DataFrame(pyogrio.list_layers(str(self.file_path)), columns=["name", "geometry_type"])
+
         schema = OrderedDict()
-        for layer_name in layers:
-            schema[layer_name] = self.get_schema_layer(layer_name)
+        for i, layer in layers.iterrows():
+            schema[layer["name"]] = self.get_schema_layer(layer["name"])
         return schema
 
-    def dump_schema(self):
+    def dump_schema(self) -> None:
         """Dump the schema of the GeoPackage to a JSON file.
 
         Returns
@@ -128,7 +140,7 @@ class GeoPackageDump:
         if cd.has_changed():
             self.changed_files.append(file_path)
 
-    def dump_layers(self, reformat: bool = True):
+    def dump_layers(self, reformat: bool = True) -> None:
         """Dump all layers and features of the GeoPackage to GeoJSON files.
 
         Parameters
@@ -140,34 +152,27 @@ class GeoPackageDump:
         -------
         None
         """
-        layers = fiona.listlayers(str(self.file_path))
+        # todo: check if sourcefile has changed since last dump
+        if hasattr(gpd, "list_layers"):
+            layers = gpd.list_layers(str(self.file_path))
+        else:
+            # for older versions of geopandas
+            layers = pd.DataFrame(pyogrio.list_layers(str(self.file_path)), columns=["name", "geometry_type"])
 
-        for layer_name in layers:
+        for i, layer in layers.iterrows():
+            layer_name = layer["name"]
             logger.info("dump layer %s", layer_name)
 
-            layer = fiona.open(str(self.file_path), "r", layer=layer_name)
-            output_file_path = self.output_path / f"{layer.name}.geojson"
-
-            cd = FileChangeDetection(output_file_path)
-
             with SubTimer(f"dump layer {layer_name}"):
-                schema = layer.schema
-                schema["properties"]["fid"] = "int"
-                dest_src = fiona.open(
-                    str(output_file_path),
-                    "w",
-                    driver="GeoJSON",
-                    crs=layer.crs,
-                    schema=schema,
-                    COORDINATE_PRECISION=6,
-                    id_field="fid",
-                )
-
-                for feature in layer:
-                    feature["properties"]["fid"] = feature["id"]
-                    dest_src.write(feature)
-
-                dest_src.close()
+                gdf = gpd.read_file(self.file_path, layer=layer_name)
+                # Add fid column for compatibility
+                # gdf["fid"] = gdf.index.astype(int)
+                output_file_path = self.output_path / f"{layer_name}.geojson"
+                # initialize change detection before write (get hash)
+                cd = FileChangeDetection(output_file_path)
+                gdf = gpd.GeoDataFrame(gdf)
+                # Set coordinate precision to 6 using GeoPandas to_file options
+                gdf.to_file(str(output_file_path), driver="GeoJSON", COORDINATE_PRECISION=6)
 
             if reformat:
                 with SubTimer(f"reformat json {layer_name}"):
@@ -179,10 +184,11 @@ class GeoPackageDump:
                         with output_file_path.open("w") as f:
                             f.write(format_json(data))
 
+            # compare hash after write with hash before write
             if cd.has_changed():
                 self.changed_files.append(output_file_path)
 
-    def dump(self):
+    def dump(self) -> None:
         """Dump the GeoPackage schema and layers to files.
 
         Returns

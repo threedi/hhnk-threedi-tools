@@ -79,7 +79,7 @@ def dump_files_in_directory(
                 if file_name.endswith(".gpkg") and gpkg_dump:
                     out_dir = actual_file_path.parent / rreplace(file_name, ".", "_", 1)
                     logger.info("Dump geopackage '%s'", actual_file_path)
-                    dumper = GeoPackageDump(str(actual_file_path), str(out_dir))
+                    dumper = GeoPackageDump(actual_file_path, out_dir)
                     dumper.dump_schema()
                     dumper.dump_layers()
                     logger.info(

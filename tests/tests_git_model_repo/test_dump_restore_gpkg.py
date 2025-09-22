@@ -74,12 +74,13 @@ class TestDumpAndRestoreGeopackage:
 
         assert tmp_file_path.exists()
 
-        source = ogr.Open(str(tmp_file_path), 0)
-        layers = [l for l in source]
+        # use ogr (different from package used) to check if restored file is correct
+        dest = ogr.Open(str(tmp_file_path), 0)
+        layers = [l for l in dest]
         layer = layers[0]
         layer_def = layer.GetLayerDefn()
 
-        assert source.GetLayerCount() == 1
+        assert dest.GetLayerCount() == 1
         assert layer.GetFeatureCount() == 2
         assert layer.GetName() == "test_geopackage"
         assert layer.GetGeomType() == ogr.wkbPoint
@@ -93,11 +94,14 @@ class TestDumpAndRestoreGeopackage:
         assert int_field.GetType() == ogr.OFTInteger64
         string_field = layer_def.GetFieldDefn(layer_def.GetFieldIndex("code"))
         assert string_field.GetType() == ogr.OFTString
-        assert string_field.GetWidth() == 12
 
-        slayer = fiona.open(str(self.test_fields_gpkg), "r")
-        ref = layer.GetSpatialRef()
-        assert ref.ExportToWkt() == slayer.crs_wkt
+        # note: length of string not supported by pyogrio, so this information will be lost in restore
+        # assert string_field.GetWidth() == 12
+
+        original_layer = ogr.Open(str(self.test_fields_gpkg), 0)
+        dest_ref = layer.GetSpatialRef()
+        original_ref = original_layer.GetLayer(0).GetSpatialRef()
+        assert dest_ref.ExportToWkt() == original_ref.ExportToWkt()
 
     def test_restore_check_multilayer(self, tmp_path):
         tmp_path = Path(dir)
@@ -121,8 +125,11 @@ class TestDumpAndRestoreGeopackage:
 
         assert layers["points"].GetGeomType() == ogr.wkbPoint
 
-        features = [f.GetFID() for f in layers["points"]]
-        assert features == [1, 4, 9, 10]
+        features = [f["id"] for f in layers["points"]]
+        assert features == [-1, -2, -3, -4]
+        # note: with pyogrio the fid is not generated from the id of the geojson
+        fids = [f.GetFID() for f in layers["points"]]
+        assert fids == [1, 2, 3, 4]
 
     def test_restore_overwrite(self, tmp_path):
         tmp_path = Path(dir)

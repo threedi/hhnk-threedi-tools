@@ -1,10 +1,11 @@
 import json
+import typing
 from pathlib import Path
 
-import fiona
+import geopandas as gpd
 
 
-class GeoPackageRestore(object):
+class GeoPackageRestore:
     """Restore a GeoPackage from schema and GeoJSON files.
 
     Parameters
@@ -32,7 +33,7 @@ class GeoPackageRestore(object):
         Restore the GeoPackage from the directory.
     """
 
-    def __init__(self, gpkg_path: Path, output_file_path: Path = None):
+    def __init__(self, gpkg_path: Path, output_file_path: typing.Optional[Path] = None) -> None:
         """Initialize the GeoPackageRestore object.
 
         Parameters
@@ -61,7 +62,7 @@ class GeoPackageRestore(object):
         with schema_file.open("r") as f:
             return json.load(f)
 
-    def restore_layers(self):
+    def restore_layers(self) -> None:
         """Restore all layers from GeoJSON files into the GeoPackage.
 
         Returns
@@ -69,32 +70,16 @@ class GeoPackageRestore(object):
         None
         """
         schema = self.read_schema()
-        for layer_name, layer_schema in schema.items():
+        for layer_name in schema.keys():
             geojson_file = self.gpkg_path / f"{layer_name}.geojson"
-            layer = fiona.open(geojson_file.as_posix(), "r", layer=layer_name)
+            if not geojson_file.exists():
+                continue
+            gdf = gpd.read_file(geojson_file).astype(schema[layer_name]["properties"])
+            # Write to GeoPackage, append if file exists, otherwise create
+            gdf.to_file(self.output_file_path, layer=layer_name, driver="GPKG", index=False)
 
-            # Ensure the fid is copied too (fiona does not do this by default)
-            layer_schema["properties"]["fid"] = "int"
-            dest_src = fiona.open(
-                self.output_file_path.as_posix(),
-                "w",
-                driver="GPKG",
-                crs=layer.crs,
-                schema=layer_schema,
-                layer=layer_name,
-                FID="fid",
-                overwrite=True,
-            )
-
-            for feature in layer:
-                feature["properties"]["fid"] = int(feature["id"])
-                dest_src.write(feature)
-            dest_src.close()
-            layer.close()
-
-    def restore(self):
-        """
-        Restore the GeoPackage from directory with schema and GeoJSON files.
+    def restore(self) -> None:
+        """Restore the GeoPackage from directory with schema and GeoJSON files.
 
         Returns
         -------

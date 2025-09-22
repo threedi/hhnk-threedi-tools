@@ -5,7 +5,7 @@ from hhnk_threedi_tools.git_model_repo.utils.restore_xlsx import ExcelRestore
 
 from .helpers import get_local_development_output_dir
 
-dir = get_local_development_output_dir(clean=True)
+directory = get_local_development_output_dir(clean=True)
 
 
 class TestDumpAndRestoreExcel:
@@ -13,7 +13,7 @@ class TestDumpAndRestoreExcel:
     text_dumped_dir = Path(__file__).parent / "data" / "test_excel"
 
     def test_dump_excel(self, tmp_path):
-        tmp_path = dir
+        tmp_path = directory
 
         dumper = ExcelDump(self.test_excel, tmp_path)
         dumper.dump_schema()
@@ -23,7 +23,7 @@ class TestDumpAndRestoreExcel:
         assert (tmp_path / "Sheet1.json").exists()
 
     def test_restore_excel(self, tmp_path):
-        tmp_path = dir
+        tmp_path = directory
 
         tmp_path.mkdir(parents=True, exist_ok=True)
         tmp_file_path = tmp_path / "excel_restored.xlsx"
