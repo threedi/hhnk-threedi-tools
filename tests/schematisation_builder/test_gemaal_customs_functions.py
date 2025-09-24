@@ -4,6 +4,7 @@ from pathlib import Path
 
 import geopandas as gpd
 import hhnk_research_tools as hrt
+import hydamo_validation
 import numpy as np
 import pytest
 
