@@ -48,6 +48,22 @@ def test_gemaal_custom_fucntions():
     results_intersected_pump_peilgebieden = intersected_pump_peilgebieden(gpd.GeoDataFrame, hydamo)
     results_gemaal_streefpeil_value = gemaal_streefpeil_value(gpd.GeoDataFrame, hydamo)
 
+    # # assert intersected code peilgebied KMG-Q-25259
+    # val_25259 = result_streefpeil_value.loc[result_streefpeil_value['code']=='KGM-Q-25259', 'pgd_codes'].values[0]
+    # assert val_25259 == "CMB_2020-6, CMB_GPG-Q-140709"
+
+    # # assert intersected code peilgebied KGM-Q-25263
+    # val_25263 = result_streefpeil_value.loc[result_streefpeil_value["code"] == "KGM-Q-25263", "pgd_codes"].values[0]
+    # assert val_25263 == "CMB_GPG-W-32, CMB_GPG-Q-140717"
+
+    # #gemaal code KGM-Q-25259 in intersected with peilgebiedes CMB_2020-6, CMB_GPG-Q-140709
+    # val_25263 = result_pump_peilgebieden.loc[result_pump_peilgebieden["code"] == "KGM-Q-25263", "pgd_codes"].values[0]
+    # assert val_25263 == "CMB_GPG-W-32, CMB_GPG-Q-140717"
+
+    # #gemaal code KGM-Q-25259 in intersected with peilgebiedes CMB_2020-6, CMB_GPG-Q-140709
+    # val_25263 = result_pump_peilgebieden.loc[result_pump_peilgebieden["code"] == "KGM-Q-25265", "pgd_codes"].values[0]
+    # assert val_25263 == "CMB_GPG-Q-140716, CMB_1000-01"
+    
     # asset functions
     assert np.sum(results_intersected_pump_peilgebieden["distance_to_peilgebied"] == 0.0)
     assert np.average(results_gemaal_streefpeil_value["aantal_peilgebieden"] == 2.0)
