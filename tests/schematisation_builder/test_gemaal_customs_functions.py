@@ -1,11 +1,14 @@
 # %%
 import sys
+
 import geopandas as gpd
 import hhnk_research_tools as hrt
 import numpy as np
 import pytest
+
 import hhnk_threedi_tools.resources.schematisation_builder as schematisation_builder_resources
 from tests.config import TEMP_DIR, TEST_DIRECTORY
+
 
 # %%
 # TODO remove skip when py312 implemented.
@@ -63,8 +66,8 @@ def test_gemaal_custom_fucntions():
     assert np.sum(results_intersected_pump_peilgebieden["distance_to_peilgebied"] == 0.0)
     assert np.average(results_gemaal_streefpeil_value["aantal_peilgebieden"] == 2.0)
 
+
 # %%
 if __name__ == "__main__":
     test_gemaal_custom_fucntions()
-
 # %%
