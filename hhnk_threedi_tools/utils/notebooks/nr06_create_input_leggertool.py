@@ -27,7 +27,11 @@ import hhnk_threedi_tools.core.checks.grid_result_metadata as grid_result_metada
 from hhnk_threedi_tools.core.folders import Folders
 
 # %%
-def create_input_leggertool(folder: Folders, berekening_naam: str, output_file: Path):
+def create_input_leggertool(
+    folder: Folders,
+    berekening_naam: str,
+    output_file: Path,
+) -> pd.DataFrame:
     """Prepare legger input gpkg. Also adds a style file.
 
     Parameters

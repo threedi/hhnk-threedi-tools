@@ -10,7 +10,7 @@ def update_syspath(sys_paths):
                 sys.path.append(sys_path)
 
 
-def setup_notebook() -> json:
+def setup_notebook() -> dict:
     """Load notebook data and fix syspath.
     Through QGIS its setup to add the plugin extra dependencies folders for
     - hhnk_threedi_plugin
@@ -23,7 +23,7 @@ def setup_notebook() -> json:
         with open(os.getcwd() + "/notebook_data.json") as f:
             notebook_data = json.load(f)
         update_syspath(notebook_data["extra_paths"])
-    except:
-        print("Failed to update path")
+    except Exception as e:
+        print("Failed to update path", e)
     finally:
         return notebook_data
