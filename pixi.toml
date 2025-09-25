@@ -20,6 +20,7 @@ pre-commit-install = "pre-commit install --install-hooks -t=pre-push" #-t=pre-co
 postinstall = { depends-on = ["hrt-install", "hydamo_validation-install", "pre-commit-install"] }
 
 pre-commit-run = "pre-commit run --all-files"
+tests = "pytest --cov-report term-missing --cov=hhnk_threedi_tools --cov-report=xml"
 
 # Upload to PyPi to make it available with pip
 upload_pypi = "twine upload --repository hhnk-threedi-tools  dist/*"
@@ -28,7 +29,6 @@ upload_pypi = "twine upload --repository hhnk-threedi-tools  dist/*"
 sort_imports = "ruff check  ./**/*.py --select I --fix --force-exclude"
 fmt = "ruff format ./**/*.py --force-exclude"
 style = {depends-on = ["sort_imports", "fmt"]} # `pixi run style`
-tests = "pytest --cov-report term-missing --cov=hhnk_threedi_tools --cov-report=xml"
 
 
 [feature.dev.tasks]
@@ -36,6 +36,8 @@ build_wheels = "rm -rf dist/ && python -m build" # build wheels
 twine_check = "twine check dist/*"
 build = { depends-on = ["build_wheels", "twine_check"] }
 
+[feature.py39.tasks]
+tests = "pytest --cov-report term-missing --cov=hhnk_threedi_tools --cov-report=xml"
 
 [dependencies]
 python = "3.12.*"
