@@ -180,10 +180,10 @@ def get_delaunay_grid(grid_gdf: gpd.GeoDataFrame, wlvl_column: str, no_data_valu
     return gdf[[wlvl_column, "geometry"]]
 
 
-def get_interpolator(
+def get_interpolator_input(
     grid_gdf: gpd.GeoDataFrame, wlvl_column: str, no_data_value: float, reorder=True
-) -> LinearNDInterpolator:
-    """LinearNDInterpolator op basis van Delauny triangulatie.
+) -> Delaunay:
+    """Get the interpolation input as an input to prepare for Delauney interpolation.
 
     https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.LinearNDInterpolator.html
 
@@ -200,8 +200,8 @@ def get_interpolator(
 
     Returns
     -------
-    LinearNDInterpolator
-        LinearNDInterpolator
+    Delaunay
+        Interpolation input voor Delaunay interpolatie
     """
 
     # aanmaken delaunay grid
@@ -264,13 +264,13 @@ class GridToWaterLevel:
         new interpolator.
         """
         if self.points_grid is None:
-            self.points_grid, self.wlvl = get_interpolator(
+            self.points_grid, self.wlvl = get_interpolator_input(
                 grid_gdf=self.grid_gdf, wlvl_column=self.wlvl_column, no_data_value=NO_DATA_VALUE
             )
 
     def run(self, output_file, chunksize: Union[int, None] = None, overwrite: bool = False):
         # level block_calculator
-        def calc_level(_, dem_chunk):
+        def calc_level(_, dem_chunk: xr.DataArray):
             # get x and y coordinates from dem_da
             x, y = np.meshgrid(
                 dem_chunk.x.data,

@@ -60,7 +60,7 @@ class OneDTwoDTest:
     def from_path(cls, path_to_polder, **kwargs):
         return cls(Folders(path_to_polder), **kwargs)
 
-    def run_wlvl_depth_at_timesteps(self, chunksize=1024, overwrite=False):
+    def run_wlvl_depth_at_timesteps(self, chunksize: int = 1024, overwrite=False):
         """Transform netcdf to grid gpkg and apply wlvl correction
         Then create waterlevel and depth rasters at 3 timesteps:
         1h : start rain
