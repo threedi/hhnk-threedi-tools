@@ -1,5 +1,6 @@
 # %%
 import sys
+
 import geopandas as gpd
 import hhnk_research_tools as hrt
 import pytest
@@ -37,6 +38,7 @@ class TestGridToRasterOld:
         output_file = hrt.Folder(TEMP_DIR).full_path(f"wdepth_corr_{hrt.get_uuid()}.tif")
         basecalc.run(output_file=output_file.path, mode="MODE_WDEPTH", overwrite=True)
         assert output_file.sum() == 5.868329048156738
+
 
 @pytest.mark.skipif(sys.version_info < (3, 12), reason="Requires Python 3.12 or higher")
 def test_grid_to_raster():

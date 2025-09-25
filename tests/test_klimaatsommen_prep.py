@@ -1,7 +1,6 @@
 # %%
 # First-party imports
 import shutil
-
 import sys
 
 import hhnk_research_tools as hrt
@@ -26,6 +25,7 @@ def test_klimaatsommenprep_verify():
             landuse_file=FOLDER_TEST.model.schema_base.rasters.landuse,
             verify=True,
         )
+
 
 @pytest.mark.skipif(sys.version_info < (3, 12), reason="Requires Python 3.12 or higher")
 def test_klimaatsommenprep():
