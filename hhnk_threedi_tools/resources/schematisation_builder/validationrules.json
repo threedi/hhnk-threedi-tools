@@ -1,5 +1,5 @@
 {
-	"schema": "1.2",
+	"schema": "1.5",
 	"hydamo_version": "2.2",
 	"status_object": [
 		"planvorming",
@@ -29,6 +29,126 @@
 							"right": 0.2
 						}
 					}
+				},
+				{
+					"id": 100,
+					"result_variable": "isascending",
+					"function": {
+						"custom_hydamo": {
+							"custom_function_name": "on_profiellijn_compute_if_ascending"
+						}
+					},
+					"description": "verifieert of de profielpunten in oplopende volgorde zijn"
+				},
+				{
+					"id": 101,
+					"result_variable": "hydroobject_breedte",
+					"function": {
+						"custom_hydamo": {
+							"custom_function_name": "on_profiellijn_add_breedte_value_from_hydroobject"
+						}
+					},
+					"description": "voegt de breedte van het hydroobject toe aan de profiellijn"
+				},
+				{
+					"id": 102,
+					"result_variable": "jaarinwinning",
+					"function": {
+						"custom_hydamo": {
+							"custom_function_name": "on_profiellijn_compute_jaarinwinning"
+						}
+					},
+					"description": "berekent de jaar van inwinning van de profiellijn"
+				},
+				{
+					"id": 103,
+					"result_variable": "max_cross_product",
+					"function": {
+						"custom_hydamo": {
+							"custom_function_name": "on_profiellijn_compute_max_cross_product"
+						}
+					},
+					"description": "berekent de maximale schuinheid van de profiellijn (afwijking per profielsegment van de rechte lijn tussen de uiterste punten van de profiellijn)"
+				},
+				{
+					"id": 104,
+					"result_variable": "afstandnatprofiel",
+					"function": {
+						"custom_hydamo": {
+							"custom_function_name": "on_profiellijn_compute_wet_profile_distance"
+						}
+					},
+					"description": "berekent de afstand van het natte profiel op de profiellijn"
+				},
+				{
+					"id": 105,
+					"result_variable": "dieptenatprofiel",
+					"function": {
+						"custom_hydamo": {
+							"custom_function_name": "on_profiellijn_compute_wet_profile_depth"
+						}
+					},
+					"description": "berekent de diepte van het natte profiel op de profiellijn"
+				},
+				{
+					"id": 106,
+					"result_variable": "nr_of_profielpunten",
+					"function": {
+						"object_relation": {
+							"statistic": "count",
+							"related_object": "profielpunt",
+							"fill_value": 0
+						}
+					},
+					"description": "berekent het aantal profielpunten op de profiellijn"
+				},
+				{
+					"id": 107,
+					"result_variable": "verschil_afstandnatprofiel_breedte",
+					"function": {
+						"difference": {
+							"left": "afstandnatprofiel",
+							"right": "hydroobject_breedte"
+						}
+					},
+					"description": "berekent het verschil tussen de breedte van het hydroobject en de breedte van het natte profiel"
+				},
+				{
+					"id": 108,
+					"result_variable": "maximalehoogteprofiel",
+					"function": {
+						"object_relation": {
+							"statistic": "max",
+							"related_object": "profielpunt",
+							"related_parameter": "geometry.z"
+						}
+					},
+					"description": "berekent de maximale hoogte van het profiel op basis van de profielpunten"
+				},
+				{
+					"id": 109,
+					"result_variable": "breedteprofiel",
+					"function": {
+						"object_relation": {
+							"statistic": "max",
+							"related_object": "profielpunt",
+							"related_parameter": "afstand"
+						}
+					},
+					"description": "berekent de breedte van het profiel op basis van de profielpunten"
+				},
+				{
+					"id": 110,
+					"result_variable": "maaiveldhoogte",
+					"function": {
+						"buffer": {
+							"radius": 10,
+							"percentile": 95,
+							"coverage": "AHN",
+							"fill_value": 325
+						}
+					},
+					"description": "berekent de maaiveldhoogte op basis van een buffer van 10 meter rond de profiellijn en de AHN data"
 				}
 			],
 			"validation_rules": [
@@ -44,6 +164,165 @@
 					"function": {
 						"snaps_to_hydroobject": {
 							"method": "overall"
+						}
+					}
+				},
+				{
+					"id": 100,
+					"name": "Profiel moet minimaal 4 profielpunten hebben",
+					"description": "Een profiel moet minimaal 4 profielpunten hebben (kan nog uitgebreider?)",
+					"type": "logic",
+					"validation_rule_set": "hhnk",
+					"error_type": "critical",
+					"result_variable": "nr_of_profielpunten_gt_4",
+					"error_message": "profiel heeft minder dan 4 profielpunten",
+					"active": true,
+					"function": {
+						"GT": {
+							"left": "nr_of_profielpunten",
+							"right": 3
+						}
+					}
+				},
+				{
+					"id": 101,
+					"name": "Verschil tussen afstandNatProfiel en hydroobject BREEDTE (BGT) is plausibel",
+					"description": "Uitgangspunt van BGT breedte is de kolom BREEDTE op hydroobject. ProfileIntermediateConverter: voegt breedte hydroobject kolom toe aan profiellijn en berekent natte profiel breedte.",
+					"type": "logic",
+					"validation_rule_set": "hhnk",
+					"error_type": "critical",
+					"result_variable": "verschil_afstandNatProfiel_breedte_plausibel",
+					"error_message": "verschil tussen afstandNatProfiel en hydroobject BREEDTE (BGT) is niet plausibel (> 2m)",
+					"active": true,
+					"function": {
+						"BE": {
+							"parameter": "verschil_afstandnatprofiel_breedte",
+							"min": -2,
+							"max": 2,
+							"inclusive": false
+						}
+					}
+				},
+				{
+					"id": 102,
+					"name": "DiepteNatProfiel is plausibel (0.2m - 20m)",
+					"description": "ProfileIntermediateConverter: voegt diepteNatProfiel kolom toe aan profiellijn.",
+					"type": "logic",
+					"validation_rule_set": "hhnk",
+					"error_type": "critical",
+					"result_variable": "dieptenatprofiel_plausibel",
+					"error_message": "diepteNatProfiel niet plausibel (0.2m - 20m)",
+					"active": true,
+					"function": {
+						"BE": {
+							"parameter": "dieptenatprofiel",
+							"min": 0.2,
+							"max": 20,
+							"inclusive": false
+						}
+					}
+				},
+				{
+					"id": 103,
+					"name": "Jaar inwinning niet ouder dan 2009",
+					"description": "ProfileIntermediateConverter: berekent jaarinwinning uit datuminwinning.",
+					"type": "logic",
+					"validation_rule_set": "hhnk",
+					"error_type": "non-critical",
+					"result_variable": "jaarminwinning_niet_ouder_dan_2009",
+					"error_message": "jaarinwinning is ouder dan 2009",
+					"active": true,
+					"function": {
+						"GE": {
+							"left": "jaarinwinning",
+							"right": 2009
+						}
+					}
+				},
+				{
+					"id": 104,
+					"name": "Bodemhoogte moet lager zijn dan 3mNAP en hoger dan -9mNAP",
+					"description": "We nemen aan dat de bodemhoogte plausibel is als die lager is dan 3mNAP en hoger dan -9mNAP",
+					"type": "logic",
+					"validation_rule_set": "hhnk",
+					"error_type": "critical",
+					"result_variable": "bodemhoogte_plausibel",
+					"error_message": "bodemhoogte niet plausibel (-9mNAP - 3mNAP)",
+					"active": true,
+					"function": {
+						"BE": {
+							"parameter": "bodemhoogte",
+							"min": -9,
+							"max": 3,
+							"inclusive": false
+						}
+					}
+				},
+				{
+					"id": 105,
+					"name": "Maximale hoogte profiel moet lager zijn dan 6mNAP",
+					"description": "De maximale hoogte van een profiel moet lager zijn dan 6mNAP om plausibel te worden gezien",
+					"type": "logic",
+					"validation_rule_set": "hhnk",
+					"error_type": "critical",
+					"result_variable": "maximalehoogteprofiel_plausibel",
+					"error_message": "maximalehoogteprofiel niet plausibel (> 6mNAP)",
+					"active": true,
+					"function": {
+						"LT": {
+							"left": "maximalehoogteprofiel",
+							"right": 6
+						}
+					}
+				},
+				{
+					"id": 106,
+					"name": "Profiellijn mag niet te veel zigzaggen (cross Product < 0.5)",
+					"description": "Een profiellijn hoort zo recht mogelijk te zijn. Het cross product is een indicatie van hoeveel een lijnsegment afwijkt van de lineare lijn tussen de twee uiterste punten. Bijvoorbeeld een cross product van 0.5 betekent dat een lijnsegment een afwijking van 13.89 graden maakt t.o.v. de lineare lijn.",
+					"type": "logic",
+					"validation_rule_set": "hhnk",
+					"error_type": "critical",
+					"result_variable": "maximale_zizag_profiellijn",
+					"error_message": "maximale zizag profiellijn is te groot (> 0.5)",
+					"active": true,
+					"function": {
+						"LT": {
+							"left": "max_cross_product",
+							"right": 0.5
+						}
+					}
+				},
+				{
+					"id": 107,
+					"name": "Ingemeten profiel moet onder het maaiveld liggen",
+					"description": "Het ingemeten profiel moet onder het maaiveld liggen. Dit is een indicatie dat het profiel niet goed is ingemeten.",
+					"type": "logic",
+					"validation_rule_set": "hhnk",
+					"error_type": "non-critical",
+					"result_variable": "ingemeten_profiel_boven_maaiveld",
+					"error_message": "ingemeten profiel > maaiveld",
+					"active": true,
+					"function": {
+						"LT": {
+							"left": "bodemhoogte",
+							"right": "maaiveldhoogte"
+						}
+					}
+				},
+				{
+					"id": 108,
+					"name": "Profielpunten moeten oplopen in hoogte",
+					"description": "Een profiel hoort oplopend te zijn in hoogte aan beide kanten vanaf het diepste punt. Dit wordt gecontroleerd door de kolom isAscending toe te voegen in de profiellijn mbv de ProfileIntermediateConverter.",
+					"type": "logic",
+					"validation_rule_set": "hhnk",
+					"error_type": "non-critical",
+					"result_variable": "profielpunten_oplopend_in_hoogte",
+					"error_message": "profielpunten zijn niet oplopend in hoogte",
+					"active": true,
+					"function": {
+						"EQ": {
+							"left": "isascending",
+							"right": 1
 						}
 					}
 				}
@@ -105,8 +384,7 @@
 					"error_type": "critical",
 					"result_variable": "bok_boven_plausibel",
 					"error_message": "bok_boven niet plausibel",
-					"exceptions": [
-					],
+					"exceptions": [],
 					"active": true,
 					"function": {
 						"BE": {
@@ -442,7 +720,7 @@
 					"validation_rule_set": "basic",
 					"error_type": "critical",
 					"result_variable": "maximalehoogteopening_plausibel",
-					"error_message": "maximalehoogteopeningniet plausibel",
+					"error_message": "maximalehoogteopening niet plausibel",
 					"active": true,
 					"filter": {
 						"ISIN": {
@@ -637,7 +915,7 @@
 				},
 				{
 					"id": 4,
-					"name": "Is de vorm opening niet driehoekig, trapezium- of  heulvormig, dan moeten de laagste en hoogste doorstroombreedtes gelijk zijn aan elkaar",
+					"name": "Is de vorm opening niet driehoekig, trapezium- of heulvormig, dan moeten de laagste en hoogste doorstroombreedtes gelijk zijn aan elkaar",
 					"type": "logic",
 					"validation_rule_set": "basic",
 					"error_type": "critical",
@@ -1036,6 +1314,7 @@
 		},
 		{
 			"object": "pomp",
+			"general_rules": [],
 			"validation_rules": [
 				{
 					"id": 0,

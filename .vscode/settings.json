@@ -26,5 +26,13 @@
         "**/.ruff_cache": true,
         ".coverage": true,
     },
+    "search.exclude": {
+        "**/.pixi": true,
+        "pixi.lock": true,
+        "/dist": true,
+    },
     "jupyter.interactiveWindow.textEditor.executeSelection": true,
+    "jupyter.notebookFileRoot": "${workspaceFolder}",
+    "python-envs.defaultEnvManager": "ms-python.python:system",
+    "python-envs.pythonProjects": [],
 }

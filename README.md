@@ -14,15 +14,22 @@ Used in QGIS with this plugin:
 
 
 # Development Setup
-Development is done in vs-code with Pixi environment.
-To setup the env;
+Development is done in VS-Code with a Pixi environment.
+To setup the env open the cloned hhnk-threedi-tools folder in VS-Code or in a terminal in the folder and execute:\
+`pixi install`\
+`pixi run postinstall` -> does a local install of hhnk-research-tools and HyDAMOValidatieModule. Also installs githooks to do ruff checks before push.
 
-`pixi install -e dev`
-`pixi shell -e dev`
-`pixi run postinstall` -> installs hrt, validatiemodule and githooks
+Use `pixi shell` to open the command prompt with the python enviroment initialized.
 
+# Run tests locally
+To run test locally:
+* Copy .env.example and rename to symple .env. This will ensure tests that required database access are skipped.
+* Run `pixi run tests` in terminal. Make sure postinstall has been run.
 
 2025-06 -> migration towards python 3.12.
-Not all checks work yet on 3.12. The github checks therefore run on py39
-Tests this locally with
+Not all checks work yet on 3.12. The github checks therefore run on python 3.9 (pixi environment `py39`)
+
+2025-09: Beware that the py39 test environment uses the main from `hhnk-research-tools` and, not local editable install.
+
+To run tests locally on python 3.9 use
 `pixi run -e py39 tests`
