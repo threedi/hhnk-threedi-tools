@@ -4,7 +4,7 @@
 import geopandas as gpd
 import pytest
 
-from hhnk_threedi_tools.core.checks.one_d_two_d import OneDTwoDTest
+from hhnk_threedi_tools.core.checks.one_d_two_d import OneDTwoDCheck
 from tests.config import FOLDER_TEST
 
 # Globals
@@ -17,7 +17,7 @@ class TestOneDTwoD:
 
     @pytest.fixture(scope="class")
     def check_1d2d(self):
-        check_1d2d = OneDTwoDTest(folder=FOLDER_TEST, revision=REVISION)
+        check_1d2d = OneDTwoDCheck(folder=FOLDER_TEST, revision=REVISION)
         check_1d2d.output_fd.mkdir(parents=True)
         return check_1d2d
 

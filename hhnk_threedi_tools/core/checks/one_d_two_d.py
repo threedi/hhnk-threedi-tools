@@ -28,7 +28,7 @@ from hhnk_threedi_tools.variables.one_d_two_d import (
 )
 
 
-class OneDTwoDTest:
+class OneDTwoDCheck:
     TIMESTEPS = [1, 3, 15]  # hours, 1=start rain, 3=end rain, 15=end calculation
 
     def __init__(self, folder: Folders, revision=0, dem_path=None):
@@ -230,7 +230,7 @@ if __name__ == "__main__":
 
     TEST_MODEL = Path(__file__).parents[3].joinpath(r"tests/data/model_test/")
     folder = Folders(TEST_MODEL)
-    self = OneDTwoDTest.from_path(TEST_MODEL)
+    self = OneDTwoDCheck.from_path(TEST_MODEL)
 
     overwrite = True
 

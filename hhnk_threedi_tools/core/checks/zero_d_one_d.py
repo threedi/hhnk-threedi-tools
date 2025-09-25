@@ -59,7 +59,7 @@ from hhnk_threedi_tools.variables.zero_d_one_d import (
 )
 
 
-class ZeroDOneDTest:
+class ZeroDOneDCheck:
     def __init__(self, folder: Folders, revision=0):
         self.fenv = folder
         self.grid_result = folder.threedi_results.zero_d_one_d[revision].grid
