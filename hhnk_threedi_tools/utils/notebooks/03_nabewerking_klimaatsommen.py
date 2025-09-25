@@ -364,7 +364,7 @@ for mask_type, mask_name in zip(["plas", "overlast"], ["mv", "ws"]):
     # Calculate sum per region
     accum = schade_raster.sum_labels(label_raster=labels_raster, label_idx=labels_index)
 
-    schade_gdf[f"cw_{mask_name}"] = accum
+    schade_gdf[f"cw_{mask_name}"] = schade_gdf["index"].map(accum) # map values to gdf
 
 schade_gdf["cw_tot"] = schade_gdf["cw_ws"] + schade_gdf["cw_mv"]
 
