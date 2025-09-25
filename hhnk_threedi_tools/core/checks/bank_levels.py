@@ -81,7 +81,7 @@ FLOW_1D2D_MANHOLES_NAME = "stroming_1d2d_putten"
 
 
 class BankLevelCheck:
-    """An object that reads and runs bank level testing"""
+    """An object that reads and runs bank level checks"""
 
     def __init__(self, folder: Folders):
         self.fenv = folder  # fenv = folder environemnt

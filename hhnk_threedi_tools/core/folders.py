@@ -196,7 +196,7 @@ class Folders(Folder):
             "climate_results_dir": self.threedi_results.climate_results.path_if_exists,
             # Default output folders
             "base_output": self.output.path_if_exists,
-            "sqlite_tests_output": self.output.sqlite_tests.path_if_exists,
+            "sqlite_checks_output": self.output.sqlite_tests.path_if_exists,
             "0d1d_output": self.output.zero_d_one_d.path_if_exists,
             "bank_levels_output": self.output.bank_levels.path_if_exists,
             "1d2d_output": self.output.one_d_two_d.path_if_exists,
@@ -676,7 +676,7 @@ class OutputDirParent(Folder):
 
                 self.add_file("grid_nodes_2d", "grid_nodes_2d.gpkg")
                 self.add_file("grid_wlvl", "grid_wlvl.gpkg")
-                self.add_file("stroming_1d2d_test", "stroming_1d2d_test.gpkg")
+                self.add_file("stroming_1d2d_check", "stroming_1d2d_check.gpkg")
                 for T in [1, 3, 15]:
                     self.add_file(f"waterstand_T{T}", f"waterstand_T{T}.tif")
                     self.add_file(f"waterdiepte_T{T}", f"waterdiepte_T{T}.tif")
