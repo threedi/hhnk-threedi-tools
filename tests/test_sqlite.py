@@ -5,17 +5,41 @@ import shutil
 import pytest
 
 # Local imports
-from hhnk_threedi_tools.core.checks.sqlite.sqlite_main import SqliteCheck
+from hhnk_threedi_tools.core.checks.sqlite.sqlite_main import HhnkSchematisationCheck
 from hhnk_threedi_tools.core.folders import Folders
 from hhnk_threedi_tools.core.schematisation.model_splitter import ModelSchematisations
 from tests.config import FOLDER_TEST, PATH_NEW_FOLDER
+
+# %%
+self = HhnkSchematisationCheck(folder=FOLDER_TEST)
+
+
+def find_ext(self, ext: list):
+    """Find files with a certain extension"""
+    if isinstance(ext, str):
+        ext = [ext]
+    file_list = []
+    for e in ext:
+        file_list += [i for i in self.path.glob(f"*.{e.replace('.', '')}")]
+    return file_list
+
+
+# %%
 
 
 class TestSqlite:
     FOLDER_TEST.output.sqlite_tests.unlink_contents()
 
-    sqlite_check = SqliteCheck(folder=FOLDER_TEST)
-    sqlite_check.output_fd.create(parents=True)
+    def __init__(self):
+        self.sqlite_check = HhnkSchematisationCheck(folder=FOLDER_TEST)
+        self.sqlite_check.output_fd.create(parents=True)
+
+    # @pytest.fixture(scope="class")
+    # def sqlite_check(self):
+    #     """Fixture to create a SqliteCheck instance with the test folder."""
+    #     sqlite_check = SqliteCheck(folder=FOLDER_TEST)
+    #     sqlite_check.output_fd.create(parents=True)
+    #     return sqlite_check
 
     @pytest.fixture(scope="class")
     def folder_new(self):

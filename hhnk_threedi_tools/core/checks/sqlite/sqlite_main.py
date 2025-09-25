@@ -134,30 +134,30 @@ OUTPUT_COLS = [
 
 
 # %%
-class SqliteCheck:
+class HhnkSchematisationCheck:
     def __init__(
         self,
         folder: Folders,
     ):
-        self.fenv = folder
+        self.folder = folder
 
-        self.output_fd = self.fenv.output.sqlite_tests
+        self.output_fd = self.folder.output.sqlite_tests
 
-        self.model = self.fenv.model.schema_base.database
-        self.dem = self.fenv.model.schema_base.rasters.dem
-        self.datachecker = self.fenv.source_data.datachecker
-        self.damo = self.fenv.source_data.damo
-        self.channels_from_profiles = self.fenv.source_data.modelbuilder.channel_from_profiles
+        self.model = self.folder.model.schema_base.database
+        self.dem = self.folder.model.schema_base.rasters.dem
+        # self.datachecker = self.folder.source_data.datachecker
+        # self.damo = self.folder.source_data.damo
+        # self.channels_from_profiles = self.folder.source_data.modelbuilder.channel_from_profiles
 
-        self.layer_fixeddrainage = self.fenv.source_data.datachecker.layers.fixeddrainagelevelarea
+        # self.layer_fixeddrainage = self.folder.source_data.datachecker.layers.fixeddrainagelevelarea
 
-        # this dict we can populate with files and layers we can check using verify_inputs
-        self.inputs = {
-            "run_imp_surface_area": [{"file": self.fenv.source_data.polder_polygon.path, "layer": None}],
-            "run_struct_channel_bed_level": [{"file": self.fenv.source_data.damo.path}],
-        }
+        # # this dict we can populate with files and layers we can check using verify_inputs
+        # self.inputs = {
+        #     "run_imp_surface_area": [{"file": self.folder.source_data.polder_polygon.path, "layer": None}],
+        #     "run_struct_channel_bed_level": [{"file": self.folder.source_data.damo.path}],
+        # }
 
-        self.results = {}
+        # self.results = {}
 
     def verify_inputs(self, function):
         """Check if the input of a function (if defined in self.inputs) exists."""
@@ -179,8 +179,8 @@ class SqliteCheck:
     def run_controlled_structures(self, overwrite=False):
         """Create leayer with structure control in schematisation"""
         self.structure_control = StructureControl(
-            model=self.fenv.model.schema_base.database,
-            hdb_control_layer=self.fenv.source_data.hdb.layers.sturing_kunstwerken,
+            model=self.folder.model.schema_base.database,
+            hdb_control_layer=self.folder.source_data.hdb.layers.sturing_kunstwerken,
             output_file=self.output_fd.gestuurde_kunstwerken.base,
         )
         self.structure_control.run(overwrite=overwrite)
@@ -277,7 +277,7 @@ class SqliteCheck:
         imp_surface_db = self.model.execute_sql_selection(impervious_surface_query)
         imp_surface_db.set_index("id", inplace=True)
 
-        polygon_imp_surface = self.fenv.source_data.polder_polygon.load()
+        polygon_imp_surface = self.folder.source_data.polder_polygon.load()
 
         db_surface, polygon_surface, area_diff = calc_surfaces_diff(imp_surface_db, polygon_imp_surface)
         result_txt = (
@@ -338,8 +338,8 @@ class SqliteCheck:
         (channels) to a structure is lower than the reference level for that structure
         (3di crashes if it is)
         """
-        datachecker_culvert_layer = self.fenv.source_data.datachecker.layers.culvert
-        damo_duiker_sifon_layer = self.fenv.source_data.damo.layers.DuikerSifonHevel
+        datachecker_culvert_layer = self.folder.source_data.datachecker.layers.culvert
+        damo_duiker_sifon_layer = self.folder.source_data.damo.layers.DuikerSifonHevel
 
         below_ref_query = struct_channel_bed_query
         gdf_below_ref = self.model.execute_sql_selection(query=below_ref_query)
@@ -375,8 +375,8 @@ class SqliteCheck:
         ) = read_input(
             model=self.model,
             channel_profile_file=self.channels_from_profiles,
-            fixeddrainage_layer=self.fenv.source_data.datachecker.layers.fixeddrainagelevelarea,
-            damo_layer=self.fenv.source_data.damo.layers.waterdeel,
+            fixeddrainage_layer=self.folder.source_data.datachecker.layers.fixeddrainagelevelarea,
+            damo_layer=self.folder.source_data.damo.layers.waterdeel,
         )
         fixeddrainage = calc_area(fixeddrainage, modelbuilder_waterdeel, damo_waterdeel, conn_nodes_geo)
         result_txt = """Gebied open water BGT: {} ha\nGebied open water model: {} ha""".format(
@@ -724,7 +724,7 @@ if __name__ == "__main__":
     TEST_MODEL = r"d:\projecten\D2301.HHNK.Ondersteuning_Python\04.plugin_testdata\data\model_test"
 
     folder = Folders(TEST_MODEL)
-    self = SqliteCheck(folder=folder)
+    self = HhnkSchematisationCheck(folder=folder)
     database = folder.model.schema_base.database
     self.run_cross_section_no_vertex(database)
     self.verify_inputs("run_imp_surface_area")
