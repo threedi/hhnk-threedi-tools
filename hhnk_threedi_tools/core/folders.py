@@ -196,7 +196,7 @@ class Folders(Folder):
             "climate_results_dir": self.threedi_results.climate_results.path_if_exists,
             # Default output folders
             "base_output": self.output.path_if_exists,
-            "sqlite_checks_output": self.output.sqlite_tests.path_if_exists,
+            "sqlite_checks_output": self.output.sqlite_checks.path_if_exists,
             "0d1d_output": self.output.zero_d_one_d.path_if_exists,
             "bank_levels_output": self.output.bank_levels.path_if_exists,
             "1d2d_output": self.output.one_d_two_d.path_if_exists,
@@ -563,7 +563,7 @@ class OutputDirParent(Folder):
     def __init__(self, base, create):
         super().__init__(os.path.join(base, "04_test_results"), create)
 
-        self.sqlite_tests = self.OutputDirSqlite(self.full_path("sqlite_tests"), create=create)
+        self.sqlite_checks = self.OutputDirSqlite(self.full_path("sqlite_checks"), create=create)
         self.bank_levels = self.OutputDirBankLevel(self.full_path("bank_levels"), create=create)
         self.zero_d_one_d = self.OutputDir0d1d(base=self.base, name="0d1d_tests", create=create)
         self.one_d_two_d = self.OutputDir1d2d(base=self.base, name="1d2d_tests", create=create)
@@ -581,8 +581,8 @@ class OutputDirParent(Folder):
             return self.climate
         elif name == "bank_levels":
             return self.bank_levels
-        elif name == "sqlite_tests":
-            return self.sqlite_tests
+        elif name == "sqlite_checks":
+            return self.sqlite_checks
 
     def create_readme(self):
         readme_txt = (
@@ -597,7 +597,7 @@ class OutputDirParent(Folder):
     def structure(self):
         return f"""  
                {self.space}output
-               {self.space}├── sqlite_tests
+               {self.space}├── sqlite_checks
                {self.space}├── bank_levels
                {self.space}├── zero_d_one_d
                {self.space}├── one_d_two_d

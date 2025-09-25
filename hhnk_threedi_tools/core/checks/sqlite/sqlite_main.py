@@ -141,7 +141,7 @@ class SqliteCheck:
     ):
         self.fenv = folder
 
-        self.output_fd = self.fenv.output.sqlite_tests
+        self.output_fd = self.fenv.output.sqlite_checks
 
         self.model = self.fenv.model.schema_base.database
         self.dem = self.fenv.model.schema_base.rasters.dem
