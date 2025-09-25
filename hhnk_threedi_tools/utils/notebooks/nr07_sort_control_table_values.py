@@ -88,30 +88,16 @@ def update_sorted_actiontable(database, queries: list[str]):
 # Sorteer de waarden in de control table in de modelmap met onderstaande cel
 
 # %%
-folder_dir = Path(notebook_data["polder_folder"])
-folder = Folders(folder_dir)
-queries = create_sorted_actiontable_queries(database=folder.model.schema_base.database)
-update_sorted_actiontable(database=folder.model.schema_base.database, queries=queries)
-
-
-# %% test regels
 if __name__ == "__main__":
-    # %% Op een specifieke map
-    folder_dir = Path(r"E:\02.modellen\VNK_zevenhuis")
-
-    # %% of in de local folder
     from notebook_setup import setup_notebook
 
     notebook_data = setup_notebook()
-    folder_dir = Path(notebook_data["polder_folder"])
 
-    # %%
+    folder_dir = Path(notebook_data["polder_folder"])  # Bestand voor de legger wordt klaargezet in de folder dir
+    # folder_dir = Path(r"E:\02.modellen\VNK_leggertool") # Of een specifieke map
 
     assert folder_dir.exists()
     folder = Folders(folder_dir)
 
     queries = create_sorted_actiontable_queries(database=folder.model.schema_base.database)
     update_sorted_actiontable(database=folder.model.schema_base.database, queries=queries)
-
-    # %% test_purpose to relative path
-    folder_dir = Path(__file__).parents[3].joinpath("tests", "data", "model_test")

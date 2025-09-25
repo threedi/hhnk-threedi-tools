@@ -95,34 +95,14 @@ def create_input_leggertool(folder: Folders, berekening_naam: str, output_file: 
     return structure_all
 
 
-# %% [markdown]
-# Bestand voor de legger wordt klaargezet in de folder dir
-
-# %%
-folder_dir = Path(notebook_data["polder_folder"])
-folder = Folders(folder_dir)
-# Input
-berekening_naam = "vnk_leggertool #11 0d1d_test leggertool"  # Deze moet in map 03_3di_resultaten\0d1d_results staan
-folder = Folders(folder_dir)
-output_file = folder.joinpath(f"debiet_{berekening_naam}_{hrt.get_uuid()}.gpkg")
-
-create_input_leggertool(
-    folder=folder,
-    berekening_naam=berekening_naam,
-    output_file=output_file,
-)
-
 # %% test regels
 if __name__ == "__main__":
-    # %% Op een specifieke map
-    folder_dir = Path(r"E:\02.modellen\VNK_leggertool")
-
-    # %% of in de local folder
     from notebook_setup import setup_notebook
 
     notebook_data = setup_notebook()
-    folder_dir = Path(notebook_data["polder_folder"])
-    # %%
+
+    folder_dir = Path(notebook_data["polder_folder"])  # Bestand voor de legger wordt klaargezet in de folder dir
+    # folder_dir = Path(r"E:\02.modellen\VNK_leggertool") # Of een specifieke map
 
     # Input
     berekening_naam = (
