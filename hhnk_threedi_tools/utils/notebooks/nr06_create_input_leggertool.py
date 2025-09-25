@@ -20,7 +20,11 @@ from hhnk_threedi_tools.core.folders import Folders
 
 
 # %%
-def create_input_leggertool(folder: Folders, berekening_naam: str, output_file: Path):
+def create_input_leggertool(
+    folder: Folders,
+    berekening_naam: str,
+    output_file: Path,
+) -> pd.DataFrame:
     """Prepare legger input gpkg. Also adds a style file.
 
     Parameters
@@ -97,8 +101,6 @@ def create_input_leggertool(folder: Folders, berekening_naam: str, output_file: 
 
 # %% test regels
 if __name__ == "__main__":
-    from notebook_setup import setup_notebook
-
     notebook_data = setup_notebook()
 
     folder_dir = Path(notebook_data["polder_folder"])  # Bestand voor de legger wordt klaargezet in de folder dir

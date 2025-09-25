@@ -78,7 +78,7 @@ def create_sorted_actiontable_queries(database: hrt.Sqlite) -> list[str]:
     return queries
 
 
-def update_sorted_actiontable(database, queries: list[str]):
+def update_sorted_actiontable(database: hrt.Sqlite, queries: list[str]) -> None:
     logger.info(f"Updating {len(queries)} table controls for {database.name}")
     for query in queries:
         database.execute_sql_changes(query=query)
@@ -89,8 +89,6 @@ def update_sorted_actiontable(database, queries: list[str]):
 
 # %%
 if __name__ == "__main__":
-    from notebook_setup import setup_notebook
-
     notebook_data = setup_notebook()
 
     folder_dir = Path(notebook_data["polder_folder"])  # Bestand voor de legger wordt klaargezet in de folder dir
