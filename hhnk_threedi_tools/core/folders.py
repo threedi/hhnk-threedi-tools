@@ -55,11 +55,11 @@ FOLDER_STRUCTURE = """
         │ └── 1d2d_results
         | |__ batch_results
         └── 04_test_results
-            ├── 0d1d_tests
+            ├── 0d1d_checks
             │   ├── *some revision*
             │     ├── Layers
             │     └── Logs
-            ├── 1d2d_tests
+            ├── 1d2d_checks
             │ └── *some revision*
             │     ├── Layers
             │     └── Logs
@@ -565,8 +565,8 @@ class OutputDirParent(Folder):
 
         self.sqlite_checks = self.OutputDirSqlite(self.full_path("sqlite_checks"), create=create)
         self.bank_levels = self.OutputDirBankLevel(self.full_path("bank_levels"), create=create)
-        self.zero_d_one_d = self.OutputDir0d1d(base=self.base, name="0d1d_tests", create=create)
-        self.one_d_two_d = self.OutputDir1d2d(base=self.base, name="1d2d_tests", create=create)
+        self.zero_d_one_d = self.OutputDir0d1d(base=self.base, name="0d1d_checks", create=create)
+        self.one_d_two_d = self.OutputDir1d2d(base=self.base, name="1d2d_checks", create=create)
         self.climate = self.OutputDirClimate(base=self.base, name="climate", create=create)
 
         if create:
