@@ -1907,7 +1907,7 @@
 					},
 					{
 					"id": 110,
-					"result_variable": "stuw_hoger_dan_peil_flag",
+					"result_variable": "stuw_fout_count",
 					"function": {
 						"custom_hydamo": {
 							"custom_function_name": "kruising_met_waterloop"
@@ -2104,12 +2104,12 @@
 					"type": "logic",
 					"validation_rule_set": "hhnk",
 					"error_type": "critical",
-					"result_variable": "stuw_hoger_dan_peil",
+					"result_variable": "stuw_fout_count_test",
 					"error_message": "Minstens een stuw met een waarde lager dan (of gelijk aan NaN) de streefpeil_zomer_bovengrens",
 					"active": true,
 					"function": {
-						"EQ": {
-							"left": "stuw_hoger_dan_peil_flag",
+						"LE": {
+							"left": "stuw_fout_count",
 							"right": 10
 						}
 					}
