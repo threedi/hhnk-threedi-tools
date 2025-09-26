@@ -134,14 +134,14 @@ OUTPUT_COLS = [
 
 
 # %%
-class HhnkSchematisationCheck:
+class HhnkSchematisationChecks:
     def __init__(
         self,
         folder: Folders,
     ):
         self.folder = folder
 
-        self.output_fd = self.folder.output.sqlite_tests
+        self.output_fd = self.folder.output.hhnk_schematisation_checks
 
         self.model = self.folder.model.schema_base.database
         self.dem = self.folder.model.schema_base.rasters.dem
@@ -724,7 +724,7 @@ if __name__ == "__main__":
     TEST_MODEL = r"d:\projecten\D2301.HHNK.Ondersteuning_Python\04.plugin_testdata\data\model_test"
 
     folder = Folders(TEST_MODEL)
-    self = HhnkSchematisationCheck(folder=folder)
+    self = HhnkSchematisationChecks(folder=folder)
     database = folder.model.schema_base.database
     self.run_cross_section_no_vertex(database)
     self.verify_inputs("run_imp_surface_area")

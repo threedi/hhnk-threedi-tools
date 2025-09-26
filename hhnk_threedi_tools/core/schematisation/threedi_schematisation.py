@@ -29,7 +29,7 @@ class ThreediSchematisation(Folder):
         # File
         # self.add_file("database", self.model_path())
         database = self.find_ext("gpkg")
-        if len(database) >= 1:
+        if len(database) > 1:
             raise ValueError("More than 1 gpkg found in folder, cannot determine which to use.")
         elif len(database) == 0:
             logger.warning(f"No gpkg found in {self.path}.")
@@ -44,12 +44,12 @@ class ThreediSchematisation(Folder):
         if filepath in [None, ""]:
             filepath = ""
 
-        sqlite_cls = Sqlite(filepath)
+        model_cls = SpatialDatabase(filepath)
         # if os.path.exists(sqlite_cls.path):
         #     return sqlite_cls
         # else:
         #     return None
-        return sqlite_cls
+        return model_cls
 
     @property
     def structure(self):
@@ -63,24 +63,24 @@ class ThreediSchematisation(Folder):
         return str(self.database)
 
     @property
-    def sqlite_paths(self):
-        """Return all sqlites in folder"""
-        return self.find_ext("sqlite")
+    def model_paths(self):
+        """Return all models (gpkg) in folder"""
+        return self.find_ext("gpkg")
 
     @property
-    def sqlite_names(self):
-        """Return all sqlites in folder"""
-        return [sp.stem for sp in self.sqlite_paths]
+    def model_names(self):
+        """Return all models (gpkg) in folder"""
+        return [sp.stem for sp in self.model_paths]
 
     def model_path(self, idx=0, name=None):
         """Find a model using an index"""
         if name:
             try:
-                idx = self.sqlite_names.index(name)
+                idx = self.model_names.index(name)
             except Exception:
-                raise ValueError("name of sqlite given, but cannot be found")
-        if len(self.sqlite_paths) >= 1:
-            return self.sqlite_paths[idx]
+                raise ValueError("name of model given, but cannot be found")
+        if len(self.model_paths) >= 1:
+            return self.model_paths[idx]
         else:
             return ""
 
@@ -89,17 +89,17 @@ class ThreediSchematisation(Folder):
             super().__init__(os.path.join(base, "rasters"), create=True)
             self.caller = caller
 
-            self.dem = self.get_raster_path(table_name="v2_global_settings", col_name="dem_file")
+            self.dem = self.get_raster_path(table_name="model_settings", col_name="dem_file")
             self.storage = self.get_raster_path(
-                table_name="v2_simple_infiltration",
+                table_name="simple_infiltration",
                 col_name="max_infiltration_capacity_file",
             )
-            self.friction = self.get_raster_path(table_name="v2_global_settings", col_name="frict_coef_file")
+            self.friction = self.get_raster_path(table_name="model_settings", col_name="friction_coefficient_file")
             self.infiltration = self.get_raster_path(
-                table_name="v2_simple_infiltration", col_name="infiltration_rate_file"
+                table_name="simple_infiltration", col_name="infiltration_rate_file"
             )
             self.initial_wlvl_2d = self.get_raster_path(
-                table_name="v2_global_settings", col_name="initial_waterlevel_file"
+                table_name="initial_conditions", col_name="initial_water_level_file"
             )
 
             # Waterschadeschatter required 50cm resolution.
@@ -114,23 +114,23 @@ class ThreediSchematisation(Folder):
             self.add_file("gwlvl_ghg", "gwlvl_ghg.tif")
 
         def find_file_by_name(self, name: str) -> File:
-            tifs = [i for i in self.path.glob(name)]
+            tifs = list(self.path.glob(name))
             if len(tifs) == 0:
                 tifs = [""]
             return File(tifs[0])
 
-        def get_raster_path(self, table_name: str, col_name: str):
-            """Read the sqlite to check which rasters are used in the model.
-            This only works for models from Klondike release onwards, where we only have
-            one global settings row.
-            """
+        def get_raster_path(self, table_name: str, col_name: str) -> Raster:
+            """Read raster path from database using SpatialDatabase class."""
 
             if self.caller.database.exists():
-                df = hrt.sqlite_table_to_df(database_path=self.caller.database.path, table_name=table_name)
-                # if len(df) > 1:
-                # print(f"{table_name} has more than 1 row. Choosing the first row for the rasters.")
+                spdb = SpatialDatabase(self.caller.database.path)
+                df = spdb.load(layer=table_name)
+                if len(df) > 1:
+                    logger.warning(f"{table_name} has more than 1 row. Choosing the first row for the rasters.")
+                    df = df.iloc[[0]]
                 if len(df) == 0:
                     raster_name = None
+                    logger.warning(f"{table_name} has no rows, cannot find raster for {self.caller.database.path}.")
                 else:
                     raster_name = df.iloc[0][col_name]
 
