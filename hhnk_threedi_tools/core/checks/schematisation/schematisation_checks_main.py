@@ -434,7 +434,7 @@ class HhnkSchematisationChecks:
             gdf = hrt.df_convert_to_gdf(df, geom_col_type="wkb", src_crs="28992")
             gdf.to_file(driver="GPKG", filename=Path(output_folder) / f"{grid_type}.gpkg", index=False)
 
-    def run_cross_section_duplicates(self, database):
+    def run_cross_section_duplicates(self, database: hrt.SpatialDatabase) -> gpd.GeoDataFrame:
         """Check for duplicate geometries in cross_section_locations."""
         cross_section_point = database.load(layer="cross_section_location", index_column="id")
 
