@@ -26,6 +26,8 @@ from hhnk_threedi_tools.core.checks.sqlite.structure_control import StructureCon
 # Local imports
 from hhnk_threedi_tools.core.folders import Folders
 
+logger = hrt.logging.get_logger(name=__name__)
+
 # queries
 from hhnk_threedi_tools.utils.queries import (
     channels_query,
@@ -453,13 +455,17 @@ class HhnkSchematisationChecks:
 
         return intersected_points
 
-    def run_cross_section_no_vertex(self, database):
-        """Check for cross_sections that are not located on the  vertex of a channel."""
+    def run_cross_section_no_vertex(self, database: hrt.SpatialDatabase) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]:
+        """
+        Check for cross_sections that are not located on the  vertex of a channel. Includes check for cross sections
+        that are located on the wrong channel (i.e. not the channel they are linked to).
+        """
         # load cross locs and channels from sqlite
-        cross_section_point = database.execute_sql_selection(query=cross_section_location_query)
-        cross_section_point.rename({"geometry_point": "geometry"}, axis=1, inplace=True)
+        cross_section_point = database.load(layer="cross_section_location", index_column="id")
 
-        channels_gdf = database.execute_sql_selection(query=channels_query)
+        channels_gdf = database.load(layer="channel", index_column="id")
+        # add column channel id to come to same result as before migration from sqlite to gpkg
+        channels_gdf["channel_id"] = channels_gdf.index
 
         # Create gdf of all channel vertices and buffer them
         channels_gdf["points"] = channels_gdf["geometry"].apply(lambda x: [Point(coord) for coord in x.coords])
@@ -479,17 +485,14 @@ class HhnkSchematisationChecks:
         v_cs = gpd.sjoin(cross_section_point, vertices_gdf, how="inner", predicate="intersects")
 
         # Error cross loc op verkeerde channel
-        # TODO error loggen/raise?
         v_cs_channel_mismatch = v_cs[v_cs["channel_id_left"] != v_cs["channel_id_right"]]
         if len(v_cs_channel_mismatch) > 0:
-            print(
-                f"cross loc ids {v_cs_channel_mismatch['cross_loc_id'].values} are located on a vertex of a different channel"
+            logger.error(
+                f"cross loc ids {v_cs_channel_mismatch.index.to_numpy()} are located on a vertex of a different channel"
             )
 
         # cross sections that didnt get joined are missing a vertex.
-        cross_no_vertex = cross_section_point[
-            ~cross_section_point["cross_loc_id"].isin(v_cs["cross_loc_id"].values)
-        ].copy()
+        cross_no_vertex = cross_section_point[~cross_section_point.index.isin(v_cs.index.values)].copy()
 
         # Find distance to nearest vertex
         nearest_point = cross_no_vertex.sjoin_nearest(vertices_gdf)
@@ -500,7 +503,7 @@ class HhnkSchematisationChecks:
 
         cross_no_vertex.loc[:, ["distance_to_vertex"]] = nearest_point.apply(get_distance, axis=1)
 
-        return cross_no_vertex
+        return cross_no_vertex, v_cs_channel_mismatch
 
 
 ## Helper functions
