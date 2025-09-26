@@ -1,0 +1,27 @@
+# Classes
+SQlite -> SpatailDatabase
+SqliteCheck -> HhnkSchematisationCheck
+ThreediSchematisation moved to hhnk-threedi-tools
+
+
+
+# Functions
+Sqlite.connect -> deprecated
+Sqlite.create_sqlite_connection -> deprecated
+Sqlite.read_table -> SpatialDatabase.load
+Sqlite.execute_sql_selection -> SpatialDatabase.load
+Sqlite.modify_using_query -> SpatialDatabase.modify_gpkg_using_query
+Sqlite.sql_table_info / sql_table_exists -> deprecated
+Sqlite.list_tables -> SpatialDatabase.available_layers
+
+# General
+sqlite_tests -> hhnk_schematisation_checks
+
+# variables
+
+
+# settings_locations
+v2_global_settings -> model_settings
+v2_simple_infiltration -> simple_infiltration
+v2_global_settings/initial_waterlevel_file -> initial_conditions/initial_water_level_file
+frict_coef_file -> friction_coefficient_file
