@@ -179,7 +179,7 @@ class HhnkSchematisationChecks:
     def run_controlled_structures(self, overwrite=False):
         """Create leayer with structure control in schematisation"""
         self.structure_control = StructureControl(
-            model=self.folder.model.schema_base.database,
+            model=self.model,
             hdb_control_layer=self.folder.source_data.hdb.layers.sturing_kunstwerken,
             output_file=self.output_fd.gestuurde_kunstwerken.base,
         )
@@ -260,7 +260,7 @@ class HhnkSchematisationChecks:
 
         gdf["start_check"] = gdf[a_geo_start_node] == gdf[a_geo_start_coord]
         gdf["end_check"] = gdf[a_geo_end_node] == gdf[a_geo_end_coord]
-        add_distance_checks(gdf)
+        _add_distance_checks(gdf)
         # Only rows where at least one of start_dist_ok and end_dist_ok is false
         result_db = gdf[~gdf[["start_dist_ok", "end_dist_ok"]].all(axis=1)]
         if not result_db.empty:
@@ -279,7 +279,7 @@ class HhnkSchematisationChecks:
 
         polygon_imp_surface = self.folder.source_data.polder_polygon.load()
 
-        db_surface, polygon_surface, area_diff = calc_surfaces_diff(imp_surface_db, polygon_imp_surface)
+        db_surface, polygon_surface, area_diff = _calc_surfaces_diff(imp_surface_db, polygon_imp_surface)
         result_txt = (
             f"Totaal ondoorlatend oppervlak: {db_surface} ha\n"
             f"Gebied polder: {polygon_surface} ha\n"
@@ -301,7 +301,7 @@ class HhnkSchematisationChecks:
             isolated_length,
             total_length,
             percentage,
-        ) = calc_len_percentage(channels_gdf)
+        ) = _calc_len_percentage(channels_gdf)
         result = (
             f"Totale lengte watergangen {total_length} km\n"
             f"Totale lengte geïsoleerde watergangen {isolated_length} km\n"
@@ -323,10 +323,10 @@ class HhnkSchematisationChecks:
         channels_gdf = self.model.execute_sql_selection(query=profiles_used_query)
         # If zoom category is 4, channel is considered primary
         channels_gdf[primary_col] = channels_gdf[a_zoom_cat].apply(lambda zoom_cat: zoom_cat == 4)
-        channels_gdf[width_col] = channels_gdf[width_col].apply(split_round)
-        channels_gdf[height_col] = channels_gdf[height_col].apply(split_round)
-        channels_gdf[water_level_width_col] = channels_gdf.apply(func=calc_width_at_waterlevel, axis=1)
-        channels_gdf[max_depth_col] = channels_gdf.apply(func=get_max_depth, axis=1)
+        channels_gdf[width_col] = channels_gdf[width_col].apply(_split_round)
+        channels_gdf[height_col] = channels_gdf[height_col].apply(_split_round)
+        channels_gdf[water_level_width_col] = channels_gdf.apply(func=_calc_width_at_waterlevel, axis=1)
+        channels_gdf[max_depth_col] = channels_gdf.apply(func=_get_max_depth, axis=1)
         # Conversion to string because lists are not valid for storing in gpkg
         channels_gdf[width_col] = channels_gdf[width_col].astype(str)
         channels_gdf[height_col] = channels_gdf[height_col].astype(str)
@@ -346,8 +346,8 @@ class HhnkSchematisationChecks:
         gdf_below_ref.rename(columns={"id": a_chan_bed_struct_id}, inplace=True)
 
         # See git issue about below statements
-        gdf_with_damo = add_damo_info(layer=damo_duiker_sifon_layer, gdf=gdf_below_ref)
-        gdf_with_datacheck = add_datacheck_info(datachecker_culvert_layer, gdf_with_damo)
+        gdf_with_damo = _add_damo_info(layer=damo_duiker_sifon_layer, gdf=gdf_below_ref)
+        gdf_with_datacheck = _add_datacheck_info(datachecker_culvert_layer, gdf_with_damo)
         gdf_with_datacheck.loc[:, down_has_assumption] = gdf_with_datacheck[height_inner_lower_down].isna()
         gdf_with_datacheck.loc[:, up_has_assumption] = gdf_with_datacheck[height_inner_lower_up].isna()
         self.results["struct_channel_bed_level"] = gdf_with_datacheck
@@ -372,13 +372,13 @@ class HhnkSchematisationChecks:
             modelbuilder_waterdeel,
             damo_waterdeel,
             conn_nodes_geo,
-        ) = read_input(
+        ) = _read_input(
             model=self.model,
             channel_profile_file=self.channels_from_profiles,
             fixeddrainage_layer=self.folder.source_data.datachecker.layers.fixeddrainagelevelarea,
             damo_layer=self.folder.source_data.damo.layers.waterdeel,
         )
-        fixeddrainage = calc_area(fixeddrainage, modelbuilder_waterdeel, damo_waterdeel, conn_nodes_geo)
+        fixeddrainage = _calc_area(fixeddrainage, modelbuilder_waterdeel, damo_waterdeel, conn_nodes_geo)
         result_txt = """Gebied open water BGT: {} ha\nGebied open water model: {} ha""".format(
             round(fixeddrainage[watersurface_waterdeel_area].sum() / 10000, 2),
             round(fixeddrainage[watersurface_model_area].sum() / 10000, 2),
@@ -424,29 +424,31 @@ class HhnkSchematisationChecks:
         }
         return wrong_profiles_gdf, update_query
 
-    def create_grid_from_sqlite(self, output_folder):
-        """Create grid from sqlite, this includes cells, lines and nodes."""
+    def create_grid_from_schematisation(self, output_folder):
+        """Create grid from schematisation (gpkg), this includes cells, lines and nodes."""
         grid = make_gridadmin(self.model.base, self.dem.base)
 
         # using output here results in error, so we use the returned dict
         for grid_type in ["cells", "lines", "nodes"]:
             df = pd.DataFrame(grid[grid_type])
             gdf = hrt.df_convert_to_gdf(df, geom_col_type="wkb", src_crs="28992")
-            hrt.gdf_write_to_geopackage(gdf, filepath=Path(output_folder) / f"{grid_type}.gpkg")
+            gdf.to_file(driver="GPKG", filename=Path(output_folder) / f"{grid_type}.gpkg", index=False)
 
     def run_cross_section_duplicates(self, database):
         """Check for duplicate geometries in cross_section_locations."""
-        cross_section_point = database.execute_sql_selection(query=cross_section_location_query)
+        cross_section_point = database.load(layer="cross_section_location", index_column="id")
 
         # Make buffer of the points to identify if we have cross setion overlapping each other.
         cross_section_buffer_gdf = cross_section_point.copy()
         cross_section_buffer_gdf["geometry"] = cross_section_buffer_gdf.buffer(0.5)
 
         # make spatial join between the buffer and the cross section point
-        cross_section_join = gpd.sjoin(cross_section_buffer_gdf, cross_section_point, how="inner", op="intersects")
+        cross_section_join = gpd.sjoin(
+            cross_section_buffer_gdf, cross_section_point, how="inner", predicate="intersects"
+        )
 
         # duplicates in cross_loc in this join are duplicated cross_section_locations
-        index_duplicates = cross_section_join[cross_section_join["cross_loc_id_left"].duplicated()].index
+        index_duplicates = cross_section_join[cross_section_join.index.duplicated()].index
         intersected_points = cross_section_point.loc[index_duplicates]
 
         return intersected_points
@@ -501,20 +503,10 @@ class HhnkSchematisationChecks:
         return cross_no_vertex
 
 
-## helper functions
-
-# TODO deprecated
-# def get_action_values(row):
-#     if row[target_type_col] is weir_layer:
-#         action_values = [float(b.split(";")[1]) for b in row[action_col].split("#")]
-#     else:
-#         action_values = [
-#             float(b.split(";")[1].split(" ")[0]) for b in row[action_col].split("#")
-#         ]
-#     return action_values[0], min(action_values), max(action_values)
+## Helper functions
 
 
-def add_distance_checks(gdf):
+def _add_distance_checks(gdf):
     # Load as valid geometry type
     gdf["start_coord"] = gdf["start_coord"].apply(wkt.loads)
     gdf["start_node"] = gdf["start_node"].apply(wkt.loads)
@@ -529,14 +521,14 @@ def add_distance_checks(gdf):
     gdf["end_dist_ok"] = round(gdf_end_node.distance(gdf_end_coor), 5) < 0.1
 
 
-def calc_surfaces_diff(db_imp_surface, polygon_imp_surface):
+def _calc_surfaces_diff(db_imp_surface, polygon_imp_surface):
     db_surface = int(db_imp_surface.sum() / 10000)
     polygon_surface = int(polygon_imp_surface.area.values[0] / 10000)
     area_diff = db_surface - polygon_surface
     return db_surface, polygon_surface, area_diff
 
 
-def calc_len_percentage(channels_gdf):
+def _calc_len_percentage(channels_gdf):
     total_length = round(channels_gdf.geometry.length.sum() / 1000, 2)
     isolated_channels_gdf = channels_gdf[channels_gdf[calculation_type_col] == channels_isolated_calc_type]
     if not isolated_channels_gdf.empty:
@@ -547,7 +539,7 @@ def calc_len_percentage(channels_gdf):
     return isolated_channels_gdf, isolated_length, total_length, percentage
 
 
-def calc_width_at_waterlevel(row):
+def _calc_width_at_waterlevel(row):
     """Bereken de breedte van de watergang op het streefpeil"""
     x_pos = [b / 2 for b in row[width_col]]
     y = [row.reference_level + b for b in row[height_col]]
@@ -558,19 +550,19 @@ def calc_width_at_waterlevel(row):
     return width_wl
 
 
-def split_round(item):
+def _split_round(item):
     """Split items in width and height columns by space,
     round all items in resulting list and converts to floats
     """
     return [round(float(n), 2) for n in str(item).split(" ")]
 
 
-def get_max_depth(row):
+def _get_max_depth(row):
     """Calculate difference between initial waterlevel and reference level"""
     return round(float(row[initial_waterlevel_col]) - float(row[reference_level_col]), 2)
 
 
-def add_damo_info(layer, gdf):
+def _add_damo_info(layer, gdf):
     try:
         damo_gdb = layer.load()
         new_gdf = gdf.merge(
@@ -593,7 +585,7 @@ def add_damo_info(layer, gdf):
         return new_gdf
 
 
-def add_datacheck_info(layer, gdf):
+def _add_datacheck_info(layer, gdf):
     try:
         datachecker_gdb = layer.load()
         new_gdf = gdf.merge(
@@ -612,7 +604,7 @@ def add_datacheck_info(layer, gdf):
         return new_gdf
 
 
-def expand_multipolygon(df):
+def _expand_multipolygon(df):
     """New version using explode, old version returned pandas dataframe not geopandas
     geodataframe (missing last line), I think it works now?
     """
@@ -628,7 +620,7 @@ def expand_multipolygon(df):
         raise e from None
 
 
-def read_input(
+def _read_input(
     model,
     channel_profile_file,
     fixeddrainage_layer,
@@ -636,7 +628,7 @@ def read_input(
 ):
     try:
         fixeddrainage = fixeddrainage_layer.load()[[peil_id_col, code_col, COL_STREEFPEIL_BWN, geometry_col]]
-        fixeddrainage = expand_multipolygon(fixeddrainage)
+        fixeddrainage = _expand_multipolygon(fixeddrainage)
         modelbuilder_waterdeel = channel_profile_file.load()
         damo_waterdeel = damo_layer.load()
         conn_nodes_geo = model.execute_sql_selection(query=watersurface_conn_node_query)
@@ -647,7 +639,7 @@ def read_input(
         raise e from None
 
 
-def add_nodes_area(fixeddrainage, conn_nodes_geo):
+def _add_nodes_area(fixeddrainage, conn_nodes_geo):
     try:
         # join on intersection of geometries
         joined = gpd.sjoin(
@@ -668,7 +660,7 @@ def add_nodes_area(fixeddrainage, conn_nodes_geo):
         raise e from None
 
 
-def add_waterdeel(fixeddrainage, to_add):
+def _add_waterdeel(fixeddrainage, to_add):
     try:
         # create dataframe containing overlaying geometry
         overl = gpd.overlay(fixeddrainage, to_add, how="intersection")
@@ -685,7 +677,7 @@ def add_waterdeel(fixeddrainage, to_add):
     return merged
 
 
-def calc_perc(diff, waterdeel):
+def _calc_perc(diff, waterdeel):
     try:
         return round((diff / waterdeel) * 100, 1)
     except:
@@ -695,12 +687,14 @@ def calc_perc(diff, waterdeel):
             return 100.0
 
 
-def calc_area(fixeddrainage, modelbuilder_waterdeel, damo_waterdeel, conn_nodes_geo):
+def _calc_area(
+    fixeddrainage, modelbuilder_waterdeel, damo_waterdeel, conn_nodes_geo
+):  # TODO type hints, docstring, test
     try:
-        fixeddrainage = add_nodes_area(fixeddrainage, conn_nodes_geo)
-        fixeddrainage = add_waterdeel(fixeddrainage, damo_waterdeel)
+        fixeddrainage = _add_nodes_area(fixeddrainage, conn_nodes_geo)
+        fixeddrainage = _add_waterdeel(fixeddrainage, damo_waterdeel)
         fixeddrainage.rename(columns={"area": watersurface_waterdeel_area}, inplace=True)
-        fixeddrainage = add_waterdeel(fixeddrainage, modelbuilder_waterdeel)
+        fixeddrainage = _add_waterdeel(fixeddrainage, modelbuilder_waterdeel)
         fixeddrainage.rename(columns={"area": watersurface_channels_area}, inplace=True)
         fixeddrainage[watersurface_model_area] = (
             fixeddrainage[watersurface_channels_area] + fixeddrainage[watersurface_nodes_area]
@@ -709,7 +703,7 @@ def calc_area(fixeddrainage, modelbuilder_waterdeel, damo_waterdeel, conn_nodes_
             fixeddrainage[watersurface_model_area] - fixeddrainage[watersurface_waterdeel_area]
         )
         fixeddrainage[area_diff_perc] = fixeddrainage.apply(
-            lambda row: calc_perc(row[area_diff_col], row[watersurface_waterdeel_area]),
+            lambda row: _calc_perc(row[area_diff_col], row[watersurface_waterdeel_area]),
             axis=1,
         )
         return fixeddrainage
@@ -720,13 +714,13 @@ def calc_area(fixeddrainage, modelbuilder_waterdeel, damo_waterdeel, conn_nodes_
 # %%
 
 if __name__ == "__main__":
-    TEST_MODEL = r"E:\02.modellen\model_test_v2"
-    TEST_MODEL = r"d:\projecten\D2301.HHNK.Ondersteuning_Python\04.plugin_testdata\data\model_test"
+    from tests.config import FOLDER_TEST
 
-    folder = Folders(TEST_MODEL)
+    folder = Folders(FOLDER_TEST)
     self = HhnkSchematisationChecks(folder=folder)
     database = folder.model.schema_base.database
-    self.run_cross_section_no_vertex(database)
+    self.run_cross_section_no_vertex(database=database)
+
     self.verify_inputs("run_imp_surface_area")
 
 
