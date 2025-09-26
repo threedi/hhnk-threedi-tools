@@ -1823,10 +1823,111 @@
 						}
 					},
 					"description": "controler als de peilgebieden van een combinatiepeilgebied elkaar niet overlappen"
+					},
+					{
+					"id": 102,
+					"result_variable": "area",
+					"function": {
+						"custom_hydamo": {
+							"custom_function_name": "peil_basic_properties"
+						}
+					},
+					"description": "get area from basic properties for the peilgebiede"
+					},
+					{
+					"id": 103,
+					"result_variable": "hydroobject_count",
+					"function": {
+						"custom_hydamo": {
+							"custom_function_name": "peil_basic_properties"
+						}
+					},
+					"description": "get numbers of hydrooboject per peilgebied"
+					},
+					{
+					"id": 104,
+					"result_variable": "peil_meer_30cm",
+					"function": {
+						"custom_hydamo": {
+							"custom_function_name": "peil_basic_properties"
+						}
+					},
+					"description": "add 30 cm to the peilgebiede for further comparisons "
+					},
+					{
+					"id": 105,
+					"result_variable": "limit_winter_ondergrens_minder_10cm",
+					"function": {
+						"custom_hydamo": {
+							"custom_function_name": "peil_basic_properties"
+						}
+					},
+					"description": "get lower limint minus 10 cm for further comparisons"
+					},
+					{
+					"id": 106,
+					"result_variable": "limit_zomer_bovengrens_plus_10cm",
+					"function": {
+						"custom_hydamo": {
+							"custom_function_name": "peil_basic_properties"
+						}
+					},
+					"description": "get upper limit plus 10 cm for further comparisons"
+					},
+					{
+					"id": 107,
+					"result_variable": "num_vertices",
+					"function": {
+						"custom_hydamo": {
+							"custom_function_name": "peil_verbonde"
+						}
+					},
+					"description": "Get number of connected vertex per peilgebied"
+					},	
+					
+					{
+					"id": 108,
+					"result_variable": "percentile_90_min",
+					"function": {
+						"custom_hydamo": {
+							"custom_function_name": "peil_versus_AHN"
+						}
+					},
+					"description": "get percentil 90, with zonal statics from ahn5"
+					},
+					{
+					"id": 109,
+					"result_variable": "waterstand_median",
+					"function": {
+						"custom_hydamo": {
+							"custom_function_name": "peilgebieded_waterstand_dm"
+						}
+					},
+					"description": "get median waterstand from datamining"
+					},
+					{
+					"id": 110,
+					"result_variable": "stuw_hoger_dan_peil_flag",
+					"function": {
+						"custom_hydamo": {
+							"custom_function_name": "kruising_met_waterloop"
+						}
+					},
+					"description": "get minimun hoogstedoorstroomhoogte from a stuw in a peilgebeied"
+					},
+					{
+					"id": 111,
+					"result_variable": "holes_in_polygon",
+					"function": {
+						"custom_hydamo": {
+							"custom_function_name": "peil_basic_properties"
+						}
+					},
+					"description": "get minimun hoogstedoorstroomhoogte from a stuw in a peilgebeied"
 					}
 				],
 				"validation_rules": [
-					{
+				{
 					"id": 100,
 					"name": "streefpeil valt niet buiten min/max",
 					"type": "logic",
@@ -1904,13 +2005,128 @@
 					"type": "logic",
 					"validation_rule_set": "hhnk",
 					"error_type": "critical",
-					"result_variable": "Geïntersecteerd_peilgebied",
+					"result_variable": "Geen_Geintersecteerd_peilgebied",
 					"error_message": "peilgebieden overlappen",
 					"active": true,
 					"function": {
 							"GT": {
-							"left": "aantal_intersecties",
-							"right": 1
+							"left": 0,
+							"right": "aantal_intersecties"
+						}
+					}
+				},
+				{
+					"id": 105,
+					"name": "Area_Grotter_100",
+					"type": "logic",
+					"validation_rule_set": "hhnk",
+					"error_type": "critical",
+					"result_variable": "Area_Grotter_100",
+					"error_message": "peilgebieden kleiner dan 100m2",
+					"active": true,
+					"function": {
+							"GT": {
+							"left": "area",
+							"right": 100
+						}
+					}
+				},
+				{
+					"id": 106,
+					"name": "hydroobject_binnen_meer_dan_1",
+					"type": "logic",
+					"validation_rule_set": "hhnk",
+					"error_type": "critical",
+					"result_variable": "minste_1_hydoobject",
+					"error_message": "geen_hydroobject_in_peilgebiede",
+					"active": true,
+					"function": {
+							"GT": {
+							"left": "hydroobject_count",
+							"right": 0
+						}
+					}
+				},
+				{
+					"id": 107,
+					"name": "peilgebiede_verbonde",
+					"type": "logic",
+					"validation_rule_set": "hhnk",
+					"error_type": "critical",
+					"result_variable": "peilgebied_verbonde",
+					"error_message": "peilgebiede_niet_verbonde",
+					"active": true,
+					"function": {
+							"GT": {
+							"left": "num_vertices",
+							"right": 0
+						}
+					}
+				},
+				{
+					"id": 108,
+					"name": "AHN5_P90_vs_peil_hoog",
+					"type": "logic",
+					"validation_rule_set": "hhnk",
+					"error_type": "critical",
+					"result_variable": "peil_lager_dan_peilgreens",
+					"error_message": "",
+					"active": true,
+					"function": {
+							"GT": {
+							"left": "percentile_90_min",
+							"right": "peil_meer_30cm"
+						}
+					}
+				},
+				{
+					"id": 109,
+					"name": "median_peilgebieded_waterstand_dm",
+					"type": "logic",
+					"validation_rule_set": "hhnk",
+					"error_type": "critical",
+					"result_variable":"peil_binnen_onder_en_bovengrens",
+					"error_message":"geen_hydroobject_in_peilgebiede",
+					"active": true,
+					"function": {
+							"BE": {
+							"parameter":"waterstand_median",
+							"min":"limit_winter_ondergrens_minder_10cm",
+							"max":"limit_zomer_bovengrens_plus_10cm",
+							"inclusive": true
+						}
+					}
+				},
+				{
+					"id": 110,
+					"name": "stuw hoger dan peil flag",
+					"description": "The stuw should be higher than the peilgrens. If there is one stuw higher then the whole peilgebied will be mark",
+					"type": "logic",
+					"validation_rule_set": "hhnk",
+					"error_type": "critical",
+					"result_variable": "stuw_hoger_dan_peil",
+					"error_message": "Minstens een stuw met een waarde lager dan (of gelijk aan NaN) de streefpeil_zomer_bovengrens",
+					"active": true,
+					"function": {
+						"EQ": {
+							"left": "stuw_hoger_dan_peil_flag",
+							"right": 10
+						}
+					}
+				},
+				{
+					"id": 111,
+					"name": "holes_in_polygon",
+					"type": "logic",
+					"validation_rule_set": "hhnk",
+					"error_type": "critical",
+					"result_variable": "zero_holes_in_polygon",
+					"error_message": "er is een gat in de polygon",
+					"active": true,
+					"function": {
+							"EQ": {
+							"left": 0,
+							"right": "holes_in_polygon"
 						}
 					}
 				}
