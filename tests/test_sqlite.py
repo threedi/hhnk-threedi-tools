@@ -11,17 +11,17 @@ from hhnk_threedi_tools.core.schematisation.model_splitter import ModelSchematis
 from tests.config import FOLDER_TEST, PATH_NEW_FOLDER
 
 
-class CheckSchematisation:
+class TestSchematisation:
     FOLDER_TEST.output.hhnk_schematisation_checks.unlink_contents()
 
     def __init__(self):
-        self.hhnk_schematisation_check = HhnkSchematisationChecks(folder=FOLDER_TEST)
-        self.hhnk_schematisation_check.output_fd.create(parents=True)
+        self.hhnk_schematisation_checks = HhnkSchematisationChecks(folder=FOLDER_TEST)
+        self.hhnk_schematisation_checks.output_fd.create(parents=True)
 
     @pytest.fixture(scope="class")
     def folder_new(self):
-        """Copy folder structure and sqlite and then run splitter so we
-        get the correct sqlite (with errors) to run tests on.
+        """Copy folder structure and model database and then run splitter so we
+        get the correct model database (with errors) to run tests on.
         """
         folder_new = Folders(PATH_NEW_FOLDER, create=True)
         shutil.copytree(FOLDER_TEST.model.schema_base.path, folder_new.model.schema_base.path, dirs_exist_ok=True)
@@ -35,23 +35,23 @@ class CheckSchematisation:
         return folder_new
 
     def test_run_controlled_structures(self):
-        self.hhnk_schematisation_check.run_controlled_structures()
+        self.hhnk_schematisation_checks.run_controlled_structures()
 
-        output_file = self.hhnk_schematisation_check.output_fd.gestuurde_kunstwerken
+        output_file = self.hhnk_schematisation_checks.output_fd.gestuurde_kunstwerken
         assert output_file.exists()
 
         output_df = output_file.load()
         assert output_df["hdb_kruin_max"][0] == -0.25
 
     def test_run_dem_max_value(self):
-        output = self.hhnk_schematisation_check.run_dem_max_value()
+        output = self.hhnk_schematisation_checks.run_dem_max_value()
         assert "voldoet aan de norm" in output
 
     def test_run_dewatering_depth(self):
-        self.hhnk_schematisation_check.run_dewatering_depth()
-        assert self.hhnk_schematisation_check.output_fd.drooglegging.exists()
+        self.hhnk_schematisation_checks.run_dewatering_depth()
+        assert self.hhnk_schematisation_checks.output_fd.drooglegging.exists()
 
-        assert self.hhnk_schematisation_check.output_fd.drooglegging.statistics() == {
+        assert self.hhnk_schematisation_checks.output_fd.drooglegging.statistics() == {
             "min": -0.76,
             "max": 9.401,
             "mean": 1.332812,
@@ -59,69 +59,81 @@ class CheckSchematisation:
         }
 
     def test_run_model_checks(self):
-        output = self.hhnk_schematisation_check.run_model_checks()
+        output = self.hhnk_schematisation_checks.run_model_checks()
         assert "node without initial waterlevel" in output.set_index("id").loc[482, "error"]
 
     def test_run_geometry(self):
         """TODO empty check"""
-        output = self.hhnk_schematisation_check.run_geometry_checks()
+        output = self.hhnk_schematisation_checks.run_geometry_checks()
         assert output.empty
 
     def test_run_imp_surface_area(self):
-        output = self.hhnk_schematisation_check.run_imp_surface_area()
+        output = self.hhnk_schematisation_checks.run_imp_surface_area()
         assert "61 ha" in output
 
     def test_run_isolated_channels(self):
-        output = self.hhnk_schematisation_check.run_isolated_channels()
+        output = self.hhnk_schematisation_checks.run_isolated_channels()
         assert output[0]["length_in_meters"][10] == 168.45
 
     def test_run_used_profiles(self):
-        output = self.hhnk_schematisation_check.run_used_profiles()
+        output = self.hhnk_schematisation_checks.run_used_profiles()
         assert output["width_at_wlvl"][0] == 2
 
     def test_run_cross_section_duplicates(self, folder_new):
         database = folder_new.model.schema_basis_errors.database
-        output = self.hhnk_schematisation_check.run_cross_section_duplicates(database=database)
+        output = self.hhnk_schematisation_checks.run_cross_section_duplicates(database=database)
         assert output["cross_loc_id"].to_list() == [282, 99999]
 
     def test_run_cross_section_no_vertex(self, folder_new):
         database = folder_new.model.schema_basis_errors.database
-        output = self.hhnk_schematisation_check.run_cross_section_no_vertex(database=database)
+        output = self.hhnk_schematisation_checks.run_cross_section_no_vertex(database=database)
         assert output["cross_loc_id"].to_list() == [320]
         assert output["distance_to_vertex"].to_list() == [1.0]
 
-    def test_create_grid_from_sqlite(self, folder_new):
-        self.hhnk_schematisation_check.create_grid_from_sqlite(output_folder=folder_new.output.sqlite_tests.path)
-        assert folder_new.output.sqlite_tests.full_path("cells.gpkg").exists()
+    def test_create_grid_from_schematisation(self, folder_new):
+        self.hhnk_schematisation_checks.create_grid_from_schematisation(
+            output_folder=folder_new.output.hhnk_schematisation_checks.path
+        )
+        assert folder_new.output.hhnk_schematisation_checks.full_path("cells.gpkg").exists()
 
     def test_run_struct_channel_bed_level(self):
         """TODO empty check"""
-        output = self.hhnk_schematisation_check.run_struct_channel_bed_level()
+        output = self.hhnk_schematisation_checks.run_struct_channel_bed_level()
         assert output.empty
 
     def test_run_watersurface_area(self):
-        output = self.hhnk_schematisation_check.run_watersurface_area()
+        output = self.hhnk_schematisation_checks.run_watersurface_area()
         assert output[0]["area_diff"][0] == -20
 
     def test_run_weir_flood_level(self):
-        output = self.hhnk_schematisation_check.run_weir_floor_level()
+        output = self.hhnk_schematisation_checks.run_weir_floor_level()
         assert output[0]["proposed_reference_level"][1] == -1.26
 
 
 # %%
 if __name__ == "__main__":
+    import inspect
+
     import geopandas as gpd
     import hhnk_research_tools as hrt
     import numpy as np
 
-    self = CheckSchematisation()
-    # self = selftest.sqlite_check
+    self = TestSchematisation()
 
-    # # Run all testfunctions
-    # for i in dir(selftest):
-    #     if i.startswith('test_') and hasattr(inspect.getattr_static(selftest,i), '__call__'):
-    #         print(i)
-    #         getattr(selftest, i)()
+    # Run all testfunctions
+    for i in dir(self):
+        if i.startswith("test_"):
+            break
+            # Find out if function needs folder_new as input
+            params = inspect.signature(getattr(self, i)).parameters
+            if "folder_new" in params:
+                folder_new = Folders(PATH_NEW_FOLDER, create=True)
+                getattr(self, i)(folder_new=folder_new)
+
+            break
+        if i.startswith("test_") and hasattr(inspect.getattr_static(self, i), "__call__"):
+            print(i)
+            getattr(self, i)()
     folder_new = self.folder_new()
     # self.test_run_cross_section_duplicates(folder_new=folder_new)
     # self.test_run_cross_section_no_vertex(folder_new=folder_new)

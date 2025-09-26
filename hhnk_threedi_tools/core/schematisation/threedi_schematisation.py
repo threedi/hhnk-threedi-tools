@@ -92,7 +92,7 @@ class ThreediSchematisation(Folder):
             self.dem = self.get_raster_path(table_name="model_settings", col_name="dem_file")
             self.storage = self.get_raster_path(
                 table_name="simple_infiltration",
-                col_name="max_infiltration_capacity_file",
+                col_name="max_infiltration_volume_file",
             )
             self.friction = self.get_raster_path(table_name="model_settings", col_name="friction_coefficient_file")
             self.infiltration = self.get_raster_path(
