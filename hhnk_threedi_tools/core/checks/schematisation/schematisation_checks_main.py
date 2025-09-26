@@ -145,17 +145,17 @@ class HhnkSchematisationChecks:
 
         self.model = self.folder.model.schema_base.database
         self.dem = self.folder.model.schema_base.rasters.dem
-        # self.datachecker = self.folder.source_data.datachecker
-        # self.damo = self.folder.source_data.damo
-        # self.channels_from_profiles = self.folder.source_data.modelbuilder.channel_from_profiles
+        self.datachecker = self.folder.source_data.datachecker
+        self.damo = self.folder.source_data.damo
+        self.channels_from_profiles = self.folder.source_data.modelbuilder.channel_from_profiles
 
-        # self.layer_fixeddrainage = self.folder.source_data.datachecker.layers.fixeddrainagelevelarea
+        self.layer_fixeddrainage = self.folder.source_data.datachecker.layers.fixeddrainagelevelarea
 
-        # # this dict we can populate with files and layers we can check using verify_inputs
-        # self.inputs = {
-        #     "run_imp_surface_area": [{"file": self.folder.source_data.polder_polygon.path, "layer": None}],
-        #     "run_struct_channel_bed_level": [{"file": self.folder.source_data.damo.path}],
-        # }
+        # this dict we can populate with files and layers we can check using verify_inputs
+        self.inputs = {
+            "run_imp_surface_area": [{"file": self.folder.source_data.polder_polygon.path, "layer": None}],
+            "run_struct_channel_bed_level": [{"file": self.folder.source_data.damo.path}],
+        }
 
         # self.results = {}
 
