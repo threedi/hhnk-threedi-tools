@@ -391,13 +391,48 @@ class HhnkSchematisationChecks:
         }
         return fixeddrainage, result_txt
 
-    def run_weir_floor_level(self):
+    def run_weir_floor_level(self, database: hrt.SpatialDatabase) -> tuple[gpd.GeoDataFrame, str]:
         """
         Check whether minimum crest height of weir is under reference level found in the v2_cross_section_location layer.
         This is not allowed, so if this is the case, we have to update the reference level.
         """
-        # TODO use hrt.sqlite_table_to_gdf instead?
-        weirs_gdf = self.model.execute_sql_selection(query=weir_height_query)
+        # load weirs and cross section locations from database and join nearby cross section location
+        weirs_gdf = database.load(layer="weir", index_column="id")
+        weirs_gdf["weir_id"] = weirs_gdf.index
+        cross_section_gdf = database.load(layer="cross_section_location", index_column="id")
+        cross_section_gdf["cs_id"] = cross_section_gdf.index
+        channels_gdf = database.load(layer="channel", index_column="id")
+        channels_gdf["channel_id"] = channels_gdf.index
+        # TODO control_table_layer ook nog toevoegen en is dit handig?
+
+        # Join cross sections to weirs both on start and end node
+        weir_join_df = pd.concat(
+            [
+                weirs_gdf[["weir_id", "connection_node_id_start"]].rename(
+                    columns={"connection_node_id_start": "connection_node_id"}
+                ),
+                weirs_gdf[["weir_id", "connection_node_id_end"]].rename(
+                    columns={"connection_node_id_end": "connection_node_id"}
+                ),
+            ]
+        )
+        channel_join_df = pd.concat(
+            [
+                channels_gdf[["channel_id", "connection_node_id_start"]].rename(
+                    columns={"connection_node_id_start": "connection_node_id"}
+                ),
+                channels_gdf[["channel_id", "connection_node_id_end"]].rename(
+                    columns={"connection_node_id_end": "connection_node_id"}
+                ),
+            ]
+        )
+        weir_join_df = weir_join_df.merge(
+            channel_join_df,
+            left_on="connection_node_id",
+            right_on="connection_node_id",
+            how="left",
+        ).dropna(subset=["channel_id"])
+
         # Bepaal de minimale kruinhoogte uit de action table
         weirs_gdf[min_crest_height] = [
             min([float(b.split(";")[1]) for b in a.split("#")]) for a in weirs_gdf[action_col]
@@ -426,15 +461,15 @@ class HhnkSchematisationChecks:
         }
         return wrong_profiles_gdf, update_query
 
-    def create_grid_from_schematisation(self, output_folder):
+    def create_grid_from_schematisation(self, output_folder):  # FIXME
         """Create grid from schematisation (gpkg), this includes cells, lines and nodes."""
-        grid = make_gridadmin(self.model.base, self.dem.base)
+        # grid = make_gridadmin(self.model.base, self.dem.base)
 
-        # using output here results in error, so we use the returned dict
-        for grid_type in ["cells", "lines", "nodes"]:
-            df = pd.DataFrame(grid[grid_type])
-            gdf = hrt.df_convert_to_gdf(df, geom_col_type="wkb", src_crs="28992")
-            gdf.to_file(driver="GPKG", filename=Path(output_folder) / f"{grid_type}.gpkg", index=False)
+        # # using output here results in error, so we use the returned dict
+        # for grid_type in ["cells", "lines", "nodes"]:
+        #     df = pd.DataFrame(grid[grid_type])
+        #     gdf = hrt.df_convert_to_gdf(df, geom_col_type="wkb", src_crs="28992")
+        #     gdf.to_file(driver="GPKG", filename=Path(output_folder) / f"{grid_type}.gpkg", index=False)
 
     def run_cross_section_duplicates(self, database: hrt.SpatialDatabase) -> gpd.GeoDataFrame:
         """Check for duplicate geometries in cross_section_locations."""
@@ -507,6 +542,7 @@ class HhnkSchematisationChecks:
 
 
 ## Helper functions
+# TODO zet in functies als het maar paar regels is
 
 
 def _add_distance_checks(gdf):
@@ -722,9 +758,25 @@ if __name__ == "__main__":
     folder = Folders(FOLDER_TEST)
     self = HhnkSchematisationChecks(folder=folder)
     database = folder.model.schema_base.database
-    self.run_cross_section_no_vertex(database=database)
-
+    self.run_cross_section_duplicates(database=database)
+    # TODO self.create_grid_from_schematisation(output_folder=folder.output.base)
+    self.run_weir_floor_level()
     self.verify_inputs("run_imp_surface_area")
 
+
+# %%
+
+
+# %%
+if __name__ == "__main__":
+    from hhnk_threedi_tools.core.schematisation.structure_relate import StructureRelations
+
+    from hhnk_threedi_tools.core.folders import Folders
+    from tests.config import TEST_DIRECTORY
+
+    folder = Folders(TEST_DIRECTORY / "model_test")
+    # database = folder.model.schema_base.database
+    weir_gdf = StructureRelations(folder=folder, structure_table="weir")
+    weir_gdf = weir_gdf.relate()
 
 # %%
