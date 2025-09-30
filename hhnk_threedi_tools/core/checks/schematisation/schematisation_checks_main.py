@@ -356,41 +356,59 @@ class HhnkSchematisationChecks:
         self.results["struct_channel_bed_level"] = gdf_with_datacheck
         return gdf_with_datacheck
 
-    def run_watersurface_area(self):
+    def run_watersurface_area(self) -> tuple[gpd.GeoDataFrame, str]:
         """
         Deze test controleert per peilgebied in het model hoe groot het gebied
         is dat het oppervlaktewater beslaat in het model. Dit totaal is opgebouwd
-        uit de kolom `storage_area` uit de `v2_connection_nodes` in de sqlite opgeteld
+        uit de kolom `storage_area` uit de `connection_node` in de sqlite opgeteld
         bij het oppervlak van de watergangen (uitgelezen uit `channel_surface_from_profiles`)
         shapefile. Vervolgens worden de totalen per peilgebied vergeleken met diezelfde
         totalen uit de waterdelen in DAMO.
 
         De kolom namen in het resultaat zijn als volgt:
-        From v2_connection_nodes -> area_nodes_m2
+        From connection_nodes -> area_nodes_m2
         From channel_surface_from_profiles -> area_channels_m2
         From DAMO -> area_waterdeel_m2
         """
-        (
-            fixeddrainage,
-            modelbuilder_waterdeel,
-            damo_waterdeel,
-            conn_nodes_geo,
-        ) = _read_input(
-            model=self.model,
-            channel_profile_file=self.channels_from_profiles,
-            fixeddrainage_layer=self.folder.source_data.datachecker.layers.fixeddrainagelevelarea,
-            damo_layer=self.folder.source_data.damo.layers.waterdeel,
+
+        # read inputs
+        fixeddrainage_gdf = self.folder.source_data.datachecker.layers.fixeddrainagelevelarea.load()[
+            ["peil_id", "code", "streefpeil_bwn2", "geometry"]
+        ]
+        modelbuilder_waterdeel_gdf = self.channels_from_profiles.load(layer="channel_surface_from_profiles")
+        damo_waterdeel_gdf = self.folder.source_data.damo.layers.waterdeel.load()
+        conn_nodes_gdf = self.model.load(layer="connection_node", index_column="id").rename(
+            columns={"id": a_watersurf_conn_id}
         )
-        fixeddrainage = _calc_area(fixeddrainage, modelbuilder_waterdeel, damo_waterdeel, conn_nodes_geo)
+        # Explode fixed drainage level area polygons to ensure no multipolygons are present
+        fixeddrainage_gdf = _expand_multipolygon(fixeddrainage_gdf)  # TODO deal with helper functions
+
+        # Add area from connection nodes to each fixed drainage level area
+        fixeddrainage_gdf = _add_nodes_area(fixeddrainage_gdf, conn_nodes_gdf)
+        # Add area from BGT waterdelen to each fixed drainage level area
+        fixeddrainage_gdf = _add_waterdeel(fixeddrainage_gdf, damo_waterdeel_gdf)
+        fixeddrainage_gdf.rename(columns={"area": "area_waterdeel_m2"}, inplace=True)
+        # Add area from model channels to each fixed drainage level area
+        fixeddrainage_gdf = _add_waterdeel(fixeddrainage_gdf, modelbuilder_waterdeel_gdf)
+        fixeddrainage_gdf.rename(columns={"area": "area_channels_m2"}, inplace=True)
+        # Total water area in model
+        fixeddrainage_gdf["area_model_m2"] = fixeddrainage_gdf["area_channels_m2"] + fixeddrainage_gdf["area_nodes_m2"]
+        # Difference in water area model and waterdeel
+        fixeddrainage_gdf["area_diff"] = fixeddrainage_gdf["area_model_m2"] - fixeddrainage_gdf["area_waterdeel_m2"]
+        fixeddrainage_gdf["area_diff_perc"] = fixeddrainage_gdf.apply(
+            lambda row: _calc_perc(row["area_diff"], row["area_waterdeel_m2"]),
+            axis=1,
+        )
+
         result_txt = """Gebied open water BGT: {} ha\nGebied open water model: {} ha""".format(
-            round(fixeddrainage[watersurface_waterdeel_area].sum() / 10000, 2),
-            round(fixeddrainage[watersurface_model_area].sum() / 10000, 2),
+            round(fixeddrainage_gdf["area_waterdeel_m2"].sum() / 10000, 2),
+            round(fixeddrainage_gdf["area_model_m2"].sum() / 10000, 2),
         )
         self.results["watersurface_area"] = {
-            "fixeddrainage": fixeddrainage,
+            "fixeddrainage": fixeddrainage_gdf,
             "result_txt": result_txt,
         }
-        return fixeddrainage, result_txt
+        return fixeddrainage_gdf, result_txt
 
     def run_weir_floor_level(self, database: hrt.SpatialDatabase) -> tuple[gpd.GeoDataFrame, str]:
         """
@@ -661,25 +679,6 @@ def _expand_multipolygon(df):
         raise e from None
 
 
-def _read_input(
-    model,
-    channel_profile_file,
-    fixeddrainage_layer,
-    damo_layer,
-):
-    try:
-        fixeddrainage = fixeddrainage_layer.load()[[peil_id_col, code_col, COL_STREEFPEIL_BWN, geometry_col]]
-        fixeddrainage = _expand_multipolygon(fixeddrainage)
-        modelbuilder_waterdeel = channel_profile_file.load()
-        damo_waterdeel = damo_layer.load()
-        conn_nodes_geo = model.execute_sql_selection(query=watersurface_conn_node_query)
-        conn_nodes_geo.set_index(a_watersurf_conn_id, inplace=True)
-
-        return fixeddrainage, modelbuilder_waterdeel, damo_waterdeel, conn_nodes_geo
-    except Exception as e:
-        raise e from None
-
-
 def _add_nodes_area(fixeddrainage, conn_nodes_geo):
     try:
         # join on intersection of geometries
@@ -728,30 +727,6 @@ def _calc_perc(diff, waterdeel):
             return 100.0
 
 
-def _calc_area(
-    fixeddrainage, modelbuilder_waterdeel, damo_waterdeel, conn_nodes_geo
-):  # TODO type hints, docstring, test
-    try:
-        fixeddrainage = _add_nodes_area(fixeddrainage, conn_nodes_geo)
-        fixeddrainage = _add_waterdeel(fixeddrainage, damo_waterdeel)
-        fixeddrainage.rename(columns={"area": watersurface_waterdeel_area}, inplace=True)
-        fixeddrainage = _add_waterdeel(fixeddrainage, modelbuilder_waterdeel)
-        fixeddrainage.rename(columns={"area": watersurface_channels_area}, inplace=True)
-        fixeddrainage[watersurface_model_area] = (
-            fixeddrainage[watersurface_channels_area] + fixeddrainage[watersurface_nodes_area]
-        )
-        fixeddrainage[area_diff_col] = (
-            fixeddrainage[watersurface_model_area] - fixeddrainage[watersurface_waterdeel_area]
-        )
-        fixeddrainage[area_diff_perc] = fixeddrainage.apply(
-            lambda row: _calc_perc(row[area_diff_col], row[watersurface_waterdeel_area]),
-            axis=1,
-        )
-        return fixeddrainage
-    except Exception as e:
-        raise e from None
-
-
 # %%
 
 if __name__ == "__main__":
@@ -760,7 +735,8 @@ if __name__ == "__main__":
     folder = Folders(FOLDER_TEST)
     self = HhnkSchematisationChecks(folder=folder)
     database = folder.model.schema_base.database
-    self.run_weir_floor_level(database=database)
+    # a, b = self.run_weir_floor_level(database=database)
+    a, b = self.run_watersurface_area()
 
     # TODO self.create_grid_from_schematisation(output_folder=folder.output.base)
     # self.verify_inputs("run_imp_surface_area")
