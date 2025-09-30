@@ -2110,7 +2110,7 @@
 					"function": {
 						"LE": {
 							"left": "stuw_fout_count",
-							"right": 10
+							"right": 2
 						}
 					}
 				},
