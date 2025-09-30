@@ -28,7 +28,7 @@ class StructureRelations(Folders):
         else:
             self.structure_table = structure_table
 
-    def _concat_channel_ids(self) -> gpd.GeoDataFrame:
+    def concat_channel_ids(self) -> gpd.GeoDataFrame:
         """Concatenate channel_id and connection_node_id from channels_gdf for both start and end side.
 
         Returns
@@ -52,7 +52,7 @@ class StructureRelations(Folders):
         )
         return channel_join_df
 
-    def _join_channel(
+    def join_channel(
         self, structure_gdf: gpd.GeoDataFrame, channel_join_df: gpd.GeoDataFrame, side: str
     ) -> gpd.GeoDataFrame:
         """Join channel_id to structure table at start or end node.
@@ -94,7 +94,7 @@ class StructureRelations(Folders):
 
         return structure_gdf
 
-    def _join_cross_section(
+    def join_cross_sections(
         self, structure_gdf: gpd.GeoDataFrame, cross_section_gdf: gpd.GeoDataFrame, side: str
     ) -> gpd.GeoDataFrame:
         """Join cross section location to structure table at start or end node.
@@ -155,14 +155,144 @@ class StructureRelations(Folders):
             lambda row: row.geometry.distance(row[f"geometry_cs_{side}"]), axis=1
         )
 
-        # filter on closest cross section location to structure at side
-        structure_gdf = structure_gdf.sort_values(by=[f"dist_cs_{side}"]).drop_duplicates(
-            subset=[f"{self.structure_table}_id"], keep="first"
+        return structure_gdf
+
+    def get_min_max_levels(self, structure_gdf: gpd.GeoDataFrame, structure_table: str, side: str) -> gpd.GeoDataFrame:
+        """Get minimum reference level and bank level at start or end side of structure.
+
+        Parameters
+        ----------
+        structure_gdf : gpd.GeoDataFrame
+            Structure GeoDataFrame with added columns from cross_section_location
+        structure_table : str
+            "weir", "culvert", "pump" or "orifice"
+        side : str
+            "start" or "end" side of the structure
+
+        Raises
+        ------
+        ValueError
+            If side is not "start" or "end"
+
+        Returns
+        -------
+        gpd.GeoDataFrame
+            Structure GeoDataFrame with added columns min and max _ref_level_{side} and _bank_level_{side}
+
+        """
+        if side not in ["start", "end"]:
+            raise ValueError("side should be 'start' or 'end'")
+
+        # Get channel join df
+        channel_join_df = self.concat_channel_ids()
+
+        # Join channel and cross section location to structure table
+        cross_section_gdf = self.database.load(layer="cross_section_location", index_column="id")
+        cross_section_gdf["cs_id"] = cross_section_gdf.index
+
+        # Create temporary dataframe to join to main structure table later
+        struct_clean_gdf = structure_gdf[["geometry", f"{structure_table}_id", f"connection_node_id_{side}"]].copy()
+        # Join multiple channel ids
+        struct_join_gdf = self.join_channel(structure_gdf=struct_clean_gdf, channel_join_df=channel_join_df, side=side)
+        # Join multiple cross section locations
+        struct_join_gdf = self.join_cross_sections(
+            structure_gdf=struct_join_gdf, cross_section_gdf=cross_section_gdf, side=side
+        )
+        # Filter on closest cross section location to structure at side with same channel_id
+        struct_join_csl_gdf = (
+            struct_join_gdf.sort_values(by=[f"dist_cs_{side}"])
+            .drop_duplicates(subset=[f"{structure_table}_id", f"channel_id_{side}"], keep="first")
+            .drop(
+                columns=[
+                    f"geometry_cs_{side}",
+                    f"dist_cs_{side}",
+                    f"connection_node_id_{side}",
+                    f"channel_id_{side}",
+                ]
+            )
+        )
+
+        # Get minimum and maximum reference level at start or end side of structure
+        struct_join_csl_sorted_gdf = struct_join_csl_gdf.sort_values(by=[f"ref_level_{side}"]).drop(
+            columns=[f"bank_level_{side}"]
+        )
+        struct_min_ref_level_gdf = struct_join_csl_sorted_gdf.drop_duplicates(
+            subset=[
+                f"{self.structure_table}_id",
+            ],
+            keep="first",
+        ).rename(
+            columns={f"ref_level_{side}": f"min_ref_level_{side}", f"cs_id_{side}": f"cs_id_min_ref_level_{side}"}
+        )
+        struct_max_ref_level_gdf = struct_join_csl_sorted_gdf.drop_duplicates(
+            subset=[
+                f"{self.structure_table}_id",
+            ],
+            keep="last",
+        ).rename(
+            columns={f"ref_level_{side}": f"max_ref_level_{side}", f"cs_id_{side}": f"cs_id_max_ref_level_{side}"}
+        )
+
+        # Get minimum and maximum bank level at start or end side of structure
+        struct_join_csl_sorted_gdf = struct_join_csl_gdf.sort_values(by=[f"bank_level_{side}"]).drop(
+            columns=[f"ref_level_{side}"]
+        )
+        struct_min_bank_level_gdf = struct_join_csl_sorted_gdf.drop_duplicates(
+            subset=[
+                f"{self.structure_table}_id",
+            ],
+            keep="first",
+        ).rename(
+            columns={f"bank_level_{side}": f"min_bank_level_{side}", f"cs_id_{side}": f"cs_id_min_bank_level_{side}"}
+        )
+        struct_max_bank_level_gdf = struct_join_csl_sorted_gdf.drop_duplicates(
+            subset=[
+                f"{self.structure_table}_id",
+            ],
+            keep="last",
+        ).rename(
+            columns={f"bank_level_{side}": f"max_bank_level_{side}", f"cs_id_{side}": f"cs_id_max_bank_level_{side}"}
+        )
+
+        # Join min and max of ref and bank levels to structure table
+        structure_gdf = (
+            structure_gdf.merge(
+                struct_min_ref_level_gdf[
+                    [f"{structure_table}_id", f"min_ref_level_{side}", f"cs_id_min_ref_level_{side}"]
+                ],
+                left_on=f"{structure_table}_id",
+                right_on=f"{structure_table}_id",
+                how="left",
+            )
+            .merge(
+                struct_max_ref_level_gdf[
+                    [f"{structure_table}_id", f"max_ref_level_{side}", f"cs_id_max_ref_level_{side}"]
+                ],
+                left_on=f"{structure_table}_id",
+                right_on=f"{structure_table}_id",
+                how="left",
+            )
+            .merge(
+                struct_min_bank_level_gdf[
+                    [f"{structure_table}_id", f"min_bank_level_{side}", f"cs_id_min_bank_level_{side}"]
+                ],
+                left_on=f"{structure_table}_id",
+                right_on=f"{structure_table}_id",
+                how="left",
+            )
+            .merge(
+                struct_max_bank_level_gdf[
+                    [f"{structure_table}_id", f"max_bank_level_{side}", f"cs_id_max_bank_level_{side}"]
+                ],
+                left_on=f"{structure_table}_id",
+                right_on=f"{structure_table}_id",
+                how="left",
+            )
         )
 
         return structure_gdf
 
-    def _join_table_control(
+    def join_table_control(
         self,
         structure_gdf: gpd.GeoDataFrame,
         structure_table: str,
@@ -232,25 +362,14 @@ class StructureRelations(Folders):
         structure_gdf = self.database.load(layer=self.structure_table, index_column="id")
         structure_gdf[f"{self.structure_table}_id"] = structure_gdf.index
 
-        # get channel join df
-        channel_join_df = self._concat_channel_ids()
+        for side in ["start", "end"]:
+            structure_gdf = self.get_min_max_levels(
+                structure_gdf=structure_gdf, structure_table=self.structure_table, side=side
+            )
 
-        # Join channel and cross section location to structure table
-        structure_gdf = self._join_channel(structure_gdf=structure_gdf, channel_join_df=channel_join_df, side="start")
-        structure_gdf = self._join_channel(structure_gdf=structure_gdf, channel_join_df=channel_join_df, side="end")
-
-        cross_section_gdf = self.database.load(layer="cross_section_location", index_column="id")
-        cross_section_gdf["cs_id"] = cross_section_gdf.index
-
-        structure_gdf = self._join_cross_section(
-            structure_gdf=structure_gdf, cross_section_gdf=cross_section_gdf, side="start"
-        )
-        structure_gdf = self._join_cross_section(
-            structure_gdf=structure_gdf, cross_section_gdf=cross_section_gdf, side="end"
-        )
-
-        structure_gdf = self._join_table_control(structure_gdf, structure_table=self.structure_table)
+        # Join table control to structure table
+        structure_gdf = self.join_table_control(structure_gdf, structure_table=self.structure_table)
 
         return structure_gdf
 
-    # TODO dubbelen eruit en alleen dichtsbijzijnde csr behouden
+    # TODO manholes

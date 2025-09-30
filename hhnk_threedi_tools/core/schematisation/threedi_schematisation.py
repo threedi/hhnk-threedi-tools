@@ -1,7 +1,10 @@
+# %%
 import os
 
+import geopandas as gpd
 import hhnk_research_tools as hrt
 import numpy as np
+import pandas as pd
 from hhnk_research_tools.folder_file_classes.file_class import File
 from hhnk_research_tools.folder_file_classes.folder_file_classes import Folder
 
@@ -11,6 +14,8 @@ from hhnk_research_tools.rasters.raster_class import Raster  # FIXME new import
 
 # from hhnk_research_tools.gis.raster import RasterOld as Raster
 from hhnk_research_tools.threedi.threediresult_loader import ThreediResultLoader
+
+# Local imports
 
 logger = hrt.logging.get_logger(name=__name__)
 

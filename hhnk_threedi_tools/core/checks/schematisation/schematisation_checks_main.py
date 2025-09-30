@@ -769,14 +769,13 @@ if __name__ == "__main__":
 
 # %%
 if __name__ == "__main__":
-    from hhnk_threedi_tools.core.schematisation.structure_relate import StructureRelations
-
     from hhnk_threedi_tools.core.folders import Folders
+    from hhnk_threedi_tools.core.schematisation.relations import StructureRelations
     from tests.config import TEST_DIRECTORY
 
     folder = Folders(TEST_DIRECTORY / "model_test")
     # database = folder.model.schema_base.database
     weir_gdf = StructureRelations(folder=folder, structure_table="weir")
-    weir_gdf = weir_gdf.relate()
+    weir_gdf = weir_gdf.relations()
 
 # %%
