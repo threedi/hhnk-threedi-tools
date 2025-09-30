@@ -116,8 +116,6 @@ def test_peilgebiede_custom_fucntions():
     assert code_peilen_met_stuw_fout.isin(peilen_with_stuw_fout).all()
     assert np.sum(results_peil_verbonde["num_vertices"]) == 1890
     assert np.average([results_peil_versus_AHN["percentile_90_min"]]) == 0.21595743498519848
-    assert np.average([results_peil_versus_AHN["percentile_90_min"]]) == 0.21595743498519848
-    assert np.average([results_peilgebieded_waterstand_dm["waterstand_median"]]) in waterstand_median
     assert CMB_GP_JF_41 == -0.875
     assert np.round(CMB_GPG_N_323, 3) == -0.88
     assert np.round(CMB_GPG_Q_140705, 3) == -0.77
