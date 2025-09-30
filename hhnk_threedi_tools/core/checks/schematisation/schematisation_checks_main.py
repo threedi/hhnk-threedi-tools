@@ -25,6 +25,7 @@ from hhnk_threedi_tools.core.checks.sqlite.structure_control import StructureCon
 
 # Local imports
 from hhnk_threedi_tools.core.folders import Folders
+from hhnk_threedi_tools.core.schematisation.relations import StructureRelations
 
 logger = hrt.logging.get_logger(name=__name__)
 
@@ -159,7 +160,7 @@ class HhnkSchematisationChecks:
             "run_struct_channel_bed_level": [{"file": self.folder.source_data.damo.path}],
         }
 
-        # self.results = {}
+        self.results = {}
 
     def verify_inputs(self, function):
         """Check if the input of a function (if defined in self.inputs) exists."""
@@ -396,72 +397,57 @@ class HhnkSchematisationChecks:
         Check whether minimum crest height of weir is under reference level found in the v2_cross_section_location layer.
         This is not allowed, so if this is the case, we have to update the reference level.
         """
-        # load weirs and cross section locations from database and join nearby cross section location
-        weirs_gdf = database.load(layer="weir", index_column="id")
-        weirs_gdf["weir_id"] = weirs_gdf.index
-        cross_section_gdf = database.load(layer="cross_section_location", index_column="id")
-        cross_section_gdf["cs_id"] = cross_section_gdf.index
-        channels_gdf = database.load(layer="channel", index_column="id")
-        channels_gdf["channel_id"] = channels_gdf.index
-        # TODO control_table_layer ook nog toevoegen en is dit handig?
 
-        # Join cross sections to weirs both on start and end node
-        weir_join_df = pd.concat(
-            [
-                weirs_gdf[["weir_id", "connection_node_id_start"]].rename(
-                    columns={"connection_node_id_start": "connection_node_id"}
-                ),
-                weirs_gdf[["weir_id", "connection_node_id_end"]].rename(
-                    columns={"connection_node_id_end": "connection_node_id"}
-                ),
-            ]
-        )
-        channel_join_df = pd.concat(
-            [
-                channels_gdf[["channel_id", "connection_node_id_start"]].rename(
-                    columns={"connection_node_id_start": "connection_node_id"}
-                ),
-                channels_gdf[["channel_id", "connection_node_id_end"]].rename(
-                    columns={"connection_node_id_end": "connection_node_id"}
-                ),
-            ]
-        )
-        weir_join_df = weir_join_df.merge(
-            channel_join_df,
-            left_on="connection_node_id",
-            right_on="connection_node_id",
-            how="left",
-        ).dropna(subset=["channel_id"])
+        # Use SchructureRelations to get relations between weirs, channels and cross section locations
+        struct_rel = StructureRelations(folder=self.folder, structure_table="weir")
+        weir_gdf = struct_rel.relations()
 
-        # Bepaal de minimale kruinhoogte uit de action table
-        weirs_gdf[min_crest_height] = [
-            min([float(b.split(";")[1]) for b in a.split("#")]) for a in weirs_gdf[action_col]
+        # Get lowest value from min_crest_level_control and crest_level if not nan
+        weir_gdf["minimal_crest_level"] = np.nanmin(
+            [weir_gdf["min_crest_level_control"], weir_gdf["crest_level"]], axis=0
+        )
+        weir_gdf = weir_gdf[
+            [
+                "weir_id",
+                "cs_id_min_ref_level_start",
+                "min_ref_level_start",
+                "cs_id_min_ref_level_end",
+                "min_ref_level_end",
+                "crest_level",
+                "min_crest_level_control",
+                "minimal_crest_level",
+                "geometry",
+            ]
         ]
-        # Bepaal het verschil tussen de minimale kruinhoogte en reference level.
-        weirs_gdf[diff_crest_ref] = weirs_gdf[min_crest_height] - weirs_gdf[reference_level_col]
-        # Als dit verschil negatief is, betekent dit dat de bodem hoger ligt dan de minimale hoogte van de stuw.
-        # Dit mag niet, en daarom moet er iets aan het bodemprofiel gebeuren.
-        weirs_gdf[wrong_profile] = weirs_gdf[diff_crest_ref] < 0
-        # Add proposed new reference levels
-        weirs_gdf.loc[weirs_gdf[wrong_profile] == 1, new_ref_lvl] = round(
-            weirs_gdf.loc[weirs_gdf[wrong_profile] == 1, min_crest_height] - 0.01, 2
+        # Get sunk weir crest levels at start and end node
+        weir_sunk_start_gdf = weir_gdf[weir_gdf["minimal_crest_level"] < weir_gdf["min_ref_level_start"]].copy()
+        weir_sunk_start_gdf["cs_id_min_ref_level"] = weir_sunk_start_gdf["cs_id_min_ref_level_start"]
+        weir_sunk_end_gdf = weir_gdf[weir_gdf["minimal_crest_level"] < weir_gdf["min_ref_level_end"]].copy()
+        weir_sunk_end_gdf["cs_id_min_ref_level"] = weir_sunk_end_gdf["cs_id_min_ref_level_end"]
+        # Combine into one list
+        wrong_profiles_gdf = pd.concat([weir_sunk_start_gdf, weir_sunk_end_gdf])
+        # Sort on lowest minimal_crest_level and remove duplicates (using only lowest reference level per location)
+        wrong_profiles_gdf = wrong_profiles_gdf.sort_values(by=["minimal_crest_level"]).drop_duplicates(
+            subset=["cs_id_min_ref_level"], keep="first"
         )
-        wrong_profiles_gdf = weirs_gdf[weirs_gdf[wrong_profile]][OUTPUT_COLS]
+
         update_query = hrt.sql_create_update_case_statement(
             df=wrong_profiles_gdf,
-            layer=cross_sec_loc_layer,
-            df_id_col=a_weir_cross_loc_id,
-            db_id_col=id_col,
-            new_val_col=new_ref_lvl,
-            old_val_col=reference_level_col,
+            layer="cross_section_location",
+            df_id_col="cs_id_min_ref_level",
+            db_id_col="cs_id_min_ref_level",
+            new_val_col="minimal_crest_level",
+            old_val_col="reference_level",
         )
         self.results["weir_floor_level"] = {
             "wrong_profiles_gdf": wrong_profiles_gdf,
             "update_query": update_query,
         }
-        return wrong_profiles_gdf, update_query
+        return wrong_profiles_gdf, update_query  # TODO check of sql werkt in de plugin
 
-    def create_grid_from_schematisation(self, output_folder):  # FIXME
+    def create_grid_from_schematisation(
+        self, output_folder
+    ):  # FIXME #27143 makegrid werkt niet in nieuwe python versie
         """Create grid from schematisation (gpkg), this includes cells, lines and nodes."""
         # grid = make_gridadmin(self.model.base, self.dem.base)
 
@@ -472,19 +458,35 @@ class HhnkSchematisationChecks:
         #     gdf.to_file(driver="GPKG", filename=Path(output_folder) / f"{grid_type}.gpkg", index=False)
 
     def run_cross_section_duplicates(self, database: hrt.SpatialDatabase) -> gpd.GeoDataFrame:
-        """Check for duplicate geometries in cross_section_locations."""
+        """Check for duplicate geometries in cross_section_locations.
+
+        Duplicates are defined as cross sections that are within 0.5 meter of each other.
+
+        Returns a GeoDataFrame with the duplicate cross section locations.
+
+        Parameters
+        ----------
+        database : hrt.SpatialDatabase
+            The database to load the cross_section_location layer from.
+
+        Returns
+        -------
+        gpd.GeoDataFrame
+            A GeoDataFrame with the intersected points.
+
+        """
         cross_section_point = database.load(layer="cross_section_location", index_column="id")
 
         # Make buffer of the points to identify if we have cross setion overlapping each other.
         cross_section_buffer_gdf = cross_section_point.copy()
         cross_section_buffer_gdf["geometry"] = cross_section_buffer_gdf.buffer(0.5)
 
-        # make spatial join between the buffer and the cross section point
+        # Make spatial join between the buffer and the cross section point
         cross_section_join = gpd.sjoin(
             cross_section_buffer_gdf, cross_section_point, how="inner", predicate="intersects"
         )
 
-        # duplicates in cross_loc in this join are duplicated cross_section_locations
+        # Duplicates in cross_loc in this join are duplicated cross_section_locations
         index_duplicates = cross_section_join[cross_section_join.index.duplicated()].index
         intersected_points = cross_section_point.loc[index_duplicates]
 
@@ -758,10 +760,10 @@ if __name__ == "__main__":
     folder = Folders(FOLDER_TEST)
     self = HhnkSchematisationChecks(folder=folder)
     database = folder.model.schema_base.database
-    self.run_cross_section_duplicates(database=database)
+    self.run_weir_floor_level(database=database)
+
     # TODO self.create_grid_from_schematisation(output_folder=folder.output.base)
-    self.run_weir_floor_level()
-    self.verify_inputs("run_imp_surface_area")
+    # self.verify_inputs("run_imp_surface_area")
 
 
 # %%
@@ -775,7 +777,11 @@ if __name__ == "__main__":
 
     folder = Folders(TEST_DIRECTORY / "model_test")
     # database = folder.model.schema_base.database
-    weir_gdf = StructureRelations(folder=folder, structure_table="weir")
-    weir_gdf = weir_gdf.relations()
+    self = StructureRelations(folder=folder, structure_table="weir")
+    self.structure_table = "weir"
+    structure_table = "weir"
+    side = "end"
+    self.relations()
+
 
 # %%

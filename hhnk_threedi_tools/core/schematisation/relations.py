@@ -11,7 +11,7 @@ class StructureRelations(Folders):
     """
     Class that adds properties from the schematisation to structure table.
      - maximum and minimum crest_level from table control
-     - minimum reference_level at start and end side from cross_section_locations linked to structure
+     - minimum and reference_level and bank_level at start and end side from cross_section_locations linked to structure, reference and bank level may originate from different cross_section_locations
 
      # TODO
     """

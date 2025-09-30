@@ -3,6 +3,8 @@
 Created on Tue Aug 17 10:28:55 2021
 
 @author: chris.kerklaan
+
+#TODO remove this, just use strings directly
 """
 
 min_crest_height = "min_crest_height"
