@@ -4,8 +4,8 @@ from pathlib import Path
 
 import geopandas as gpd
 
-from hhnk_threedi_tools.core.vergelijkingstool import Dataset, name_date
-from hhnk_threedi_tools.core.vergelijkingstool.name_date import symbology_both
+from hhnk_threedi_tools.core.vergelijkingstool import Dataset, utils
+from hhnk_threedi_tools.core.vergelijkingstool.utils import ModelInfo, symbology_both
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -13,20 +13,6 @@ logger.setLevel(logging.DEBUG)
 # styling.py
 
 update_symbology = symbology_both(False)
-
-path = name_date.path
-
-model_name, source_data, folder = name_date.name(path)
-
-fn_damo_new = name_date.fn_damo_new
-fn_hdb_old = name_date.fn_hdb_old
-fn_damo_old = name_date.fn_damo_old
-fn_hdb_new = name_date.fn_hdb_new
-fn_3di = name_date.fn_threedimodel
-
-date_fn_damo_new, date_fn_damo_old, date_hdb_new, date_hdb_old, date_threedi = name_date.date(
-    fn_damo_new, fn_damo_old, fn_hdb_new, fn_hdb_old, fn_3di
-)
 
 STYLING_BASIC_TABLE_COLUMNS = [
     "id",
@@ -57,34 +43,34 @@ def geom_kind(gdf):
 
 
 # Function to replace labels based on their current value
-def replace_label_DAMO(match, model_name=model_name):
+def replace_label_DAMO(match, model_info: ModelInfo):
     label_value = match.group(1)
     value_value = match.group(2)
     symbol_value = match.group(3)
     if symbol_value == "0":
-        return f'label="{model_name} new {name_date.date_new_damo}" value="{model_name} new" symbol="0"'
+        return f'label="{model_info.model_name} new {model_info.date_new_damo}" value="{model_info.model_name} new" symbol="0"'
     elif symbol_value == "1":
-        return f'label="{model_name} old {name_date.date_old_damo}" value="{model_name} old" symbol="1"'
+        return f'label="{model_info.model_name} old {model_info.date_old_damo}" value="{model_info.model_name} old" symbol="1"'
     elif symbol_value == "2":
-        return f'label="{model_name} both" value="{model_name} both" symbol="2"'
+        return f'label="{model_info.model_name} both" value="{model_info.model_name} both" symbol="2"'
     else:
-        if label_value.startswith(model_name) and value_value.startswith(model_name):
+        if label_value.startswith(model_info.model_name) and value_value.startswith(model_info.model_name):
             print("The labels are corrected")
 
 
 # replace values
-def replace_label_3di(match, model_name=model_name):
+def replace_label_3di(match, model_info: ModelInfo):
     label_value = match.group(3)
     value_value = match.group(1)
     symbol_value = match.group(2)
     if value_value.__contains__("both"):
-        return f'value="{model_name} both" symbol="2" label="{model_name} both"'
+        return f'value="{model_info.model_name} both" symbol="2" label="{model_info.model_name} both"'
 
     elif value_value.__contains__("damo"):
-        return f'value="{model_name} damo" symbol="0" label="Damo {model_name} {name_date.date_new_damo}"'
+        return f'value="{model_info.model_name} damo" symbol="0" label="Damo {model_info.model_name} {model_info.date_new_damo}"'
 
     elif value_value.__contains__("sqlite"):
-        return f'value="{model_name} sqlite" symbol="1" label="Model {model_name} {name_date.date_sqlite}"'
+        return f'value="{model_info.model_name} sqlite" symbol="1" label="Model {model_info.model_name} {model_info.date_sqlite}"'
 
 
 def prepare_layers_for_export(table_C, filename, overwrite=False):
@@ -117,7 +103,7 @@ def prepare_layers_for_export(table_C, filename, overwrite=False):
     return table_C
 
 
-def export_comparison_DAMO(table_C, statistics, filename, overwrite=False, styling_path=None):
+def export_comparison_DAMO(table_C, statistics, filename, model_info: ModelInfo, overwrite=False, styling_path=None):
     """
     Exports all compared layers and statistics to a GeoPackage.
 
@@ -130,7 +116,7 @@ def export_comparison_DAMO(table_C, statistics, filename, overwrite=False, styli
     :return:
     """
 
-    model_name = name_date.model_name
+    model_name = model_info.model_name
     table = []
     table_C = prepare_layers_for_export(table_C, filename, overwrite)
     for i, layer_name in enumerate(table_C):
@@ -188,7 +174,9 @@ def export_comparison_DAMO(table_C, statistics, filename, overwrite=False, styli
     return layer_styles
 
 
-def export_comparison_3di(table_C, statistics, filename, overwrite=False, styling_path=None, crs=None):
+def export_comparison_3di(
+    table_C, statistics, filename, model_info: ModelInfo, overwrite=False, styling_path=None, crs=None
+):
     """
     Exports all compared layers and statistics to a GeoPackage.
 
@@ -202,7 +190,7 @@ def export_comparison_3di(table_C, statistics, filename, overwrite=False, stylin
     :return:
     """
 
-    model_name = name_date.model_name
+    model_name = model_info.model_name
     table = []
     table_C = prepare_layers_for_export(table_C, filename, overwrite)
 
