@@ -1,3 +1,5 @@
+from functools import cached_property
+
 import geopandas as gpd
 import numpy as np
 import pandas as pd
@@ -8,7 +10,7 @@ from hhnk_threedi_tools.core.folders import Folders
 logger = logging.get_logger(name=__name__)
 
 
-class StructureRelations(Folders):
+class StructureRelations:
     """
     Class that adds properties from the schematisation to structure table.
      - maximum and minimum crest_level from table control
@@ -384,7 +386,7 @@ class StructureRelations(Folders):
     def join_table_control(
         self,
         structure_gdf: gpd.GeoDataFrame,
-        structure_table: str,
+        structure_table: str,  # dubbel eruit
     ) -> gpd.GeoDataFrame:
         """Join table control to structure table on structure id.
 
@@ -416,37 +418,35 @@ class StructureRelations(Folders):
 
             # Check if there are any other table controles
             if len(table_control_gdf[table_control_gdf["action_type"] != "set_crest_level"]) > 0:
-                logger.warning(
-                    "Join table control not implemented for any action type other than set_crest_level"
-                )  # TODO
+                logger.warning("Join table control not implemented for any action type other than set_crest_level")
+                # TODO andere action types nog toevoegen
 
-            # Bepaal de minimale kruinhoogte uit de action table
-            for index, row in set_crest_level_gdf.iterrows():
-                # convert action table string an array on new line as seperator
-                action_table_array = row["action_table"].split("\n")
-                # split each item in array on , and get second line as float
-                action_values = [float(line.split(",")[1]) for line in action_table_array]
-                # get min and max of action values
-                set_crest_level_gdf.at[index, "min_crest_level_control"] = min(action_values)  # noqa: PD008
-                set_crest_level_gdf.at[index, "max_crest_level_control"] = max(action_values)  # noqa: PD008
+            if len(set_crest_level_gdf) > 0:
+                # Bepaal de minimale kruinhoogte uit de action table
+                for index, row in set_crest_level_gdf.iterrows():
+                    # convert action table string an array on new line as seperator
+                    action_table_array = row["action_table"].split("\n")
+                    # split each item in array on , and get second line as float
+                    action_values = [float(line.split(",")[1]) for line in action_table_array]
+                    # get min and max of action values
+                    set_crest_level_gdf.at[index, "min_crest_level_control"] = min(action_values)  # noqa: PD008
+                    set_crest_level_gdf.at[index, "max_crest_level_control"] = max(action_values)  # noqa: PD008
 
-            # TODO andere action types nog toevoegen
-
-            structure_gdf = structure_gdf.merge(
-                set_crest_level_gdf[
-                    [
-                        "target_id",
-                        "control_id",
-                        "min_crest_level_control",
-                        "max_crest_level_control",
-                        "action_table",
-                        "measure_operator",
-                    ]
-                ],
-                left_on=f"{self.structure_table}_id",
-                right_on="target_id",
-                how="left",
-            ).drop(columns=["target_id"])
+                structure_gdf = structure_gdf.merge(
+                    set_crest_level_gdf[
+                        [
+                            "target_id",
+                            "control_id",
+                            "min_crest_level_control",
+                            "max_crest_level_control",
+                            "action_table",
+                            "measure_operator",
+                        ]
+                    ],
+                    left_on=f"{self.structure_table}_id",
+                    right_on="target_id",
+                    how="left",
+                ).drop(columns=["target_id"])
         else:
             logger.warning(
                 "Join table control not implemented for structure table other than weir and orifice"
@@ -454,7 +454,8 @@ class StructureRelations(Folders):
 
         return structure_gdf
 
-    def relations(self) -> gpd.GeoDataFrame:
+    @cached_property
+    def gdf(self) -> gpd.GeoDataFrame:
         # Load table
         structure_gdf = self.database.load(layer=self.structure_table, index_column="id")
         structure_gdf[f"{self.structure_table}_id"] = structure_gdf.index
@@ -489,15 +490,18 @@ class StructureRelations(Folders):
         if side not in ["start", "end"]:
             raise ValueError("side should be 'start' or 'end'")
 
-        struct_rel = StructureRelations(folder=self.folder, structure_table=self.structure_table).relations()
+        struct_rel = StructureRelations(folder=self.folder, structure_table=self.structure_table).gdf()
 
-        if self.structure_table in ["weir", "orifice"]:
-            # Get lowest value from min_crest_level_control and crest_level if not nan
-            struct_rel["minimal_level"] = np.nanmin(
-                [struct_rel["min_crest_level_control"], struct_rel["crest_level"]], axis=0
-            )
-        elif self.structure_table == "culvert":
+        if self.structure_table == "culvert":
             struct_rel["minimal_level"] = struct_rel[f"invert_level_{side}"]
+        elif self.structure_table in ["weir", "orifice"]:
+            if "min_crest_level_control" in struct_rel.columns:
+                # Get lowest value from min_crest_level_control and crest_level if not nan
+                struct_rel["minimal_level"] = np.nanmin(
+                    [struct_rel["min_crest_level_control"], struct_rel["crest_level"]], axis=0
+                )
+            else:
+                struct_rel["minimal_level"] = struct_rel["crest_level"]
 
         # Filter sunk structures on side start or end
         struct_sunk_gdf = struct_rel[
