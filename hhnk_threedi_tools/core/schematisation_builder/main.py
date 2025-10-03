@@ -9,6 +9,9 @@ import hhnk_research_tools as hrt
 import hhnk_threedi_tools.resources.schematisation_builder as schematisation_builder_resources
 from hhnk_threedi_tools.core.folders import Project
 from hhnk_threedi_tools.core.schematisation_builder.DAMO_HyDAMO_converter import DAMO_to_HyDAMO_Converter
+from hhnk_threedi_tools.core.schematisation_builder.raw_export_to_DAMO_converters.gemaal_converter import (
+    GemaalConverter,
+)
 from hhnk_threedi_tools.core.schematisation_builder.DB_exporter import db_exporter
 from hhnk_threedi_tools.core.schematisation_builder.HyDAMO_validator import validate_hydamo
 
@@ -30,6 +33,7 @@ class SchematisationBuilder:
 
         self.project = Project(str(self.project_folder))
         self.polder_file_path = self.project.folders.source_data.polder_polygon.path
+        self.raw_export_file_path = self.project_folder / "01_source_data" / "raw_export.gpkg"
         self.damo_file_path = self.project.folders.source_data.damo.path
         self.hydamo_file_path = self.project.folders.source_data.hydamo.path
 
@@ -60,7 +64,7 @@ class SchematisationBuilder:
             gdf_polder = gpd.read_file(self.polder_file_path)
             logging_DAMO = db_exporter(
                 model_extent_gdf=gdf_polder,
-                output_file=self.damo_file_path,
+                output_file=self.raw_export_file_path,
                 table_names=self.table_names,
             )
 
@@ -71,14 +75,22 @@ class SchematisationBuilder:
                 f"DAMO export was succesfull. Now, start conversion to HyDAMO for file: {self.polder_file_path}"
             )
 
-            gdf_polder.to_file(self.damo_file_path, layer="polder", driver="GPKG")
+
+            gdf_polder.to_file(self.raw_export_file_path, layer="polder", driver="GPKG")
+
+            converter = GemaalConverter(
+                raw_export_file_path=self.raw_export_file_path, 
+                output_file_path=self.damo_file_path, 
+                logger=self.logger
+            )
+            converter.run()
 
             converter = DAMO_to_HyDAMO_Converter(
                 damo_file_path=self.damo_file_path,
                 damo_version=self.damo_version,
                 hydamo_file_path=self.hydamo_file_path,
                 hydamo_version=self.hydamo_version,
-                layers=self.table_names,
+                layers=None,
                 overwrite=True,
                 convert_domain_values=False,
             )
@@ -139,9 +151,10 @@ class SchematisationBuilder:
 
 
 if __name__ == "__main__":
-    project_folder = Path("E:/09.modellen_speeltuin/test_with_pomp_table_juan")
+    # ask input from user
+    project_folder = Path("E:/09.modellen_speeltuin/test_main_esther2")
     default_polder_polygon_path = Path("E:/09.modellen_speeltuin/place_polder_polygon_here_for_schematisationbuilder")
-    TABLE_NAMES = ["HYDROOBJECT", "GEMAAL", "COMBINATIEPEILGEBIED"]
+    TABLE_NAMES = ["HYDROOBJECT", "GEMAAL", "COMBINATIEPEILGEBIED", "DUIKERSIFONHEVEL"]
 
     builder = SchematisationBuilder(project_folder, default_polder_polygon_path, TABLE_NAMES)
     builder.make_hydamo_package()

@@ -50,10 +50,9 @@ def validate_hydamo(
     validation_rules_json_path = Path(validation_rules_json_path)
 
     hydamo_file_path2 = validation_directory_path.joinpath("datasets", hydamo_file_path.name)
-    # Copy the HyDAMO file and the validation rules to the validation directory if they are not already there
-    if not hydamo_file_path2.exists():
-        hydamo_file_path2.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(hydamo_file_path, hydamo_file_path2)
+    # Copy the HyDAMO file and the validation rules to the validation directory, to ensure you use the most recent HyDAMO file
+    hydamo_file_path2.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(hydamo_file_path, hydamo_file_path2)
 
     validation_rules_json_path2 = validation_directory_path.joinpath("validationrules.json")
     if not validation_rules_json_path2.exists():

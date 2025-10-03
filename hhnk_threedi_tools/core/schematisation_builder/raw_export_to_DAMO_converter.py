@@ -7,6 +7,7 @@ from typing import Optional
 import geopandas as gpd
 import shapely
 from shapely.validation import make_valid
+import hhnk_research_tools as hrt
 
 CRS = "EPSG:28992"
 
@@ -20,6 +21,8 @@ class _Data:
     gemaal: gpd.GeoDataFrame = field(default_factory=gpd.GeoDataFrame)
     hydroobject: gpd.GeoDataFrame = field(default_factory=gpd.GeoDataFrame)
     pomp: gpd.GeoDataFrame = field(default_factory=gpd.GeoDataFrame)
+    duikersifonhevel: gpd.GeoDataFrame = field(default_factory=gpd.GeoDataFrame)
+    combinatiepeilgebied: gpd.GeoDataFrame = field(default_factory=gpd.GeoDataFrame)
 
     # Specific hhnk tables
     hydroobject_linemerged: gpd.GeoDataFrame = field(default_factory=gpd.GeoDataFrame)
@@ -69,9 +72,16 @@ class RawExportToDAMOConverter:
         logger: Optional[logging.Logger] = None,
     ):
         self.raw_export_file_path = Path(raw_export_file_path)
+        self.hrt_raw_export_file_path = hrt.SpatialDatabase(raw_export_file_path)
         self.output_file_path = Path(output_file_path)
         self.logger = logger or logging.getLogger(__name__)
         self.data = _Data()
+    
+    def load_layers(self):
+        self.logger.info("Loading all layers...")
+
+        for layer_name in self.hrt_raw_export_file_path.available_layers():
+            setattr(self.data, layer_name.lower(), self._load_and_validate(self.raw_export_file_path, layer_name))
 
     def mark_executed(self):
         RawExportToDAMOConverter._executed.add(self.__class__)
@@ -93,10 +103,10 @@ class RawExportToDAMOConverter:
 
         for name, gdf in output_gdf_dict.items():
             if isinstance(gdf, gpd.GeoDataFrame) and "geometry" in gdf.columns:
-                gdf.to_file(self.output_file_path, layer=name, engine="pyogrio")
+                gdf.to_file(self.output_file_path, layer=name, engine="pyogrio", overwrite=True, driver="GPKG")
             else:  # dataframe handling
                 gdf_no_geom = gpd.GeoDataFrame(gdf, geometry=[None] * len(gdf), crs=CRS)
-                gdf_no_geom.to_file(self.output_file_path, layer=name, engine="pyogrio", driver="GPKG")
+                gdf_no_geom.to_file(self.output_file_path, layer=name, engine="pyogrio", overwrite=True, driver="GPKG")
                 if gdf_no_geom.empty:
                     self.logger.warning(f"Layer {name} is empty.")
                 else:

@@ -41,12 +41,6 @@ class GemaalConverter(RawExportToDAMOConverter):
         self.write_outputs()  # STEP 3
         self.mark_executed()
 
-    def load_layers(self):
-        self.logger.info("Loading gemaal-specific layers...")
-        self.data.hydroobject = self._load_and_validate(self.raw_export_file_path, "hydroobject")
-        self.data.gemaal = self._load_and_validate(self.raw_export_file_path, "gemaal")
-        self.data.pomp = self._load_and_validate(self.raw_export_file_path, "pomp")
-
     def update_gemaal_layer(self):
         self.logger.info("Updating gemaal layer...")
 
