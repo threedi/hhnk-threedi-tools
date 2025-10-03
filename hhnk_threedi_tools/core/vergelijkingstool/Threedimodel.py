@@ -2,20 +2,19 @@
 # importing external dependencies
 import json
 import logging
-import os
 import re
 import sqlite3
 from pathlib import Path
 
 # from pd.errors import DatabaseError #FIXME vanaf pd 1.5.3 beschikbaar. Als qgis zover is overzetten.
-from sqlite3 import DatabaseError
-
+# from sqlite3 import DatabaseError
+import fiona
 import geopandas as gpd
 import numpy as np
 import pandas as pd
 
 import hhnk_threedi_tools.core.vergelijkingstool.config as config
-from hhnk_threedi_tools.core.vergelijkingstool import name_date
+from hhnk_threedi_tools.core.vergelijkingstool import name_date, styling
 from hhnk_threedi_tools.core.vergelijkingstool.config import *
 from hhnk_threedi_tools.core.vergelijkingstool.Dataset import DataSet
 from hhnk_threedi_tools.core.vergelijkingstool.styling import *
@@ -30,10 +29,11 @@ class Threedimodel(DataSet):
         :param filename: Path of the .sqlite file to be loaded
         :param translation: Path of the translation dictionary to be used
         """
-
+        # super().__init__()
         self.logger = logging.getLogger("Threedimodel")
         self.logger.debug("Created Threedimodel object")
-        self.data = self.from_sqlite(filename, translation)
+        # self.data = self.from_sqlite(filename, translation)
+        self.data = self.from_geopackage(filename, translation)
         self.join_cross_section_definition()
 
         # Set priority columns
@@ -56,19 +56,12 @@ class Threedimodel(DataSet):
             :param tabulated_string:
             :return: Maximum value in a tabulated string
             """
-            #     if tabulated_string is not None:
-            #         tabulated_array = np.fromstring(tabulated_string, dtype=float, sep=" ")
-            #         return np.max(tabulated_array)
-            #     else:
-            #         return None
 
             if tabulated_string is not None:
-                # Split the column into lines and and rows
                 data = [list(map(float, line.split(","))) for line in tabulated_string.strip().split("\n")]
 
                 # Transform the data into array
                 array = np.array(data)
-
                 # split the array in x (width) and y (height)
                 x = array[:, 0]
                 y = array[:, 1]
@@ -78,19 +71,14 @@ class Threedimodel(DataSet):
 
                 # find max value in y (height)
                 max_y = np.max(y)
-
                 return max_x, max_y
             else:
                 return None
 
         cross_section_definition = self.data["cross_section_location"]
 
-        # cross_section_definition["cross_section_max_width"] = cross_section_definition["cross_section_width"].apply(
-        #     max_value_from_tabulated
-        # )
-
-        cross_section_definition["cross_section_max_width"], cross_section_definition["cross_section_max_height"] = (
-            cross_section_definition["cross_section_table"].values[0].apply(max_value_from_tabulated)
+        cross_section_definition[["cross_section_max_width", "cross_section_max_height"]] = (
+            cross_section_definition["cross_section_table"].apply(max_value_from_tabulated).to_list()
         )
 
         for layer in self.data:
@@ -132,70 +120,41 @@ class Threedimodel(DataSet):
             lambda x: self.create_structure_geometry(x["geometry_start"], x["geometry_end"]), axis=1
         )
         layer_data.drop(["geometry_start", "geometry_end"], axis=1, inplace=True)
-        # result = gpd.GeoDataFrame(layer_data, geometry='geom')
 
         return layer_data
 
-    def from_sqlite(self, filename, translation=None):
+    def from_geopackage(self, filename, translation=None):
         """
-        Load data from 3Di .sqlite file
+        Load data from GeoPackage (.gpkg) file
 
-        :param filename: Path of the .sqlite file
-        :param translation: Path of the translation file
+        :param filename: Path of the .gpkg file
+        :param translation: Path of the translation file (optional)
         :return: Dictionary containing layer names (keys) and GeoDataFrames (values)
         """
 
-        # Define empty data dictionary, to be filled with layer data from .sqlite
         data = {}
+        self.logger.debug("called from_geopackage")
 
-        self.logger.debug("called from_sqlite")
+        # Get layer in the geopackge
+        layers = fiona.listlayers(filename)
+        if not layers:
+            self.logger.error("No layers found in .gpkg, or file does not exist")
+            raise Exception("Error reading GeoPackage")
 
-        # Create connection with database
-        con = sqlite3.connect(filename)
-        cur = con.cursor()
+        self.logger.debug(f"Layers results: {layers}")
 
-        # Load spatiallite extension. Make sure mod_spatialite.dll is in the System32 folder, see module description
-        # for installation instructions
-        self.logger.debug("Try loading mod_spatialite")
-        con.enable_load_extension(True)
-        cur.execute('SELECT load_extension("mod_spatialite")')
-
-        # Get overview of layers
-        res = con.execute(f"SELECT name FROM sqlite_schema WHERE type = 'table' AND name NOT LIKE 'sqlite_%';")
-        db_layers = res.fetchall()
-        if db_layers:
-            self.logger.debug(f"Layers results: {db_layers}")
-        else:
-            self.logger.error("No layers found in .sqlite, or file does not exist")
-            raise Exception("Error reading 3Di .sqlite")
-
-        # Loop over all layers starting with v2_ and put them in the data object
-        for layer in config.SQLITE_LAYERS:
+        # loop over all layers and save them in a dictionary
+        for layer in layers:
             self.logger.debug(f"Loading layer {layer}")
-
-            # Catch database error in case the table does not contain a geometry
             try:
-                layer_data = pd.read_sql(f"SELECT *, ST_AsText(the_geom) as wkt_geom FROM {layer};", con)
-                gdf_layer_data = gpd.GeoDataFrame(
-                    layer_data, geometry=gpd.geoseries.from_wkt(layer_data["wkt_geom"].to_list())
-                )
-                # layer_data['geom'] = gpd.geoseries.from_wkt(layer_data["wkt_geom"])
-            except:
-                self.logger.debug(f"Layer {layer} does not contain a geometry layer, loading as a table")
-                layer_data = pd.read_sql(f"SELECT * FROM {layer};", con)
-                try:
-                    # Try to create a geometry using the connection nodes
-                    layer_data = self.add_geometry_from_connection_nodes(layer_data, data["v2_connection_nodes"])
-                except KeyError:
-                    # Add without a geometry
-                    self.logger.debug(
-                        f"Layer {layer} does not have a geometry or reference to connection nodes. Import as normal "
-                        f"table"
-                    )
-                gdf_layer_data = gpd.GeoDataFrame(layer_data)
+                gdf_layer_data = gpd.read_file(filename, layer=layer)
+            except Exception as e:
+                self.logger.error(f"Error loading layer {layer}: {e}")
+                continue
 
-            # Add layer data to data object
+            # Save to dictionary
             data[layer] = gdf_layer_data
+
         self.logger.debug("Done loading layers")
 
         # Start translation
@@ -225,8 +184,7 @@ class Threedimodel(DataSet):
             # Map layer names
             for old, new in translate_layers.items():
                 data[new] = data.pop(old)
-
-        self.logger.debug("Done loading .sqlite")
+        self.logger.debug("Done loading .gpkg")
         return data
 
     def determine_statistics(self, table_C):
@@ -317,7 +275,7 @@ class Threedimodel(DataSet):
         statistics = statistics.fillna(0).astype(int)
         return statistics
 
-    def export_comparison(self, table_C, statistics, filename, overwrite=False, styling_path=None):
+    def export_comparison_3di(self, table_C, statistics, filename, overwrite=False, styling_path=None, crs=None):
         """
         Exports all compared layers and statistics to a GeoPackage.
 
@@ -329,153 +287,11 @@ class Threedimodel(DataSet):
         with the exact same name as the layer
         :return:
         """
-        model_name = name_date.model_name
-        table = []
-        if Path(filename).exists():
-            if overwrite:
-                Path.unlink(filename)
-            else:
-                raise FileExistsError(
-                    f'The file "{filename}" already exists. If you want to overwrite the existing file, add overwrite=True to the function.'
-                )
-
-        # Explode multipart geometries to singleparts
-        for layer_name in list(table_C):
-            table_C[layer_name] = table_C[layer_name].explode(index_parts=True)
-
-        # export result to gpkg
-        for layer_name in list(table_C):
-            if len(table_C[layer_name].geometry.type.unique()) > 1:
-                self.logger.debug(
-                    f"Layer {layer_name} exists of the following geometry types: {table_C[layer_name].geometry.type.unique()}. Using representative point."
-                )
-                table_C[layer_name].geometry = table_C[layer_name].geometry.representative_point()
-
-        for i, layer_name in enumerate(table_C):
-            # Check if the layer name has a style in the styling folder
-            if styling_path is not None:
-                qml_name = layer_name + ".qml"
-                qml_file = (styling_path) / qml_name
-
-                # if file exists, use that for the styling
-                if qml_file.exists():
-                    self.logger.debug(f"Style layer for layer {layer_name} found, adding it to the GeoPackage")
-                    with open(qml_file, "r") as file:
-                        style = file.read()
-
-                    # Function to replace labels based on their current value
-                    def replace_label(match):
-                        label_value = match.group(3)
-                        value_value = match.group(1)
-                        symbol_value = match.group(2)
-                        if value_value.__contains__("both"):
-                            return f'value="{model_name} both" symbol="2" label="{model_name} both"'
-
-                        elif value_value.__contains__("damo"):
-                            return f'value="{model_name} damo" symbol="0" label="Damo {model_name} {name_date.date_new_damo}"'
-
-                        elif value_value.__contains__("sqlite"):
-                            return f'value="{model_name} sqlite" symbol="1" label="Model {model_name} {name_date.date_sqlite}"'
-
-                        # else:
-                        #     if value_value.startswith(model_name) and label_value.startswith(model_name):
-                        #         return match.group(0)
-
-                    # Use a regular expression to find and replace label values
-                    style = re.sub(r'value="([^"]*)" symbol="([^"]*)" label="([^"]*)"', replace_label, style)
-
-                    # Write the modified content back to the QML file
-                    with open(qml_file, "w") as file:
-                        file.write(style)
-
-                    with open(qml_file, "r") as file:
-                        style = file.read()
-                        style_name = layer_name + "_style"
-                        table.append(
-                            [
-                                i,
-                                None,
-                                None,
-                                layer_name,
-                                table_C[layer_name]._geometry_column_name,
-                                style_name,
-                                style,
-                                None,
-                                "false",
-                                None,
-                                None,
-                                None,
-                                None,
-                            ]
-                        )
-
-                else:
-                    if table_C[layer_name].geometry.type.unique() is None:
-                        pass
-                    if table_C[layer_name].geometry.type.unique() == "Point":
-                        table.append(
-                            [
-                                i,
-                                None,
-                                None,
-                                layer_name,
-                                table_C[layer_name]._geometry_column_name,
-                                "point_style",
-                                STYLING_POINTS_THREEDI,
-                                None,
-                                "false",
-                                None,
-                                None,
-                                None,
-                                None,
-                            ]
-                        )
-                    if (
-                        table_C[layer_name].geometry.type.unique() == "LineString"
-                        or table_C[layer_name].geometry.type.unique() == "MultiLineString"
-                    ):
-                        table.append(
-                            [
-                                i,
-                                None,
-                                None,
-                                layer_name,
-                                table_C[layer_name]._geometry_column_name,
-                                "line_style",
-                                STYLING_LINES_THREEDI,
-                                None,
-                                "false",
-                                None,
-                                None,
-                                None,
-                                None,
-                            ]
-                        )
-                    if table_C[layer_name].geometry.type.unique() == "MultiPolygon":
-                        table.append(
-                            [
-                                i,
-                                None,
-                                None,
-                                layer_name,
-                                table_C[layer_name]._geometry_column_name,
-                                "polygon_style",
-                                STYLING_POLYGONS_THREEDI,
-                                None,
-                                "false",
-                                None,
-                                None,
-                                None,
-                                None,
-                            ]
-                        )
-
-            self.logger.info(f"Export results of comparing DAMO/3Di layer {layer_name} to {filename}")
-            table_C[layer_name].to_file(filename, layer=layer_name, driver="GPKG", crs=self.crs)
 
         # add styling to layers
-        layer_styles = gpd.GeoDataFrame(columns=STYLING_BASIC_TABLE_COLUMNS, data=table)
-        layer_styles.fillna("", inplace=True)
+        layer_styles = styling.export_comparison_3di(
+            table_C, statistics, filename, overwrite=overwrite, styling_path=styling_path, crs=self.crs
+        )
         self.add_layer_styling(fn_export_gpkg=filename, layer_styles=layer_styles)
 
         # Export statistics
@@ -526,24 +342,11 @@ class Threedimodel(DataSet):
 
         for struc in STRUCTURE_CODES:
             table_struc_model[struc] = self.get_structure_by_code(struc, THREEDI_STRUCTURE_LAYERS)
+            table_struc_DAMO[struc] = DAMO.get_structure_by_code(struc, DAMO_HDB_STRUCTURE_LAYERS)
 
-            name = "check_table_model_" + struc + ".csv"
-            path_table = os.path.join(base_output, name)
-            table_struc_model[struc].to_csv(path_table, sep=";", index=False)
-
-            # print(f'3di_type {(table_struc_model[struc])}')
-            table_struc_DAMO[struc] = self.get_structure_by_code(struc, DAMO_HDB_STRUCTURE_LAYERS)
-
-            name = "check_table_DAMO_" + struc + ".csv"
-            path_table = os.path.join(base_output, name)
-            table_struc_DAMO[struc].to_csv(path_table, sep=";", index=False)
-
-            # print(struc)
-            # print(f'the crs is {table_struc_DAMO[struc].crs} for the strcuture {struc}')
-            # print(f'damo_type {type(table_struc_DAMO[struc])}')
         table_C = {}
         for layer in table_struc_model.keys():
-            print(f"the crs for {layer} in DAMO is {table_struc_DAMO[layer].crs}")
+            # print(f"the crs for {layer} in DAMO is {table_struc_DAMO[layer].crs}")
             if table_struc_DAMO[layer].crs == table_struc_model[layer].crs:
                 self.logger.debug(f"CRS of DAMO and model data {layer} is equal")
             else:
@@ -612,7 +415,9 @@ class Threedimodel(DataSet):
 
         # export to filename
         if filename is not None:
-            self.export_comparison(table_C, statistics, filename, overwrite=overwrite, styling_path=styling_path)
+            self.export_comparison_3di(
+                table_C, statistics, filename, overwrite=overwrite, styling_path=styling_path, crs=self.crs
+            )
 
         # statistics.to_csv(r"E:\02.modellen\castricum\01_source_data\vergelijkingsTool\output\statistics_threedi.csv", sep = ';')
         # table_C[layer].to_csv(r"E:\02.modellen\castricum\01_source_data\vergelijkingsTool\output\TableC_threedi.csv", sep = ';')
