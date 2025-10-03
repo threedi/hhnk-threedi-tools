@@ -187,10 +187,10 @@ class DataSet:
             else:
                 change_na = None
 
-            # try:
-            #    change_na = (left.isna() & right.notna()) | (left.notna() & right.isna())
-            # except:
-            #    change_na = None
+            try:
+                change_na = (left.isna() & right.notna()) | (left.notna() & right.isna())
+            except:
+                change_na = None
 
             ### DIFFERENCE ###
             if function_name == "difference":
@@ -422,6 +422,7 @@ class DataSet:
         tabel = pd.DataFrame()
         for layer in layers:
             codes = []
+            # (print("Capas disponibles:", list(self.data.keys())))
             for i in self.data[layer].code.values:
                 if i is not None:
                     i = str(i)
