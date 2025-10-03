@@ -1,3 +1,4 @@
+# %%
 import json
 import logging
 import re
@@ -7,7 +8,7 @@ import fiona
 import geopandas as gpd
 import pandas as pd
 
-from hhnk_threedi_tools.core.vergelijkingstool import name_date
+from hhnk_threedi_tools.core.vergelijkingstool import name_date, styling
 from hhnk_threedi_tools.core.vergelijkingstool.config import *
 from hhnk_threedi_tools.core.vergelijkingstool.Dataset import DataSet
 from hhnk_threedi_tools.core.vergelijkingstool.styling import *
@@ -56,7 +57,9 @@ class DAMO(DataSet):
 
         # Clip data
         if clip_shape is not None:
-            self.data = self.clip_data(self.data, clip_shape)
+            if isinstance(clip_shape, (str, Path)):
+                clip_shape = gpd.read_file(clip_shape).geometry.union_all()
+        self.data = self.clip_data(self.data, clip_shape)
 
         # Add mapped layer names as DAMO attributes
         for key in self.data.keys():
@@ -194,7 +197,7 @@ class DAMO(DataSet):
 
         return data
 
-    def export_comparison(self, table_C, statistics, filename, overwrite=False, styling_path=None):
+    def export_comparison_new(self, table_C, statistics, filename, overwrite=False, styling_path=None):
         """
         Exports all compared layers and statistics to a GeoPackage.
 
@@ -207,173 +210,14 @@ class DAMO(DataSet):
         :return:
         """
 
-        table = []
-        if Path(filename).exists():
-            if overwrite:
-                self.logger.debug("file exists, overwrite is used so delete old file")
-                try:
-                    Path.unlink(filename)
-                except PermissionError:
-                    self.logger.error(
-                        "File to export  is still in use. Unload GPKG from QGIS and disconnect database connections"
-                    )
-            else:
-                raise FileExistsError(
-                    f'The file "{filename}" already exists. If you want to overwrite the '
-                    f"existing file, add overwrite=True to the function."
-                )
-
-        # Deal with multiple geometry types per layer. Split each layer in a LayerName_Point or LayerName_LineString
-        # and delete the original layer
-        for layer_name in list(table_C):
-            if len(table_C[layer_name].geometry.type.unique()) > 1:
-                for geometry_type in range(len(table_C[layer_name].geometry.type.unique())):
-                    table_C[f"{layer_name}_{table_C[layer_name].geometry.type.unique()[geometry_type]}"] = table_C[
-                        layer_name
-                    ][table_C[layer_name].geometry.type == table_C[layer_name].geometry.type.unique()[geometry_type]]
-                del table_C[layer_name]
-
-        # Add an entry to the styling table. First check if a qml file exists with the same name as the layer.
-        # If not, add the default styling for either point, linestring or polygon
-        for i, layer_name in enumerate(table_C):
-            # Check if the layer name has a style in the styling folder
-            if styling_path is not None:
-                qml_name = layer_name + ".qml"
-                qml_file = (styling_path) / qml_name
-
-                # qml_file = Path(r"\\corp.hhnk.nl\data\Hydrologen_data\Data\02.modellen\castricum\01_source_data\styling") / qml_name
-                # if file exists, use that for the styling
-                if qml_file.exists():
-                    self.logger.debug(f"Style layer for layer {layer_name} found, adding it to the GeoPackage")
-                    with open(qml_file, "r") as file:
-                        style = file.read()
-                        style_name = layer_name + "_style"
-
-                    model_name = folder.name
-                    # model_name = 'castricum'
-
-                    # Function to replace labels based on their current value
-                    def replace_label(match):
-                        label_value = match.group(1)
-                        value_value = match.group(2)
-                        symbol_value = match.group(3)
-                        if symbol_value == "0":
-                            return f'label="{model_name} new {name_date.date_new_damo}" value="{model_name} new" symbol="0"'
-                        elif symbol_value == "1":
-                            return f'label="{model_name} old {name_date.date_old_damo}" value="{model_name} old" symbol="1"'
-                        elif symbol_value == "2":
-                            return f'label="{model_name} both" value="{model_name} both" symbol="2"'
-                        else:
-                            if label_value.startswith(model_name) and value_value.startswith(model_name):
-                                print("The labels are corrected")
-
-                    style = re.sub(r'label="([^"]*)" value="([^"]*)" symbol="([^"]*)"', replace_label, style)
-
-                    def change_both(match):
-                        value = match.group(1)
-                        if name_date.opacity_100:
-                            return 'value="197,197,197,0"'
-                        return match.group(0)
-
-                    # Use a regular expression to find and replace label values
-                    style = re.sub(r'value="(197,197,197,128)"', change_both, style)
-
-                    # Write the modified content back to the QML file
-                    with open(qml_file, "w") as file:
-                        file.write(style)
-
-                    with open(qml_file, "r") as file:
-                        style = file.read()
-                        style_name = layer_name + "_style"
-                        table.append(
-                            [
-                                i,
-                                None,
-                                None,
-                                layer_name,
-                                table_C[layer_name]._geometry_column_name,
-                                style_name,
-                                style,
-                                None,
-                                "false",
-                                None,
-                                None,
-                                None,
-                                None,
-                            ]
-                        )
-                else:
-                    if table_C[layer_name].geometry.type.unique() is None:
-                        pass
-                    if table_C[layer_name].geometry.type.drop_duplicates().to_list() == ["Point"]:
-                        table.append(
-                            [
-                                i,
-                                None,
-                                None,
-                                layer_name,
-                                table_C[layer_name]._geometry_column_name,
-                                "point_style",
-                                STYLING_POINTS_DAMO,
-                                None,
-                                "false",
-                                None,
-                                None,
-                                None,
-                                None,
-                            ]
-                        )
-                    if table_C[layer_name].geometry.type.drop_duplicates().to_list() == ["LineString"] or table_C[
-                        layer_name
-                    ].geometry.type.drop_duplicates().to_list() == ["MultiLineString"]:
-                        table.append(
-                            [
-                                i,
-                                None,
-                                None,
-                                layer_name,
-                                table_C[layer_name]._geometry_column_name,
-                                "line_style",
-                                STYLING_LINES_DAMO,
-                                None,
-                                "false",
-                                None,
-                                None,
-                                None,
-                                None,
-                            ]
-                        )
-                    if table_C[layer_name].geometry.type.drop_duplicates().to_list() == ["Polygon"] or table_C[
-                        layer_name
-                    ].geometry.type.drop_duplicates().to_list() == ["MultiPolygon"]:
-                        table.append(
-                            [
-                                i,
-                                None,
-                                None,
-                                layer_name,
-                                table_C[layer_name]._geometry_column_name,
-                                "polygon_style",
-                                STYLING_POLYGONS_DAMO,
-                                None,
-                                "false",
-                                None,
-                                None,
-                                None,
-                                None,
-                            ]
-                        )
-
-            self.logger.info(f"export results of comparing DAMO/DAMO layer {layer_name} to geopackage")
-            table_C[layer_name].to_file(filename, layer=layer_name, driver="GPKG")
-
-        # add styling to layers
-        layer_styles = gpd.GeoDataFrame(columns=STYLING_BASIC_TABLE_COLUMNS, data=table)
-        layer_styles.fillna("", inplace=True)
+        layer_styles = styling.export_comparison_DAMO(
+            table_C, statistics, filename, overwrite=overwrite, styling_path=styling_path
+        )
         self.add_layer_styling(fn_export_gpkg=filename, layer_styles=layer_styles)
 
-        # Call function export statistics
+        # Export statistics
         self.export_statistics(statistics, filename)
+        self.logger.info(f"Finished exporting to {filename}")
 
     def compare_with_damo(self, damo_b, attribute_comparison=None, filename=None, overwrite=False, styling_path=None):
         """
@@ -637,7 +481,8 @@ class DAMO(DataSet):
 
         # check if filename already exists. Cr
         if filename is not None:
-            self.export_comparison(table_C, statistics, filename, overwrite=overwrite, styling_path=styling_path)
+            print(filename)
+            self.export_comparison_new(table_C, statistics, filename, overwrite=overwrite, styling_path=styling_path)
 
         statistics.to_csv(r"E:\02.modellen\castricum\01_source_data\vergelijkingsTool\output\statistics.csv", sep=";")
         # table_C.to_csv(r"E:\02.modellen\castricum\01_source_data\vergelijkingsTool\output\TableC.csv", sep = ';')
