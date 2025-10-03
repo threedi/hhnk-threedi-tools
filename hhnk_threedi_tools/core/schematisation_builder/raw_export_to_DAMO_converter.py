@@ -5,9 +5,9 @@ from pathlib import Path
 from typing import Optional
 
 import geopandas as gpd
+import hhnk_research_tools as hrt
 import shapely
 from shapely.validation import make_valid
-import hhnk_research_tools as hrt
 
 CRS = "EPSG:28992"
 
@@ -76,7 +76,7 @@ class RawExportToDAMOConverter:
         self.output_file_path = Path(output_file_path)
         self.logger = logger or logging.getLogger(__name__)
         self.data = _Data()
-    
+
     def load_layers(self):
         self.logger.info("Loading all layers...")
 
