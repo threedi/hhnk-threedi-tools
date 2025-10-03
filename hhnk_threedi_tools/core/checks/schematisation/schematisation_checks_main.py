@@ -143,7 +143,7 @@ class HhnkSchematisationChecks:
 
         self.output_fd = self.folder.output.hhnk_schematisation_checks
 
-        self.model = self.folder.model.schema_base.database
+        self.database = self.folder.model.schema_base.database
         self.dem = self.folder.model.schema_base.rasters.dem
         self.datachecker = self.folder.source_data.datachecker
         self.damo = self.folder.source_data.damo
@@ -179,7 +179,7 @@ class HhnkSchematisationChecks:
     def run_controlled_structures(self, overwrite=False):
         """Create leayer with structure control in schematisation"""
         self.structure_control = StructureControl(
-            model=self.model,
+            model=self.database,
             hdb_control_layer=self.folder.source_data.hdb.layers.sturing_kunstwerken,
             output_file=self.output_fd.gestuurde_kunstwerken.base,
         )
@@ -244,7 +244,7 @@ class HhnkSchematisationChecks:
         and executes them
         """
 
-        df = self.model.execute_sql_selection(query=ModelCheck.get_query())
+        df = self.database.execute_sql_selection(query=ModelCheck.get_query())
 
         self.results["model_checks"] = df
         return df
@@ -254,7 +254,7 @@ class HhnkSchematisationChecks:
         Deze test checkt of de geometrie van een object in het model correspondeert met de start- of end node in de
         v2_connection_nodes tafel. Als de verkeerde ids worden gebruikt geeft dit fouten in het model.
         """
-        gdf = self.model.execute_sql_selection(
+        gdf = self.database.execute_sql_selection(
             query=geometry_check_query,
         )
 
@@ -274,7 +274,7 @@ class HhnkSchematisationChecks:
         2. the area of the polder (based on the polder shapefile)
         3. the difference between the two.
         """
-        imp_surface_db = self.model.execute_sql_selection(impervious_surface_query)
+        imp_surface_db = self.database.execute_sql_selection(impervious_surface_query)
         imp_surface_db.set_index("id", inplace=True)
 
         polygon_imp_surface = self.folder.source_data.polder_polygon.load()
@@ -294,7 +294,7 @@ class HhnkSchematisationChecks:
         meegenomen in de uitwisseling in het watersysteem. De test berekent tevens de totale lengte van watergangen en welk
         deel daarvan geïsoleerd is.
         """
-        channels_gdf = self.model.execute_sql_selection(query=isolated_channels_query)
+        channels_gdf = self.database.execute_sql_selection(query=isolated_channels_query)
         channels_gdf[length_in_meters_col] = round(channels_gdf[df_geo_col].length, 2)
         (
             isolated_channels_gdf,
@@ -320,7 +320,7 @@ class HhnkSchematisationChecks:
         weergave van de breedtes en dieptes van watergangen in het model ter controle.
         """
         # TODO use hrt.sqlite_table_to_gdf instead?
-        channels_gdf = self.model.execute_sql_selection(query=profiles_used_query)
+        channels_gdf = self.database.execute_sql_selection(query=profiles_used_query)
         # If zoom category is 4, channel is considered primary
         channels_gdf[primary_col] = channels_gdf[a_zoom_cat].apply(lambda zoom_cat: zoom_cat == 4)
         channels_gdf[width_col] = channels_gdf[width_col].apply(_split_round)
@@ -366,16 +366,18 @@ class HhnkSchematisationChecks:
         culvert_assump_gdf = dc_culvert_gdf[dc_culvert_gdf["aanname"].str.contains()]
         bridge_assump_gdf = dc_bridge_gdf[dc_bridge_gdf["aanname"].str.contains()]
 
-        culvert_gdf = self.model.load(layer="culvert", index_column="id")
+        culvert_gdf = self.database.load(layer="culvert", index_column="id")
         culvert_gdf["culvert_id"] = culvert_gdf.index
         culvert_gdf["struct_code"] = culvert_gdf["code"]
+
+        ############################
 
         # Load source data to determine whether structure reference lever was based on assumption
         datachecker_culvert_layer = self.folder.source_data.datachecker.layers.culvert
         damo_duiker_sifon_layer = self.folder.source_data.damo.layers.DuikerSifonHevel
 
         below_ref_query = struct_channel_bed_query
-        gdf_below_ref = self.model.execute_sql_selection(query=below_ref_query)
+        gdf_below_ref = self.database.execute_sql_selection(query=below_ref_query)
         gdf_below_ref.rename(columns={"id": a_chan_bed_struct_id}, inplace=True)
 
         # TODO waar vind ik hoe dit gebruikt wordt? Check lijkt niet hier te gebeuren
@@ -409,7 +411,7 @@ class HhnkSchematisationChecks:
         ]
         modelbuilder_waterdeel_gdf = self.channels_from_profiles.load(layer="channel_surface_from_profiles")
         damo_waterdeel_gdf = self.folder.source_data.damo.layers.waterdeel.load()
-        conn_nodes_gdf = self.model.load(layer="connection_node", index_column="id").rename(
+        conn_nodes_gdf = self.database.load(layer="connection_node", index_column="id").rename(
             columns={"id": a_watersurf_conn_id}
         )
         # Explode fixed drainage level area polygons to ensure no multipolygons are present
@@ -770,8 +772,8 @@ if __name__ == "__main__":
     folder = Folders(TEST_DIRECTORY / "model_test")
     # database = folder.model.schema_base.database
     self = StructureRelations(folder=folder, structure_table="orifice")
-    self.structure_table = "orifice"
-    structure_table = "orifice"
+    # self.structure_table = "orifice"
+    # structure_table = "orifice"
     side = "start"
     self.gdf()
 

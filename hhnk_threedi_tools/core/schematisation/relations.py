@@ -161,7 +161,7 @@ class StructureRelations:
 
         return structure_gdf
 
-    def get_min_max_levels(self, structure_gdf: gpd.GeoDataFrame, structure_table: str, side: str) -> gpd.GeoDataFrame:
+    def get_min_max_levels(self, structure_gdf: gpd.GeoDataFrame, side: str) -> gpd.GeoDataFrame:
         """Get minimum and maximum reference level and bank level at start or end side of structure.
 
         Parameters
@@ -195,7 +195,7 @@ class StructureRelations:
         cross_section_gdf["cs_id"] = cross_section_gdf.index
 
         # Create temporary dataframe to join to main structure table later
-        struct_clean_gdf = structure_gdf[["geometry", f"{structure_table}_id", f"connection_node_id_{side}"]].copy()
+        struct_clean_gdf = structure_gdf[["geometry", f"{self.structure_table}_id", f"connection_node_id_{side}"]].copy()
         # Join multiple channel ids
         struct_join_gdf = self.join_channel(structure_gdf=struct_clean_gdf, channel_join_df=channel_join_df, side=side)
         # Join multiple cross section locations
@@ -205,7 +205,7 @@ class StructureRelations:
         # Filter on closest cross section location to structure at side with same channel_id
         struct_join_csl_gdf = (
             struct_join_gdf.sort_values(by=[f"dist_cs_{side}"])
-            .drop_duplicates(subset=[f"{structure_table}_id", f"channel_id_{side}"], keep="first")
+            .drop_duplicates(subset=[f"{self.structure_table}_id", f"channel_id_{side}"], keep="first")
             .drop(
                 columns=[
                     # f"geometry_cs_{side}",
@@ -279,53 +279,53 @@ class StructureRelations:
             structure_gdf.merge(
                 struct_min_ref_level_gdf[
                     [
-                        f"{structure_table}_id",
+                        f"{self.structure_table}_id",
                         f"min_ref_level_{side}",
                         f"cs_id_min_ref_level_{side}",
                         f"geometry_cs_min_ref_{side}",
                     ]
                 ],
-                left_on=f"{structure_table}_id",
-                right_on=f"{structure_table}_id",
+                left_on=f"{self.structure_table}_id",
+                right_on=f"{self.structure_table}_id",
                 how="left",
             )
             .merge(
                 struct_max_ref_level_gdf[
                     [
-                        f"{structure_table}_id",
+                        f"{self.structure_table}_id",
                         f"max_ref_level_{side}",
                         f"cs_id_max_ref_level_{side}",
                         f"geometry_cs_max_ref_{side}",
                     ]
                 ],
-                left_on=f"{structure_table}_id",
-                right_on=f"{structure_table}_id",
+                left_on=f"{self.structure_table}_id",
+                right_on=f"{self.structure_table}_id",
                 how="left",
             )
             .merge(
                 struct_min_bank_level_gdf[
                     [
-                        f"{structure_table}_id",
+                        f"{self.structure_table}_id",
                         f"min_bank_level_{side}",
                         f"cs_id_min_bank_level_{side}",
                         f"geometry_cs_min_bank_{side}",
                     ]
                 ],
-                left_on=f"{structure_table}_id",
-                right_on=f"{structure_table}_id",
+                left_on=f"{self.structure_table}_id",
+                right_on=f"{self.structure_table}_id",
                 how="left",
             )
             .merge(
                 struct_max_bank_level_gdf[
                     [
-                        f"{structure_table}_id",
+                        f"{self.structure_table}_id",
                         f"max_bank_level_{side}",
                         f"cs_id_max_bank_level_{side}",
                         f"geometry_cs_max_bank_{side}",
                     ]
                 ],
-                left_on=f"{structure_table}_id",
-                right_on=f"{structure_table}_id",
+                left_on=f"{self.structure_table}_id",
+                right_on=f"{self.structure_table}_id",
                 how="left",
             )
         )
@@ -386,7 +386,6 @@ class StructureRelations:
     def join_table_control(
         self,
         structure_gdf: gpd.GeoDataFrame,
-        structure_table: str,  # dubbel eruit
     ) -> gpd.GeoDataFrame:
         """Join table control to structure table on structure id.
 
@@ -403,16 +402,16 @@ class StructureRelations:
             Structure GeoDataFrame with added columns from table_control
 
         """
-        if structure_table not in ["weir", "culvert", "pump", "orifice"]:
+        if self.structure_table not in ["weir", "culvert", "pump", "orifice"]:
             raise ValueError("Provide structure table weir, culvert, pump or orifice")
 
         table_control_gdf = self.database.load(layer="table_control", index_column="id")
         table_control_gdf["control_id"] = table_control_gdf.index
 
         # Add prperties from table controle to structure table
-        if structure_table in ["weir", "orifice"]:
+        if self.structure_table in ["weir", "orifice"]:
             # filter control table on weir
-            table_control_gdf = table_control_gdf[table_control_gdf["target_type"] == structure_table]
+            table_control_gdf = table_control_gdf[table_control_gdf["target_type"] == self.structure_table]
             # filter control table on action type
             set_crest_level_gdf = table_control_gdf[table_control_gdf["action_type"] == "set_crest_level"]
 
@@ -490,23 +489,23 @@ class StructureRelations:
         if side not in ["start", "end"]:
             raise ValueError("side should be 'start' or 'end'")
 
-        struct_rel = StructureRelations(folder=self.folder, structure_table=self.structure_table).gdf()
+        struct_gdf = self.gdf()
 
         if self.structure_table == "culvert":
-            struct_rel["minimal_level"] = struct_rel[f"invert_level_{side}"]
+            struct_gdf["minimal_level"] = struct_gdf[f"invert_level_{side}"]
         elif self.structure_table in ["weir", "orifice"]:
-            if "min_crest_level_control" in struct_rel.columns:
+            if "min_crest_level_control" in struct_gdf.columns:
                 # Get lowest value from min_crest_level_control and crest_level if not nan
-                struct_rel["minimal_level"] = np.nanmin(
-                    [struct_rel["min_crest_level_control"], struct_rel["crest_level"]], axis=0
+                struct_gdf["minimal_level"] = np.nanmin(
+                    [struct_gdf["min_crest_level_control"], struct_gdf["crest_level"]], axis=0
                 )
             else:
-                struct_rel["minimal_level"] = struct_rel["crest_level"]
+                struct_gdf["minimal_level"] = struct_gdf["crest_level"]
 
         # Filter sunk structures on side start or end
-        struct_sunk_gdf = struct_rel[
-            (struct_rel["minimal_level"] < struct_rel[f"min_ref_level_{side}"])
-            & (struct_rel[f"bottom_level_{side}"].isna())
+        struct_sunk_gdf = struct_gdf[
+            (struct_gdf["minimal_level"] < struct_gdf[f"min_ref_level_{side}"])
+            & (struct_gdf[f"bottom_level_{side}"].isna())
         ].copy()
         struct_sunk_gdf["cs_id_min_ref_level"] = struct_sunk_gdf[f"cs_id_min_ref_level_{side}"]
         # Set geometry to crs geometry
