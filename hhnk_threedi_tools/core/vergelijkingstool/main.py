@@ -36,10 +36,11 @@ from pathlib import Path
 import geopandas as gpd
 from sqlalchemy import false
 
-from hhnk_threedi_tools.core.vergelijkingstool import config, name_date, styling
+from hhnk_threedi_tools.core.vergelijkingstool import config, styling
 from hhnk_threedi_tools.core.vergelijkingstool.DAMO import DAMO
 from hhnk_threedi_tools.core.vergelijkingstool.styling import *
 from hhnk_threedi_tools.core.vergelijkingstool.Threedimodel import Threedimodel
+from hhnk_threedi_tools.core.vergelijkingstool.utils import get_model_info
 
 # from folder_names import name
 
@@ -200,37 +201,38 @@ if __name__ == "__main__":
     # source_data = folder.source_data.path
 
     # name
-    path = name_date.path
-    model_name, source_data, folder = name_date.name(path)
+    path = r"E:\02.modellen\castricum"
+    info = get_model_info(path)
+    source_data = info.source_data
 
     # polder polygon. It should be a geopackge file
-    selection_shape = fn_DAMO_selection = name_date.damo_selection
+    selection_shape = fn_DAMO_selection = info.damo_selection
 
     # Base folder initial files.
-    source_data_old = name_date.source_data_old
+    source_data_old = info.source_data
+
     json_file = os.path.join(source_data, "vergelijkingsTool", "json_files")
 
     # output location.
     out_put_files = os.path.join(source_data, "vergelijkingsTool", "output")
 
     # Old DAMO (DCMB/FME export) location .
-    fn_damo_old = name_date.fn_damo_old
+    fn_damo_old = info.fn_damo_old
     fn_damo_old_translation = Path(os.path.join(source_data_old, "damo_translation.json"))
 
     # the last version
-    fn_damo_new = name_date.fn_damo_new
+    fn_damo_new = info.fn_damo_new
     fn_damo_new_translation = fn_damo_old_translation
     # fn_damo_new_translation = Path(os.path.join(source_data_old, 'damo_translation.json'))
 
     # Old HDB (DCMB/FME export) location .
-    fn_hdb_old = name_date.fn_hdb_old
+    fn_hdb_old = info.fn_hdb_old
     fn_hdb_old_translation = Path(os.path.join(source_data_old, "hdb_translation.json"))
 
     # the last version
-    fn_hdb_new = name_date.fn_hdb_new
+    fn_hdb_new = info.fn_hdb_new
     fn_hdb_new_translation = fn_hdb_old_translation
 
-    fn_threedimodel = name_date.fn_threedimodel
     fn_threedimodel_translation = Path(os.path.join(json_file, "threedi_translation.json"))
     fn_damo_attribute_comparison = Path(os.path.join(json_file, "damo_attribute_comparison.json"))
     fn_model_attribute_comparison = Path(os.path.join(json_file, "model_attribute_comparison.json"))
@@ -284,21 +286,4 @@ if __name__ == "__main__":
         damo_structure_selection=damo_structure_selection,
         structure_codes=structure_codes,
     )
-# %%
-# AfvoergebiedAanvoergebied, Bergingsgebied, DuikerSifonHevel
-# hydro_deelgebieden, stuwen_op_peilgrens, Levee_overstromingsmodel
-
-# AfvoergebiedAanvoergebied,  Bergingsgebied
-# base_output = r"E:\02.modellen\castricum\01_source_data\vergelijkingsTool\output"
-# threedi_model = Threedimodel(fn_threedimodel, translation=fn_threedimodel_translation)
-# damo_new = DAMO(
-#     fn_damo_new,
-#     fn_hdb_new,
-#     translation_DAMO=fn_damo_new_translation,
-#     clip_shape=selection_shape,
-#     layer_selection=False,
-#     layers_input_hdb_selection=layers_input_hdb_selection,
-#     layers_input_damo_selection=layers_input_damo_selection,
-# )
-
 # %%
