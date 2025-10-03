@@ -1363,6 +1363,28 @@
 							"fill_value": 0
 						}
 					}
+				},
+				{
+					"id": 100,
+					"result_variable": "distance_to_peilgebied",
+					"name": "Afstand tot dichtstbijzijnde peilgebied",
+					"description": "Berekent de afstand van het gemaal tot het dichtstbijzijnde peilgebied",
+					"function": {
+						"custom_hydamo": {
+							"custom_function_name": "distance_to_peilgebied"
+						}
+					}
+				},
+				{
+					"id": 101,
+					"result_variable": "aantal_peilgebieden",
+					"name": "Aantal peilgebieden per gemaal",
+					"description": "Berekent het aantal peilgebieden dat aan het gemaal is gekoppeld",
+					"function": {
+						"custom_hydamo": {
+							"custom_function_name": "gemaal_streefpeil_value"
+						}
+					}
 				}
 			],
 			"validation_rules": [
@@ -1449,6 +1471,40 @@
 						"snaps_to_hydroobject": {
 							"method": "overall",
 							"tolerance": 1
+						}
+					}
+				},
+				{
+					"id": 103,
+					"name": "Afstand tot peilgebied",
+					"description": "De afstand van het gemaal tot het peilgebied moet kleiner of gelijk zijn aan 0.01",
+					"type": "logic",
+					"validation_rule_set": "hhnk",
+					"error_type": "critical",
+					"result_variable": "Gemaal_op_peilgebieden",
+					"error_message": "Gemaal niet op peilgebieden",
+					"active": true,
+					"function": {
+						"LE": {
+							"left": "distance_to_peilgebied",
+							"right": "0.01"
+						}
+					}
+				},
+				{
+					"id": 104,
+					"name": "Aantal peilgebieden per gemaal maximaal 2",
+					"description": "Een gemaal mag aan maximaal 2 peilgebieden gekoppeld zijn",
+					"type": "logic",
+					"validation_rule_set": "hhnk",
+					"error_type": "critical",
+					"result_variable": "aantal_peilgebieden",
+					"error_message": "aantal peilgebieden meer dan 2",
+					"active": true,
+					"function": {
+						"LE": {
+							"left": "aantal_peilgebieden",
+							"right": 2
 						}
 					}
 				}
