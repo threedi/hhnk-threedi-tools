@@ -138,10 +138,7 @@ OUTPUT_COLS = [
 
 # %%
 class HhnkSchematisationChecks:
-    def __init__(
-        self,
-        folder: Folders,
-    ):
+    def __init__(self, folder: Folders, results: dict[str, object]):
         self.folder = folder
 
         self.output_fd = self.folder.output.hhnk_schematisation_checks
@@ -336,11 +333,24 @@ class HhnkSchematisationChecks:
         self.results["used_profiles"] = channels_gdf
         return channels_gdf
 
-    def run_struct_channel_bed_level(self):
-        """Check whether the reference level of any of the adjacent cross section locations
-        (channels) to a structure is lower than the reference level for that structure
-        (3di crashes if it is)
+    def run_struct_channel_bed_level(self) -> gpd.GeoDataFrame:
+        """Check whether the reference level of the cross section location reference level is below the orifice crest level or the culvert inlet level of the adjacent channels.
+
+        StructureRelation gives the lowest of the reference levels of the connected channels, but it takes into account only to use the closest cross section location per channel.
+
+        Connection nodes with manholes are not considered.
+
+        If the structure levels are below the lowest reference level, 3Di model may crash (when water level drops below reference level).
         """
+        # TODO loop culvert, weir and orifice
+        # Load culvert layer with joined reference levels
+        struct_rel = StructureRelations(folder=self.folder, structure_table="culvert")
+        culvert_gdf = struct_rel.relations()
+
+        # Load orifice lauer with joined reference levels
+        struct_rel = StructureRelations(folder=self.folder, structure_table="orifice")
+        orifice_gdf = struct_rel.relations()
+
         datachecker_culvert_layer = self.folder.source_data.datachecker.layers.culvert
         damo_duiker_sifon_layer = self.folder.source_data.damo.layers.DuikerSifonHevel
 
@@ -348,12 +358,14 @@ class HhnkSchematisationChecks:
         gdf_below_ref = self.model.execute_sql_selection(query=below_ref_query)
         gdf_below_ref.rename(columns={"id": a_chan_bed_struct_id}, inplace=True)
 
+        # TODO waar vind ik hoe dit gebruikt wordt? Check lijkt niet hier te gebeuren
         # See git issue about below statements
         gdf_with_damo = _add_damo_info(layer=damo_duiker_sifon_layer, gdf=gdf_below_ref)
         gdf_with_datacheck = _add_datacheck_info(datachecker_culvert_layer, gdf_with_damo)
         gdf_with_datacheck.loc[:, down_has_assumption] = gdf_with_datacheck[height_inner_lower_down].isna()
         gdf_with_datacheck.loc[:, up_has_assumption] = gdf_with_datacheck[height_inner_lower_up].isna()
         self.results["struct_channel_bed_level"] = gdf_with_datacheck
+        # TODO add monhole bottom level
         return gdf_with_datacheck
 
     def run_watersurface_area(self) -> tuple[gpd.GeoDataFrame, str]:
@@ -410,7 +422,7 @@ class HhnkSchematisationChecks:
         }
         return fixeddrainage_gdf, result_txt
 
-    def run_weir_floor_level(self, database: hrt.SpatialDatabase) -> tuple[gpd.GeoDataFrame, str]:
+    def run_weir_floor_level(self) -> tuple[gpd.GeoDataFrame, str]:
         """
         Check whether minimum crest height of weir is under reference level found in the v2_cross_section_location layer.
         This is not allowed, so if this is the case, we have to update the reference level.
@@ -418,49 +430,30 @@ class HhnkSchematisationChecks:
 
         # Use SchructureRelations to get relations between weirs, channels and cross section locations
         struct_rel = StructureRelations(folder=self.folder, structure_table="weir")
-        weir_gdf = struct_rel.relations()
 
-        # Get lowest value from min_crest_level_control and crest_level if not nan
-        weir_gdf["minimal_crest_level"] = np.nanmin(
-            [weir_gdf["min_crest_level_control"], weir_gdf["crest_level"]], axis=0
-        )
-        weir_gdf = weir_gdf[
-            [
-                "weir_id",
-                "cs_id_min_ref_level_start",
-                "min_ref_level_start",
-                "cs_id_min_ref_level_end",
-                "min_ref_level_end",
-                "crest_level",
-                "min_crest_level_control",
-                "minimal_crest_level",
-                "geometry",
-            ]
-        ]
-        # Get sunk weir crest levels at start and end node
-        weir_sunk_start_gdf = weir_gdf[weir_gdf["minimal_crest_level"] < weir_gdf["min_ref_level_start"]].copy()
-        weir_sunk_start_gdf["cs_id_min_ref_level"] = weir_sunk_start_gdf["cs_id_min_ref_level_start"]
-        weir_sunk_end_gdf = weir_gdf[weir_gdf["minimal_crest_level"] < weir_gdf["min_ref_level_end"]].copy()
-        weir_sunk_end_gdf["cs_id_min_ref_level"] = weir_sunk_end_gdf["cs_id_min_ref_level_end"]
-        # Combine into one list
-        wrong_profiles_gdf = pd.concat([weir_sunk_start_gdf, weir_sunk_end_gdf])
+        # Get wrong profiles on both sides of structure
+        wrong_profiles_start = struct_rel.get_wrong_profile(side="start")
+        wrong_profiles_end = struct_rel.get_wrong_profile(side="end")
+        wrong_profiles_gdf = pd.concat([wrong_profiles_start, wrong_profiles_end])
+
         # Sort on lowest minimal_crest_level and remove duplicates (using only lowest reference level per location)
-        wrong_profiles_gdf = wrong_profiles_gdf.sort_values(by=["minimal_crest_level"]).drop_duplicates(
-            subset=["cs_id_min_ref_level"], keep="first"
+        wrong_profiles_gdf = wrong_profiles_gdf.sort_values(by=["proposed_reference_level"]).drop_duplicates(
+            subset=["cross_section_location_id"], keep="first"
         )
 
         update_query = hrt.sql_create_update_case_statement(
             df=wrong_profiles_gdf,
             layer="cross_section_location",
-            df_id_col="cs_id_min_ref_level",
-            db_id_col="cs_id_min_ref_level",
-            new_val_col="minimal_crest_level",
+            df_id_col="cross_section_location_id",
+            db_id_col="id",
+            new_val_col="proposed_reference_level",
             old_val_col="reference_level",
         )
         self.results["weir_floor_level"] = {
             "wrong_profiles_gdf": wrong_profiles_gdf,
             "update_query": update_query,
         }
+
         return wrong_profiles_gdf, update_query  # TODO check of sql werkt in de plugin
 
     def create_grid_from_schematisation(
@@ -560,6 +553,8 @@ class HhnkSchematisationChecks:
 
         return cross_no_vertex, v_cs_channel_mismatch
 
+
+# TODO add monhole bottom level is lower than structure level check
 
 ## Helper functions
 # TODO zet in functies als het maar paar regels is
@@ -733,10 +728,11 @@ if __name__ == "__main__":
     from tests.config import FOLDER_TEST
 
     folder = Folders(FOLDER_TEST)
-    self = HhnkSchematisationChecks(folder=folder)
+    results = {}
+    self = HhnkSchematisationChecks(folder=folder, results=results)
     database = folder.model.schema_base.database
-    # a, b = self.run_weir_floor_level(database=database)
-    a, b = self.run_watersurface_area()
+    a, b = self.run_weir_floor_level()
+    # a, b = self.run_watersurface_area()
 
     # TODO self.create_grid_from_schematisation(output_folder=folder.output.base)
     # self.verify_inputs("run_imp_surface_area")
@@ -756,7 +752,7 @@ if __name__ == "__main__":
     self = StructureRelations(folder=folder, structure_table="weir")
     self.structure_table = "weir"
     structure_table = "weir"
-    side = "end"
+    side = "start"
     self.relations()
 
 

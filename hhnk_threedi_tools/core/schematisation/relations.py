@@ -1,4 +1,5 @@
 import geopandas as gpd
+import numpy as np
 import pandas as pd
 from hhnk_research_tools import logging
 
@@ -21,6 +22,7 @@ class StructureRelations(Folders):
         folder: Folders,
         structure_table: str = "",
     ):
+        self.folder = folder
         self.database = folder.model.schema_base.database
 
         if structure_table not in ["weir", "culvert", "pump", "orifice"]:
@@ -158,7 +160,7 @@ class StructureRelations(Folders):
         return structure_gdf
 
     def get_min_max_levels(self, structure_gdf: gpd.GeoDataFrame, structure_table: str, side: str) -> gpd.GeoDataFrame:
-        """Get minimum reference level and bank level at start or end side of structure.
+        """Get minimum and maximum reference level and bank level at start or end side of structure.
 
         Parameters
         ----------
@@ -204,7 +206,7 @@ class StructureRelations(Folders):
             .drop_duplicates(subset=[f"{structure_table}_id", f"channel_id_{side}"], keep="first")
             .drop(
                 columns=[
-                    f"geometry_cs_{side}",
+                    # f"geometry_cs_{side}",
                     f"dist_cs_{side}",
                     f"connection_node_id_{side}",
                     f"channel_id_{side}",
@@ -222,7 +224,11 @@ class StructureRelations(Folders):
             ],
             keep="first",
         ).rename(
-            columns={f"ref_level_{side}": f"min_ref_level_{side}", f"cs_id_{side}": f"cs_id_min_ref_level_{side}"}
+            columns={
+                f"ref_level_{side}": f"min_ref_level_{side}",
+                f"cs_id_{side}": f"cs_id_min_ref_level_{side}",
+                f"geometry_cs_{side}": f"geometry_cs_min_ref_{side}",
+            }
         )
         struct_max_ref_level_gdf = struct_join_csl_sorted_gdf.drop_duplicates(
             subset=[
@@ -230,7 +236,11 @@ class StructureRelations(Folders):
             ],
             keep="last",
         ).rename(
-            columns={f"ref_level_{side}": f"max_ref_level_{side}", f"cs_id_{side}": f"cs_id_max_ref_level_{side}"}
+            columns={
+                f"ref_level_{side}": f"max_ref_level_{side}",
+                f"cs_id_{side}": f"cs_id_max_ref_level_{side}",
+                f"geometry_cs_{side}": f"geometry_cs_max_ref_{side}",
+            }
         )
 
         # Get minimum and maximum bank level at start or end side of structure
@@ -243,7 +253,11 @@ class StructureRelations(Folders):
             ],
             keep="first",
         ).rename(
-            columns={f"bank_level_{side}": f"min_bank_level_{side}", f"cs_id_{side}": f"cs_id_min_bank_level_{side}"}
+            columns={
+                f"bank_level_{side}": f"min_bank_level_{side}",
+                f"cs_id_{side}": f"cs_id_min_bank_level_{side}",
+                f"geometry_cs_{side}": f"geometry_cs_min_bank_{side}",
+            }
         )
         struct_max_bank_level_gdf = struct_join_csl_sorted_gdf.drop_duplicates(
             subset=[
@@ -251,14 +265,23 @@ class StructureRelations(Folders):
             ],
             keep="last",
         ).rename(
-            columns={f"bank_level_{side}": f"max_bank_level_{side}", f"cs_id_{side}": f"cs_id_max_bank_level_{side}"}
+            columns={
+                f"bank_level_{side}": f"max_bank_level_{side}",
+                f"cs_id_{side}": f"cs_id_max_bank_level_{side}",
+                f"geometry_cs_{side}": f"geometry_cs_max_bank_{side}",
+            }
         )
 
         # Join min and max of ref and bank levels to structure table
         structure_gdf = (
             structure_gdf.merge(
                 struct_min_ref_level_gdf[
-                    [f"{structure_table}_id", f"min_ref_level_{side}", f"cs_id_min_ref_level_{side}"]
+                    [
+                        f"{structure_table}_id",
+                        f"min_ref_level_{side}",
+                        f"cs_id_min_ref_level_{side}",
+                        f"geometry_cs_min_ref_{side}",
+                    ]
                 ],
                 left_on=f"{structure_table}_id",
                 right_on=f"{structure_table}_id",
@@ -266,7 +289,12 @@ class StructureRelations(Folders):
             )
             .merge(
                 struct_max_ref_level_gdf[
-                    [f"{structure_table}_id", f"max_ref_level_{side}", f"cs_id_max_ref_level_{side}"]
+                    [
+                        f"{structure_table}_id",
+                        f"max_ref_level_{side}",
+                        f"cs_id_max_ref_level_{side}",
+                        f"geometry_cs_max_ref_{side}",
+                    ]
                 ],
                 left_on=f"{structure_table}_id",
                 right_on=f"{structure_table}_id",
@@ -274,7 +302,12 @@ class StructureRelations(Folders):
             )
             .merge(
                 struct_min_bank_level_gdf[
-                    [f"{structure_table}_id", f"min_bank_level_{side}", f"cs_id_min_bank_level_{side}"]
+                    [
+                        f"{structure_table}_id",
+                        f"min_bank_level_{side}",
+                        f"cs_id_min_bank_level_{side}",
+                        f"geometry_cs_min_bank_{side}",
+                    ]
                 ],
                 left_on=f"{structure_table}_id",
                 right_on=f"{structure_table}_id",
@@ -282,13 +315,69 @@ class StructureRelations(Folders):
             )
             .merge(
                 struct_max_bank_level_gdf[
-                    [f"{structure_table}_id", f"max_bank_level_{side}", f"cs_id_max_bank_level_{side}"]
+                    [
+                        f"{structure_table}_id",
+                        f"max_bank_level_{side}",
+                        f"cs_id_max_bank_level_{side}",
+                        f"geometry_cs_max_bank_{side}",
+                    ]
                 ],
                 left_on=f"{structure_table}_id",
                 right_on=f"{structure_table}_id",
                 how="left",
             )
         )
+
+        return structure_gdf
+
+    def get_manhole_data_at_connection_node(self, structure_gdf: gpd.GeoDataFrame, side: str) -> gpd.GeoDataFrame:
+        """Join manhole data (from connection node) on start and end node of structure
+
+        Parameters
+        ----------
+        structure_gdf : gpd.GeoDataFrame
+            Structure GeoDataFrame with added columns from cross_section_location
+        side : str
+            "start" or "end" side of the structure
+
+
+        Returns
+        -------
+        gpd.GeoDataFrame
+            Structure GeoDataFrame with added data from manholes
+        """
+        if side not in ["start", "end"]:
+            raise ValueError("side should be 'start' or 'end'")
+
+        # Load connection nodes
+        connection_node_gdf = self.database.load(layer="connection_node", index_column="id")
+        connection_node_gdf["conn_id"] = connection_node_gdf.index
+
+        # Join connection nodes
+        structure_gdf = structure_gdf.merge(
+            connection_node_gdf[
+                [
+                    "conn_id",
+                    "storage_area",
+                    "initial_water_level",
+                    "bottom_level",
+                    "exchange_level",
+                    "exchange_type",
+                ]
+            ].rename(
+                columns={
+                    "cs_id": f"cs_id_{side}",
+                    "storage_area": f"storage_area_{side}",
+                    "initial_water_level": f"initial_water_level_{side}",
+                    "bottom_level": f"bottom_level_{side}",
+                    "exchange_level": f"exchange_level_{side}",
+                    "exchange_type": f"exchange_type_{side}",
+                }
+            ),
+            left_on=f"connection_node_id_{side}",
+            right_on="conn_id",
+            how="left",
+        ).drop(columns=["conn_id"])
 
         return structure_gdf
 
@@ -319,11 +408,17 @@ class StructureRelations(Folders):
         table_control_gdf["control_id"] = table_control_gdf.index
 
         # Add prperties from table controle to structure table
-        if structure_table == "weir":
+        if structure_table in ["weir", "orifice"]:
             # filter control table on weir
             table_control_gdf = table_control_gdf[table_control_gdf["target_type"] == structure_table]
             # filter control table on action type
             set_crest_level_gdf = table_control_gdf[table_control_gdf["action_type"] == "set_crest_level"]
+
+            # Check if there are any other table controles
+            if len(table_control_gdf[table_control_gdf["action_type"] != "set_crest_level"]) > 0:
+                logger.warning(
+                    "Join table control not implemented for any action type other than set_crest_level"
+                )  # TODO
 
             # Bepaal de minimale kruinhoogte uit de action table
             for index, row in set_crest_level_gdf.iterrows():
@@ -353,7 +448,9 @@ class StructureRelations(Folders):
                 how="left",
             ).drop(columns=["target_id"])
         else:
-            logger.warning("Join table control not implemented for structure table other than weir")
+            logger.warning(
+                "Join table control not implemented for structure table other than weir and orifice"
+            )  # TODO
 
         return structure_gdf
 
@@ -363,6 +460,7 @@ class StructureRelations(Folders):
         structure_gdf[f"{self.structure_table}_id"] = structure_gdf.index
 
         for side in ["start", "end"]:
+            structure_gdf = self.get_manhole_data_at_connection_node(structure_gdf=structure_gdf, side=side)
             structure_gdf = self.get_min_max_levels(
                 structure_gdf=structure_gdf, structure_table=self.structure_table, side=side
             )
@@ -372,4 +470,61 @@ class StructureRelations(Folders):
 
         return structure_gdf
 
-    # TODO manholes
+    def get_wrong_profile(self, side: str) -> gpd.GeoDataFrame:
+        """Filter structures where the reference level of the cross section location reference level is below the orifice crest level or the culvert inlet level of the adjacent channels.
+
+        If there is a manhole on the start or end node, profiles are not checked.
+
+        Parameters
+        ----------
+        side : str
+            "start" or "end" side of the structure
+
+
+        Returns
+        -------
+        gpd.GeoDataFrame
+            Cross section locations that are wrong
+        """
+        if side not in ["start", "end"]:
+            raise ValueError("side should be 'start' or 'end'")
+
+        struct_rel = StructureRelations(folder=self.folder, structure_table=self.structure_table).relations()
+
+        if self.structure_table in ["weir", "orifice"]:
+            # Get lowest value from min_crest_level_control and crest_level if not nan
+            struct_rel["minimal_level"] = np.nanmin(
+                [struct_rel["min_crest_level_control"], struct_rel["crest_level"]], axis=0
+            )
+        elif self.structure_table == "culvert":
+            struct_rel["minimal_level"] = struct_rel[f"invert_level_{side}"]
+
+        # Filter sunk structures on side start or end
+        struct_sunk_gdf = struct_rel[
+            (struct_rel["minimal_level"] < struct_rel[f"min_ref_level_{side}"])
+            & (struct_rel[f"bottom_level_{side}"].isna())
+        ].copy()
+        struct_sunk_gdf["cs_id_min_ref_level"] = struct_sunk_gdf[f"cs_id_min_ref_level_{side}"]
+        # Set geometry to crs geometry
+        struct_sunk_gdf["geometry"] = struct_sunk_gdf[f"geometry_cs_min_ref_{side}"].drop(
+            columns=[f"geometry_cs_min_ref_{side}"]
+        )
+        # Select relevant columns
+        wrong_profiles = struct_sunk_gdf[
+            [
+                "cs_id_min_ref_level",
+                f"min_ref_level_{side}",
+                "code",
+                "minimal_level",
+                "geometry",
+            ]
+        ].rename(
+            columns={
+                "cs_id_min_ref_level": "cross_section_location_id",
+                f"min_ref_level_{side}": "reference_level",
+                "code": "structure_code",
+                "minimal_level": "proposed_reference_level",
+            }
+        )
+
+        return wrong_profiles
