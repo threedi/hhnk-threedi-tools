@@ -34,6 +34,7 @@ import warnings
 from pathlib import Path
 
 import geopandas as gpd
+from sqlalchemy import false
 
 from hhnk_threedi_tools.core.vergelijkingstool import config, name_date, styling
 from hhnk_threedi_tools.core.vergelijkingstool.DAMO import DAMO
@@ -80,7 +81,7 @@ def main(
     warnings.filterwarnings("ignore", "GeoSeries.notna", UserWarning)
 
     gdf_selection = gpd.read_file(fn_DAMO_selection, engine="pyogrio")
-    selection_shape = gdf_selection.unary_union
+    selection_shape = gdf_selection.union_all()
 
     # Create two damo_objects, supply with DAMO-file, HDB-file and optionally a translation_DAMO, translation_HDB or a
     # clip_shape
@@ -203,7 +204,7 @@ if __name__ == "__main__":
     model_name, source_data, folder = name_date.name(path)
 
     # polder polygon. It should be a geopackge file
-    fn_DAMO_selection = name_date.damo_selection
+    selection_shape = fn_DAMO_selection = name_date.damo_selection
 
     # Base folder initial files.
     source_data_old = name_date.source_data_old
@@ -238,27 +239,27 @@ if __name__ == "__main__":
     styling_path = Path(os.path.join(source_data, "styling"))
 
     # Define outputs
-    fn_DAMO_comparison_export = Path(os.path.join(out_put_files, "DAMO_comparison_Test_110.gpkg"))
+    fn_DAMO_comparison_export = Path(os.path.join(out_put_files, "DAMO_comparison_Test_117.gpkg"))
 
     # Layers To Compare DAMO_DAMO
     layer_selection = True
-    layers_input_damo_selection = ["Bergingsgebied"]
-    layers_input_hdb_selection = []
-    fn_threedi_comparison_export = Path(os.path.join(out_put_files, "Threedi_comparison_Test_20.gpkg"))
+    layers_input_damo_selection = ["Stuw"]
+    layers_input_hdb_selection = [
+        "duikers_op_peilgrens",
+        "stuwen_op_peilgrens",
+    ]
+    fn_threedi_comparison_export = Path(os.path.join(out_put_files, "Threedi_comparison_Test_33.gpkg"))
 
     # compare_with = "Compare with Damo"
     compare_with = "Compare with 3Di"
-    # config.UPDATE_SYMBOLOGY = False
+    # config.UPDATE_SYMBOLOGY = True
 
     # Layers to Compare DAMO_3di
     threedi_layer_selector = False
-    threedi_structure_selection = [
-        "culvert",
-        "pump",
-    ]
-    damo_structure_selection = ["duikersifonhevel", "gemaal"]
-    structure_codes = ["KDU", "KGM"]
-
+    threedi_structure_selection = ["culvert", "weir"]
+    damo_structure_selection = ["duikersifonhevel", "stuw"]
+    structure_codes = ["KDU", "KST"]
+    # %%
     main(
         fn_DAMO_selection,
         fn_damo_old_translation,
@@ -288,3 +289,16 @@ if __name__ == "__main__":
 # hydro_deelgebieden, stuwen_op_peilgrens, Levee_overstromingsmodel
 
 # AfvoergebiedAanvoergebied,  Bergingsgebied
+# base_output = r"E:\02.modellen\castricum\01_source_data\vergelijkingsTool\output"
+# threedi_model = Threedimodel(fn_threedimodel, translation=fn_threedimodel_translation)
+# damo_new = DAMO(
+#     fn_damo_new,
+#     fn_hdb_new,
+#     translation_DAMO=fn_damo_new_translation,
+#     clip_shape=selection_shape,
+#     layer_selection=False,
+#     layers_input_hdb_selection=layers_input_hdb_selection,
+#     layers_input_damo_selection=layers_input_damo_selection,
+# )
+
+# %%
