@@ -14,7 +14,6 @@ POMP_COLUMNS = [
     "last_edited_date",
     "maximalecapaciteit",
     "minimalecapaciteit",
-    "nen3610id",
     "objectid",
     "opmerking",
     "opstellingpomp",
@@ -155,6 +154,7 @@ class GemaalConverter(RawExportToDAMOConverter):
         # add at least one gemaal to the pomp layer
         if self.data.gemaal is not None and not self.data.gemaal.empty:
             self.data.pomp["objectid"] = [1]  # Add a dummy objectid
+            self.data.pomp["code"] = [self.data.gemaal["code"].iloc[0]]  # Create a unique code for the pomp
             self.data.pomp["gemaalid"] = [self.data.gemaal["globalid"].iloc[0]]  # Use the first gemaal's globalid
             self.data.pomp["codebeheerobject"] = [self.data.gemaal["code"].iloc[0]]  # Use the first gemaal's code
             self.data.pomp["geometry"] = [self.data.gemaal["geometry"].iloc[0]]
