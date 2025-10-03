@@ -145,6 +145,8 @@ class GemaalConverter(RawExportToDAMOConverter):
         # converter = DAMO_to_HyDAMO_Converter()
 
         # TODO wietse retrieving the pump columns from schema will only work if we have the damo schema locally
+        # TODO converter without arguments will also only work if we accept None arguments for the init function
+        # TODO for now, we use the hardcoded POMP_COLUMNS list at the top of this file
         # _, DAMO_schema_objects = converter.retrieve_domain_mapping()
         # pomp_columns = list(DAMO_schema_objects["pomp"].keys())
 

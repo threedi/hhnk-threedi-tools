@@ -74,8 +74,8 @@ class DAMO_to_HyDAMO_Converter:
 
     def __init__(
         self,
-        damo_file_path: os.PathLike = None,
-        hydamo_file_path: Union[Path, hrt.SpatialDatabase] = None,
+        damo_file_path: os.PathLike,
+        hydamo_file_path: Union[Path, hrt.SpatialDatabase],
         layers: Optional[list[str]] = None,
         hydamo_schema_path: Optional[Path] = None,
         hydamo_version: str = "2.4",
