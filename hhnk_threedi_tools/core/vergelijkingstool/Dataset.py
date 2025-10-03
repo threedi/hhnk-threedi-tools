@@ -8,11 +8,10 @@ import geopandas as gpd
 import pandas as pd
 from shapely.geometry import LineString, Polygon
 
-from hhnk_threedi_tools.core.vergelijkingstool import name_date
 from hhnk_threedi_tools.core.vergelijkingstool.config import *
+from hhnk_threedi_tools.core.vergelijkingstool.utils import ModelInfo
 
 # %%
-model_name = name_date.folder.name
 
 
 class DataSet:
@@ -20,12 +19,14 @@ class DataSet:
     Parent class of DAMO and Threedimodel
     """
 
-    def __init__(self):
+    def __init__(self, model_info: ModelInfo):
         """
         Initialisation of a dataset.
         """
-        # Set priority columns
+
+        self.model_name = model_info.model_name
         self.data = None
+        # Set priority columns
         self.priority_columns = {}
 
     def add_layer_styling(self, fn_export_gpkg, layer_styles):
