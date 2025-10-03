@@ -1,4 +1,5 @@
 {
+	"$schema": "http://json-schema.org/draft-07/schema#",
 	"schema": "1.5",
 	"hydamo_version": "2.2",
 	"status_object": [

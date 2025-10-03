@@ -153,8 +153,11 @@ class GemaalConverter(RawExportToDAMOConverter):
             self.data.pomp["code"] = [self.data.gemaal["code"].iloc[0]]  # Create a unique code for the pomp
             self.data.pomp["gemaalid"] = [self.data.gemaal["globalid"].iloc[0]]  # Use the first gemaal's globalid
             self.data.pomp["codebeheerobject"] = [self.data.gemaal["code"].iloc[0]]  # Use the first gemaal's code
-            self.data.pomp["geometry"] = [self.data.gemaal["geometry"].iloc[0]]
             self.data.pomp["maximalecapaciteit"] = [self.data.gemaal["maximalecapaciteit"].iloc[0]]
+
+            self.data.pomp = self.data.pomp.set_geometry([self.data.gemaal["geometry"].iloc[0]])
+            self.data.pomp.crs = self.data.gemaal.crs
+
             self.logger.info(f"Pomp layer created with object based on gemaal {self.data.gemaal['globalid'].iloc[0]}.")
         else:
             self.logger.warning("No gemaal data available to add to the pomp layer. Pomp layer will be empty.")
