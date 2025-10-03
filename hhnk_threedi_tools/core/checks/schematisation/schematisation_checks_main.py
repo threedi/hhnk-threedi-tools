@@ -342,15 +342,35 @@ class HhnkSchematisationChecks:
 
         If the structure levels are below the lowest reference level, 3Di model may crash (when water level drops below reference level).
         """
-        # TODO loop culvert, weir and orifice
-        # Load culvert layer with joined reference levels
-        struct_rel = StructureRelations(folder=self.folder, structure_table="culvert")
-        culvert_gdf = struct_rel.relations()
 
-        # Load orifice lauer with joined reference levels
-        struct_rel = StructureRelations(folder=self.folder, structure_table="orifice")
-        orifice_gdf = struct_rel.relations()
+        wrong_profile_dict: dict[str, gpd.GeoDataFrame] = {}
+        for structure_table in ["culvert", "orifice"]:
+            struct_rel = StructureRelations(folder=self.folder, structure_table=structure_table)
+            for side in ["start", "end"]:
+                # Get wrong profiles on both sides of structure
+                wrong_profiles_side = struct_rel.get_wrong_profile(side=side)
+                wrong_profile_dict[f"{structure_table}_{side}"] = wrong_profiles_side
+        # Combine wrong profiles
+        wrong_profiles_gdf = pd.concat(wrong_profile_dict.values(), ignore_index=True)
 
+        # Sort on lowest minimal_crest_level and remove duplicates (using only lowest reference level per location)
+        wrong_profiles_gdf = wrong_profiles_gdf.sort_values(by=["proposed_reference_level"]).drop_duplicates(
+            subset=["cross_section_location_id"], keep="first"
+        )
+
+        # Load datacheck to determine whether structure reference lever was based on assumption
+        dc_culvert_gdf = self.folder.source_data.datachecker.layers.culvert.load()
+        dc_bridge_gdf = self.folder.source_data.datachecker.layers.bridge.load()
+
+        # Filter when these have an assumption
+        culvert_assump_gdf = dc_culvert_gdf[dc_culvert_gdf["aanname"].str.contains()]
+        bridge_assump_gdf = dc_bridge_gdf[dc_bridge_gdf["aanname"].str.contains()]
+
+        culvert_gdf = self.model.load(layer="culvert", index_column="id")
+        culvert_gdf["culvert_id"] = culvert_gdf.index
+        culvert_gdf["struct_code"] = culvert_gdf["code"]
+
+        # Load source data to determine whether structure reference lever was based on assumption
         datachecker_culvert_layer = self.folder.source_data.datachecker.layers.culvert
         damo_duiker_sifon_layer = self.folder.source_data.damo.layers.DuikerSifonHevel
 
@@ -360,13 +380,13 @@ class HhnkSchematisationChecks:
 
         # TODO waar vind ik hoe dit gebruikt wordt? Check lijkt niet hier te gebeuren
         # See git issue about below statements
-        gdf_with_damo = _add_damo_info(layer=damo_duiker_sifon_layer, gdf=gdf_below_ref)
+        gdf_with_damo = _add_damo_info(layer=damo_duiker_sifon_layer, gdf=culvert_gdf)
         gdf_with_datacheck = _add_datacheck_info(datachecker_culvert_layer, gdf_with_damo)
         gdf_with_datacheck.loc[:, down_has_assumption] = gdf_with_datacheck[height_inner_lower_down].isna()
         gdf_with_datacheck.loc[:, up_has_assumption] = gdf_with_datacheck[height_inner_lower_up].isna()
         self.results["struct_channel_bed_level"] = gdf_with_datacheck
         # TODO add monhole bottom level
-        return gdf_with_datacheck
+        return gdf_with_datacheck  # culverts met beneden beneden_has_assumption en boven_has assumption, maar hoe gebruikt
 
     def run_watersurface_area(self) -> tuple[gpd.GeoDataFrame, str]:
         """
@@ -731,7 +751,7 @@ if __name__ == "__main__":
     results = {}
     self = HhnkSchematisationChecks(folder=folder, results=results)
     database = folder.model.schema_base.database
-    a, b = self.run_weir_floor_level()
+    # a, b = self.run_weir_floor_level()
     # a, b = self.run_watersurface_area()
 
     # TODO self.create_grid_from_schematisation(output_folder=folder.output.base)
@@ -749,11 +769,11 @@ if __name__ == "__main__":
 
     folder = Folders(TEST_DIRECTORY / "model_test")
     # database = folder.model.schema_base.database
-    self = StructureRelations(folder=folder, structure_table="weir")
-    self.structure_table = "weir"
-    structure_table = "weir"
+    self = StructureRelations(folder=folder, structure_table="orifice")
+    self.structure_table = "orifice"
+    structure_table = "orifice"
     side = "start"
-    self.relations()
+    self.gdf()
 
 
 # %%
