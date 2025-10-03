@@ -1,22 +1,23 @@
 # %%
 import json
 import logging
-import re
 from pathlib import Path
 
 import fiona
 import geopandas as gpd
 import pandas as pd
 
-from hhnk_threedi_tools.core.vergelijkingstool import styling, utils
+from hhnk_threedi_tools.core.vergelijkingstool import styling
 from hhnk_threedi_tools.core.vergelijkingstool.config import *
 from hhnk_threedi_tools.core.vergelijkingstool.Dataset import DataSet
 from hhnk_threedi_tools.core.vergelijkingstool.styling import *
+from hhnk_threedi_tools.core.vergelijkingstool.utils import ModelInfo
 
 
 class DAMO(DataSet):
     def __init__(
         self,
+        model_info: ModelInfo,
         damo_filename,
         hdb_filename,
         translation_DAMO=None,
@@ -40,7 +41,8 @@ class DAMO(DataSet):
         # Set up logger
         self.logger = logging.getLogger("DAMO")
         self.logger.debug("Created DAMO object")
-
+        self.model_info = model_info
+        self.model_name = model_info.model_name
         # Load data
         self.data = self.from_file(
             damo_filename,
@@ -211,7 +213,7 @@ class DAMO(DataSet):
         """
 
         layer_styles = styling.export_comparison_DAMO(
-            table_C, statistics, filename, overwrite=overwrite, styling_path=styling_path
+            table_C, statistics, filename, model_info=self.model_info, overwrite=overwrite, styling_path=styling_path
         )
         self.add_layer_styling(fn_export_gpkg=filename, layer_styles=layer_styles)
 
@@ -289,13 +291,13 @@ class DAMO(DataSet):
                 geometry_adjusted = []
                 for i in range(len(table_merged)):
                     if table_merged["dataset_A"][i] & table_merged["dataset_B"][i]:
-                        inboth.append(f"{model_name} both")
+                        inboth.append(f"{self.model_name} both")
                         # geometry_adjusted.append(table_merged['geometry_A'][i] != table_merged['geometry_B'][i])
                     elif table_merged["dataset_A"][i] and not table_merged["dataset_B"][i]:
-                        inboth.append(f"{model_name} new")
+                        inboth.append(f"{self.model_name} new")
                         # geometry_adjusted.append(None)
                     else:
-                        inboth.append(f"{model_name} old")
+                        inboth.append(f"{self.model_name} old")
                         # geometry_adjusted.append(None)
                 table_merged["in_both"] = inboth
                 table_merged["geometry_adjusted"] = table_merged["geometry_A"] != table_merged["geometry_B"]
@@ -318,23 +320,27 @@ class DAMO(DataSet):
                             .set_geometry("geometry")
                         )
                         df_intersections["in_both"] = pd.Series(
-                            [f"{model_name} both", f"{model_name} new", f"{model_name} old"]
+                            [f"{self.model_name} both", f"{self.model_name} new", f"{self.model_name} old"]
                         )
                         df_intersections = df_intersections.explode(column="geometry", index_parts=True)
                         table_merged = df_intersections[df_intersections.geometry.geom_type == "Polygon"].copy()
 
                         table_merged.loc[
-                            table_merged["in_both"].isin([f"{model_name} new", f"{model_name} both"]), "geom_area_A"
+                            table_merged["in_both"].isin([f"{self.model_name} new", f"{self.model_name} both"]),
+                            "geom_area_A",
                         ] = table_merged["geometry"].area
                         table_merged.loc[
-                            ~table_merged["in_both"].isin([f"{model_name} new", f"{model_name} both"]), "geom_area_A"
+                            ~table_merged["in_both"].isin([f"{self.model_name} new", f"{self.model_name} both"]),
+                            "geom_area_A",
                         ] = None
 
                         table_merged.loc[
-                            table_merged["in_both"].isin([f"{model_name} old", f"{model_name} both"]), "geom_area_B"
+                            table_merged["in_both"].isin([f"{self.model_name} old", f"{self.model_name} both"]),
+                            "geom_area_B",
                         ] = table_merged["geometry"].area
                         table_merged.loc[
-                            ~table_merged["in_both"].isin([f"{model_name} old", f"{model_name} both"]), "geom_area_B"
+                            ~table_merged["in_both"].isin([f"{self.model_name} old", f"{self.model_name} both"]),
+                            "geom_area_B",
                         ] = None
 
                         table_merged["geom_length_A"] = 0
@@ -421,30 +427,30 @@ class DAMO(DataSet):
             self.logger.debug(f"Layer name: {layer_name}")
             count_A = len(
                 table_C[layer_name].loc[
-                    (table_C[layer_name]["in_both"] == f"{model_name} new")
-                    | (table_C[layer_name]["in_both"] == f"{model_name} both")
+                    (table_C[layer_name]["in_both"] == f"{self.model_name} new")
+                    | (table_C[layer_name]["in_both"] == f"{self.model_name} both")
                 ]
             )
             count_B = len(
                 table_C[layer_name].loc[
-                    (table_C[layer_name]["in_both"] == f"{model_name} old")
-                    | (table_C[layer_name]["in_both"] == f"{model_name} both")
+                    (table_C[layer_name]["in_both"] == f"{self.model_name} old")
+                    | (table_C[layer_name]["in_both"] == f"{self.model_name} both")
                 ]
             )
             count_diff = count_B - count_A
             length_A = sum(
                 table_C[layer_name]
                 .loc[
-                    (table_C[layer_name]["in_both"] == f"{model_name} new")
-                    | (table_C[layer_name]["in_both"] == f"{model_name} both")
+                    (table_C[layer_name]["in_both"] == f"{self.model_name} new")
+                    | (table_C[layer_name]["in_both"] == f"{self.model_name} both")
                 ]
                 .geom_length_A
             )
             length_B = sum(
                 table_C[layer_name]
                 .loc[
-                    (table_C[layer_name]["in_both"] == f"{model_name} old")
-                    | (table_C[layer_name]["in_both"] == f"{model_name} both")
+                    (table_C[layer_name]["in_both"] == f"{self.model_name} old")
+                    | (table_C[layer_name]["in_both"] == f"{self.model_name} both")
                 ]
                 .geom_length_B
             )
@@ -452,16 +458,16 @@ class DAMO(DataSet):
             area_A = sum(
                 table_C[layer_name]
                 .loc[
-                    (table_C[layer_name]["in_both"] == f"{model_name} new")
-                    | (table_C[layer_name]["in_both"] == f"{model_name} both")
+                    (table_C[layer_name]["in_both"] == f"{self.model_name} new")
+                    | (table_C[layer_name]["in_both"] == f"{self.model_name} both")
                 ]
                 .geom_area_A
             )
             area_B = sum(
                 table_C[layer_name]
                 .loc[
-                    (table_C[layer_name]["in_both"] == f"{model_name} old")
-                    | (table_C[layer_name]["in_both"] == f"{model_name} both")
+                    (table_C[layer_name]["in_both"] == f"{self.model_name} old")
+                    | (table_C[layer_name]["in_both"] == f"{self.model_name} both")
                 ]
                 .geom_area_B
             )

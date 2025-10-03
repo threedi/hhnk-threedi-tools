@@ -14,14 +14,15 @@ import numpy as np
 import pandas as pd
 
 import hhnk_threedi_tools.core.vergelijkingstool.config as config
-from hhnk_threedi_tools.core.vergelijkingstool import styling, utils
+from hhnk_threedi_tools.core.vergelijkingstool import styling
 from hhnk_threedi_tools.core.vergelijkingstool.config import *
 from hhnk_threedi_tools.core.vergelijkingstool.Dataset import DataSet
 from hhnk_threedi_tools.core.vergelijkingstool.styling import *
+from hhnk_threedi_tools.core.vergelijkingstool.utils import ModelInfo
 
 
 class Threedimodel(DataSet):
-    def __init__(self, filename, translation=None):
+    def __init__(self, filename, model_info: ModelInfo, translation=None):
         """
         Creates a Threedimodel object and reads the data from the 3Di schematisation sqlite.
         If translation dictionaries are supplied, layer and column names are mapped.
@@ -29,7 +30,10 @@ class Threedimodel(DataSet):
         :param filename: Path of the .sqlite file to be loaded
         :param translation: Path of the translation dictionary to be used
         """
-        # super().__init__()
+        # super().__init__(model_info)
+        self.model_info = model_info
+        self.model_name = model_info.model_name
+        self.sourcedata = model_info.source_data
         self.logger = logging.getLogger("Threedimodel")
         self.logger.debug("Created Threedimodel object")
         # self.data = self.from_sqlite(filename, translation)
@@ -210,7 +214,7 @@ class Threedimodel(DataSet):
             ]
         )
 
-        model_name = utils.model_name
+        model_name = self.model_name
         for i, layer_name in enumerate(table_C):
             count_model = len(
                 table_C[layer_name].loc[
@@ -290,7 +294,13 @@ class Threedimodel(DataSet):
 
         # add styling to layers
         layer_styles = styling.export_comparison_3di(
-            table_C, statistics, filename, overwrite=overwrite, styling_path=styling_path, crs=self.crs
+            table_C,
+            statistics,
+            filename,
+            model_info=self.model_info,
+            overwrite=overwrite,
+            styling_path=styling_path,
+            crs=self.crs,
         )
         self.add_layer_styling(fn_export_gpkg=filename, layer_styles=layer_styles)
 
@@ -324,12 +334,12 @@ class Threedimodel(DataSet):
         """
 
         # sort model and damo data by structure code instead of model and damo layers
-        model_name = utils.model_name
+        model_name = self.model_name
         table_struc_model = {}
         table_struc_DAMO = {}
 
         # base_     output = r"E:\02.modellen\castricum\01_source_data\vergelijkingsTool\output"
-        base_output = utils.source_data / "vergelijkingsTool\output"  # TODO THIS NEED TO BE FIX
+        base_output = self.sourcedata / "vergelijkingsTool\output"  # TODO THIS NEED TO BE FIX
         if threedi_layer_selector is True:
             THREEDI_STRUCTURE_LAYERS = threedi_structure_selection
             DAMO_HDB_STRUCTURE_LAYERS = damo_structure_selection

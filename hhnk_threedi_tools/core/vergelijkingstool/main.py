@@ -46,6 +46,7 @@ from hhnk_threedi_tools.core.vergelijkingstool.utils import get_model_info
 
 
 def main(
+    model_info: ModelInfo,
     fn_DAMO_selection,
     fn_damo_old_translation,
     fn_damo_new,
@@ -91,6 +92,7 @@ def main(
 
     if selection_compare == "Compare with Damo":
         damo_old = DAMO(
+            model_info,
             fn_damo_old,
             fn_hdb_old,
             translation_DAMO=fn_damo_old_translation,
@@ -100,6 +102,7 @@ def main(
             layers_input_damo_selection=layers_input_damo_selection,
         )
         damo_new = DAMO(
+            model_info,
             fn_damo_new,
             fn_hdb_new,
             translation_DAMO=fn_damo_new_translation,
@@ -122,8 +125,9 @@ def main(
 
     elif selection_compare == "Compare with 3Di":
         # Create Threedimodel object
-        threedi_model = Threedimodel(fn_threedimodel, translation=fn_threedimodel_translation)
+        threedi_model = Threedimodel(fn_threedimodel, model_info=model_info, translation=fn_threedimodel_translation)
         damo_new = DAMO(
+            model_info,
             fn_damo_new,
             fn_hdb_new,
             translation_DAMO=fn_damo_new_translation,
@@ -149,8 +153,9 @@ def main(
         return fn_threedi_comparison_export
 
     elif selection_compare == "Both":
-        threedi_model = Threedimodel(fn_threedimodel, translation=fn_threedimodel_translation)
+        threedi_model = Threedimodel(fn_threedimodel, model_info=model_info, translation=fn_threedimodel_translation)
         damo_old = DAMO(
+            model_info,
             fn_damo_old,
             fn_hdb_old,
             translation_DAMO=fn_damo_old_translation,
@@ -160,6 +165,7 @@ def main(
             layers_input_damo_selection=layers_input_damo_selection,
         )
         damo_new = DAMO(
+            model_info,
             fn_damo_new,
             fn_hdb_new,
             translation_DAMO=fn_damo_new_translation,
@@ -207,9 +213,9 @@ if __name__ == "__main__":
 
     # polder polygon. It should be a geopackge file
     selection_shape = fn_DAMO_selection = info.damo_selection
-
+    fn_threedimodel = info.fn_threedimodel
     # Base folder initial files.
-    source_data_old = info.source_data
+    source_data_old = info.source_data_old
 
     json_file = os.path.join(source_data, "vergelijkingsTool", "json_files")
 
@@ -252,8 +258,8 @@ if __name__ == "__main__":
     ]
     fn_threedi_comparison_export = Path(os.path.join(out_put_files, "Threedi_comparison_Test_33.gpkg"))
 
-    # compare_with = "Compare with Damo"
-    compare_with = "Compare with 3Di"
+    compare_with = "Compare with Damo"
+    # compare_with = "Compare with 3Di"
     # config.UPDATE_SYMBOLOGY = True
 
     # Layers to Compare DAMO_3di
@@ -263,6 +269,7 @@ if __name__ == "__main__":
     structure_codes = ["KDU", "KST"]
     # %%
     main(
+        info,
         fn_DAMO_selection,
         fn_damo_old_translation,
         fn_damo_new,

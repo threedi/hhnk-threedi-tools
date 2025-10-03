@@ -84,7 +84,7 @@ class DataSet:
         :param geometry_B: Shapely geometry
         :return: Shapely geometry
         """
-        if dataset == f"{model_name} new" or dataset == f"{model_name} both":
+        if dataset == f"{self.model_name} new" or dataset == f"{self.model_name} both":
             return geometry_A
         else:
             return geometry_B

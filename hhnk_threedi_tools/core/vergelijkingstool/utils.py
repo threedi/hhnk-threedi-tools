@@ -18,6 +18,7 @@ class ModelInfo:
     fn_damo_new: Path
     fn_hdb_new: Path
     damo_selection: Path
+    fn_threedimodel: Path
     date_damo_old: str
     date_damo_new: str
     date_hdb_old: str
@@ -48,6 +49,7 @@ def get_model_info(path: str) -> ModelInfo:
         fn_damo_new=fn_damo_new,
         fn_hdb_new=fn_hdb_new,
         damo_selection=damo_selection,
+        fn_threedimodel=fn_threedimodel,
         date_damo_old=time.ctime(os.path.getmtime(fn_damo_old)),
         date_damo_new=time.ctime(os.path.getmtime(fn_damo_new)),
         date_hdb_old=time.ctime(os.path.getmtime(fn_hdb_old)),
