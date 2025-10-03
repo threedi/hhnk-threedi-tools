@@ -14,7 +14,7 @@ import numpy as np
 import pandas as pd
 
 import hhnk_threedi_tools.core.vergelijkingstool.config as config
-from hhnk_threedi_tools.core.vergelijkingstool import name_date, styling
+from hhnk_threedi_tools.core.vergelijkingstool import styling, utils
 from hhnk_threedi_tools.core.vergelijkingstool.config import *
 from hhnk_threedi_tools.core.vergelijkingstool.Dataset import DataSet
 from hhnk_threedi_tools.core.vergelijkingstool.styling import *
@@ -210,7 +210,7 @@ class Threedimodel(DataSet):
             ]
         )
 
-        model_name = name_date.model_name
+        model_name = utils.model_name
         for i, layer_name in enumerate(table_C):
             count_model = len(
                 table_C[layer_name].loc[
@@ -324,12 +324,12 @@ class Threedimodel(DataSet):
         """
 
         # sort model and damo data by structure code instead of model and damo layers
-        model_name = name_date.model_name
+        model_name = utils.model_name
         table_struc_model = {}
         table_struc_DAMO = {}
 
-        # base_output = r"E:\02.modellen\castricum\01_source_data\vergelijkingsTool\output"
-        base_output = name_date.source_data / "vergelijkingsTool\output"  # TODO THIS NEED TO BE FIX
+        # base_     output = r"E:\02.modellen\castricum\01_source_data\vergelijkingsTool\output"
+        base_output = utils.source_data / "vergelijkingsTool\output"  # TODO THIS NEED TO BE FIX
         if threedi_layer_selector is True:
             THREEDI_STRUCTURE_LAYERS = threedi_structure_selection
             DAMO_HDB_STRUCTURE_LAYERS = damo_structure_selection
