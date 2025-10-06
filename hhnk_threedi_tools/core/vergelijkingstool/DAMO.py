@@ -497,11 +497,3 @@ class DAMO(DataSet):
 
 
 # %%
-# import hhnk_research_tools as hrt
-# gpkg = r"E:\02.modellen\RegionalFloodModel\work in progress\schematisation\RegionalFloodModel.gpkg"
-# fgdb = hrt.FileGDB(gpkg)
-# fgdb.add_layer("linear_obstacle")
-# gdf = fgdb.layers.linear_obstacle.load()
-
-# # %%
-# gdf[gdf['id'].duplicated()]

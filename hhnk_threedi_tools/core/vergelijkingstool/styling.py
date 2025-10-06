@@ -32,6 +32,11 @@ STYLING_BASIC_TABLE_COLUMNS = [
 
 
 def geom_kind(gdf):
+    """
+    Determine the kind of geometry in a GeoDataFrame.
+    :param gdf: GeoDataFrame to check
+    :return: 'point', 'line', or 'polygon' based on the geometry type
+    """
     # get the type of geometry
     geometry_type = set(gdf.geometry.type.dropna().unique())
     if geometry_type <= {"Point", "MultiPoint"}:
@@ -44,6 +49,9 @@ def geom_kind(gdf):
 
 # Function to replace labels based on their current value
 def replace_label_DAMO(match, model_info: ModelInfo):
+    """
+    Replace labels in the DAMO dataset that are going to be use later in symbology.
+    """
     label_value = match.group(1)
     value_value = match.group(2)
     symbol_value = match.group(3)
@@ -60,6 +68,12 @@ def replace_label_DAMO(match, model_info: ModelInfo):
 
 # replace values
 def replace_label_3di(match, model_info: ModelInfo):
+    """
+    Replace labels in the 3Di dataset that are going to be use later in symbology.
+    param match: regex match object
+    param model_info: ModelInfo object containing model details
+    return: formatted string with updated label, value, and symbol
+    """
     label_value = match.group(3)
     value_value = match.group(1)
     symbol_value = match.group(2)

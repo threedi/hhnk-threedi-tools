@@ -10,6 +10,8 @@ path = r"E:\02.modellen\castricum"
 
 @dataclass
 class ModelInfo:
+    """ "Dataclass to hold model information."""
+
     model_name: str
     source_data: Path
     source_data_old: Path
@@ -27,6 +29,12 @@ class ModelInfo:
 
 
 def get_model_info(path: str) -> ModelInfo:
+    """
+    Get model information from the given path.
+    :param path: Path to the model folder
+    :return: ModelInfo object containing model details
+    """
+
     folder = Folders(path)
     source_data = Path(folder.source_data.path)
     model_name = folder.name
@@ -64,16 +72,3 @@ def symbology_both(opacity):
         return 0
     else:
         return 128
-
-
-# source_data_old = os.path.join(source_data, "vergelijkingsTool", "old")
-# fn_damo_old = Path(os.path.join(source_data_old, "DAMO.gdb"))
-# fn_hdb_old = Path(os.path.join(source_data_old, "HDB.gdb"))
-
-# fn_damo_new = Path(os.path.join(source_data, "DAMO.gpkg"))
-# fn_hdb_new = Path(os.path.join(source_data, "HDB.gpkg"))
-# damo_selection = Path(os.path.join(source_data, "polder_polygon.gpkg"))
-
-# date_old_damo = date_fn_damo_old
-# date_new_damo = date_fn_damo_new
-# date_sqlite = date_3di_new
