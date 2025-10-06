@@ -35,7 +35,7 @@ class TestFolder:
 
     def test_find_dem(self):
         dem = FOLDER_TEST.full_path(r"02_schematisation/00_basis/rasters/dem_hoekje.tif")
-        assert Path(FOLDER_TEST.model.schema_base.rasters.dem.path) == Path(dem.path)
+        assert Path(FOLDER_TEST.model.schema_base.rasters.dem.path) == Path(dem.path)  # FIXME
 
     def test_find_threediresult(self):
         assert (

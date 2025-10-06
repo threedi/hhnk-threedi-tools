@@ -4,15 +4,12 @@
 Created on Tue Aug 24 14:11:45 2021
 
 @author: chris.kerklaan
-"""
 
-# Third-party imports
-from pathlib import Path
+@revised oktober 2025 by Wouter van Esse
+"""
 
 import fiona
 import geopandas as gpd
-
-# research-tools
 import hhnk_research_tools as hrt
 import numpy as np
 import pandas as pd
@@ -22,14 +19,8 @@ from shapely.geometry import Point
 from threedigrid_builder import make_gridadmin
 
 from hhnk_threedi_tools.core.checks.sqlite.structure_control import StructureControl
-
-# Local imports
 from hhnk_threedi_tools.core.folders import Folders
 from hhnk_threedi_tools.core.schematisation.relations import StructureRelations
-
-logger = hrt.logging.get_logger(name=__name__)
-
-# queries
 from hhnk_threedi_tools.utils.queries import (
     channels_query,
     cross_section_location_query,
@@ -104,6 +95,9 @@ from hhnk_threedi_tools.variables.weirs import (
     new_ref_lvl,
     wrong_profile,
 )
+
+logger = hrt.logging.get_logger(name=__name__)
+
 
 # Globals
 # controlled
@@ -482,7 +476,7 @@ class HhnkSchematisationChecks:
         self, output_folder
     ):  # FIXME #27143 makegrid werkt niet in nieuwe python versie
         """Create grid from schematisation (gpkg), this includes cells, lines and nodes."""
-        # grid = make_gridadmin(self.model.base, self.dem.base)
+        # grid = make_gridadmin(self.database.base, self.dem.base)
 
         # # using output here results in error, so we use the returned dict
         # for grid_type in ["cells", "lines", "nodes"]:
@@ -746,6 +740,7 @@ def _calc_perc(diff, waterdeel):
 
 # %%
 
+
 if __name__ == "__main__":
     from tests.config import FOLDER_TEST
 
@@ -753,6 +748,7 @@ if __name__ == "__main__":
     results = {}
     self = HhnkSchematisationChecks(folder=folder, results=results)
     database = folder.model.schema_base.database
+    make_gridadmin(self.database.base, self.dem.base)
     # a, b = self.run_weir_floor_level()
     # a, b = self.run_watersurface_area()
 
@@ -761,7 +757,12 @@ if __name__ == "__main__":
 
 
 # %%
+if __name__ == "__main__":
+    from hhnk_threedi_tools.core.folders import Folders
+    from tests.config import FOLDER_TEST
 
+    folder = Folders(FOLDER_TEST)
+    folder.model.schema_base.rasters.dem.path
 
 # %%
 if __name__ == "__main__":
