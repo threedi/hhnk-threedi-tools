@@ -195,7 +195,9 @@ class StructureRelations:
         cross_section_gdf["cs_id"] = cross_section_gdf.index
 
         # Create temporary dataframe to join to main structure table later
-        struct_clean_gdf = structure_gdf[["geometry", f"{self.structure_table}_id", f"connection_node_id_{side}"]].copy()
+        struct_clean_gdf = structure_gdf[
+            ["geometry", f"{self.structure_table}_id", f"connection_node_id_{side}"]
+        ].copy()
         # Join multiple channel ids
         struct_join_gdf = self.join_channel(structure_gdf=struct_clean_gdf, channel_join_df=channel_join_df, side=side)
         # Join multiple cross section locations
