@@ -14,10 +14,17 @@ class ProfielConverter(RawExportToDAMOConverter):
 
     def run(self):
         self.logger.info("Starting ProfielConverter...")
-        self.load_layers()
+
+        # self.load_layers()
         self.process_linemerge()
+        # self.find_linemerge_id_by_hydroobject_code()
+        # self.find_peilgebied_id_by_hydroobject_code()
+
         self.create_profile_tables()
         self.connect_profiles_to_hydroobject_without_profiles()
+        self.compute_deepest_point_hydroobjects()
+        # self.find_deepest_point_by_hydroobject_code()
+
         self.write_outputs()
 
     def load_layers(self):
@@ -353,7 +360,7 @@ class ProfielConverter(RawExportToDAMOConverter):
         hydroobject = hydroobject[hydroobject["assigned_peilgebied"].notna()]
 
         for peilgebied_id, group_peilgebied in hydroobject.groupby("assigned_peilgebied"):
-            primary_group = group_peilgebied[group_peilgebied["categorieoppwaterlichaamcode"] == str(1)]
+            primary_group = group_peilgebied[group_peilgebied["categorieoppwaterlichaamcode"].isin([str(1), 1])]
             if primary_group.empty:
                 continue
 
@@ -379,8 +386,12 @@ class ProfielConverter(RawExportToDAMOConverter):
                     "categorie": "primary",
                 }
             )
+        print(merged_hydroobjects)
+        if not merged_hydroobjects:
+            return None
+        else:
+            merged_hydroobjects_gdf = gpd.GeoDataFrame(merged_hydroobjects, crs=hydroobject.crs)
 
-        merged_hydroobjects_gdf = gpd.GeoDataFrame(merged_hydroobjects, crs=hydroobject.crs)
         if merged_hydroobjects_gdf.empty:
             return None
         else:

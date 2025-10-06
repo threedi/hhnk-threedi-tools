@@ -53,7 +53,7 @@ class _Data:
         """
         for layer in layers:
             gdf = getattr(self, layer)
-            if gdf.empty and len(gdf.columns) == 0:
+            if gdf is None or (gdf.empty and len(gdf.columns) == 0):
                 raise ValueError(f"Layer '{layer}' not loaded. Call {previous_method}() first.")
 
 
@@ -77,11 +77,18 @@ class RawExportToDAMOConverter:
         self.logger = logger or logging.getLogger(__name__)
         self.data = _Data()
 
+        self.load_layers()
+
     def load_layers(self):
         self.logger.info("Loading all layers...")
 
         for layer_name in self.hrt_raw_export_file_path.available_layers():
             setattr(self.data, layer_name.lower(), self._load_and_validate(self.raw_export_file_path, layer_name))
+
+        peilgebiedpraktijk = self._load_and_validate(self.raw_export_file_path, "peilgebiedpraktijk")
+        self.data.peilgebiedpraktijk = peilgebiedpraktijk.explode(index_parts=False).reset_index(drop=True)
+
+        self.logger.info("All layers loaded.")
 
     def mark_executed(self):
         RawExportToDAMOConverter._executed.add(self.__class__)
