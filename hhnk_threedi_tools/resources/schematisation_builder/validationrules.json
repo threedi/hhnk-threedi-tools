@@ -1816,6 +1816,16 @@
 					},
 					{
 					"id": 101,
+					"result_variable": "stuw_fout_count",
+					"function": {
+						"custom_hydamo": {
+							"custom_function_name": "kruising_met_waterloop"
+						}
+					},
+					"description": "get minimun hoogstedoorstroomhoogte from a stuw in a peilgebeied"
+					},
+					{
+					"id": 102,
 					"result_variable": "intersectie_codes",
 					"function": {
 						"custom_hydamo": {
@@ -1825,7 +1835,7 @@
 					"description": "controler als de peilgebieden van een combinatiepeilgebied elkaar niet overlappen"
 					},
 					{
-					"id": 102,
+					"id": 103,
 					"result_variable": "area",
 					"function": {
 						"custom_hydamo": {
@@ -1835,7 +1845,7 @@
 					"description": "get area from basic properties for the peilgebiede"
 					},
 					{
-					"id": 103,
+					"id": 104,
 					"result_variable": "hydroobject_count",
 					"function": {
 						"custom_hydamo": {
@@ -1845,7 +1855,7 @@
 					"description": "get numbers of hydrooboject per peilgebied"
 					},
 					{
-					"id": 104,
+					"id": 105,
 					"result_variable": "peil_meer_30cm",
 					"function": {
 						"custom_hydamo": {
@@ -1855,7 +1865,7 @@
 					"description": "add 30 cm to the peilgebiede for further comparisons "
 					},
 					{
-					"id": 105,
+					"id": 106,
 					"result_variable": "limit_winter_ondergrens_minder_10cm",
 					"function": {
 						"custom_hydamo": {
@@ -1865,7 +1875,7 @@
 					"description": "get lower limint minus 10 cm for further comparisons"
 					},
 					{
-					"id": 106,
+					"id": 107,
 					"result_variable": "limit_zomer_bovengrens_plus_10cm",
 					"function": {
 						"custom_hydamo": {
@@ -1875,7 +1885,7 @@
 					"description": "get upper limit plus 10 cm for further comparisons"
 					},
 					{
-					"id": 107,
+					"id": 108,
 					"result_variable": "num_vertices",
 					"function": {
 						"custom_hydamo": {
@@ -1886,7 +1896,7 @@
 					},	
 					
 					{
-					"id": 108,
+					"id": 109,
 					"result_variable": "percentile_90_min",
 					"function": {
 						"custom_hydamo": {
@@ -1896,7 +1906,7 @@
 					"description": "get percentil 90, with zonal statics from ahn5"
 					},
 					{
-					"id": 109,
+					"id": 1,
 					"result_variable": "waterstand_median",
 					"function": {
 						"custom_hydamo": {
@@ -1904,16 +1914,6 @@
 						}
 					},
 					"description": "get median waterstand from datamining"
-					},
-					{
-					"id": 110,
-					"result_variable": "stuw_fout_count",
-					"function": {
-						"custom_hydamo": {
-							"custom_function_name": "kruising_met_waterloop"
-						}
-					},
-					"description": "get minimun hoogstedoorstroomhoogte from a stuw in a peilgebeied"
 					},
 					{
 					"id": 111,
@@ -1983,6 +1983,24 @@
 				},
 				{
 					"id": 103,
+					"name": "winterpeil binnen onder- en bovengrens",
+					"type": "logic",
+					"validation_rule_set": "hhnk",
+					"error_type": "critical",
+					"result_variable": "winterpeil_correct",
+					"error_message": "winterpeil_buiten_grenzen",
+					"active": true,
+					"function": {
+							"BE": {
+							"parameter": "streefpeil_winter",
+							"min": "streefpeil_winter_ondergrens",
+							"max": "streefpeil_winter_bovengrens",
+							"inclusive": true
+						}
+					}
+				},
+				{
+					"id": 104,
 					"name": "Winterpeil lager dan zomerpeil",
 					"type": "logic",
 					"validation_rule_set": "hhnk",
@@ -2000,7 +2018,7 @@
 					}
 				},
 				{
-					"id": 104,
+					"id": 105,
 					"name": "Intersectiepeilgebieden",
 					"type": "logic",
 					"validation_rule_set": "hhnk",
@@ -2009,14 +2027,14 @@
 					"error_message": "peilgebieden overlappen",
 					"active": true,
 					"function": {
-							"GT": {
+							"EQ": {
 							"left": 0,
 							"right": "aantal_intersecties"
 						}
 					}
 				},
 				{
-					"id": 105,
+					"id": 106,
 					"name": "Area_Grotter_100",
 					"type": "logic",
 					"validation_rule_set": "hhnk",
@@ -2032,7 +2050,7 @@
 					}
 				},
 				{
-					"id": 106,
+					"id": 107,
 					"name": "hydroobject_binnen_meer_dan_1",
 					"type": "logic",
 					"validation_rule_set": "hhnk",
@@ -2048,7 +2066,7 @@
 					}
 				},
 				{
-					"id": 107,
+					"id": 108,
 					"name": "peilgebiede_verbonde",
 					"type": "logic",
 					"validation_rule_set": "hhnk",
@@ -2064,7 +2082,7 @@
 					}
 				},
 				{
-					"id": 108,
+					"id": 109,
 					"name": "AHN5_P90_vs_peil_hoog",
 					"type": "logic",
 					"validation_rule_set": "hhnk",
@@ -2080,7 +2098,7 @@
 					}
 				},
 				{
-					"id": 109,
+					"id": 110,
 					"name": "median_peilgebieded_waterstand_dm",
 					"type": "logic",
 					"validation_rule_set": "hhnk",
@@ -2094,23 +2112,6 @@
 							"min":"limit_winter_ondergrens_minder_10cm",
 							"max":"limit_zomer_bovengrens_plus_10cm",
 							"inclusive": true
-						}
-					}
-				},
-				{
-					"id": 110,
-					"name": "stuw hoger dan peil flag",
-					"description": "The stuw should be higher than the peilgrens. If there is one stuw higher then the whole peilgebied will be mark",
-					"type": "logic",
-					"validation_rule_set": "hhnk",
-					"error_type": "critical",
-					"result_variable": "stuw_fout_count_test",
-					"error_message": "Minstens een stuw met een waarde lager dan (of gelijk aan NaN) de streefpeil_zomer_bovengrens",
-					"active": true,
-					"function": {
-						"LE": {
-							"left": "stuw_fout_count",
-							"right": 2
 						}
 					}
 				},
@@ -2134,4 +2135,3 @@
 		}
 	]
 }			
-	
