@@ -8,6 +8,8 @@ Created on Tue Aug 24 14:11:45 2021
 @revised oktober 2025 by Wouter van Esse
 """
 
+import os
+
 import fiona
 import geopandas as gpd
 import hhnk_research_tools as hrt
@@ -476,13 +478,21 @@ class HhnkSchematisationChecks:
         self, output_folder
     ):  # FIXME #27143 makegrid werkt niet in nieuwe python versie
         """Create grid from schematisation (gpkg), this includes cells, lines and nodes."""
-        # grid = make_gridadmin(self.database.base, self.dem.base)
+        # NOTE in de model settings staat het woord 'rasters' niet meer voor de rasterverwijzing
+        if "rasters" not in self.dem.base:
+            dem_fp = os.path.join(self.folder.model.path, self.dem.name)
+        else:
+            dem_fp = self.dem.base
 
-        # # using output here results in error, so we use the returned dict
-        # for grid_type in ["cells", "lines", "nodes"]:
-        #     df = pd.DataFrame(grid[grid_type])
-        #     gdf = hrt.df_convert_to_gdf(df, geom_col_type="wkb", src_crs="28992")
-        #     gdf.to_file(driver="GPKG", filename=Path(output_folder) / f"{grid_type}.gpkg", index=False)
+        grid = make_gridadmin(self.database.base, dem_fp)
+
+        output_fp = os.path.join(output_folder, "grid.gpkg")
+        # using output here results in error, so we use the returned dict
+        # TODO fix loading from 1 gropackage instead of three
+        for grid_type in ["cells", "lines", "nodes"]:
+            df = pd.DataFrame(grid[grid_type])
+            gdf = hrt.df_convert_to_gdf(df, geom_col_type="wkb", src_crs="28992")
+            gdf.to_file(driver="GPKG", filename=output_fp, index=False, layer=grid_type)
 
     def run_cross_section_duplicates(self, database: hrt.SpatialDatabase) -> gpd.GeoDataFrame:
         """Check for duplicate geometries in cross_section_locations.
@@ -749,20 +759,16 @@ if __name__ == "__main__":
     self = HhnkSchematisationChecks(folder=folder, results=results)
     database = folder.model.schema_base.database
     make_gridadmin(self.database.base, self.dem.base)
+    make_gridadmin(
+        self.database.base,
+        r"D:/github/wvanesse/hhnk-threedi-tools/tests/data/model_test/02_schematisation/00_basis/rasters/dem_hoekje.tif",
+    )
     # a, b = self.run_weir_floor_level()
     # a, b = self.run_watersurface_area()
 
-    # TODO self.create_grid_from_schematisation(output_folder=folder.output.base)
+    self.create_grid_from_schematisation(output_folder=folder.output.base)
     # self.verify_inputs("run_imp_surface_area")
 
-
-# %%
-if __name__ == "__main__":
-    from hhnk_threedi_tools.core.folders import Folders
-    from tests.config import FOLDER_TEST
-
-    folder = Folders(FOLDER_TEST)
-    folder.model.schema_base.rasters.dem.path
 
 # %%
 if __name__ == "__main__":
