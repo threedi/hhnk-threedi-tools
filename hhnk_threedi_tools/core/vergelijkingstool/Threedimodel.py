@@ -1,14 +1,9 @@
 # %%
 # importing external dependencies
-import json
 import logging
-import re
-import sqlite3
-from pathlib import Path
 
 # from pd.errors import DatabaseError #FIXME vanaf pd 1.5.3 beschikbaar. Als qgis zover is overzetten.
 # from sqlite3 import DatabaseError
-import fiona
 import geopandas as gpd
 import numpy as np
 import pandas as pd
@@ -37,7 +32,16 @@ class Threedimodel(DataSet):
         self.logger = logging.getLogger("Threedimodel")
         self.logger.debug("Created Threedimodel object")
         # self.data = self.from_sqlite(filename, translation)
-        self.data = self.from_geopackage(filename, translation)
+        self.data = utils.load_file_and_translate(
+            damo_filename=None,
+            hdb_filename=None,
+            threedi_filename=filename,
+            translation_3Di=translation,
+            layer_selection=None,
+            layers_input_threedi_selection=None,
+            mode="threedi",
+        )
+
         self.join_cross_section_definition()
 
         # Set priority columns
@@ -93,70 +97,6 @@ class Threedimodel(DataSet):
                     left_on="cross_section_definition_id",
                     right_on="id",
                 )
-
-    def from_geopackage(self, filename, translation=None):
-        """
-        Load data from GeoPackage (.gpkg) file
-
-        :param filename: Path of the .gpkg file
-        :param translation: Path of the translation file (optional)
-        :return: Dictionary containing layer names (keys) and GeoDataFrames (values)
-        """
-
-        data = {}
-        self.logger.debug("called from_geopackage")
-
-        # Get layer in the geopackge
-        layers = fiona.listlayers(filename)
-        if not layers:
-            self.logger.error("No layers found in .gpkg, or file does not exist")
-            raise Exception("Error reading GeoPackage")
-
-        self.logger.debug(f"Layers results: {layers}")
-
-        # loop over all layers and save them in a dictionary
-        for layer in layers:
-            self.logger.debug(f"Loading layer {layer}")
-            try:
-                gdf_layer_data = gpd.read_file(filename, layer=layer)
-            except Exception as e:
-                self.logger.error(f"Error loading layer {layer}: {e}")
-                continue
-
-            # Save to dictionary
-            data[layer] = gdf_layer_data
-
-        self.logger.debug("Done loading layers")
-
-        # Start translation
-        if translation is not None:
-            self.logger.debug("Start mapping layer and column names")
-            # load file
-            f = open(translation)
-
-            try:
-                mapping = json.loads(json.dumps(json.load(f)).lower())
-            except json.decoder.JSONDecodeError:
-                self.logger.error("Structure of translation file is incorrect")
-                raise
-
-            translate_layers = {}
-            for layer in data.keys():
-                # Check if the layer name is mapped in the translation file
-                for layer_name in mapping.keys():
-                    if layer == layer_name:
-                        # Map column names
-                        self.logger.debug(f"Mapping column names of layer {layer}")
-                        data[layer].rename(columns=mapping[layer]["columns"], inplace=True)
-
-                        # Store layer mapping in dict to be mapped later
-                        translate_layers[layer_name] = mapping[layer]["name"]
-
-            # Map layer names
-            for old, new in translate_layers.items():
-                data[new] = data.pop(old)
-        self.logger.debug("Done loading .gpkg")
-        return data
 
     def determine_statistics(self, table_C):
         """
