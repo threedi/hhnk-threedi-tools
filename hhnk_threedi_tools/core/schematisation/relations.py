@@ -514,12 +514,15 @@ class StructureRelations:
         struct_sunk_gdf["geometry"] = struct_sunk_gdf[f"geometry_cs_min_ref_{side}"].drop(
             columns=[f"geometry_cs_min_ref_{side}"]
         )
+        # Register side
+        struct_sunk_gdf["structure_side"] = side
         # Select relevant columns
         wrong_profiles = struct_sunk_gdf[
             [
                 "cs_id_min_ref_level",
                 f"min_ref_level_{side}",
                 "code",
+                "structure_side",
                 "minimal_level",
                 "geometry",
             ]

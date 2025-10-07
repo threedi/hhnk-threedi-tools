@@ -190,7 +190,7 @@ class Folders(Folder):
             "channels_shapefile": self.source_data.modelbuilder.channel_from_profiles.path_if_exists,
             # model folder
             "model": self.model.schema_base.database.path_if_exists,
-            "dem": self.model.schema_base.rasters.dem.path_if_exists,
+            "dem": self.model.schema_base.rasters.dem.path_if_exists,  # FIXME DEM path hier?
             # Threedi
             "0d1d_results_dir": self.threedi_results.zero_d_one_d.path_if_exists,
             "1d2d_results_dir": self.threedi_results.one_d_two_d.path_if_exists,
@@ -290,7 +290,7 @@ class SourceDir(Folder):
         self.hdb.add_layer("sturing_kunstwerken")
 
         self.add_file("datachecker", "datachecker_output.gpkg")
-        self.datachecker.add_layers(["fixeddrainagelevelarea", "culvert"])
+        self.datachecker.add_layers(["fixeddrainagelevelarea", "culvert", "bridge"])
 
         self.add_file("polder_polygon", POLDER_POLY)
         self.add_file("panden", "panden.gpkg")
@@ -744,4 +744,11 @@ class Project:
             self.__dict__.update(data)
 
 
+# %%
+if __name__ == "__main__":
+    from hhnk_threedi_tools.core.folders import Folders
+    from tests.config import FOLDER_TEST
+
+    folder = Folders(FOLDER_TEST)
+    folder.model.schema_base.rasters.dem.path
 # %%

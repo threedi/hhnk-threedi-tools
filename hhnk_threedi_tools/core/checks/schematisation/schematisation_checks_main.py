@@ -334,6 +334,10 @@ class HhnkSchematisationChecks:
         Check whether the reference level of the cross section location reference level is below the orifice crest
         level or the culvert inlet level of the adjacent channels.
 
+        # FIXME this is not what the code below does. It only loaded culverts and looked at damo if it had some
+        assumption. It did not look at channels or bed levels at all. It only returns a list of culverts with an
+        indication of an assumption. But it was also the wrong source for that, since this is in the datachecker
+
         StructureRelation gives the lowest of the reference levels of the connected channels, but it takes into account
         only to use the closest cross section location per channel.
 
@@ -342,7 +346,15 @@ class HhnkSchematisationChecks:
         If the structure levels are below the lowest reference level, 3Di model may crash (when water level drops
         below reference level).
         """
+        logger.warning("Check 'run_struct_channel_bed_level' does not do what it is supposed to do")
 
+        # Load culvert and bridges including relations
+        culvert_rel = StructureRelations(folder=self.folder, structure_table="culvert")
+        orifice_rel = StructureRelations(folder=self.folder, structure_table="orifice")
+        culvert_gdf = culvert_rel.gdf
+        orifice_gdf = orifice_rel.gdf
+
+        # Get profiles that cause structures to be sunk
         wrong_profile_dict: dict[str, gpd.GeoDataFrame] = {}
         for structure_table in ["culvert", "orifice"]:
             struct_rel = StructureRelations(folder=self.folder, structure_table=structure_table)
@@ -369,22 +381,41 @@ class HhnkSchematisationChecks:
         culvert_assump_up_gdf = dc_culvert_gdf[
             (dc_culvert_gdf["aanname"].str.contains("bed_level_up")) & ~(dc_culvert_gdf["aanname"].isna())
         ]
+        bridge_assump_gdf = dc_bridge_gdf[
+            (dc_bridge_gdf["aanname"].str.contains("bottom_level")) & ~(dc_bridge_gdf["aanname"].isna())
+        ]
 
-        bridge_assump_gdf = dc_bridge_gdf[dc_bridge_gdf["aanname"].str.contains()]
+        # List of structures where the bed/bottem level is sunk below reference level, but the bed/bottom level is based on assumption
+        assump_start = pd.concat([culvert_assump_up_gdf["code"], bridge_assump_gdf["code"]])
+        assump_end = pd.concat([culvert_assump_down_gdf["code"], bridge_assump_gdf["code"]])
 
-        culvert_gdf = self.database.load(layer="culvert", index_column="id")
-        culvert_gdf["culvert_id"] = culvert_gdf.index
-        culvert_gdf["struct_code"] = culvert_gdf["code"]
+        # Filter and split wrong profiles
+        wrong_profiles_no_assumption_gdf = pd.concat(
+            [
+                wrong_profiles_gdf[
+                    (~wrong_profiles_gdf["structure_code"].isin(assump_start))
+                    & (wrong_profiles_gdf["structure_side"] == "start")
+                ],
+                wrong_profiles_gdf[
+                    (~wrong_profiles_gdf["structure_code"].isin(assump_end))
+                    & (wrong_profiles_gdf["structure_side"] == "end")
+                ],
+            ]
+        )
+        # Flag wrong profiles
+        wrong_profiles_gdf["ref_level_based_on_assumption"] = False
+        wrong_profiles_gdf["ref_level_based_on_assumption"] = ~wrong_profiles_gdf["cross_section_location_id"].isin(
+            wrong_profiles_no_assumption_gdf["cross_section_location_id"]
+        )
+
+        # This seems logical to return
+        # return wrong_profiles_gdf, culvert_assump_down_gdf, culvert_assump_up_gdf, bridge_assump_gdf
 
         ############################
-
+        # Original code, working towards original result
         # Load source data to determine whether structure reference lever was based on assumption
         datachecker_culvert_layer = self.folder.source_data.datachecker.layers.culvert
         damo_duiker_sifon_layer = self.folder.source_data.damo.layers.DuikerSifonHevel
-
-        below_ref_query = struct_channel_bed_query
-        gdf_below_ref = self.database.execute_sql_selection(query=below_ref_query)
-        gdf_below_ref.rename(columns={"id": a_chan_bed_struct_id}, inplace=True)
 
         # TODO waar vind ik hoe dit gebruikt wordt? Check lijkt niet hier te gebeuren
         # See git issue about below statements
