@@ -1,4 +1,18 @@
-STYLING_BASIC_TABLE_COLUMNS = ['id', 'f_table_catalog', 'f_table_schema', 'f_table_name', 'f_geometry_column', 'styleName', 'styleQML', 'styleSLD', 'useAsDefault', 'description', 'owner', 'ui', 'update_time']
+STYLING_BASIC_TABLE_COLUMNS = [
+    "id",
+    "f_table_catalog",
+    "f_table_schema",
+    "f_table_name",
+    "f_geometry_column",
+    "styleName",
+    "styleQML",
+    "styleSLD",
+    "useAsDefault",
+    "description",
+    "owner",
+    "ui",
+    "update_time",
+]
 
 STYLING_POINTS_DAMO = r"""
 <!DOCTYPE qgis PUBLIC 'http://mrcc.com/qgis.dtd' 'SYSTEM'>
