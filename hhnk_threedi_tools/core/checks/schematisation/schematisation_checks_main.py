@@ -411,7 +411,7 @@ class HhnkSchematisationChecks:
             columns={"id": a_watersurf_conn_id}
         )
         # Explode fixed drainage level area polygons to ensure no multipolygons are present
-        fixeddrainage_gdf = _expand_multipolygon(fixeddrainage_gdf)  # TODO deal with helper functions
+        fixeddrainage_gdf = _expand_multipolygon(fixeddrainage_gdf)
 
         # Add area from connection nodes to each fixed drainage level area
         fixeddrainage_gdf = _add_nodes_area(fixeddrainage_gdf, conn_nodes_gdf)
@@ -474,13 +474,14 @@ class HhnkSchematisationChecks:
 
         return wrong_profiles_gdf, update_query  # TODO check of sql werkt in de plugin
 
-    def create_grid_from_schematisation(
-        self, output_folder
-    ):  # FIXME #27143 makegrid werkt niet in nieuwe python versie
-        """Create grid from schematisation (gpkg), this includes cells, lines and nodes."""
+    def create_grid_from_schematisation(self, output_folder):
+        """
+        Create grid from schematisation (gpkg), this includes cells, lines and nodes.
+        Returns Geopackage named grid.gpkg in output folder.
+        """
         # NOTE in de model settings staat het woord 'rasters' niet meer voor de rasterverwijzing
         if "rasters" not in self.dem.base:
-            dem_fp = os.path.join(self.folder.model.path, self.dem.name)
+            dem_fp = os.path.join(self.folder.model.schema_base.path, "rasters", self.dem.name)
         else:
             dem_fp = self.dem.base
 
@@ -488,7 +489,7 @@ class HhnkSchematisationChecks:
 
         output_fp = os.path.join(output_folder, "grid.gpkg")
         # using output here results in error, so we use the returned dict
-        # TODO fix loading from 1 gropackage instead of three
+        # TODO plugin fix loading from 1 gropackage instead of three in
         for grid_type in ["cells", "lines", "nodes"]:
             df = pd.DataFrame(grid[grid_type])
             gdf = hrt.df_convert_to_gdf(df, geom_col_type="wkb", src_crs="28992")
