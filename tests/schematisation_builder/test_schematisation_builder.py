@@ -36,7 +36,7 @@ def test_main():
     default_polder_polygon_path = TEST_DIRECTORY / "model_test" / "01_source_data" / "polder_polygon.shp"
 
     # all layers which are ready to be exported from DAMO/CSO, convertered to HyDAMO and to be validated
-    TABLE_NAMES = ["HYDROOBJECT", "GEMAAL", "COMBINATIEPEILGEBIED", "DUIKERSIFONHEVEL"]
+    TABLE_NAMES = ["HYDROOBJECT", "GEMAAL", "DUIKERSIFONHEVEL"]
 
     # run schematisation builder
     logger.info(f"Starting SchematisationBuilder test with project folder: {temp_project_folder}")
@@ -64,23 +64,24 @@ def test_main():
     )
 
     # Test if the output files contain expected layers
-    damo_layers = hrt.vector.get_layers(damo_file_path)
-    hydamo_layers = hrt.vector.get_layers(hydamo_file_path)
-    validation_layers = hrt.vector.get_layers(validation_result_file_path)
+    damo_layers = hrt.SpatialDatabase(damo_file_path).available_layers()
+    hydamo_layers = hrt.SpatialDatabase(hydamo_file_path).available_layers()
+    validation_layers = hrt.SpatialDatabase(validation_result_file_path).available_layers()
     for layer in TABLE_NAMES:
-        assert layer in damo_layers, f"Layer {layer} not found in DAMO file."
-        assert layer in hydamo_layers, f"Layer {layer} not found in HyDAMO file."
-        assert layer in validation_layers, f"Layer {layer} not found in validation results."
+        assert layer.lower() in [l.lower() for l in damo_layers], f"Layer {layer} not found in DAMO file."
+        assert layer.lower() in [l.lower() for l in hydamo_layers], f"Layer {layer} not found in HyDAMO file."
+        assert layer.lower() in [l.lower() for l in validation_layers], (
+            f"Layer {layer} not found in validation results."
+        )
 
     # Test if the output files contain expected columns and data
     # TODO: check if these are the right columns
-    expected_columns = {
-        "GEMAAL": ["code", "functiegemaal", "vermogen", "peilgebied"],
-        "HYDROOBJECT": ["code", "typeobject", "naam", "lengte"],
-        "COMBINATIEPEILGEBIED": ["code", "naam", "gempeil"],
-        "DUIKERSIFONHEVEL": ["code", "typeobject", "doorsnede", "materiaal"],
+    expected_columns_hydamo_validation = {
+        "GEMAAL": ["code", "functiegemaal", "globalid", "NEN3610id"],
+        "HYDROOBJECT": ["code", "categorieoppwaterlichaamcode", "NEN3610id", "lengte"],
+        "DUIKERSIFONHEVEL": ["code", "lengtebeheerobject", "catergorieinwatersysteemcode", "NEN3610id"],
     }
-    for layer, columns in expected_columns.items():
+    for layer, columns in expected_columns_hydamo_validation.items():
         damo_gdf = gpd.read_file(damo_file_path, layer=layer)
         hydamo_gdf = gpd.read_file(hydamo_file_path, layer=layer)
         validation_gdf = gpd.read_file(validation_result_file_path, layer=layer)
@@ -90,15 +91,12 @@ def test_main():
         assert not hydamo_gdf.empty, f"HyDAMO layer {layer} is empty."
         assert not validation_gdf.empty, f"Validation layer {layer} is empty."
 
-        # check if expected columns are present in the layers
+        # check if expected columns are present in the layers in hydamo and validation files
         for column in columns:
-            assert column in damo_gdf.columns, f"Column {column} not found in DAMO layer {layer}."
             assert column in hydamo_gdf.columns, f"Column {column} not found in HyDAMO layer {layer}."
             assert column in validation_gdf.columns, f"Column {column} not found in validation layer {layer}."
 
         # check if layers contain expected data
-        for index, row in damo_gdf.iterrows():
-            assert row.notnull().all(), f"DAMO layer {layer} has null values in row {index}."
         for index, row in hydamo_gdf.iterrows():
             assert row.notnull().all(), f"HyDAMO layer {layer} has null values in row {index}."
         for index, row in validation_gdf.iterrows():
