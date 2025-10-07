@@ -201,11 +201,6 @@ def main(
 # %%
 
 if __name__ == "__main__":
-    # model folder
-
-    # folder = Folders(castricum)
-    # source_data = folder.source_data.path
-
     # name
     path = r"E:\02.modellen\castricum"
     info = get_model_info(path)
@@ -217,14 +212,13 @@ if __name__ == "__main__":
     # Base folder initial files.
     source_data_old = info.source_data_old
 
-    json_file = os.path.join(source_data, "vergelijkingsTool", "json_files")
-
+    json_file = info.json_folder
     # output location.
-    out_put_files = os.path.join(source_data, "vergelijkingsTool", "output")
+    out_put_files = source_data_old
 
     # Old DAMO (DCMB/FME export) location .
     fn_damo_old = info.fn_damo_old
-    fn_damo_old_translation = Path(os.path.join(source_data_old, "damo_translation.json"))
+    fn_damo_old_translation = source_data_old / "damo_translation.json"
 
     # the last version
     fn_damo_new = info.fn_damo_new
@@ -233,21 +227,21 @@ if __name__ == "__main__":
 
     # Old HDB (DCMB/FME export) location .
     fn_hdb_old = info.fn_hdb_old
-    fn_hdb_old_translation = Path(os.path.join(source_data_old, "hdb_translation.json"))
+    fn_hdb_old_translation = source_data_old / "hdb_translation.json"
 
     # the last version
     fn_hdb_new = info.fn_hdb_new
     fn_hdb_new_translation = fn_hdb_old_translation
 
-    fn_threedimodel_translation = Path(os.path.join(json_file, "threedi_translation.json"))
-    fn_damo_attribute_comparison = Path(os.path.join(json_file, "damo_attribute_comparison.json"))
-    fn_model_attribute_comparison = Path(os.path.join(json_file, "model_attribute_comparison.json"))
+    fn_threedimodel_translation = json_file / "threedi_translation.json"
+    fn_damo_attribute_comparison = json_file / "damo_attribute_comparison.json"
+    fn_model_attribute_comparison = json_file / "model_attribute_comparison.json"
 
     # Define path where layer stylings can be found (for each layer it will search for <<LAYER_NAME>>.qml
-    styling_path = Path(os.path.join(source_data, "styling"))
+    styling_path = source_data / "styling"
 
     # Define outputs
-    fn_DAMO_comparison_export = Path(os.path.join(out_put_files, "DAMO_comparison_Test_117.gpkg"))
+    fn_DAMO_comparison_export = out_put_files / "DAMO_comparison_Test_119.gpkg"
 
     # Layers To Compare DAMO_DAMO
     layer_selection = True
@@ -256,7 +250,7 @@ if __name__ == "__main__":
         "duikers_op_peilgrens",
         "stuwen_op_peilgrens",
     ]
-    fn_threedi_comparison_export = Path(os.path.join(out_put_files, "Threedi_comparison_Test_33.gpkg"))
+    fn_threedi_comparison_export = out_put_files / "Threedi_comparison_Test_34.gpkg"
 
     compare_with = "Compare with Damo"
     # compare_with = "Compare with 3Di"
