@@ -419,7 +419,9 @@ class StructureRelations:
 
             # Check if there are any other table controles
             if len(table_control_gdf[table_control_gdf["action_type"] != "set_crest_level"]) > 0:
-                logger.warning("Join table control not implemented for any action type other than set_crest_level")
+                logger.warning(
+                    f"Found table control other than 'set_crest_level' for table {self.structure_table}, but this is not joined to structure as this is not implemented for any action type other than set_crest_level"
+                )
                 # TODO andere action types nog toevoegen
 
             if len(set_crest_level_gdf) > 0:
@@ -450,7 +452,7 @@ class StructureRelations:
                 ).drop(columns=["target_id"])
         else:
             logger.warning(
-                "Join table control not implemented for structure table other than weir and orifice"
+                f"Join table control not implemented for structure table {self.structure_table}, only available for weir and orifice"
             )  # TODO
 
         return structure_gdf
@@ -463,12 +465,10 @@ class StructureRelations:
 
         for side in ["start", "end"]:
             structure_gdf = self.get_manhole_data_at_connection_node(structure_gdf=structure_gdf, side=side)
-            structure_gdf = self.get_min_max_levels(
-                structure_gdf=structure_gdf, structure_table=self.structure_table, side=side
-            )
+            structure_gdf = self.get_min_max_levels(structure_gdf=structure_gdf, side=side)
 
         # Join table control to structure table
-        structure_gdf = self.join_table_control(structure_gdf, structure_table=self.structure_table)
+        structure_gdf = self.join_table_control(structure_gdf)
 
         return structure_gdf
 
@@ -491,7 +491,7 @@ class StructureRelations:
         if side not in ["start", "end"]:
             raise ValueError("side should be 'start' or 'end'")
 
-        struct_gdf = self.gdf()
+        struct_gdf = self.gdf
 
         if self.structure_table == "culvert":
             struct_gdf["minimal_level"] = struct_gdf[f"invert_level_{side}"]

@@ -330,13 +330,17 @@ class HhnkSchematisationChecks:
         return channels_gdf
 
     def run_struct_channel_bed_level(self) -> gpd.GeoDataFrame:
-        """Check whether the reference level of the cross section location reference level is below the orifice crest level or the culvert inlet level of the adjacent channels.
+        """
+        Check whether the reference level of the cross section location reference level is below the orifice crest
+        level or the culvert inlet level of the adjacent channels.
 
-        StructureRelation gives the lowest of the reference levels of the connected channels, but it takes into account only to use the closest cross section location per channel.
+        StructureRelation gives the lowest of the reference levels of the connected channels, but it takes into account
+        only to use the closest cross section location per channel.
 
         Connection nodes with manholes are not considered.
 
-        If the structure levels are below the lowest reference level, 3Di model may crash (when water level drops below reference level).
+        If the structure levels are below the lowest reference level, 3Di model may crash (when water level drops
+        below reference level).
         """
 
         wrong_profile_dict: dict[str, gpd.GeoDataFrame] = {}
@@ -359,7 +363,13 @@ class HhnkSchematisationChecks:
         dc_bridge_gdf = self.folder.source_data.datachecker.layers.bridge.load()
 
         # Filter when these have an assumption
-        culvert_assump_gdf = dc_culvert_gdf[dc_culvert_gdf["aanname"].str.contains()]
+        culvert_assump_down_gdf = dc_culvert_gdf[
+            (dc_culvert_gdf["aanname"].str.contains("bed_level_down")) & ~(dc_culvert_gdf["aanname"].isna())
+        ]
+        culvert_assump_up_gdf = dc_culvert_gdf[
+            (dc_culvert_gdf["aanname"].str.contains("bed_level_up")) & ~(dc_culvert_gdf["aanname"].isna())
+        ]
+
         bridge_assump_gdf = dc_bridge_gdf[dc_bridge_gdf["aanname"].str.contains()]
 
         culvert_gdf = self.database.load(layer="culvert", index_column="id")
@@ -383,7 +393,7 @@ class HhnkSchematisationChecks:
         gdf_with_datacheck.loc[:, down_has_assumption] = gdf_with_datacheck[height_inner_lower_down].isna()
         gdf_with_datacheck.loc[:, up_has_assumption] = gdf_with_datacheck[height_inner_lower_up].isna()
         self.results["struct_channel_bed_level"] = gdf_with_datacheck
-        # TODO add monhole bottom level
+        # FIXME this only returns culverts, not bridges
         return gdf_with_datacheck  # culverts met beneden beneden_has_assumption en boven_has assumption, maar hoe gebruikt
 
     def run_watersurface_area(self) -> tuple[gpd.GeoDataFrame, str]:
@@ -759,11 +769,7 @@ if __name__ == "__main__":
     results = {}
     self = HhnkSchematisationChecks(folder=folder, results=results)
     database = folder.model.schema_base.database
-    make_gridadmin(self.database.base, self.dem.base)
-    make_gridadmin(
-        self.database.base,
-        r"D:/github/wvanesse/hhnk-threedi-tools/tests/data/model_test/02_schematisation/00_basis/rasters/dem_hoekje.tif",
-    )
+
     # a, b = self.run_weir_floor_level()
     # a, b = self.run_watersurface_area()
 
