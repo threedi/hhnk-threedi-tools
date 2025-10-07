@@ -6,6 +6,8 @@ from osgeo import gdal
 import hhnk_threedi_tools.core
 import hhnk_threedi_tools.qgis
 import hhnk_threedi_tools.resources
+import hhnk_threedi_tools.resources.qgis_layer_styles
+import hhnk_threedi_tools.resources.qgis_layer_styles.zero_d_one_d
 import hhnk_threedi_tools.resources.schematisation_builder
 
 # checks

@@ -20,7 +20,6 @@ jobs:
     strategy:
       matrix:
         os: ["windows-latest", ]
-        # ["ubuntu-latest", "windows-latest"]
         python-version: [ "py39", ]
     runs-on: ${{ matrix.os }}
     steps:
@@ -33,9 +32,18 @@ jobs:
           cache: true
           # cache-write: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
           environments: ${{ matrix.python-version }}
-          
+      
+      
+      - name: Run ruff
+        shell: bash
+        run: |
+          pixi run -e py39 ruff check --select I --force-exclude && \
+          pixi run -e py39 ruff format --check --force-exclude
+
       - name: Run Tests
         run: pixi run -e py39 tests tests/
+        env: 
+          SKIP_DATABASE: "1"
 
       - name: Upload coverage
         uses: codecov/codecov-action@v5
