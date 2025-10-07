@@ -5,14 +5,12 @@ from pathlib import Path
 import geopandas as gpd
 
 from hhnk_threedi_tools.core.vergelijkingstool import Dataset, utils
-from hhnk_threedi_tools.core.vergelijkingstool.utils import ModelInfo, symbology_both
+from hhnk_threedi_tools.core.vergelijkingstool.utils import ModelInfo
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 # styling.py
-
-update_symbology = symbology_both(False)
 
 STYLING_BASIC_TABLE_COLUMNS = [
     "id",
