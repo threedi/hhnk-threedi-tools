@@ -4,7 +4,6 @@ from pathlib import Path
 
 import geopandas as gpd
 
-from hhnk_threedi_tools.core.vergelijkingstool import Dataset, utils
 from hhnk_threedi_tools.core.vergelijkingstool.utils import ModelInfo
 
 logger = logging.getLogger(__name__)
