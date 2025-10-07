@@ -9,6 +9,7 @@ import fiona
 import geopandas as gpd
 
 from hhnk_threedi_tools.core.folders import Folders
+from hhnk_threedi_tools.core.vergelijkingstool import config
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -118,270 +119,88 @@ def translate(data, translation_file):
     return data
 
 
-# def from_file(
-#     self,
-#     damo_filename,
-#     hdb_filename,
-#     translation_DAMO=None,
-#     translation_HDB=None,
-#     layer_selection=None,
-#     layers_input_hdb_selection=None,
-#     layers_input_damo_selection=None,
-#     layer_threedi_filename = None,
-# ):
-#     """
-#     Function that loads the data in GeoDataFrames and applies layer and column mapping
+def load_file_and_translate(
+    damo_filename=None,
+    hdb_filename=None,
+    threedi_filename=None,
+    translation_DAMO=None,
+    translation_HDB=None,
+    translation_3Di=None,
+    layer_selection=False,
+    layers_input_damo_selection=None,
+    layers_input_hdb_selection=None,
+    layers_input_threedi_selection=None,
+    mode="damo",  # options: "damo", "threedi", "both"
+):
+    """
+    loader for DAMO, HDB, and 3Di datasets.
+    Depending on `mode`
 
-#     :param damo_filename: Path to the .gbd folder with DAMO data
-#     :param hdb_filename: Path to the .gbd folder with HDB data
-#     :param translation_DAMO: Path to the DAMO translation dictionary
-#     :param translation_HDB: Path to the HDB translation dictionary
-#     :return: Dictionary containing layer names (keys) and GeoDataFrames (values)
-#     """
+    mode = "damo" → loads DAMO + HDB
+    mode = "threedi" → loads 3Di layers
+    mode = "both" → loads all (if paths are provided)
+    """
 
-#     # Define empty data dictionary, to be filled with layer data from file
-#     data = {}
+    data = {}
+    logger.debug("Find layer names within geopackages")
 
-#     # Load layers within .gdb datasets
-#     self.logger.debug("Find layer names within geopackages")
-#     # Get layer in the geopackge
+    # Determine layers to load depending on mode
+    if layer_selection:
+        layers_damo = layers_input_damo_selection
+        layers_hdb = layers_input_hdb_selection
+        layers_3di = layers_input_threedi_selection
+        logger.debug(f"Layer selection enabled")
+    else:
+        layers_damo = fiona.listlayers(damo_filename) if damo_filename else []
+        layers_hdb = fiona.listlayers(hdb_filename) if hdb_filename else []
+        layers_3di = fiona.listlayers(threedi_filename) if threedi_filename else []
 
-#     if layer_selection == True:
-#         layers_gdb_damo = layers_input_damo_selection
-#         layers_gdb_hdb = layers_input_hdb_selection
+    # Load DAMO + HDB datasets
 
-#     else:
-#         layers_gdb_damo = fiona.listlayers(damo_filename)
-#         layers_gdb_hdb = fiona.listlayers(hdb_filename)
-#         layer_threedi = fiona.listlayers(layer_threedi_filename)
+    if mode in ["damo", "both"]:
+        for layer in layers_damo:
+            if layer in config.DAMO_LAYERS:
+                logger.debug(f"Reading DAMO layer {layer}")
+                try:
+                    gdf = gpd.read_file(damo_filename, layer=layer)
+                    gdf.columns = gdf.columns.str.lower()
+                    data[layer.lower()] = gdf
+                except Exception as e:
+                    logger.error(f"Error loading DAMO layer {layer}: {e}")
 
-#     # Start reading DAMO
-#     for layer in layers_gdb_damo:
-#         # Check if the layer name is mapped in the translation file
-#         if layer in DAMO_LAYERS:
-#             # Map column names
-#             self.logger.debug(f"Reading DAMO layer {layer}")
-#             gdf_damo = gpd.read_file(damo_filename, layer=layer)
-#             gdf_damo.columns = gdf_damo.columns.str.lower()
+        for layer in layers_hdb:
+            if layer in config.HDB_LAYERS:
+                logger.debug(f"Reading HDB layer {layer}")
+                try:
+                    gdf = gpd.read_file(hdb_filename, layer=layer)
+                    gdf.columns = gdf.columns.str.lower()
+                    data[layer.lower()] = gdf
+                except Exception as e:
+                    logger.error(f"Error loading HDB layer {layer}: {e}")
+        # Start translation DAMO
+        if translation_DAMO is not None:
+            logger.debug("Start mapping layer and column names of DAMO layers")
+            data = translate(data, translation_DAMO)
 
-#             # Make the name of the DAMO layer lowecase and the save it in the dictionary
-#             data[layer.lower()] = gdf_damo
+        # Start translation DAMO
+        if translation_HDB is not None:
+            logger.debug("Start mapping layer and column names of HDB layers")
+            data = translate(data, translation_HDB)
 
-#     # Start reading HDB
-#     for layer in layers_gdb_hdb:
-#         # Check if the layer name is mapped in the translation file
-#         if layer in HDB_LAYERS:
-#             # Map column names
-#             self.logger.debug(f"Reading HDB layer {layer}")
-#             gdf_hdb = gpd.read_file(hdb_filename, layer=layer)
-#             gdf_hdb.columns = gdf_hdb.columns.str.lower()
+    # Load 3Di dataset
 
-#             # Make the name of the HDB layer lowecase and the save it in the dictionary
-#             data[layer.lower()] = gdf_hdb
+    if mode in ["threedi", "both"]:
+        for layer in layers_3di:
+            logger.debug(f"Loading 3Di layer {layer}")
+            try:
+                gdf = gpd.read_file(threedi_filename, layer=layer)
+                gdf.columns = gdf.columns.str.lower()
+                data[layer.lower()] = gdf
+            except Exception as e:
+                logger.error(f"Error loading 3Di layer {layer}: {e}")
 
-#         # loop over all layers and save them in a dictionary
-#         for layer in layer_threedi:
-#             self.logger.debug(f"Loading layer {layer}")
-#             try:
-#                 gdf_layer_data = gpd.read_file(filename, layer=layer)
-#             except Exception as e:
-#                 self.logger.error(f"Error loading layer {layer}: {e}")
-#                 continue
+        if translation_HDB is not None:
+            logger.debug("Start mapping layer and column names of 3di layers")
+            data = translate(data, translation_3Di)
 
-#             # Save to dictionary
-#             data[layer] = gdf_layer_data
-
-#     # Start translation DAMO
-#     if translation_DAMO is not None:
-#         self.logger.debug("Start mapping layer and column names of DAMO layers")
-#         data = utils.translate(data, translation_DAMO)
-
-#     # Start translation HDB
-#     if translation_HDB is not None:
-#         self.logger.debug("Start mapping layer and column names of HDB layers")
-#         data = utils.translate(data, translation_HDB)
-
-#     return data
-
-
-# def from_geopackage(self, filename, translation=None):
-#     """
-#     Load data from GeoPackage (.gpkg) file
-
-#     :param filename: Path of the .gpkg file
-#     :param translation: Path of the translation file (optional)
-#     :return: Dictionary containing layer names (keys) and GeoDataFrames (values)
-#     """
-
-#     data = {}
-#     logger.debug("called from_geopackage")
-
-#     # Get layer in the geopackge
-#     layers = fiona.listlayers(filename)
-#     if not layers:
-#         self.logger.error("No layers found in .gpkg, or file does not exist")
-#         raise Exception("Error reading GeoPackage")
-
-#     self.logger.debug(f"Layers results: {layers}")
-
-#     # loop over all layers and save them in a dictionary
-#     for layer in layers:
-#         self.logger.debug(f"Loading layer {layer}")
-#         try:
-#             gdf_layer_data = gpd.read_file(filename, layer=layer)
-#         except Exception as e:
-#             self.logger.error(f"Error loading layer {layer}: {e}")
-#             continue
-
-#         # Save to dictionary
-#         data[layer] = gdf_layer_data
-
-#     self.logger.debug("Done loading layers")
-
-#     # Start translation
-#     if translation is not None:
-#         self.logger.debug("Start mapping layer and column names")
-#         # load file
-#         data = utils.translate(data, translation)
-#     return data
-
-
-# import fiona
-# import geopandas as gpd
-# import logging
-
-# logger = logging.getLogger(__name__)
-
-# def load_layers_from_file(
-#     filename,
-#     allowed_layers=None,
-#     translation=None,
-#     layer_selection=False,
-#     layers_input_selection=None,
-#     lowercase=True,
-# ):
-#     """
-#     Load layers from a GeoPackage (.gpkg) or FileGDB (.gdb) into a dictionary of GeoDataFrames.
-
-#     :param filename: Path to the file to load (.gpkg or .gdb)
-#     :param allowed_layers: List of allowed layer names (optional)
-#     :param translation: Path to translation mapping file (optional)
-#     :param layer_selection: Boolean. If True, only layers_input_selection will be read.
-#     :param layers_input_selection: List of layers to load (optional, required if layer_selection=True)
-#     :param lowercase: Convert column names to lowercase (default=True)
-#     :return: Dictionary of {layer_name: GeoDataFrame}
-#     """
-#     data = {}
-
-#     # Get available layers
-#     try:
-#         layers_available = fiona.listlayers(filename)
-#     except Exception as e:
-#         logger.error(f"Error listing layers from {filename}: {e}")
-#         raise
-
-#     if not layers_available:
-#         raise Exception(f"No layers found in {filename}")
-
-#     # Determine which layers to load
-#     if layer_selection and layers_input_selection:
-#         layers_to_load = layers_input_selection
-#         logger.debug(f"User-defined layer selection: {layers_to_load}")
-#     else:
-#         layers_to_load = layers_available
-#         logger.debug(f"Loading all layers from {filename}")
-
-#     # Loop through and load
-#     for layer in layers_to_load:
-#         if allowed_layers and layer not in allowed_layers:
-#             logger.debug(f"Skipping non-allowed layer: {layer}")
-#             continue
-
-#         logger.debug(f"Loading layer {layer}")
-#         try:
-#             gdf = gpd.read_file(filename, layer=layer)
-#         except Exception as e:
-#             logger.error(f"Error loading layer {layer} from {filename}: {e}")
-#             continue
-
-#         if lowercase:
-#             gdf.columns = gdf.columns.str.lower()
-
-#         data[layer.lower()] = gdf
-
-#     return data
-
-
-# # En DAMO:
-# data.update(load_layers_from_file(damo_filename, DAMO_LAYERS, translation_DAMO))
-# data.update(load_layers_from_file(hdb_filename, HDB_LAYERS, translation_HDB))
-
-# # En 3Di:
-# data.update(load_layers_from_file(filename, translation=translation))
-
-
-# def from_file(
-#         self,
-#         damo_filename,
-#         hdb_filename,
-#         layer_threedi_filename,
-#         translation_DAMO=None,
-#         translation_HDB=None,
-#         layer_selection=None,
-#         layers_input_hdb_selection=None,
-#         layers_input_damo_selection=None,
-#         layers_input_threedi_selection=None
-#         DAMO_HDB = None,
-#         three_di = None,
-#     ):
-#     data = {}
-
-#     logger.debug("Find layer names within geopackages")
-
-#     if layer_selection == True:
-#         layers_gdb_damo = layers_input_damo_selection
-#         layers_gdb_hdb = layers_input_hdb_selection
-#         layers_gdb_threedi = layers_input_threedi_selection
-#     else:
-#         layers_gdb_damo = fiona.listlayers(damo_filename)
-#         layers_gdb_hdb = fiona.listlayers(hdb_filename)
-#         layers_gdb_threedi = fiona.listlayers(layer_threedi_filename)
-
-#     if DAMO_HDB == True:
-#         # Start reading DAMO
-#         for layer in layers_gdb_damo:
-
-#             # Check if the layer name is mapped in the translation file
-#             if layer in DAMO_LAYERS:
-#                 # Map column names
-#                 self.logger.debug(f"Reading DAMO layer {layer}")
-#                 gdf_damo = gpd.read_file(damo_filename, layer=layer)
-#                 gdf_damo.columns = gdf_damo.columns.str.lower()
-
-#                 # Make the name of the DAMO layer lowecase and the save it in the dictionary
-#                 data[layer.lower()] = gdf_damo
-
-#         # Start reading HDB
-#         for layer in layers_gdb_hdb:
-#             # Check if the layer name is mapped in the translation file
-#             if layer in HDB_LAYERS:
-#                 # Map column names
-#                 self.logger.debug(f"Reading HDB layer {layer}")
-#                 gdf_hdb = gpd.read_file(hdb_filename, layer=layer)
-#                 gdf_hdb.columns = gdf_hdb.columns.str.lower()
-
-#                 # Make the name of the HDB layer lowecase and the save it in the dictionary
-#                 data[layer.lower()] = gdf_hdb
-
-#     if three_di == True:
-#         # loop over all layers and save them in a dictionary
-#         for layer in layers_gdb_threedi:
-#             self.logger.debug(f"Loading layer {layer}")
-#             try:
-#                 gdf_layer_data = gpd.read_file(layer_threedi_filename, layer=layer)
-#             except Exception as e:
-#                 self.logger.error(f"Error loading layer {layer}: {e}")
-#                 continue
-
-#             # Save to dictionary
-#             data[layer] = gdf_layer_data
+    return data
