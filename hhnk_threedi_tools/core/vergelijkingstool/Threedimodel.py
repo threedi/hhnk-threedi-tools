@@ -94,39 +94,6 @@ class Threedimodel(DataSet):
                     right_on="id",
                 )
 
-    def add_geometry_from_connection_nodes(self, layer_data, data_connection_nodes):
-        """
-        Add a geometry column to a layer based on the start/end connection nodes. Used for example for v2_orifice,
-        as orifices are defined by the start/end connection nodes instead of by a geometry.
-
-        :param layer_data: GeoDataframe of layer to have a geometry added
-        :param data_connection_nodes: GeoDataframe containing the connection nodes
-        :return: GeoDataframe with appended geometry
-        """
-
-        layer_data["geometry"] = None
-        subset_data_connection_nodes = data_connection_nodes[["id", "geometry"]]
-        layer_data = layer_data.merge(
-            subset_data_connection_nodes.fillna(-9999),
-            how="left",
-            left_on="connection_node_start_id",
-            right_on="id",
-            suffixes=(None, "_start"),
-        )
-        layer_data = layer_data.merge(
-            subset_data_connection_nodes.fillna(-9999),
-            how="left",
-            left_on="connection_node_end_id",
-            right_on="id",
-            suffixes=(None, "_end"),
-        )
-        layer_data["geometry"] = layer_data.apply(
-            lambda x: self.create_structure_geometry(x["geometry_start"], x["geometry_end"]), axis=1
-        )
-        layer_data.drop(["geometry_start", "geometry_end"], axis=1, inplace=True)
-
-        return layer_data
-
     def from_geopackage(self, filename, translation=None):
         """
         Load data from GeoPackage (.gpkg) file
