@@ -24,8 +24,8 @@ class DAMO(DataSet):
         translation_HDB=None,
         clip_shape=None,
         layer_selection=None,
-        layers_input_hdb_selection=[],
-        layers_input_damo_selection=[],
+        layers_input_hdb_selection=None,
+        layers_input_damo_selection=None,
     ):
         """
         Creates a DAMO object and reads the data from the DAMO and HDB FileGeoDatabase.
@@ -37,21 +37,24 @@ class DAMO(DataSet):
         :param translation_HDB: Path to the HDB translation dictionary.
         :param clip_shape: Shapely shape to subset data on
         """
-
         # Set up logger
         self.logger = logging.getLogger("DAMO")
         self.logger.debug("Created DAMO object")
         self.model_info = model_info
         self.model_name = model_info.model_name
         # Load data
-        self.data = self.from_file(
-            damo_filename,
-            hdb_filename,
-            translation_DAMO,
-            translation_HDB,
-            layer_selection,
-            layers_input_hdb_selection,
-            layers_input_damo_selection,
+        layers_input_hdb_selection = layers_input_hdb_selection or []
+        layers_input_damo_selection = layers_input_damo_selection or []
+
+        self.data = utils.load_file_and_translate(
+            damo_filename=damo_filename,
+            hdb_filename=hdb_filename,
+            translation_DAMO=translation_DAMO,
+            translation_HDB=translation_HDB,
+            layer_selection=layer_selection,
+            layers_input_damo_selection=layers_input_damo_selection,
+            layers_input_hdb_selection=layers_input_hdb_selection,
+            mode="damo",
         )
 
         # Set priority columns
@@ -82,121 +85,6 @@ class DAMO(DataSet):
             gdf = data[layer]
             intersections = gdf[gdf.geometry.intersects(shape) | gdf.geometry.isnull()]
             data[layer] = intersections
-        return data
-
-    def translate(self, data, translation_file):
-        """
-        Loads a translation file and translates the data datastructure.
-        Renames tables and columns as indicated in the translation_file
-
-        :param data: Data to be translated
-        :param translation_file: Path to translation file
-        :return: Translated data
-        """
-
-        # load file
-        f = open(translation_file)
-
-        try:
-            mapping = json.loads(json.dumps(json.load(f)).lower())
-        except json.decoder.JSONDecodeError:
-            self.logger.error("Structure of DAMO-translation file is incorrect, check brackets and commas")
-            raise
-
-        translate_layers = {}
-        # Iterate over the gdf within the data that has inside of it the names of the table from the sqlite or gpkg
-        for layer in data.keys():
-            # Check if the layer name is mapped in the translation file
-            for layer_name in mapping.keys():
-                if layer == layer_name:
-                    # Map column names
-                    self.logger.debug(f"Mapping column names of layer {layer}")
-
-                    # Rename de columns within the data dictionary following the damo_translation.json file
-                    data[layer].rename(columns=mapping[layer]["columns"], inplace=True)
-
-                    # Store layer mapping in dict to be mapped later
-                    translate_layers[layer_name] = mapping[layer]["name"]
-
-        # Map layer names
-        for old, new in translate_layers.items():
-            data[new] = data.pop(old)
-
-        return data
-
-    def from_file(
-        self,
-        damo_filename,
-        hdb_filename,
-        translation_DAMO=None,
-        translation_HDB=None,
-        layer_selection=None,
-        layers_input_hdb_selection=None,
-        layers_input_damo_selection=None,
-    ):
-        """
-        Function that loads the data in GeoDataFrames and applies layer and column mapping
-
-        :param damo_filename: Path to the .gbd folder with DAMO data
-        :param hdb_filename: Path to the .gbd folder with HDB data
-        :param translation_DAMO: Path to the DAMO translation dictionary
-        :param translation_HDB: Path to the HDB translation dictionary
-        :return: Dictionary containing layer names (keys) and GeoDataFrames (values)
-        """
-
-        # Define empty data dictionary, to be filled with layer data from file
-        data = {}
-
-        # Load layers within .gdb datasets
-        self.logger.debug("Find layer names within geopackages")
-
-        if layer_selection == True:
-            # layers_input_damo = str(input('Type the layer from DAMO you want to compare'))
-            layers_gdb_damo = layers_input_damo_selection
-            # layers_gdb_damo = ['AfvoergebiedAanvoergebied', 'Bergingsgebied', 'DuikerSifonHevel']
-            # layers_input_hdb = str(input('Type the layer from HDB you want to compare'))
-            layers_gdb_hdb = layers_input_hdb_selection
-
-        else:
-            layers_gdb_damo = fiona.listlayers(damo_filename)
-            layers_gdb_hdb = fiona.listlayers(hdb_filename)
-            # layers_gdb_damo = layers_gdb_damo
-            # layers_gdb_hdb = layers_gdb_hdb
-
-        # Start reading DAMO
-        for layer in layers_gdb_damo:
-            # Check if the layer name is mapped in the translation file
-            if layer in DAMO_LAYERS:
-                # Map column names
-                self.logger.debug(f"Reading DAMO layer {layer}")
-                gdf_damo = gpd.read_file(damo_filename, layer=layer)
-                gdf_damo.columns = gdf_damo.columns.str.lower()
-
-                # Make the name of the DAMO layer lowecase and the save it in the dictionary
-                data[layer.lower()] = gdf_damo
-
-        # Start reading HDB
-        for layer in layers_gdb_hdb:
-            # Check if the layer name is mapped in the translation file
-            if layer in HDB_LAYERS:
-                # Map column names
-                self.logger.debug(f"Reading HDB layer {layer}")
-                gdf_hdb = gpd.read_file(hdb_filename, layer=layer)
-                gdf_hdb.columns = gdf_hdb.columns.str.lower()
-
-                # Make the name of the HDB layer lowecase and the save it in the dictionary
-                data[layer.lower()] = gdf_hdb
-
-        # Start translation DAMO
-        if translation_DAMO is not None:
-            self.logger.debug("Start mapping layer and column names of DAMO layers")
-            data = self.translate(data, translation_DAMO)
-
-        # Start translation DAMO
-        if translation_HDB is not None:
-            self.logger.debug("Start mapping layer and column names of DAMO layers")
-            data = self.translate(data, translation_HDB)
-
         return data
 
     def export_comparison_new(self, table_C, statistics, filename, overwrite=False, styling_path=None):
