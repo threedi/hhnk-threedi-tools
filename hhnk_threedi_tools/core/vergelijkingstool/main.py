@@ -214,7 +214,7 @@ if __name__ == "__main__":
 
     json_file = info.json_folder
     # output location.
-    out_put_files = source_data_old
+    out_put_files = info.output_folder
 
     # Old DAMO (DCMB/FME export) location .
     fn_damo_old = info.fn_damo_old
@@ -252,34 +252,34 @@ if __name__ == "__main__":
     ]
     fn_threedi_comparison_export = out_put_files / "Threedi_comparison_Test_34.gpkg"
 
-    compare_with = "Compare with Damo"
-    # compare_with = "Compare with 3Di"
+    # compare_with = "Compare with Damo"
+    compare_with = "Compare with 3Di"
     # config.UPDATE_SYMBOLOGY = True
 
     # Layers to Compare DAMO_3di
-    threedi_layer_selector = False
+    threedi_layer_selector = True
     threedi_structure_selection = ["culvert", "weir"]
     damo_structure_selection = ["duikersifonhevel", "stuw"]
     structure_codes = ["KDU", "KST"]
     # %%
     main(
-        info,
-        fn_DAMO_selection,
-        fn_damo_old_translation,
-        fn_damo_new,
-        fn_hdb_new,
-        fn_damo_old,
-        fn_hdb_old,
-        fn_threedimodel,
-        fn_threedimodel_translation,
-        fn_damo_attribute_comparison,
-        fn_model_attribute_comparison,
-        styling_path,
-        fn_damo_new_translation,
-        fn_DAMO_comparison_export,
-        fn_threedi_comparison_export,
-        compare_with,
-        layer_selection,
+        model_info=info,
+        fn_DAMO_selection=fn_DAMO_selection,
+        fn_damo_old_translation=fn_damo_old_translation,
+        fn_damo_new=fn_damo_new,
+        fn_hdb_new=fn_hdb_new,
+        fn_damo_old=fn_damo_old,
+        fn_hdb_old=fn_hdb_old,
+        fn_threedimodel=fn_threedimodel,
+        fn_threedimodel_translation=fn_threedimodel_translation,
+        fn_damo_attribute_comparison=fn_damo_attribute_comparison,
+        fn_model_attribute_comparison=fn_model_attribute_comparison,
+        styling_path=styling_path,
+        fn_damo_new_translation=fn_damo_new_translation,
+        fn_DAMO_comparison_export=fn_DAMO_comparison_export,
+        fn_threedi_comparison_export=fn_threedi_comparison_export,
+        compare_with=compare_with,
+        layer_selection=layer_selection,
         layers_input_hdb_selection=layers_input_hdb_selection,
         layers_input_damo_selection=layers_input_damo_selection,
         threedi_layer_selector=threedi_layer_selector,
