@@ -1,6 +1,8 @@
 # %%
 """Functional testing for oneDtwoD object"""
 
+import sys
+
 import geopandas as gpd
 import pytest
 
@@ -27,6 +29,7 @@ class TestOneDTwoD:
 
         assert output["pump_capacity_m3_s"][1094] == 0.00116666666666667
 
+    @pytest.mark.skipif(sys.version_info < (3, 12), reason="Requires Python 3.12 or higher")
     def test_run_depth_at_timesteps(self, check_1d2d):
         """Test of de 0d1d test werkt"""
         # TODO move output to temp folder
