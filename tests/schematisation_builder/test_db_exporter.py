@@ -77,7 +77,7 @@ def test_db_exporter_polder():
 # %%
 # Test
 if __name__ == "__main__":
-    print(os.getenv("SKIP_DATABASE"))
+    print(f"SKIP_DATABASE: {os.getenv('SKIP_DATABASE')}")
 
     Path(db_export_output_dir).mkdir(exist_ok=True, parents=True)
     test_db_exporter_one_feature()

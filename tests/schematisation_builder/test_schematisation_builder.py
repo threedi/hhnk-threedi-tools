@@ -15,7 +15,7 @@ dotenv.load_dotenv()
 
 
 @pytest.mark.skipif(
-    os.getenv("SKIP_DATABASE") == "1",
+    str(os.getenv("SKIP_DATABASE")) == "1",
     reason="Skipping DB test because no local_settings_htt.py or DATABASES available.",
 )
 def test_main():
@@ -107,5 +107,5 @@ def test_main():
 
 # %%
 if __name__ == "__main__":
-    print(os.getenv("SKIP_DATABASE"))
+    print(f"SKIP_DATABASE: {os.getenv('SKIP_DATABASE')}")
     test_main()
