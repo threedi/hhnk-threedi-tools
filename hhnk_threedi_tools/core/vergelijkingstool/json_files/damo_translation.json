@@ -1,0 +1,14 @@
+{
+	"DuikerSifonHevel": {
+		"name": "DuikerSifonHevel",
+		"columns": {
+			"CODE": "code"
+		}
+	},
+	"Stuw": {
+		"name": "Stuw",
+		"columns": {
+			"CODE": "code"
+		}
+	}
+}
