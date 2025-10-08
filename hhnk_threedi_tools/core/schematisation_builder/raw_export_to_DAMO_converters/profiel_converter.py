@@ -386,7 +386,7 @@ class ProfielConverter(RawExportToDAMOConverter):
                     "categorie": "primary",
                 }
             )
-        print(merged_hydroobjects)
+
         if not merged_hydroobjects:
             return None
         else:

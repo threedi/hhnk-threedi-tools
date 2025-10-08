@@ -8,26 +8,24 @@ import geopandas as gpd
 import hhnk_research_tools as hrt
 import pytest
 
-try:
-    from hhnk_threedi_tools.core.schematisation_builder.DB_exporter import db_exporter
-except ImportError:
-    db_exporter = None
 from tests.config import FOLDER_TEST, TEMP_DIR, TEST_DIRECTORY
 
 TEST_DIRECTORY_SB = TEST_DIRECTORY / "schematisation_builder"
 # Create output directory for db exporter tests
 db_export_output_dir = TEMP_DIR / f"temp_db_exporter_{hrt.current_time(date=True)}"
 
-# skip_db is True when db_exporter could not be imported or when the environment variable SKIP_DATABASE is set to '1'
-skip_db = db_exporter is None or os.getenv("SKIP_DATABASE", "0") == "1"
 
-
-@pytest.mark.skipif(skip_db, reason="Skipping DB test because no local_settings_htt.py or DATABASES available.")
+@pytest.mark.skipif(
+    str(os.getenv("SKIP_DATABASE")) == "1",
+    reason="Skipping DB test because no local_settings_htt.py or DATABASES available.",
+)
 def test_db_exporter_one_feature():
     """
     Test the db_exporter function with a single feature from the GEMAAL table from DAMO and CSO
     Includes test of sub table.
     """
+    from hhnk_threedi_tools.core.schematisation_builder.DB_exporter import db_exporter
+
     model_extent_path = TEST_DIRECTORY_SB / "area_test_sql_helsdeur.gpkg"
     output_file = db_export_output_dir / "test_damo_gemaal_helsdeur.gpkg"
     db_export_output_dir.mkdir(exist_ok=True)
@@ -55,9 +53,13 @@ def test_db_exporter_one_feature():
     assert logging_DAMO == []  # test geen errors
 
 
-@pytest.mark.skipif(skip_db, reason="Skipping DB test because no local_settings_htt.py or DATABASES available.")
+@pytest.mark.skipif(
+    str(os.getenv("SKIP_DATABASE")) == "1",
+    reason="Skipping DB test because no local_settings_htt.py or DATABASES available.",
+)
 def test_db_exporter_polder():
     """Test the db_exporter function using all default tables for the test polder."""
+    from hhnk_threedi_tools.core.schematisation_builder.DB_exporter import db_exporter
 
     model_extent_path = TEST_DIRECTORY / r"model_test\01_source_data\polder_polygon.shp"
     output_file = db_export_output_dir / "test_export.gpkg"
