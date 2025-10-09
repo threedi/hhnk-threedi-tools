@@ -12,7 +12,7 @@ from tests.config import FOLDER_TEST, PATH_NEW_FOLDER
 
 
 class TestSqlite:
-    FOLDER_TEST.output.sqlite_tests.unlink_contents()
+    FOLDER_TEST.output.sqlite_checks.unlink_contents()
 
     sqlite_check = SqliteCheck(folder=FOLDER_TEST)
     sqlite_check.output_fd.create(parents=True)
@@ -90,8 +90,8 @@ class TestSqlite:
         assert output["distance_to_vertex"].to_list() == [1.0]
 
     def test_create_grid_from_sqlite(self, folder_new):
-        self.sqlite_check.create_grid_from_sqlite(output_folder=folder_new.output.sqlite_tests.path)
-        assert folder_new.output.sqlite_tests.full_path("cells.gpkg").exists()
+        self.sqlite_check.create_grid_from_sqlite(output_folder=folder_new.output.sqlite_checks.path)
+        assert folder_new.output.sqlite_checks.full_path("cells.gpkg").exists()
 
     def test_run_struct_channel_bed_level(self):
         """TODO empty check"""

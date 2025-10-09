@@ -7,7 +7,7 @@ They still must be checked qualitatively
 
 import pytest
 
-from hhnk_threedi_tools.core.checks.bank_levels import BankLevelTest
+from hhnk_threedi_tools.core.checks.bank_levels import BankLevelCheck
 from tests.config import FOLDER_TEST
 
 # pd.options.mode.chained_assignment = 'raise' #catch SettingWithCopyWarning
@@ -16,7 +16,7 @@ from tests.config import FOLDER_TEST
 class TestBankLevel:
     @pytest.fixture(scope="class")
     def bl_test(self):
-        bl = BankLevelTest(FOLDER_TEST)
+        bl = BankLevelCheck(FOLDER_TEST)
         bl.import_data()
         return bl
 
