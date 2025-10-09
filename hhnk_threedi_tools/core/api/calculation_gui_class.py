@@ -176,19 +176,19 @@ class StartCalculationWidgets:
 
             # hydraulic check; 1 dry, 5 days rain, 2 dry
             self.check_0d1d_button = widgets.Button(
-                description="Hyd test (0d1d)", layout=item_layout(grid_area="check_0d1d_button")
+                description="Hydraulic check (0d1d)", layout=item_layout(grid_area="check_0d1d_button")
             )
 
             # 1d2d check: T10 rain peak. 35.5mm total
             self.check_1d2d_button = widgets.Button(
-                description="1d2d test",
+                description="1d2d check",
                 layout=item_layout(grid_area="check_1d2d_button", justify_self="end"),
             )
 
-            # One hour test
-            self.test_hour_button = widgets.Button(
-                description="1 hour test",
-                layout=item_layout(grid_area="hour_test_button", justify_self="end"),
+            # One hour check
+            self.one_hour_check_button = widgets.Button(
+                description="1 hour check",
+                layout=item_layout(grid_area="one_hour_check_button", justify_self="end"),
             )
 
             for rtype in RAIN_TYPES:  # ["piek", "blok"]
@@ -317,7 +317,7 @@ class StartCalculationWidgets:
                 children=[
                     self.check_0d1d_button,
                     self.check_1d2d_button,
-                    self.test_hour_button,
+                    self.one_hour_check_button,
                     self.T10_blok_button,
                     self.T100_blok_button,
                     self.T1000_blok_button,
@@ -346,7 +346,7 @@ class StartCalculationWidgets:
                     grid_template_areas="""
                     'check_0d1d_button simulation_duration_label simulation_duration_widget simulation_duration_widget'
                     'check_1d2d_button custom_rain_label custom_rain_label custom_rain_label'
-                    'hour_test_button rain_offset_label rain_offset_widget rain_offset_widget'
+                    'one_hour_check_button rain_offset_label rain_offset_widget rain_offset_widget'
                     'T10_blok_button rain_duration_label rain_duration_widget rain_duration_widget'
                     'T100_blok_button rain_intensity_label rain_intensity_widget rain_intensity_widget'
                     'T1000_blok_button rain_event_plot rain_event_plot rain_event_plot'
@@ -715,7 +715,7 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
             self._update_calc_settings_buttons(structure_control=True, laterals=True)
             self.update_simulation_name_widget(model_type="1d2d_test")
 
-        @self.rain.test_hour_button.on_click
+        @self.rain.one_hour_check_button.on_click
         def change_rain(action):
             self.rain.update_rain(
                 simulation_duration="3600",
@@ -724,7 +724,7 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
                 rain_intensity="100",
             )
 
-            self._activate_button_color(self.rain.test_hour_button)
+            self._activate_button_color(self.rain.one_hour_check_button)
             self.output.subfolder_box.value = self.output.subfolder_box.options[0]
             self._update_calc_settings_buttons(structure_control=True, laterals=True)
             self.update_simulation_name_widget(model_type="1hour_test")
@@ -1363,7 +1363,7 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
         for button_grey in [
             self.rain.check_0d1d_button,
             self.rain.check_1d2d_button,
-            self.rain.test_hour_button,
+            self.rain.one_hour_check_button,
             self.rain.T10_blok_button,
             self.rain.T100_blok_button,
             self.rain.T1000_blok_button,
