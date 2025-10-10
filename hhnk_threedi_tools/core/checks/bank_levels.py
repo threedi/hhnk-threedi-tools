@@ -215,11 +215,11 @@ class BankLevelTest:
 
     def write_csv_gpkg(self, result, filename, csv_path, gpkg_path):
         """writes a csv and geopackage, name is the name wo extension"""
+        print(gpkg_path)
         if not result.empty:
             hrt.gdf_write_to_csv(result, csv_path, filename)
             hrt.gdf_write_to_geopackage(result, gpkg_path, filename)
-            print(result)
-            print(gpkg_path)
+            # print(result)
 
     def write(self, csv_path, gpkg_path):
         self.write_csv_gpkg(
@@ -733,7 +733,6 @@ def get_updated_channels(channel_line_geo, cross_loc_new_all):
         left_on=a_chan_id,
         right_on=a_chan_id,
     )
-    print(all_channels)
     return all_channels
 
 
@@ -749,6 +748,7 @@ if __name__ == "__main__":
     self = BankLevelTest(Folders(TEST_MODEL))
     self.import_data()
     self.run()
+    self.write_output("run_2025_10_10")
     # self.manhole_information()
 
 # %%
