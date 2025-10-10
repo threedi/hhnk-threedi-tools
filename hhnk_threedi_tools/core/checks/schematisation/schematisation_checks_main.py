@@ -348,12 +348,6 @@ class HhnkSchematisationChecks:
         """
         logger.warning("Check 'run_struct_channel_bed_level' does not do what it is supposed to do")
 
-        # Load culvert and bridges including relations
-        culvert_rel = StructureRelations(folder=self.folder, structure_table="culvert")
-        orifice_rel = StructureRelations(folder=self.folder, structure_table="orifice")
-        culvert_gdf = culvert_rel.gdf
-        orifice_gdf = orifice_rel.gdf
-
         # Get profiles that cause structures to be sunk
         wrong_profile_dict: dict[str, gpd.GeoDataFrame] = {}
         for structure_table in ["culvert", "orifice"]:
@@ -408,23 +402,25 @@ class HhnkSchematisationChecks:
             wrong_profiles_no_assumption_gdf["cross_section_location_id"]
         )
 
-        # This seems logical to return
+        # This should be loaded into the plugin
         # return wrong_profiles_gdf, culvert_assump_down_gdf, culvert_assump_up_gdf, bridge_assump_gdf
 
         ############################
-        # Original code, working towards original result
+        # Original code modified, working towards original result #FIXME use above in plugin, remove below
+
+        # Load culvert and bridges including relations
+        culvert_rel = StructureRelations(folder=self.folder, structure_table="culvert")
+        culvert_gdf = culvert_rel.gdf.rename(columns={"code": "struct_code"})
         # Load source data to determine whether structure reference lever was based on assumption
         datachecker_culvert_layer = self.folder.source_data.datachecker.layers.culvert
         damo_duiker_sifon_layer = self.folder.source_data.damo.layers.DuikerSifonHevel
 
-        # TODO waar vind ik hoe dit gebruikt wordt? Check lijkt niet hier te gebeuren
         # See git issue about below statements
         gdf_with_damo = _add_damo_info(layer=damo_duiker_sifon_layer, gdf=culvert_gdf)
         gdf_with_datacheck = _add_datacheck_info(datachecker_culvert_layer, gdf_with_damo)
         gdf_with_datacheck.loc[:, down_has_assumption] = gdf_with_datacheck[height_inner_lower_down].isna()
         gdf_with_datacheck.loc[:, up_has_assumption] = gdf_with_datacheck[height_inner_lower_up].isna()
         self.results["struct_channel_bed_level"] = gdf_with_datacheck
-        # FIXME this only returns culverts, not bridges
         return gdf_with_datacheck  # culverts met beneden beneden_has_assumption en boven_has assumption, maar hoe gebruikt
 
     def run_watersurface_area(self) -> tuple[gpd.GeoDataFrame, str]:
