@@ -29,4 +29,9 @@ v2_global_settings -> model_settings
 v2_simple_infiltration -> simple_infiltration
 v2_global_settings/initial_waterlevel_file -> initial_conditions/initial_water_level_file
 frict_coef_file -> friction_coefficient_file
-max_infiltration_capacity_file -> max_infiltration_volume_file
+max_infiltration_capacity_file -> 
+
+
+# CRITICAL
+zoom_category bestaat niet meer voor channels. Deze gebruikten wij voor aangeven of iets primair was (zoom_category == 4).
+Dit kan nu niet meer. Er zijn wel 'tags'. Al onze modellen moeten nu een tag krijgen voor primaire watergangen.
