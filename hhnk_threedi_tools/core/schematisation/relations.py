@@ -10,6 +10,107 @@ from hhnk_threedi_tools.core.folders import Folders
 logger = logging.get_logger(name=__name__)
 
 
+class ChannelRelations:
+    """
+    Class that adds properties from the connection nodes and cross section location to the channel
+    table.
+    """
+
+    def __init__(
+        self,
+        folder: Folders,
+    ):
+        self.folder = folder
+        self.database = folder.model.schema_base.database
+
+    def get_width_and_depth_from_tabulated_profile(self, channel_gdf_row: pd.Series) -> float:
+        """
+        From tabulated cross section (type 6) get width at water level and depth
+        Table like this is transformed to two values:
+            0,0
+            0.118,1.29
+            0.235,3.08
+            0.353,3.54
+            0.47,4.09
+        """
+        if channel_gdf_row["cross_section_shape"] == 6:
+            depth = channel_gdf_row["depth"]
+            item = channel_gdf_row["cross_section_table"]
+
+            # Get arrays of heigth and width
+            h, w = zip(*[map(float, line.strip().split(",")) for line in item.strip().split("\n")])
+
+            # TODO check that depth is nog greater than h[-1]
+
+            # Calculate width at waterlevel
+            width_wl = round(np.interp(depth, xp=h, fp=w), 2)
+
+            return width_wl
+        else:
+            logger.warning(f"Channel shape is not tabulated (type 6) for channel index {channel_gdf_row.index}")
+
+    @cached_property
+    def gdf(self) -> gpd.GeoDataFrame:
+        """
+        Create Geodataframe from channel with added data from cross section locations and connection
+        nodes.
+
+        Uses left join on cross section locations, so multiple crs are joined per channel. End result shows
+        the mean depth and width at waterlevel.
+
+        """
+        # Load tables
+        channel_gdf = self.database.load(layer="channel", index_column="id")
+        cross_section_gdf = self.database.load(layer="cross_section_location", index_column="id")
+        connection_node_gdf = self.database.load(layer="connection_node", index_column="id")
+
+        channel_gdf["channel_id"] = channel_gdf.index
+        channel_gdf["is_primary"] = channel_gdf["tags"].apply(
+            lambda tags: "is_primary" in tags if isinstance(tags, (list, str, np.ndarray)) else False
+        )
+        # Join connection node data to channel table
+        channel_gdf = channel_gdf.merge(
+            connection_node_gdf[["initial_water_level", "storage_area"]],
+            how="left",
+            left_on="connection_node_id_start",
+            right_index=True,
+        ).rename(columns={"initial_water_level": "initial_water_level_start", "storage_area": "storage_areastart"})
+        channel_gdf = channel_gdf.merge(
+            connection_node_gdf[["initial_water_level", "storage_area"]],
+            how="left",
+            left_on="connection_node_id_end",
+            right_index=True,
+        ).rename(columns={"initial_water_level": "initial_water_level_end", "storage_area": "storage_area_end"})
+
+        channel_gdf["initial_water_level_average"] = (
+            channel_gdf["initial_water_level_start"] + channel_gdf["initial_water_level_end"]
+        ) / 2
+
+        # Join cross section locations on channels using channel_id
+        channel_gdf = channel_gdf.merge(cross_section_gdf, left_index=True, right_on="channel_id", how="left")
+
+        # Calculate depth and width at waterlevel
+        channel_gdf["depth"] = channel_gdf["initial_water_level_average"] - channel_gdf["reference_level"]
+        channel_gdf["width_at_wlvl"] = channel_gdf.apply(func=self.get_width_and_depth_from_tabulated_profile, axis=1)
+
+        # Calculate average width of channel (not based on actual position of cross sections)
+        mean_widths = channel_gdf.groupby("channel_id")["width_at_wlvl"].agg(lambda x: np.nanmean(x.values))
+        min_widths = channel_gdf.groupby("channel_id")["width_at_wlvl"].agg(lambda x: np.nanmin(x.values))
+        max_widths = channel_gdf.groupby("channel_id")["width_at_wlvl"].agg(lambda x: np.nanmax(x.values))
+        mean_depths = channel_gdf.groupby("channel_id")["depth"].agg(lambda x: np.nanmean(x.values))
+        min_depths = channel_gdf.groupby("channel_id")["depth"].agg(lambda x: np.nanmin(x.values))
+        max_depths = channel_gdf.groupby("channel_id")["depth"].agg(lambda x: np.nanmax(x.values))
+        channel_gdf.drop_duplicates(subset="channel_id", keep="first", inplace=True)
+        channel_gdf["width_at_wlvl"] = mean_widths
+        channel_gdf["width_at_wlvl_min"] = min_widths
+        channel_gdf["width_at_wlvl_max"] = max_widths
+        channel_gdf["depth"] = mean_depths
+        channel_gdf["depth_min"] = min_depths
+        channel_gdf["depth_max"] = max_depths
+
+        return channel_gdf
+
+
 class StructureRelations:
     """
     Class that adds properties from the schematisation to structure table.
@@ -459,6 +560,10 @@ class StructureRelations:
 
     @cached_property
     def gdf(self) -> gpd.GeoDataFrame:
+        """
+        Create geodataframe from structure with added data from profiles, manholes and control
+        when available. Closest cross section is used.
+        """
         # Load table
         structure_gdf = self.database.load(layer=self.structure_table, index_column="id")
         structure_gdf[f"{self.structure_table}_id"] = structure_gdf.index

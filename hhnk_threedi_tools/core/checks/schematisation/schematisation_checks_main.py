@@ -22,7 +22,7 @@ from threedigrid_builder import make_gridadmin
 
 from hhnk_threedi_tools.core.checks.sqlite.structure_control import StructureControl
 from hhnk_threedi_tools.core.folders import Folders
-from hhnk_threedi_tools.core.schematisation.relations import StructureRelations
+from hhnk_threedi_tools.core.schematisation.relations import ChannelRelations, StructureRelations
 from hhnk_threedi_tools.utils.queries import (
     channels_query,
     cross_section_location_query,
@@ -309,25 +309,19 @@ class HhnkSchematisationChecks:
         }
         return isolated_channels_gdf, result
 
-    def run_used_profiles(self):
+    def run_used_profiles(self) -> gpd.GeoDataFrame:
         """
         Koppelt de v2_cross_section_definition laag van het model (discrete weergave van de natuurlijke geometrie van de
         watergangen) aan de v2_channel laag (informatie over watergangen in het model). Het resultaat van deze toets is een
         weergave van de breedtes en dieptes van watergangen in het model ter controle.
         """
-        # TODO use hrt.sqlite_table_to_gdf instead?
-        channels_gdf = self.database.execute_sql_selection(query=profiles_used_query)
-        # If zoom category is 4, channel is considered primary
-        channels_gdf[primary_col] = channels_gdf[a_zoom_cat].apply(lambda zoom_cat: zoom_cat == 4)
-        channels_gdf[width_col] = channels_gdf[width_col].apply(_split_round)
-        channels_gdf[height_col] = channels_gdf[height_col].apply(_split_round)
-        channels_gdf[water_level_width_col] = channels_gdf.apply(func=_calc_width_at_waterlevel, axis=1)
-        channels_gdf[max_depth_col] = channels_gdf.apply(func=_get_max_depth, axis=1)
-        # Conversion to string because lists are not valid for storing in gpkg
-        channels_gdf[width_col] = channels_gdf[width_col].astype(str)
-        channels_gdf[height_col] = channels_gdf[height_col].astype(str)
-        self.results["used_profiles"] = channels_gdf
-        return channels_gdf
+        # Load channels and cross sections from model
+        channel_rel = ChannelRelations(folder=self.folder)
+        channel_gdf = channel_rel.gdf
+
+        self.results["used_profiles"] = channel_gdf
+        # TODO confige plugin so than minimum depth is somehow shown, this is what is actually interesting
+        return channel_gdf
 
     def run_struct_channel_bed_level(self) -> gpd.GeoDataFrame:
         """
@@ -655,29 +649,6 @@ def _calc_len_percentage(channels_gdf):
         isolated_length = 0
     percentage = round((isolated_length / total_length) * 100, 0)
     return isolated_channels_gdf, isolated_length, total_length, percentage
-
-
-def _calc_width_at_waterlevel(row):
-    """Bereken de breedte van de watergang op het streefpeil"""
-    x_pos = [b / 2 for b in row[width_col]]
-    y = [row.reference_level + b for b in row[height_col]]
-    ini = row[initial_waterlevel_col]
-
-    # Interpoleer tussen de x en y waarden (let op: de x en y zijn hier verwisseld)
-    width_wl = round(np.interp(ini, xp=y, fp=x_pos), 2) * 2
-    return width_wl
-
-
-def _split_round(item):
-    """Split items in width and height columns by space,
-    round all items in resulting list and converts to floats
-    """
-    return [round(float(n), 2) for n in str(item).split(" ")]
-
-
-def _get_max_depth(row):
-    """Calculate difference between initial waterlevel and reference level"""
-    return round(float(row[initial_waterlevel_col]) - float(row[reference_level_col]), 2)
 
 
 def _add_damo_info(layer, gdf):
