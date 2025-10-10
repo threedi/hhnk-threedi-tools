@@ -21,7 +21,7 @@ one_d_two_d_crosses_levee_val = "1d2d_crosses_levee"
 one_d_two_d_crosses_fixed = "1d2d_crosses_fixeddrainage"
 
 # Nodes in wrong area
-drain_level_col = "drain_level"
+drain_level_col = "bottom_level"
 already_manhole_col = "already_manhole"
 unknown_val = "unknown"
 node_in_wrong_fixed_area = "node_in_wrong_fixeddrainage_area"
