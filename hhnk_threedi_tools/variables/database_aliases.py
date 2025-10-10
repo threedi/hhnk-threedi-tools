@@ -20,11 +20,11 @@ a_weir_chan_conn_end_id = "channel_connection_node_end_id"
 a_weir_cross_loc_id = "cross_section_location_id"
 
 # bank levels gather information
-a_man_id = "manhole_id"
-a_man_conn_id = "conn_node_id"
+a_man_id = "code"
+a_man_conn_id = "code"
 a_conn_nodes = "nodes"
 a_cross_loc_id = "cross_loc_id"
-a_conn_node_id = "conn_node_id"
+a_conn_node_id = "code"
 
 # model states weir_widths
 a_weir_cross_def_id = "cross_def_id"
