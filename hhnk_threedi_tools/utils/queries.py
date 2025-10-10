@@ -10,8 +10,11 @@ All sqlite queries are stored within this script. Queries are listed per table.
 """
 
 # Third-part imports
+import fiona
+import geopandas as gpd
 import hhnk_research_tools as hrt
 import numpy as np
+import pandas as pd
 
 from hhnk_threedi_tools.variables.backups_table_names import (
     BANK_LVLS_LAST_CALC,
@@ -504,3 +507,100 @@ def construct_geometry_query(table_names, dst_crs=DEF_TRGT_CRS):
 
 
 geometry_check_query = construct_geometry_query(table_names=[channels_layer, culvert_layer])
+
+
+def channels_query_from_gpkg(data, gpkg_path):
+    """
+    Replaces the old SQL query for channels using geopackage data.
+    Joins 'channel' with 'connection_node' to add initial water levels.
+    """
+    channels = data["channel"].copy()
+    conn_nodes = data["connection_node"].copy()
+
+    with fiona.open(gpkg_path, layer="channel") as src:
+        fids = [feat["id"] for feat in src]
+    # align indices
+    channels = channels.reset_index(drop=True)
+    channels["channel_id"] = pd.Series(fids, index=channels.index)
+
+    # transform into numeric if possible
+    channels["channel_id"] = pd.to_numeric(channels["channel_id"], errors="ignore")
+
+    # Ensure consistent naming and data types
+    channels["connection_node_id_start"] = channels["connection_node_id_start"].astype(str)
+    conn_nodes["code"] = conn_nodes["code"].astype(str)
+
+    # LEFT JOIN: each channel gets the initial level from its start node
+    channels = channels.merge(
+        conn_nodes[["code", "initial_water_level"]], how="left", left_on="connection_node_id_start", right_on="code"
+    )
+
+    channels.drop(columns=["id_y"], errors="ignore", inplace=True)
+
+    # keeps geometry
+    channels = gpd.GeoDataFrame(channels, geometry="geometry", crs="EPSG:28992")
+
+    return channels
+
+
+def cross_section_location_from_gpkg(data, gpkg_path) -> gpd.GeoDataFrame:
+    """
+    Replaces the old SQL-based cross_section_location_query.
+    Reads the 'cross_section_location' layer directly from the 3Di geopackage
+    already loaded into `data`.
+    """
+    df = data["cross_section_location"].copy()
+
+    with fiona.open(gpkg_path, layer="cross_section_location") as src:
+        fids = [feat["id"] for feat in src]
+    # align indices
+    df = df.reset_index(drop=True)
+    df[a_cross_loc_id] = pd.Series(fids, index=df.index)
+
+    # Rename columns if needed for consistency with legacy names
+    rename_map = {}
+
+    if "channel_id" in df.columns:
+        rename_map["channel_id"] = "channel_id"
+    if "reference_level" in df.columns:
+        rename_map["reference_level"] = "reference_level"
+    if "bank_level" in df.columns:
+        rename_map["bank_level"] = "bank_level"
+
+    df.rename(columns=rename_map, inplace=True)
+
+    # Keep only the relevant columns (if they exist)
+    keep = [c for c in ["cross_loc_id", "channel_id", "reference_level", "bank_level", "geometry"] if c in df.columns]
+    df = df[keep]
+
+    return df
+
+
+def conn_nodes_from_gpkg(data: dict) -> gpd.GeoDataFrame:
+    """
+    Replacement for the old SQL-based conn_nodes_query.
+    Reads the 'connection_node' layer directly from the 3Di GeoPackage
+    that is already loaded in the `data` dictionary.
+    """
+    df = data["connection_node"].copy()
+
+    # Rename columns for consistency with legacy naming
+    rename_map = {}
+    if "id" in df.columns:
+        rename_map["id"] = "code"  # equivalent to a_conn_node_id
+    if "storage_area" in df.columns:
+        rename_map["storage_area"] = "storage_area"
+    if "geometry" not in df.columns and "geom" in df.columns:
+        rename_map["geom"] = "geometry"
+
+    df.rename(columns=rename_map, inplace=True)
+
+    # Make sure geometry is valid and CRS is correct
+    if not isinstance(df, gpd.GeoDataFrame):
+        df = gpd.GeoDataFrame(df, geometry="geometry", crs="EPSG:28992")
+
+    # Keep only relevant columns if they exist
+    keep = [c for c in ["code", "bottom_level", "initial_water_level", "storage_area", "geometry"] if c in df.columns]
+    df = df[keep]
+
+    return df
