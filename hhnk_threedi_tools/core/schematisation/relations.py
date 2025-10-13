@@ -1,3 +1,4 @@
+# %%
 from functools import cached_property
 
 import geopandas as gpd
@@ -101,12 +102,25 @@ class ChannelRelations:
         min_depths = channel_gdf.groupby("channel_id")["depth"].agg(lambda x: np.nanmin(x.values))
         max_depths = channel_gdf.groupby("channel_id")["depth"].agg(lambda x: np.nanmax(x.values))
         channel_gdf.drop_duplicates(subset="channel_id", keep="first", inplace=True)
-        channel_gdf["width_at_wlvl"] = mean_widths
-        channel_gdf["width_at_wlvl_min"] = min_widths
-        channel_gdf["width_at_wlvl_max"] = max_widths
-        channel_gdf["depth"] = mean_depths
-        channel_gdf["depth_min"] = min_depths
-        channel_gdf["depth_max"] = max_depths
+        channel_gdf.drop(columns=["width_at_wlvl", "depth"], inplace=True)
+        channel_gdf = channel_gdf.merge(mean_widths, how="left", left_on="channel_id", right_index=True).rename(
+            columns={"width_at_wlvl": "width_at_wlvl_mean"}
+        )
+        channel_gdf = channel_gdf.merge(min_widths, how="left", left_on="channel_id", right_index=True).rename(
+            columns={"width_at_wlvl": "width_at_wlvl_min"}
+        )
+        channel_gdf = channel_gdf.merge(max_widths, how="left", left_on="channel_id", right_index=True).rename(
+            columns={"width_at_wlvl": "width_at_wlvl_max"}
+        )
+        channel_gdf = channel_gdf.merge(mean_depths, how="left", left_on="channel_id", right_index=True).rename(
+            columns={"depth": "depth_mean"}
+        )
+        channel_gdf = channel_gdf.merge(min_depths, how="left", left_on="channel_id", right_index=True).rename(
+            columns={"depth": "depth_min"}
+        )
+        channel_gdf = channel_gdf.merge(max_depths, how="left", left_on="channel_id", right_index=True).rename(
+            columns={"depth": "depth_max"}
+        )
 
         return channel_gdf
 

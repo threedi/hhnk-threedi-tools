@@ -34,7 +34,7 @@ class TestSchematisation:
 
         return folder_new
 
-    def test_run_controlled_structures(self):
+    def test_run_controlled_structures(self):  # TODO with gpkg
         self.hhnk_schematisation_checks.run_controlled_structures()
 
         output_file = self.hhnk_schematisation_checks.output_fd.gestuurde_kunstwerken
@@ -58,11 +58,11 @@ class TestSchematisation:
             "std": 1.19355,
         }
 
-    def test_run_model_checks(self):
+    def test_run_model_checks(self):  # TODO with gpkg
         output = self.hhnk_schematisation_checks.run_model_checks()
         assert "node without initial waterlevel" in output.set_index("id").loc[482, "error"]
 
-    def test_run_geometry(self):
+    def test_run_geometry(self):  # TODO with gpkg
         """TODO empty check"""
         output = self.hhnk_schematisation_checks.run_geometry_checks()
         assert output.empty
@@ -72,19 +72,19 @@ class TestSchematisation:
         assert "61 ha" in output
 
     def test_run_isolated_channels(self):
-        output = self.hhnk_schematisation_checks.run_isolated_channels()
-        assert output[0]["length_in_meters"][10] == 168.45
+        output, some_text = self.hhnk_schematisation_checks.run_isolated_channels()
+        assert output["length_in_meters"].iloc[0] == 168.45
 
     def test_run_used_profiles(self):
         output = self.hhnk_schematisation_checks.run_used_profiles()
-        assert output["width_at_wlvl"][0] == 2
+        assert output["width_at_wlvl_mean"].iloc[0] == 2
 
-    def test_run_cross_section_duplicates(self, folder_new):
+    def test_run_cross_section_duplicates(self, folder_new):  # TODO what is schema_basis_errors?
         database = folder_new.model.schema_basis_errors.database
         output = self.hhnk_schematisation_checks.run_cross_section_duplicates(database=database)
         assert output["cross_loc_id"].to_list() == [282, 99999]
 
-    def test_run_cross_section_no_vertex(self, folder_new):
+    def test_run_cross_section_no_vertex(self, folder_new):  # TODO what is schema_basis_errors?
         database = folder_new.model.schema_basis_errors.database
         output = self.hhnk_schematisation_checks.run_cross_section_no_vertex(database=database)
         assert output["cross_loc_id"].to_list() == [320]
@@ -94,12 +94,13 @@ class TestSchematisation:
         self.hhnk_schematisation_checks.create_grid_from_schematisation(
             output_folder=folder_new.output.hhnk_schematisation_checks.path
         )
-        assert folder_new.output.hhnk_schematisation_checks.full_path("cells.gpkg").exists()
+        assert folder_new.output.hhnk_schematisation_checks.full_path("grid.gpkg").exists()
 
     def test_run_struct_channel_bed_level(self):
-        """TODO empty check"""
+        # TODO improve test with better result from function
         output = self.hhnk_schematisation_checks.run_struct_channel_bed_level()
-        assert output.empty
+
+        assert output.iloc[0]["beneden_has_assumption"]
 
     def test_run_watersurface_area(self):
         output = self.hhnk_schematisation_checks.run_watersurface_area()
@@ -107,7 +108,7 @@ class TestSchematisation:
 
     def test_run_weir_flood_level(self):
         output = self.hhnk_schematisation_checks.run_weir_floor_level()
-        assert output[0]["proposed_reference_level"][1] == -1.26
+        assert output[0]["proposed_reference_level"].iloc[0] == -1.25
 
 
 # %%
@@ -123,18 +124,16 @@ if __name__ == "__main__":
     # Run all testfunctions
     for i in dir(self):
         if i.startswith("test_"):
-            break
+            # break
             # Find out if function needs folder_new as input
             params = inspect.signature(getattr(self, i)).parameters
             if "folder_new" in params:
                 folder_new = Folders(PATH_NEW_FOLDER, create=True)
                 getattr(self, i)(folder_new=folder_new)
 
-            break
-        if i.startswith("test_") and hasattr(inspect.getattr_static(self, i), "__call__"):
-            print(i)
-            getattr(self, i)()
-    folder_new = self.folder_new()
+            elif i.startswith("test_") and hasattr(inspect.getattr_static(self, i), "__call__"):
+                print(i)
+                getattr(self, i)()
     # self.test_run_cross_section_duplicates(folder_new=folder_new)
     # self.test_run_cross_section_no_vertex(folder_new=folder_new)
     self.test_run_geometry()

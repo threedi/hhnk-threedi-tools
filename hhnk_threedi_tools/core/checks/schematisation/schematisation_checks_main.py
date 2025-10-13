@@ -42,7 +42,7 @@ logger = hrt.logging.get_logger(name=__name__)
 
 # %%
 class HhnkSchematisationChecks:
-    def __init__(self, folder: Folders, results: dict[str, object]):
+    def __init__(self, folder: Folders):
         self.folder = folder
 
         self.output_fd = self.folder.output.hhnk_schematisation_checks
@@ -305,7 +305,7 @@ class HhnkSchematisationChecks:
             wrong_profiles_no_assumption_gdf["cross_section_location_id"]
         )
 
-        # This should be loaded into the plugin
+        # TODO This should be loaded into the plugin
         # return wrong_profiles_gdf, culvert_assump_down_gdf, culvert_assump_up_gdf, bridge_assump_gdf
 
         ############################
@@ -656,12 +656,14 @@ def _calc_perc(diff, waterdeel):
             return 100.0
 
 
+# %%
+
 if __name__ == "__main__":
     from tests.config import FOLDER_TEST
 
     folder = Folders(FOLDER_TEST)
-    results = {}
-    self = HhnkSchematisationChecks(folder=folder, results=results)
+    # results = {}
+    self = HhnkSchematisationChecks(folder=folder)  # , results=results)
     database = folder.model.schema_base.database
 
     # self.verify_inputs("run_imp_surface_area")
