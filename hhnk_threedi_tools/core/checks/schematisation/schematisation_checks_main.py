@@ -13,7 +13,6 @@ import os
 import fiona
 import geopandas as gpd
 import hhnk_research_tools as hrt
-import numpy as np
 import pandas as pd
 import xarray as xr
 from shapely import wkt
@@ -24,112 +23,21 @@ from hhnk_threedi_tools.core.checks.sqlite.structure_control import StructureCon
 from hhnk_threedi_tools.core.folders import Folders
 from hhnk_threedi_tools.core.schematisation.relations import ChannelRelations, StructureRelations
 from hhnk_threedi_tools.utils.queries import (
-    channels_query,
-    cross_section_location_query,
     geometry_check_query,
-    impervious_surface_query,
-    isolated_channels_query,
-    profiles_used_query,
-    struct_channel_bed_query,
-    watersurface_conn_node_query,
-    weir_height_query,
 )
 from hhnk_threedi_tools.utils.queries_general_checks import ModelCheck
 from hhnk_threedi_tools.variables.database_aliases import (
     a_chan_bed_struct_code,
-    a_chan_bed_struct_id,
-    a_chan_id,
     a_geo_end_coord,
     a_geo_end_node,
     a_geo_start_coord,
     a_geo_start_node,
     a_watersurf_conn_id,
-    a_weir_code,
-    a_weir_conn_node_end_id,
-    a_weir_conn_node_start_id,
-    a_weir_cross_loc_id,
-    a_zoom_cat,
-    df_geo_col,
-)
-from hhnk_threedi_tools.variables.database_variables import (
-    action_col,
-    calculation_type_col,
-    code_col,
-    cross_sec_loc_layer,
-    height_col,
-    id_col,
-    initial_waterlevel_col,
-    reference_level_col,
-    storage_area_col,
-    width_col,
-)
-from hhnk_threedi_tools.variables.datachecker_variables import (
-    COL_STREEFPEIL_BWN,
-    geometry_col,
-    peil_id_col,
-)
-from hhnk_threedi_tools.variables.definitions import (
-    DEM_MAX_VALUE,
-    channels_isolated_calc_type,
 )
 
-# variables
-from hhnk_threedi_tools.variables.sqlite import (
-    area_diff_col,
-    area_diff_perc,
-    datachecker_assumption_alias,
-    down_has_assumption,
-    height_inner_lower_down,
-    height_inner_lower_up,
-    length_in_meters_col,
-    max_depth_col,
-    primary_col,
-    up_has_assumption,
-    water_level_width_col,
-    watersurface_channels_area,
-    watersurface_model_area,
-    watersurface_nodes_area,
-    watersurface_waterdeel_area,
-)
-from hhnk_threedi_tools.variables.weirs import (
-    diff_crest_ref,
-    min_crest_height,
-    new_ref_lvl,
-    wrong_profile,
-)
+DEM_MAX_VALUE = 400
 
 logger = hrt.logging.get_logger(name=__name__)
-
-
-# Globals
-# controlled
-START_ACTION = "start_action_value"
-MIN_ACTION = "min_action_value"
-MAX_ACTION = "max_action_value"
-HDB_KRUIN_MIN = "hdb_kruin_min"
-HDB_KRUIN_MAX = "hdb_kruin_max"
-HDB_STREEFPEIL = "hdb_streefpeil"
-
-# structures on channels
-DAMO_FIELDS = ["CODE", "HOOGTEBINNENONDERKANTBENE", "HOOGTEBINNENONDERKANTBOV"]
-DAMO_LINK_ON = "CODE"
-DATACHECKER_FIELDS = ["code", "aanname"]
-DATACHECKER_LINK_ON = "code"
-DATACHECKER_ASSUMPTION_FIELD = "aanname"
-
-
-# weir heights
-OUTPUT_COLS = [
-    a_weir_code,
-    a_weir_conn_node_start_id,
-    a_weir_conn_node_end_id,
-    a_weir_cross_loc_id,
-    a_chan_id,
-    min_crest_height,
-    reference_level_col,
-    new_ref_lvl,
-    df_geo_col,
-]
 
 
 # %%
@@ -151,11 +59,11 @@ class HhnkSchematisationChecks:
         self.inputs = {
             "run_imp_surface_area": [{"file": self.folder.source_data.polder_polygon.path, "layer": None}],
             "run_struct_channel_bed_level": [{"file": self.folder.source_data.damo.path}],
-        }
+        }  # TODO doen we hier iets mee?
 
         self.results = {}
 
-    def verify_inputs(self, function):
+    def verify_inputs(self, function) -> bool:
         """Check if the input of a function (if defined in self.inputs) exists."""
         exist = True
         # if function does not exist in self.inputs we can totally ignore this function
@@ -172,7 +80,7 @@ class HhnkSchematisationChecks:
                             exist = False
         return exist
 
-    def run_controlled_structures(self, overwrite=False):
+    def run_controlled_structures(self, overwrite=False):  # TODO
         """Create leayer with structure control in schematisation"""
         self.structure_control = StructureControl(
             model=self.database,
@@ -181,7 +89,7 @@ class HhnkSchematisationChecks:
         )
         self.structure_control.run(overwrite=overwrite)
 
-    def run_dem_max_value(self):
+    def run_dem_max_value(self) -> str:
         stats = self.dem.statistics()
         if stats["max"] > DEM_MAX_VALUE:
             result = f"Maximale waarde DEM: {stats['max']} is te hoog"
@@ -208,7 +116,7 @@ class HhnkSchematisationChecks:
             fixeddrainage_gdf = self.layer_fixeddrainage.load()
             hrt.gdf_to_raster(
                 gdf=fixeddrainage_gdf,
-                value_field=COL_STREEFPEIL_BWN,
+                value_field="streefpeil_bwn2",
                 raster_out=wlvl_raster,
                 nodata=nodata,
                 metadata=self.dem.metadata,
@@ -226,7 +134,7 @@ class HhnkSchematisationChecks:
             da_out = xr.where(da_dem == 10, nodata, da_out)
 
             # Write to file
-            da_out.rio.set_crs(crs)  # Reapply crs
+            da_out.rio.write_crs(crs)  # Reapply crs
             drooglegging_raster = hrt.Raster.write(
                 drooglegging_raster,
                 result=da_out,
@@ -235,7 +143,7 @@ class HhnkSchematisationChecks:
                 chunksize=None,
             )
 
-    def run_model_checks(self):
+    def run_model_checks(self):  # TODO Wat doet dit, en waar wordt het gebruikt?
         """Collect all queries that are part of general model checks (see general_checks_queries file)
         and executes them
         """
@@ -245,10 +153,10 @@ class HhnkSchematisationChecks:
         self.results["model_checks"] = df
         return df
 
-    def run_geometry_checks(self):
+    def run_geometry_checks(self):  # TODO
         """
-        Deze test checkt of de geometrie van een object in het model correspondeert met de start- of end node in de
-        v2_connection_nodes tafel. Als de verkeerde ids worden gebruikt geeft dit fouten in het model.
+        Deze test checkt of de geometrie van een channel en culvert in het model correspondeert met de start- of end node in de
+        v2_connection_nodes tabel. Als de verkeerde ids worden gebruikt geeft dit fouten in het model.
         """
         gdf = self.database.execute_sql_selection(
             query=geometry_check_query,
@@ -264,18 +172,20 @@ class HhnkSchematisationChecks:
         self.results["geometry_checks"] = result_db
         return result_db
 
-    def run_imp_surface_area(self):
+    def run_imp_surface_area(self) -> str:
         """Calculate
         1. the impervious surface area in the model
         2. the area of the polder (based on the polder shapefile)
         3. the difference between the two.
         """
-        imp_surface_db = self.database.execute_sql_selection(impervious_surface_query)
-        imp_surface_db.set_index("id", inplace=True)
+        imp_surface_db = self.database.load(layer="surface", index_column="id")
 
         polygon_imp_surface = self.folder.source_data.polder_polygon.load()
 
-        db_surface, polygon_surface, area_diff = _calc_surfaces_diff(imp_surface_db, polygon_imp_surface)
+        db_surface = int(imp_surface_db.area.sum() / 10000)
+        polygon_surface = int(polygon_imp_surface.area.to_numpy()[0] / 10000)
+        area_diff = db_surface - polygon_surface
+
         result_txt = (
             f"Totaal ondoorlatend oppervlak: {db_surface} ha\n"
             f"Gebied polder: {polygon_surface} ha\n"
@@ -284,20 +194,19 @@ class HhnkSchematisationChecks:
         self.results["imp_surface_area"] = result_txt
         return result_txt
 
-    def run_isolated_channels(self):
+    def run_isolated_channels(self) -> tuple[gpd.GeoDataFrame, str]:
         """
-        Test bepaalt welke watergangen niet zijn aangesloten op de rest van de watergangen. Deze watergangen worden niet
-        meegenomen in de uitwisseling in het watersysteem. De test berekent tevens de totale lengte van watergangen en welk
-        deel daarvan geïsoleerd is.
+        Test bepaalt welke watergangen isolated zijn, dus geen verbinding maken met het maaiveld of 2D rekenrooster.
+        De test berekent tevens de totale lengte van watergangen en welk deel daarvan geïsoleerd is.
         """
-        channels_gdf = self.database.execute_sql_selection(query=isolated_channels_query)
-        channels_gdf[length_in_meters_col] = round(channels_gdf[df_geo_col].length, 2)
+        channel_gdf = self.database.load(layer="channel", index_column="id")
+        channel_gdf["length_in_meters"] = round(channel_gdf["geometry"].length, 2)
         (
             isolated_channels_gdf,
             isolated_length,
             total_length,
             percentage,
-        ) = _calc_len_percentage(channels_gdf)
+        ) = _calc_len_percentage(channel_gdf)
         result = (
             f"Totale lengte watergangen {total_length} km\n"
             f"Totale lengte geïsoleerde watergangen {isolated_length} km\n"
@@ -412,8 +321,10 @@ class HhnkSchematisationChecks:
         # See git issue about below statements
         gdf_with_damo = _add_damo_info(layer=damo_duiker_sifon_layer, gdf=culvert_gdf)
         gdf_with_datacheck = _add_datacheck_info(datachecker_culvert_layer, gdf_with_damo)
-        gdf_with_datacheck.loc[:, down_has_assumption] = gdf_with_datacheck[height_inner_lower_down].isna()
-        gdf_with_datacheck.loc[:, up_has_assumption] = gdf_with_datacheck[height_inner_lower_up].isna()
+        gdf_with_datacheck.loc[:, "beneden_has_assumption"] = gdf_with_datacheck[
+            "hoogte_binnen_onderkant_beneden"
+        ].isna()
+        gdf_with_datacheck.loc[:, "boven_has_assumption"] = gdf_with_datacheck["hoogte_binnen_onderkant_boven"].isna()
         self.results["struct_channel_bed_level"] = gdf_with_datacheck
         return gdf_with_datacheck  # culverts met beneden beneden_has_assumption en boven_has assumption, maar hoe gebruikt
 
@@ -510,13 +421,8 @@ class HhnkSchematisationChecks:
         Create grid from schematisation (gpkg), this includes cells, lines and nodes.
         Returns Geopackage named grid.gpkg in output folder.
         """
-        # NOTE in de model settings staat het woord 'rasters' niet meer voor de rasterverwijzing
-        if "rasters" not in self.dem.base:
-            dem_fp = os.path.join(self.folder.model.schema_base.path, "rasters", self.dem.name)
-        else:
-            dem_fp = self.dem.base
 
-        grid = make_gridadmin(self.database.base, dem_fp)
+        grid = make_gridadmin(self.database.base, self.dem.base)
 
         output_fp = os.path.join(output_folder, "grid.gpkg")
         # using output here results in error, so we use the returned dict
@@ -633,16 +539,9 @@ def _add_distance_checks(gdf):
     gdf["end_dist_ok"] = round(gdf_end_node.distance(gdf_end_coor), 5) < 0.1
 
 
-def _calc_surfaces_diff(db_imp_surface, polygon_imp_surface):
-    db_surface = int(db_imp_surface.sum() / 10000)
-    polygon_surface = int(polygon_imp_surface.area.values[0] / 10000)
-    area_diff = db_surface - polygon_surface
-    return db_surface, polygon_surface, area_diff
-
-
 def _calc_len_percentage(channels_gdf):
     total_length = round(channels_gdf.geometry.length.sum() / 1000, 2)
-    isolated_channels_gdf = channels_gdf[channels_gdf[calculation_type_col] == channels_isolated_calc_type]
+    isolated_channels_gdf = channels_gdf[channels_gdf["exchange_type"] == 101]
     if not isolated_channels_gdf.empty:
         isolated_length = round(isolated_channels_gdf.geometry.length.sum() / 1000, 2)
     else:
@@ -655,15 +554,15 @@ def _add_damo_info(layer, gdf):
     try:
         damo_gdb = layer.load()
         new_gdf = gdf.merge(
-            damo_gdb[DAMO_FIELDS],
+            damo_gdb[["CODE", "HOOGTEBINNENONDERKANTBENE", "HOOGTEBINNENONDERKANTBOV"]],
             how="left",
-            left_on=a_chan_bed_struct_code,
-            right_on=DAMO_LINK_ON,
+            left_on="struct_code",
+            right_on="CODE",
         )
         new_gdf.rename(
             columns={
-                "HOOGTEBINNENONDERKANTBENE": height_inner_lower_down,
-                "HOOGTEBINNENONDERKANTBOV": height_inner_lower_up,
+                "HOOGTEBINNENONDERKANTBENE": "hoogte_binnen_onderkant_beneden",
+                "HOOGTEBINNENONDERKANTBOV": "hoogte_binnen_onderkant_boven",
                 "CODE": "damo_code",
             },
             inplace=True,
@@ -678,13 +577,13 @@ def _add_datacheck_info(layer, gdf):
     try:
         datachecker_gdb = layer.load()
         new_gdf = gdf.merge(
-            datachecker_gdb[DATACHECKER_FIELDS],
+            datachecker_gdb[["code", "aanname"]],
             how="left",
             left_on=a_chan_bed_struct_code,
-            right_on=DATACHECKER_LINK_ON,
+            right_on="code",
         )
         new_gdf.rename(
-            columns={DATACHECKER_ASSUMPTION_FIELD: datachecker_assumption_alias},
+            columns={"aanname": "assumptions"},
             inplace=True,
         )
     except Exception as e:
@@ -698,12 +597,12 @@ def _expand_multipolygon(df):
     geodataframe (missing last line), I think it works now?
     """
     try:
-        exploded = df.set_index([peil_id_col])[geometry_col]
+        exploded = df.set_index(["peil_id"])["geometry"]
         exploded = exploded.explode(index_parts=True)
         exploded = exploded.reset_index()
-        exploded = exploded.rename(columns={0: geometry_col, "level_1": "multipolygon_level"})
-        merged = exploded.merge(df.drop(geometry_col, axis=1), left_on=peil_id_col, right_on=peil_id_col)
-        merged = merged.set_geometry(geometry_col, crs=df.crs)
+        exploded = exploded.rename(columns={0: "geometry", "level_1": "multipolygon_level"})
+        merged = exploded.merge(df.drop("geometry", axis=1), left_on="peil_id", right_on="peil_id")
+        merged = merged.set_geometry("geometry", crs=df.crs)
         return merged
     except Exception as e:
         raise e from None
@@ -721,10 +620,10 @@ def _add_nodes_area(fixeddrainage, conn_nodes_geo):
             rsuffix="conn",
         )
         # Combine all rows with same peil_id and multipolygon level and sum their area
-        group = joined.groupby([peil_id_col, "multipolygon_level"])[storage_area_col].sum()
+        group = joined.groupby(["peil_id", "multipolygon_level"])["storage_area"].sum()
         # Add the aggregated area column to the original dataframe
-        fixeddrainage = fixeddrainage.merge(group, how="left", on=[peil_id_col, "multipolygon_level"])
-        fixeddrainage.rename(columns={storage_area_col: watersurface_nodes_area}, inplace=True)
+        fixeddrainage = fixeddrainage.merge(group, how="left", on=["peil_id", "multipolygon_level"])
+        fixeddrainage.rename(columns={"storage_area": "area_nodes_m2"}, inplace=True)
         return fixeddrainage
     except Exception as e:
         raise e from None
@@ -735,11 +634,11 @@ def _add_waterdeel(fixeddrainage, to_add):
         # create dataframe containing overlaying geometry
         overl = gpd.overlay(fixeddrainage, to_add, how="intersection")
         # add column containing size of overlaying areas
-        overl["area"] = overl[geometry_col].area
+        overl["area"] = overl["geometry"].area
         # group overlaying area gdf by id's
-        overl = overl.groupby([peil_id_col, "multipolygon_level"])["area"].sum()
+        overl = overl.groupby(["peil_id", "multipolygon_level"])["area"].sum()
         # merge overlapping area size into fixeddrainage
-        merged = fixeddrainage.merge(overl, how="left", on=[peil_id_col, "multipolygon_level"])
+        merged = fixeddrainage.merge(overl, how="left", on=["peil_id", "multipolygon_level"])
         merged["area"] = round(merged["area"], 0)
         merged["area"] = merged["area"].fillna(0)
     except Exception as e:
