@@ -11,19 +11,12 @@ class PeilgebiedConverter(RawExportToDAMOConverter):
             return
 
         self.logger.info("Running PeilgebiedConverter...")
-        self.load_layers()  # STEP 1
-        # self.update_peilgebied_layer()  # STEP 2
-        self.write_outputs()  # STEP 3
+        self.update_peilgebied_layer()
         self.mark_executed()
         self.logger.info("PeilgebiedConverter run completed.")
-
-    def load_layers(self):
-        self.logger.info("Loading peilgebied-specific layers...")
-        peilgebiedpraktijk = self._load_and_validate(self.raw_export_file_path, "PEILGEBIEDPRAKTIJK")
-        self.data.peilgebiedpraktijk = peilgebiedpraktijk.explode(index_parts=False).reset_index(drop=True)
 
     def update_peilgebied_layer(self):
         self.logger.info("Updating peilgebied layer...")
         self.data._ensure_loaded(["peilgebiedpraktijk"], previous_method="load_layers")
-
+        self.logger.warning("Update peilgebied layer not implemented yet")
         # TODO implement logic later

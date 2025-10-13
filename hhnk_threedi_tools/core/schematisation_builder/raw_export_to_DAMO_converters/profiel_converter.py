@@ -14,30 +14,10 @@ class ProfielConverter(RawExportToDAMOConverter):
 
     def run(self):
         self.logger.info("Starting ProfielConverter...")
-
-        # self.load_layers()
         self.process_linemerge()
-        # self.find_linemerge_id_by_hydroobject_code()
-        # self.find_peilgebied_id_by_hydroobject_code()
-
         self.create_profile_tables()
         self.connect_profiles_to_hydroobject_without_profiles()
         self.compute_deepest_point_hydroobjects()
-        # self.find_deepest_point_by_hydroobject_code()
-
-        self.write_outputs()
-
-    def load_layers(self):
-        self.logger.info("Loading profile-specific layers...")
-        self.data.hydroobject = self._load_and_validate(self.raw_export_file_path, "hydroobject")
-        self.data.gw_pro = self._load_and_validate(self.raw_export_file_path, "gw_pro")
-        self.data.gw_prw = self._load_and_validate(self.raw_export_file_path, "gw_prw")
-        self.data.gw_pbp = self._load_and_validate(self.raw_export_file_path, "gw_pbp")
-        self.data.iws_geo_beschr_profielpunten = self._load_and_validate(
-            self.raw_export_file_path, "iws_geo_beschr_profielpunten"
-        )
-        peilgebiedpraktijk = self._load_and_validate(self.raw_export_file_path, "peilgebiedpraktijk")
-        self.data.peilgebiedpraktijk = peilgebiedpraktijk.explode(index_parts=False).reset_index(drop=True)
 
     def process_linemerge(self):
         self.logger.info("ProfielConverter is linemerging hydroobjects for peilgebieden...")

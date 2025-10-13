@@ -36,9 +36,7 @@ class GemaalConverter(RawExportToDAMOConverter):
             return
 
         self.logger.info("Running GemaalConverter...")
-        # self.load_layers()  # STEP 1
-        self.update_gemaal_layer()  # STEP 2
-        self.write_outputs()  # STEP 3
+        self.update_gemaal_layer()
         self.mark_executed()
 
     def update_gemaal_layer(self):
