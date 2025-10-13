@@ -142,9 +142,13 @@ class ThreediSchematisation(Folder):
                 if raster_name is None:
                     raster_path = ""
                 else:
+                    # NOTE in de model settings van gpkg staat het woord 'rasters' niet meer voor de rasterverwijzing
+                    if not raster_name.startswith("rasters/"):
+                        raster_name = os.path.join("rasters", raster_name)
                     raster_path = self.caller.full_path(raster_name)
             else:
                 raster_path = ""
+
             return Raster(raster_path)
 
         def __repr__(self):
