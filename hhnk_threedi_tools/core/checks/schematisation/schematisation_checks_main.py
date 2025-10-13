@@ -656,9 +656,6 @@ def _calc_perc(diff, waterdeel):
             return 100.0
 
 
-# %%
-
-
 if __name__ == "__main__":
     from tests.config import FOLDER_TEST
 
@@ -667,26 +664,4 @@ if __name__ == "__main__":
     self = HhnkSchematisationChecks(folder=folder, results=results)
     database = folder.model.schema_base.database
 
-    # a, b = self.run_weir_floor_level()
-    # a, b = self.run_watersurface_area()
-
-    self.create_grid_from_schematisation(output_folder=folder.output.base)
     # self.verify_inputs("run_imp_surface_area")
-
-
-# %%
-if __name__ == "__main__":
-    from hhnk_threedi_tools.core.folders import Folders
-    from hhnk_threedi_tools.core.schematisation.relations import StructureRelations
-    from tests.config import TEST_DIRECTORY
-
-    folder = Folders(TEST_DIRECTORY / "model_test")
-    # database = folder.model.schema_base.database
-    self = StructureRelations(folder=folder, structure_table="orifice")
-    # self.structure_table = "orifice"
-    # structure_table = "orifice"
-    side = "start"
-    self.gdf()
-
-
-# %%

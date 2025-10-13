@@ -35,7 +35,8 @@ from hhnk_threedi_tools.variables.model_state import (
     one_d_two_d_state,
     weirs_new_width_col,
 )
-from hhnk_threedi_tools.variables.weirs import new_ref_lvl
+
+# from hhnk_threedi_tools.variables.weirs import new_ref_lvl
 
 # Strings
 # Global settings
@@ -369,21 +370,21 @@ def construct_channels_update_statement(channels_to_update_df, excluded_ids=[]):
         raise e from None
 
 
-def create_update_reference_level_query(wrong_profiles_gdf, excluded_ids=[]):
-    """
-    Creates qsl query to update reference level where minimum weir height is below
-    ground level (any deselected id's are skipped)
-    """
-    query = hrt.sql_create_update_case_statement(
-        df=wrong_profiles_gdf,
-        layer=cross_sec_loc_layer,
-        df_id_col=a_weir_cross_loc_id,
-        db_id_col=id_col,
-        old_val_col=reference_level_col,
-        new_val_col=new_ref_lvl,
-        excluded_ids=excluded_ids,
-    )
-    return query
+# def create_update_reference_level_query(wrong_profiles_gdf, excluded_ids=[]):
+#     """
+#     Creates qsl query to update reference level where minimum weir height is below
+#     ground level (any deselected id's are skipped)
+#     """
+#     query = hrt.sql_create_update_case_statement(
+#         df=wrong_profiles_gdf,
+#         layer=cross_sec_loc_layer,
+#         df_id_col=a_weir_cross_loc_id,
+#         db_id_col=id_col,
+#         old_val_col=reference_level_col,
+#         new_val_col=new_ref_lvl,
+#         excluded_ids=excluded_ids,
+#     )
+#     return query
 
 
 def __construct_channel_bed_query_inner(struct, startend):
