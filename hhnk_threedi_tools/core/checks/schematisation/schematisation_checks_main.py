@@ -9,6 +9,7 @@ Created on Tue Aug 24 14:11:45 2021
 """
 
 import os
+from pathlib import Path
 
 import fiona
 import geopandas as gpd
@@ -52,7 +53,7 @@ class HhnkSchematisationChecks:
 
         self.results = {}
 
-    def verify_inputs(self, function) -> bool:
+    def verify_inputs(self, function) -> bool:  # TODO WVE Dit weghalen en afvangen in functie, plugin weghalen 1x?
         """Check if the input of a function (if defined in self.inputs) exists."""
         exist = True
         # if function does not exist in self.inputs we can totally ignore this function
@@ -315,7 +316,7 @@ class HhnkSchematisationChecks:
             wrong_profiles_no_assumption_gdf["cross_section_location_id"]
         )
 
-        # TODO This should be loaded into the plugin
+        # TODO WVE This should be loaded into the plugin
         # return wrong_profiles_gdf, culvert_assump_down_gdf, culvert_assump_up_gdf, bridge_assump_gdf
 
         ############################
@@ -426,10 +427,10 @@ class HhnkSchematisationChecks:
 
         return wrong_profiles_gdf, update_query  # TODO check of sql werkt in de plugin
 
-    def create_grid_from_schematisation(self, output_folder):
+    def create_grid_from_schematisation(self, output_folder: Path) -> None:
         """
         Create grid from schematisation (gpkg), this includes cells, lines and nodes.
-        Returns Geopackage named grid.gpkg in output folder.
+        Writes Geopackage named grid.gpkg in output folder.
         """
 
         grid = make_gridadmin(self.database.base, self.dem.base)
