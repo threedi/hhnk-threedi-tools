@@ -22,18 +22,7 @@ from threedigrid_builder import make_gridadmin
 from hhnk_threedi_tools.core.checks.sqlite.structure_control import StructureControl
 from hhnk_threedi_tools.core.folders import Folders
 from hhnk_threedi_tools.core.schematisation.relations import ChannelRelations, StructureRelations
-from hhnk_threedi_tools.utils.queries import (
-    geometry_check_query,
-)
 from hhnk_threedi_tools.utils.queries_general_checks import ModelCheck
-from hhnk_threedi_tools.variables.database_aliases import (
-    a_chan_bed_struct_code,
-    a_geo_end_coord,
-    a_geo_end_node,
-    a_geo_start_coord,
-    a_geo_start_node,
-    a_watersurf_conn_id,
-)
 
 DEM_MAX_VALUE = 400
 
@@ -143,7 +132,7 @@ class HhnkSchematisationChecks:
                 chunksize=None,
             )
 
-    def run_model_checks(self):  # TODO Wat doet dit, en waar wordt het gebruikt?
+    def run_model_checks(self):  # TODO SQl checks, hoe nu doen want ik heb juist alles zonder run sql gedaan...
         """Collect all queries that are part of general model checks (see general_checks_queries file)
         and executes them
         """
@@ -371,7 +360,7 @@ class HhnkSchematisationChecks:
         modelbuilder_waterdeel_gdf = self.channels_from_profiles.load(layer="channel_surface_from_profiles")
         damo_waterdeel_gdf = self.folder.source_data.damo.layers.waterdeel.load()
         conn_nodes_gdf = self.database.load(layer="connection_node", index_column="id").rename(
-            columns={"id": a_watersurf_conn_id}
+            columns={"id": "conn_id"}
         )
         # Explode fixed drainage level area polygons to ensure no multipolygons are present
         fixeddrainage_gdf = _expand_multipolygon(fixeddrainage_gdf)
@@ -600,7 +589,7 @@ def _add_datacheck_info(layer, gdf):
         new_gdf = gdf.merge(
             datachecker_gdb[["code", "aanname"]],
             how="left",
-            left_on=a_chan_bed_struct_code,
+            left_on="struct_code",
             right_on="code",
         )
         new_gdf.rename(
