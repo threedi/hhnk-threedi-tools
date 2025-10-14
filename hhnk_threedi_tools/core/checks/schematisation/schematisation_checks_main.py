@@ -15,7 +15,7 @@ import geopandas as gpd
 import hhnk_research_tools as hrt
 import pandas as pd
 import xarray as xr
-from shapely import wkt
+from shapely import get_point, wkt
 from shapely.geometry import Point
 from threedigrid_builder import make_gridadmin
 
@@ -153,22 +153,43 @@ class HhnkSchematisationChecks:
         self.results["model_checks"] = df
         return df
 
-    def run_geometry_checks(self):  # TODO
+    def run_geometry_checks(self) -> gpd.GeoDataFrame:
         """
         Deze test checkt of de geometrie van een channel en culvert in het model correspondeert met de start- of end node in de
         v2_connection_nodes tabel. Als de verkeerde ids worden gebruikt geeft dit fouten in het model.
         """
-        gdf = self.database.execute_sql_selection(
-            query=geometry_check_query,
+        struct_rel = StructureRelations(folder=self.folder, structure_table="culvert")
+        culvert_gdf = struct_rel.gdf
+
+        channel_rel = ChannelRelations(folder=self.folder)
+        channel_gdf = channel_rel.gdf
+
+        columns = ["geometry", "code", "connection_node_id_start", "connection_node_id_end"]
+        gdf = pd.concat([culvert_gdf[columns], channel_gdf[columns]])
+        gdf["start_coord"] = gpd.GeoSeries(get_point(gdf.geometry, 0), crs="EPSG:28992")
+        gdf["end_coord"] = gpd.GeoSeries(get_point(gdf.geometry, -1), crs="EPSG:28992")
+
+        connection_node_gdf = self.database.load(layer="connection_node", index_column="id")["geometry"]
+
+        gdf = gdf.merge(
+            connection_node_gdf.rename("node_geom_start"),
+            how="left",
+            left_on="connection_node_id_start",
+            right_index=True,
+        ).merge(
+            connection_node_gdf.rename("node_geom_end"),
+            how="left",
+            left_on="connection_node_id_end",
+            right_index=True,
         )
 
-        gdf["start_check"] = gdf[a_geo_start_node] == gdf[a_geo_start_coord]
-        gdf["end_check"] = gdf[a_geo_end_node] == gdf[a_geo_end_coord]
-        _add_distance_checks(gdf)
+        gdf["start_dist_ok"] = gdf.start_coord.intersects(gdf.node_geom_start)
+        gdf["end_dist_ok"] = gdf.end_coord.intersects(gdf.node_geom_end)
+
         # Only rows where at least one of start_dist_ok and end_dist_ok is false
-        result_db = gdf[~gdf[["start_dist_ok", "end_dist_ok"]].all(axis=1)]
+        result_db = gdf[~gdf[["start_dist_ok", "end_dist_ok"]].all(axis=1)].copy()
         if not result_db.empty:
-            result_db["error"] = "Error: mismatched geometry"
+            result_db["error"] = "Error: Start or endnode from channel or culvert is not on referenced connection node"
         self.results["geometry_checks"] = result_db
         return result_db
 

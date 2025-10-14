@@ -18,7 +18,7 @@ class TestSchematisation:
         self.hhnk_schematisation_checks = HhnkSchematisationChecks(folder=FOLDER_TEST)
         self.hhnk_schematisation_checks.output_fd.create(parents=True)
 
-    @pytest.fixture(scope="class")
+    # @pytest.fixture(scope="class")
     def folder_new(self):
         """Copy folder structure and model database and then run splitter so we
         get the correct model database (with errors) to run tests on.
@@ -62,7 +62,7 @@ class TestSchematisation:
         output = self.hhnk_schematisation_checks.run_model_checks()
         assert "node without initial waterlevel" in output.set_index("id").loc[482, "error"]
 
-    def test_run_geometry(self):  # TODO with gpkg
+    def test_run_geometry(self):
         """TODO empty check"""
         output = self.hhnk_schematisation_checks.run_geometry_checks()
         assert output.empty
@@ -128,7 +128,7 @@ if __name__ == "__main__":
             # Find out if function needs folder_new as input
             params = inspect.signature(getattr(self, i)).parameters
             if "folder_new" in params:
-                folder_new = Folders(PATH_NEW_FOLDER, create=True)
+                folder_new = self.folder_new()
                 getattr(self, i)(folder_new=folder_new)
 
             elif i.startswith("test_") and hasattr(inspect.getattr_static(self, i), "__call__"):

@@ -88,7 +88,20 @@ class ChannelRelations:
         ) / 2
 
         # Join cross section locations on channels using channel_id
-        channel_gdf = channel_gdf.merge(cross_section_gdf, left_index=True, right_on="channel_id", how="left")
+        channel_gdf = channel_gdf.merge(
+            cross_section_gdf[
+                [
+                    "channel_id",
+                    "reference_level",
+                    "bank_level",
+                    "cross_section_shape",
+                    "cross_section_table",
+                ]
+            ],
+            left_index=True,
+            right_on="channel_id",
+            how="left",
+        )
 
         # Calculate depth and width at waterlevel
         channel_gdf["depth"] = channel_gdf["initial_water_level_average"] - channel_gdf["reference_level"]
