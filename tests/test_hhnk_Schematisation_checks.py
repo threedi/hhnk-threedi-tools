@@ -18,7 +18,7 @@ class TestSchematisation:
         self.hhnk_schematisation_checks = HhnkSchematisationChecks(folder=FOLDER_TEST)
         self.hhnk_schematisation_checks.output_fd.create(parents=True)
 
-    # @pytest.fixture(scope="class")
+    @pytest.fixture(scope="class")
     def folder_new(self):
         """Copy folder structure and model database and then run splitter so we
         get the correct model database (with errors) to run tests on.
@@ -58,7 +58,9 @@ class TestSchematisation:
             "std": 1.19355,
         }
 
-    def test_run_model_checks(self):  # TODO with gpkg
+    def test_run_model_checks(
+        self,
+    ):  # FIXME we hebben nu geen run sql functie meer toch op hrt, dus hoe gaan dit doen?
         output = self.hhnk_schematisation_checks.run_model_checks()
         assert "node without initial waterlevel" in output.set_index("id").loc[482, "error"]
 
@@ -79,12 +81,16 @@ class TestSchematisation:
         output = self.hhnk_schematisation_checks.run_used_profiles()
         assert output["width_at_wlvl_mean"].iloc[0] == 2
 
-    def test_run_cross_section_duplicates(self, folder_new):  # TODO what is schema_basis_errors?
+    def test_run_cross_section_duplicates(
+        self, folder_new
+    ):  # FIXME model splitter moet helemaal overhoop voordat dit gaat werken
         database = folder_new.model.schema_basis_errors.database
         output = self.hhnk_schematisation_checks.run_cross_section_duplicates(database=database)
         assert output["cross_loc_id"].to_list() == [282, 99999]
 
-    def test_run_cross_section_no_vertex(self, folder_new):  # TODO what is schema_basis_errors?
+    def test_run_cross_section_no_vertex(
+        self, folder_new
+    ):  # FIXME model splitter moet helemaal overhoop voordat dit gaat werken
         database = folder_new.model.schema_basis_errors.database
         output = self.hhnk_schematisation_checks.run_cross_section_no_vertex(database=database)
         assert output["cross_loc_id"].to_list() == [320]
@@ -115,11 +121,8 @@ class TestSchematisation:
 if __name__ == "__main__":
     import inspect
 
-    import geopandas as gpd
-    import hhnk_research_tools as hrt
-    import numpy as np
-
     self = TestSchematisation()
+    folder_new = self.folder_new()
 
     # Run all testfunctions
     for i in dir(self):
@@ -137,3 +140,5 @@ if __name__ == "__main__":
     # self.test_run_cross_section_duplicates(folder_new=folder_new)
     # self.test_run_cross_section_no_vertex(folder_new=folder_new)
     self.test_run_geometry()
+
+# %%

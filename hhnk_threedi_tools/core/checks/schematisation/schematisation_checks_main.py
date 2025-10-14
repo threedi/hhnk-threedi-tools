@@ -530,10 +530,8 @@ class HhnkSchematisationChecks:
 
 # TODO add monhole bottom level is lower than structure level check
 
+
 ## Helper functions
-# TODO zet in functies als het maar paar regels is
-
-
 def _add_distance_checks(gdf):
     # Load as valid geometry type
     gdf["start_coord"] = gdf["start_coord"].apply(wkt.loads)
