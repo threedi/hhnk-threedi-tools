@@ -56,7 +56,7 @@ class SchematisationBuilder:
                 f"polder_polygon.shp not found in {self.project_folder}/01_source_data, copying from default location."
             )
             shutil.copytree(
-                self.default_polder_polygon_path,
+                self.default_polder_polygon_path.parent,
                 self.project_folder / "01_source_data",
                 dirs_exist_ok=True,
             )
@@ -90,13 +90,19 @@ class SchematisationBuilder:
                 logger=self.logger,
             )
 
-            gemaal_converter = GemaalConverter(raw_export_converter)
+            gemaal_converter = GemaalConverter(
+                raw_export_converter = raw_export_converter,
+            )
             gemaal_converter.run()
 
-            peilgebied_converter = PeilgebiedConverter(raw_export_converter)
+            peilgebied_converter = PeilgebiedConverter(
+                raw_export_converter = raw_export_converter,
+            )
             peilgebied_converter.run()
 
-            profiel_converter = ProfielConverter(raw_export_converter)
+            profiel_converter = ProfielConverter(
+                raw_export_converter = raw_export_converter,
+            )
             profiel_converter.run()
 
             raw_export_converter.write_outputs()

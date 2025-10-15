@@ -11,6 +11,9 @@ from hhnk_threedi_tools.core.schematisation_builder.raw_export_to_DAMO_converter
 
 class ProfielConverter(RawExportToDAMOConverter):
     """Profile-specific converter implementation."""
+    def __init__(self, raw_export_converter: RawExportToDAMOConverter):
+        self.data = raw_export_converter.data
+        self.logger = raw_export_converter.logger
 
     def run(self):
         self.logger.info("Starting ProfielConverter...")
