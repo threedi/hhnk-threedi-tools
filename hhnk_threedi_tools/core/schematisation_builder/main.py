@@ -91,17 +91,17 @@ class SchematisationBuilder:
             )
 
             gemaal_converter = GemaalConverter(
-                raw_export_converter = raw_export_converter,
+                raw_export_converter=raw_export_converter,
             )
             gemaal_converter.run()
 
             peilgebied_converter = PeilgebiedConverter(
-                raw_export_converter = raw_export_converter,
+                raw_export_converter=raw_export_converter,
             )
             peilgebied_converter.run()
 
             profiel_converter = ProfielConverter(
-                raw_export_converter = raw_export_converter,
+                raw_export_converter=raw_export_converter,
             )
             profiel_converter.run()
 
