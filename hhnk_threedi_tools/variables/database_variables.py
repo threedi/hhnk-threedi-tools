@@ -66,7 +66,13 @@ zoom_cat_col = "zoom_category"
 name_col = "name"
 control_group_col = "control_group_id"
 crest_level_col = "crest_level"
-
+visualisation_col = "visualisation"
+manhole_surface_level_col = "manhole_surface_level"
+exchange_level_col = "exchange_level"
+exchange_type_col = "exchange_type"
+exchange_thickness_col = 'exchange_thickness'
+hydraulic_conductivity_in_col = 'hydraulic_conductivity_in'
+hydraulic_conductivity_out_col = 'hydraulic_conductivity_out'
 # SQLITE FUNCTIONS
 f_aswkt = "AsWKT"
 f_makeline = "MakeLine"

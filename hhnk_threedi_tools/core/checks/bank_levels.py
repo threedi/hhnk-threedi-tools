@@ -16,6 +16,7 @@ import numpy as np
 import pandas as pd
 from hhnk_research_tools.threedi.geometry_functions import extract_boundary_from_polygon
 from hhnk_research_tools.threedi.grid import Grid
+from pathlib import Path
 
 # Local imports
 from hhnk_threedi_tools.core.folders import Folders
@@ -24,9 +25,11 @@ from hhnk_threedi_tools.utils.queries import (
     channels_query_from_gpkg,
     conn_nodes_from_gpkg,
     conn_nodes_query,
-    cross_section_location_from_gpkg,
+    update_new_manholes_query,
     cross_section_location_query,
-    # manholes_query,
+    manholes_query,
+    update_cross_section_bank_levels,
+    cross_section_location_from_gpkg,
 )
 from hhnk_threedi_tools.variables.bank_levels import (
     already_manhole_col,
@@ -47,6 +50,7 @@ from hhnk_threedi_tools.variables.bank_levels import (
     storage_area_col,
     type_col,
     unknown_val,
+    
 )
 from hhnk_threedi_tools.variables.database_aliases import (
     a_chan_id,
@@ -69,6 +73,13 @@ from hhnk_threedi_tools.variables.database_variables import (
     surface_lvl_col,
     width_col,
     zoom_cat_col,
+    visualisation_col,
+    manhole_surface_level_col,
+    exchange_level_col,
+    exchange_type_col,
+    exchange_thickness_col,
+    hydraulic_conductivity_in_col,
+    hydraulic_conductivity_out_col, 
 )
 from hhnk_threedi_tools.variables.datachecker_variables import (
     COL_STREEFPEIL_BWN,
@@ -76,6 +87,7 @@ from hhnk_threedi_tools.variables.datachecker_variables import (
 )
 from hhnk_threedi_tools.variables.default_variables import DEF_TRGT_CRS
 
+# %%
 # Globals
 NEW_STORAGE_AREA_COL = "new_storage_area"
 
@@ -200,6 +212,25 @@ class BankLevelTest:
         if write:
             self.new_channels.to_file("new_channels.gpkg", driver="GPKG")
 
+    def update_model(self, update_model = False):
+        """update the model if it is requiered
+        """
+        if update_model:
+            print(" Updating 3Di model with new manholes and bank levels...")
+
+            # Update manholes in the connection nodes
+            update_new_manholes_query(
+                self.imports["conn_nodes"],
+                self.new_manholes_df,
+                self.model_path,
+            )
+
+            # Update cross section layer
+            update_cross_section_bank_levels(
+                self.imports["cross_loc"],
+                self.cross_loc_new_filtered,
+                self.model_path,
+            )
     def run(self):
         self.line_intersections()
         self.flowlines_1d2d()
@@ -211,7 +242,7 @@ class BankLevelTest:
 
         # generate locations and update channels
         self.generate_cross_section_locations()
-        self.generate_channels()
+        self.generate_channels()    
 
     def write_csv_gpkg(self, result, filename, csv_path, gpkg_path):
         """writes a csv and geopackage, name is the name wo extension"""
@@ -283,7 +314,7 @@ def import_information(grid, model_path, fixeddrainage_layer):
         #     "conn_nodes": hrt.sqlite_table_to_gdf(conn=conn, query=conn_nodes_query, id_col=a_conn_node_id),
         #     "manholes": hrt.sqlite_table_to_gdf(conn=conn, query=manholes_query, id_col=a_man_id),
         # }
-        print(grid.import_levees())
+        # print(grid.import_levees())
         return {
             "fixeddrainage": fixeddrainage,
             "fixeddrainage_lines": extract_boundary_from_polygon(fixeddrainage, df_geo_col),
@@ -464,9 +495,19 @@ def get_manholes_to_add_to_model(all_manholes):
     try:
         # Nodes with no manhole id need new manholes. Do not create manhole at fixeddrainage.
 
-        new_manholes_df = all_manholes[(all_manholes[type_col] != one_d_two_d_crosses_fixed)].drop(df_geo_col, axis=1)
+        new_manholes_df = all_manholes[(all_manholes[type_col] != one_d_two_d_crosses_fixed)]
+        # new_manholes_df = all_manholes[(all_manholes[type_col] != one_d_two_d_crosses_fixed)].drop(df_geo_col, axis=1)
 
-        new_manholes_for_model = dataframe_from_new_manholes(new_manholes_df)
+        if new_manholes_df.empty:
+            print('no manhole to be added')
+        
+        new_manholes_df["exchange_level"] = new_manholes_df[levee_height_col]
+        new_manholes_df[visualisation_col] = 0
+        new_manholes_df[exchange_type_col] = 2
+        new_manholes_df[bottom_lvl_col] = -10
+        new_manholes_df[manhole_surface_level_col] = new_manholes_df[initial_waterlevel_col]
+        # new_manholes_for_model = dataframe_from_new_manholes(new_manholes_df)
+
         return new_manholes_for_model
     except Exception as e:
         raise e from None
@@ -563,48 +604,57 @@ def divergent_waterlevel_nodes(conn_nodes: gpd.GeoDataFrame, fixeddrainage: gpd.
         return diverging_nodes
     except Exception as e:
         raise e from None
+    
+def divergent_waterlevel_nodes_gpkg(conn_nodes: gpd.GeoDataFrame, fixeddrainage: gpd.GeoDataFrame):
+    try:
+        # For all connection nodes, see in which area they are
+        # nodes_in_drainage_area
+        conn_nodes = conn_nodes.copy()
+        fixeddrainage = fixeddrainage.copy()
 
+        nodes_with_fixeddrainage_id = gpd.sjoin(
+            conn_nodes,
+            fixeddrainage[[peil_id_col, COL_STREEFPEIL_BWN, df_geo_col]],
+            how='left',
+            predicate='within'
+        ).drop(columns=['index_right'])
+
+        iw_col = 
 
 def dataframe_from_new_manholes(new_manholes):
     try:
         new_manholes_model_df = pd.DataFrame(
             columns=[
-                display_name_col,
-                code_col,
-                conn_node_id_col,
-                shape_col,
-                width_col,
-                manhole_indicator_col,
-                calculation_type_col,
-                # drain_level_col,
-                bottom_lvl_col,
-                surface_lvl_col,
-                zoom_cat_col,
+                new_manholes.columns
+                
             ]
         )
-        new_manholes_model_df[display_name_col] = new_manholes[code_col].astype(str) + "_" + new_manholes[type_col]
-        new_manholes_model_df[code_col] = new_manholes_model_df[display_name_col]
-        new_manholes_model_df[conn_node_id_col] = new_manholes[a_man_conn_id]
-        new_manholes_model_df[shape_col] = "00"
-        new_manholes_model_df[width_col] = 1
-        new_manholes_model_df[manhole_indicator_col] = 0
-        new_manholes_model_df[calculation_type_col] = np.where(new_manholes[bottom_lvl_col].isna(), 1, 2)
+        # new_manholes_model_df[display_name_col] = new_manholes[code_col].astype(str) + "_" + new_manholes[type_col]
+        new_manholes_model_df[code_col] = new_manholes['code']
+        codes = new_manholes_model_df[code_col] = new_manholes['code']
+        # new_manholes_model_df[conn_node_id_col] = new_manholes[a_man_conn_id]
+        # new_manholes_model_df[width_col] = 1
+        new_manholes_model_df[visualisation_col] = 0
+        new_manholes_model_df[exchange_type_col] = np.where(new_manholes[bottom_lvl_col].isna(), 1, 2)
         # new_manholes_model_df[drain_level_col] = new_manholes[drain_level_col]
-        new_manholes_model_df.loc[new_manholes_model_df[bottom_lvl_col].isna(), bottom_lvl_col] = "null"
+        # new_manholes_model_df.loc[new_manholes_model_df[bottom_lvl_col].isna(), bottom_lvl_col] = "null"
+        new_manholes_model_df[bottom_lvl_col] = new_manholes[bottom_lvl_col]
+        
+
 
         new_manholes_model_df[bottom_lvl_col] = -10
-        new_manholes_model_df[surface_lvl_col] = new_manholes[initial_waterlevel_col]
-        new_manholes_model_df[zoom_cat_col] = 0
-        new_manholes_model_df.set_index(conn_node_id_col)
+        new_manholes_model_df[manhole_surface_level_col] = new_manholes[initial_waterlevel_col]
+        # new_manholes_model_df.set_index(conn_node_id_col)
         new_manholes_model_df[storage_area_col] = new_manholes[storage_area_col]
-        # Add new storage area column where appropriate
-        new_manholes_model_df.insert(
-            new_manholes_model_df.columns.get_loc(storage_area_col) + 1,
-            NEW_STORAGE_AREA_COL,
-            np.where(np.isnan(new_manholes_model_df[storage_area_col]), 2.0, "-"),
-        )
-        print(new_manholes_model_df)
-        return new_manholes_model_df
+
+        # # Add new storage area column where appropriate
+        # new_manholes_model_df.insert(
+        #     new_manholes_model_df.columns.get_loc(storage_area_col) + 1,
+        #     NEW_STORAGE_AREA_COL,
+        #     np.where(np.isnan(new_manholes_model_df[storage_area_col]), 2.0,  np.nan),
+        # )
+        new_manholes_model_df['geometry'] = new_manholes['geometry']
+        return codes
     except Exception as e:
         raise e from None
 
@@ -748,7 +798,6 @@ if __name__ == "__main__":
     self = BankLevelTest(Folders(TEST_MODEL))
     self.import_data()
     self.run()
-    self.write_output("run_2025_10_10")
     # self.manhole_information()
-
-# %%
+    self.update_model()
+    self.write_output("run_2025_10_10")

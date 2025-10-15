@@ -10,6 +10,7 @@ All sqlite queries are stored within this script. Queries are listed per table.
 """
 
 # Third-part imports
+import os
 import fiona
 import geopandas as gpd
 import hhnk_research_tools as hrt
@@ -580,7 +581,7 @@ def conn_nodes_from_gpkg(data: dict) -> gpd.GeoDataFrame:
     """
     Replacement for the old SQL-based conn_nodes_query.
     Reads the 'connection_node' layer directly from the 3Di GeoPackage
-    that is already loaded in the `data` dictionary.
+    that is already loaded in the 'data' dictionary.
     """
     df = data["connection_node"].copy()
 
@@ -600,7 +601,72 @@ def conn_nodes_from_gpkg(data: dict) -> gpd.GeoDataFrame:
         df = gpd.GeoDataFrame(df, geometry="geometry", crs="EPSG:28992")
 
     # Keep only relevant columns if they exist
-    keep = [c for c in ["code", "bottom_level", "initial_water_level", "storage_area", "geometry"] if c in df.columns]
-    df = df[keep]
+    # keep = [c for c in ["code", "bottom_level", "initial_water_level", "storage_area", "geometry"] if c in df.columns]
+    # df = df[keep]
 
     return df
+
+
+# def update_connection_nodes_with_new_manholes(conn_nodes, new_manholes_df, model_path):
+
+
+def update_new_manholes_query(conn_nodes, new_manholes_df, model_path):
+    """
+    Updates the connection_node layer in the GeoPackage by adding new manholes.
+
+    """
+    try:
+        # Combine existing and new manholes
+        updated_conn_nodes = pd.concat([conn_nodes, new_manholes_df], ignore_index=True)
+
+        # Remove potential duplicates (by connection_node_id or code)
+        if "code" in updated_conn_nodes.columns:
+            updated_conn_nodes.drop_duplicates(subset="code", inplace=True)
+
+        # Ensure it’s a proper GeoDataFrame
+        if not isinstance(updated_conn_nodes, gpd.GeoDataFrame):
+            updated_conn_nodes = gpd.GeoDataFrame(updated_conn_nodes, geometry="geometry", crs="EPSG:28992")
+
+        # Write updated connection_node layer back to GeoPackage
+        updated_conn_nodes.to_file(os.path.normpath(model_path), layer="connection_node", driver="GPKG")
+
+        print(f"Updated 'connection_node' layer written successfully to {model_path}")
+        return updated_conn_nodes
+
+    except Exception as e:
+        raise RuntimeError(f"Error updating connection_node layer: {e}")
+
+
+def update_cross_section_bank_levels(cross_loc, new_bank_levels_df, model_path):
+    """
+    Updates the 'cross_section_location' layer in the GeoPackage (.gpkg)
+    with recalculated bank levels.
+
+    """
+    try:
+        # Merge current cross sections with updated bank levels
+        updated_cross_loc = cross_loc.merge(
+            new_bank_levels_df[["cross_loc_id", "new_bank_level"]],
+            on="cross_loc_id",
+            how="left",
+            suffixes=("", "_new"),
+        )
+
+        # Update the bank_level column where new values exist
+        updated_cross_loc["bank_level"] = updated_cross_loc["new_bank_level"].combine_first(
+            updated_cross_loc["bank_level"]
+        )
+        updated_cross_loc.drop(columns=["new_bank_level"], inplace=True)
+
+        # Ensure GeoDataFrame type and CRS
+        if not isinstance(updated_cross_loc, gpd.GeoDataFrame):
+            updated_cross_loc = gpd.GeoDataFrame(updated_cross_loc, geometry="geometry", crs="EPSG:28992")
+
+        # Write updated layer back to GeoPackage
+        updated_cross_loc.to_file(os.path.normpath(model_path), layer="cross_section_location", driver="GPKG")
+
+        print(f"Updated 'cross_section_location' bank levels written to {model_path}")
+        return updated_cross_loc
+
+    except Exception as e:
+        raise RuntimeError(f"Error updating bank levels in GeoPackage: {e}")
