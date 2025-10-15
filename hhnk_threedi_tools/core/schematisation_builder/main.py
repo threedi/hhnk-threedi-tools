@@ -72,7 +72,7 @@ class SchematisationBuilder:
             logging_DAMO = db_exporter(
                 model_extent_gdf=gdf_polder,
                 output_file=self.raw_export_file_path,
-                table_names=self.table_names, # if None, all tables will be exported
+                table_names=self.table_names,  # if None, all tables will be exported
             )
 
             if len(logging_DAMO) > 0:
