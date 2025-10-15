@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 
 import hhnk_threedi_tools.core.vergelijkingstool.config as config
-from hhnk_threedi_tools.core.vergelijkingstool import styling
+from hhnk_threedi_tools.core.vergelijkingstool import styling, utils
 from hhnk_threedi_tools.core.vergelijkingstool.config import *
 from hhnk_threedi_tools.core.vergelijkingstool.Dataset import DataSet
 from hhnk_threedi_tools.core.vergelijkingstool.styling import *

@@ -7,7 +7,7 @@ import fiona
 import geopandas as gpd
 import pandas as pd
 
-from hhnk_threedi_tools.core.vergelijkingstool import styling
+from hhnk_threedi_tools.core.vergelijkingstool import styling, utils
 from hhnk_threedi_tools.core.vergelijkingstool.config import *
 from hhnk_threedi_tools.core.vergelijkingstool.Dataset import DataSet
 from hhnk_threedi_tools.core.vergelijkingstool.styling import *
