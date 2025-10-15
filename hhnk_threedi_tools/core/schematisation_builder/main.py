@@ -28,7 +28,7 @@ class SchematisationBuilder:
         self,
         project_folder: Path,
         default_polder_polygon_path: Path,
-        table_names: list,
+        table_names: list = None,
         damo_version: str = "2.4.1",
         hydamo_version: str = "2.4",
     ):
@@ -72,7 +72,7 @@ class SchematisationBuilder:
             logging_DAMO = db_exporter(
                 model_extent_gdf=gdf_polder,
                 output_file=self.raw_export_file_path,
-                table_names=self.table_names,
+                table_names=self.table_names, # if None, all tables will be exported
             )
 
             if len(logging_DAMO) > 0:

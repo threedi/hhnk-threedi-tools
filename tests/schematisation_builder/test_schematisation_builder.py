@@ -40,7 +40,7 @@ def test_main():
 
     # run schematisation builder
     logger.info(f"Starting SchematisationBuilder test with project folder: {temp_project_folder}")
-    builder = SchematisationBuilder(temp_project_folder, default_polder_polygon_path, TABLE_NAMES)
+    builder = SchematisationBuilder(temp_project_folder, default_polder_polygon_path)
 
     # Part 1: Make DAMO and HyDAMO package
     builder.make_hydamo_package()
