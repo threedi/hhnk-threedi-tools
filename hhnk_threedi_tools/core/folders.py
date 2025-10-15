@@ -342,20 +342,20 @@ class SourceDir(Folder):
         def __init__(self, base, create):
             super().__init__(os.path.join(base, "hydamo_validation"), create=create)
             self.add_file("validation_result", "validation_result.gpkg")
-    
+
     class Vergelijkingstool(Folder):
         def __init__(self, base, create):
             super().__init__(os.path.join(base, "vergelijkingstool"), create=create)
-            self.json_files = self.full_path("json_files")            
+            self.json_files = self.full_path("json_files")
             self.json_files.mkdir(parents=True, exist_ok=True)
             self.add_file("json_files", "validation_result.gpkg")
 
-            self.old = self.full_path("old")            
+            self.old = self.full_path("old")
             self.old.mkdir(parents=True, exist_ok=True)
             self.add_file("old", "DAMO.gpkg")
             self.add_file("old", "HDB.gpkg")
 
-            self.output = self.full_path("output")            
+            self.output = self.full_path("output")
             self.output.mkdir(parents=True, exist_ok=True)
             self.add_file("output", "Threedi_comparison.gpkg")
             self.add_file("output", "DAMO_comparison.gpkg")
