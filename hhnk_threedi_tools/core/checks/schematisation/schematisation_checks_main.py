@@ -12,12 +12,11 @@ import os
 import sqlite3
 from pathlib import Path
 
-import fiona
 import geopandas as gpd
 import hhnk_research_tools as hrt
 import pandas as pd
 import xarray as xr
-from shapely import get_point, wkt
+from shapely import get_point
 from shapely.geometry import Point
 from threedigrid_builder import make_gridadmin
 
@@ -202,12 +201,15 @@ class HhnkSchematisationChecks:
         """
         channel_gdf = self.database.load(layer="channel", index_column="id")
         channel_gdf["length_in_meters"] = round(channel_gdf["geometry"].length, 2)
-        (
-            isolated_channels_gdf,
-            isolated_length,
-            total_length,
-            percentage,
-        ) = _calc_len_percentage(channel_gdf)
+        total_length = round(channel_gdf.geometry.length.sum() / 1000, 2)
+        isolated_channels_gdf = channel_gdf[channel_gdf["exchange_type"] == 101]
+
+        if not isolated_channels_gdf.empty:
+            isolated_length = round(isolated_channels_gdf.geometry.length.sum() / 1000, 2)
+        else:
+            isolated_length = 0
+        percentage = round((isolated_length / total_length) * 100, 0)
+
         result = (
             f"Totale lengte watergangen {total_length} km\n"
             f"Totale lengte geïsoleerde watergangen {isolated_length} km\n"
@@ -320,8 +322,29 @@ class HhnkSchematisationChecks:
         damo_duiker_sifon_layer = self.folder.source_data.damo.layers.DuikerSifonHevel
 
         # See git issue about below statements
-        gdf_with_damo = _add_damo_info(layer=damo_duiker_sifon_layer, gdf=culvert_gdf)
-        gdf_with_datacheck = _add_datacheck_info(datachecker_culvert_layer, gdf_with_damo)
+        damo_gdb = damo_duiker_sifon_layer.load()
+        gdf_with_damo = culvert_gdf.merge(
+            damo_gdb[["CODE", "HOOGTEBINNENONDERKANTBENE", "HOOGTEBINNENONDERKANTBOV"]],
+            how="left",
+            left_on="struct_code",
+            right_on="CODE",
+        )
+        gdf_with_damo.rename(
+            columns={
+                "HOOGTEBINNENONDERKANTBENE": "hoogte_binnen_onderkant_beneden",
+                "HOOGTEBINNENONDERKANTBOV": "hoogte_binnen_onderkant_boven",
+                "CODE": "damo_code",
+            },
+            inplace=True,
+        )
+        datachecker_gdb = datachecker_culvert_layer.load()
+        gdf_with_datacheck = gdf_with_damo.merge(
+            datachecker_gdb[["code", "aanname"]], how="left", left_on="struct_code", right_on="code"
+        )
+        gdf_with_datacheck.rename(
+            columns={"aanname": "assumptions"},
+            inplace=True,
+        )
         gdf_with_datacheck.loc[:, "beneden_has_assumption"] = gdf_with_datacheck[
             "hoogte_binnen_onderkant_beneden"
         ].isna()
@@ -354,20 +377,71 @@ class HhnkSchematisationChecks:
             columns={"id": "conn_id"}
         )
         # Explode fixed drainage level area polygons to ensure no multipolygons are present
-        fixeddrainage_gdf = _expand_multipolygon(fixeddrainage_gdf)
+        exploded = fixeddrainage_gdf.set_index(["peil_id"])["geometry"]
+        exploded = exploded.explode(index_parts=True)
+        exploded = exploded.reset_index()
+        exploded = exploded.rename(columns={0: "geometry", "level_1": "multipolygon_level"})
+        merged = exploded.merge(fixeddrainage_gdf.drop("geometry", axis=1), left_on="peil_id", right_on="peil_id")
+        merged = merged.set_geometry("geometry", crs=fixeddrainage_gdf.crs)
 
         # Add area from connection nodes to each fixed drainage level area
-        fixeddrainage_gdf = _add_nodes_area(fixeddrainage_gdf, conn_nodes_gdf)
+        joined = gpd.sjoin(
+            fixeddrainage_gdf,
+            conn_nodes_gdf,
+            how="left",
+            predicate="intersects",
+            lsuffix="fd",
+            rsuffix="conn",
+        )
+        # Combine all rows with same peil_id and multipolygon level and sum their area
+        group = joined.groupby(["peil_id", "multipolygon_level"])["storage_area"].sum()
+        # Add the aggregated area column to the original dataframe
+        fixeddrainage_gdf = fixeddrainage_gdf.merge(group, how="left", on=["peil_id", "multipolygon_level"])
+        fixeddrainage_gdf.rename(columns={"storage_area": "area_nodes_m2"}, inplace=True)
+
+        def _add_waterdeel(
+            fixeddrainage_gdf: gpd.GeoDataFrame, water_areas_gdf: gpd.GeoDataFrame, column_name: str = "area"
+        ):
+            """Add area of one polygon that falls inside as field to other polygon"""
+            try:
+                # create dataframe containing overlaying geometry
+                overl = gpd.overlay(fixeddrainage_gdf, water_areas_gdf, how="intersection")
+                # add column containing size of overlaying areas
+                overl[column_name] = overl["geometry"].area
+                # group overlaying area gdf by id's
+                overl = overl.groupby(["peil_id", "multipolygon_level"])[column_name].sum()
+                # merge overlapping area size into fixeddrainage
+                merged = fixeddrainage_gdf.merge(overl, how="left", on=["peil_id", "multipolygon_level"])
+                merged[column_name] = round(merged["area"], 0)
+                merged[column_name] = merged["area"].fillna(0)
+            except Exception as e:
+                raise e from None
+            return merged
+
         # Add area from BGT waterdelen to each fixed drainage level area
-        fixeddrainage_gdf = _add_waterdeel(fixeddrainage_gdf, damo_waterdeel_gdf)
-        fixeddrainage_gdf.rename(columns={"area": "area_waterdeel_m2"}, inplace=True)
+        fixeddrainage_gdf = _add_waterdeel(
+            fixeddrainage_gdf=fixeddrainage_gdf, water_areas_gdf=damo_waterdeel_gdf, column_name="area_waterdeel_m2"
+        )
         # Add area from model channels to each fixed drainage level area
-        fixeddrainage_gdf = _add_waterdeel(fixeddrainage_gdf, modelbuilder_waterdeel_gdf)
-        fixeddrainage_gdf.rename(columns={"area": "area_channels_m2"}, inplace=True)
+        fixeddrainage_gdf = _add_waterdeel(
+            fixeddrainage_gdf=fixeddrainage_gdf,
+            water_areas_gdf=modelbuilder_waterdeel_gdf,
+            column_name="area_channels_m2",
+        )
         # Total water area in model
         fixeddrainage_gdf["area_model_m2"] = fixeddrainage_gdf["area_channels_m2"] + fixeddrainage_gdf["area_nodes_m2"]
+
         # Difference in water area model and waterdeel
+        def _calc_perc(diff: float, waterdeel: float):
+            if diff == waterdeel:
+                return 0.0
+            elif waterdeel == 0:
+                return 100.0
+            else:
+                return round((diff / waterdeel) * 100, 1)
+
         fixeddrainage_gdf["area_diff"] = fixeddrainage_gdf["area_model_m2"] - fixeddrainage_gdf["area_waterdeel_m2"]
+
         fixeddrainage_gdf["area_diff_perc"] = fixeddrainage_gdf.apply(
             lambda row: _calc_perc(row["area_diff"], row["area_waterdeel_m2"]),
             axis=1,
@@ -520,122 +594,6 @@ class HhnkSchematisationChecks:
 
 
 # TODO add monhole bottom level is lower than structure level check
-
-
-## Helper functions
-def _calc_len_percentage(channels_gdf):
-    total_length = round(channels_gdf.geometry.length.sum() / 1000, 2)
-    isolated_channels_gdf = channels_gdf[channels_gdf["exchange_type"] == 101]
-    if not isolated_channels_gdf.empty:
-        isolated_length = round(isolated_channels_gdf.geometry.length.sum() / 1000, 2)
-    else:
-        isolated_length = 0
-    percentage = round((isolated_length / total_length) * 100, 0)
-    return isolated_channels_gdf, isolated_length, total_length, percentage
-
-
-def _add_damo_info(layer, gdf):
-    try:
-        damo_gdb = layer.load()
-        new_gdf = gdf.merge(
-            damo_gdb[["CODE", "HOOGTEBINNENONDERKANTBENE", "HOOGTEBINNENONDERKANTBOV"]],
-            how="left",
-            left_on="struct_code",
-            right_on="CODE",
-        )
-        new_gdf.rename(
-            columns={
-                "HOOGTEBINNENONDERKANTBENE": "hoogte_binnen_onderkant_beneden",
-                "HOOGTEBINNENONDERKANTBOV": "hoogte_binnen_onderkant_boven",
-                "CODE": "damo_code",
-            },
-            inplace=True,
-        )
-    except Exception as e:
-        raise e from None
-    else:
-        return new_gdf
-
-
-def _add_datacheck_info(layer, gdf):
-    try:
-        datachecker_gdb = layer.load()
-        new_gdf = gdf.merge(
-            datachecker_gdb[["code", "aanname"]],
-            how="left",
-            left_on="struct_code",
-            right_on="code",
-        )
-        new_gdf.rename(
-            columns={"aanname": "assumptions"},
-            inplace=True,
-        )
-    except Exception as e:
-        raise e from None
-    else:
-        return new_gdf
-
-
-def _expand_multipolygon(df: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
-    """Explode Multipolygon and deal with idex"""
-    try:
-        exploded = df.set_index(["peil_id"])["geometry"]
-        exploded = exploded.explode(index_parts=True)
-        exploded = exploded.reset_index()
-        exploded = exploded.rename(columns={0: "geometry", "level_1": "multipolygon_level"})
-        merged = exploded.merge(df.drop("geometry", axis=1), left_on="peil_id", right_on="peil_id")
-        merged = merged.set_geometry("geometry", crs=df.crs)
-        return merged
-    except Exception as e:
-        raise e from None
-
-
-def _add_nodes_area(fixeddrainage, conn_nodes_geo):
-    try:
-        # join on intersection of geometries
-        joined = gpd.sjoin(
-            fixeddrainage,
-            conn_nodes_geo,
-            how="left",
-            predicate="intersects",
-            lsuffix="fd",
-            rsuffix="conn",
-        )
-        # Combine all rows with same peil_id and multipolygon level and sum their area
-        group = joined.groupby(["peil_id", "multipolygon_level"])["storage_area"].sum()
-        # Add the aggregated area column to the original dataframe
-        fixeddrainage = fixeddrainage.merge(group, how="left", on=["peil_id", "multipolygon_level"])
-        fixeddrainage.rename(columns={"storage_area": "area_nodes_m2"}, inplace=True)
-        return fixeddrainage
-    except Exception as e:
-        raise e from None
-
-
-def _add_waterdeel(fixeddrainage, to_add):
-    try:
-        # create dataframe containing overlaying geometry
-        overl = gpd.overlay(fixeddrainage, to_add, how="intersection")
-        # add column containing size of overlaying areas
-        overl["area"] = overl["geometry"].area
-        # group overlaying area gdf by id's
-        overl = overl.groupby(["peil_id", "multipolygon_level"])["area"].sum()
-        # merge overlapping area size into fixeddrainage
-        merged = fixeddrainage.merge(overl, how="left", on=["peil_id", "multipolygon_level"])
-        merged["area"] = round(merged["area"], 0)
-        merged["area"] = merged["area"].fillna(0)
-    except Exception as e:
-        raise e from None
-    return merged
-
-
-def _calc_perc(diff, waterdeel):
-    try:
-        return round((diff / waterdeel) * 100, 1)
-    except:
-        if diff == waterdeel:
-            return 0.0
-        else:
-            return 100.0
 
 
 # %%
