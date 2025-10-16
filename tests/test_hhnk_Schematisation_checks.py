@@ -29,7 +29,7 @@ class TestSchematisation:
         shutil.copy(FOLDER_TEST.model.settings.path, folder_new.model.settings.path)
         shutil.copy(FOLDER_TEST.model.settings_default.path, folder_new.model.settings_default.path)
         shutil.copy(FOLDER_TEST.model.model_sql.path, folder_new.model.model_sql.path)
-        # self.folder=FOLDER_TEST
+        # self.folder = FOLDER_TEST
         # spl = ModelSchematisations(folder=folder_new) #TODO WVE zet weer aan als modelsplitter is bijgewerkt
         # spl.create_schematisation(name="basis_errors")
 
@@ -82,23 +82,19 @@ class TestSchematisation:
         assert output["width_at_wlvl_mean"].iloc[0] == 2
 
     @pytest.mark.skipif(True, reason="Splitter heeft heel veel aanpassingen nodig voordat dit werkt")
-    def test_run_cross_section_duplicates(
-        self, folder_new
-    ):  # FIXME model splitter moet helemaal overhoop voordat dit gaat werken
+    def test_run_cross_section_duplicates(self, folder_new: Folders):  # FIXME WVE
         database = folder_new.model.schema_basis_errors.database
         output = self.hhnk_schematisation_checks.run_cross_section_duplicates(database=database)
         assert output["cross_loc_id"].to_list() == [282, 99999]
 
     @pytest.mark.skipif(True, reason="Splitter heeft heel veel aanpassingen nodig voordat dit werkt")
-    def test_run_cross_section_no_vertex(
-        self, folder_new
-    ):  # FIXME model splitter moet helemaal overhoop voordat dit gaat werken
+    def test_run_cross_section_no_vertex(self, folder_new: Folders):  # FIXME WVE
         database = folder_new.model.schema_basis_errors.database
         output = self.hhnk_schematisation_checks.run_cross_section_no_vertex(database=database)
         assert output["cross_loc_id"].to_list() == [320]
         assert output["distance_to_vertex"].to_list() == [1.0]
 
-    def test_create_grid_from_schematisation(self, folder_new):
+    def test_create_grid_from_schematisation(self, folder_new: Folders):
         self.hhnk_schematisation_checks.create_grid_from_schematisation(
             output_folder=folder_new.output.hhnk_schematisation_checks.path
         )
@@ -107,7 +103,6 @@ class TestSchematisation:
     def test_run_struct_channel_bed_level(self):
         # TODO improve test with better result from function
         output = self.hhnk_schematisation_checks.run_struct_channel_bed_level()
-
         assert output.iloc[0]["beneden_has_assumption"]
 
     def test_run_watersurface_area(self):
@@ -120,6 +115,7 @@ class TestSchematisation:
 
 
 # %%
+
 if __name__ == "__main__":
     import inspect
 
@@ -133,8 +129,9 @@ if __name__ == "__main__":
             # Find out if function needs folder_new as input
             params = inspect.signature(getattr(self, i)).parameters
             if "folder_new" in params:
-                folder_new = self.folder_new()
-                getattr(self, i)(folder_new=folder_new)
+                continue
+                # folder_new = self.folder_new()
+                getattr(self, i)(folder_new=self.folder_new)
 
             elif i.startswith("test_") and hasattr(inspect.getattr_static(self, i), "__call__"):
                 print(i)

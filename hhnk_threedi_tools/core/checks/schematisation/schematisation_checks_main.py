@@ -30,7 +30,6 @@ DEM_MAX_VALUE = 400
 logger = hrt.logging.get_logger(name=__name__)
 
 
-# %%
 class HhnkSchematisationChecks:
     def __init__(self, folder: Folders, results: dict[str, object] = {}):
         self.folder = folder
@@ -89,6 +88,7 @@ class HhnkSchematisationChecks:
                 metadata=self.dem.metadata,
                 read_array=False,
                 overwrite=overwrite,
+                epsg=fixeddrainage_gdf.crs.to_epsg(),
             )
 
             # Load data arrays
@@ -380,7 +380,7 @@ class HhnkSchematisationChecks:
         exploded = exploded.reset_index()
         exploded = exploded.rename(columns={0: "geometry", "level_1": "multipolygon_level"})
         merged = exploded.merge(fixeddrainage_gdf.drop("geometry", axis=1), left_on="peil_id", right_on="peil_id")
-        merged = merged.set_geometry("geometry", crs=fixeddrainage_gdf.crs)
+        fixeddrainage_gdf = merged.set_geometry("geometry", crs=fixeddrainage_gdf.crs)
 
         # Add area from connection nodes to each fixed drainage level area
         joined = gpd.sjoin(
@@ -410,8 +410,8 @@ class HhnkSchematisationChecks:
                 overl = overl.groupby(["peil_id", "multipolygon_level"])[column_name].sum()
                 # merge overlapping area size into fixeddrainage
                 merged = fixeddrainage_gdf.merge(overl, how="left", on=["peil_id", "multipolygon_level"])
-                merged[column_name] = round(merged["area"], 0)
-                merged[column_name] = merged["area"].fillna(0)
+                merged[column_name] = round(merged[column_name], 0)
+                merged[column_name] = merged[column_name].fillna(0)
             except Exception as e:
                 raise e from None
             return merged
@@ -593,8 +593,6 @@ class HhnkSchematisationChecks:
 
 # TODO add monhole bottom level is lower than structure level check
 
-
-# %%
 
 if __name__ == "__main__":
     from tests.config import FOLDER_TEST
