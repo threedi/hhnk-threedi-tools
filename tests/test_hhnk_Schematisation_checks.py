@@ -98,7 +98,9 @@ class TestSchematisation:
         self.hhnk_schematisation_checks.create_grid_from_schematisation(
             output_folder=folder_new.output.hhnk_schematisation_checks.path
         )
-        assert folder_new.output.hhnk_schematisation_checks.full_path("grid.gpkg").exists()
+        output_path = folder_new.output.hhnk_schematisation_checks.full_path("grid.gpkg")
+        assert output_path.exists()
+        assert not output_path.load(layer="cells").empty
 
     def test_run_struct_channel_bed_level(self):
         # TODO improve test with better result from function
