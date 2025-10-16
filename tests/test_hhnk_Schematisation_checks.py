@@ -7,7 +7,8 @@ import pytest
 # Local imports
 from hhnk_threedi_tools.core.checks.schematisation.schematisation_checks_main import HhnkSchematisationChecks
 from hhnk_threedi_tools.core.folders import Folders
-from hhnk_threedi_tools.core.schematisation.model_splitter import ModelSchematisations
+
+# from hhnk_threedi_tools.core.schematisation.model_splitter import ModelSchematisations
 from tests.config import FOLDER_TEST, PATH_NEW_FOLDER
 
 
@@ -15,8 +16,8 @@ class TestSchematisation:
     FOLDER_TEST.output.hhnk_schematisation_checks.unlink_contents()
 
     def __init__(self):
-        self.hhnk_schematisation_checks = HhnkSchematisationChecks(folder=FOLDER_TEST)
-        self.hhnk_schematisation_checks.output_fd.create(parents=True)
+        self.hhnk_schematisation_checks = HhnkSchematisationChecks(folder=FOLDER_TEST, results={})
+        self.hhnk_schematisation_checks.output_fd.mkdir(parents=True)
 
     @pytest.fixture(scope="class")
     def folder_new(self):
@@ -29,7 +30,7 @@ class TestSchematisation:
         shutil.copy(FOLDER_TEST.model.settings_default.path, folder_new.model.settings_default.path)
         shutil.copy(FOLDER_TEST.model.model_sql.path, folder_new.model.model_sql.path)
         # self.folder=FOLDER_TEST
-        # spl = ModelSchematisations(folder=folder_new)
+        # spl = ModelSchematisations(folder=folder_new) #TODO WVE zet weer aan als modelsplitter is bijgewerkt
         # spl.create_schematisation(name="basis_errors")
 
         return folder_new
@@ -59,10 +60,7 @@ class TestSchematisation:
             "std": 1.19355,
         }
 
-    @pytest.mark.skipif(True, reason="SQl code moet helemaal opnieuw")
-    def test_run_model_checks(
-        self,
-    ):  # FIXME we hebben nu geen run sql functie meer toch op hrt, dus hoe gaan dit doen? proberen met pandas.read_sql
+    def test_run_model_checks(self):
         output = self.hhnk_schematisation_checks.run_model_checks()
         assert "node without initial waterlevel" in output.set_index("id").loc[482, "error"]
 
@@ -126,7 +124,7 @@ if __name__ == "__main__":
     import inspect
 
     self = TestSchematisation()
-    folder_new = self.folder_new()
+    # folder_new = self.folder_new()
 
     # Run all testfunctions
     for i in dir(self):

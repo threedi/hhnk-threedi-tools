@@ -9,6 +9,7 @@ Created on Tue Aug 24 14:11:45 2021
 """
 
 import os
+import sqlite3
 from pathlib import Path
 
 import fiona
@@ -23,7 +24,9 @@ from threedigrid_builder import make_gridadmin
 from hhnk_threedi_tools.core.checks.sqlite.structure_control import StructureControl
 from hhnk_threedi_tools.core.folders import Folders
 from hhnk_threedi_tools.core.schematisation.relations import ChannelRelations, StructureRelations
-from hhnk_threedi_tools.utils.queries_general_checks import ModelCheck
+from hhnk_threedi_tools.resources.checks.sql_checks import sql_checks
+
+# from hhnk_threedi_tools.utils.queries_general_checks import ModelCheck # TODO WVE opruimen
 
 DEM_MAX_VALUE = 400
 
@@ -32,7 +35,7 @@ logger = hrt.logging.get_logger(name=__name__)
 
 # %%
 class HhnkSchematisationChecks:
-    def __init__(self, folder: Folders):
+    def __init__(self, folder: Folders, results: dict[str, object] = {}):
         self.folder = folder
 
         self.output_fd = self.folder.output.hhnk_schematisation_checks
@@ -45,7 +48,9 @@ class HhnkSchematisationChecks:
 
         self.layer_fixeddrainage = self.folder.source_data.datachecker.layers.fixeddrainagelevelarea
 
-    def run_controlled_structures(self, overwrite=False):  # TODO WVE
+        self.results = results
+
+    def run_controlled_structures(self, overwrite: bool = False):  # TODO WVE
         """Create leayer with structure control in schematisation"""
         self.structure_control = StructureControl(
             model=self.database,
@@ -63,7 +68,7 @@ class HhnkSchematisationChecks:
         self.results["dem_max_value"] = result
         return result
 
-    def run_dewatering_depth(self, overwrite=False):
+    def run_dewatering_depth(self, overwrite: bool = False):
         """
         Compare initial water level from fixed drainage level areas with
         surface level in DEM of model. Initial water level should mostly
@@ -108,12 +113,15 @@ class HhnkSchematisationChecks:
                 chunksize=None,
             )
 
-    def run_model_checks(self):  # TODO SQl checks, hoe nu doen want ik heb juist alles zonder run sql gedaan...
+    def run_model_checks(self) -> pd.DataFrame:
         """Collect all queries that are part of general model checks (see general_checks_queries file)
         and executes them
         """
+        # Read sql with query checks
 
-        df = self.database.execute_sql_selection(query=ModelCheck.get_query())
+        with sqlite3.connect(self.database.path) as conn:
+            # List available tables/layers (optional)
+            df = pd.read_sql(sql_checks, conn)
 
         self.results["model_checks"] = df
         return df
@@ -515,21 +523,6 @@ class HhnkSchematisationChecks:
 
 
 ## Helper functions
-def _add_distance_checks(gdf):
-    # Load as valid geometry type
-    gdf["start_coord"] = gdf["start_coord"].apply(wkt.loads)
-    gdf["start_node"] = gdf["start_node"].apply(wkt.loads)
-    gdf["end_coord"] = gdf["end_coord"].apply(wkt.loads)
-    gdf["end_node"] = gdf["end_node"].apply(wkt.loads)
-    # Set as geometry column (geopandas doesn't support having more than one)
-    gdf_start_coor = gdf.set_geometry(col="start_coord")
-    gdf_start_node = gdf.set_geometry(col="start_node")
-    gdf["start_dist_ok"] = round(gdf_start_node.distance(gdf_start_coor), 5) < 0.1
-    gdf_end_coor = gdf.set_geometry(col="end_coord")
-    gdf_end_node = gdf.set_geometry(col="end_node")
-    gdf["end_dist_ok"] = round(gdf_end_node.distance(gdf_end_coor), 5) < 0.1
-
-
 def _calc_len_percentage(channels_gdf):
     total_length = round(channels_gdf.geometry.length.sum() / 1000, 2)
     isolated_channels_gdf = channels_gdf[channels_gdf["exchange_type"] == 101]
@@ -583,10 +576,8 @@ def _add_datacheck_info(layer, gdf):
         return new_gdf
 
 
-def _expand_multipolygon(df):
-    """New version using explode, old version returned pandas dataframe not geopandas
-    geodataframe (missing last line), I think it works now?
-    """
+def _expand_multipolygon(df: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
+    """Explode Multipolygon and deal with idex"""
     try:
         exploded = df.set_index(["peil_id"])["geometry"]
         exploded = exploded.explode(index_parts=True)
@@ -653,8 +644,8 @@ if __name__ == "__main__":
     from tests.config import FOLDER_TEST
 
     folder = Folders(FOLDER_TEST)
-    # results = {}
-    self = HhnkSchematisationChecks(folder=folder)  # , results=results)
+    results = {}
+    self = HhnkSchematisationChecks(folder=folder, results=results)
     database = folder.model.schema_base.database
 
 

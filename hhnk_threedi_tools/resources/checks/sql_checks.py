@@ -1,3 +1,4 @@
+sql_checks = """
 SELECT 'cross_section_location' as table_name,
 cross_section_location.id as id,
 'WARNING: cross section definition height not used for shape type 1' as error
@@ -239,4 +240,4 @@ table_control.id as id,
 'ERROR: action_table has more than 1000 characters (model will crash)' as error
 FROM table_control
 WHERE length(table_control.action_table) > 1000
-
+"""
