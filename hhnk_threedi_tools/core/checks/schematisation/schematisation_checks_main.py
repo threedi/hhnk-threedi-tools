@@ -25,8 +25,6 @@ from hhnk_threedi_tools.core.folders import Folders
 from hhnk_threedi_tools.core.schematisation.relations import ChannelRelations, StructureRelations
 from hhnk_threedi_tools.resources.checks.sql_checks import sql_checks
 
-# from hhnk_threedi_tools.utils.queries_general_checks import ModelCheck # TODO WVE opruimen
-
 DEM_MAX_VALUE = 400
 
 logger = hrt.logging.get_logger(name=__name__)
