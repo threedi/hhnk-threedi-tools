@@ -45,32 +45,7 @@ class HhnkSchematisationChecks:
 
         self.layer_fixeddrainage = self.folder.source_data.datachecker.layers.fixeddrainagelevelarea
 
-        # this dict we can populate with files and layers we can check using verify_inputs
-        self.inputs = {
-            "run_imp_surface_area": [{"file": self.folder.source_data.polder_polygon.path, "layer": None}],
-            "run_struct_channel_bed_level": [{"file": self.folder.source_data.damo.path}],
-        }  # TODO doen we hier iets mee?
-
-        self.results = {}
-
-    def verify_inputs(self, function) -> bool:  # TODO WVE Dit weghalen en afvangen in functie, plugin weghalen 1x?
-        """Check if the input of a function (if defined in self.inputs) exists."""
-        exist = True
-        # if function does not exist in self.inputs we can totally ignore this function
-        if function in self.inputs.keys():
-            for layer_input in self.inputs[function]:
-                # check if file doesn't exist
-                if not layer_input["file"].exists():
-                    exist = False
-
-                # optionally check if layer exists in file
-                elif "layer" in layer_input.keys():
-                    if layer_input["layer"] is not None:
-                        if layer_input["layer"] not in fiona.listlayers(layer_input["file"]):
-                            exist = False
-        return exist
-
-    def run_controlled_structures(self, overwrite=False):  # TODO
+    def run_controlled_structures(self, overwrite=False):  # TODO WVE
         """Create leayer with structure control in schematisation"""
         self.structure_control = StructureControl(
             model=self.database,
@@ -191,17 +166,24 @@ class HhnkSchematisationChecks:
         """
         imp_surface_db = self.database.load(layer="surface", index_column="id")
 
-        polygon_imp_surface = self.folder.source_data.polder_polygon.load()
+        if self.folder.source_data.polder_polygon.exists():
+            polygon_imp_surface = self.folder.source_data.polder_polygon.load()
+            # Vergelijk oppervlakte polder met dat in surface
+            db_surface = int(imp_surface_db.area.sum() / 10000)
+            polygon_surface = int(polygon_imp_surface.area.to_numpy()[0] / 10000)
+            area_diff = db_surface - polygon_surface
 
-        db_surface = int(imp_surface_db.area.sum() / 10000)
-        polygon_surface = int(polygon_imp_surface.area.to_numpy()[0] / 10000)
-        area_diff = db_surface - polygon_surface
+            result_txt = (
+                f"Totaal ondoorlatend oppervlak: {db_surface} ha\n"
+                f"Gebied polder: {polygon_surface} ha\n"
+                f"Verschil: {area_diff} ha\n"
+            )
+        else:
+            result_txt = (
+                "Polder polygon bestaat niet, plaats deze op de volgende locatie om het oppervlakte in surface te vergelijken\n"
+                f"{self.folder.source_data.polder_polygon.base}"
+            )
 
-        result_txt = (
-            f"Totaal ondoorlatend oppervlak: {db_surface} ha\n"
-            f"Gebied polder: {polygon_surface} ha\n"
-            f"Verschil: {area_diff} ha\n"
-        )
         self.results["imp_surface_area"] = result_txt
         return result_txt
 
@@ -437,7 +419,7 @@ class HhnkSchematisationChecks:
 
         output_fp = os.path.join(output_folder, "grid.gpkg")
         # using output here results in error, so we use the returned dict
-        # TODO plugin fix loading from 1 gropackage instead of three in
+        # TODO WVE plugin fix loading from 1 geopackage instead of three in
         for grid_type in ["cells", "lines", "nodes"]:
             df = pd.DataFrame(grid[grid_type])
             gdf = hrt.df_convert_to_gdf(df, geom_col_type="wkb", src_crs="28992")
@@ -675,4 +657,5 @@ if __name__ == "__main__":
     self = HhnkSchematisationChecks(folder=folder)  # , results=results)
     database = folder.model.schema_base.database
 
-    # self.verify_inputs("run_imp_surface_area")
+
+# %%
