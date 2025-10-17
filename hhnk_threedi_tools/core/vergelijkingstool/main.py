@@ -29,18 +29,14 @@ __status__ = "Production"
 __version__ = "1.1.0"
 
 import logging
-import os
 import warnings
-from pathlib import Path
 
 import geopandas as gpd
-from sqlalchemy import false
 
-from hhnk_threedi_tools.core.vergelijkingstool import utils
+
 from hhnk_threedi_tools.core.vergelijkingstool.DAMO import DAMO
-from hhnk_threedi_tools.core.vergelijkingstool.styling import *
 from hhnk_threedi_tools.core.vergelijkingstool.Threedimodel import Threedimodel
-from hhnk_threedi_tools.core.vergelijkingstool.utils import get_model_info
+from hhnk_threedi_tools.core.vergelijkingstool.utils import ModelInfo, get_model_info
 
 # from folder_names import name
 
