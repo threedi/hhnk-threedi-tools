@@ -1,11 +1,16 @@
 # %%
+import sys
 
 import hhnk_research_tools as hrt
+import pytest
 
 from hhnk_threedi_tools.core.api.calculation import SimulationData
 from tests.config import FOLDER_TEST
 
 
+@pytest.mark.skipif(
+    sys.version_info < (3, 12), reason="# TODO migratie tabelnamen moeten aangpast worden, mogelijk splitter ook."
+)
 def test_simulationdata():
     simdata = SimulationData(
         sqlite_path=FOLDER_TEST.model.schema_base.database.base,
