@@ -13,12 +13,12 @@ from hhnk_threedi_tools.core.folders import Folders
 class StructureControl:
     """
     Deze test selecteert alle gestuurde kunstwerken (uit de v2_culvert, v2_orifice en v2_weir tabellen van het model) op
-    basis van de v2_control_table. Per kunstwerk worden actiewaarden opgevraagd. Per gevonden gestuurd kunstwerk
+    basis van de control_table. Per kunstwerk worden actiewaarden opgevraagd. Per gevonden gestuurd kunstwerk
     wordt ook relevante informatie uit de HDB database toegevoegd, zoals het streefpeil en minimale en maximale kruin
     hoogtes.
     """
 
-    def __init__(self, model: hrt.Sqlite, hdb_control_layer: hrt.SpatialDatabaseLayer, output_file: str):
+    def __init__(self, model: hrt.SpatialDatabase, hdb_control_layer: hrt.SpatialDatabaseLayer, output_file: str):
         self.model = model  # folder.model.schema_base.database
         self.hdb_control_layer = hdb_control_layer  # folder.source_data.hdb.layers.sturing_kunstwerken
         self.output_file = Path(output_file)  # folder.output.sqlite_tests.gestuurde_kunstwerken.base
@@ -28,40 +28,39 @@ class StructureControl:
     class Layers:
         def __init__(self):
             # Raw results
-            self.control: pd.DataFrame  # v2_control table
-            self.control_table: pd.DataFrame  # v2_control_table table
-            self.control_measure_map: pd.DataFrame  # v2_control_measure_map
-            self.conn_nodes: pd.DataFrame  # v2_connection_nodes
-            self.hdb_control: pd.DataFrame = None
+            self.control_table: gpd.GeoDataFrame
+            self.control_measure_location: gpd.GeoDataFrame
+            self.control_measure_map: gpd.GeoDataFrame
+            self.connection_node: gpd.GeoDataFrame
+            self.hdb_control: gpd.GeoDataFrame = None
 
             # Derived
-            self.control_nodes: pd.DataFrame
+            self.control_nodes: gpd.GeoDataFrame
             self.control_merge = {}  # Merged control tables split per structure type
 
     @property
-    def l(self):
+    def local_layers(self):
         return self.layers
 
     def load_layers(self):
         # Load layers
-        self.l.control = self.model.read_table("v2_control")
-        self.l.control.rename({"id": "v2_control_id"}, axis=1, inplace=True)
-        self.l.control.set_index("v2_control_id", inplace=True)
 
-        self.l.control_table = self.model.read_table("v2_control_table")
-        self.l.control_table.rename({"id": "v2_control_table_id"}, axis=1, inplace=True)
+        self.local_layers.control_table = self.model.load("table_control", index_column="id")
+        self.local_layers.control_table.rename({"id": "control_table_id"}, axis=1, inplace=True)
 
-        self.l.control_measure_map = self.model.read_table("v2_control_measure_map")
-        self.l.control_measure_map.rename({"id": "v2_control_measure_map_id"}, axis=1, inplace=True)
+        self.local_layers.control_measure_location = self.model.load("measure_location", index_column="id")
+        self.local_layers.control_measure_location.rename({"id": "control_measure_location_id"}, axis=1, inplace=True)
 
-        self.l.conn_nodes = self.model.read_table("v2_connection_nodes")
-        self.l.conn_nodes.rename({"id": "node_id"}, axis=1, inplace=True)
+        self.local_layers.control_measure_map = self.model.load("measure_map", index_column="id")
+        self.local_layers.control_measure_map.rename({"id": "control_measure_map_id"}, axis=1, inplace=True)
+
+        self.local_layers.connection_node = self.model.load("connection_node", index_column="id")
 
         if self.hdb_control_layer.parent.exists():
-            self.l.hdb_control = self.hdb_control_layer.load()[
+            self.local_layers.hdb_control = self.hdb_control_layer.load()[
                 ["CODE", "STREEFPEIL", "MIN_KRUINHOOGTE", "MAX_KRUINHOOGTE"]
             ]
-            self.l.hdb_control.rename(
+            self.local_layers.hdb_control.rename(
                 columns={
                     "CODE": "code",
                     "STREEFPEIL": "hdb_streefpeil",
@@ -72,44 +71,76 @@ class StructureControl:
             )
 
     def merge_control(self):
-        """merge control tables and split per structure type"""
+        """Merge control tables with the measure map geometry as base"""
+        control_gdf = (
+            self.local_layers.control_measure_map.merge(
+                self.local_layers.control_table.drop(columns="geometry"),
+                how="left",
+                left_on="control_id",
+                right_index=True,
+            )
+            .merge(
+                self.local_layers.control_measure_location.drop(columns="geometry"),
+                how="left",
+                left_on="measure_location_id",
+                right_index=True,
+            )
+            .merge(
+                self.local_layers.connection_node.drop(columns="geometry"),
+                how="left",
+                left_on="connection_node_id",
+                right_index=True,
+            )
+        )
+
+        # TODO hoe gaat dit werken met meerdere measure locations met weging naar één structure?
+
         # Merge control tables
-        control_merge_all = self.l.control.join(self.l.control_table.set_index("v2_control_table_id"))
+        control_merge_all = self.local_layers.control.join(
+            self.local_layers.control_table.set_index("control_table_id")
+        )
         control_merge_all = pd.merge(
             control_merge_all.reset_index(drop=False),
-            self.l.control_measure_map,
+            self.local_layers.control_measure_map,
             left_on="measure_group_id",
             right_on="measure_group_id",
         )
 
-        # Split per structure type
+        # Split per structure type # TODO ?
         for target_type in control_merge_all["target_type"].unique():
-            self.l.control_merge[target_type] = control_merge_all[control_merge_all["target_type"] == target_type]
+            self.local_layers.control_merge[target_type] = control_merge_all[
+                control_merge_all["target_type"] == target_type
+            ]
 
     def create_geometry_start_end(self, target_type: str, control_merge_structure: pd.DataFrame):
         """Create a linestring from the measure point to the controlled structure"""
 
         # Read structure table
-        structure_df = self.model.read_table(target_type)[["id", "code", "connection_node_start_id"]]
+        structure_df = self.model.load(target_type)[["id", "code", "connection_node_start_id"]]
 
         # Merge with structure
         control_merge_structure = pd.merge(control_merge_structure, structure_df, left_on="target_id", right_on="id")
         control_merge_structure.set_index("v2_control_id", inplace=True)
 
         # Create linegeometry from measure point to startnode structure
-        start_nodes = pd.merge(control_merge_structure, self.l.conn_nodes, left_on="object_id", right_on="node_id")[
-            ["control_id", "geometry"]
-        ]
+        start_nodes = pd.merge(
+            control_merge_structure, self.local_layers.connection_node, left_on="object_id", right_on="node_id"
+        )[["control_id", "geometry"]]
         end_nodes = pd.merge(
-            control_merge_structure, self.l.conn_nodes, left_on="connection_node_start_id", right_on="node_id"
+            control_merge_structure,
+            self.local_layers.connection_node,
+            left_on="connection_node_start_id",
+            right_on="node_id",
         )[["control_id", "initial_waterlevel", "geometry"]]
-        self.l.control_nodes = pd.merge(
+        self.local_layers.control_nodes = pd.merge(
             start_nodes, end_nodes, left_index=True, right_index=True, suffixes=("_start", "_end")
         )
-        self.l.control_nodes.set_index("control_id_start", inplace=True)
-        geom = self.l.control_nodes.apply(lambda x: LineString([x["geometry_start"], x["geometry_end"]]), axis=1)
+        self.local_layers.control_nodes.set_index("control_id_start", inplace=True)
+        geom = self.local_layers.control_nodes.apply(
+            lambda x: LineString([x["geometry_start"], x["geometry_end"]]), axis=1
+        )
 
-        control_merge_structure["initial_wlvl"] = self.l.control_nodes["initial_waterlevel"]
+        control_merge_structure["initial_wlvl"] = self.local_layers.control_nodes["initial_waterlevel"]
         return gpd.GeoDataFrame(control_merge_structure, geometry=geom, crs=DEF_TRGT_CRS)
 
     def get_action_values(self, row):
@@ -143,14 +174,14 @@ class StructureControl:
             self.merge_control()
 
             # Add linestring geometry
-            for target_type, control_merge_structure in self.l.control_merge.items():
-                self.l.control_merge[target_type] = self.create_geometry_start_end(
+            for target_type, control_merge_structure in self.local_layers.control_merge.items():
+                self.local_layers.control_merge[target_type] = self.create_geometry_start_end(
                     target_type, control_merge_structure
                 )
 
             # Combine structure tables
-            if self.l.control_merge:
-                control_df = pd.concat(self.l.control_merge.values())
+            if self.local_layers.control_merge:
+                control_df = pd.concat(self.local_layers.control_merge.values())
             else:
                 control_df = None
 
