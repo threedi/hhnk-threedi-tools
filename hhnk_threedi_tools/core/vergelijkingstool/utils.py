@@ -4,10 +4,10 @@ import os
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from shapely.geometry import Point
 
 import fiona
 import geopandas as gpd
+from shapely.geometry import Point
 
 from hhnk_threedi_tools.core.folders import Folders
 from hhnk_threedi_tools.core.vergelijkingstool import config
@@ -206,6 +206,7 @@ def load_file_and_translate(
 
     return data
 
+
 def update_channel_codes(channel, cross_section_location, damo, model_path):
     """
     Update channels ids
@@ -216,18 +217,18 @@ def update_channel_codes(channel, cross_section_location, damo, model_path):
     if starts_with_oaf.all():
         print("all the codes are updated")
         return channel
-    
-    with fiona.open(model_path, layer='channel') as src:
-        ids = [feat['id'] for feat in src]
 
-    channel['id'] = ids
-    gdf_cross_section  = cross_section_location
-   
+    with fiona.open(model_path, layer="channel") as src:
+        ids = [feat["id"] for feat in src]
+
+    channel["id"] = ids
+    gdf_cross_section = cross_section_location
+
     gdf_channel = channel.copy()
-    damo_gdf = gpd.read_file(damo, layer= 'hydroobject')
-    
+    damo_gdf = gpd.read_file(damo, layer="hydroobject")
+
     cross = gdf_cross_section[["channel_id", "geometry"]].copy()
-    if 'CODE' in damo_gdf.columns:
+    if "CODE" in damo_gdf.columns:
         damo_gdf.rename(columns={"CODE": "code"}, inplace=True)
 
     damo_gdf = damo_gdf[["code", "geometry"]].copy()
@@ -248,4 +249,3 @@ def update_channel_codes(channel, cross_section_location, damo, model_path):
     gdf_channel.to_file(model_path, layer="channel", driver="GPKG")
 
     return gdf_channel
-
