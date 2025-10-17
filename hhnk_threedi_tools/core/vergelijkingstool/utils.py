@@ -4,6 +4,7 @@ import os
 import time
 from dataclasses import dataclass
 from pathlib import Path
+from shapely.geometry import Point
 
 import fiona
 import geopandas as gpd
@@ -136,9 +137,9 @@ def load_file_and_translate(
     loader for DAMO, HDB, and 3Di datasets.
     Depending on `mode`
 
-    mode = "damo" → loads DAMO + HDB
-    mode = "threedi" → loads 3Di layers
-    mode = "both" → loads all (if paths are provided)
+    mode = "damo" loads DAMO + HDB
+    mode = "threedi" loads 3Di layers
+    mode = "both" loads all (if paths are provided)
     """
 
     data = {}
@@ -204,3 +205,47 @@ def load_file_and_translate(
             data = translate(data, translation_3Di)
 
     return data
+
+def update_channel_codes(channel, cross_section_location, damo, model_path):
+    """
+    Update channels ids
+    """
+    if "code" in channel.columns:
+        codes = channel["code"].astype(str).str.strip()  # delete spaces
+        starts_with_oaf = codes.str.startswith("OAF", na=False)
+    if starts_with_oaf.all():
+        print("all the codes are updated")
+        return channel
+    
+    with fiona.open(model_path, layer='channel') as src:
+        ids = [feat['id'] for feat in src]
+
+    channel['id'] = ids
+    gdf_cross_section  = cross_section_location
+   
+    gdf_channel = channel.copy()
+    damo_gdf = gpd.read_file(damo, layer= 'hydroobject')
+    
+    cross = gdf_cross_section[["channel_id", "geometry"]].copy()
+    if 'CODE' in damo_gdf.columns:
+        damo_gdf.rename(columns={"CODE": "code"}, inplace=True)
+
+    damo_gdf = damo_gdf[["code", "geometry"]].copy()
+
+    joined = gpd.sjoin_nearest(cross, damo_gdf, how="left", max_distance=5)
+
+    code_map = joined.groupby("channel_id")["code"].first()
+
+    gdf_channel["id"] = gdf_channel["id"].astype(str)
+    code_map.index = code_map.index.astype(str)
+
+    gdf_channel["code"] = gdf_channel["id"].map(code_map)
+
+    gdf_channel = gdf_channel.copy()
+
+    if "id" in channel.columns:
+        channel.drop(columns=["id"], inplace=True)
+    gdf_channel.to_file(model_path, layer="channel", driver="GPKG")
+
+    return gdf_channel
+
