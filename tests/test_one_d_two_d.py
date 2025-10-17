@@ -31,7 +31,7 @@ class TestOneDTwoD:
 
     @pytest.mark.skipif(sys.version_info < (3, 12), reason="Requires Python 3.12 or higher")
     def test_run_depth_at_timesteps(self, check_1d2d):
-        """Test of de 0d1d test werkt"""
+        """Test of de 0d1d check werkt"""
         # TODO move output to temp folder
         output_fd = check_1d2d.folder.output.one_d_two_d[check_1d2d.revision]
 

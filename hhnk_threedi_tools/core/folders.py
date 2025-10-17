@@ -650,7 +650,7 @@ class OutputDirParent(Folder):
             def __init__(self, base, create=False):
                 super().__init__(base, create=create)
 
-                self.add_file("nodes_0d1d_test", "nodes_0d1d_test.gpkg")
+                self.add_file("nodes_0d1d_check", "nodes_0d1d_check.gpkg")
                 self.add_file(
                     "hydraulische_toets_kunstwerken",
                     "hydraulische_toets_kunstwerken.gpkg",
