@@ -183,6 +183,6 @@ if __name__ == "__main__":
     self = StructureControl(
         model=folder.model.schema_base.database,
         hdb_control_layer=folder.source_data.hdb.layers.sturing_kunstwerken,
-        output_file=folder.output.sqlite_tests.gestuurde_kunstwerken.path,
+        output_file=folder.output.hhnk_schematisation_checks.gestuurde_kunstwerken.path,
     )
     self.run(overwrite=True)

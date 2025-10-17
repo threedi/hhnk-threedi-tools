@@ -1,0 +1,40 @@
+# Classes
+SQlite -> SpatailDatabase
+SqliteCheck -> HhnkSchematisationCheck
+ThreediSchematisation moved to hhnk-threedi-tools
+
+
+
+# Functions
+Sqlite.connect -> deprecated
+Sqlite.create_sqlite_connection -> deprecated
+Sqlite.read_table -> SpatialDatabase.load
+Sqlite.execute_sql_selection -> SpatialDatabase.load
+Sqlite.modify_using_query -> SpatialDatabase.modify_gpkg_using_query
+Sqlite.sql_table_info / sql_table_exists -> deprecated
+Sqlite.list_tables -> SpatialDatabase.available_layers
+
+## Examples
+oud: cross_section_point = database.execute_sql_selection(query=cross_section_location_query)
+nieuw: cross_section_point = database.load(layer="cross_section_location", index_column="id")
+
+# General
+sqlite_tests -> hhnk_schematisation_checks
+
+# variables
+
+
+# settings_locations
+v2_global_settings -> model_settings
+v2_simple_infiltration -> simple_infiltration
+v2_global_settings/initial_waterlevel_file -> initial_conditions/initial_water_level_file
+frict_coef_file -> friction_coefficient_file
+max_infiltration_capacity_file -> max_infiltration_volume_file
+calculation_type = exchange_type
+
+
+# CRITICAL
+zoom_category bestaat niet meer voor channels. Deze gebruikten wij voor aangeven of iets primair was (zoom_category == 4).
+Dit kan nu niet meer. Er zijn wel 'tags'. Al onze modellen moeten nu een tag krijgen voor primaire watergangen.
+
+'rasters/' staat niet meer standaard voor de rasters in de settings

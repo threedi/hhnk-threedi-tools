@@ -13,16 +13,16 @@ except:
 notebook_data = setup_notebook()
 
 
-from hhnk_threedi_tools import Folders, SqliteCheck
+from hhnk_threedi_tools import Folders, HhnkSchematisationChecks
 
 # %%
 folder_dir = notebook_data["polder_folder"]
 
 folder = Folders(folder_dir)
-sqlite_test = SqliteCheck(folder)
+sqlite_test = HhnkSchematisationChecks(folder)
 
-sqlite_test.create_grid_from_sqlite(
+sqlite_test.create_grid_from_schematisation(
     sqlite_path=folder.model.sqlite_paths[0],
     dem_path=folder.model.rasters.dem.path,
-    output_folder=folder.output.sqlite_tests.path,
+    output_folder=folder.output.hhnk_schematisation_checks.path,
 )

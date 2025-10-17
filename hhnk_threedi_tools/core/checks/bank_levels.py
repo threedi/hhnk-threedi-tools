@@ -125,7 +125,7 @@ class BankLevelTest:
             self.datachecker_path = self.fenv.source_data.datachecker.base
 
         self.grid = Grid(
-            sqlite_path=self.fenv.model.schema_base.sqlite_paths[0],
+            sqlite_path=self.fenv.model.schema_base.model_paths[0],
             dem_path=self.fenv.model.schema_base.rasters.dem.base,
         )
 
