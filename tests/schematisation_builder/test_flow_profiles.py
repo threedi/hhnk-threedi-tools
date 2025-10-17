@@ -147,7 +147,7 @@ def test_profiel_flow():
     assert pl_2["code"].iloc[0] == nearest_profiellijn_code_it_should_connect_to
 
     # Compute the deepest point per hydroobject
-    converter.compute_deepest_point_hydroobjects() # STEP 4 in run method
+    converter.compute_deepest_point_hydroobjects()  # STEP 4 in run method
     dp = converter.find_deepest_point_by_hydroobject_code(hydroobject_code_no_profile_should_connect)
     assert dp == deepest_point_hydroobject_no_profile
 
@@ -156,7 +156,7 @@ def test_profiel_flow():
     assert pl_3 is None
 
     # Write the result to a new file
-    raw_export_converter.write_outputs() 
+    raw_export_converter.write_outputs()
 
     assert output_file_path.exists()
 

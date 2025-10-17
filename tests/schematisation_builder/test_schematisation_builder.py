@@ -27,8 +27,9 @@ def test_main():
     logger = hrt.logging.get_logger(__name__)
 
     # import SchematisationBuilder here to avoid import issues related to missing database settings
-    from hhnk_threedi_tools.core.schematisation_builder.main import SchematisationBuilder
     import sqlite3
+
+    from hhnk_threedi_tools.core.schematisation_builder.main import SchematisationBuilder
 
     # create temporary project folder path
     temp_project_folder = TEMP_DIR / f"temp_schematisation_builder_{hrt.current_time(date=True)}"
