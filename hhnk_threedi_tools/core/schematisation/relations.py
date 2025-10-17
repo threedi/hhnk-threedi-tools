@@ -5,6 +5,7 @@ import geopandas as gpd
 import numpy as np
 import pandas as pd
 from hhnk_research_tools import logging
+from hhnk_research_tools.folder_file_classes.spatial_database_class import SpatialDatabase
 
 from hhnk_threedi_tools.core.folders import Folders
 
@@ -22,7 +23,7 @@ class ChannelRelations:
         folder: Folders,
     ):
         self.folder = folder
-        self.database = folder.model.schema_base.database
+        self.database: SpatialDatabase = folder.model.schema_base.database
 
     def get_width_and_depth_from_tabulated_profile(self, channel_gdf_row: pd.Series) -> float:
         """
@@ -153,7 +154,7 @@ class StructureRelations:
         structure_table: str = "",
     ):
         self.folder = folder
-        self.database = folder.model.schema_base.database
+        self.database: SpatialDatabase = folder.model.schema_base.database
 
         if structure_table not in ["weir", "culvert", "pump", "orifice"]:
             raise ValueError("Provide structure table weir, culvert, pump or orifice")
