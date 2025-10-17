@@ -271,7 +271,7 @@ class SourceDir(Folder):
         # Folders
         self.modelbuilder = self.ModelbuilderPaths(self.base, create=create)
         self.hydamo_validation = self.HydamoValidationPaths(self.base, create=create)
-        self.vergelijkingstool = self.Vergelijkingstool(self.base, create=create)
+        self.vergelijkingstool = self.VergelijkingstoolPaths(self.base, create=create)
         self.peilgebieden = self.PeilgebiedenPaths(self.base, create=create)
         self.wsa_output_administratie = self.WsaOutputAdministratie(self.base, create=create)
         self.rasters = self.Rasters(self.base, create=create)
@@ -342,20 +342,20 @@ class SourceDir(Folder):
         def __init__(self, base, create):
             super().__init__(os.path.join(base, "hydamo_validation"), create=create)
             self.add_file("validation_result", "validation_result.gpkg")
-
-    class Vergelijkingstool(Folder):
+    
+    class VergelijkingstoolPaths(Folder):
         def __init__(self, base, create):
             super().__init__(os.path.join(base, "vergelijkingstool"), create=create)
-            self.json_files = self.full_path("json_files")
+            self.json_files = self.full_path("json_files")            
             self.json_files.mkdir(parents=True, exist_ok=True)
             self.add_file("json_files", "validation_result.gpkg")
 
-            self.old = self.full_path("old")
+            self.old = self.full_path("old")            
             self.old.mkdir(parents=True, exist_ok=True)
             self.add_file("old", "DAMO.gpkg")
             self.add_file("old", "HDB.gpkg")
 
-            self.output = self.full_path("output")
+            self.output = self.full_path("output")            
             self.output.mkdir(parents=True, exist_ok=True)
             self.add_file("output", "Threedi_comparison.gpkg")
             self.add_file("output", "DAMO_comparison.gpkg")
