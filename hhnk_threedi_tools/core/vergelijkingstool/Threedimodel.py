@@ -1,7 +1,7 @@
 # %%
 # importing external dependencies
 import logging
-
+import os
 # from pd.errors import DatabaseError #FIXME vanaf pd 1.5.3 beschikbaar. Als qgis zover is overzetten.
 # from sqlite3 import DatabaseError
 import geopandas as gpd
@@ -29,9 +29,12 @@ class Threedimodel(DataSet):
         self.model_info = model_info
         self.model_name = model_info.model_name
         self.sourcedata = model_info.source_data
+        self.damo_new = model_info.fn_damo_new
+        self.model_path = model_info.fn_threedimodel
         self.logger = logging.getLogger("Threedimodel")
         self.logger.debug("Created Threedimodel object")
         # self.data = self.from_sqlite(filename, translation)
+
         self.data = utils.load_file_and_translate(
             damo_filename=None,
             hdb_filename=None,
@@ -41,7 +44,16 @@ class Threedimodel(DataSet):
             layers_input_threedi_selection=None,
             mode="threedi",
         )
+        
+        try:
+            if self.damo_new.exists():
+                
+                self.data['channel'] = utils.update_channel_codes(self.data['channel'], self.data['cross_section_location'], self.damo_new, self.model_path)
 
+        except Exception as e: 
+            self.logger.warning('model couln not be updated')
+        
+        
         self.join_cross_section_definition()
 
         # Set priority columns
@@ -256,7 +268,7 @@ class Threedimodel(DataSet):
             print("threedi layer selection is OFF")
             THREEDI_STRUCTURE_LAYERS = config.THREEDI_STRUCTURE_LAYERS
             DAMO_HDB_STRUCTURE_LAYERS = config.DAMO_HDB_STRUCTURE_LAYERS
-
+        
         for struc in STRUCTURE_CODES:
             table_struc_model[struc] = self.get_structure_by_code(struc, THREEDI_STRUCTURE_LAYERS)
             table_struc_DAMO[struc] = DAMO.get_structure_by_code(struc, DAMO_HDB_STRUCTURE_LAYERS)
