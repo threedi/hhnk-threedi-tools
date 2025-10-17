@@ -36,7 +36,7 @@ from pathlib import Path
 import geopandas as gpd
 from sqlalchemy import false
 
-from hhnk_threedi_tools.core.vergelijkingstool import config, styling
+from hhnk_threedi_tools.core.vergelijkingstool import utils
 from hhnk_threedi_tools.core.vergelijkingstool.DAMO import DAMO
 from hhnk_threedi_tools.core.vergelijkingstool.styling import *
 from hhnk_threedi_tools.core.vergelijkingstool.Threedimodel import Threedimodel
@@ -244,23 +244,23 @@ if __name__ == "__main__":
     fn_DAMO_comparison_export = out_put_files / "DAMO_comparison_Test_119.gpkg"
 
     # Layers To Compare DAMO_DAMO
-    layer_selection = True
+    layer_selection = False
     layers_input_damo_selection = ["Stuw"]
     layers_input_hdb_selection = [
         "duikers_op_peilgrens",
         "stuwen_op_peilgrens",
     ]
-    fn_threedi_comparison_export = out_put_files / "Threedi_comparison_Test_34.gpkg"
+    fn_threedi_comparison_export = out_put_files / "Threedi_comparison_Test_43.gpkg"
 
     # compare_with = "Compare with Damo"
     compare_with = "Compare with 3Di"
     # config.UPDATE_SYMBOLOGY = True
 
     # Layers to Compare DAMO_3di
-    threedi_layer_selector = True
-    threedi_structure_selection = ["culvert", "weir"]
-    damo_structure_selection = ["duikersifonhevel", "stuw"]
-    structure_codes = ["KDU", "KST"]
+    threedi_layer_selector = False
+    threedi_structure_selection = ["channel"]
+    damo_structure_selection = ["hydroobject"]
+    structure_codes = ["OAF"]
     # %%
     main(
         model_info=info,
@@ -287,4 +287,3 @@ if __name__ == "__main__":
         damo_structure_selection=damo_structure_selection,
         structure_codes=structure_codes,
     )
-# %%
