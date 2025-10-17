@@ -346,14 +346,11 @@ class SourceDir(Folder):
     class VergelijkingstoolPaths(Folder):
         def __init__(self, base, create):
             super().__init__(os.path.join(base, "vergelijkingstool"), create=create)
-            self.json_files = self.full_path("json_files")
-            self.json_files.mkdir(parents=True, exist_ok=True)
-            self.add_file("json_files", "validation_result.gpkg")
 
-            self.old = self.full_path("old")
-            self.old.mkdir(parents=True, exist_ok=True)
-            self.add_file("old", "DAMO.gpkg")
-            self.add_file("old", "HDB.gpkg")
+            self.input_data_old = self.full_path("input_data_old")
+            self.input_data_old.mkdir(parents=True, exist_ok=True)
+            self.add_file("input_data_old", "DAMO.gpkg")
+            self.add_file("input_data_old", "HDB.gpkg")
 
             self.output = self.full_path("output")
             self.output.mkdir(parents=True, exist_ok=True)
