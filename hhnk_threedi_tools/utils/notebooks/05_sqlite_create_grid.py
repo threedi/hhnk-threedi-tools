@@ -24,5 +24,5 @@ sqlite_test = SqliteCheck(folder)
 sqlite_test.create_grid_from_sqlite(
     sqlite_path=folder.model.sqlite_paths[0],
     dem_path=folder.model.rasters.dem.path,
-    output_folder=folder.output.sqlite_tests.path,
+    output_folder=folder.output.sqlite_checks.path,
 )

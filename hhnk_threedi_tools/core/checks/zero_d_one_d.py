@@ -59,7 +59,7 @@ from hhnk_threedi_tools.variables.zero_d_one_d import (
 )
 
 
-class ZeroDOneDTest:
+class ZeroDOneDCheck:
     def __init__(self, folder: Folders, revision=0):
         self.fenv = folder
         self.grid_result = folder.threedi_results.zero_d_one_d[revision].grid
@@ -285,7 +285,7 @@ def add_slope_info(structure, structure_name, up_waterlevel, down_waterlevel):
     # Bepalen of een structure op een peilgrens ligt, en daardoor is het verhang niet interessant.
     if structure_name in [res_orifices, res_culverts]:
         structure[struct_on_lvl_limit_col] = False
-        # Dit testen we door te kijken of de bovenstroomse en benedenstrooms INITIELE waterstand gelijk zijn.
+        # Dit valideren we door te kijken of de bovenstroomse en benedenstrooms INITIELE waterstand gelijk zijn.
         structure.loc[
             (round(up_waterlevel[waterlevel_t_0_col], 2)) != (round(down_waterlevel[waterlevel_t_0_col], 2)),
             struct_on_lvl_limit_col,

@@ -30,7 +30,7 @@ from hhnk_threedi_tools.variables.one_d_two_d import (
 logger = hrt.logging.get_logger(__name__, level="INFO")
 
 
-class OneDTwoDTest:
+class OneDTwoDCheck:
     TIMESTEPS = [1, 3, 15]  # hours, 1=start rain, 3=end rain, 15=end calculation
 
     def __init__(self, folder: Folders, revision=0, dem_path=None):
@@ -238,12 +238,8 @@ if __name__ == "__main__":
 
     TEST_MODEL = Path(r"E:\02.modellen\Schermer_leggertool")
     folder = Folders(TEST_MODEL)
-    self = OneDTwoDTest.from_path(TEST_MODEL)
-    # T = 1
-    # chunksize = 1024
-    # overwrite = False
-# %%
-# output = self.run_flowline_stats()
-# output = self.run_wlvl_depth_at_timesteps(chunksize=2048)
+    self = OneDTwoDCheck.from_path(TEST_MODEL)
 
-# %%
+    overwrite = True
+
+    output = self.run_wlvl_depth_at_timesteps()

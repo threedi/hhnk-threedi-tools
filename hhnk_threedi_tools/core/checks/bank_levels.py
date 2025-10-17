@@ -80,8 +80,8 @@ FLOW_1D2D_CHANNELS_NAME = "stroming_1d2d_watergangen"
 FLOW_1D2D_MANHOLES_NAME = "stroming_1d2d_putten"
 
 
-class BankLevelTest:
-    """an object that reads and run bank level testing"""
+class BankLevelCheck:
+    """An object that reads and runs bank level checks"""
 
     def __init__(self, folder: Folders):
         self.fenv = folder  # fenv = folder environemnt
@@ -679,7 +679,7 @@ if __name__ == "__main__":
     if not TEST_MODEL.exists():
         raise Exception(f"{TEST_MODEL} doesnt exist")
 
-    self = BankLevelTest(Folders(TEST_MODEL))
+    self = BankLevelCheck(Folders(TEST_MODEL))
     self.import_data()
     self.run()
     # self.manhole_information()
