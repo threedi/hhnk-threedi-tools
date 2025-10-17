@@ -33,7 +33,7 @@ class ThreediSchematisation(Folder):
 
         # File
         # self.add_file("database", self.model_path())
-        database = self.find_ext("gpkg")
+        database: SpatialDatabase = self.find_ext("gpkg")
         if len(database) > 1:
             raise ValueError("More than 1 gpkg found in folder, cannot determine which to use.")
         elif len(database) == 0:
