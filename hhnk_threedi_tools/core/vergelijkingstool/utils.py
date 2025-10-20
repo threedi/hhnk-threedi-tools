@@ -18,7 +18,7 @@ logger.setLevel(logging.DEBUG)
 
 @dataclass
 class ModelInfo:
-    """ "Dataclass to hold model information."""
+    """Dataclass to hold model information."""
 
     model_name: str
     source_data: Path
@@ -81,7 +81,7 @@ def get_model_info(path: str) -> ModelInfo:
 
 def translate(data, translation_file):
     """
-    Loads a translation file and translates the data datastructure.
+    Load a translation file and translates the data datastructure.
     Renames tables and columns as indicated in the translation_file
 
     :param data: Data to be translated
@@ -134,7 +134,7 @@ def load_file_and_translate(
     mode="damo",  # options: "damo", "threedi", "both"
 ):
     """
-    loader for DAMO, HDB, and 3Di datasets.
+    Load for DAMO, HDB, and 3Di datasets.
     Depending on `mode`
 
     mode = "damo" loads DAMO + HDB
@@ -150,7 +150,7 @@ def load_file_and_translate(
         layers_damo = layers_input_damo_selection
         layers_hdb = layers_input_hdb_selection
         layers_3di = layers_input_threedi_selection
-        logger.debug(f"Layer selection enabled")
+        logger.debug("Layer selection enabled")
     else:
         layers_damo = fiona.listlayers(damo_filename) if damo_filename else []
         layers_hdb = fiona.listlayers(hdb_filename) if hdb_filename else []
@@ -207,9 +207,47 @@ def load_file_and_translate(
     return data
 
 
-def update_channel_codes(channel, cross_section_location, damo, model_path):
+def update_channel_codes(channel:gpd.GeoDataFrame, cross_section_location:gpd.GeoDataFrame, damo, model_path)->gpd.GeoDataFrame:
     """
-    Update channels ids
+    Update channel `code` values by nearest-matching DAMO hydroobject codes and persist the result.
+
+    This function:
+    - If all existing channel codes start with "OAF", returns the input `channel` unchanged.
+    - Reads feature ids from the "channel" layer in `model_path` (expects a GeoPackage/other Fiona-supported datasource)
+      and assigns them to the working `channel` GeoDataFrame as an "id" column.
+    - Reads DAMO hydroobjects from the `damo` datasource (layer "hydroobject"), normalizes the code column
+      (accepts "CODE" or "code"), and creates a mapping from channel_id -> nearest hydroobject.code using a
+      spatial nearest-join between `cross_section_location` (expects a "channel_id" column) and the DAMO data.
+      The join uses max_distance=5 (units of the CRS).
+    - Maps the found codes onto the channels by matching the channel "id" to the derived mapping and writes the
+      updated channel layer back to `model_path` (layer "channel", driver "GPKG").
+    - Removes the temporary "id" column from the original `channel` if it existed.
+
+    Parameters
+    ----------
+    channel : geopandas.GeoDataFrame
+        GeoDataFrame representing channel features to update. Column names will be treated case-insensitively
+        (lowercased earlier in the pipeline).
+    cross_section_location : geopandas.GeoDataFrame
+        GeoDataFrame with cross-section locations. Must contain a "channel_id" column and geometries used to
+        find the nearest DAMO hydroobject for each channel.
+    damo : str or pathlib.Path
+        Path to the DAMO datasource (e.g. GPKG) containing a "hydroobject" layer with a code column.
+    model_path : str or pathlib.Path
+        Path to the model datasource (e.g. GeoPackage) containing a "channel" layer. This file will be written.
+
+    Returns
+    -------
+    geopandas.GeoDataFrame
+        A new GeoDataFrame with updated "code" values for channels (and same geometry/attributes as input `channel`).
+
+    Notes
+    -----
+    - The spatial nearest join uses a max_distance of 5 (CRS units). Increase this value if your data CRS uses degrees
+      or if features are further apart.
+    - If the DAMO hydroobject code column is named "CODE" it will be renamed to "code" for consistency.
+    - Side effects: writes the updated "channel" layer into `model_path` using the GPKG driver.
+    - Exceptions from Fiona/GeoPandas (file access, missing layers, CRS mismatches) are propagated.
     """
     if "code" in channel.columns:
         codes = channel["code"].astype(str).str.strip()  # delete spaces
