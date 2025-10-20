@@ -1,12 +1,8 @@
 # %%
-import json
 import logging
 from pathlib import Path
-
-import fiona
 import geopandas as gpd
 import pandas as pd
-
 from hhnk_threedi_tools.core.vergelijkingstool import styling, utils
 from hhnk_threedi_tools.core.vergelijkingstool.config import *
 from hhnk_threedi_tools.core.vergelijkingstool.Dataset import DataSet
@@ -28,7 +24,7 @@ class DAMO(DataSet):
         layers_input_damo_selection=None,
     ):
         """
-        Creates a DAMO object and reads the data from the DAMO and HDB FileGeoDatabase.
+        Create a DAMO object and reads the data from the DAMO and HDB FileGeoDatabase.
         If translation dictionaries are supplied, layer and column names are mapped.
 
         :param damo_filename: Path to the GDB folder with DAMO data.
@@ -62,6 +58,7 @@ class DAMO(DataSet):
 
         # Clip data
         if clip_shape is not None:
+
             if isinstance(clip_shape, (str, Path)):
                 clip_shape = gpd.read_file(clip_shape).geometry.union_all()
         self.data = self.clip_data(self.data, clip_shape)
@@ -81,15 +78,25 @@ class DAMO(DataSet):
         :return: Clipped data
         """
         for layer in data.keys():
-            self.logger.debug(f"Check if layer {layer} has geometry")
+            layers_to_remove = []
             gdf = data[layer]
-            intersections = gdf[gdf.geometry.intersects(shape) | gdf.geometry.isnull()]
-            data[layer] = intersections
+            if isinstance(gdf, gpd.GeoDataFrame):
+                self.logger.debug(f"Check if layer {layer} has geometry")
+                gdf = data[layer]
+                intersections = gdf[gdf.geometry.intersects(shape) | gdf.geometry.isnull()]
+                data[layer] = intersections
+            else:
+                self.logger.debug(f"Layer '{layer}' is not a GeoDataFrame, skipping geometry clipping")
+                layers_to_remove.append(layer)
+        
+        for layer in layers_to_remove:
+                del data[layer]
+
         return data
 
     def export_comparison_new(self, table_C, statistics, filename, overwrite=False, styling_path=None):
         """
-        Exports all compared layers and statistics to a GeoPackage.
+        Export all compared layers and statistics to a GeoPackage.
 
         :param table_C: Dictionary containing a GeoDataframe per layer
         :param statistics: Dataframe containing the statistics
@@ -131,6 +138,7 @@ class DAMO(DataSet):
         table_C = {}
 
         for layer in table_A.keys():
+            print(layer)
             if not table_B.keys().__contains__(layer):
                 self.logger.warning(f"Layer {layer} does not exist in the other dataset, skipping layer")
                 continue
