@@ -10,6 +10,7 @@ from hhnk_threedi_tools.core.vergelijkingstool.config import *
 from hhnk_threedi_tools.core.vergelijkingstool.Dataset import DataSet
 from hhnk_threedi_tools.core.vergelijkingstool.styling import *
 from hhnk_threedi_tools.core.vergelijkingstool.utils import ModelInfo
+from hhnk_threedi_tools.core.vergelijkingstool.qml_styling_files import DAMO as DAMO_styling_path
 
 
 class DAMO(DataSet):
@@ -38,6 +39,9 @@ class DAMO(DataSet):
         # Set up logger
         self.logger = logging.getLogger("DAMO")
         self.logger.debug("Created DAMO object")
+
+        self.styling_path = Path(DAMO_styling_path.__file__).resolve().parent
+
         self.model_info = model_info
         self.model_name = model_info.model_name
         # Load data
@@ -95,7 +99,7 @@ class DAMO(DataSet):
 
         return data
 
-    def export_comparison_new(self, table_C, statistics, filename, overwrite=False, styling_path=None):
+    def export_comparison_new(self, table_C, statistics, filename, overwrite=False):
         """
         Export all compared layers and statistics to a GeoPackage.
 
@@ -109,7 +113,7 @@ class DAMO(DataSet):
         """
 
         layer_styles = styling.export_comparison_DAMO(
-            table_C, statistics, filename, model_info=self.model_info, overwrite=overwrite, styling_path=styling_path
+            table_C, statistics, filename, model_info=self.model_info, overwrite=overwrite, styling_path=self.styling_path
         )
         self.add_layer_styling(fn_export_gpkg=filename, layer_styles=layer_styles)
 
@@ -117,7 +121,7 @@ class DAMO(DataSet):
         self.export_statistics(statistics, filename)
         self.logger.info(f"Finished exporting to {filename}")
 
-    def compare_with_damo(self, damo_b, attribute_comparison=None, filename=None, overwrite=False, styling_path=None):
+    def compare_with_damo(self, damo_b, attribute_comparison=None, filename=None, overwrite=False,):
         """
         Compare two DAMO objects with eachother, self (damo_a) and other (damo_b).
         For every layer in the datasets (brug, duikersyfonhevel, etc.) an outer join based on the code will be made.
@@ -385,7 +389,7 @@ class DAMO(DataSet):
         # check if filename already exists. Cr
         if filename is not None:
             print(filename)
-            self.export_comparison_new(table_C, statistics, filename, overwrite=overwrite, styling_path=styling_path)
+            self.export_comparison_new(table_C, statistics, filename, overwrite=overwrite)
 
         statistics.to_csv(r"E:\02.modellen\castricum\01_source_data\vergelijkingsTool\output\statistics.csv", sep=";")
         # table_C.to_csv(r"E:\02.modellen\castricum\01_source_data\vergelijkingsTool\output\TableC.csv", sep = ';')

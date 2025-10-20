@@ -3,11 +3,10 @@
 import logging
 import os
 
-# from pd.errors import DatabaseError #FIXME vanaf pd 1.5.3 beschikbaar. Als qgis zover is overzetten.
-# from sqlite3 import DatabaseError
 import geopandas as gpd
 import numpy as np
 import pandas as pd
+from pathlib import Path
 
 import hhnk_threedi_tools.core.vergelijkingstool.config as config
 from hhnk_threedi_tools.core.vergelijkingstool import styling, utils
@@ -15,7 +14,7 @@ from hhnk_threedi_tools.core.vergelijkingstool.config import *
 from hhnk_threedi_tools.core.vergelijkingstool.Dataset import DataSet
 from hhnk_threedi_tools.core.vergelijkingstool.styling import *
 from hhnk_threedi_tools.core.vergelijkingstool.utils import ModelInfo
-
+from hhnk_threedi_tools.core.vergelijkingstool.qml_styling_files import Threedi as Threedi_styling_path
 
 class Threedimodel(DataSet):
     def __init__(self, filename, model_info: ModelInfo, translation=None):
@@ -35,6 +34,9 @@ class Threedimodel(DataSet):
         self.logger = logging.getLogger("Threedimodel")
         self.logger.debug("Created Threedimodel object")
         # self.data = self.from_sqlite(filename, translation)
+        
+        self.styling_path = Path(Threedi_styling_path.__file__).resolve().parent
+
 
         self.data = utils.load_file_and_translate(
             damo_filename=None,
@@ -199,7 +201,7 @@ class Threedimodel(DataSet):
         statistics = statistics.fillna(0).astype(int)
         return statistics
 
-    def export_comparison_3di(self, table_C, statistics, filename, overwrite=False, styling_path=None, crs=None):
+    def export_comparison_3di(self, table_C, statistics, filename, overwrite=False, crs=None):
         """
         Exports all compared layers and statistics to a GeoPackage.
 
@@ -211,6 +213,8 @@ class Threedimodel(DataSet):
         with the exact same name as the layer
         :return:
         """
+
+        styling_path = self.styling_path
 
         # add styling to layers
         layer_styles = styling.export_comparison_3di(
@@ -234,7 +238,6 @@ class Threedimodel(DataSet):
         attribute_comparison=None,
         filename=None,
         overwrite=False,
-        styling_path=None,
         threedi_layer_selector=False,
         threedi_structure_selection=None,
         damo_structure_selection=None,
@@ -346,7 +349,7 @@ class Threedimodel(DataSet):
         # export to filename
         if filename is not None:
             self.export_comparison_3di(
-                table_C, statistics, filename, overwrite=overwrite, styling_path=styling_path, crs=self.crs
+                table_C, statistics, filename, overwrite=overwrite, crs=self.crs
             )
 
         # statistics.to_csv(r"E:\02.modellen\castricum\01_source_data\vergelijkingsTool\output\statistics_threedi.csv", sep = ';')

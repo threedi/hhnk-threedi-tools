@@ -52,7 +52,6 @@ def main(
     fn_threedimodel_translation,
     fn_damo_attribute_comparison,
     fn_model_attribute_comparison,
-    styling_path,
     fn_damo_new_translation,
     fn_DAMO_comparison_export,
     fn_threedi_comparison_export,
@@ -112,8 +111,7 @@ def main(
             damo_old,
             attribute_comparison=fn_damo_attribute_comparison,
             filename=fn_DAMO_comparison_export,
-            overwrite=True,
-            styling_path=styling_path,
+            overwrite=True
         )
 
         return fn_DAMO_comparison_export
@@ -137,7 +135,6 @@ def main(
             attribute_comparison=fn_model_attribute_comparison,
             filename=fn_threedi_comparison_export,
             overwrite=True,
-            styling_path=styling_path,
             threedi_layer_selector=threedi_layer_selector,
             threedi_structure_selection=threedi_structure_selection,
             damo_structure_selection=damo_structure_selection,
@@ -173,15 +170,13 @@ def main(
             damo_old,
             attribute_comparison=fn_damo_attribute_comparison,
             filename=fn_DAMO_comparison_export,
-            overwrite=True,
-            styling_path=styling_path,
+            overwrite=True
         )
         threedi_comparison, threedi_statistics = threedi_model.compare_with_DAMO(
             damo_new,
             attribute_comparison=fn_model_attribute_comparison,
             filename=fn_threedi_comparison_export,
             overwrite=True,
-            styling_path=styling_path,
             threedi_layer_selector=threedi_layer_selector,
             threedi_structure_selection=threedi_structure_selection,
             damo_structure_selection=damo_structure_selection,
@@ -236,7 +231,7 @@ if __name__ == "__main__":
     styling_path = source_data / "styling"
 
     # Define outputs
-    fn_DAMO_comparison_export = out_put_files / "DAMO_comparison_Test_123.gpkg"
+    fn_DAMO_comparison_export = out_put_files / "DAMO_comparison_Test_124.gpkg"
 
     # Layers To Compare DAMO_DAMO
     layer_selection = False
@@ -245,7 +240,7 @@ if __name__ == "__main__":
         "duikers_op_peilgrens",
         "stuwen_op_peilgrens",
     ]
-    fn_threedi_comparison_export = out_put_files / "Threedi_comparison_Test_46.gpkg"
+    fn_threedi_comparison_export = out_put_files / "Threedi_comparison_Test_48.gpkg"
 
     compare_with = "Compare with Damo"
     # compare_with = "Compare with 3Di"
@@ -269,7 +264,6 @@ if __name__ == "__main__":
         fn_threedimodel_translation=fn_threedimodel_translation,
         fn_damo_attribute_comparison=fn_damo_attribute_comparison,
         fn_model_attribute_comparison=fn_model_attribute_comparison,
-        styling_path=styling_path,
         fn_damo_new_translation=fn_damo_new_translation,
         fn_DAMO_comparison_export=fn_DAMO_comparison_export,
         fn_threedi_comparison_export=fn_threedi_comparison_export,

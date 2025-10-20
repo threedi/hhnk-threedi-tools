@@ -51,9 +51,9 @@ def replace_label_DAMO(match, model_info: ModelInfo):
     value_value = match.group(2)
     symbol_value = match.group(3)
     if symbol_value == "0":
-        return f'label="{model_info.model_name} new {model_info.date_new_damo}" value="{model_info.model_name} new" symbol="0"'
+        return f'label="{model_info.model_name} new {model_info.date_damo_new}" value="{model_info.model_name} new" symbol="0"'
     elif symbol_value == "1":
-        return f'label="{model_info.model_name} old {model_info.date_old_damo}" value="{model_info.model_name} old" symbol="1"'
+        return f'label="{model_info.model_name} old {model_info.date_damo_old}" value="{model_info.model_name} old" symbol="1"'
     elif symbol_value == "2":
         return f'label="{model_info.model_name} both - critical" value="{model_info.model_name} both" symbol="2"'
     elif symbol_value == "3":
@@ -73,9 +73,9 @@ def replace_label_3di(match, model_info: ModelInfo):
     param model_info: ModelInfo object containing model details
     return: formatted string with updated label, value, and symbol
     """
-    label_value = match.group(3)
+
     value_value = match.group(1)
-    symbol_value = match.group(2)
+
     if value_value.__contains__("both - critical"):
         return f'value="{model_info.model_name} both - critical" symbol="2" label="{model_info.model_name} both"'
 
@@ -85,7 +85,7 @@ def replace_label_3di(match, model_info: ModelInfo):
         )
 
     elif value_value.__contains__("damo"):
-        return f'value="{model_info.model_name} damo" symbol="0" label="Damo {model_info.model_name} {model_info.date_new_damo}"'
+        return f'value="{model_info.model_name} damo" symbol="0" label="Damo {model_info.model_name} {model_info.date_damo_new}"'
 
     elif value_value.__contains__("sqlite"):
         return f'value="{model_info.model_name} sqlite" symbol="1" label="Model {model_info.model_name} {model_info.date_sqlite}"'
@@ -145,7 +145,7 @@ def export_comparison_DAMO(table_C, statistics, filename, model_info: ModelInfo,
         # Check if the layer name has a style in the styling folder
         if styling_path is not None:
             qml_name = kind + ".qml"
-            qml_file = (styling_path) / "DAMO" / qml_name
+            qml_file = (styling_path) / qml_name
             print(qml_file)
         if qml_file.exists():
             logger.debug(f"Style layer for layer {layer_name} found, adding it to the GeoPackage")
@@ -196,7 +196,7 @@ def export_comparison_3di(
     table_C, statistics, filename, model_info: ModelInfo, overwrite=False, styling_path=None, crs=None
 ):
     """
-    Exports all compared layers and statistics to a GeoPackage.
+    Export all compared layers and statistics to a GeoPackage.
 
     :param table_C: Dictionary containing a GeoDataframe per layer
     :param statistics: Dataframe containing the statistics
@@ -222,7 +222,7 @@ def export_comparison_3di(
         # Check if the layer name has a style in the styling folder
         if styling_path is not None:
             qml_name = kind + ".qml"
-            qml_file = (styling_path) / "Threedi" / qml_name
+            qml_file = (styling_path) / qml_name
 
         if qml_file.exists():
             logger.debug(f"Style layer for layer {layer_name} found, adding it to the GeoPackage")
