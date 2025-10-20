@@ -207,7 +207,9 @@ def load_file_and_translate(
     return data
 
 
-def update_channel_codes(channel:gpd.GeoDataFrame, cross_section_location:gpd.GeoDataFrame, damo, model_path)->gpd.GeoDataFrame:
+def update_channel_codes(
+    channel: gpd.GeoDataFrame, cross_section_location: gpd.GeoDataFrame, damo, model_path
+) -> gpd.GeoDataFrame:
     """
     Update channel `code` values by nearest-matching DAMO hydroobject codes and persist the result.
 

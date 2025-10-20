@@ -57,7 +57,9 @@ def replace_label_DAMO(match, model_info: ModelInfo):
     elif symbol_value == "2":
         return f'label="{model_info.model_name} both - critical" value="{model_info.model_name} both" symbol="2"'
     elif symbol_value == "3":
-        return f'label="{model_info.model_name} both - niet vergeleken" value="{model_info.model_name} both" symbol="3"'
+        return (
+            f'label="{model_info.model_name} both - niet vergeleken" value="{model_info.model_name} both" symbol="3"'
+        )
     else:
         if label_value.startswith(model_info.model_name) and value_value.startswith(model_info.model_name):
             print("The labels are corrected")
@@ -76,9 +78,11 @@ def replace_label_3di(match, model_info: ModelInfo):
     symbol_value = match.group(2)
     if value_value.__contains__("both - critical"):
         return f'value="{model_info.model_name} both - critical" symbol="2" label="{model_info.model_name} both"'
-    
+
     if value_value.__contains__("both - niet vergeleken"):
-        return f'value="{model_info.model_name} both - niet vergeleken" symbol="3" label="{model_info.model_name} both"'
+        return (
+            f'value="{model_info.model_name} both - niet vergeleken" symbol="3" label="{model_info.model_name} both"'
+        )
 
     elif value_value.__contains__("damo"):
         return f'value="{model_info.model_name} damo" symbol="0" label="Damo {model_info.model_name} {model_info.date_new_damo}"'

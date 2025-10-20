@@ -1,8 +1,10 @@
 # %%
 import logging
 from pathlib import Path
+
 import geopandas as gpd
 import pandas as pd
+
 from hhnk_threedi_tools.core.vergelijkingstool import styling, utils
 from hhnk_threedi_tools.core.vergelijkingstool.config import *
 from hhnk_threedi_tools.core.vergelijkingstool.Dataset import DataSet
@@ -58,7 +60,6 @@ class DAMO(DataSet):
 
         # Clip data
         if clip_shape is not None:
-
             if isinstance(clip_shape, (str, Path)):
                 clip_shape = gpd.read_file(clip_shape).geometry.union_all()
         self.data = self.clip_data(self.data, clip_shape)
@@ -88,9 +89,9 @@ class DAMO(DataSet):
             else:
                 self.logger.debug(f"Layer '{layer}' is not a GeoDataFrame, skipping geometry clipping")
                 layers_to_remove.append(layer)
-        
+
         for layer in layers_to_remove:
-                del data[layer]
+            del data[layer]
 
         return data
 
