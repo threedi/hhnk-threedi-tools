@@ -236,7 +236,7 @@ if __name__ == "__main__":
     styling_path = source_data / "styling"
 
     # Define outputs
-    fn_DAMO_comparison_export = out_put_files / "DAMO_comparison_Test_119.gpkg"
+    fn_DAMO_comparison_export = out_put_files / "DAMO_comparison_Test_122.gpkg"
 
     # Layers To Compare DAMO_DAMO
     layer_selection = False
@@ -245,10 +245,10 @@ if __name__ == "__main__":
         "duikers_op_peilgrens",
         "stuwen_op_peilgrens",
     ]
-    fn_threedi_comparison_export = out_put_files / "Threedi_comparison_Test_44.gpkg"
+    fn_threedi_comparison_export = out_put_files / "Threedi_comparison_Test_46.gpkg"
 
-    # compare_with = "Compare with Damo"
-    compare_with = "Compare with 3Di"
+    compare_with = "Compare with Damo"
+    # compare_with = "Compare with 3Di"
     # config.UPDATE_SYMBOLOGY = True
 
     # Layers to Compare DAMO_3di
@@ -282,3 +282,5 @@ if __name__ == "__main__":
         damo_structure_selection=damo_structure_selection,
         structure_codes=structure_codes,
     )
+
+# %%

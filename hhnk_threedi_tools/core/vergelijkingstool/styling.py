@@ -46,9 +46,7 @@ def geom_kind(gdf):
 
 # Function to replace labels based on their current value
 def replace_label_DAMO(match, model_info: ModelInfo):
-    """
-    Replace labels in the DAMO dataset that are going to be use later in symbology.
-    """
+    """Replace labels in the DAMO dataset that are going to be use later in symbology."""
     label_value = match.group(1)
     value_value = match.group(2)
     symbol_value = match.group(3)
@@ -57,7 +55,9 @@ def replace_label_DAMO(match, model_info: ModelInfo):
     elif symbol_value == "1":
         return f'label="{model_info.model_name} old {model_info.date_old_damo}" value="{model_info.model_name} old" symbol="1"'
     elif symbol_value == "2":
-        return f'label="{model_info.model_name} both" value="{model_info.model_name} both" symbol="2"'
+        return f'label="{model_info.model_name} both - critical" value="{model_info.model_name} both" symbol="2"'
+    elif symbol_value == "3":
+        return f'label="{model_info.model_name} both - niet vergeleken" value="{model_info.model_name} both" symbol="3"'
     else:
         if label_value.startswith(model_info.model_name) and value_value.startswith(model_info.model_name):
             print("The labels are corrected")
@@ -74,8 +74,11 @@ def replace_label_3di(match, model_info: ModelInfo):
     label_value = match.group(3)
     value_value = match.group(1)
     symbol_value = match.group(2)
-    if value_value.__contains__("both"):
-        return f'value="{model_info.model_name} both" symbol="2" label="{model_info.model_name} both"'
+    if value_value.__contains__("both - critical"):
+        return f'value="{model_info.model_name} both - critical" symbol="2" label="{model_info.model_name} both"'
+    
+    if value_value.__contains__("both - niet vergeleken"):
+        return f'value="{model_info.model_name} both - niet vergeleken" symbol="3" label="{model_info.model_name} both"'
 
     elif value_value.__contains__("damo"):
         return f'value="{model_info.model_name} damo" symbol="0" label="Damo {model_info.model_name} {model_info.date_new_damo}"'
@@ -86,7 +89,7 @@ def replace_label_3di(match, model_info: ModelInfo):
 
 def prepare_layers_for_export(table_C, filename, overwrite=False):
     """
-    Prepares layers for export by exploding geometries and handling representative points.
+    Prepare layers for export by exploding geometries and handling representative points.
 
     :param table_C: Dictionary of GeoDataFrames
     :param filename: Output file path
@@ -116,7 +119,7 @@ def prepare_layers_for_export(table_C, filename, overwrite=False):
 
 def export_comparison_DAMO(table_C, statistics, filename, model_info: ModelInfo, overwrite=False, styling_path=None):
     """
-    Exports all compared layers and statistics to a GeoPackage.
+    Export all compared layers and statistics to a GeoPackage.
 
     :param table_C: Dictionary containing a GeoDataframe per layer
     :param statistics: Dataframe containing the statistics
