@@ -16,12 +16,12 @@ DAMO_LAYERS = [
     "AquaductLijn",  # Niet in beide datasets
     "Bergingsgebied",  # Niet in beide datasets
     "Brug",
-    "Doorstroomopening",
+    # "Doorstroomopening", not a gdf
     "DuikerSifonHevel",
     "Gemaal",
-    "GW_PBP",
+    # "GW_PBP", no gdf
     "GW_PRO",
-    "GW_PRW",
+    # "GW_PRW", no gdf
     "HydroObject",
     #'IWS_GEO_BESCHR_PROFIELPUNTEN',
     "PeilafwijkingGebied",
@@ -31,7 +31,7 @@ DAMO_LAYERS = [
     "Stuw",
     "VasteDam",
     "Vispassage",
-    "Waterdeel",
+    # "Waterdeel", it does not contains code should be done in a different way 
 ]
 
 HDB_LAYERS = [
@@ -40,7 +40,7 @@ HDB_LAYERS = [
     "hydro_deelgebieden",
     "Levee_overstromingsmodel",
     "polderclusters",
-    "randvoorwaarden",  # geen geom
+    # "randvoorwaarden",  # geen geom
     "Sturing_3Di",
     "duikers_op_peilgrens",
 ]
@@ -80,6 +80,6 @@ STRUCTURE_CODES = [
     # @TODO: introduce 'other' category, so we don't miss any that don't have a nice code
 ]
 
-GEOMETRICAL_COMPARISON_LAYERS = ["PeilafwijkingGebied", "PeilgebiedPraktijk", "waterdeel"]
-
+GEOMETRICAL_COMPARISON_LAYERS = ["PeilafwijkingGebied", "PeilgebiedPraktijk",]
+# "Waterdeel"
 COMPARISON_GENERAL_THRESHOLD = 0.00001
