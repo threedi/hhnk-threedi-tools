@@ -20,9 +20,7 @@ class DataSet:
     """
 
     def __init__(self, model_info: ModelInfo):
-        """
-        Initialisation of a dataset.
-        """
+        """Initizialize of a dataset."""
 
         self.model_name = model_info.model_name
         self.data = None
@@ -31,7 +29,7 @@ class DataSet:
 
     def add_layer_styling(self, fn_export_gpkg, layer_styles):
         """
-        Adds and fills a helper table 'layer_styles' to the GeoPackage containing the style per layer.
+        Add and fills a helper table 'layer_styles' to the GeoPackage containing the style per layer.
         When the GeoPackage is loaded into QGIS, the layers are auto-loaded
 
         :param fn_export_gpkg: Filename of the GeoPackage to write to
@@ -75,7 +73,7 @@ class DataSet:
 
     def get_significant_geometry(self, dataset, geometry_A, geometry_B):
         """
-        Returns the significant geometry based on the origin of the geometry in the datasets.
+        Return the significant geometry based on the origin of the geometry in the datasets.
         If an asset occurs in dataset A (self) or in A AND B, geometry A is returned.
         If an asset occurs ONLY in dataset B, geometry B is returned.
 
@@ -91,7 +89,7 @@ class DataSet:
 
     def create_structure_geometry(self, point_start, point_end):
         """
-        Creates a LineString from structures that are only defined by a start and end point.
+        Create a LineString from structures that are only defined by a start and end point.
         If only a start point is supplied, the start point is returned
 
         :param point_start: Shapely geometry of the start point
@@ -107,7 +105,7 @@ class DataSet:
 
     def add_geometry_info(self, gdf):
         """
-        Adds columns regarding the geometry type, length and area as attributes to a GeoDatarame
+        Add columns regarding the geometry type, length and area as attributes to a GeoDatarame
 
         :param gdf: GeoDataframe to be analyzed
         :return: GeoDataframe with added columns
@@ -120,7 +118,7 @@ class DataSet:
 
     def drop_unused_geoseries(self, gdf, keep="geometry"):
         """
-        Removes all GeoSeries from a GeoDataframe except the column indicated with the 'keep' parameter.
+        Remove all GeoSeries from a GeoDataframe except the column indicated with the 'keep' parameter.
         Used because for the export to GeoPackage, a GeoDataframe is only allowed to have 1 geometry column
 
         :param gdf: GeoDataframe to be stripped of unused GeoSeries
@@ -147,7 +145,7 @@ class DataSet:
 
         def resolve_parameter(table, parameter):
             """
-            Resolves the parameters of a function. If the parameter is a string, the column in the table with that header is returned.
+            Resolve the parameters of a function. If the parameter is a string, the column in the table with that header is returned.
             If the parameter is a dict, a recursive function is applied.
             If the parameter is a number, the value is used
 
@@ -226,7 +224,7 @@ class DataSet:
 
     def compare_category(self, row, priority):
         """
-        Compares two values in a row on category. Returns a value only if the asset occurs in A and B (or DAMO and Model)
+        Compare two values in a row on category. Returns a value only if the asset occurs in A and B (or DAMO and Model)
         Returns not changed if there is no change in the category
 
         :param row: row containing the left and right column to be compared and the 'in_both' column.
@@ -257,6 +255,7 @@ class DataSet:
                         return ("not changed", None)
                 else:
                     return ("not changed", None)
+        
         return (None, None)
 
     def compare_attribute(self, df, comparison):
@@ -288,7 +287,7 @@ class DataSet:
 
         if comparison_type == "numeric":
             function = comparison["function"]
-            self.logger.debug(f"Comparison type: numeric")
+            self.logger.debug("Comparison type: numeric")
 
             # Try to read the numerical threshold, if not set, use default value
             try:
@@ -332,7 +331,7 @@ class DataSet:
                 # raise
 
         elif comparison_type == "category":
-            self.logger.debug(f"Comparison type: category")
+            self.logger.debug("Comparison type: category")
             left = comparison["left"]
             right = comparison["right"]
 
@@ -376,14 +375,14 @@ class DataSet:
 
     def apply_attribute_comparison(self, attribute_comparison, table):
         """
-        Loads a attribute comparison json file and applies the comparison rules in the json on the supplied table
+        Load a attribute comparison json file and applies the comparison rules in the json on the supplied table
 
         :param attribute_comparison: Path to file containing comparison rules
         :param table: Table to apply the comparison rules on
         :return:
         """
 
-        self.logger.debug(f"Start applying attribute comparison")
+        self.logger.debug("Start applying attribute comparison")
 
         try:
             with open(attribute_comparison) as file:
@@ -411,7 +410,7 @@ class DataSet:
 
     def get_structure_by_code(self, code_start: str, layers):
         """
-        Searches in all layers for entries based on code.
+        Search in all layers for entries based on code.
         If a rows 'code' column starts with code_start, it is appended to the return table,
         keeping all columns from different sources.
         Example, when searching for 'KDU' it returns all assets (in this case 'Duikers'),
