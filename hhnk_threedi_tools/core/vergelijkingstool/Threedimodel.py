@@ -2,19 +2,20 @@
 # importing external dependencies
 import logging
 import os
+from pathlib import Path
 
 import geopandas as gpd
 import numpy as np
 import pandas as pd
-from pathlib import Path
 
 import hhnk_threedi_tools.core.vergelijkingstool.config as config
 from hhnk_threedi_tools.core.vergelijkingstool import styling, utils
 from hhnk_threedi_tools.core.vergelijkingstool.config import *
 from hhnk_threedi_tools.core.vergelijkingstool.Dataset import DataSet
+from hhnk_threedi_tools.core.vergelijkingstool.qml_styling_files import Threedi as Threedi_styling_path
 from hhnk_threedi_tools.core.vergelijkingstool.styling import *
 from hhnk_threedi_tools.core.vergelijkingstool.utils import ModelInfo
-from hhnk_threedi_tools.core.vergelijkingstool.qml_styling_files import Threedi as Threedi_styling_path
+
 
 class Threedimodel(DataSet):
     def __init__(self, filename, model_info: ModelInfo, translation=None):
@@ -34,9 +35,8 @@ class Threedimodel(DataSet):
         self.logger = logging.getLogger("Threedimodel")
         self.logger.debug("Created Threedimodel object")
         # self.data = self.from_sqlite(filename, translation)
-        
-        self.styling_path = Path(Threedi_styling_path.__file__).resolve().parent
 
+        self.styling_path = Path(Threedi_styling_path.__file__).resolve().parent
 
         self.data = utils.load_file_and_translate(
             damo_filename=None,
@@ -348,9 +348,7 @@ class Threedimodel(DataSet):
 
         # export to filename
         if filename is not None:
-            self.export_comparison_3di(
-                table_C, statistics, filename, overwrite=overwrite, crs=self.crs
-            )
+            self.export_comparison_3di(table_C, statistics, filename, overwrite=overwrite, crs=self.crs)
 
         # statistics.to_csv(r"E:\02.modellen\castricum\01_source_data\vergelijkingsTool\output\statistics_threedi.csv", sep = ';')
         # table_C[layer].to_csv(r"E:\02.modellen\castricum\01_source_data\vergelijkingsTool\output\TableC_threedi.csv", sep = ';')

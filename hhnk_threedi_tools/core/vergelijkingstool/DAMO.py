@@ -8,9 +8,9 @@ import pandas as pd
 from hhnk_threedi_tools.core.vergelijkingstool import styling, utils
 from hhnk_threedi_tools.core.vergelijkingstool.config import *
 from hhnk_threedi_tools.core.vergelijkingstool.Dataset import DataSet
+from hhnk_threedi_tools.core.vergelijkingstool.qml_styling_files import DAMO as DAMO_styling_path
 from hhnk_threedi_tools.core.vergelijkingstool.styling import *
 from hhnk_threedi_tools.core.vergelijkingstool.utils import ModelInfo
-from hhnk_threedi_tools.core.vergelijkingstool.qml_styling_files import DAMO as DAMO_styling_path
 
 
 class DAMO(DataSet):
@@ -113,7 +113,12 @@ class DAMO(DataSet):
         """
 
         layer_styles = styling.export_comparison_DAMO(
-            table_C, statistics, filename, model_info=self.model_info, overwrite=overwrite, styling_path=self.styling_path
+            table_C,
+            statistics,
+            filename,
+            model_info=self.model_info,
+            overwrite=overwrite,
+            styling_path=self.styling_path,
         )
         self.add_layer_styling(fn_export_gpkg=filename, layer_styles=layer_styles)
 
@@ -121,7 +126,13 @@ class DAMO(DataSet):
         self.export_statistics(statistics, filename)
         self.logger.info(f"Finished exporting to {filename}")
 
-    def compare_with_damo(self, damo_b, attribute_comparison=None, filename=None, overwrite=False,):
+    def compare_with_damo(
+        self,
+        damo_b,
+        attribute_comparison=None,
+        filename=None,
+        overwrite=False,
+    ):
         """
         Compare two DAMO objects with eachother, self (damo_a) and other (damo_b).
         For every layer in the datasets (brug, duikersyfonhevel, etc.) an outer join based on the code will be made.
