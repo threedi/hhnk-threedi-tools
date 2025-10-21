@@ -29,7 +29,7 @@ class Threedimodel(DataSet):
         """
         # super().__init__(model_info)
 
-        self.json_files_path=Path(json_files_path.__file__).resolve().parent
+        self.json_files_path = Path(json_files_path.__file__).resolve().parent
         self.styling_path = Path(Threedi_styling_path.__file__).resolve().parent
 
         self.model_info = model_info
@@ -39,12 +39,12 @@ class Threedimodel(DataSet):
         self.model_path = model_info.fn_threedimodel
         self.logger = logging.getLogger("Threedimodel")
         self.logger.debug("Created Threedimodel object")
-             
+
         self.data = utils.load_file_and_translate(
             damo_filename=None,
             hdb_filename=None,
             threedi_filename=filename,
-            translation_3Di=self.json_files_path / 'threedi_translation.json',
+            translation_3Di=self.json_files_path / "threedi_translation.json",
             layer_selection=None,
             layers_input_threedi_selection=None,
             mode="threedi",
@@ -67,42 +67,40 @@ class Threedimodel(DataSet):
         for key in self.data.keys():
             self.__setattr__(key, self.data[key])
 
-    
-
     def max_value_from_tabulated(self):
         """
         Determine the maximum value in a tabultated string
         :param self:
         :return: Maximum value for each gdf
         """
-        for layer in self.data: 
+        for layer in self.data:
             # layer = 'cross_section_location'
             if "cross_section_table" in (self.data[layer].keys()):
                 print(layer)
                 gdf = self.data[layer]
 
-                max_widths=  []
+                max_widths = []
                 max_heights = []
                 for index, row in gdf.iterrows():
                     shape = row.cross_section_shape
-                    cross_section_table =  row.cross_section_table
-                    if shape == 2: 
+                    cross_section_table = row.cross_section_table
+                    if shape == 2:
                         cross_section_max_width = row.cross_section_width
                         cross_section_max_height = row.cross_section_height
-                    elif cross_section_table is not None: 
+                    elif cross_section_table is not None:
                         data = [list(map(float, line.split(","))) for line in cross_section_table.strip().split("\n")]
                         array = np.array(data)
                         cross_section_max_width = np.max(array[:, 0])
                         cross_section_max_height = np.max(array[:, 1])
-                    elif shape==5  and cross_section_table is None:
+                    elif shape == 5 and cross_section_table is None:
                         cross_section_max_width = row.cross_section_width
                         cross_section_max_height = row.crest_level
                     max_widths.append(cross_section_max_width)
                     max_heights.append(cross_section_max_height)
-            
+
                 gdf["cross_section_max_width"] = max_widths
                 gdf["cross_section_max_height"] = max_heights
-    
+
     def determine_statistics(self, table_C):
         """
         Per layer aggregate statistics like amount of entries, total length or total area for a layer,
@@ -271,7 +269,6 @@ class Threedimodel(DataSet):
 
         table_C = {}
         for layer in table_struc_model.keys():
-            
             # print(f"the crs for {layer} in DAMO is {table_struc_DAMO[layer].crs}")
             if table_struc_DAMO[layer].crs == table_struc_model[layer].crs:
                 self.logger.debug(f"CRS of DAMO and model data {layer} is equal")
