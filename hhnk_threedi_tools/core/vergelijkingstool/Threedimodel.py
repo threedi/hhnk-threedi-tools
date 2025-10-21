@@ -28,6 +28,10 @@ class Threedimodel(DataSet):
         :param translation: Path of the translation dictionary to be used
         """
         # super().__init__(model_info)
+
+        self.json_files_path=Path(json_files_path.__file__).resolve().parent
+        self.styling_path = Path(Threedi_styling_path.__file__).resolve().parent
+
         self.model_info = model_info
         self.model_name = model_info.model_name
         self.sourcedata = model_info.source_data
@@ -35,14 +39,12 @@ class Threedimodel(DataSet):
         self.model_path = model_info.fn_threedimodel
         self.logger = logging.getLogger("Threedimodel")
         self.logger.debug("Created Threedimodel object")
-        # self.json_files_path=Path(json_files_path.__file__).resolve().parent
-        self.styling_path = Path(Threedi_styling_path.__file__).resolve().parent
-
+             
         self.data = utils.load_file_and_translate(
             damo_filename=None,
             hdb_filename=None,
             threedi_filename=filename,
-            # translation_3Di=self.json_files_path / 'threedi_translation.json',
+            translation_3Di=self.json_files_path / 'threedi_translation.json',
             layer_selection=None,
             layers_input_threedi_selection=None,
             mode="threedi",
@@ -57,7 +59,7 @@ class Threedimodel(DataSet):
         except Exception as e:
             self.logger.warning("model couln not be updated")
 
-        self.join_cross_section_definition()
+        self.max_value_from_tabulated()
 
         # Set priority columns
         self.priority_columns = {}
@@ -65,54 +67,42 @@ class Threedimodel(DataSet):
         for key in self.data.keys():
             self.__setattr__(key, self.data[key])
 
-    def join_cross_section_definition(self):
+    
+
+    def max_value_from_tabulated(self):
         """
-        Join the v2_cross_section_definition with the layers in self.data.
-        From the tabulated height and width, the maximum value is determined and added to the self.data layer.
-
-        :return: None
+        Determine the maximum value in a tabultated string
+        :param self:
+        :return: Maximum value for each gdf
         """
+        for layer in self.data: 
+            # layer = 'cross_section_location'
+            if "cross_section_table" in (self.data[layer].keys()):
+                print(layer)
+                gdf = self.data[layer]
 
-        def max_value_from_tabulated(tabulated_string):
-            """
-            Determine the maximum value in a tabultated string
-            :param tabulated_string:
-            :return: Maximum value in a tabulated string
-            """
-
-            if tabulated_string is not None:
-                data = [list(map(float, line.split(","))) for line in tabulated_string.strip().split("\n")]
-
-                # Transform the data into array
-                array = np.array(data)
-                # split the array in x (width) and y (height)
-                x = array[:, 0]
-                y = array[:, 1]
-
-                # find max value in x (width)
-                max_x = np.max(x)
-
-                # find max value in y (height)
-                max_y = np.max(y)
-                return max_x, max_y
-            else:
-                return None
-
-        cross_section_definition = self.data["cross_section_location"]
-
-        cross_section_definition[["cross_section_max_width", "cross_section_max_height"]] = (
-            cross_section_definition["cross_section_table"].apply(max_value_from_tabulated).to_list()
-        )
-
-        for layer in self.data:
-            if "cross_section_location" in list(self.data[layer].keys()):
-                self.data[layer] = self.data[layer].merge(
-                    cross_section_definition[["cross_section_max_width", "cross_section_max_height"]],
-                    how="left",
-                    left_on="cross_section_definition_id",
-                    right_on="id",
-                )
-
+                max_widths=  []
+                max_heights = []
+                for index, row in gdf.iterrows():
+                    shape = row.cross_section_shape
+                    cross_section_table =  row.cross_section_table
+                    if shape == 2: 
+                        cross_section_max_width = row.cross_section_width
+                        cross_section_max_height = row.cross_section_height
+                    elif cross_section_table is not None: 
+                        data = [list(map(float, line.split(","))) for line in cross_section_table.strip().split("\n")]
+                        array = np.array(data)
+                        cross_section_max_width = np.max(array[:, 0])
+                        cross_section_max_height = np.max(array[:, 1])
+                    elif shape==5  and cross_section_table is None:
+                        cross_section_max_width = row.cross_section_width
+                        cross_section_max_height = row.crest_level
+                    max_widths.append(cross_section_max_width)
+                    max_heights.append(cross_section_max_height)
+            
+                gdf["cross_section_max_width"] = max_widths
+                gdf["cross_section_max_height"] = max_heights
+    
     def determine_statistics(self, table_C):
         """
         Per layer aggregate statistics like amount of entries, total length or total area for a layer,
@@ -235,7 +225,7 @@ class Threedimodel(DataSet):
     def compare_with_DAMO(
         self,
         DAMO,
-        attribute_comparison=None,
+        # attribute_comparison=None,
         filename=None,
         overwrite=False,
         threedi_layer_selector=False,
@@ -255,7 +245,7 @@ class Threedimodel(DataSet):
         :param styling_path: Path to folder containing .qml files for styling the layers
         :return: Dictionary containing GeoDataframes with compared data and a Dataframe with statistics
         """
-        # attribute_comparison = self.json_files_path / "model_attribute_comparison.json"
+        attribute_comparison = self.json_files_path / "model_attribute_comparison.json"
         # print(attribute_comparison)
 
         # sort model and damo data by structure code instead of model and damo layers
@@ -281,6 +271,7 @@ class Threedimodel(DataSet):
 
         table_C = {}
         for layer in table_struc_model.keys():
+            
             # print(f"the crs for {layer} in DAMO is {table_struc_DAMO[layer].crs}")
             if table_struc_DAMO[layer].crs == table_struc_model[layer].crs:
                 self.logger.debug(f"CRS of DAMO and model data {layer} is equal")

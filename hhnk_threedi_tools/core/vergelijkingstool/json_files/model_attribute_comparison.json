@@ -1,23 +1,23 @@
 {
-	"comparisons": [{
+	"comparisons": [
+		{
 			"name": "cmp_bob_bov",
 			"table": "KDU",
 			"type": "numeric",
-			"description":"Verschil tussen bovenstroomse BOB en de bovenstroomse culvert invert level",
+			"description": "Verschil tussen bovenstroomse BOB en de bovenstroomse culvert invert level",
 			"priority": "critical",
 			"function": {
 				"difference": {
 					"left": "hoogtebinnenonderkantbov_damo",
-					"right": "invert_level_start_point_model"
+					"right": "invert_level_start_model"
 				}
 			}
 		},
-		
 		{
 			"name": "cmp_bob_max",
 			"table": "KDU",
 			"type": "numeric",
-			"description":"Verschil tussen maximale BOB en de maximale culvert invert level",
+			"description": "Verschil tussen maximale BOB en de maximale culvert invert level",
 			"priority": "critical",
 			"function": {
 				"difference": {
@@ -30,19 +30,18 @@
 					},
 					"right": {
 						"maximum": {
-							"left": "invert_level_start_point_model",
-							"right": "invert_level_end_point_model"
+							"left": "invert_level_start_model",
+							"right": "invert_level_end_model"
 						}
 					}
 				}
 			}
 		},
-
 		{
 			"name": "cmp_hoogteonderzijde",
 			"table": "KBR",
 			"type": "numeric",
-			"description":"Verschil tussen hoogteonderzijde (DAMO) en de crest_level+cross_section_max_height (model)",
+			"description": "Verschil tussen hoogteonderzijde (DAMO) en de crest_level+cross_section_max_height (model)",
 			"priority": "critical",
 			"function": {
 				"difference": {
@@ -56,7 +55,6 @@
 				}
 			}
 		},
-
 		{
 			"name": "cmp_capaciteit",
 			"table": "KGM",

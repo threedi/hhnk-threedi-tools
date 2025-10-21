@@ -48,7 +48,7 @@ def main(
     fn_damo_old,
     fn_hdb_old,
     fn_threedimodel,
-    fn_model_attribute_comparison,
+    # fn_model_attribute_comparison,
     fn_DAMO_comparison_export,
     fn_threedi_comparison_export,
     compare_with: str = "Compare with 3Di",
@@ -124,7 +124,7 @@ def main(
 
         threedi_comparison, threedi_statistics = threedi_model.compare_with_DAMO(
             damo_new,
-            attribute_comparison=fn_model_attribute_comparison,
+            # attribute_comparison=fn_model_attribute_comparison,
             filename=fn_threedi_comparison_export,
             overwrite=True,
             threedi_layer_selector=threedi_layer_selector,
@@ -163,7 +163,7 @@ def main(
         )
         threedi_comparison, threedi_statistics = threedi_model.compare_with_DAMO(
             damo_new,
-            attribute_comparison=fn_model_attribute_comparison,
+            # attribute_comparison=fn_model_attribute_comparison,
             filename=fn_threedi_comparison_export,
             overwrite=True,
             threedi_layer_selector=threedi_layer_selector,
@@ -212,7 +212,7 @@ if __name__ == "__main__":
     # Define path where layer stylings can be found (for each layer it will search for <<LAYER_NAME>>.qml
     styling_path = source_data / "styling"
 
-    fn_model_attribute_comparison = json_file / "model_attribute_comparison.json"
+    # fn_model_attribute_comparison = json_file / "model_attribute_comparison.json"
     # Define outputs
     fn_DAMO_comparison_export = out_put_files / "DAMO_comparison_Test_126.gpkg"
 
@@ -223,7 +223,7 @@ if __name__ == "__main__":
         "duikers_op_peilgrens",
         "stuwen_op_peilgrens",
     ]
-    fn_threedi_comparison_export = out_put_files / "Threedi_comparison_Test_50.gpkg"
+    fn_threedi_comparison_export = out_put_files / "Threedi_comparison_Test_51.gpkg"
 
     # compare_with = "Compare with Damo"
     compare_with = "Compare with 3Di"
@@ -243,7 +243,7 @@ if __name__ == "__main__":
         fn_damo_old=fn_damo_old,
         fn_hdb_old=fn_hdb_old,
         fn_threedimodel=fn_threedimodel,
-        fn_model_attribute_comparison=fn_model_attribute_comparison,
+        # fn_model_attribute_comparison=fn_model_attribute_comparison,
         fn_DAMO_comparison_export=fn_DAMO_comparison_export,
         fn_threedi_comparison_export=fn_threedi_comparison_export,
         compare_with=compare_with,
