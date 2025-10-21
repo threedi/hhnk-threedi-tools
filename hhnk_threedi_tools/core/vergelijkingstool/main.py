@@ -43,16 +43,13 @@ from hhnk_threedi_tools.core.vergelijkingstool.utils import ModelInfo, get_model
 def main(
     model_info: ModelInfo,
     fn_DAMO_selection,
-    fn_damo_old_translation,
     fn_damo_new,
     fn_hdb_new,
     fn_damo_old,
     fn_hdb_old,
     fn_threedimodel,
-    fn_threedimodel_translation,
     fn_damo_attribute_comparison,
     fn_model_attribute_comparison,
-    fn_damo_new_translation,
     fn_DAMO_comparison_export,
     fn_threedi_comparison_export,
     compare_with: str = "Compare with 3Di",
@@ -89,7 +86,6 @@ def main(
             model_info,
             fn_damo_old,
             fn_hdb_old,
-            translation_DAMO=fn_damo_old_translation,
             clip_shape=selection_shape,
             layer_selection=layer_selection,
             layers_input_hdb_selection=layers_input_hdb_selection,
@@ -99,7 +95,6 @@ def main(
             model_info,
             fn_damo_new,
             fn_hdb_new,
-            translation_DAMO=fn_damo_new_translation,
             clip_shape=selection_shape,
             layer_selection=layer_selection,
             layers_input_hdb_selection=layers_input_hdb_selection,
@@ -118,12 +113,11 @@ def main(
 
     elif selection_compare == "Compare with 3Di":
         # Create Threedimodel object
-        threedi_model = Threedimodel(fn_threedimodel, model_info=model_info, translation=fn_threedimodel_translation)
+        threedi_model = Threedimodel(fn_threedimodel, model_info=model_info)
         damo_new = DAMO(
             model_info,
             fn_damo_new,
             fn_hdb_new,
-            translation_DAMO=fn_damo_new_translation,
             clip_shape=selection_shape,
             layer_selection=False,
             layers_input_hdb_selection=layers_input_hdb_selection,
@@ -145,12 +139,11 @@ def main(
         return fn_threedi_comparison_export
 
     elif selection_compare == "Both":
-        threedi_model = Threedimodel(fn_threedimodel, model_info=model_info, translation=fn_threedimodel_translation)
+        threedi_model = Threedimodel(fn_threedimodel, model_info=model_info)
         damo_old = DAMO(
             model_info,
             fn_damo_old,
             fn_hdb_old,
-            translation_DAMO=fn_damo_old_translation,
             clip_shape=selection_shape,
             layer_selection=layer_selection,
             layers_input_hdb_selection=layers_input_hdb_selection,
@@ -160,7 +153,6 @@ def main(
             model_info,
             fn_damo_new,
             fn_hdb_new,
-            translation_DAMO=fn_damo_new_translation,
             clip_shape=selection_shape,
             layer_selection=layer_selection,
             layers_input_hdb_selection=layers_input_hdb_selection,
@@ -208,22 +200,18 @@ if __name__ == "__main__":
 
     # Old DAMO (DCMB/FME export) location .
     fn_damo_old = info.fn_damo_old
-    fn_damo_old_translation = source_data_old / "damo_translation.json"
-
+    
     # the last version
     fn_damo_new = info.fn_damo_new
-    fn_damo_new_translation = fn_damo_old_translation
+
     # fn_damo_new_translation = Path(os.path.join(source_data_old, 'damo_translation.json'))
 
     # Old HDB (DCMB/FME export) location .
     fn_hdb_old = info.fn_hdb_old
-    fn_hdb_old_translation = source_data_old / "hdb_translation.json"
 
     # the last version
     fn_hdb_new = info.fn_hdb_new
-    fn_hdb_new_translation = fn_hdb_old_translation
 
-    fn_threedimodel_translation = json_file / "threedi_translation.json"
     fn_damo_attribute_comparison = json_file / "damo_attribute_comparison.json"
     fn_model_attribute_comparison = json_file / "model_attribute_comparison.json"
 
@@ -231,7 +219,7 @@ if __name__ == "__main__":
     styling_path = source_data / "styling"
 
     # Define outputs
-    fn_DAMO_comparison_export = out_put_files / "DAMO_comparison_Test_124.gpkg"
+    fn_DAMO_comparison_export = out_put_files / "DAMO_comparison_Test_125.gpkg"
 
     # Layers To Compare DAMO_DAMO
     layer_selection = False
@@ -240,10 +228,10 @@ if __name__ == "__main__":
         "duikers_op_peilgrens",
         "stuwen_op_peilgrens",
     ]
-    fn_threedi_comparison_export = out_put_files / "Threedi_comparison_Test_48.gpkg"
+    fn_threedi_comparison_export = out_put_files / "Threedi_comparison_Test_49.gpkg"
 
-    compare_with = "Compare with Damo"
-    # compare_with = "Compare with 3Di"
+    # compare_with = "Compare with Damo"
+    compare_with = "Compare with 3Di"
     # config.UPDATE_SYMBOLOGY = True
 
     # Layers to Compare DAMO_3di
@@ -255,16 +243,13 @@ if __name__ == "__main__":
     main(
         model_info=info,
         fn_DAMO_selection=fn_DAMO_selection,
-        fn_damo_old_translation=fn_damo_old_translation,
         fn_damo_new=fn_damo_new,
         fn_hdb_new=fn_hdb_new,
         fn_damo_old=fn_damo_old,
         fn_hdb_old=fn_hdb_old,
         fn_threedimodel=fn_threedimodel,
-        fn_threedimodel_translation=fn_threedimodel_translation,
         fn_damo_attribute_comparison=fn_damo_attribute_comparison,
         fn_model_attribute_comparison=fn_model_attribute_comparison,
-        fn_damo_new_translation=fn_damo_new_translation,
         fn_DAMO_comparison_export=fn_DAMO_comparison_export,
         fn_threedi_comparison_export=fn_threedi_comparison_export,
         compare_with=compare_with,

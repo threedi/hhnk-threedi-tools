@@ -15,12 +15,12 @@ from hhnk_threedi_tools.core.vergelijkingstool.Dataset import DataSet
 from hhnk_threedi_tools.core.vergelijkingstool.qml_styling_files import Threedi as Threedi_styling_path
 from hhnk_threedi_tools.core.vergelijkingstool.styling import *
 from hhnk_threedi_tools.core.vergelijkingstool.utils import ModelInfo
-
+from hhnk_threedi_tools.core.vergelijkingstool import json_files as json_files_path
 
 class Threedimodel(DataSet):
     def __init__(self, filename, model_info: ModelInfo, translation=None):
         """
-        Creates a Threedimodel object and reads the data from the 3Di schematisation sqlite.
+        Create a Threedimodel object and reads the data from the 3Di schematisation sqlite.
         If translation dictionaries are supplied, layer and column names are mapped.
 
         :param filename: Path of the .sqlite file to be loaded
@@ -35,6 +35,7 @@ class Threedimodel(DataSet):
         self.logger = logging.getLogger("Threedimodel")
         self.logger.debug("Created Threedimodel object")
         # self.data = self.from_sqlite(filename, translation)
+        self.json_files_path=Path(json_files_path.__file__).resolve().parent
 
         self.styling_path = Path(Threedi_styling_path.__file__).resolve().parent
 
@@ -42,7 +43,7 @@ class Threedimodel(DataSet):
             damo_filename=None,
             hdb_filename=None,
             threedi_filename=filename,
-            translation_3Di=translation,
+            translation_3Di=self.json_files_path / 'threedi_translation.json',
             layer_selection=None,
             layers_input_threedi_selection=None,
             mode="threedi",
@@ -67,7 +68,7 @@ class Threedimodel(DataSet):
 
     def join_cross_section_definition(self):
         """
-        Method to join the v2_cross_section_definition with the layers in self.data.
+        Join the v2_cross_section_definition with the layers in self.data.
         From the tabulated height and width, the maximum value is determined and added to the self.data layer.
 
         :return: None
@@ -75,7 +76,7 @@ class Threedimodel(DataSet):
 
         def max_value_from_tabulated(tabulated_string):
             """
-            Determines the maximum value in a tabultated string
+            Determine the maximum value in a tabultated string
             :param tabulated_string:
             :return: Maximum value in a tabulated string
             """
@@ -203,7 +204,7 @@ class Threedimodel(DataSet):
 
     def export_comparison_3di(self, table_C, statistics, filename, overwrite=False, crs=None):
         """
-        Exports all compared layers and statistics to a GeoPackage.
+        Export all compared layers and statistics to a GeoPackage.
 
         :param table_C: Dictionary containing a GeoDataframe per layer
         :param statistics: Dataframe containing the statistics
@@ -244,7 +245,7 @@ class Threedimodel(DataSet):
         structure_codes=None,
     ):
         """
-        Compares the Threedi object with a DAMO object.
+        Compare the Threedi object with a DAMO object.
         Looks in all layers containing structures (defined in the config.py) for the 'code' column. Creates a joined
         GeoDataFrame for each structure code ('KDU','KBR', etc., also defined in config.py)
 
