@@ -200,7 +200,7 @@ if __name__ == "__main__":
 
     # Old DAMO (DCMB/FME export) location .
     fn_damo_old = info.fn_damo_old
-    
+
     # the last version
     fn_damo_new = info.fn_damo_new
 

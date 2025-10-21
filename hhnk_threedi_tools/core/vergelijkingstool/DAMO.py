@@ -5,11 +5,11 @@ from pathlib import Path
 import geopandas as gpd
 import pandas as pd
 
+from hhnk_threedi_tools.core.vergelijkingstool import json_files as json_files_path
 from hhnk_threedi_tools.core.vergelijkingstool import styling, utils
 from hhnk_threedi_tools.core.vergelijkingstool.config import *
 from hhnk_threedi_tools.core.vergelijkingstool.Dataset import DataSet
 from hhnk_threedi_tools.core.vergelijkingstool.qml_styling_files import DAMO as DAMO_styling_path
-from hhnk_threedi_tools.core.vergelijkingstool import json_files as json_files_path
 from hhnk_threedi_tools.core.vergelijkingstool.styling import *
 from hhnk_threedi_tools.core.vergelijkingstool.utils import ModelInfo
 
@@ -41,8 +41,8 @@ class DAMO(DataSet):
         self.logger = logging.getLogger("DAMO")
         self.logger.debug("Created DAMO object")
 
-        self.styling_path = Path(DAMO_styling_path.__file__).resolve().parent 
-        self.json_files_path=Path(json_files_path.__file__).resolve().parent
+        self.styling_path = Path(DAMO_styling_path.__file__).resolve().parent
+        self.json_files_path = Path(json_files_path.__file__).resolve().parent
 
         self.model_info = model_info
         self.model_name = model_info.model_name
@@ -53,8 +53,8 @@ class DAMO(DataSet):
         self.data = utils.load_file_and_translate(
             damo_filename=damo_filename,
             hdb_filename=hdb_filename,
-            translation_DAMO=self.json_files_path / 'damo_translation.json',
-            translation_HDB=self.json_files_path / 'hdb_translation.json',
+            translation_DAMO=self.json_files_path / "damo_translation.json",
+            translation_HDB=self.json_files_path / "hdb_translation.json",
             layer_selection=layer_selection,
             layers_input_damo_selection=layers_input_damo_selection,
             layers_input_hdb_selection=layers_input_hdb_selection,
