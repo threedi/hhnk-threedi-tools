@@ -9,13 +9,14 @@ import numpy as np
 import pandas as pd
 
 import hhnk_threedi_tools.core.vergelijkingstool.config as config
+from hhnk_threedi_tools.core.vergelijkingstool import json_files as json_files_path
 from hhnk_threedi_tools.core.vergelijkingstool import styling, utils
 from hhnk_threedi_tools.core.vergelijkingstool.config import *
 from hhnk_threedi_tools.core.vergelijkingstool.Dataset import DataSet
 from hhnk_threedi_tools.core.vergelijkingstool.qml_styling_files import Threedi as Threedi_styling_path
 from hhnk_threedi_tools.core.vergelijkingstool.styling import *
 from hhnk_threedi_tools.core.vergelijkingstool.utils import ModelInfo
-from hhnk_threedi_tools.core.vergelijkingstool import json_files as json_files_path
+
 
 class Threedimodel(DataSet):
     def __init__(self, filename, model_info: ModelInfo, translation=None):

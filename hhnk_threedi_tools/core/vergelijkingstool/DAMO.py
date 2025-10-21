@@ -145,7 +145,7 @@ class DAMO(DataSet):
         geometries differ, the geometry of A is exported.
         Additionally, a table with statistics is returned
         """
-        attribute_comparison = self.json_files_path  / 'damo_attribute_comparison.json'
+        attribute_comparison = self.json_files_path / "damo_attribute_comparison.json"
         # copy damo data and add column with True values
         self.logger.debug("create copies of tables")
         table_A = self.data.copy()
