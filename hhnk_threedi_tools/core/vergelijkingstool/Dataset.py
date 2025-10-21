@@ -255,7 +255,6 @@ class DataSet:
                         return ("not changed", None)
                 else:
                     return ("not changed", None)
-
         return (None, None)
 
     def compare_attribute(self, df, comparison):

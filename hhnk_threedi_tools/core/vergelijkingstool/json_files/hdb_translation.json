@@ -7,7 +7,7 @@
 			"geometry": "geometry"
 		}
 	},
-    "duikers_op_peilgrens": {
+	"duikers_op_peilgrens": {
 		"name": "duikers_op_peilgrens",
 		"columns": {
 			"CODE": "code",
