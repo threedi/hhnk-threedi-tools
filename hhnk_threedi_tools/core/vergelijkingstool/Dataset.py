@@ -381,7 +381,7 @@ class DataSet:
         :param table: Table to apply the comparison rules on
         :return:
         """
-
+        print(attribute_comparison)
         self.logger.debug("Start applying attribute comparison")
 
         try:

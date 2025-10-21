@@ -48,7 +48,6 @@ def main(
     fn_damo_old,
     fn_hdb_old,
     fn_threedimodel,
-    fn_damo_attribute_comparison,
     fn_model_attribute_comparison,
     fn_DAMO_comparison_export,
     fn_threedi_comparison_export,
@@ -104,7 +103,6 @@ def main(
         # Compare damo objects with eachother and export result to geopackage
         DAMO_comparison, DAMO_statistics = damo_new.compare_with_damo(
             damo_old,
-            attribute_comparison=fn_damo_attribute_comparison,
             filename=fn_DAMO_comparison_export,
             overwrite=True,
         )
@@ -160,7 +158,6 @@ def main(
         )
         DAMO_comparison, DAMO_statistics = damo_new.compare_with_damo(
             damo_old,
-            attribute_comparison=fn_damo_attribute_comparison,
             filename=fn_DAMO_comparison_export,
             overwrite=True,
         )
@@ -194,10 +191,10 @@ if __name__ == "__main__":
     # Base folder initial files.
     source_data_old = info.source_data_old
 
-    json_file = info.json_folder
     # output location.
     out_put_files = info.output_folder
 
+    json_file = info.json_folder
     # Old DAMO (DCMB/FME export) location .
     fn_damo_old = info.fn_damo_old
 
@@ -212,14 +209,13 @@ if __name__ == "__main__":
     # the last version
     fn_hdb_new = info.fn_hdb_new
 
-    fn_damo_attribute_comparison = json_file / "damo_attribute_comparison.json"
-    fn_model_attribute_comparison = json_file / "model_attribute_comparison.json"
-
     # Define path where layer stylings can be found (for each layer it will search for <<LAYER_NAME>>.qml
     styling_path = source_data / "styling"
 
+
+    fn_model_attribute_comparison = json_file / "model_attribute_comparison.json"
     # Define outputs
-    fn_DAMO_comparison_export = out_put_files / "DAMO_comparison_Test_125.gpkg"
+    fn_DAMO_comparison_export = out_put_files / "DAMO_comparison_Test_126.gpkg"
 
     # Layers To Compare DAMO_DAMO
     layer_selection = False
@@ -228,7 +224,7 @@ if __name__ == "__main__":
         "duikers_op_peilgrens",
         "stuwen_op_peilgrens",
     ]
-    fn_threedi_comparison_export = out_put_files / "Threedi_comparison_Test_49.gpkg"
+    fn_threedi_comparison_export = out_put_files / "Threedi_comparison_Test_50.gpkg"
 
     # compare_with = "Compare with Damo"
     compare_with = "Compare with 3Di"
@@ -248,7 +244,6 @@ if __name__ == "__main__":
         fn_damo_old=fn_damo_old,
         fn_hdb_old=fn_hdb_old,
         fn_threedimodel=fn_threedimodel,
-        fn_damo_attribute_comparison=fn_damo_attribute_comparison,
         fn_model_attribute_comparison=fn_model_attribute_comparison,
         fn_DAMO_comparison_export=fn_DAMO_comparison_export,
         fn_threedi_comparison_export=fn_threedi_comparison_export,

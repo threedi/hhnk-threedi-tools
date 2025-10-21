@@ -9,14 +9,13 @@ import numpy as np
 import pandas as pd
 
 import hhnk_threedi_tools.core.vergelijkingstool.config as config
-from hhnk_threedi_tools.core.vergelijkingstool import json_files as json_files_path
 from hhnk_threedi_tools.core.vergelijkingstool import styling, utils
 from hhnk_threedi_tools.core.vergelijkingstool.config import *
 from hhnk_threedi_tools.core.vergelijkingstool.Dataset import DataSet
 from hhnk_threedi_tools.core.vergelijkingstool.qml_styling_files import Threedi as Threedi_styling_path
 from hhnk_threedi_tools.core.vergelijkingstool.styling import *
 from hhnk_threedi_tools.core.vergelijkingstool.utils import ModelInfo
-
+from hhnk_threedi_tools.core.vergelijkingstool import json_files as json_files_path
 
 class Threedimodel(DataSet):
     def __init__(self, filename, model_info: ModelInfo, translation=None):
@@ -35,16 +34,14 @@ class Threedimodel(DataSet):
         self.model_path = model_info.fn_threedimodel
         self.logger = logging.getLogger("Threedimodel")
         self.logger.debug("Created Threedimodel object")
-        # self.data = self.from_sqlite(filename, translation)
-        self.json_files_path = Path(json_files_path.__file__).resolve().parent
-
+        # self.json_files_path=Path(json_files_path.__file__).resolve().parent
         self.styling_path = Path(Threedi_styling_path.__file__).resolve().parent
 
         self.data = utils.load_file_and_translate(
             damo_filename=None,
             hdb_filename=None,
             threedi_filename=filename,
-            translation_3Di=self.json_files_path / "threedi_translation.json",
+            # translation_3Di=self.json_files_path / 'threedi_translation.json',
             layer_selection=None,
             layers_input_threedi_selection=None,
             mode="threedi",
@@ -257,6 +254,8 @@ class Threedimodel(DataSet):
         :param styling_path: Path to folder containing .qml files for styling the layers
         :return: Dictionary containing GeoDataframes with compared data and a Dataframe with statistics
         """
+        # attribute_comparison = self.json_files_path / "model_attribute_comparison.json"
+        # print(attribute_comparison)
 
         # sort model and damo data by structure code instead of model and damo layers
         model_name = self.model_name

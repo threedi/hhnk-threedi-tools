@@ -7,7 +7,6 @@ from pathlib import Path
 
 import fiona
 import geopandas as gpd
-from shapely.geometry import Point
 
 from hhnk_threedi_tools.core.folders import Folders
 from hhnk_threedi_tools.core.vergelijkingstool import config
@@ -29,8 +28,8 @@ class ModelInfo:
     fn_hdb_new: Path
     damo_selection: Path
     fn_threedimodel: Path
-    json_folder: Path
     output_folder: Path
+    json_folder: Path
     date_damo_old: str
     date_damo_new: str
     date_hdb_old: str
@@ -51,8 +50,8 @@ def get_model_info(path: str) -> ModelInfo:
     fn_threedimodel = folder.model.schema_base.content[0]
 
     source_data_old = source_data / "vergelijkingsTool" / "old"
-    json_folder = source_data / "vergelijkingsTool" / "json_files"
     fn_damo_old = source_data_old / "DAMO.gdb"
+    json_folder = source_data / "vergelijkingsTool" / "json_files"
     fn_hdb_old = source_data_old / "HDB.gdb"
     fn_damo_new = source_data / "DAMO.gpkg"
     fn_hdb_new = source_data / "HDB.gpkg"
@@ -69,8 +68,8 @@ def get_model_info(path: str) -> ModelInfo:
         fn_hdb_new=fn_hdb_new,
         damo_selection=damo_selection,
         fn_threedimodel=fn_threedimodel,
-        json_folder=json_folder,
         output_folder=output_folder,
+        json_folder=json_folder,
         date_damo_old=time.ctime(os.path.getmtime(fn_damo_old)),
         date_damo_new=time.ctime(os.path.getmtime(fn_damo_new)),
         date_hdb_old=time.ctime(os.path.getmtime(fn_hdb_old)),

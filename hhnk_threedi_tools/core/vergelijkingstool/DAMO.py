@@ -20,8 +20,6 @@ class DAMO(DataSet):
         model_info: ModelInfo,
         damo_filename,
         hdb_filename,
-        translation_DAMO=None,
-        translation_HDB=None,
         clip_shape=None,
         layer_selection=None,
         layers_input_hdb_selection=None,
@@ -131,7 +129,6 @@ class DAMO(DataSet):
     def compare_with_damo(
         self,
         damo_b,
-        attribute_comparison=None,
         filename=None,
         overwrite=False,
     ):
@@ -148,7 +145,7 @@ class DAMO(DataSet):
         geometries differ, the geometry of A is exported.
         Additionally, a table with statistics is returned
         """
-
+        attribute_comparison = self.json_files_path  / 'damo_attribute_comparison.json'
         # copy damo data and add column with True values
         self.logger.debug("create copies of tables")
         table_A = self.data.copy()
