@@ -18,7 +18,10 @@ Unpack content of .7z file and place them in the C:\\Windows\\System32 folder
 """
 
 # %%
-__authors__ = ["Thijs van den Pol (Royal HaskoningDHV)", "Emiel Verstegen (Royal HaskoningDHV)"]
+__authors__ = [
+    "Thijs van den Pol (Royal HaskoningDHV)",
+    "Emiel Verstegen (Royal HaskoningDHV)",
+]
 __contact__ = "emiel.verstegen@rhdhv.com"
 __credits__ = ["Thijs van den Pol", "Emiel Verstegen"]
 __date__ = "2023/03/13"
@@ -209,9 +212,6 @@ if __name__ == "__main__":
     # the last version
     fn_hdb_new = info.fn_hdb_new
 
-    # Define path where layer stylings can be found (for each layer it will search for <<LAYER_NAME>>.qml
-    styling_path = source_data / "styling"
-
     # fn_model_attribute_comparison = json_file / "model_attribute_comparison.json"
     # Define outputs
     fn_DAMO_comparison_export = out_put_files / "DAMO_comparison_Test_126.gpkg"
@@ -223,7 +223,7 @@ if __name__ == "__main__":
         "duikers_op_peilgrens",
         "stuwen_op_peilgrens",
     ]
-    fn_threedi_comparison_export = out_put_files / "Threedi_comparison_Test_51.gpkg"
+    fn_threedi_comparison_export = out_put_files / "Threedi_comparison_Test_54.gpkg"
 
     # compare_with = "Compare with Damo"
     compare_with = "Compare with 3Di"
