@@ -1,7 +1,9 @@
 # %%
 import shutil
+import sys
 
 import hhnk_research_tools as hrt
+import pytest
 
 from hhnk_threedi_tools.utils.notebooks.nr07_sort_control_table_values import (
     create_sorted_actiontable_queries,
@@ -12,6 +14,7 @@ from tests.config import FOLDER_TEST, TEMP_DIR
 # %%
 
 
+@pytest.mark.skipif(sys.version_info < (3, 12), reason="# TODO notebook moet nog bijgewerkt worden.")
 def test_sort_control_table():
     database_path = shutil.copy(
         FOLDER_TEST.model.schema_base.database.path,

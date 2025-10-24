@@ -1,3 +1,4 @@
+# %%
 import geopandas as gpd
 import pandas as pd
 
@@ -15,7 +16,7 @@ def test_structure_relations():
 
     assert len(orifice_gdf) == 5
     assert "min_ref_level_end" in list(orifice_gdf.columns)
-    assert round(orifice_gdf["minimal_level"].iloc[0], 1) == -0.9
+    assert round(orifice_gdf["min_ref_level_end"].iloc[0], 1) == -0.9
 
     # test wrong profiles
     wrong_profile_dict: dict[str, gpd.GeoDataFrame] = {}
@@ -38,3 +39,6 @@ def test_channel_relations():
     assert len(channel_gdf) == 49
     assert "width_at_wlvl_mean" in list(channel_gdf.columns)
     assert round(channel_gdf["depth_max"].iloc[0], 1) == 1.0
+
+
+# %%
