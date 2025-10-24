@@ -10,7 +10,7 @@ from hhnk_threedi_tools.core.checks.one_d_two_d import OneDTwoDCheck
 from tests.config import FOLDER_TEST
 
 # Globals
-REVISION = "BWN bwn_test #6 1d2d_test"
+REVISION = "BWN bwn_test #6 1d2d_check"
 
 
 class TestOneDTwoD:

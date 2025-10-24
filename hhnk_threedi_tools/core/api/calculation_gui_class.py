@@ -700,7 +700,7 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
             self._activate_button_color(self.rain.check_0d1d_button)
             self.output.subfolder_box.value = self.output.subfolder_box.options[1]
             self._update_calc_settings_buttons(structure_control=False, laterals=True)
-            self.update_simulation_name_widget(model_type="0d1d_test")
+            self.update_simulation_name_widget(model_type="0d1d_check")
 
         @self.rain.check_1d2d_button.on_click
         def change_rain(action):
@@ -713,7 +713,7 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
             self._activate_button_color(self.rain.check_1d2d_button)
             self.output.subfolder_box.value = self.output.subfolder_box.options[0]
             self._update_calc_settings_buttons(structure_control=True, laterals=True)
-            self.update_simulation_name_widget(model_type="1d2d_test")
+            self.update_simulation_name_widget(model_type="1d2d_check")
 
         @self.rain.one_hour_check_button.on_click
         def change_rain(action):
