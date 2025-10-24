@@ -3,17 +3,17 @@ from typing import Any
 
 import fiona
 import ipywidgets as widgets
-from ipywidgets import HBox, VBox, Button, ToggleButtons, Checkbox, Text, HTML
-from IPython.display import display, clear_output
+from IPython.display import clear_output, display
+from ipywidgets import HTML, Button, Checkbox, HBox, Text, ToggleButtons, VBox
 
-from hhnk_threedi_tools.core.vergelijkingstool.utils import get_model_info
 from hhnk_threedi_tools.core.vergelijkingstool import config, main
+from hhnk_threedi_tools.core.vergelijkingstool.utils import get_model_info
 
 
 class VergelijkingstoolGUI:
     def __init__(self):
-        #  Styling 
-        desc_style = {"description_width": "160px"}  
+        #  Styling
+        desc_style = {"description_width": "160px"}
         text_w = "95%"
 
         self.output_box = widgets.Output()
@@ -57,7 +57,7 @@ class VergelijkingstoolGUI:
             layout=widgets.Layout(width="auto"),
         )
 
-        # Checkboxes 
+        # Checkboxes
         self.select_layer_damo = Checkbox(
             value=False,
             description="Select specific DAMO/DAMO layers?",
@@ -72,7 +72,7 @@ class VergelijkingstoolGUI:
         # run button
         self.run_button = Button(description="Run Comparison", button_style="success")
 
-        # Layout 
+        # Layout
         output_section = VBox(
             [
                 HTML("<b>Output configuration</b>"),
@@ -87,7 +87,7 @@ class VergelijkingstoolGUI:
                 self.compare_title,
                 self.compare_buttons,
                 output_section,
-                self.output_box, 
+                self.output_box,
             ]
         )
         display(self.main_box)
@@ -105,7 +105,7 @@ class VergelijkingstoolGUI:
         self._update_output_folder({"new": self.model_base_path_input.value})
         self._update_output_file_path()
 
-    #  helpers 
+    #  helpers
     def _safe_get_model_info(self):
         base = self.model_base_path_input.value.strip()
         if not base:
@@ -128,7 +128,7 @@ class VergelijkingstoolGUI:
         except Exception:
             self.output_file_path.value = ""
 
-    #  UI logic 
+    #  UI logic
     def _on_compare_change(self, change: Any):
         """deploy bottons"""
         with self.output_box:
@@ -156,7 +156,7 @@ class VergelijkingstoolGUI:
                 # Nada seleccionado
                 pass
 
-    #  DAMO branch 
+    #  DAMO branch
     def _on_damo_checkbox_change(self, change: Any):
         """Show llist of layers only if the checkbox is activated"""
         if self.compare_buttons.value != "Compare with Damo":
@@ -183,8 +183,12 @@ class VergelijkingstoolGUI:
             damo_layers = fiona.listlayers(mi.fn_damo_new)
             hdb_layers = fiona.listlayers(mi.fn_hdb_new)
 
-            self._damo_buttons = [widgets.ToggleButton(description=l, layout=widgets.Layout(width="48%")) for l in damo_layers]
-            self._hdb_buttons = [widgets.ToggleButton(description=l, layout=widgets.Layout(width="48%")) for l in hdb_layers]
+            self._damo_buttons = [
+                widgets.ToggleButton(description=l, layout=widgets.Layout(width="48%")) for l in damo_layers
+            ]
+            self._hdb_buttons = [
+                widgets.ToggleButton(description=l, layout=widgets.Layout(width="48%")) for l in hdb_layers
+            ]
 
             def two_rows(buttons):
                 half = len(buttons) // 2
@@ -262,7 +266,7 @@ class VergelijkingstoolGUI:
             )
             print("Finished.")
 
-    #  3Di branch 
+    #  3Di branch
     def _on_3di_checkbox_change(self, change: Any):
         if self.compare_buttons.value != "Compare with 3Di":
             return
@@ -286,9 +290,15 @@ class VergelijkingstoolGUI:
             damo_layers = config.DAMO_HDB_STRUCTURE_LAYERS
             codes = config.STRUCTURE_CODES
 
-            self._threedi_buttons = [widgets.ToggleButton(description=l, layout=widgets.Layout(width="48%")) for l in threedi_layers]
-            self._damo_struct_buttons = [widgets.ToggleButton(description=l, layout=widgets.Layout(width="48%")) for l in damo_layers]
-            self._code_buttons = [widgets.ToggleButton(description=c, layout=widgets.Layout(width="48%")) for c in codes]
+            self._threedi_buttons = [
+                widgets.ToggleButton(description=l, layout=widgets.Layout(width="48%")) for l in threedi_layers
+            ]
+            self._damo_struct_buttons = [
+                widgets.ToggleButton(description=l, layout=widgets.Layout(width="48%")) for l in damo_layers
+            ]
+            self._code_buttons = [
+                widgets.ToggleButton(description=c, layout=widgets.Layout(width="48%")) for c in codes
+            ]
 
             def two_rows(buttons):
                 half = len(buttons) // 2
@@ -299,9 +309,15 @@ class VergelijkingstoolGUI:
                     ]
                 )
 
-            display(HTML("<b>3Di structure layers:</b>"), HBox(self._threedi_buttons, layout=widgets.Layout(flex_flow="row wrap", gap="6px")))
+            display(
+                HTML("<b>3Di structure layers:</b>"),
+                HBox(self._threedi_buttons, layout=widgets.Layout(flex_flow="row wrap", gap="6px")),
+            )
             display(HTML("<b>DAMO/HDB layers:</b>"), two_rows(self._damo_struct_buttons))
-            display(HTML("<b>Structure codes:</b>"), HBox(self._code_buttons, layout=widgets.Layout(flex_flow="row wrap", gap="6px")))
+            display(
+                HTML("<b>Structure codes:</b>"),
+                HBox(self._code_buttons, layout=widgets.Layout(flex_flow="row wrap", gap="6px")),
+            )
 
             self.run_button._click_handlers.callbacks = []
             self.run_button.on_click(self._run_3di_selected)
@@ -367,7 +383,7 @@ class VergelijkingstoolGUI:
             )
             print("Finished.")
 
-    #  Both 
+    #  Both
     def _run_both_all(self, _):
         with self.output_box:
             clear_output()
