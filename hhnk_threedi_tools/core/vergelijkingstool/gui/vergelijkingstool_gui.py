@@ -3,281 +3,417 @@ from typing import Any
 
 import fiona
 import ipywidgets as widgets
-from IPython.display import clear_output, display
-from ipywidgets import Button, HBox, Label, Text, VBox
+from ipywidgets import HBox, VBox, Button, ToggleButtons, Checkbox, Text, HTML
+from IPython.display import display, clear_output
 
-from hhnk_threedi_tools.core.vergelijkingstool import config, main
 from hhnk_threedi_tools.core.vergelijkingstool.utils import get_model_info
+from hhnk_threedi_tools.core.vergelijkingstool import config, main
 
 
-def run_gui(
-    fn_DAMO_selection,
-    fn_damo_new,
-    fn_hdb_new,
-    fn_damo_old,
-    fn_hdb_old,
-    fn_threedimodel,
-    fn_DAMO_comparison_export,
-    fn_threedi_comparison_export,
-):
-    """
-    Set of the graphic interface. Include: compare, checkbox and run buttons
-    mainly a copy of the previous gui
-    """
+class VergelijkingstoolGUI:
+    def __init__(self):
+        #  Styling 
+        desc_style = {"description_width": "160px"}  
+        text_w = "95%"
 
-    output_box = widgets.Output()
+        self.output_box = widgets.Output()
 
-    model_base_path_input = Text(
-        value="",
-        placeholder="Enter base model folder (e.g. E:/models/castricum)",
-        description="Model folder:",
-        layout=widgets.Layout(width="90%"),
-    )
+        # Model folder
+        self.model_base_path_input = Text(
+            value="",
+            placeholder=r"e.g. E:\02.modellen\castricum",
+            description="Model folder:",
+            layout=widgets.Layout(width=text_w),
+            style=desc_style,
+        )
 
-    output_folder_text = Text(
-        value="", description="Output folder location:", disable=True, layout=widgets.Layout(width="70%")
-    )
+        # Output widgets
+        self.output_folder_text = Text(
+            value="",
+            description="Output folder:",
+            disabled=True,
+            layout=widgets.Layout(width=text_w),
+            style=desc_style,
+        )
+        self.output_name_input = Text(
+            value=".gpkg",
+            description="Output name:",
+            layout=widgets.Layout(width=text_w),
+            style=desc_style,
+        )
+        self.output_file_path = Text(
+            value="",
+            description="Full path:",
+            disabled=True,
+            layout=widgets.Layout(width=text_w),
+            style=desc_style,
+        )
 
-    output_name_input = Text(
-        value="comparison_output.gpkg",
-        description="Output name:",
-        layout=widgets.Layout(width="25%"),
-    )
+        # Compare options
+        self.compare_title = HTML("<b>Which database do you want to compare with?</b>")
+        self.compare_buttons = ToggleButtons(
+            options=["Compare with Damo", "Compare with 3Di", "Both"],
+            value=None,
+            layout=widgets.Layout(width="auto"),
+        )
 
-    # Select comparation type
-    compare_title = Label(value="Which database do you want to compare with?")
-    options = ["Compare with Damo", "Compare with 3Di", "Both"]
-    compare_buttons = widgets.ToggleButtons(
-        options=options,
-        value=None,
-        layout=widgets.Layout(width="auto"),
-    )
+        # Checkboxes 
+        self.select_layer_damo = Checkbox(
+            value=False,
+            description="Select specific DAMO/DAMO layers?",
+            indent=False,
+        )
+        self.select_layer_3di = Checkbox(
+            value=False,
+            description="Select specific 3Di/DAMO layers?",
+            indent=False,
+        )
 
-    # Select checkboxes to select layer to compare in case it is wanted.
-    # selection for damo
-    select_layer_damo = widgets.Checkbox(
-        value=False,
-        description="Do you want to compare specific layer DAMO/DAMO?",
-        indent=False,
-    )
-    # selection for 3di
-    select_layer_3di = widgets.Checkbox(
-        value=False,
-        description="Do you want to compare specific layer 3Di/DAMO?",
-        indent=False,
-    )
+        # run button
+        self.run_button = Button(description="Run Comparison", button_style="success")
 
-    # Run botton
-    run_button = Button(description="Run Comparison", button_style="success")
+        # Layout 
+        output_section = VBox(
+            [
+                HTML("<b>Output configuration</b>"),
+                self.output_folder_text,
+                self.output_name_input,
+                self.output_file_path,
+            ]
+        )
+        self.main_box = VBox(
+            [
+                self.model_base_path_input,
+                self.compare_title,
+                self.compare_buttons,
+                output_section,
+                self.output_box, 
+            ]
+        )
+        display(self.main_box)
 
-    # show widgets.
-    output_section = VBox([Label("Output configuration"), HBox([output_folder_text, output_name_input])])
+        # Wire events
+        self.model_base_path_input.observe(self._update_output_folder, names="value")
+        self.output_name_input.observe(self._update_output_file_path, names="value")
+        self.compare_buttons.observe(self._on_compare_change, names="value")
 
-    main_box = VBox([model_base_path_input, compare_title, compare_buttons, output_section, output_box])
-    display(main_box)
+        # check if the checkbox is changed
+        self.select_layer_damo.observe(self._on_damo_checkbox_change, names="value")
+        self.select_layer_3di.observe(self._on_3di_checkbox_change, names="value")
 
-    def update_output_folder(change):
-        """Update model path"""
+        # Inits
+        self._update_output_folder({"new": self.model_base_path_input.value})
+        self._update_output_file_path()
+
+    #  helpers 
+    def _safe_get_model_info(self):
+        base = self.model_base_path_input.value.strip()
+        if not base:
+            return None
         try:
-            model_info = get_model_info(change["new"])  # tu función ya hace esto
-            output_folder_text.value = str(model_info.output_folder)
-        except Exception as e:
-            output_folder_text.value = "model could not be read"
-            print(e)
+            return get_model_info(base)
+        except Exception:
+            return None
 
-    model_base_path_input.observe(update_output_folder, names="value")
+    def _update_output_folder(self, change: Any):
+        mi = self._safe_get_model_info()
+        self.output_folder_text.value = str(mi.output_folder) if mi else "model could not be read"
+        self._update_output_file_path()
 
-    update_output_folder({"new": model_base_path_input.value})
+    def _update_output_file_path(self, change: Any = None):
+        try:
+            folder = Path(self.output_folder_text.value)
+            name = self.output_name_input.value or "comparison_output.gpkg"
+            self.output_file_path.value = str(folder / name)
+        except Exception:
+            self.output_file_path.value = ""
 
-    # function use to make the gui dinamic.
-    def on_compare_change(change: Any) -> None:
-        """
-        First step. If the user select any of the options. change['new']
-        get that the varaiable  of the selection
-        """
-        with output_box:
-            # step1 clear the output_box
+    #  UI logic 
+    def _on_compare_change(self, change: Any):
+        """deploy bottons"""
+        with self.output_box:
             clear_output()
+            val = change["new"]
 
-            # change["new"] is the option selected in the widget and it will show the
-            # checkbox depending o n the selection.
-            if change["new"] == "Compare with Damo":
-                display(select_layer_damo)
-            elif change["new"] == "Compare with 3Di":
-                display(select_layer_3di)
-            elif change["new"] == "Both":
-                display(VBox([select_layer_damo, select_layer_3di]))
-            display(run_button)
+            # Limpia handlers viejos del botón
+            self.run_button._click_handlers.callbacks = []
 
-    def on_damo_checkbox_change(change: Any) -> None:
-        """
-        Second shared step. If the user want to select specific layer from DAMO/DAMO
-        the user will be able to select those from this widget.
-        """
-        with output_box:
-            clear_output()
+            if val == "Compare with Damo":
+                display(self.select_layer_damo, self.run_button)
+                # Handler por defecto (todas las capas)
+                self.run_button.on_click(self._run_damo_all)
 
-            if change["new"]:
-                print("Select layers to compare:")
+            elif val == "Compare with 3Di":
+                display(self.select_layer_3di, self.run_button)
+                self.run_button.on_click(self._run_3di_all)
 
-                # deploy layers to be seen in the gui
-                layers_damo = fiona.listlayers(fn_damo_new)
-                layers_hdb = fiona.listlayers(fn_hdb_new)
+            elif val == "Both":
+                # Both no muestra checkboxes; siempre corre todo
+                display(HTML("<i>Both comparisons will run using all layers.</i>"), self.run_button)
+                self.run_button.on_click(self._run_both_all)
 
-                # put the layers list from damo in bottons
-                damo_buttons = [
-                    widgets.ToggleButton(description=l, layout=widgets.Layout(width="48%")) for l in layers_damo
-                ]
-                # put the layers list from hdb in bottons
-                hdb_buttons = [
-                    widgets.ToggleButton(description=l, layout=widgets.Layout(width="48%")) for l in layers_hdb
-                ]
-
-                # put the bottons in box for damo and hdb
-                half = len(damo_buttons) // 2
-
-                damo_row1 = HBox(damo_buttons[:half], layout=widgets.Layout(flex_flow="row wrap"))
-                damo_row2 = HBox(damo_buttons[half:], layout=widgets.Layout(flex_flow="row wrap"))
-
-                half_hdb = len(hdb_buttons) // 2
-
-                hdb_row1 = HBox(hdb_buttons[:half_hdb], layout=widgets.Layout(flex_flow="row wrap"))
-                hdb_row2 = HBox(hdb_buttons[half_hdb:], layout=widgets.Layout(flex_flow="row wrap"))
-
-                display(Label(value="DAMO:"))
-                display(VBox([damo_row1, damo_row2]))
-                display(Label(value="HDB layers:"))
-                display(HBox([hdb_row1, hdb_row2]))
-                # display the columns in the gui
-
-                display(run_button)
-
-                # this function collect the selected layer or all of them and the
-                # run the main when click is done
-                def on_run_clicked(_event: Any) -> None:
-                    """Handle Run Comparison click: collect selections in damo and hdb and run main.
-
-                    The event parameter is provided by ipywidgets but not used.
-                    """
-                    base_path = model_base_path_input.value.strip()
-                    if not base_path:
-                        print("Please enter a valid base model folder path.")
-                        return
-
-                    # create model_info object.
-                    model_info = get_model_info(base_path)
-
-                    # colect layer to be compapred
-                    selected_damo = [b.description for b in damo_buttons if b.value]
-                    selected_hdb = [b.description for b in hdb_buttons if b.value]
-
-                    print(f"Selected DAMO layers: {selected_damo}")
-                    print(f"Selected HDB layers: {selected_hdb}")
-                    print("Running comparison...")
-
-                    # run main
-                    main.main(
-                        model_info=model_info,
-                        fn_DAMO_selection=fn_DAMO_selection,
-                        fn_damo_new=fn_damo_new,
-                        fn_hdb_new=fn_hdb_new,
-                        fn_damo_old=fn_damo_old,
-                        fn_hdb_old=fn_hdb_old,
-                        fn_threedimodel=fn_threedimodel,
-                        fn_DAMO_comparison_export=fn_DAMO_comparison_export,
-                        fn_threedi_comparison_export=fn_threedi_comparison_export,
-                        compare_with="Compare with Damo",
-                        layer_selection=True,
-                        layers_input_hdb_selection=selected_hdb,
-                        layers_input_damo_selection=selected_damo,
-                        threedi_layer_selector=False,
-                        threedi_structure_selection=[],
-                        damo_structure_selection=[],
-                        structure_codes=[],
-                    )
-
-                    print("Comparison finished!")
-
-                run_button.on_click(on_run_clicked)
             else:
-                print("Using all layers by default.")
-                display(run_button)
+                # Nada seleccionado
+                pass
 
-    def on_3di_checkbox_change(change: Any) -> None:
-        """
-        Handle the 3Di-structure selection checkbox change.
+    #  DAMO branch 
+    def _on_damo_checkbox_change(self, change: Any):
+        """Show llist of layers only if the checkbox is activated"""
+        if self.compare_buttons.value != "Compare with Damo":
+            return
 
-        When enabled (change["new"] is truthy) this displays widgets to select:
-        - 3Di structure layers
-        - DAMO/HDB layers
-        - Structure codes
-        """
-
-        with output_box:
+        with self.output_box:
             clear_output()
+            display(self.select_layer_damo, self.run_button)
 
-            if change["new"]:
-                print("Select structures to compare:")
+            # Limpia y vuelve a poner handler por defecto
+            self.run_button._click_handlers.callbacks = []
+            self.run_button.on_click(self._run_damo_all)
 
-                threedi_layers = config.THREEDI_STRUCTURE_LAYERS
-                damo_layers = config.DAMO_HDB_STRUCTURE_LAYERS
-                codes = config.STRUCTURE_CODES
+            if not change["new"]:
+                # Si desmarcan, no mostramos selección de capas
+                return
 
-                threedi_buttons = [
-                    widgets.ToggleButton(description=l, layout=widgets.Layout(width="48%")) for l in threedi_layers
-                ]
-                damo_buttons = [
-                    widgets.ToggleButton(description=l, layout=widgets.Layout(width="48%")) for l in damo_layers
-                ]
-                code_buttons = [widgets.ToggleButton(description=c, layout=widgets.Layout(width="48%")) for c in codes]
+            # Mostrar selección de capas
+            mi = self._safe_get_model_info()
+            if not mi:
+                print("Enter a valid model folder first.")
+                return
 
-                display(Label(value="3Di structure layers:"))
-                display(HBox(threedi_buttons))
-                display(Label(value="DAMO/HDB layers:"))
-                half = len(damo_buttons) // 2
-                damo_row1 = HBox(damo_buttons[:half], layout=widgets.Layout(flex_flow="row wrap"))
-                damo_row2 = HBox(damo_buttons[half:], layout=widgets.Layout(flex_flow="row wrap"))
-                display(VBox([damo_row1, damo_row2]))
-                display(Label(value="Structure codes:"))
-                display(HBox(code_buttons))
-                display(run_button)
+            damo_layers = fiona.listlayers(mi.fn_damo_new)
+            hdb_layers = fiona.listlayers(mi.fn_hdb_new)
 
-                def on_run_clicked(_):
-                    selected_3di = [b.description for b in threedi_buttons if b.value]
-                    selected_damo = [b.description for b in damo_buttons if b.value]
-                    selected_codes = [b.description for b in code_buttons if b.value]
+            self._damo_buttons = [widgets.ToggleButton(description=l, layout=widgets.Layout(width="48%")) for l in damo_layers]
+            self._hdb_buttons = [widgets.ToggleButton(description=l, layout=widgets.Layout(width="48%")) for l in hdb_layers]
 
-                    print(f"Selected 3Di layers: {selected_3di}")
-                    print(f"Selected DAMO layers: {selected_damo}")
-                    print(f"Selected structure codes: {selected_codes}")
-                    print("Running comparison...")
+            def two_rows(buttons):
+                half = len(buttons) // 2
+                return VBox(
+                    [
+                        HBox(buttons[:half], layout=widgets.Layout(flex_flow="row wrap", gap="6px")),
+                        HBox(buttons[half:], layout=widgets.Layout(flex_flow="row wrap", gap="6px")),
+                    ]
+                )
 
-                    main.main(
-                        fn_DAMO_selection,
-                        fn_damo_new,
-                        fn_hdb_new,
-                        fn_damo_old,
-                        fn_hdb_old,
-                        fn_threedimodel,
-                        fn_DAMO_comparison_export,
-                        fn_threedi_comparison_export,
-                        "Compare with 3Di",
-                        layer_selection=False,
-                        layers_input_hdb_selection=[],
-                        layers_input_damo_selection=[],
-                        threedi_layer_selector=True,
-                        threedi_structure_selection=selected_3di,
-                        damo_structure_selection=selected_damo,
-                        structure_codes=selected_codes,
-                    )
+            display(HTML("<b>DAMO layers:</b>"), two_rows(self._damo_buttons))
+            display(HTML("<b>HDB layers:</b>"), two_rows(self._hdb_buttons))
 
-                    print("3Di comparison finished!")
+            # Reemplaza handler: ahora corre con selección
+            self.run_button._click_handlers.callbacks = []
+            self.run_button.on_click(self._run_damo_selected)
 
-                run_button.on_click(on_run_clicked)
-            else:
-                print("Using all structures by default.")
-                display(run_button)
+    def _run_damo_all(self, _):
+        with self.output_box:
+            clear_output()
+            mi = self._safe_get_model_info()
+            if not mi:
+                print("Enter a valid model folder.")
+                return
+            print("Comparing DAMO/DAMO using ALL layers...")
+            main.main(
+                model_info=mi,
+                fn_DAMO_selection=mi.damo_selection,
+                fn_damo_new=mi.fn_damo_new,
+                fn_hdb_new=mi.fn_hdb_new,
+                fn_damo_old=mi.fn_damo_old,
+                fn_hdb_old=mi.fn_hdb_old,
+                fn_threedimodel=mi.fn_threedimodel,
+                fn_DAMO_comparison_export=self.output_file_path.value,
+                fn_threedi_comparison_export=self.output_file_path.value,
+                compare_with="Compare with Damo",
+                layer_selection=False,
+                layers_input_hdb_selection=[],
+                layers_input_damo_selection=fiona.listlayers(mi.fn_damo_new),
+                threedi_layer_selector=False,
+                threedi_structure_selection=[],
+                damo_structure_selection=[],
+                structure_codes=[],
+            )
+            print("Finished.")
 
-    compare_buttons.observe(on_compare_change, names="value")
-    select_layer_damo.observe(on_damo_checkbox_change, names="value")
-    select_layer_3di.observe(on_3di_checkbox_change, names="value")
+    def _run_damo_selected(self, _):
+        with self.output_box:
+            clear_output()
+            mi = self._safe_get_model_info()
+            if not mi:
+                print("Enter a valid model folder.")
+                return
+            sel_damo = [b.description for b in getattr(self, "_damo_buttons", []) if b.value]
+            sel_hdb = [b.description for b in getattr(self, "_hdb_buttons", []) if b.value]
+            print(f"DAMO: {sel_damo}\nHDB: {sel_hdb}\n Running...")
+            main.main(
+                model_info=mi,
+                fn_DAMO_selection=mi.damo_selection,
+                fn_damo_new=mi.fn_damo_new,
+                fn_hdb_new=mi.fn_hdb_new,
+                fn_damo_old=mi.fn_damo_old,
+                fn_hdb_old=mi.fn_hdb_old,
+                fn_threedimodel=mi.fn_threedimodel,
+                fn_DAMO_comparison_export=self.output_file_path.value,
+                fn_threedi_comparison_export=self.output_file_path.value,
+                compare_with="Compare with Damo",
+                layer_selection=True,
+                layers_input_hdb_selection=sel_hdb,
+                layers_input_damo_selection=sel_damo,
+                threedi_layer_selector=False,
+                threedi_structure_selection=[],
+                damo_structure_selection=[],
+                structure_codes=[],
+            )
+            print("Finished.")
+
+    #  3Di branch 
+    def _on_3di_checkbox_change(self, change: Any):
+        if self.compare_buttons.value != "Compare with 3Di":
+            return
+
+        with self.output_box:
+            clear_output()
+            display(self.select_layer_3di, self.run_button)
+
+            self.run_button._click_handlers.callbacks = []
+            self.run_button.on_click(self._run_3di_all)
+
+            if not change["new"]:
+                return
+
+            mi = self._safe_get_model_info()
+            if not mi:
+                print("Enter a valid model folder first.")
+                return
+
+            threedi_layers = config.THREEDI_STRUCTURE_LAYERS
+            damo_layers = config.DAMO_HDB_STRUCTURE_LAYERS
+            codes = config.STRUCTURE_CODES
+
+            self._threedi_buttons = [widgets.ToggleButton(description=l, layout=widgets.Layout(width="48%")) for l in threedi_layers]
+            self._damo_struct_buttons = [widgets.ToggleButton(description=l, layout=widgets.Layout(width="48%")) for l in damo_layers]
+            self._code_buttons = [widgets.ToggleButton(description=c, layout=widgets.Layout(width="48%")) for c in codes]
+
+            def two_rows(buttons):
+                half = len(buttons) // 2
+                return VBox(
+                    [
+                        HBox(buttons[:half], layout=widgets.Layout(flex_flow="row wrap", gap="6px")),
+                        HBox(buttons[half:], layout=widgets.Layout(flex_flow="row wrap", gap="6px")),
+                    ]
+                )
+
+            display(HTML("<b>3Di structure layers:</b>"), HBox(self._threedi_buttons, layout=widgets.Layout(flex_flow="row wrap", gap="6px")))
+            display(HTML("<b>DAMO/HDB layers:</b>"), two_rows(self._damo_struct_buttons))
+            display(HTML("<b>Structure codes:</b>"), HBox(self._code_buttons, layout=widgets.Layout(flex_flow="row wrap", gap="6px")))
+
+            self.run_button._click_handlers.callbacks = []
+            self.run_button.on_click(self._run_3di_selected)
+
+    def _run_3di_all(self, _):
+        with self.output_box:
+            clear_output()
+            mi = self._safe_get_model_info()
+            if not mi:
+                print("Enter a valid model folder.")
+                return
+            print("Comparing 3Di/DAMO using ALL structures...")
+            main.main(
+                model_info=mi,
+                fn_DAMO_selection=mi.damo_selection,
+                fn_damo_new=mi.fn_damo_new,
+                fn_hdb_new=mi.fn_hdb_new,
+                fn_damo_old=mi.fn_damo_old,
+                fn_hdb_old=mi.fn_hdb_old,
+                fn_threedimodel=mi.fn_threedimodel,
+                fn_DAMO_comparison_export=self.output_file_path.value,
+                fn_threedi_comparison_export=self.output_file_path.value,
+                compare_with="Compare with 3Di",
+                layer_selection=False,
+                layers_input_hdb_selection=[],
+                layers_input_damo_selection=[],
+                threedi_layer_selector=True,
+                threedi_structure_selection=config.THREEDI_STRUCTURE_LAYERS,
+                damo_structure_selection=config.DAMO_HDB_STRUCTURE_LAYERS,
+                structure_codes=config.STRUCTURE_CODES,
+            )
+            print("Finished.")
+
+    def _run_3di_selected(self, _):
+        with self.output_box:
+            clear_output()
+            mi = self._safe_get_model_info()
+            if not mi:
+                print("Enter a valid model folder.")
+                return
+            sel_3di = [b.description for b in getattr(self, "_threedi_buttons", []) if b.value]
+            sel_damo_struct = [b.description for b in getattr(self, "_damo_struct_buttons", []) if b.value]
+            sel_codes = [b.description for b in getattr(self, "_code_buttons", []) if b.value]
+            print(f"3Di: {sel_3di}\nDAMO/HDB: {sel_damo_struct}\nCodes: {sel_codes}\n⚙️ Running...")
+            main.main(
+                model_info=mi,
+                fn_DAMO_selection=mi.damo_selection,
+                fn_damo_new=mi.fn_damo_new,
+                fn_hdb_new=mi.fn_hdb_new,
+                fn_damo_old=mi.fn_damo_old,
+                fn_hdb_old=mi.fn_hdb_old,
+                fn_threedimodel=mi.fn_threedimodel,
+                fn_DAMO_comparison_export=self.output_file_path.value,
+                fn_threedi_comparison_export=self.output_file_path.value,
+                compare_with="Compare with 3Di",
+                layer_selection=False,
+                layers_input_hdb_selection=[],
+                layers_input_damo_selection=[],
+                threedi_layer_selector=True,
+                threedi_structure_selection=sel_3di,
+                damo_structure_selection=sel_damo_struct,
+                structure_codes=sel_codes,
+            )
+            print("Finished.")
+
+    #  Both 
+    def _run_both_all(self, _):
+        with self.output_box:
+            clear_output()
+            mi = self._safe_get_model_info()
+            if not mi:
+                print("Enter a valid model folder.")
+                return
+            print("Running BOTH (all layers)...")
+            # DAMO
+            main.main(
+                model_info=mi,
+                fn_DAMO_selection=mi.damo_selection,
+                fn_damo_new=mi.fn_damo_new,
+                fn_hdb_new=mi.fn_hdb_new,
+                fn_damo_old=mi.fn_damo_old,
+                fn_hdb_old=mi.fn_hdb_old,
+                fn_threedimodel=mi.fn_threedimodel,
+                fn_DAMO_comparison_export=self.output_file_path.value,
+                fn_threedi_comparison_export=self.output_file_path.value,
+                compare_with="Compare with Damo",
+                layer_selection=False,
+                layers_input_hdb_selection=[],
+                layers_input_damo_selection=fiona.listlayers(mi.fn_damo_new),
+                threedi_layer_selector=False,
+                threedi_structure_selection=[],
+                damo_structure_selection=[],
+                structure_codes=[],
+            )
+            # 3Di
+            main.main(
+                model_info=mi,
+                fn_DAMO_selection=mi.damo_selection,
+                fn_damo_new=mi.fn_damo_new,
+                fn_hdb_new=mi.fn_hdb_new,
+                fn_damo_old=mi.fn_damo_old,
+                fn_hdb_old=mi.fn_hdb_old,
+                fn_threedimodel=mi.fn_threedimodel,
+                fn_DAMO_comparison_export=self.output_file_path.value,
+                fn_threedi_comparison_export=self.output_file_path.value,
+                compare_with="Compare with 3Di",
+                layer_selection=False,
+                layers_input_hdb_selection=[],
+                layers_input_damo_selection=[],
+                threedi_layer_selector=True,
+                threedi_structure_selection=config.THREEDI_STRUCTURE_LAYERS,
+                damo_structure_selection=config.DAMO_HDB_STRUCTURE_LAYERS,
+                structure_codes=config.STRUCTURE_CODES,
+            )
+            print("Both finished.")

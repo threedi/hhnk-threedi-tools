@@ -82,8 +82,9 @@ class DAMO(DataSet):
         :param shape: (Multi)Polygon used for the clipping of the data
         :return: Clipped data
         """
+        layers_to_remove = []
         for layer in data.keys():
-            layers_to_remove = []
+            # layers_to_remove = []
             gdf = data[layer]
             if isinstance(gdf, gpd.GeoDataFrame):
                 self.logger.debug(f"Check if layer {layer} has geometry")
@@ -94,8 +95,9 @@ class DAMO(DataSet):
                 self.logger.debug(f"Layer '{layer}' is not a GeoDataFrame, skipping geometry clipping")
                 layers_to_remove.append(layer)
 
-        for layer in layers_to_remove:
-            del data[layer]
+        if len(layers_to_remove) != 0:
+            for layer in layers_to_remove:
+                del data[layer]
 
         return data
 
