@@ -15,8 +15,8 @@ from hhnk_threedi_tools.core.checks.bank_levels import BankLevelCheck
 
 # FIXME TypeError: metaclass conflict: the metaclass of a derived class must be a (non-strict) subclass of the metaclasses of all its bases
 from hhnk_threedi_tools.core.checks.one_d_two_d import OneDTwoDCheck
-from hhnk_threedi_tools.core.checks.sqlite.sqlite_main import SqliteCheck  # FIXME
 from hhnk_threedi_tools.core.checks.zero_d_one_d import ZeroDOneDCheck
+from hhnk_threedi_tools.core.checks.schematisation.schematisation_checks_main import HhnkSchematisationChecks
 from hhnk_threedi_tools.core.folders import Folders
 from hhnk_threedi_tools.core.folders_modelbuilder import FoldersModelbuilder
 
@@ -24,7 +24,7 @@ from hhnk_threedi_tools.core.result_rasters.grid_to_raster import GridToWaterDep
 from hhnk_threedi_tools.core.result_rasters.grid_to_raster_old import GridToRaster  # TODO deprecate
 from hhnk_threedi_tools.core.result_rasters.netcdf_to_gridgpkg import NetcdfToGPKG
 from hhnk_threedi_tools.core.schematisation import (
-    migrate,
+    migrate,  # TODO fix or do we still need it?
     model_backup,
     model_splitter,
     upload,
