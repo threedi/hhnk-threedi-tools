@@ -1,35 +1,65 @@
+# %%
 # importing external dependencies
-import json
 import logging
-import sqlite3
+import os
 from pathlib import Path
-
-# from pd.errors import DatabaseError #FIXME vanaf pd 1.5.3 beschikbaar. Als qgis zover is overzetten.
-from sqlite3 import DatabaseError
 
 import geopandas as gpd
 import numpy as np
 import pandas as pd
 
+import hhnk_threedi_tools.core.vergelijkingstool.config as config
+from hhnk_threedi_tools.core.vergelijkingstool import json_files as json_files_path
+from hhnk_threedi_tools.core.vergelijkingstool import styling, utils
 from hhnk_threedi_tools.core.vergelijkingstool.config import *
 from hhnk_threedi_tools.core.vergelijkingstool.Dataset import DataSet
+from hhnk_threedi_tools.core.vergelijkingstool.qml_styling_files import Threedi as Threedi_styling_path
 from hhnk_threedi_tools.core.vergelijkingstool.styling import *
+from hhnk_threedi_tools.core.vergelijkingstool.utils import ModelInfo
 
 
 class Threedimodel(DataSet):
-    def __init__(self, filename, translation=None):
+    def __init__(self, filename, model_info: ModelInfo, translation=None):
         """
-        Creates a Threedimodel object and reads the data from the 3Di schematisation sqlite.
+        Create a Threedimodel object and reads the data from the 3Di schematisation sqlite.
         If translation dictionaries are supplied, layer and column names are mapped.
 
         :param filename: Path of the .sqlite file to be loaded
         :param translation: Path of the translation dictionary to be used
         """
+        # super().__init__(model_info)
 
+        self.json_files_path = Path(json_files_path.__file__).resolve().parent
+        self.styling_path = Path(Threedi_styling_path.__file__).resolve().parent
+
+        self.model_info = model_info
+        self.model_name = model_info.model_name
+        self.sourcedata = model_info.source_data
+        self.damo_new = model_info.fn_damo_new
+        self.model_path = model_info.fn_threedimodel
         self.logger = logging.getLogger("Threedimodel")
         self.logger.debug("Created Threedimodel object")
-        self.data = self.from_sqlite(filename, translation)
-        self.join_cross_section_definition()
+
+        self.data = utils.load_file_and_translate(
+            damo_filename=None,
+            hdb_filename=None,
+            threedi_filename=filename,
+            translation_3Di=self.json_files_path / "threedi_translation.json",
+            layer_selection=None,
+            layers_input_threedi_selection=None,
+            mode="threedi",
+        )
+
+        try:
+            if self.damo_new.exists():
+                self.data["channel"] = utils.update_channel_codes(
+                    self.data["channel"], self.data["cross_section_location"], self.damo_new, self.model_path
+                )
+
+        except Exception as e:
+            self.logger.warning("model couln not be updated")
+
+        self.max_value_from_tabulated()
 
         # Set priority columns
         self.priority_columns = {}
@@ -37,169 +67,39 @@ class Threedimodel(DataSet):
         for key in self.data.keys():
             self.__setattr__(key, self.data[key])
 
-    def join_cross_section_definition(self):
+    def max_value_from_tabulated(self):
         """
-        Method to join the v2_cross_section_definition with the layers in self.data.
-        From the tabulated height and width, the maximum value is determined and added to the self.data layer.
-
-        :return: None
+        Determine the maximum value in a tabultated string
+        :param self:
+        :return: Maximum value for each gdf
         """
-
-        def max_value_from_tabulated(tabulated_string):
-            """
-            Determines the maximum value in a tabultated string
-            :param tabulated_string:
-            :return: Maximum value in a tabulated string
-            """
-            if tabulated_string is not None:
-                tabulated_array = np.fromstring(tabulated_string, dtype=float, sep=" ")
-                return np.max(tabulated_array)
-            else:
-                return None
-
-        cross_section_definition = self.data["v2_cross_section_definition"].set_index("id")
-        cross_section_definition["cross_section_max_width"] = cross_section_definition["width"].apply(
-            max_value_from_tabulated
-        )
-        cross_section_definition["cross_section_max_height"] = cross_section_definition["height"].apply(
-            max_value_from_tabulated
-        )
-
         for layer in self.data:
-            if "cross_section_definition_id" in list(self.data[layer].keys()):
-                self.data[layer] = self.data[layer].merge(
-                    cross_section_definition[["cross_section_max_width", "cross_section_max_height"]],
-                    how="left",
-                    left_on="cross_section_definition_id",
-                    right_on="id",
-                )
+            # layer = 'cross_section_location'
+            if "cross_section_table" in (self.data[layer].keys()):
+                print(layer)
+                gdf = self.data[layer]
 
-    def add_geometry_from_connection_nodes(self, layer_data, data_connection_nodes):
-        """
-        Add a geometry column to a layer based on the start/end connection nodes. Used for example for v2_orifice,
-        as orifices are defined by the start/end connection nodes instead of by a geometry.
+                max_widths = []
+                max_heights = []
+                for index, row in gdf.iterrows():
+                    shape = row.cross_section_shape
+                    cross_section_table = row.cross_section_table
+                    if shape == 2:
+                        cross_section_max_width = row.cross_section_width
+                        cross_section_max_height = row.cross_section_height
+                    elif cross_section_table is not None:
+                        data = [list(map(float, line.split(","))) for line in cross_section_table.strip().split("\n")]
+                        array = np.array(data)
+                        cross_section_max_width = np.max(array[:, 0])
+                        cross_section_max_height = np.max(array[:, 1])
+                    elif shape == 5 and cross_section_table is None:
+                        cross_section_max_width = row.cross_section_width
+                        cross_section_max_height = row.crest_level
+                    max_widths.append(cross_section_max_width)
+                    max_heights.append(cross_section_max_height)
 
-        :param layer_data: GeoDataframe of layer to have a geometry added
-        :param data_connection_nodes: GeoDataframe containing the connection nodes
-        :return: GeoDataframe with appended geometry
-        """
-
-        layer_data["geometry"] = None
-        subset_data_connection_nodes = data_connection_nodes[["id", "geometry"]]
-        layer_data = layer_data.merge(
-            subset_data_connection_nodes.fillna(-9999),
-            how="left",
-            left_on="connection_node_start_id",
-            right_on="id",
-            suffixes=(None, "_start"),
-        )
-        layer_data = layer_data.merge(
-            subset_data_connection_nodes.fillna(-9999),
-            how="left",
-            left_on="connection_node_end_id",
-            right_on="id",
-            suffixes=(None, "_end"),
-        )
-        layer_data["geometry"] = layer_data.apply(
-            lambda x: self.create_structure_geometry(x["geometry_start"], x["geometry_end"]), axis=1
-        )
-        layer_data.drop(["geometry_start", "geometry_end"], axis=1, inplace=True)
-        # result = gpd.GeoDataFrame(layer_data, geometry='geom')
-
-        return layer_data
-
-    def from_sqlite(self, filename, translation=None):
-        """
-        Load data from 3Di .sqlite file
-
-        :param filename: Path of the .sqlite file
-        :param translation: Path of the translation file
-        :return: Dictionary containing layer names (keys) and GeoDataFrames (values)
-        """
-
-        # Define empty data dictionary, to be filled with layer data from .sqlite
-        data = {}
-
-        self.logger.debug("called from_sqlite")
-
-        # Create connection with database
-        con = sqlite3.connect(filename)
-        cur = con.cursor()
-
-        # Load spatiallite extension. Make sure mod_spatialite.dll is in the System32 folder, see module description
-        # for installation instructions
-        self.logger.debug("Try loading mod_spatialite")
-        con.enable_load_extension(True)
-        cur.execute('SELECT load_extension("mod_spatialite")')
-
-        # Get overview of layers
-        res = con.execute(f"SELECT name FROM sqlite_schema WHERE type = 'table' AND name NOT LIKE 'sqlite_%';")
-        db_layers = res.fetchall()
-        if db_layers:
-            self.logger.debug(f"Layers results: {db_layers}")
-        else:
-            self.logger.error("No layers found in .sqlite, or file does not exist")
-            raise Exception("Error reading 3Di .sqlite")
-
-        # Loop over all layers starting with v2_ and put them in the data object
-        for layer in SQLITE_LAYERS:
-            self.logger.debug(f"Loading layer {layer}")
-
-            # Catch database error in case the table does not contain a geometry
-            try:
-                layer_data = pd.read_sql(f"SELECT *, ST_AsText(the_geom) as wkt_geom FROM {layer};", con)
-                gdf_layer_data = gpd.GeoDataFrame(
-                    layer_data, geometry=gpd.geoseries.from_wkt(layer_data["wkt_geom"].to_list())
-                )
-                # layer_data['geom'] = gpd.geoseries.from_wkt(layer_data["wkt_geom"])
-            except:
-                self.logger.debug(f"Layer {layer} does not contain a geometry layer, loading as a table")
-                layer_data = pd.read_sql(f"SELECT * FROM {layer};", con)
-                try:
-                    # Try to create a geometry using the connection nodes
-                    layer_data = self.add_geometry_from_connection_nodes(layer_data, data["v2_connection_nodes"])
-                except KeyError:
-                    # Add without a geometry
-                    self.logger.debug(
-                        f"Layer {layer} does not have a geometry or reference to connection nodes. Import as normal "
-                        f"table"
-                    )
-                gdf_layer_data = gpd.GeoDataFrame(layer_data)
-
-            # Add layer data to data object
-            data[layer] = gdf_layer_data
-        self.logger.debug("Done loading layers")
-
-        # Start translation
-        if translation is not None:
-            self.logger.debug("Start mapping layer and column names")
-            # load file
-            f = open(translation)
-
-            try:
-                mapping = json.loads(json.dumps(json.load(f)).lower())
-            except json.decoder.JSONDecodeError:
-                self.logger.error("Structure of translation file is incorrect")
-                raise
-
-            translate_layers = {}
-            for layer in data.keys():
-                # Check if the layer name is mapped in the translation file
-                for layer_name in mapping.keys():
-                    if layer == layer_name:
-                        # Map column names
-                        self.logger.debug(f"Mapping column names of layer {layer}")
-                        data[layer].rename(columns=mapping[layer]["columns"], inplace=True)
-
-                        # Store layer mapping in dict to be mapped later
-                        translate_layers[layer_name] = mapping[layer]["name"]
-
-            # Map layer names
-            for old, new in translate_layers.items():
-                data[new] = data.pop(old)
-
-        self.logger.debug("Done loading .sqlite")
-        return data
+                gdf["cross_section_max_width"] = max_widths
+                gdf["cross_section_max_height"] = max_heights
 
     def determine_statistics(self, table_C):
         """
@@ -223,39 +123,55 @@ class Threedimodel(DataSet):
                 "Area difference",
             ]
         )
+
+        model_name = self.model_name
         for i, layer_name in enumerate(table_C):
             count_model = len(
                 table_C[layer_name].loc[
-                    (table_C[layer_name]["in_both"] == "model") | (table_C[layer_name]["in_both"] == "both")
+                    (table_C[layer_name]["in_both"] == f"{model_name} sqlite")
+                    | (table_C[layer_name]["in_both"] == f"{model_name} both")
                 ]
             )
             count_DAMO = len(
                 table_C[layer_name].loc[
-                    (table_C[layer_name]["in_both"] == "damo") | (table_C[layer_name]["in_both"] == "both")
+                    (table_C[layer_name]["in_both"] == f"{model_name} damo")
+                    | (table_C[layer_name]["in_both"] == f"{model_name} both")
                 ]
             )
             count_diff = count_model - count_DAMO
 
             length_model = sum(
                 table_C[layer_name]
-                .loc[(table_C[layer_name]["in_both"] == "model") | (table_C[layer_name]["in_both"] == "both")]
+                .loc[
+                    (table_C[layer_name]["in_both"] == f"{model_name} sqlite")
+                    | (table_C[layer_name]["in_both"] == f"{model_name} both")
+                ]
                 .geom_length_model
             )
             length_DAMO = sum(
                 table_C[layer_name]
-                .loc[(table_C[layer_name]["in_both"] == "damo") | (table_C[layer_name]["in_both"] == "both")]
+                .loc[
+                    (table_C[layer_name]["in_both"] == f"{model_name} damo")
+                    | (table_C[layer_name]["in_both"] == f"{model_name} both")
+                ]
                 .geom_length_damo
             )
             length_diff = length_model - length_DAMO
 
             area_model = sum(
                 table_C[layer_name]
-                .loc[(table_C[layer_name]["in_both"] == "model") | (table_C[layer_name]["in_both"] == "both")]
+                .loc[
+                    (table_C[layer_name]["in_both"] == f"{model_name} sqlite")
+                    | (table_C[layer_name]["in_both"] == f"{model_name} both")
+                ]
                 .geom_area_model
             )
             area_DAMO = sum(
                 table_C[layer_name]
-                .loc[(table_C[layer_name]["in_both"] == "damo") | (table_C[layer_name]["in_both"] == "both")]
+                .loc[
+                    (table_C[layer_name]["in_both"] == f"{model_name} damo")
+                    | (table_C[layer_name]["in_both"] == f"{model_name} both")
+                ]
                 .geom_area_damo
             )
             area_diff = area_model - area_DAMO
@@ -273,9 +189,9 @@ class Threedimodel(DataSet):
         statistics = statistics.fillna(0).astype(int)
         return statistics
 
-    def export_comparison(self, table_C, statistics, filename, overwrite=False, styling_path=None):
+    def export_comparison_3di(self, table_C, statistics, filename, overwrite=False, crs=None):
         """
-        Exports all compared layers and statistics to a GeoPackage.
+        Export all compared layers and statistics to a GeoPackage.
 
         :param table_C: Dictionary containing a GeoDataframe per layer
         :param statistics: Dataframe containing the statistics
@@ -286,132 +202,37 @@ class Threedimodel(DataSet):
         :return:
         """
 
-        table = []
-        if Path(filename).exists():
-            if overwrite:
-                Path.unlink(filename)
-            else:
-                raise FileExistsError(
-                    f'The file "{filename}" already exists. If you want to overwrite the existing file, add overwrite=True to the function.'
-                )
-
-        # Explode multipart geometries to singleparts
-        for layer_name in list(table_C):
-            table_C[layer_name] = table_C[layer_name].explode(index_parts=True)
-
-        # export result to gpkg
-        for layer_name in list(table_C):
-            if len(table_C[layer_name].geometry.type.unique()) > 1:
-                self.logger.debug(
-                    f"Layer {layer_name} exists of the following geometry types: {table_C[layer_name].geometry.type.unique()}. Using representative point."
-                )
-                table_C[layer_name].geometry = table_C[layer_name].geometry.representative_point()
-
-        for i, layer_name in enumerate(table_C):
-            # Check if the layer name has a style in the styling folder
-            if styling_path is not None:
-                qml_name = layer_name + ".qml"
-                qml_file = styling_path / qml_name
-
-                # if file exists, use that for the styling
-                if qml_file.exists():
-                    self.logger.debug(f"Style layer for layer {layer_name} found, adding it to the GeoPackage")
-                    with open(qml_file, "r") as file:
-                        style = file.read()
-                        style_name = layer_name + "_style"
-                        table.append(
-                            [
-                                i,
-                                None,
-                                None,
-                                layer_name,
-                                table_C[layer_name]._geometry_column_name,
-                                style_name,
-                                style,
-                                None,
-                                "false",
-                                None,
-                                None,
-                                None,
-                                None,
-                            ]
-                        )
-                else:
-                    if table_C[layer_name].geometry.type.unique() is None:
-                        pass
-                    if table_C[layer_name].geometry.type.unique() == "Point":
-                        table.append(
-                            [
-                                i,
-                                None,
-                                None,
-                                layer_name,
-                                table_C[layer_name]._geometry_column_name,
-                                "point_style",
-                                STYLING_POINTS_THREEDI,
-                                None,
-                                "false",
-                                None,
-                                None,
-                                None,
-                                None,
-                            ]
-                        )
-                    if (
-                        table_C[layer_name].geometry.type.unique() == "LineString"
-                        or table_C[layer_name].geometry.type.unique() == "MultiLineString"
-                    ):
-                        table.append(
-                            [
-                                i,
-                                None,
-                                None,
-                                layer_name,
-                                table_C[layer_name]._geometry_column_name,
-                                "line_style",
-                                STYLING_LINES_THREEDI,
-                                None,
-                                "false",
-                                None,
-                                None,
-                                None,
-                                None,
-                            ]
-                        )
-                    if table_C[layer_name].geometry.type.unique() == "MultiPolygon":
-                        table.append(
-                            [
-                                i,
-                                None,
-                                None,
-                                layer_name,
-                                table_C[layer_name]._geometry_column_name,
-                                "polygon_style",
-                                STYLING_POLYGONS_THREEDI,
-                                None,
-                                "false",
-                                None,
-                                None,
-                                None,
-                                None,
-                            ]
-                        )
-
-            self.logger.info(f"Export results of comparing DAMO/3Di layer {layer_name} to {filename}")
-            table_C[layer_name].to_file(filename, layer=layer_name, driver="GPKG", crs=self.crs)
+        styling_path = self.styling_path
 
         # add styling to layers
-        layer_styles = gpd.GeoDataFrame(columns=STYLING_BASIC_TABLE_COLUMNS, data=table)
-        layer_styles.fillna("", inplace=True)
+        layer_styles = styling.export_comparison_3di(
+            table_C,
+            statistics,
+            filename,
+            model_info=self.model_info,
+            overwrite=overwrite,
+            styling_path=styling_path,
+            crs=self.crs,
+        )
         self.add_layer_styling(fn_export_gpkg=filename, layer_styles=layer_styles)
 
         # Export statistics
         self.export_statistics(statistics, filename)
         self.logger.info(f"Finished exporting to {filename}")
 
-    def compare_with_DAMO(self, DAMO, attribute_comparison=None, filename=None, overwrite=False, styling_path=None):
+    def compare_with_DAMO(
+        self,
+        DAMO,
+        # attribute_comparison=None,
+        filename=None,
+        overwrite=False,
+        threedi_layer_selector=False,
+        threedi_structure_selection=None,
+        damo_structure_selection=None,
+        structure_codes=None,
+    ):
         """
-        Compares the Threedi object with a DAMO object.
+        Compare the Threedi object with a DAMO object.
         Looks in all layers containing structures (defined in the config.py) for the 'code' column. Creates a joined
         GeoDataFrame for each structure code ('KDU','KBR', etc., also defined in config.py)
 
@@ -422,16 +243,33 @@ class Threedimodel(DataSet):
         :param styling_path: Path to folder containing .qml files for styling the layers
         :return: Dictionary containing GeoDataframes with compared data and a Dataframe with statistics
         """
+        attribute_comparison = self.json_files_path / "model_attribute_comparison.json"
+        # print(attribute_comparison)
 
         # sort model and damo data by structure code instead of model and damo layers
+        model_name = self.model_name
         table_struc_model = {}
         table_struc_DAMO = {}
+
+        # base_     output = r"E:\02.modellen\castricum\01_source_data\vergelijkingsTool\output"
+        base_output = self.sourcedata / "vergelijkingsTool\output"  # TODO THIS NEED TO BE FIX
+        if threedi_layer_selector is True:
+            THREEDI_STRUCTURE_LAYERS = threedi_structure_selection
+            DAMO_HDB_STRUCTURE_LAYERS = damo_structure_selection
+            STRUCTURE_CODES = structure_codes
+        else:
+            STRUCTURE_CODES = config.STRUCTURE_CODES
+            print("threedi layer selection is OFF")
+            THREEDI_STRUCTURE_LAYERS = config.THREEDI_STRUCTURE_LAYERS
+            DAMO_HDB_STRUCTURE_LAYERS = config.DAMO_HDB_STRUCTURE_LAYERS
+
         for struc in STRUCTURE_CODES:
             table_struc_model[struc] = self.get_structure_by_code(struc, THREEDI_STRUCTURE_LAYERS)
             table_struc_DAMO[struc] = DAMO.get_structure_by_code(struc, DAMO_HDB_STRUCTURE_LAYERS)
 
         table_C = {}
         for layer in table_struc_model.keys():
+            # print(f"the crs for {layer} in DAMO is {table_struc_DAMO[layer].crs}")
             if table_struc_DAMO[layer].crs == table_struc_model[layer].crs:
                 self.logger.debug(f"CRS of DAMO and model data {layer} is equal")
             else:
@@ -466,20 +304,21 @@ class Threedimodel(DataSet):
 
             # add column with values model, damo or both, depending on code
             inboth = []
+
             for i in range(len(table_merged)):
                 if table_merged["dataset_model"][i] & table_merged["dataset_damo"][i]:
-                    inboth.append("both")
+                    inboth.append(f"{model_name} both")
                 elif table_merged["dataset_model"][i] and not table_merged["dataset_damo"][i]:
-                    inboth.append("model")
+                    inboth.append(f"{model_name} sqlite")
                 else:
-                    inboth.append("damo")
+                    inboth.append(f"{model_name} damo")
             table_merged["in_both"] = inboth
 
             # use geometry of model when feature exists in model or in both model and damo. Use geometry of damo when feature only exists in damo
             mask_geom_model = table_merged.loc[
-                (table_merged["in_both"] == "model") | (table_merged["in_both"] == "both")
+                (table_merged["in_both"] == f"{model_name} sqlite") | (table_merged["in_both"] == f"{model_name} both")
             ]
-            mask_geom_DAMO = table_merged.loc[table_merged["in_both"] == "damo"]
+            mask_geom_DAMO = table_merged.loc[table_merged["in_both"] == (f"{model_name} damo")]
             geom = pd.concat([mask_geom_model["geometry_model"], mask_geom_DAMO["geometry_damo"]])
             table_merged["geometry"] = geom
             table_merged = self.drop_unused_geoseries(table_merged, keep="geometry")
@@ -499,6 +338,12 @@ class Threedimodel(DataSet):
 
         # export to filename
         if filename is not None:
-            self.export_comparison(table_C, statistics, filename, overwrite=overwrite, styling_path=styling_path)
+            self.export_comparison_3di(table_C, statistics, filename, overwrite=overwrite, crs=self.crs)
+
+        # statistics.to_csv(r"E:\02.modellen\castricum\01_source_data\vergelijkingsTool\output\statistics_threedi.csv", sep = ';')
+        # table_C[layer].to_csv(r"E:\02.modellen\castricum\01_source_data\vergelijkingsTool\output\TableC_threedi.csv", sep = ';')
 
         return table_C, statistics
+
+
+# %%

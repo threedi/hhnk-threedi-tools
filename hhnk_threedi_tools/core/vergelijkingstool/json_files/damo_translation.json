@@ -1,20 +1,14 @@
 {
-	"GW_PRO": {
-		"name": "GW_PRO",
+	"DuikerSifonHevel": {
+		"name": "DuikerSifonHevel",
 		"columns": {
-			"PROIDENT": "code"
+			"CODE": "code"
 		}
 	},
-	"Waterdeel": {
-		"name": "Waterdeel",
+	"Stuw": {
+		"name": "Stuw",
 		"columns": {
-			"identificatie": "code"
-		}
-	},
-	"GW_PRW": {
-		"name": "GW_PRW",
-		"columns": {
-			"PRW_ID": "code"
+			"CODE": "code"
 		}
 	}
 }
