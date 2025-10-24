@@ -564,7 +564,7 @@ class OutputDirParent(Folder):
     def __init__(self, base, create):
         super().__init__(os.path.join(base, "04_test_results"), create)
 
-        self.hhnk_schematisation_checks = self.OutputDirSqlite(
+        self.hhnk_schematisation_checks = self.OutputDirHhnkSchematisationChecks(
             self.full_path("hhnk_schematisation_checks"), create=create
         )
         self.bank_levels = self.OutputDirBankLevel(self.full_path("bank_levels"), create=create)
