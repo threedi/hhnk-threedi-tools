@@ -1,9 +1,7 @@
 # %%
 import shutil
-import sys
 
 import hhnk_research_tools as hrt
-import pytest
 
 from hhnk_threedi_tools.core.checks.schematisation.structure_control import (
     create_sorted_actiontable_queries,
@@ -30,7 +28,3 @@ def test_sort_control_table():
     update_sorted_actiontable(
         database=database, queries=queries
     )  # FIXME WvE An error occurred while modifying the GeoPackage: no such function: ST_IsEmpty
-
-
-if __name__ == "__main__":
-    test_sort_control_table()
