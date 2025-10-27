@@ -50,6 +50,7 @@ class ChannelRelations:
             return width_wl
         else:
             logger.warning(f"Channel shape is not tabulated (type 6) for channel index {channel_gdf_row.index}")
+            return -9999.0
 
     @cached_property
     def gdf(self) -> gpd.GeoDataFrame:
@@ -145,7 +146,6 @@ class StructureRelations:
      - maximum and minimum crest_level from table control
      - minimum and reference_level and bank_level at start and end side from cross_section_locations linked to structure, reference and bank level may originate from different cross_section_locations
 
-     # TODO
     """
 
     def __init__(
