@@ -25,6 +25,4 @@ def test_sort_control_table():
         "UPDATE table_control SET action_table='-0.85,-0.85\n-0.84,-0.95\n-0.83,-1.05\n-0.82,-1.15\n-0.81,-1.25\n-0.8,-1.25\n-0.79,-1.25\n-0.78,-1.25\n-0.77,-1.25\n-0.76,-1.25' WHERE id=53"
     ]
 
-    update_sorted_actiontable(
-        database=database, queries=queries
-    )  # FIXME WvE An error occurred while modifying the GeoPackage: no such function: ST_IsEmpty
+    update_sorted_actiontable(database=database, queries=queries)
