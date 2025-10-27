@@ -33,7 +33,6 @@ logger = hrt.logging.get_logger(name=__name__)
 class HhnkSchematisationChecks:
     def __init__(self, folder: Folders, results: dict[str, object] = {}):
         self.folder = folder
-
         self.output_fd = self.folder.output.hhnk_schematisation_checks
 
         self.database = self.folder.model.schema_base.database
@@ -41,7 +40,6 @@ class HhnkSchematisationChecks:
         self.datachecker = self.folder.source_data.datachecker
         self.damo = self.folder.source_data.damo
         self.channels_from_profiles = self.folder.source_data.modelbuilder.channel_from_profiles
-
         self.layer_fixeddrainage = self.folder.source_data.datachecker.layers.fixeddrainagelevelarea
 
         self.results = results
