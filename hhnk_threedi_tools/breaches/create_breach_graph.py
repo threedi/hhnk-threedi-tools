@@ -63,10 +63,10 @@ def create_breach_graph(
     All time series inputs should have compatible lengths. The function uses
     matplotlib and numpy for plotting and basic time-axis selection/interpolation.
     """
-    
     import matplotlib.gridspec as gridspec
     import matplotlib.pyplot as plt
     import numpy as np
+   
 
     # Set the Parameter of the graph.png\
     time_h = time_sec / 3600
