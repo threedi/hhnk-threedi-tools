@@ -66,7 +66,7 @@ def download_results_from_3di(output_folder, id_search, api_client):
         expected_size = resource.size
         actual_size = target.stat().st_size
         if expected_size != actual_size:
-            msg = f"Incomplete download of {resource.get_url}: " f"expected {expected_size}, got {actual_size}."
+            msg = f"Incomplete download of {resource.get_url}: expected {expected_size}, got {actual_size}."
             raise utils.FileDownloadException(msg)
     print(f"scenario {simulation_name} downloaded")
     return simulation
