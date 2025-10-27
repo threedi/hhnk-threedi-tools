@@ -66,7 +66,6 @@ def create_breach_graph(
     import matplotlib.gridspec as gridspec
     import matplotlib.pyplot as plt
     import numpy as np
-   
 
     # Set the Parameter of the graph.png\
     time_h = time_sec / 3600
