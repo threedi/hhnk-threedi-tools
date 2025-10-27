@@ -12,6 +12,58 @@ def create_breach_graph(
     breach_width,
     fig_path_name,
 ):
+    """
+    Create and save a PNG summarising breach time series.
+
+    The function produces a 4-panel figure showing, from top to bottom:
+    - upstream and downstream water level (m NAP),
+    - discharge through the breach (m3/s),
+    - flow velocity through the breach (m/s),
+    - breach width (m).
+
+    Parameters
+    ----------
+    scenarioname : str
+        Title used for the figure (scenario or breach name).
+    time_sec : array-like (seconds)
+        Time vector in seconds since simulation start. Converted to hours for
+        plotting. Only values up to 485 hours are used in the figure.
+    model_name : str
+        Model identifier used in the figure text.
+    model_revision : int | str
+        Model revision number (included in figure text if desired).
+    breach_id : array-like
+        Breach identifier array-like; breach_id[0] is used in the title text.
+    breach_depth : array-like
+        Time series of breach depth (m).
+    breach_wlev_upstream : array-like
+        Time series of upstream water level (m NAP).
+    breach_wlev_downstream : array-like
+        Time series of downstream water level (m NAP).
+    breach_q : array-like
+        Time series of discharge through the breach (m3/s).
+    breach_u : array-like
+        Time series of flow velocity through the breach (m/s).
+    breach_width : array-like
+        Time series of breach width (m).
+    fig_path_name : str | Path
+        Output file path (PNG) where the figure will be saved.
+
+    Returns
+    -------
+    None
+
+    Side effects
+    ------------
+    - Saves a PNG file at fig_path_name.
+    - Closes and clears matplotlib figures to free memory.
+
+    Notes
+    -----
+    All time series inputs should have compatible lengths. The function uses
+    matplotlib and numpy for plotting and basic time-axis selection/interpolation.
+    """
+    
     import matplotlib.gridspec as gridspec
     import matplotlib.pyplot as plt
     import numpy as np
