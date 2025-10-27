@@ -1,10 +1,10 @@
 # %%
-from hhnk_threedi_tools.core.checks.zero_d_one_d import ZeroDOneDTest
+from hhnk_threedi_tools.core.checks.zero_d_one_d import ZeroDOneDCheck
 from tests.config import PATH_TEST_MODEL
 
 
 class TestZeroDOneD:
-    test_0d1d = ZeroDOneDTest.from_path(PATH_TEST_MODEL)
+    test_0d1d = ZeroDOneDCheck.from_path(PATH_TEST_MODEL)
 
     def test_run_zero_d_one_d_test(self):
         """Test of de 0d1d test werkt"""
