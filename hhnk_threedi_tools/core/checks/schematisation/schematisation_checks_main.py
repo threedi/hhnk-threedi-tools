@@ -20,7 +20,7 @@ from shapely import get_point
 from shapely.geometry import Point
 from threedigrid_builder import make_gridadmin
 
-from hhnk_threedi_tools.core.checks.sqlite.structure_control import StructureControl
+from hhnk_threedi_tools.core.checks.schematisation.structure_control import StructureControl
 from hhnk_threedi_tools.core.folders import Folders
 from hhnk_threedi_tools.core.schematisation.relations import ChannelRelations, StructureRelations
 from hhnk_threedi_tools.resources.checks.sql_checks import sql_checks
