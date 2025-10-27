@@ -46,7 +46,7 @@ class HhnkSchematisationChecks:
 
         self.results = results
 
-    def run_controlled_structures(self, overwrite: bool = False):  # TODO WVE
+    def run_controlled_structures(self, overwrite: bool = False):
         """Create leayer with structure control in schematisation"""
         self.structure_control = StructureControl(
             model=self.database,
