@@ -14,7 +14,7 @@ INFILTRATION_COLS = [
     "infiltration_rate",
     "infiltration_rate_file",
     "infiltration_surface_option",
-    "max_infiltration_capacity_file",
+    "max_infiltration_volume_file",
     "display_name",
 ]
 
@@ -22,7 +22,7 @@ RASTER_FILES = [
     "dem_file",
     "frict_coef_file",
     "infiltration_rate_file",
-    "max_infiltration_capacity_file",
+    "max_infiltration_volume_file",
     "initial_waterlevel_file",
 ]
 
@@ -108,7 +108,7 @@ class ModelSchematisations:
         # This menas rasters that are not defined are not added to the schematisation.
         schema_base = self.folder.model.schema_base
         schema_new = getattr(self.folder.model, f"schema_{name}")
-        schema_new.create()
+        schema_new.mkdir()
 
         database_base = schema_base.database
 
@@ -121,7 +121,7 @@ class ModelSchematisations:
         # If database_new is defined before sqlite exists, it will not work properly
         database_new = schema_new.database
 
-        schema_new.rasters.create(parents=False)
+        schema_new.rasters.mkdir()
         # Copy rasters that are defined in the settings file
         for raster_file in RASTER_FILES:
             if not pd.isnull(row[raster_file]):
@@ -256,7 +256,7 @@ or do not use this run in the modelsplitter.
         initial_groundwater_level_file, initial_waterlevel_file, groundwater_hydro_connectivity_file,
         groundwater_impervious_layer_level_file, infiltration_decay_period_file, initial_infiltration_rate_file,
         leakage_file, phreatic_storage_capacity_file, hydraulic_conductivity_file, porosity_file, infiltration_rate_file,
-        max_infiltration_capacity_file, interception_file ]
+        max_infiltration_volume_file, interception_file ]
         """
 
         schema_new = getattr(self.folder.model, f"schema_{name}")
@@ -268,7 +268,7 @@ or do not use this run in the modelsplitter.
             "dem_file": schema_new.rasters.dem.path_if_exists,
             "frict_coef_file": schema_new.rasters.friction.path_if_exists,
             "infiltration_rate_file": schema_new.rasters.infiltration.path_if_exists,
-            "max_infiltration_capacity_file": schema_new.rasters.storage.path_if_exists,
+            "max_infiltration_volume_file": schema_new.rasters.storage.path_if_exists,
             "initial_waterlevel_file": schema_new.rasters.initial_wlvl_2d.path_if_exists,
         }
 
@@ -301,8 +301,8 @@ or do not use this run in the modelsplitter.
             mod_settings_default = self.folder.model.settings_default.path_if_exists
             model_sql = self.folder.model.model_sql.path_if_exists
 
-            target_path = self.folder.model.revisions.full_path(f"rev_{rev_count+1} - {commit_message[:25]}")
-            target_path.create(parents=True)
+            target_path = self.folder.model.revisions.full_path(f"rev_{rev_count + 1} - {commit_message[:25]}")
+            target_path.mkdir(parents=True)
 
             files_copied = []
             for f in [sqlite_path, mod_settings_file, mod_settings_default, model_sql]:

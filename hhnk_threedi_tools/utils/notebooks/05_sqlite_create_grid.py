@@ -1,0 +1,26 @@
+# %% [markdown]
+# Open in jupyterlab as a notebook; right click .py -> Open With -> Jupytext Notebook
+# ## Create grid nodes and lines from sqlite
+
+# %%
+from hhnk_threedi_tools import Folders, HhnkSchematisationChecks
+
+# Add qgis plugin deps to syspath and load notebook_data
+try:
+    from hhnk_threedi_tools.utils.notebooks.notebook_setup import setup_notebook
+except:
+    from notebook_setup import setup_notebook  # in case hhnk-threedi-tools is not part of python installation
+
+
+notebook_data = setup_notebook()
+# %%
+folder_dir = notebook_data["polder_folder"]
+
+folder = Folders(folder_dir)
+sqlite_test = HhnkSchematisationChecks(folder)
+
+sqlite_test.create_grid_from_schematisation(
+    sqlite_path=folder.model.sqlite_paths[0],
+    dem_path=folder.model.rasters.dem.path,
+    output_folder=folder.output.hhnk_schematisation_checks.path,
+)

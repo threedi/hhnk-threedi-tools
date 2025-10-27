@@ -17,4 +17,22 @@
     ],
     "python.testing.unittestEnabled": false,
     "python.testing.pytestEnabled": true,
+    "files.exclude": {
+        "**/__pycache__": true,
+        "**/.ipynb_checkpoints": true,
+        "**/.mypy_cache": true,
+        "**.egg-info": true,
+        "**/.pytest_cache": true,
+        "**/.ruff_cache": true,
+        ".coverage": true,
+    },
+    "search.exclude": {
+        "**/.pixi": true,
+        "pixi.lock": true,
+        "/dist": true,
+    },
+    "jupyter.interactiveWindow.textEditor.executeSelection": true,
+    "jupyter.notebookFileRoot": "${workspaceFolder}",
+    "python-envs.defaultEnvManager": "ms-python.python:system",
+    "python-envs.pythonProjects": [],
 }

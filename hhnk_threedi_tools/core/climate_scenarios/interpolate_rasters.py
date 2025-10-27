@@ -143,7 +143,7 @@ def main_interpolate_rasters(
 
     if not output_file.exists():
         # Inladen rasters als class
-        raster_classes = [hrt.Raster(r) for r in rasters]
+        raster_classes = [hrt.RasterOld(r) for r in rasters]
 
         depth_raster = raster_classes[0]
         parts = depth_raster.generate_blocks()

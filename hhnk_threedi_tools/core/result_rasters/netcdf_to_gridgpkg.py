@@ -7,10 +7,11 @@ import geopandas as gpd
 import hhnk_research_tools as hrt
 import numpy as np
 import pandas as pd
-from matplotlib.widgets import EllipseSelector
 from shapely.geometry import box
 
 from hhnk_threedi_tools.core.folders import Folders
+
+logger = hrt.logging.get_logger(__name__, level="INFO")
 
 
 class ThreediGrid:
@@ -125,9 +126,9 @@ Debug by checking available timeseries through the (.ts) timeseries attributes""
                 col_base = f"{int(timestep_h)}h"
             else:
                 if timestep_h < 1:
-                    col_base = f"{int(timestep_h*60)}min"
+                    col_base = f"{int(timestep_h * 60)}min"
                 else:
-                    col_base = f"{int(np.floor(timestep_h))}h{int((timestep_h%1)*60)}min"
+                    col_base = f"{int(np.floor(timestep_h))}h{int((timestep_h % 1) * 60)}min"
         return col_base
 
 
@@ -288,6 +289,7 @@ class NetcdfToGPKG:
 
     def create_base_gdf(self):
         """Create base grid from netcdf"""
+        logger.debug("Creating base grid gdf from netcdf.")
         grid_gdf = gpd.GeoDataFrame()
 
         # * inputs every element from row as a new function argument, creating a (square) box.
@@ -312,6 +314,7 @@ class NetcdfToGPKG:
         gpd.GeoDataFrame
             extened grid_gdf with correction parameters columns.
         """
+        logger.debug("Adding correction parameters to grid gdf.")
         grid_gdf["dem_minimal_m"] = self.grid.cells.subset("2D_open_water").z_coordinate
         # Percentage of dem in a calculation cell
         # so we can make a selection of cells on model edge that need to be ignored
@@ -350,6 +353,7 @@ class NetcdfToGPKG:
     def get_waterlevels(self, grid_gdf, timesteps_seconds: list):
         """Retrieve waterlevels volume and storage at given timesteps"""
 
+        logger.debug("Retrieving waterlevels, volume and storage at given timesteps.")
         col_idx = ColumnIdx(gdf=grid_gdf)
 
         for timestep in timesteps_seconds:
@@ -383,6 +387,7 @@ class NetcdfToGPKG:
         """Correct the waterlevel for the given timesteps. Results are only corrected
         for cells where the 'replace_all' value is not False.
         """
+        logger.debug("Correcting waterlevels for given timesteps.")
         # Create copy and set_index the id field so we can use the neighbours_ids column easily
         grid_gdf_local = grid_gdf.copy()
         grid_gdf_local.set_index("id", inplace=True)
@@ -452,6 +457,7 @@ class NetcdfToGPKG:
 
         if output_file is None:
             output_file = self.output_default
+        output_file = hrt.SpatialDatabase(output_file)
 
         create = hrt.check_create_new_file(output_file=output_file, overwrite=overwrite)
         if create:
@@ -469,8 +475,10 @@ class NetcdfToGPKG:
 
             if wlvl_correction:
                 grid_gdf = self.correct_waterlevels(grid_gdf=grid_gdf, timesteps_seconds=timesteps_seconds)
+
             # Save to file
-            grid_gdf.to_file(str(output_file), engine="pyogrio")
+            logger.debug(f"Saving grid gdf to {output_file.path}.")
+            grid_gdf.to_file(output_file.path, engine="pyogrio")
 
 
 # %%

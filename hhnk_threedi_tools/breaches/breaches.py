@@ -8,7 +8,6 @@ self.base is the directory in which it is located
 import os
 from pathlib import Path
 
-import hhnk_research_tools as hrt
 from hhnk_research_tools import Folder
 
 FOLDER_STRUCTURE = """
@@ -45,7 +44,7 @@ class Breaches(Folder):
         
         --------------------------------------------------------------------------
         An object to ease the accessibility, creation and checks of folders and
-        files in the polder structure.
+        files in the current structure.
         
         Usage as follows:
             - Access class with te path to the main folder (e.g., E:\03.resultaten\Overstromingsberekeningen primaire doorbraken 2024\output\ROR PRI - dijktrajecten 13-8 en 13-9 - Stroom_ZUID_T10_T3000\ROR-PRI-UITDAMMERDIJK_8-T100)
@@ -61,7 +60,7 @@ class Breaches(Folder):
             folder.show
            
             Output: 
-                Heiloo @ E:\03.resultaten\Overstromingsberekeningen primaire doorbraken 2024\output\ROR PRI - dijktrajecten 13-8 en 13-9 - Stroom_ZUID_T10_T3000\ROR-PRI-UITDAMMERDIJK_8-T100
+                ROR-PRI-UITDAMMERDIJK_8-T100 @ E:\03.resultaten\Overstromingsberekeningen primaire doorbraken 2024\output\ROR PRI - dijktrajecten 13-8 en 13-9 - Stroom_ZUID_T10_T3000\ROR-PRI-UITDAMMERDIJK_8-T100
                                 Folders:	  
                                     Folders
                                     ├── 01_NetCDF
@@ -74,15 +73,6 @@ class Breaches(Folder):
         
             
             folder.source_data.show
-            
-            Output: 
-            
-                01_Source_data @ C:/Poldermodellen/Heiloo/01_Source_data
-                                    Folders:	  
-                                        source_data
-                                        └── modelbuilder
-                               
-                                    Files:	['aggregate_results_3di', 'gridadmin', 'results_3di', ...]
             
             
         {FOLDER_STRUCTURE}
@@ -114,42 +104,38 @@ class Breaches(Folder):
                {self.space}└── 04_WSS (.wss)
                """
 
-    @property
-    def full_structure(self):
-        return print(FOLDER_STRUCTURE)
+    def to_file_dict(self):
+        """
+        Return dictionary containing paths to source files according to set project structure.
 
-    # def to_file_dict(self):
-    #     """
-    #     Return dictionary containing paths to source files according to set project structure.
-
-    #         build_base_paths_dict(
-    #                 polder_path (string: path to project folder (highest level))
-    #             )
-    #     """
-    #     return {
-    #         "aggregate_results_3di": self.netcdf.aggregate_results_3di.path_if_exists,
-    #         "gridadmin": self.netcdf.gridadmin.path_if_exists,
-    #         "gridadmin": self.netcdf.gridadmin.path_if_exists,
-    #         "results_3di": self.netcdf.results_3di.path_if_exists,
-    #         # "channels_shapefile": self.source_data.modelbuilder.channel_from_profiles.path_if_exists,
-    #         # jpeg
-    #         "graph": self.jpeg.graph.path_if_exists,
-    #         "agg_graph": self.jpeg.agg_graph.path_if_exists,
-    #         "overstroming": self.jpeg.overstroming.path_if_exists,
-    #         # wss
-    #         "dem_clip": self.wss.dem_clip.path_if_exists,
-    #         "grid_raw": self.wss.grid_raw.path_if_exists,
-    #         "mask_flood": self.wss.mask_flood.path_if_exists,
-    #         "max_wdepth_orig": self.wss.max_wdepth_orig.path_if_exists,
-    #         "new_grid": self.wss.new_grid.path_if_exists,
-    #         "nodeid": self.wss.nodeid.path_if_exists,
-    #         "landuse_2021_clip": self.wss.landuse_2021_clip.path_if_exists,
-    #         # ssm
-    #         "max_flow_velocity_5m": self.ssm.max_flow_velocity_5m.path_if_exists,
-    #         "max_rate_of_rise_5m": self.ssm.max_rate_of_rise_5m.sqlite_tests.path_if_exists,
-    #         "max_waterdepth_5m": self.ssm.max_waterdepth_5m.path_if_exists,
-    #         "max_waterlevel_5m": self.ssm.max_waterlevel_5m.path_if_exists,
-    #     }
+            build_base_paths_dict(
+                    polder_path (string: path to project folder (highest level))
+                )
+        """
+        return {
+            "aggregate_results_3di": self.netcdf.aggregate_results_3di.path_if_exists,
+            "gridadmin": self.netcdf.gridadmin.path_if_exists,
+            "gridadmin": self.netcdf.gridadmin.path_if_exists,
+            "results_3di": self.netcdf.results_3di.path_if_exists,
+            # "channels_shapefile": self.source_data.modelbuilder.channel_from_profiles.path_if_exists,
+            # jpeg
+            "graph": self.jpeg.graph.path_if_exists,
+            "agg_graph": self.jpeg.agg_graph.path_if_exists,
+            "overstroming": self.jpeg.overstroming.path_if_exists,
+            # wss
+            "dem_clip": self.wss.dem_clip.path_if_exists,
+            "grid_raw": self.wss.grid_raw.path_if_exists,
+            "mask_flood": self.wss.mask_flood.path_if_exists,
+            "max_wdepth_orig": self.wss.max_wdepth_orig.path_if_exists,
+            "new_grid": self.wss.new_grid.path_if_exists,
+            "nodeid": self.wss.nodeid.path_if_exists,
+            "landuse_2021_clip": self.wss.landuse_2021_clip.path_if_exists,
+            # ssm
+            "max_flow_velocity_5m": self.ssm.max_flow_velocity_5m.path_if_exists,
+            "max_rate_of_rise_5m": self.ssm.max_rate_of_rise_5m.hhnk_schematisation_checks.path_if_exists,
+            "max_waterdepth_5m": self.ssm.max_waterdepth_5m.path_if_exists,
+            "max_waterlevel_5m": self.ssm.max_waterlevel_5m.path_if_exists,
+        }
 
     @classmethod
     def is_valid(self, folderpath):
@@ -158,7 +144,7 @@ class Breaches(Folder):
         return all([Path(folderpath).joinpath(i).exists() for i in SUB_FOLDERS])
 
 
-class NetCDF(hrt.ThreediResult):
+class NetCDF(Folder):
     """Path to netcdf data (aggregate_results_3di, gridadmin, results_3di)"""
 
     def __init__(self, base, create):
@@ -224,8 +210,6 @@ class SSM(Folder):
     """
     Folder in which rasters from lizard can be saved
 
-    to use with list indexing use the following options:
-
     """
 
     def __init__(self, base, create):
@@ -246,13 +230,10 @@ class SSM(Folder):
             f.write(readme_txt)
 
 
-# 1d2d output
 class WSS(Folder):
     """
-    Output paths are only defined up to the foldername
-    of the test, because we can internally decide on the
-    filenames of logfiles and generated layers (these
-    paths are not up to the user)
+    Folder where the the water depth raster are going to be created. Also all the files used to create it,
+    are going to be store in this folder.
     """
 
     def __init__(self, base, create):
