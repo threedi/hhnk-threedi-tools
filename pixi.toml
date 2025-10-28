@@ -69,6 +69,7 @@ tqdm = "*"
 xarray = "*"
 
 pip = "*"
+git = ">=2.51.1,<3"
 
 [pypi-dependencies]
 # NenS deps
