@@ -21,11 +21,24 @@ To setup the env open the cloned hhnk-threedi-tools folder in VS-Code or in a te
 
 Use `pixi shell` to open the command prompt with the python enviroment initialized.
 
+# Run tests locally
+To run test locally:
+* Copy .env.example and rename to symple .env. This will ensure tests that required database access are skipped.
+* Run `pixi run tests` in terminal. Make sure postinstall has been run.
+
 2025-06 -> migration towards python 3.12.
 Not all checks work yet on 3.12. The github checks therefore run on py39
 
 Tests this locally with
 `pixi run -e py39 tests`
+
+Not all checks work yet on 3.12. The github checks therefore run on python 3.9 (pixi environment `py39`)
+
+2025-09: Beware that the py39 test environment uses the main from `hhnk-research-tools` and, not local editable install.
+
+To run tests locally on python 3.9 use
+`pixi run -e py39 tests`
+
 
 # Model Repository
 
@@ -52,6 +65,4 @@ initialize git LFS (Large File Storage), create or append to the .gitattributes 
 <root of hhnk-treedi-tools repo>/hhnk_threedi_tools/git_model_repo/bin/linux/initialize_repo.sh <path to model repo>
 ```
 
-Tests this locally with\
-`pixi run -e py39 tests`
 

@@ -8,22 +8,24 @@ import geopandas as gpd
 import hhnk_research_tools as hrt
 import pytest
 
-from hhnk_threedi_tools.core.schematisation_builder.DB_exporter import DATABASES, db_exporter
 from tests.config import FOLDER_TEST, TEMP_DIR, TEST_DIRECTORY
 
 TEST_DIRECTORY_SB = TEST_DIRECTORY / "schematisation_builder"
 # Create output directory for db exporter tests
 db_export_output_dir = TEMP_DIR / f"temp_db_exporter_{hrt.current_time(date=True)}"
 
-skip_db = DATABASES == {}
 
-
-@pytest.mark.skipif(skip_db, reason="Skipping DB test because no local_settings_htt.py or DATABASES available.")
+@pytest.mark.skipif(
+    str(os.getenv("SKIP_DATABASE")) == "1",
+    reason="Skipping DB test because no local_settings_htt.py or DATABASES available.",
+)
 def test_db_exporter_one_feature():
     """
     Test the db_exporter function with a single feature from the GEMAAL table from DAMO and CSO
     Includes test of sub table.
     """
+    from hhnk_threedi_tools.core.schematisation_builder.DB_exporter import db_exporter
+
     model_extent_path = TEST_DIRECTORY_SB / "area_test_sql_helsdeur.gpkg"
     output_file = db_export_output_dir / "test_damo_gemaal_helsdeur.gpkg"
     db_export_output_dir.mkdir(exist_ok=True)
@@ -51,9 +53,13 @@ def test_db_exporter_one_feature():
     assert logging_DAMO == []  # test geen errors
 
 
-@pytest.mark.skipif(skip_db, reason="Skipping DB test because no local_settings_htt.py or DATABASES available.")
+@pytest.mark.skipif(
+    str(os.getenv("SKIP_DATABASE")) == "1",
+    reason="Skipping DB test because no local_settings_htt.py or DATABASES available.",
+)
 def test_db_exporter_polder():
     """Test the db_exporter function using all default tables for the test polder."""
+    from hhnk_threedi_tools.core.schematisation_builder.DB_exporter import db_exporter
 
     model_extent_path = TEST_DIRECTORY / r"model_test\01_source_data\polder_polygon.shp"
     output_file = db_export_output_dir / "test_export.gpkg"
@@ -73,7 +79,7 @@ def test_db_exporter_polder():
 # %%
 # Test
 if __name__ == "__main__":
-    print(os.getenv("SKIP_DATABASE"))
+    print(f"SKIP_DATABASE: {os.getenv('SKIP_DATABASE')}")
 
     Path(db_export_output_dir).mkdir(exist_ok=True, parents=True)
     test_db_exporter_one_feature()

@@ -24,15 +24,6 @@ hhnk-research-tools
 coverage.xml
 
 hhnk_threedi_tools/breaches/api_ldo_key.txt
-hhnk_threedi_tools/tests/data/new_project/
-tests_local/data/temp
-tests_local/data
-
-git_log.log
-.env
-.DS_Store
-.idea
-
 *.log
 project.json
 tests/data/schematisation_builder/test_schematisation_builder
