@@ -235,6 +235,59 @@
 			}
 		},
 		{
+			"name": "cmp_geom_length",
+			"table": "duikers_op_peilgrens",
+			"type": "numeric",
+			"description": "Verschil in lengte van geometrie",
+			"priority": "critical",
+			"function": {
+				"difference": {
+					"left": "geom_length_New",
+					"right": "geom_length_Old"
+				}
+			}
+		},
+		{
+			"name": "cmp_geom_type",
+			"table": "duikers_op_peilgrens",
+			"type": "category",
+			"description": "Verschil in geometry type",
+			"priority": "critical",
+			"left": "geom_type_New",
+			"right": "geom_type_Old"
+		},
+		{
+			"name": "cmp_ws_categorie",
+			"table": "duikers_op_peilgrens",
+			"type": "category",
+			"description": "Verschil in ws_categorie",
+			"priority": "critical",
+			"left": "categorie_New",
+			"right": "categorie_Old"
+		},
+		{
+			"name": "cmp_modelleren_als",
+			"table": "duikers_op_peilgrens",
+			"type": "category",
+			"description": "Verschil in open of dicht ",
+			"priority": "critical",
+			"left": "modelleren_als_New",
+			"right": "modelleren_als_Old"
+		},
+		{
+			"name": "cmp_area",
+			"table": "duikers_op_peilgrens",
+			"type": "numeric",
+			"description": "Verschil in area",
+			"priority": "critical",
+			"function": {
+				"difference": {
+					"left": "geom_area_New",
+					"right": "geom_area_New"
+				}
+			}
+		},
+		{
 			"name": "cmp_functiegemaal",
 			"table": "gemaal",
 			"type": "category",

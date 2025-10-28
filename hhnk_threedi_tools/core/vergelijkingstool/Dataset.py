@@ -205,7 +205,9 @@ class DataSet:
                 result = pd.concat([left, right], axis=1).max(axis=1, skipna=skipna)
             elif function_name == "multiply":
                 result = left * right
-
+            ### TEXT DIFFERENCE ###
+            # elif function_name == "text_difference":
+            #     result = left == right
             else:
                 self.logger.error(f"Comparison function {function_name} not recognized")
                 result = None
@@ -231,7 +233,7 @@ class DataSet:
         :return: String containing the change in category, if any.
         """
 
-        if row.in_both == "AB" or row.in_both == "both":
+        if "both" in row.in_both:
             left = row[0]
             right = row[1]
 

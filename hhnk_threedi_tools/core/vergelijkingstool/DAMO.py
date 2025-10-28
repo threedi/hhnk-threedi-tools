@@ -223,8 +223,8 @@ class DAMO(DataSet):
                     if layer == "waterdeel":
                         # For waterdeel we cannot compare based on code. So we treat A and B as one big polygon and
                         # determine the intersection and the differences
-                        union_A = table_merged.geometry_A.unary_union
-                        union_B = table_merged.geometry_B.unary_union
+                        union_A = table_merged.geometry_New.unary_union
+                        union_B = table_merged.geometry_Old.unary_union
                         intersection = union_A.intersection(union_B)
                         diff_A = union_A.difference(union_B)
                         diff_B = union_B.difference(union_A)
