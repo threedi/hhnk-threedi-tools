@@ -197,7 +197,9 @@ class DAMO(DataSet):
                 table_merged = gpd.GeoDataFrame(table_merged, geometry="geometry")
 
                 # fillna values of the two columns by False
-                table_merged[["dataset_New", "dataset_Old"]] = table_merged[["dataset_New", "dataset_Old"]].fillna(value=False)
+                table_merged[["dataset_New", "dataset_Old"]] = table_merged[["dataset_New", "dataset_Old"]].fillna(
+                    value=False
+                )
 
                 # add column with values A, B or AB, depending on code
                 inboth = []
@@ -272,14 +274,20 @@ class DAMO(DataSet):
                         intersection["origin"] = "intersection"
                         diff_A = gpd.GeoDataFrame(
                             pd.concat(
-                                [table_merged.code, table_merged["geometry_New"].difference(table_merged["geometry_Old"])],
+                                [
+                                    table_merged.code,
+                                    table_merged["geometry_New"].difference(table_merged["geometry_Old"]),
+                                ],
                                 axis=1,
                             )
                         ).rename(columns={0: "geometry_diff"})
                         diff_A["origin"] = "diff_New"
                         diff_B = gpd.GeoDataFrame(
                             pd.concat(
-                                [table_merged.code, table_merged["geometry_New"].difference(table_merged["geometry_Old"])],
+                                [
+                                    table_merged.code,
+                                    table_merged["geometry_New"].difference(table_merged["geometry_Old"]),
+                                ],
                                 axis=1,
                             )
                         ).rename(columns={0: "geometry_diff"})
@@ -306,7 +314,8 @@ class DAMO(DataSet):
 
                 else:
                     table_merged["geometry"] = table_merged.apply(
-                        lambda x: self.get_significant_geometry(x["in_both"], x["geometry_New"], x["geometry_Old"]), axis=1
+                        lambda x: self.get_significant_geometry(x["in_both"], x["geometry_New"], x["geometry_Old"]),
+                        axis=1,
                     )
                 # remove all geometry columns except 'geometry'
                 table_merged = self.drop_unused_geoseries(table_merged, keep="geometry")
