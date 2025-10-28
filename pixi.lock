@@ -3369,7 +3369,7 @@ packages:
 - pypi: ./
   name: hhnk-threedi-tools
   version: '2025.1'
-  sha256: b080af4bc77268203ec64ed1478376df1c170f543f03447bc0355d21d0c0ec09
+  sha256: 2707c449b1c06a9145917fbe4006999040d127a63bb9910653ad9969a8f4e0b7
   requires_python: '>=3.9'
   editable: true
 - conda: https://conda.anaconda.org/conda-forge/noarch/hpack-4.1.0-pyhd8ed1ab_0.conda
