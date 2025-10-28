@@ -88,6 +88,28 @@
 			}
 		},
 		{
+			"name": "cmp_som_doorstroombreedte",
+			"table": "brug",
+			"type": "numeric",
+			"description": "Verschil in som_doorstroombreedte",
+			"priority": "critical",
+			"function": {
+				"difference": {
+					"left": "som_doorstroombreedte_New",
+					"right": "som_doorstroombreedte_Old"
+				}
+			}
+		},
+		{
+			"name": "cmp_ID",
+			"table": "brug",
+			"type": "category",
+			"description": "Verschil in code een naam",
+			"priority": "warning",
+			"left": "brug_id_New",
+			"right": "brug_id_Old"
+		},
+		{
 			"name": "cmp_indicatiewaterkerend",
 			"table": "duikersifonhevel",
 			"type": "category",
@@ -283,9 +305,27 @@
 			"function": {
 				"difference": {
 					"left": "geom_area_New",
-					"right": "geom_area_New"
+					"right": "geom_area_Old"
 				}
 			}
+		},
+		{
+			"name": "cmp_geom_type",
+			"table": "duikers_op_peilgrens",
+			"type": "category",
+			"description": "Verschil in geometry type",
+			"priority": "critical",
+			"left": "geom_type_New",
+			"right": "geom_type_Old"
+		},
+		{
+			"name": "cmp_ID",
+			"table": "gemaal",
+			"type": "category",
+			"description": "Verschil in code een naam",
+			"priority": "warning",
+			"left": "naam_New",
+			"right": "naam_Old"
 		},
 		{
 			"name": "cmp_functiegemaal",
@@ -305,9 +345,169 @@
 			"function": {
 				"difference": {
 					"left": "maximalecapaciteit_New",
-					"right": "maximalecapaciteit_New"
+					"right": "maximalecapaciteit_Old"
 				}
 			}
+		},
+		{
+			"name": "cmp_categorie",
+			"table": "gemaal",
+			"type": "category",
+			"description": "Verschil in categorie",
+			"priority": "warning",
+			"left": "ws_categorie_New",
+			"right": "ws_categorie_Old"
+		},
+		{
+			"name": "cmp_geom_type",
+			"table": "gemaal",
+			"type": "category",
+			"description": "Verschil in categorie",
+			"priority": "critical",
+			"left": "geom_type_New",
+			"right": "geom_type_Old"
+		},
+		{
+			"name": "cmp_modelleren_als",
+			"table": "gemalen_op_peilgrens",
+			"type": "category",
+			"description": "Verschil in open of dicht",
+			"priority": "critical",
+			"left": "moet_op_peilgrens_New",
+			"right": "moet_op_peilgrens_Old"
+		},
+		{
+			"name": "cmp_geom_type",
+			"table": "gemalen_op_peilgrens",
+			"type": "critical",
+			"description": "Verschil in geometry type",
+			"priority": "critical",
+			"left": "geom_type_New",
+			"right": "geom_type_Old"
+		},
+		{
+			"name": "cmp_categorie",
+			"table": "gemalen_op_peilgrens",
+			"type": "category",
+			"description": "Verschil in open of dicht ",
+			"priority": "critical",
+			"left": "ws_categorie_New",
+			"right": "ws_categorie_Old"
+		},
+		{
+			"name": "cmp_origin",
+			"table": "hydro_deelgebieden",
+			"type": "category",
+			"description": "Verschil in origin",
+			"priority": "warning",
+			"left": "origin_New",
+			"right": "origin_Old"
+		},
+		{
+			"name": "cmp_bron",
+			"table": "hydro_deelgebieden",
+			"type": "category",
+			"description": "Verschil in bron",
+			"priority": "warning",
+			"left": "ws_bron_New",
+			"right": "ws_bron_Old"
+		},
+		{
+			"name": "cmp_zomerpeil",
+			"table": "hydro_deelgebieden",
+			"type": "numeric",
+			"description": "Verschil in zomerpeil",
+			"priority": "critical",
+			"function": {
+				"difference": {
+					"left": "zomerpeil_New",
+					"right": "zomerpeil_Old"
+				}
+			}
+		},
+		{
+			"name": "cmp_winterpeil",
+			"table": "hydro_deelgebieden",
+			"type": "numeric",
+			"description": "Verschil in winterpeil",
+			"priority": "critical",
+			"function": {
+				"difference": {
+					"left": "winterpeil_New",
+					"right": "winterpeil_Old"
+				}
+			}
+		},
+		{
+			"name": "cmp_peil_brond",
+			"table": "hydro_deelgebieden",
+			"type": "category",
+			"description": "Verschil in peilbrond",
+			"priority": "warning",
+			"left": "peil_bron_New",
+			"right": "peil_bron_Old"
+		},
+		{
+			"name": "cmp_name",
+			"table": "hydro_deelgebieden",
+			"type": "category",
+			"description": "Verschil in naam",
+			"priority": "warning",
+			"left": "naam_New",
+			"right": "naam_Old"
+		},
+		{
+			"name": "cmp_datum",
+			"table": "hydro_deelgebieden",
+			"type": "category",
+			"description": "Verschil in datum",
+			"priority": "warning",
+			"left": "peil_datum_New",
+			"right": "peil_datum_Old"
+		},
+		{
+			"name": "cmp_geom_length",
+			"table": "hydro_deelgebieden",
+			"type": "numeric",
+			"description": "Verschil in geometrie lengte",
+			"priority": "critical",
+			"function": {
+				"difference": {
+					"left": "geom_length_New",
+					"right": "geom_length_Old"
+				}
+			}
+		},
+		{
+			"name": "cmp_geom_area",
+			"table": "hydro_deelgebieden",
+			"type": "numeric",
+			"description": "Verschil in geometrie oppervlakte",
+			"priority": "critical",
+			"function": {
+				"difference": {
+					"left": "geom_area_New",
+					"right": "geom_area_Old"
+				}
+			}
+		},
+		{
+			"name": "cmp_hydroobject_id",
+			"table": "hydroobject",
+			"type": "category",
+			"description": "Verschil in hydroobject_id",
+			"priority": "critical",
+			"left": "hydroobject_id_New",
+			"right": "hydroobject_id_Old"
+		},
+		{
+			"name": "cmp_hydroobject_naam",
+			"table": "hydroobject",
+			"type": "category",
+			"description": "Verschil in hydroobject_naam",
+			"priority": "warning",
+			"left": "hydroobject_naam_New",
+			"right": "hydroobject_naam_Old"
 		}
 	]
 }
