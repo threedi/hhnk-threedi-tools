@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Module for the comparison of DAMO/HDB data and 3Di model data.
+r"""Module for the comparison of DAMO/HDB data and 3Di model data.
 With this module the actuality of 3Di models can be assessed.
 There are two main usages within this module:
     1. Compare current DAMO/HDB data with the DAMO/HDB data that was used to build the model.
@@ -69,8 +69,10 @@ def main(
 
     # Supress fiona logging to keep logging readable
     for log_name, log_obj in logging.Logger.manager.loggerDict.items():
-        if log_name.__contains__("fiona"):
-            log_obj.disabled = True
+        if "fiona" in log_name:
+            # log_obj may be a logging.PlaceHolder; only disable actual Logger instances
+            if isinstance(log_obj, logging.Logger):
+                log_obj.disabled = True
 
     # Supress GeoSeries.notna warning, as it warns about a changed operator. Currently using the new operator.
     warnings.filterwarnings("ignore", "GeoSeries.notna", UserWarning)
