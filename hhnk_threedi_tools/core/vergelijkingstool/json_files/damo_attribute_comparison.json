@@ -1,18 +1,15 @@
 {
-	"comparisons": [	
-			
-	
-	
+	"comparisons": [
 		{
 			"name": "cmp_bergend_vermogen",
 			"table": "bergingsgebied",
 			"type": "numeric",
-			"description":"Verschil in bergend vermogen",
+			"description": "Verschil in bergend vermogen",
 			"priority": "information",
 			"function": {
 				"difference": {
-					"left": "bergendvermogen_A",
-					"right": "bergendvermogen_B"
+					"left": "bergendvermogen_New",
+					"right": "bergendvermogen_Old"
 				}
 			}
 		},
@@ -20,12 +17,12 @@
 			"name": "cmp_bergend_vermogen_peil",
 			"table": "bergingsgebied",
 			"type": "numeric",
-			"description":"Verschil in bergend vermogen peil",
+			"description": "Verschil in bergend vermogen peil",
 			"priority": "information",
 			"function": {
 				"difference": {
-					"left": "ws_bergend_vermogen_bij_peil_A",
-					"right": "ws_bergend_vermogen_bij_peil_B"
+					"left": "ws_bergend_vermogen_bij_peil_New",
+					"right": "ws_bergend_vermogen_bij_peil_Old"
 				}
 			}
 		},
@@ -33,28 +30,25 @@
 			"name": "cmp_oppervlak",
 			"table": "bergingsgebied",
 			"type": "numeric",
-			"description":"Verschil in bergend vermogen",
+			"description": "Verschil in bergend vermogen",
 			"priority": "critical",
 			"function": {
 				"difference": {
-					"left": "geom_area_A",
-					"right": "geom_area_A"
+					"left": "geom_area_New",
+					"right": "geom_area_New"
 				}
 			}
 		},
-	
-	
-	
 		{
 			"name": "cmp_hoogteonderzijde",
 			"table": "brug",
 			"type": "numeric",
-			"description":"Verschil in hoogteonderzijde",
+			"description": "Verschil in hoogteonderzijde",
 			"priority": "critical",
 			"function": {
 				"difference": {
-					"left": "hoogteonderzijde_A",
-					"right": "hoogteonderzijde_B"
+					"left": "hoogteonderzijde_New",
+					"right": "hoogteonderzijde_Old"
 				}
 			}
 		},
@@ -62,12 +56,12 @@
 			"name": "cmp_doorvaarbreedte",
 			"table": "brug",
 			"type": "numeric",
-			"description":"Verschil in doorvaarbreedte",
+			"description": "Verschil in doorvaarbreedte",
 			"priority": "critical",
 			"function": {
 				"difference": {
-					"left": "hoogteonderzijde_A",
-					"right": "hoogteonderzijde_B"
+					"left": "hoogteonderzijde_New",
+					"right": "hoogteonderzijde_Old"
 				}
 			}
 		},
@@ -75,56 +69,53 @@
 			"name": "cmp_ws_categorie",
 			"table": "brug",
 			"type": "category",
-			"description":"Verschil in categorie",
+			"description": "Verschil in categorie",
 			"priority": "critical",
-			"left": "ws_categorie_A",
-			"right": "ws_categorie_B"
-
-		},		
+			"left": "ws_categorie_New",
+			"right": "ws_categorie_Old"
+		},
 		{
 			"name": "cmp_aantal_doorstroomopeningen",
 			"table": "brug",
 			"type": "numeric",
-			"description":"Verschil in aantal doorstroomopeningen",
+			"description": "Verschil in aantal doorstroomopeningen",
 			"priority": "critical",
 			"function": {
 				"difference": {
-					"left": "aantal_doorstroomopeningen_A",
-					"right": "aantal_doorstroomopeningen_B"
+					"left": "aantal_doorstroomopeningen_New",
+					"right": "aantal_doorstroomopeningen_Old"
 				}
 			}
 		},
-		
-		
 		{
 			"name": "cmp_indicatiewaterkerend",
 			"table": "duikersifonhevel",
 			"type": "category",
-			"description":"Verschil in indicatiewaterkerend",
+			"description": "Verschil in indicatiewaterkerend",
 			"priority": "critical",
-			"left": "indicatiewaterkerend_A",
-			"right": "indicatiewaterkerend_B"
+			"left": "indicatiewaterkerend_New",
+			"right": "indicatiewaterkerend_Old"
 		},
 		{
 			"name": "cmp_indpeilregulpeilscheidend",
 			"table": "duikersifonhevel",
 			"type": "category",
-			"description":"Verschil in indpeilregulpeilscheidend",
+			"description": "Verschil in indpeilregulpeilscheidend",
 			"priority": "critical",
-			"left": "indpeilregulpeilscheidend_A",
-			"right": "indpeilregulpeilscheidend_B"
-		},		
+			"left": "indpeilregulpeilscheidend_New",
+			"right": "indpeilregulpeilscheidend_Old"
+		},
 		{
 			"name": "cmp_hoogteopening",
 			"table": "duikersifonhevel",
 			"type": "numeric",
-			"description":"Verschil in aantal hoogteopening",
+			"description": "Verschil in aantal hoogteopening",
 			"priority": "critical",
 			"threshold": 0.1,
 			"function": {
 				"difference": {
-					"left": "hoogteopening_A",
-					"right": "hoogteopening_B"
+					"left": "hoogteopening_New",
+					"right": "hoogteopening_Old"
 				}
 			}
 		},
@@ -132,12 +123,12 @@
 			"name": "cmp_breedteopening",
 			"table": "duikersifonhevel",
 			"type": "numeric",
-			"description":"Verschil in aantal breedteopening",
+			"description": "Verschil in aantal breedteopening",
 			"priority": "critical",
 			"function": {
 				"difference": {
-					"left": "breedteopening_A",
-					"right": "breedteopening_B"
+					"left": "breedteopening_New",
+					"right": "breedteopening_Old"
 				}
 			}
 		},
@@ -145,12 +136,12 @@
 			"name": "cmp_hoogtebinnenonderkantbenedenstrooms",
 			"table": "duikersifonhevel",
 			"type": "numeric",
-			"description":"Verschil in aantal hoogtebinnenonderkantbenedenstrooms",
+			"description": "Verschil in aantal hoogtebinnenonderkantbenedenstrooms",
 			"priority": "critical",
 			"function": {
 				"difference": {
-					"left": "hoogtebinnenonderkantbene_A",
-					"right": "hoogtebinnenonderkantbene_B"
+					"left": "hoogtebinnenonderkantbene_New",
+					"right": "hoogtebinnenonderkantbene_Old"
 				}
 			}
 		},
@@ -158,12 +149,12 @@
 			"name": "cmp_hoogtebinnenonderkantbovenstrooms",
 			"table": "duikersifonhevel",
 			"type": "numeric",
-			"description":"Verschil in aantal hoogtebinnenonderkantbovenstrooms",
+			"description": "Verschil in aantal hoogtebinnenonderkantbovenstrooms",
 			"priority": "critical",
 			"function": {
 				"difference": {
-					"left": "hoogtebinnenonderkantbov_A",
-					"right": "hoogtebinnenonderkantbov_B"
+					"left": "hoogtebinnenonderkantbov_New",
+					"right": "hoogtebinnenonderkantbov_Old"
 				}
 			}
 		},
@@ -171,99 +162,97 @@
 			"name": "cmp_vormkoker",
 			"table": "duikersifonhevel",
 			"type": "category",
-			"description":"Verschil in vormkoker",
+			"description": "Verschil in vormkoker",
 			"priority": "critical",
-			"left": "vormkoker_A",
-			"right": "vormkoker_B"
-		},		
+			"left": "vormkoker_New",
+			"right": "vormkoker_Old"
+		},
 		{
 			"name": "cmp_soortmateriaal",
 			"table": "duikersifonhevel",
 			"type": "category",
-			"description":"Verschil in soortmateriaal",
+			"description": "Verschil in soortmateriaal",
 			"priority": "critical",
-			"left": "soortmateriaal_A",
-			"right": "soortmateriaal_A"
+			"left": "soortmateriaal_New",
+			"right": "soortmateriaal_Old"
 		},
 		{
 			"name": "cmp_typekruising",
 			"table": "duikersifonhevel",
 			"type": "category",
-			"description":"Verschil in typekruising",
+			"description": "Verschil in typekruising",
 			"priority": "critical",
-			"left": "typekruising_A",
-			"right": "typekruising_B"
-		},				
+			"left": "typekruising_New",
+			"right": "typekruising_Old"
+		},
 		{
 			"name": "cmp_ws_categorie",
 			"table": "duikersifonhevel",
 			"type": "category",
-			"description":"Verschil in ws_categorie",
+			"description": "Verschil in ws_categorie",
 			"priority": "critical",
-			"left": "ws_categorie_A",
-			"right": "ws_categorie_B"
+			"left": "ws_categorie_New",
+			"right": "ws_categorie_Old"
 		},
 		{
 			"name": "cmp_inlaatfunctie",
 			"table": "duikersifonhevel",
 			"type": "category",
-			"description":"Verschil in inlaatfunctie",
+			"description": "Verschil in inlaatfunctie",
 			"priority": "critical",
-			"left": "ws_inlaatfunctie_A",
-			"right": "ws_inlaatfunctie_B"
+			"left": "ws_inlaatfunctie_New",
+			"right": "ws_inlaatfunctie_Old"
 		},
 		{
 			"name": "cmp_ws_afsluitwijze1",
 			"table": "duikersifonhevel",
 			"type": "category",
-			"description":"Verschil in afsluitwijze 1",
+			"description": "Verschil in afsluitwijze 1",
 			"priority": "critical",
-			"left": "ws_afsluitwijze1_A",
-			"right": "ws_afsluitwijze1_B"
+			"left": "ws_afsluitwijze1_New",
+			"right": "ws_afsluitwijze1_Old"
 		},
 		{
 			"name": "cmp_ws_afsluitwijze2",
 			"table": "duikersifonhevel",
 			"type": "category",
-			"description":"Verschil in afsluitwijze 2",
+			"description": "Verschil in afsluitwijze 2",
 			"priority": "warning",
-			"left": "ws_afsluitwijze2_A",
-			"right": "ws_afsluitwijze2_B"
+			"left": "ws_afsluitwijze2_New",
+			"right": "ws_afsluitwijze2_Old"
 		},
 		{
 			"name": "cmp_geom_length",
 			"table": "duikersifonhevel",
 			"type": "numeric",
-			"description":"Verschil in lengte van geometrie",
+			"description": "Verschil in lengte van geometrie",
 			"priority": "critical",
 			"function": {
 				"difference": {
-					"left": "geom_length_A",
-					"right": "geom_length_B"
+					"left": "geom_length_New",
+					"right": "geom_length_Old"
 				}
 			}
 		},
-		
-		
 		{
 			"name": "cmp_functiegemaal",
 			"table": "gemaal",
 			"type": "category",
-			"description":"Verschil in functiegemaal",
+			"description": "Verschil in functiegemaal",
 			"priority": "critical",
-			"left": "functiegemaal_A",
-			"right": "functiegemaal_B"
+			"left": "functiegemaal_New",
+			"right": "functiegemaal_Old"
 		},
 		{
 			"name": "cmp_maximalecapaciteit",
 			"table": "gemaal",
 			"type": "numeric",
-			"description":"Verschil in maximale capaciteit",
+			"description": "Verschil in maximale capaciteit",
 			"priority": "critical",
 			"function": {
 				"difference": {
-					"left": "maximalecapaciteit_A",
-					"right": "maximalecapaciteit_A"
+					"left": "maximalecapaciteit_New",
+					"right": "maximalecapaciteit_New"
 				}
 			}
 		}

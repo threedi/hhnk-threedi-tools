@@ -185,8 +185,8 @@ class DAMO(DataSet):
                 table_B[layer]["origin"] = layer
 
                 # outer merge on the two tables with suffixes
-                table_A[layer] = table_A[layer].add_suffix("_A").rename(columns={"code_A": "code"})
-                table_B[layer] = table_B[layer].add_suffix("_B").rename(columns={"code_B": "code"})
+                table_A[layer] = table_A[layer].add_suffix("_New").rename(columns={"code_New": "code"})
+                table_B[layer] = table_B[layer].add_suffix("_Old").rename(columns={"code_Old": "code"})
 
                 # make sure the code column is of type string for proper merging
                 table_A[layer]["code"] = table_A[layer]["code"].astype("string")
@@ -197,23 +197,23 @@ class DAMO(DataSet):
                 table_merged = gpd.GeoDataFrame(table_merged, geometry="geometry")
 
                 # fillna values of the two columns by False
-                table_merged[["dataset_A", "dataset_B"]] = table_merged[["dataset_A", "dataset_B"]].fillna(value=False)
+                table_merged[["dataset_New", "dataset_Old"]] = table_merged[["dataset_New", "dataset_Old"]].fillna(value=False)
 
                 # add column with values A, B or AB, depending on code
                 inboth = []
                 geometry_adjusted = []
                 for i in range(len(table_merged)):
-                    if table_merged["dataset_A"][i] & table_merged["dataset_B"][i]:
+                    if table_merged["dataset_New"][i] & table_merged["dataset_Old"][i]:
                         inboth.append(f"{self.model_name} both")
                         # geometry_adjusted.append(table_merged['geometry_A'][i] != table_merged['geometry_B'][i])
-                    elif table_merged["dataset_A"][i] and not table_merged["dataset_B"][i]:
+                    elif table_merged["dataset_New"][i] and not table_merged["dataset_Old"][i]:
                         inboth.append(f"{self.model_name} new")
                         # geometry_adjusted.append(None)
                     else:
                         inboth.append(f"{self.model_name} old")
                         # geometry_adjusted.append(None)
                 table_merged["in_both"] = inboth
-                table_merged["geometry_adjusted"] = table_merged["geometry_A"] != table_merged["geometry_B"]
+                table_merged["geometry_adjusted"] = table_merged["geometry_New"] != table_merged["geometry_Old"]
 
                 # use geometry of A (new) when feature exists in A or in A and B, use geometry of B (old) when feature
                 # only exists in B
@@ -240,31 +240,31 @@ class DAMO(DataSet):
 
                         table_merged.loc[
                             table_merged["in_both"].isin([f"{self.model_name} new", f"{self.model_name} both"]),
-                            "geom_area_A",
+                            "geom_area_New",
                         ] = table_merged["geometry"].area
                         table_merged.loc[
                             ~table_merged["in_both"].isin([f"{self.model_name} new", f"{self.model_name} both"]),
-                            "geom_area_A",
+                            "geom_area_New",
                         ] = None
 
                         table_merged.loc[
                             table_merged["in_both"].isin([f"{self.model_name} old", f"{self.model_name} both"]),
-                            "geom_area_B",
+                            "geom_area_Old",
                         ] = table_merged["geometry"].area
                         table_merged.loc[
                             ~table_merged["in_both"].isin([f"{self.model_name} old", f"{self.model_name} both"]),
-                            "geom_area_B",
+                            "geom_area_Old",
                         ] = None
 
-                        table_merged["geom_length_A"] = 0
-                        table_merged["geom_length_B"] = 0
+                        table_merged["geom_length_New"] = 0
+                        table_merged["geom_length_Old"] = 0
                     else:
                         # hier iets om geometrieen te bepalen
                         intersection = gpd.GeoDataFrame(
                             pd.concat(
                                 [
                                     table_merged.code,
-                                    table_merged["geometry_A"].intersection(table_merged["geometry_B"]),
+                                    table_merged["geometry_New"].intersection(table_merged["geometry_Old"]),
                                 ],
                                 axis=1,
                             )
@@ -272,18 +272,18 @@ class DAMO(DataSet):
                         intersection["origin"] = "intersection"
                         diff_A = gpd.GeoDataFrame(
                             pd.concat(
-                                [table_merged.code, table_merged["geometry_A"].difference(table_merged["geometry_B"])],
+                                [table_merged.code, table_merged["geometry_New"].difference(table_merged["geometry_Old"])],
                                 axis=1,
                             )
                         ).rename(columns={0: "geometry_diff"})
-                        diff_A["origin"] = "diff_A"
+                        diff_A["origin"] = "diff_New"
                         diff_B = gpd.GeoDataFrame(
                             pd.concat(
-                                [table_merged.code, table_merged["geometry_B"].difference(table_merged["geometry_A"])],
+                                [table_merged.code, table_merged["geometry_New"].difference(table_merged["geometry_Old"])],
                                 axis=1,
                             )
                         ).rename(columns={0: "geometry_diff"})
-                        diff_B["origin"] = "diff_B"
+                        diff_B["origin"] = "diff_Old"
 
                         df_intersections = pd.concat([intersection, diff_A, diff_B])
                         df_intersections = df_intersections[df_intersections["geometry_diff"].notna()]
@@ -293,7 +293,7 @@ class DAMO(DataSet):
                         # table_merged = table_merged[table_merged.geometry_diff.geom_type == 'Polygon']
 
                         table_merged["geometry_diff"] = table_merged.apply(
-                            lambda x: self.get_significant_geometry(x["in_both"], x["geometry_A"], x["geometry_B"])
+                            lambda x: self.get_significant_geometry(x["in_both"], x["geometry_New"], x["geometry_Old"])
                             if (x["geometry_diff"] is None)
                             else x["geometry_diff"],
                             axis=1,
@@ -306,7 +306,7 @@ class DAMO(DataSet):
 
                 else:
                     table_merged["geometry"] = table_merged.apply(
-                        lambda x: self.get_significant_geometry(x["in_both"], x["geometry_A"], x["geometry_B"]), axis=1
+                        lambda x: self.get_significant_geometry(x["in_both"], x["geometry_New"], x["geometry_Old"]), axis=1
                     )
                 # remove all geometry columns except 'geometry'
                 table_merged = self.drop_unused_geoseries(table_merged, keep="geometry")
@@ -325,14 +325,14 @@ class DAMO(DataSet):
         self.logger.debug("create statistics")
         statistics = pd.DataFrame(
             columns=[
-                "Count A",
-                "Count B",
+                "Count New",
+                "Count Old",
                 "Count difference",
-                "Length A",
-                "Length B",
+                "Length New",
+                "Length Old",
                 "Length difference",
-                "Area A",
-                "Area B",
+                "Area New",
+                "Area Old",
                 "Area difference",
             ]
         )
@@ -357,7 +357,7 @@ class DAMO(DataSet):
                     (table_C[layer_name]["in_both"] == f"{self.model_name} new")
                     | (table_C[layer_name]["in_both"] == f"{self.model_name} both")
                 ]
-                .geom_length_A
+                .geom_length_New
             )
             length_B = sum(
                 table_C[layer_name]
@@ -365,7 +365,7 @@ class DAMO(DataSet):
                     (table_C[layer_name]["in_both"] == f"{self.model_name} old")
                     | (table_C[layer_name]["in_both"] == f"{self.model_name} both")
                 ]
-                .geom_length_B
+                .geom_length_Old
             )
             length_diff = length_B - length_A
             area_A = sum(
@@ -374,7 +374,7 @@ class DAMO(DataSet):
                     (table_C[layer_name]["in_both"] == f"{self.model_name} new")
                     | (table_C[layer_name]["in_both"] == f"{self.model_name} both")
                 ]
-                .geom_area_A
+                .geom_area_New
             )
             area_B = sum(
                 table_C[layer_name]
@@ -382,7 +382,7 @@ class DAMO(DataSet):
                     (table_C[layer_name]["in_both"] == f"{self.model_name} old")
                     | (table_C[layer_name]["in_both"] == f"{self.model_name} both")
                 ]
-                .geom_area_B
+                .geom_area_Old
             )
             area_diff = area_B - area_A
             statistics.loc[layer_name, :] = [
