@@ -35,7 +35,7 @@
 			"function": {
 				"difference": {
 					"left": "geom_area_New",
-					"right": "geom_area_New"
+					"right": "geom_area_Old"
 				}
 			}
 		},
@@ -70,7 +70,7 @@
 			"table": "brug",
 			"type": "category",
 			"description": "Verschil in categorie",
-			"priority": "critical",
+			"priority": "warning",
 			"left": "ws_categorie_New",
 			"right": "ws_categorie_Old"
 		},
@@ -212,7 +212,7 @@
 			"table": "duikersifonhevel",
 			"type": "category",
 			"description": "Verschil in ws_categorie",
-			"priority": "critical",
+			"priority": "warning",
 			"left": "ws_categorie_New",
 			"right": "ws_categorie_Old"
 		},
@@ -283,7 +283,7 @@
 			"table": "duikers_op_peilgrens",
 			"type": "category",
 			"description": "Verschil in ws_categorie",
-			"priority": "critical",
+			"priority": "warning",
 			"left": "categorie_New",
 			"right": "categorie_Old"
 		},
@@ -1183,7 +1183,7 @@
 			"table": "stuw",
 			"type": "category",
 			"description": "Verschil in ws_categorie",
-			"priority": "critical",
+			"priority": "warning",
 			"left": "ws_categorie_New",
 			"right": "ws_categorie_Old"
 		},
@@ -1197,11 +1197,11 @@
 			"right": "ws_kruinvorm_Old"
 		},
 		{
-			"name": "cmp_ws_functiestuw",
+			"name": "cmp_ws_functie",
 			"table": "stuw",
 			"type": "category",
-			"description": "Verschil in ws_functiestuw",
-			"priority": "critical",
+			"description": "Verschil in ws_functie",
+			"priority": "warning",
 			"left": "ws_functiestuw_New",
 			"right": "ws_functiestuw_Old"
 		},
@@ -1233,17 +1233,22 @@
 			"right": "moet_op_peilgrens_Old"
 		},
 		{
+			"name": "cmp_functie",
+			"table": "stuwen_op_peilgrens",
+			"type": "category",
+			"description": "Verschil in functie",
+			"priority": "warning",
+			"left": "functie_New",
+			"right": "functie_Old"
+		},
+		{
 			"name": "cmp_kruinhoogte_hdb",
 			"table": "stuwen_op_peilgrens",
-			"type": "numeric",
+			"type": "category",
 			"description": "Verschil in kruinhoogte_hdb",
 			"priority": "critical",
-			"function": {
-				"difference": {
-					"left": "kruinhoogte_hdb_New",
-					"right": "kruinhoogte_hdb_Old"
-				}
-			}
+			"left": "kruinhoogte_hdb_New",
+			"right": "kruinhoogte_hdb_Old"
 		},
 		{
 			"name": "cmp_geom_type",
@@ -1253,6 +1258,77 @@
 			"priority": "critical",
 			"left": "geom_type_New",
 			"right": "geom_type_Old"
+		},
+		{
+			"name": "cmp_ws_categorie",
+			"table": "vastedam",
+			"type": "category",
+			"description": "Verschil in ws_categorie",
+			"priority": "warning",
+			"left": "ws_categorie_New",
+			"right": "ws_categorie_Old"
+		},
+		{
+			"name": "cmp_geom_type",
+			"table": "vastedam",
+			"type": "category",
+			"description": "Verschil in geom_type",
+			"priority": "critical",
+			"left": "geom_type_New",
+			"right": "geom_type_Old"
+		},
+		{
+			"name": "cmp_geom_area",
+			"table": "vastedam",
+			"type": "numeric",
+			"description": "Verschil in area",
+			"priority": "warning",
+			"function": {
+				"difference": {
+					"left": "geom_area_New",
+					"right": "geom_area_Old"
+				}
+			}
+		},
+		{
+			"name": "cmp_ws_categorie",
+			"table": "vispassage",
+			"type": "category",
+			"description": "Verschil in ws_categorie",
+			"priority": "warning",
+			"left": "ws_categorie_New",
+			"right": "ws_categorie_Old"
+		},
+		{
+			"name": "cmp_ws_naam",
+			"table": "vispassage",
+			"type": "category",
+			"description": "Verschil in ws_naam",
+			"priority": "warning",
+			"left": "naam_New",
+			"right": "naam_Old"
+		},
+		{
+			"name": "cmp_geom_type",
+			"table": "vispassage",
+			"type": "category",
+			"description": "Verschil in geom_type",
+			"priority": "critical",
+			"left": "geom_type_New",
+			"right": "geom_type_Old"
+		},
+		{
+			"name": "cmp_geom_area",
+			"table": "vispassage",
+			"type": "numeric",
+			"description": "Verschil in area",
+			"priority": "warning",
+			"function": {
+				"difference": {
+					"left": "geom_area_New",
+					"right": "geom_area_Old"
+				}
+			}
 		}
 	]
 }
