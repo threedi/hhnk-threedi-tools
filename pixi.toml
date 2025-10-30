@@ -150,6 +150,7 @@ seaborn = "*"
 pip = "*"
 urllib3= "1.*"
 ruff = "*"
+gitpython = "*"
 
 [feature.py39.pypi-dependencies]
 lazy_loader= "*"
