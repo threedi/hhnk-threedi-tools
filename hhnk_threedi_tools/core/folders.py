@@ -185,6 +185,7 @@ class Folders(Folder):
             "dem": self.source_data.rasters.dem.path_if_exists,
             "hydamo": self.source_data.hydamo.path_if_exists,
             "validation_result": self.source_data.hydamo_validation.validation_result.path_if_exists,
+            "vergelijkingstool": self.source_data.vergelijkingstool.path_if_exists,
             "hdb": self.source_data.hdb.path_if_exists,
             "polder_shapefile": self.source_data.polder_polygon.path_if_exists,
             "channels_shapefile": self.source_data.modelbuilder.channel_from_profiles.path_if_exists,
@@ -271,6 +272,7 @@ class SourceDir(Folder):
         # Folders
         self.modelbuilder = self.ModelbuilderPaths(self.base, create=create)
         self.hydamo_validation = self.HydamoValidationPaths(self.base, create=create)
+        self.vergelijkingstool = self.VergelijkingstoolPaths(self.base, create=create)
         self.peilgebieden = self.PeilgebiedenPaths(self.base, create=create)
         self.wsa_output_administratie = self.WsaOutputAdministratie(self.base, create=create)
         self.rasters = self.Rasters(self.base, create=create)
@@ -317,6 +319,7 @@ class SourceDir(Folder):
                {self.space}└── modelbuilder_output
                {self.space}└── hydamo_validation
                {self.space}└── peilgebieden
+               {self.space}└── vergelijkingstool
                {self.space}└── wsa_output_administratie
                
                """
@@ -340,6 +343,20 @@ class SourceDir(Folder):
         def __init__(self, base, create):
             super().__init__(os.path.join(base, "hydamo_validation"), create=create)
             self.add_file("validation_result", "validation_result.gpkg")
+
+    class VergelijkingstoolPaths(Folder):
+        def __init__(self, base, create):
+            super().__init__(os.path.join(base, "vergelijkingstool"), create=create)
+
+            self.input_data_old = self.full_path("input_data_old")
+            self.input_data_old.mkdir(parents=True, exist_ok=True)
+            self.add_file("input_data_old", "DAMO.gpkg")
+            self.add_file("input_data_old", "HDB.gpkg")
+
+            self.output = self.full_path("output")
+            self.output.mkdir(parents=True, exist_ok=True)
+            self.add_file("output", "Threedi_comparison.gpkg")
+            self.add_file("output", "DAMO_comparison.gpkg")
 
     class PeilgebiedenPaths(Folder):
         # TODO deze map moet een andere naam en plek krijgen.

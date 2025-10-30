@@ -1,8 +1,14 @@
 {
-    "v2_weir": {
-        "name": "v2_weir",
+    "v2_weir_view": {
+        "name": "v2_weir_view",
         "columns": {
-            "code": "code"
+            "weir_code": "code"
+        }
+    },
+    "v2_culvert_view": {
+        "name": "v2_culvert_view",
+        "columns": {
+            "cul_code": "code"
         }
     }
 }
