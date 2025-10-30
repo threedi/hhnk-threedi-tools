@@ -84,6 +84,9 @@ threedigrid-builder = ">=1.24.3"
 threedidepth = "==0.6.3"
 # hhnk-research-tools = { git = "https://github.com/hhnk/hhnk-research-tools.git", rev = "main" }
 
+# modellen repo deps
+gitpython = "*"
+
 # HHNK deps
 hhnk-threedi-tools = { path = ".", editable = true }
 lazy_loader= "*"
