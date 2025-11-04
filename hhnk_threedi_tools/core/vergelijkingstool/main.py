@@ -216,16 +216,13 @@ if __name__ == "__main__":
 
     # fn_model_attribute_comparison = json_file / "model_attribute_comparison.json"
     # Define outputs
-    fn_DAMO_comparison_export = out_put_files / "DAMO_comparison_Test_127.gpkg"
+    fn_DAMO_comparison_export = out_put_files / "DAMO_comparison_hydro_deelgebieden_levee_144.gpkg"
 
     # Layers To Compare DAMO_DAMO
     layer_selection = True
-    layers_input_damo_selection = ["Stuw"]
-    layers_input_hdb_selection = [
-        "duikers_op_peilgrens",
-        "stuwen_op_peilgrens",
-    ]
-    fn_threedi_comparison_export = out_put_files / "Threedi_comparison_duikers_op_peilgrens_54.gpkg"
+    layers_input_damo_selection = ["PeilgebiedPraktijk"]
+    layers_input_hdb_selection = ["hydro_deelgebieden", "Levee_overstromingsmodel"]
+    fn_threedi_comparison_export = out_put_files / "Threedi_comparison_54.gpkg"
 
     compare_with = "Compare with Damo"
     # compare_with = "Compare with 3Di"

@@ -843,33 +843,6 @@
         </config>
       </editWidget>
     </field>
-    <field configurationFlags="NoFlag" name="naam_New">
-      <editWidget type="TextEdit">
-        <config>
-          <Option/>
-        </config>
-      </editWidget>
-    </field>
-    <field configurationFlags="NoFlag" name="functiegemaal_New">
-      <editWidget type="TextEdit">
-        <config>
-          <Option type="Map">
-            <Option type="bool" value="false" name="IsMultiline"/>
-            <Option type="bool" value="false" name="UseHtml"/>
-          </Option>
-        </config>
-      </editWidget>
-    </field>
-    <field configurationFlags="NoFlag" name="maximalecapaciteit_New">
-      <editWidget type="TextEdit">
-        <config>
-          <Option type="Map">
-            <Option type="bool" value="false" name="IsMultiline"/>
-            <Option type="bool" value="false" name="UseHtml"/>
-          </Option>
-        </config>
-      </editWidget>
-    </field>
     <field configurationFlags="NoFlag" name="ws_categorie_New">
       <editWidget type="TextEdit">
         <config>
@@ -877,6 +850,34 @@
             <Option type="bool" value="false" name="IsMultiline"/>
             <Option type="bool" value="false" name="UseHtml"/>
           </Option>
+        </config>
+      </editWidget>
+    </field>
+    <field configurationFlags="NoFlag" name="opmerkingen_New">
+      <editWidget type="TextEdit">
+        <config>
+          <Option/>
+        </config>
+      </editWidget>
+    </field>
+    <field configurationFlags="NoFlag" name="aanslagpeil_rel_New">
+      <editWidget type="TextEdit">
+        <config>
+          <Option/>
+        </config>
+      </editWidget>
+    </field>
+    <field configurationFlags="NoFlag" name="afslagpeil_rel_New">
+      <editWidget type="TextEdit">
+        <config>
+          <Option/>
+        </config>
+      </editWidget>
+    </field>
+    <field configurationFlags="NoFlag" name="moet_op_peilgrens_New">
+      <editWidget type="TextEdit">
+        <config>
+          <Option/>
         </config>
       </editWidget>
     </field>
@@ -932,30 +933,6 @@
         </config>
       </editWidget>
     </field>
-    <field configurationFlags="NoFlag" name="naam_Old">
-      <editWidget type="TextEdit">
-        <config>
-          <Option type="Map">
-            <Option type="bool" value="false" name="IsMultiline"/>
-            <Option type="bool" value="false" name="UseHtml"/>
-          </Option>
-        </config>
-      </editWidget>
-    </field>
-    <field configurationFlags="NoFlag" name="functiegemaal_Old">
-      <editWidget type="TextEdit">
-        <config>
-          <Option/>
-        </config>
-      </editWidget>
-    </field>
-    <field configurationFlags="NoFlag" name="maximalecapaciteit_Old">
-      <editWidget type="TextEdit">
-        <config>
-          <Option/>
-        </config>
-      </editWidget>
-    </field>
     <field configurationFlags="NoFlag" name="ws_categorie_Old">
       <editWidget type="TextEdit">
         <config>
@@ -966,13 +943,31 @@
         </config>
       </editWidget>
     </field>
-    <field configurationFlags="NoFlag" name="geom_type_Old">
+    <field configurationFlags="NoFlag" name="opmerkingen_Old">
       <editWidget type="TextEdit">
         <config>
-          <Option type="Map">
-            <Option type="bool" value="false" name="IsMultiline"/>
-            <Option type="bool" value="false" name="UseHtml"/>
-          </Option>
+          <Option/>
+        </config>
+      </editWidget>
+    </field>
+    <field configurationFlags="NoFlag" name="aanslagpeil_rel_Old">
+      <editWidget type="TextEdit">
+        <config>
+          <Option/>
+        </config>
+      </editWidget>
+    </field>
+    <field configurationFlags="NoFlag" name="afslagpeil_rel_Old">
+      <editWidget type="TextEdit">
+        <config>
+          <Option/>
+        </config>
+      </editWidget>
+    </field>
+    <field configurationFlags="NoFlag" name="moet_op_peilgrens_Old">
+      <editWidget type="TextEdit">
+        <config>
+          <Option/>
         </config>
       </editWidget>
     </field>
@@ -1040,75 +1035,17 @@
         </config>
       </editWidget>
     </field>
-    <field configurationFlags="NoFlag" name="cmp_ID">
+    <field configurationFlags="NoFlag" name="cmp_modelleren_als">
       <editWidget type="TextEdit">
         <config>
-          <Option type="Map">
-            <Option type="bool" value="false" name="IsMultiline"/>
-            <Option type="bool" value="false" name="UseHtml"/>
-          </Option>
+          <Option/>
         </config>
       </editWidget>
     </field>
-    <field configurationFlags="NoFlag" name="cmp_ID_priority">
+    <field configurationFlags="NoFlag" name="cmp_modelleren_als_priority">
       <editWidget type="TextEdit">
         <config>
-          <Option type="Map">
-            <Option type="bool" value="false" name="IsMultiline"/>
-            <Option type="bool" value="false" name="UseHtml"/>
-          </Option>
-        </config>
-      </editWidget>
-    </field>
-    <field configurationFlags="NoFlag" name="cmp_functiegemaal">
-      <editWidget type="TextEdit">
-        <config>
-          <Option type="Map">
-            <Option type="bool" value="false" name="IsMultiline"/>
-            <Option type="bool" value="false" name="UseHtml"/>
-          </Option>
-        </config>
-      </editWidget>
-    </field>
-    <field configurationFlags="NoFlag" name="cmp_functiegemaal_priority">
-      <editWidget type="TextEdit">
-        <config>
-          <Option type="Map">
-            <Option type="bool" value="false" name="IsMultiline"/>
-            <Option type="bool" value="false" name="UseHtml"/>
-          </Option>
-        </config>
-      </editWidget>
-    </field>
-    <field configurationFlags="NoFlag" name="cmp_maximalecapaciteit">
-      <editWidget type="TextEdit">
-        <config>
-          <Option type="Map">
-            <Option type="bool" value="false" name="IsMultiline"/>
-            <Option type="bool" value="false" name="UseHtml"/>
-          </Option>
-        </config>
-      </editWidget>
-    </field>
-    <field configurationFlags="NoFlag" name="cmp_maximalecapaciteit_change_NaN">
-      <editWidget type="CheckBox">
-        <config>
-          <Option type="Map">
-            <Option type="bool" value="false" name="AllowNullState"/>
-            <Option type="QString" value="" name="CheckedState"/>
-            <Option type="int" value="0" name="TextDisplayMethod"/>
-            <Option type="QString" value="" name="UncheckedState"/>
-          </Option>
-        </config>
-      </editWidget>
-    </field>
-    <field configurationFlags="NoFlag" name="cmp_maximalecapaciteit_priority">
-      <editWidget type="TextEdit">
-        <config>
-          <Option type="Map">
-            <Option type="bool" value="false" name="IsMultiline"/>
-            <Option type="bool" value="false" name="UseHtml"/>
-          </Option>
+          <Option/>
         </config>
       </editWidget>
     </field>
@@ -1123,26 +1060,6 @@
       </editWidget>
     </field>
     <field configurationFlags="NoFlag" name="cmp_categorie_priority">
-      <editWidget type="TextEdit">
-        <config>
-          <Option type="Map">
-            <Option type="bool" value="false" name="IsMultiline"/>
-            <Option type="bool" value="false" name="UseHtml"/>
-          </Option>
-        </config>
-      </editWidget>
-    </field>
-    <field configurationFlags="NoFlag" name="cmp_geom_type">
-      <editWidget type="TextEdit">
-        <config>
-          <Option type="Map">
-            <Option type="bool" value="false" name="IsMultiline"/>
-            <Option type="bool" value="false" name="UseHtml"/>
-          </Option>
-        </config>
-      </editWidget>
-    </field>
-    <field configurationFlags="NoFlag" name="cmp_geom_type_priority">
       <editWidget type="TextEdit">
         <config>
           <Option type="Map">
@@ -1185,77 +1102,65 @@
     <alias field="level_0" index="1" name=""/>
     <alias field="level_1" index="2" name=""/>
     <alias field="code" index="3" name=""/>
-    <alias field="naam_New" index="4" name=""/>
-    <alias field="functiegemaal_New" index="5" name=""/>
-    <alias field="maximalecapaciteit_New" index="6" name=""/>
-    <alias field="ws_categorie_New" index="7" name=""/>
-    <alias field="geom_type_New" index="8" name=""/>
-    <alias field="geom_length_New" index="9" name=""/>
-    <alias field="geom_area_New" index="10" name=""/>
-    <alias field="dataset_New" index="11" name=""/>
-    <alias field="origin_New" index="12" name=""/>
-    <alias field="naam_Old" index="13" name=""/>
-    <alias field="functiegemaal_Old" index="14" name=""/>
-    <alias field="maximalecapaciteit_Old" index="15" name=""/>
-    <alias field="ws_categorie_Old" index="16" name=""/>
-    <alias field="geom_type_Old" index="17" name=""/>
-    <alias field="geom_length_Old" index="18" name=""/>
-    <alias field="geom_area_Old" index="19" name=""/>
-    <alias field="dataset_Old" index="20" name=""/>
-    <alias field="origin_Old" index="21" name=""/>
-    <alias field="in_both" index="22" name=""/>
-    <alias field="geometry_adjusted" index="23" name=""/>
-    <alias field="cmp_ID" index="24" name=""/>
-    <alias field="cmp_ID_priority" index="25" name=""/>
-    <alias field="cmp_functiegemaal" index="26" name=""/>
-    <alias field="cmp_functiegemaal_priority" index="27" name=""/>
-    <alias field="cmp_maximalecapaciteit" index="28" name=""/>
-    <alias field="cmp_maximalecapaciteit_change_NaN" index="29" name=""/>
-    <alias field="cmp_maximalecapaciteit_priority" index="30" name=""/>
-    <alias field="cmp_categorie" index="31" name=""/>
-    <alias field="cmp_categorie_priority" index="32" name=""/>
-    <alias field="cmp_geom_type" index="33" name=""/>
-    <alias field="cmp_geom_type_priority" index="34" name=""/>
-    <alias field="number_of_info" index="35" name=""/>
-    <alias field="number_of_warning" index="36" name=""/>
-    <alias field="number_of_critical" index="37" name=""/>
+    <alias field="ws_categorie_New" index="4" name=""/>
+    <alias field="opmerkingen_New" index="5" name=""/>
+    <alias field="aanslagpeil_rel_New" index="6" name=""/>
+    <alias field="afslagpeil_rel_New" index="7" name=""/>
+    <alias field="moet_op_peilgrens_New" index="8" name=""/>
+    <alias field="geom_type_New" index="9" name=""/>
+    <alias field="geom_length_New" index="10" name=""/>
+    <alias field="geom_area_New" index="11" name=""/>
+    <alias field="dataset_New" index="12" name=""/>
+    <alias field="origin_New" index="13" name=""/>
+    <alias field="ws_categorie_Old" index="14" name=""/>
+    <alias field="opmerkingen_Old" index="15" name=""/>
+    <alias field="aanslagpeil_rel_Old" index="16" name=""/>
+    <alias field="afslagpeil_rel_Old" index="17" name=""/>
+    <alias field="moet_op_peilgrens_Old" index="18" name=""/>
+    <alias field="geom_length_Old" index="19" name=""/>
+    <alias field="geom_area_Old" index="20" name=""/>
+    <alias field="dataset_Old" index="21" name=""/>
+    <alias field="origin_Old" index="22" name=""/>
+    <alias field="in_both" index="23" name=""/>
+    <alias field="geometry_adjusted" index="24" name=""/>
+    <alias field="cmp_modelleren_als" index="25" name=""/>
+    <alias field="cmp_modelleren_als_priority" index="26" name=""/>
+    <alias field="cmp_categorie" index="27" name=""/>
+    <alias field="cmp_categorie_priority" index="28" name=""/>
+    <alias field="number_of_info" index="29" name=""/>
+    <alias field="number_of_warning" index="30" name=""/>
+    <alias field="number_of_critical" index="31" name=""/>
   </aliases>
   <splitPolicies>
     <policy policy="DefaultValue" field="fid"/>
     <policy policy="DefaultValue" field="level_0"/>
     <policy policy="DefaultValue" field="level_1"/>
     <policy policy="Duplicate" field="code"/>
-    <policy policy="Duplicate" field="naam_New"/>
-    <policy policy="DefaultValue" field="functiegemaal_New"/>
-    <policy policy="DefaultValue" field="maximalecapaciteit_New"/>
     <policy policy="DefaultValue" field="ws_categorie_New"/>
+    <policy policy="Duplicate" field="opmerkingen_New"/>
+    <policy policy="Duplicate" field="aanslagpeil_rel_New"/>
+    <policy policy="Duplicate" field="afslagpeil_rel_New"/>
+    <policy policy="Duplicate" field="moet_op_peilgrens_New"/>
     <policy policy="DefaultValue" field="geom_type_New"/>
     <policy policy="DefaultValue" field="geom_length_New"/>
     <policy policy="DefaultValue" field="geom_area_New"/>
     <policy policy="DefaultValue" field="dataset_New"/>
     <policy policy="DefaultValue" field="origin_New"/>
-    <policy policy="DefaultValue" field="naam_Old"/>
-    <policy policy="Duplicate" field="functiegemaal_Old"/>
-    <policy policy="Duplicate" field="maximalecapaciteit_Old"/>
     <policy policy="DefaultValue" field="ws_categorie_Old"/>
-    <policy policy="DefaultValue" field="geom_type_Old"/>
+    <policy policy="Duplicate" field="opmerkingen_Old"/>
+    <policy policy="Duplicate" field="aanslagpeil_rel_Old"/>
+    <policy policy="Duplicate" field="afslagpeil_rel_Old"/>
+    <policy policy="Duplicate" field="moet_op_peilgrens_Old"/>
     <policy policy="DefaultValue" field="geom_length_Old"/>
     <policy policy="DefaultValue" field="geom_area_Old"/>
     <policy policy="DefaultValue" field="dataset_Old"/>
     <policy policy="DefaultValue" field="origin_Old"/>
     <policy policy="DefaultValue" field="in_both"/>
     <policy policy="DefaultValue" field="geometry_adjusted"/>
-    <policy policy="DefaultValue" field="cmp_ID"/>
-    <policy policy="DefaultValue" field="cmp_ID_priority"/>
-    <policy policy="DefaultValue" field="cmp_functiegemaal"/>
-    <policy policy="DefaultValue" field="cmp_functiegemaal_priority"/>
-    <policy policy="DefaultValue" field="cmp_maximalecapaciteit"/>
-    <policy policy="DefaultValue" field="cmp_maximalecapaciteit_change_NaN"/>
-    <policy policy="DefaultValue" field="cmp_maximalecapaciteit_priority"/>
+    <policy policy="Duplicate" field="cmp_modelleren_als"/>
+    <policy policy="Duplicate" field="cmp_modelleren_als_priority"/>
     <policy policy="DefaultValue" field="cmp_categorie"/>
     <policy policy="DefaultValue" field="cmp_categorie_priority"/>
-    <policy policy="DefaultValue" field="cmp_geom_type"/>
-    <policy policy="DefaultValue" field="cmp_geom_type_priority"/>
     <policy policy="DefaultValue" field="number_of_info"/>
     <policy policy="Duplicate" field="number_of_warning"/>
     <policy policy="DefaultValue" field="number_of_critical"/>
@@ -1265,37 +1170,31 @@
     <default field="level_0" expression="" applyOnUpdate="0"/>
     <default field="level_1" expression="" applyOnUpdate="0"/>
     <default field="code" expression="" applyOnUpdate="0"/>
-    <default field="naam_New" expression="" applyOnUpdate="0"/>
-    <default field="functiegemaal_New" expression="" applyOnUpdate="0"/>
-    <default field="maximalecapaciteit_New" expression="" applyOnUpdate="0"/>
     <default field="ws_categorie_New" expression="" applyOnUpdate="0"/>
+    <default field="opmerkingen_New" expression="" applyOnUpdate="0"/>
+    <default field="aanslagpeil_rel_New" expression="" applyOnUpdate="0"/>
+    <default field="afslagpeil_rel_New" expression="" applyOnUpdate="0"/>
+    <default field="moet_op_peilgrens_New" expression="" applyOnUpdate="0"/>
     <default field="geom_type_New" expression="" applyOnUpdate="0"/>
     <default field="geom_length_New" expression="" applyOnUpdate="0"/>
     <default field="geom_area_New" expression="" applyOnUpdate="0"/>
     <default field="dataset_New" expression="" applyOnUpdate="0"/>
     <default field="origin_New" expression="" applyOnUpdate="0"/>
-    <default field="naam_Old" expression="" applyOnUpdate="0"/>
-    <default field="functiegemaal_Old" expression="" applyOnUpdate="0"/>
-    <default field="maximalecapaciteit_Old" expression="" applyOnUpdate="0"/>
     <default field="ws_categorie_Old" expression="" applyOnUpdate="0"/>
-    <default field="geom_type_Old" expression="" applyOnUpdate="0"/>
+    <default field="opmerkingen_Old" expression="" applyOnUpdate="0"/>
+    <default field="aanslagpeil_rel_Old" expression="" applyOnUpdate="0"/>
+    <default field="afslagpeil_rel_Old" expression="" applyOnUpdate="0"/>
+    <default field="moet_op_peilgrens_Old" expression="" applyOnUpdate="0"/>
     <default field="geom_length_Old" expression="" applyOnUpdate="0"/>
     <default field="geom_area_Old" expression="" applyOnUpdate="0"/>
     <default field="dataset_Old" expression="" applyOnUpdate="0"/>
     <default field="origin_Old" expression="" applyOnUpdate="0"/>
     <default field="in_both" expression="" applyOnUpdate="0"/>
     <default field="geometry_adjusted" expression="" applyOnUpdate="0"/>
-    <default field="cmp_ID" expression="" applyOnUpdate="0"/>
-    <default field="cmp_ID_priority" expression="" applyOnUpdate="0"/>
-    <default field="cmp_functiegemaal" expression="" applyOnUpdate="0"/>
-    <default field="cmp_functiegemaal_priority" expression="" applyOnUpdate="0"/>
-    <default field="cmp_maximalecapaciteit" expression="" applyOnUpdate="0"/>
-    <default field="cmp_maximalecapaciteit_change_NaN" expression="" applyOnUpdate="0"/>
-    <default field="cmp_maximalecapaciteit_priority" expression="" applyOnUpdate="0"/>
+    <default field="cmp_modelleren_als" expression="" applyOnUpdate="0"/>
+    <default field="cmp_modelleren_als_priority" expression="" applyOnUpdate="0"/>
     <default field="cmp_categorie" expression="" applyOnUpdate="0"/>
     <default field="cmp_categorie_priority" expression="" applyOnUpdate="0"/>
-    <default field="cmp_geom_type" expression="" applyOnUpdate="0"/>
-    <default field="cmp_geom_type_priority" expression="" applyOnUpdate="0"/>
     <default field="number_of_info" expression="" applyOnUpdate="0"/>
     <default field="number_of_warning" expression="" applyOnUpdate="0"/>
     <default field="number_of_critical" expression="" applyOnUpdate="0"/>
@@ -1305,37 +1204,31 @@
     <constraint field="level_0" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
     <constraint field="level_1" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
     <constraint field="code" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
-    <constraint field="naam_New" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
-    <constraint field="functiegemaal_New" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
-    <constraint field="maximalecapaciteit_New" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
     <constraint field="ws_categorie_New" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
+    <constraint field="opmerkingen_New" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
+    <constraint field="aanslagpeil_rel_New" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
+    <constraint field="afslagpeil_rel_New" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
+    <constraint field="moet_op_peilgrens_New" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
     <constraint field="geom_type_New" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
     <constraint field="geom_length_New" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
     <constraint field="geom_area_New" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
     <constraint field="dataset_New" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
     <constraint field="origin_New" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
-    <constraint field="naam_Old" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
-    <constraint field="functiegemaal_Old" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
-    <constraint field="maximalecapaciteit_Old" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
     <constraint field="ws_categorie_Old" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
-    <constraint field="geom_type_Old" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
+    <constraint field="opmerkingen_Old" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
+    <constraint field="aanslagpeil_rel_Old" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
+    <constraint field="afslagpeil_rel_Old" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
+    <constraint field="moet_op_peilgrens_Old" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
     <constraint field="geom_length_Old" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
     <constraint field="geom_area_Old" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
     <constraint field="dataset_Old" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
     <constraint field="origin_Old" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
     <constraint field="in_both" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
     <constraint field="geometry_adjusted" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
-    <constraint field="cmp_ID" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
-    <constraint field="cmp_ID_priority" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
-    <constraint field="cmp_functiegemaal" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
-    <constraint field="cmp_functiegemaal_priority" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
-    <constraint field="cmp_maximalecapaciteit" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
-    <constraint field="cmp_maximalecapaciteit_change_NaN" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
-    <constraint field="cmp_maximalecapaciteit_priority" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
+    <constraint field="cmp_modelleren_als" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
+    <constraint field="cmp_modelleren_als_priority" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
     <constraint field="cmp_categorie" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
     <constraint field="cmp_categorie_priority" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
-    <constraint field="cmp_geom_type" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
-    <constraint field="cmp_geom_type_priority" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
     <constraint field="number_of_info" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
     <constraint field="number_of_warning" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
     <constraint field="number_of_critical" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
@@ -1345,37 +1238,31 @@
     <constraint field="level_0" desc="" exp=""/>
     <constraint field="level_1" desc="" exp=""/>
     <constraint field="code" desc="" exp=""/>
-    <constraint field="naam_New" desc="" exp=""/>
-    <constraint field="functiegemaal_New" desc="" exp=""/>
-    <constraint field="maximalecapaciteit_New" desc="" exp=""/>
     <constraint field="ws_categorie_New" desc="" exp=""/>
+    <constraint field="opmerkingen_New" desc="" exp=""/>
+    <constraint field="aanslagpeil_rel_New" desc="" exp=""/>
+    <constraint field="afslagpeil_rel_New" desc="" exp=""/>
+    <constraint field="moet_op_peilgrens_New" desc="" exp=""/>
     <constraint field="geom_type_New" desc="" exp=""/>
     <constraint field="geom_length_New" desc="" exp=""/>
     <constraint field="geom_area_New" desc="" exp=""/>
     <constraint field="dataset_New" desc="" exp=""/>
     <constraint field="origin_New" desc="" exp=""/>
-    <constraint field="naam_Old" desc="" exp=""/>
-    <constraint field="functiegemaal_Old" desc="" exp=""/>
-    <constraint field="maximalecapaciteit_Old" desc="" exp=""/>
     <constraint field="ws_categorie_Old" desc="" exp=""/>
-    <constraint field="geom_type_Old" desc="" exp=""/>
+    <constraint field="opmerkingen_Old" desc="" exp=""/>
+    <constraint field="aanslagpeil_rel_Old" desc="" exp=""/>
+    <constraint field="afslagpeil_rel_Old" desc="" exp=""/>
+    <constraint field="moet_op_peilgrens_Old" desc="" exp=""/>
     <constraint field="geom_length_Old" desc="" exp=""/>
     <constraint field="geom_area_Old" desc="" exp=""/>
     <constraint field="dataset_Old" desc="" exp=""/>
     <constraint field="origin_Old" desc="" exp=""/>
     <constraint field="in_both" desc="" exp=""/>
     <constraint field="geometry_adjusted" desc="" exp=""/>
-    <constraint field="cmp_ID" desc="" exp=""/>
-    <constraint field="cmp_ID_priority" desc="" exp=""/>
-    <constraint field="cmp_functiegemaal" desc="" exp=""/>
-    <constraint field="cmp_functiegemaal_priority" desc="" exp=""/>
-    <constraint field="cmp_maximalecapaciteit" desc="" exp=""/>
-    <constraint field="cmp_maximalecapaciteit_change_NaN" desc="" exp=""/>
-    <constraint field="cmp_maximalecapaciteit_priority" desc="" exp=""/>
+    <constraint field="cmp_modelleren_als" desc="" exp=""/>
+    <constraint field="cmp_modelleren_als_priority" desc="" exp=""/>
     <constraint field="cmp_categorie" desc="" exp=""/>
     <constraint field="cmp_categorie_priority" desc="" exp=""/>
-    <constraint field="cmp_geom_type" desc="" exp=""/>
-    <constraint field="cmp_geom_type_priority" desc="" exp=""/>
     <constraint field="number_of_info" desc="" exp=""/>
     <constraint field="number_of_warning" desc="" exp=""/>
     <constraint field="number_of_critical" desc="" exp=""/>
@@ -1392,38 +1279,32 @@
       <column type="field" hidden="0" width="-1" name="geometry_adjusted"/>
       <column type="field" hidden="0" width="-1" name="level_0"/>
       <column type="field" hidden="0" width="-1" name="level_1"/>
-      <column type="field" hidden="0" width="-1" name="naam_New"/>
-      <column type="field" hidden="0" width="-1" name="functiegemaal_New"/>
-      <column type="field" hidden="0" width="-1" name="maximalecapaciteit_New"/>
       <column type="field" hidden="0" width="-1" name="ws_categorie_New"/>
       <column type="field" hidden="0" width="-1" name="geom_type_New"/>
       <column type="field" hidden="0" width="-1" name="geom_length_New"/>
       <column type="field" hidden="0" width="-1" name="geom_area_New"/>
       <column type="field" hidden="0" width="-1" name="dataset_New"/>
       <column type="field" hidden="0" width="-1" name="origin_New"/>
-      <column type="field" hidden="0" width="-1" name="naam_Old"/>
-      <column type="field" hidden="0" width="-1" name="functiegemaal_Old"/>
-      <column type="field" hidden="0" width="-1" name="maximalecapaciteit_Old"/>
       <column type="field" hidden="0" width="-1" name="ws_categorie_Old"/>
-      <column type="field" hidden="0" width="-1" name="geom_type_Old"/>
       <column type="field" hidden="0" width="-1" name="geom_length_Old"/>
       <column type="field" hidden="0" width="-1" name="geom_area_Old"/>
       <column type="field" hidden="0" width="-1" name="dataset_Old"/>
       <column type="field" hidden="0" width="-1" name="origin_Old"/>
-      <column type="field" hidden="0" width="-1" name="cmp_functiegemaal"/>
-      <column type="field" hidden="0" width="-1" name="cmp_functiegemaal_priority"/>
-      <column type="field" hidden="0" width="-1" name="cmp_maximalecapaciteit"/>
-      <column type="field" hidden="0" width="-1" name="cmp_maximalecapaciteit_change_NaN"/>
-      <column type="field" hidden="0" width="-1" name="cmp_maximalecapaciteit_priority"/>
       <column type="field" hidden="0" width="-1" name="number_of_info"/>
       <column type="field" hidden="0" width="-1" name="number_of_warning"/>
       <column type="field" hidden="0" width="-1" name="number_of_critical"/>
       <column type="field" hidden="0" width="-1" name="cmp_categorie"/>
       <column type="field" hidden="0" width="-1" name="cmp_categorie_priority"/>
-      <column type="field" hidden="0" width="-1" name="cmp_geom_type"/>
-      <column type="field" hidden="0" width="-1" name="cmp_geom_type_priority"/>
-      <column type="field" hidden="0" width="-1" name="cmp_ID"/>
-      <column type="field" hidden="0" width="-1" name="cmp_ID_priority"/>
+      <column type="field" hidden="0" width="-1" name="opmerkingen_New"/>
+      <column type="field" hidden="0" width="-1" name="aanslagpeil_rel_New"/>
+      <column type="field" hidden="0" width="-1" name="afslagpeil_rel_New"/>
+      <column type="field" hidden="0" width="-1" name="moet_op_peilgrens_New"/>
+      <column type="field" hidden="0" width="-1" name="opmerkingen_Old"/>
+      <column type="field" hidden="0" width="-1" name="aanslagpeil_rel_Old"/>
+      <column type="field" hidden="0" width="-1" name="afslagpeil_rel_Old"/>
+      <column type="field" hidden="0" width="-1" name="moet_op_peilgrens_Old"/>
+      <column type="field" hidden="0" width="-1" name="cmp_modelleren_als"/>
+      <column type="field" hidden="0" width="-1" name="cmp_modelleren_als_priority"/>
       <column type="actions" hidden="1" width="-1"/>
     </columns>
   </attributetableconfig>
@@ -1473,22 +1354,22 @@ def my_form_open(dialog, layer, feature):
           <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
         </labelStyle>
       </attributeEditorField>
-      <attributeEditorField showLabel="1" verticalStretch="0" index="4" horizontalStretch="0" name="naam_New">
+      <attributeEditorField showLabel="1" verticalStretch="0" index="-1" horizontalStretch="0" name="naam_New">
         <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
           <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
         </labelStyle>
       </attributeEditorField>
-      <attributeEditorField showLabel="1" verticalStretch="0" index="13" horizontalStretch="0" name="naam_Old">
+      <attributeEditorField showLabel="1" verticalStretch="0" index="-1" horizontalStretch="0" name="naam_Old">
         <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
           <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
         </labelStyle>
       </attributeEditorField>
-      <attributeEditorField showLabel="1" verticalStretch="0" index="24" horizontalStretch="0" name="cmp_ID">
+      <attributeEditorField showLabel="1" verticalStretch="0" index="-1" horizontalStretch="0" name="cmp_ID">
         <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
           <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
         </labelStyle>
       </attributeEditorField>
-      <attributeEditorField showLabel="1" verticalStretch="0" index="25" horizontalStretch="0" name="cmp_ID_priority">
+      <attributeEditorField showLabel="1" verticalStretch="0" index="-1" horizontalStretch="0" name="cmp_ID_priority">
         <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
           <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
         </labelStyle>
@@ -1498,22 +1379,22 @@ def my_form_open(dialog, layer, feature):
       <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="1">
         <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,75,0,0,0,0,0" bold="1" style="" italic="0" underline="0"/>
       </labelStyle>
-      <attributeEditorField showLabel="1" verticalStretch="0" index="7" horizontalStretch="0" name="ws_categorie_New">
+      <attributeEditorField showLabel="1" verticalStretch="0" index="4" horizontalStretch="0" name="ws_categorie_New">
         <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
           <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
         </labelStyle>
       </attributeEditorField>
-      <attributeEditorField showLabel="1" verticalStretch="0" index="16" horizontalStretch="0" name="ws_categorie_Old">
+      <attributeEditorField showLabel="1" verticalStretch="0" index="14" horizontalStretch="0" name="ws_categorie_Old">
         <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
           <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
         </labelStyle>
       </attributeEditorField>
-      <attributeEditorField showLabel="1" verticalStretch="0" index="31" horizontalStretch="0" name="cmp_categorie">
+      <attributeEditorField showLabel="1" verticalStretch="0" index="27" horizontalStretch="0" name="cmp_categorie">
         <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
           <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
         </labelStyle>
       </attributeEditorField>
-      <attributeEditorField showLabel="1" verticalStretch="0" index="32" horizontalStretch="0" name="cmp_categorie_priority">
+      <attributeEditorField showLabel="1" verticalStretch="0" index="28" horizontalStretch="0" name="cmp_categorie_priority">
         <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
           <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
         </labelStyle>
@@ -1523,27 +1404,27 @@ def my_form_open(dialog, layer, feature):
       <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="1">
         <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,75,0,0,0,0,0" bold="1" style="" italic="0" underline="0"/>
       </labelStyle>
-      <attributeEditorField showLabel="1" verticalStretch="0" index="6" horizontalStretch="0" name="maximalecapaciteit_New">
+      <attributeEditorField showLabel="1" verticalStretch="0" index="-1" horizontalStretch="0" name="maximalecapaciteit_New">
         <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
           <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
         </labelStyle>
       </attributeEditorField>
-      <attributeEditorField showLabel="1" verticalStretch="0" index="15" horizontalStretch="0" name="maximalecapaciteit_Old">
+      <attributeEditorField showLabel="1" verticalStretch="0" index="-1" horizontalStretch="0" name="maximalecapaciteit_Old">
         <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
           <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
         </labelStyle>
       </attributeEditorField>
-      <attributeEditorField showLabel="1" verticalStretch="0" index="28" horizontalStretch="0" name="cmp_maximalecapaciteit">
+      <attributeEditorField showLabel="1" verticalStretch="0" index="-1" horizontalStretch="0" name="cmp_maximalecapaciteit">
         <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
           <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
         </labelStyle>
       </attributeEditorField>
-      <attributeEditorField showLabel="1" verticalStretch="0" index="29" horizontalStretch="0" name="cmp_maximalecapaciteit_change_NaN">
+      <attributeEditorField showLabel="1" verticalStretch="0" index="-1" horizontalStretch="0" name="cmp_maximalecapaciteit_change_NaN">
         <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
           <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
         </labelStyle>
       </attributeEditorField>
-      <attributeEditorField showLabel="1" verticalStretch="0" index="30" horizontalStretch="0" name="cmp_maximalecapaciteit_priority">
+      <attributeEditorField showLabel="1" verticalStretch="0" index="-1" horizontalStretch="0" name="cmp_maximalecapaciteit_priority">
         <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
           <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
         </labelStyle>
@@ -1557,12 +1438,12 @@ def my_form_open(dialog, layer, feature):
         <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
           <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
         </labelStyle>
-        <attributeEditorField showLabel="1" verticalStretch="0" index="11" horizontalStretch="0" name="dataset_New">
+        <attributeEditorField showLabel="1" verticalStretch="0" index="12" horizontalStretch="0" name="dataset_New">
           <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
             <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
           </labelStyle>
         </attributeEditorField>
-        <attributeEditorField showLabel="1" verticalStretch="0" index="20" horizontalStretch="0" name="dataset_Old">
+        <attributeEditorField showLabel="1" verticalStretch="0" index="21" horizontalStretch="0" name="dataset_Old">
           <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
             <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
           </labelStyle>
@@ -1572,18 +1453,18 @@ def my_form_open(dialog, layer, feature):
         <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
           <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
         </labelStyle>
-        <attributeEditorField showLabel="1" verticalStretch="0" index="12" horizontalStretch="0" name="origin_New">
+        <attributeEditorField showLabel="1" verticalStretch="0" index="13" horizontalStretch="0" name="origin_New">
           <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
             <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
           </labelStyle>
         </attributeEditorField>
-        <attributeEditorField showLabel="1" verticalStretch="0" index="21" horizontalStretch="0" name="origin_Old">
+        <attributeEditorField showLabel="1" verticalStretch="0" index="22" horizontalStretch="0" name="origin_Old">
           <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
             <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
           </labelStyle>
         </attributeEditorField>
       </attributeEditorContainer>
-      <attributeEditorField showLabel="1" verticalStretch="0" index="22" horizontalStretch="0" name="in_both">
+      <attributeEditorField showLabel="1" verticalStretch="0" index="23" horizontalStretch="0" name="in_both">
         <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
           <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
         </labelStyle>
@@ -1593,22 +1474,22 @@ def my_form_open(dialog, layer, feature):
       <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="1">
         <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,75,0,0,0,0,0" bold="1" style="" italic="0" underline="0"/>
       </labelStyle>
-      <attributeEditorField showLabel="1" verticalStretch="0" index="5" horizontalStretch="0" name="functiegemaal_New">
+      <attributeEditorField showLabel="1" verticalStretch="0" index="-1" horizontalStretch="0" name="functiegemaal_New">
         <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
           <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
         </labelStyle>
       </attributeEditorField>
-      <attributeEditorField showLabel="1" verticalStretch="0" index="14" horizontalStretch="0" name="functiegemaal_Old">
+      <attributeEditorField showLabel="1" verticalStretch="0" index="-1" horizontalStretch="0" name="functiegemaal_Old">
         <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
           <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
         </labelStyle>
       </attributeEditorField>
-      <attributeEditorField showLabel="1" verticalStretch="0" index="26" horizontalStretch="0" name="cmp_functiegemaal">
+      <attributeEditorField showLabel="1" verticalStretch="0" index="-1" horizontalStretch="0" name="cmp_functiegemaal">
         <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
           <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
         </labelStyle>
       </attributeEditorField>
-      <attributeEditorField showLabel="1" verticalStretch="0" index="27" horizontalStretch="0" name="cmp_functiegemaal_priority">
+      <attributeEditorField showLabel="1" verticalStretch="0" index="-1" horizontalStretch="0" name="cmp_functiegemaal_priority">
         <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
           <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
         </labelStyle>
@@ -1622,12 +1503,12 @@ def my_form_open(dialog, layer, feature):
         <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
           <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
         </labelStyle>
-        <attributeEditorField showLabel="1" verticalStretch="0" index="10" horizontalStretch="0" name="geom_area_New">
+        <attributeEditorField showLabel="1" verticalStretch="0" index="11" horizontalStretch="0" name="geom_area_New">
           <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
             <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
           </labelStyle>
         </attributeEditorField>
-        <attributeEditorField showLabel="1" verticalStretch="0" index="19" horizontalStretch="0" name="geom_area_Old">
+        <attributeEditorField showLabel="1" verticalStretch="0" index="20" horizontalStretch="0" name="geom_area_Old">
           <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
             <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
           </labelStyle>
@@ -1637,12 +1518,12 @@ def my_form_open(dialog, layer, feature):
         <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
           <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
         </labelStyle>
-        <attributeEditorField showLabel="1" verticalStretch="0" index="9" horizontalStretch="0" name="geom_length_New">
+        <attributeEditorField showLabel="1" verticalStretch="0" index="10" horizontalStretch="0" name="geom_length_New">
           <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
             <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
           </labelStyle>
         </attributeEditorField>
-        <attributeEditorField showLabel="1" verticalStretch="0" index="18" horizontalStretch="0" name="geom_length_Old">
+        <attributeEditorField showLabel="1" verticalStretch="0" index="19" horizontalStretch="0" name="geom_length_Old">
           <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
             <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
           </labelStyle>
@@ -1652,28 +1533,28 @@ def my_form_open(dialog, layer, feature):
         <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
           <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
         </labelStyle>
-        <attributeEditorField showLabel="1" verticalStretch="0" index="8" horizontalStretch="0" name="geom_type_New">
+        <attributeEditorField showLabel="1" verticalStretch="0" index="9" horizontalStretch="0" name="geom_type_New">
           <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
             <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
           </labelStyle>
         </attributeEditorField>
-        <attributeEditorField showLabel="1" verticalStretch="0" index="17" horizontalStretch="0" name="geom_type_Old">
+        <attributeEditorField showLabel="1" verticalStretch="0" index="-1" horizontalStretch="0" name="geom_type_Old">
           <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
             <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
           </labelStyle>
         </attributeEditorField>
-        <attributeEditorField showLabel="1" verticalStretch="0" index="33" horizontalStretch="0" name="cmp_geom_type">
+        <attributeEditorField showLabel="1" verticalStretch="0" index="-1" horizontalStretch="0" name="cmp_geom_type">
           <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
             <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
           </labelStyle>
         </attributeEditorField>
-        <attributeEditorField showLabel="1" verticalStretch="0" index="34" horizontalStretch="0" name="cmp_geom_type_priority">
+        <attributeEditorField showLabel="1" verticalStretch="0" index="-1" horizontalStretch="0" name="cmp_geom_type_priority">
           <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
             <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
           </labelStyle>
         </attributeEditorField>
       </attributeEditorContainer>
-      <attributeEditorField showLabel="1" verticalStretch="0" index="23" horizontalStretch="0" name="geometry_adjusted">
+      <attributeEditorField showLabel="1" verticalStretch="0" index="24" horizontalStretch="0" name="geometry_adjusted">
         <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
           <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
         </labelStyle>
@@ -1683,17 +1564,17 @@ def my_form_open(dialog, layer, feature):
       <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="1">
         <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,75,0,0,0,0,0" bold="1" style="" italic="0" underline="0"/>
       </labelStyle>
-      <attributeEditorField showLabel="1" verticalStretch="0" index="35" horizontalStretch="0" name="number_of_info">
+      <attributeEditorField showLabel="1" verticalStretch="0" index="29" horizontalStretch="0" name="number_of_info">
         <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
           <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
         </labelStyle>
       </attributeEditorField>
-      <attributeEditorField showLabel="1" verticalStretch="0" index="36" horizontalStretch="0" name="number_of_warning">
+      <attributeEditorField showLabel="1" verticalStretch="0" index="30" horizontalStretch="0" name="number_of_warning">
         <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
           <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
         </labelStyle>
       </attributeEditorField>
-      <attributeEditorField showLabel="1" verticalStretch="0" index="37" horizontalStretch="0" name="number_of_critical">
+      <attributeEditorField showLabel="1" verticalStretch="0" index="31" horizontalStretch="0" name="number_of_critical">
         <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
           <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
         </labelStyle>
@@ -1706,8 +1587,12 @@ def my_form_open(dialog, layer, feature):
     <field editable="1" name="Width Verschil"/>
     <field editable="1" name="Width Verschil_change_NaN"/>
     <field editable="1" name="Width Verschil_priority"/>
+    <field editable="1" name="aanslagpeil_rel_New"/>
+    <field editable="1" name="aanslagpeil_rel_Old"/>
     <field editable="1" name="aantal_doorstroomopeningen_A"/>
     <field editable="1" name="aantal_doorstroomopeningen_B"/>
+    <field editable="1" name="afslagpeil_rel_New"/>
+    <field editable="1" name="afslagpeil_rel_Old"/>
     <field editable="1" name="brug_id_A"/>
     <field editable="1" name="brug_id_B"/>
     <field editable="1" name="cmp_ID"/>
@@ -1730,6 +1615,8 @@ def my_form_open(dialog, layer, feature):
     <field editable="1" name="cmp_maximalecapaciteit"/>
     <field editable="1" name="cmp_maximalecapaciteit_change_NaN"/>
     <field editable="1" name="cmp_maximalecapaciteit_priority"/>
+    <field editable="1" name="cmp_modelleren_als"/>
+    <field editable="1" name="cmp_modelleren_als_priority"/>
     <field editable="1" name="cmp_ws_categorie"/>
     <field editable="1" name="cmp_ws_categorie_priority"/>
     <field editable="1" name="code"/>
@@ -1776,6 +1663,8 @@ def my_form_open(dialog, layer, feature):
     <field editable="1" name="maximalecapaciteit_Old"/>
     <field editable="1" name="moet_op_peilgrens_A"/>
     <field editable="1" name="moet_op_peilgrens_B"/>
+    <field editable="1" name="moet_op_peilgrens_New"/>
+    <field editable="1" name="moet_op_peilgrens_Old"/>
     <field editable="1" name="naam_A"/>
     <field editable="1" name="naam_B"/>
     <field editable="1" name="naam_New"/>
@@ -1785,6 +1674,8 @@ def my_form_open(dialog, layer, feature):
     <field editable="1" name="number_of_warning"/>
     <field editable="1" name="opmerkingen_A"/>
     <field editable="1" name="opmerkingen_B"/>
+    <field editable="1" name="opmerkingen_New"/>
+    <field editable="1" name="opmerkingen_Old"/>
     <field editable="1" name="origin_A"/>
     <field editable="1" name="origin_B"/>
     <field editable="1" name="origin_New"/>
@@ -1812,8 +1703,12 @@ def my_form_open(dialog, layer, feature):
     <field labelOnTop="0" name="Width Verschil"/>
     <field labelOnTop="0" name="Width Verschil_change_NaN"/>
     <field labelOnTop="0" name="Width Verschil_priority"/>
+    <field labelOnTop="0" name="aanslagpeil_rel_New"/>
+    <field labelOnTop="0" name="aanslagpeil_rel_Old"/>
     <field labelOnTop="0" name="aantal_doorstroomopeningen_A"/>
     <field labelOnTop="0" name="aantal_doorstroomopeningen_B"/>
+    <field labelOnTop="0" name="afslagpeil_rel_New"/>
+    <field labelOnTop="0" name="afslagpeil_rel_Old"/>
     <field labelOnTop="0" name="brug_id_A"/>
     <field labelOnTop="0" name="brug_id_B"/>
     <field labelOnTop="0" name="cmp_ID"/>
@@ -1836,6 +1731,8 @@ def my_form_open(dialog, layer, feature):
     <field labelOnTop="0" name="cmp_maximalecapaciteit"/>
     <field labelOnTop="0" name="cmp_maximalecapaciteit_change_NaN"/>
     <field labelOnTop="0" name="cmp_maximalecapaciteit_priority"/>
+    <field labelOnTop="0" name="cmp_modelleren_als"/>
+    <field labelOnTop="0" name="cmp_modelleren_als_priority"/>
     <field labelOnTop="0" name="cmp_ws_categorie"/>
     <field labelOnTop="0" name="cmp_ws_categorie_priority"/>
     <field labelOnTop="0" name="code"/>
@@ -1882,6 +1779,8 @@ def my_form_open(dialog, layer, feature):
     <field labelOnTop="0" name="maximalecapaciteit_Old"/>
     <field labelOnTop="0" name="moet_op_peilgrens_A"/>
     <field labelOnTop="0" name="moet_op_peilgrens_B"/>
+    <field labelOnTop="0" name="moet_op_peilgrens_New"/>
+    <field labelOnTop="0" name="moet_op_peilgrens_Old"/>
     <field labelOnTop="0" name="naam_A"/>
     <field labelOnTop="0" name="naam_B"/>
     <field labelOnTop="0" name="naam_New"/>
@@ -1891,6 +1790,8 @@ def my_form_open(dialog, layer, feature):
     <field labelOnTop="0" name="number_of_warning"/>
     <field labelOnTop="0" name="opmerkingen_A"/>
     <field labelOnTop="0" name="opmerkingen_B"/>
+    <field labelOnTop="0" name="opmerkingen_New"/>
+    <field labelOnTop="0" name="opmerkingen_Old"/>
     <field labelOnTop="0" name="origin_A"/>
     <field labelOnTop="0" name="origin_B"/>
     <field labelOnTop="0" name="origin_New"/>
@@ -1918,8 +1819,12 @@ def my_form_open(dialog, layer, feature):
     <field reuseLastValue="0" name="Width Verschil"/>
     <field reuseLastValue="0" name="Width Verschil_change_NaN"/>
     <field reuseLastValue="0" name="Width Verschil_priority"/>
+    <field reuseLastValue="0" name="aanslagpeil_rel_New"/>
+    <field reuseLastValue="0" name="aanslagpeil_rel_Old"/>
     <field reuseLastValue="0" name="aantal_doorstroomopeningen_A"/>
     <field reuseLastValue="0" name="aantal_doorstroomopeningen_B"/>
+    <field reuseLastValue="0" name="afslagpeil_rel_New"/>
+    <field reuseLastValue="0" name="afslagpeil_rel_Old"/>
     <field reuseLastValue="0" name="brug_id_A"/>
     <field reuseLastValue="0" name="brug_id_B"/>
     <field reuseLastValue="0" name="cmp_ID"/>
@@ -1942,6 +1847,8 @@ def my_form_open(dialog, layer, feature):
     <field reuseLastValue="0" name="cmp_maximalecapaciteit"/>
     <field reuseLastValue="0" name="cmp_maximalecapaciteit_change_NaN"/>
     <field reuseLastValue="0" name="cmp_maximalecapaciteit_priority"/>
+    <field reuseLastValue="0" name="cmp_modelleren_als"/>
+    <field reuseLastValue="0" name="cmp_modelleren_als_priority"/>
     <field reuseLastValue="0" name="cmp_ws_categorie"/>
     <field reuseLastValue="0" name="cmp_ws_categorie_priority"/>
     <field reuseLastValue="0" name="code"/>
@@ -1988,6 +1895,8 @@ def my_form_open(dialog, layer, feature):
     <field reuseLastValue="0" name="maximalecapaciteit_Old"/>
     <field reuseLastValue="0" name="moet_op_peilgrens_A"/>
     <field reuseLastValue="0" name="moet_op_peilgrens_B"/>
+    <field reuseLastValue="0" name="moet_op_peilgrens_New"/>
+    <field reuseLastValue="0" name="moet_op_peilgrens_Old"/>
     <field reuseLastValue="0" name="naam_A"/>
     <field reuseLastValue="0" name="naam_B"/>
     <field reuseLastValue="0" name="naam_New"/>
@@ -1997,6 +1906,8 @@ def my_form_open(dialog, layer, feature):
     <field reuseLastValue="0" name="number_of_warning"/>
     <field reuseLastValue="0" name="opmerkingen_A"/>
     <field reuseLastValue="0" name="opmerkingen_B"/>
+    <field reuseLastValue="0" name="opmerkingen_New"/>
+    <field reuseLastValue="0" name="opmerkingen_Old"/>
     <field reuseLastValue="0" name="origin_A"/>
     <field reuseLastValue="0" name="origin_B"/>
     <field reuseLastValue="0" name="origin_New"/>

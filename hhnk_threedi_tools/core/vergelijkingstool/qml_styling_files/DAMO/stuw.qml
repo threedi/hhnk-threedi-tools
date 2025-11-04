@@ -846,11 +846,14 @@
     <field configurationFlags="NoFlag" name="naam_New">
       <editWidget type="TextEdit">
         <config>
-          <Option/>
+          <Option type="Map">
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
+          </Option>
         </config>
       </editWidget>
     </field>
-    <field configurationFlags="NoFlag" name="functiegemaal_New">
+    <field configurationFlags="NoFlag" name="doorstroombreedte_New">
       <editWidget type="TextEdit">
         <config>
           <Option type="Map">
@@ -860,7 +863,37 @@
         </config>
       </editWidget>
     </field>
-    <field configurationFlags="NoFlag" name="maximalecapaciteit_New">
+    <field configurationFlags="NoFlag" name="kruinbreedte_New">
+      <editWidget type="TextEdit">
+        <config>
+          <Option type="Map">
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
+          </Option>
+        </config>
+      </editWidget>
+    </field>
+    <field configurationFlags="NoFlag" name="laagstedoorstroomhoogte_New">
+      <editWidget type="TextEdit">
+        <config>
+          <Option type="Map">
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
+          </Option>
+        </config>
+      </editWidget>
+    </field>
+    <field configurationFlags="NoFlag" name="hoogstedoorstroomhoogte_New">
+      <editWidget type="TextEdit">
+        <config>
+          <Option type="Map">
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
+          </Option>
+        </config>
+      </editWidget>
+    </field>
+    <field configurationFlags="NoFlag" name="soortregelbaarheid_New">
       <editWidget type="TextEdit">
         <config>
           <Option type="Map">
@@ -871,6 +904,26 @@
       </editWidget>
     </field>
     <field configurationFlags="NoFlag" name="ws_categorie_New">
+      <editWidget type="TextEdit">
+        <config>
+          <Option type="Map">
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
+          </Option>
+        </config>
+      </editWidget>
+    </field>
+    <field configurationFlags="NoFlag" name="ws_kruinvorm_New">
+      <editWidget type="TextEdit">
+        <config>
+          <Option type="Map">
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
+          </Option>
+        </config>
+      </editWidget>
+    </field>
+    <field configurationFlags="NoFlag" name="ws_functiestuw_New">
       <editWidget type="TextEdit">
         <config>
           <Option type="Map">
@@ -942,14 +995,41 @@
         </config>
       </editWidget>
     </field>
-    <field configurationFlags="NoFlag" name="functiegemaal_Old">
+    <field configurationFlags="NoFlag" name="doorstroombreedte_Old">
+      <editWidget type="TextEdit">
+        <config>
+          <Option type="Map">
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
+          </Option>
+        </config>
+      </editWidget>
+    </field>
+    <field configurationFlags="NoFlag" name="kruinbreedte_Old">
+      <editWidget type="TextEdit">
+        <config>
+          <Option type="Map">
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
+          </Option>
+        </config>
+      </editWidget>
+    </field>
+    <field configurationFlags="NoFlag" name="laagstedoorstroomhoogte_Old">
       <editWidget type="TextEdit">
         <config>
           <Option/>
         </config>
       </editWidget>
     </field>
-    <field configurationFlags="NoFlag" name="maximalecapaciteit_Old">
+    <field configurationFlags="NoFlag" name="hoogstedoorstroomhoogte_Old">
+      <editWidget type="TextEdit">
+        <config>
+          <Option/>
+        </config>
+      </editWidget>
+    </field>
+    <field configurationFlags="NoFlag" name="soortregelbaarheid_Old">
       <editWidget type="TextEdit">
         <config>
           <Option/>
@@ -957,6 +1037,20 @@
       </editWidget>
     </field>
     <field configurationFlags="NoFlag" name="ws_categorie_Old">
+      <editWidget type="TextEdit">
+        <config>
+          <Option/>
+        </config>
+      </editWidget>
+    </field>
+    <field configurationFlags="NoFlag" name="ws_kruinvorm_Old">
+      <editWidget type="TextEdit">
+        <config>
+          <Option/>
+        </config>
+      </editWidget>
+    </field>
+    <field configurationFlags="NoFlag" name="ws_functiestuw_Old">
       <editWidget type="TextEdit">
         <config>
           <Option type="Map">
@@ -969,10 +1063,7 @@
     <field configurationFlags="NoFlag" name="geom_type_Old">
       <editWidget type="TextEdit">
         <config>
-          <Option type="Map">
-            <Option type="bool" value="false" name="IsMultiline"/>
-            <Option type="bool" value="false" name="UseHtml"/>
-          </Option>
+          <Option/>
         </config>
       </editWidget>
     </field>
@@ -1040,7 +1131,7 @@
         </config>
       </editWidget>
     </field>
-    <field configurationFlags="NoFlag" name="cmp_ID">
+    <field configurationFlags="NoFlag" name="cmp_doorstroombreedte">
       <editWidget type="TextEdit">
         <config>
           <Option type="Map">
@@ -1050,7 +1141,14 @@
         </config>
       </editWidget>
     </field>
-    <field configurationFlags="NoFlag" name="cmp_ID_priority">
+    <field configurationFlags="NoFlag" name="cmp_doorstroombreedte_change_NaN">
+      <editWidget type="CheckBox">
+        <config>
+          <Option/>
+        </config>
+      </editWidget>
+    </field>
+    <field configurationFlags="NoFlag" name="cmp_doorstroombreedte_priority">
       <editWidget type="TextEdit">
         <config>
           <Option type="Map">
@@ -1060,7 +1158,7 @@
         </config>
       </editWidget>
     </field>
-    <field configurationFlags="NoFlag" name="cmp_functiegemaal">
+    <field configurationFlags="NoFlag" name="cmp_kruinbreedte">
       <editWidget type="TextEdit">
         <config>
           <Option type="Map">
@@ -1070,27 +1168,7 @@
         </config>
       </editWidget>
     </field>
-    <field configurationFlags="NoFlag" name="cmp_functiegemaal_priority">
-      <editWidget type="TextEdit">
-        <config>
-          <Option type="Map">
-            <Option type="bool" value="false" name="IsMultiline"/>
-            <Option type="bool" value="false" name="UseHtml"/>
-          </Option>
-        </config>
-      </editWidget>
-    </field>
-    <field configurationFlags="NoFlag" name="cmp_maximalecapaciteit">
-      <editWidget type="TextEdit">
-        <config>
-          <Option type="Map">
-            <Option type="bool" value="false" name="IsMultiline"/>
-            <Option type="bool" value="false" name="UseHtml"/>
-          </Option>
-        </config>
-      </editWidget>
-    </field>
-    <field configurationFlags="NoFlag" name="cmp_maximalecapaciteit_change_NaN">
+    <field configurationFlags="NoFlag" name="cmp_kruinbreedte_change_NaN">
       <editWidget type="CheckBox">
         <config>
           <Option type="Map">
@@ -1102,7 +1180,7 @@
         </config>
       </editWidget>
     </field>
-    <field configurationFlags="NoFlag" name="cmp_maximalecapaciteit_priority">
+    <field configurationFlags="NoFlag" name="cmp_kruinbreedte_priority">
       <editWidget type="TextEdit">
         <config>
           <Option type="Map">
@@ -1112,7 +1190,21 @@
         </config>
       </editWidget>
     </field>
-    <field configurationFlags="NoFlag" name="cmp_categorie">
+    <field configurationFlags="NoFlag" name="cmp_laagstedoorstroomhoogte">
+      <editWidget type="TextEdit">
+        <config>
+          <Option/>
+        </config>
+      </editWidget>
+    </field>
+    <field configurationFlags="NoFlag" name="cmp_laagstedoorstroomhoogte_change_NaN">
+      <editWidget type="CheckBox">
+        <config>
+          <Option/>
+        </config>
+      </editWidget>
+    </field>
+    <field configurationFlags="NoFlag" name="cmp_laagstedoorstroomhoogte_priority">
       <editWidget type="TextEdit">
         <config>
           <Option type="Map">
@@ -1122,7 +1214,92 @@
         </config>
       </editWidget>
     </field>
-    <field configurationFlags="NoFlag" name="cmp_categorie_priority">
+    <field configurationFlags="NoFlag" name="cmp_hoogstedoorstroomhoogte">
+      <editWidget type="TextEdit">
+        <config>
+          <Option/>
+        </config>
+      </editWidget>
+    </field>
+    <field configurationFlags="NoFlag" name="cmp_hoogstedoorstroomhoogte_change_NaN">
+      <editWidget type="CheckBox">
+        <config>
+          <Option/>
+        </config>
+      </editWidget>
+    </field>
+    <field configurationFlags="NoFlag" name="cmp_hoogstedoorstroomhoogte_priority">
+      <editWidget type="TextEdit">
+        <config>
+          <Option type="Map">
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
+          </Option>
+        </config>
+      </editWidget>
+    </field>
+    <field configurationFlags="NoFlag" name="cmp_soortregelbaarheid">
+      <editWidget type="TextEdit">
+        <config>
+          <Option/>
+        </config>
+      </editWidget>
+    </field>
+    <field configurationFlags="NoFlag" name="cmp_soortregelbaarheid_priority">
+      <editWidget type="TextEdit">
+        <config>
+          <Option type="Map">
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
+          </Option>
+        </config>
+      </editWidget>
+    </field>
+    <field configurationFlags="NoFlag" name="cmp_ws_categorie">
+      <editWidget type="TextEdit">
+        <config>
+          <Option/>
+        </config>
+      </editWidget>
+    </field>
+    <field configurationFlags="NoFlag" name="cmp_ws_categorie_priority">
+      <editWidget type="TextEdit">
+        <config>
+          <Option type="Map">
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
+          </Option>
+        </config>
+      </editWidget>
+    </field>
+    <field configurationFlags="NoFlag" name="cmp_ws_kruinvorm">
+      <editWidget type="TextEdit">
+        <config>
+          <Option/>
+        </config>
+      </editWidget>
+    </field>
+    <field configurationFlags="NoFlag" name="cmp_ws_kruinvorm_priority">
+      <editWidget type="TextEdit">
+        <config>
+          <Option type="Map">
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
+          </Option>
+        </config>
+      </editWidget>
+    </field>
+    <field configurationFlags="NoFlag" name="cmp_ws_functie">
+      <editWidget type="TextEdit">
+        <config>
+          <Option type="Map">
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
+          </Option>
+        </config>
+      </editWidget>
+    </field>
+    <field configurationFlags="NoFlag" name="cmp_ws_functie_priority">
       <editWidget type="TextEdit">
         <config>
           <Option type="Map">
@@ -1135,10 +1312,7 @@
     <field configurationFlags="NoFlag" name="cmp_geom_type">
       <editWidget type="TextEdit">
         <config>
-          <Option type="Map">
-            <Option type="bool" value="false" name="IsMultiline"/>
-            <Option type="bool" value="false" name="UseHtml"/>
-          </Option>
+          <Option/>
         </config>
       </editWidget>
     </field>
@@ -1186,79 +1360,121 @@
     <alias field="level_1" index="2" name=""/>
     <alias field="code" index="3" name=""/>
     <alias field="naam_New" index="4" name=""/>
-    <alias field="functiegemaal_New" index="5" name=""/>
-    <alias field="maximalecapaciteit_New" index="6" name=""/>
-    <alias field="ws_categorie_New" index="7" name=""/>
-    <alias field="geom_type_New" index="8" name=""/>
-    <alias field="geom_length_New" index="9" name=""/>
-    <alias field="geom_area_New" index="10" name=""/>
-    <alias field="dataset_New" index="11" name=""/>
-    <alias field="origin_New" index="12" name=""/>
-    <alias field="naam_Old" index="13" name=""/>
-    <alias field="functiegemaal_Old" index="14" name=""/>
-    <alias field="maximalecapaciteit_Old" index="15" name=""/>
-    <alias field="ws_categorie_Old" index="16" name=""/>
-    <alias field="geom_type_Old" index="17" name=""/>
-    <alias field="geom_length_Old" index="18" name=""/>
-    <alias field="geom_area_Old" index="19" name=""/>
-    <alias field="dataset_Old" index="20" name=""/>
-    <alias field="origin_Old" index="21" name=""/>
-    <alias field="in_both" index="22" name=""/>
-    <alias field="geometry_adjusted" index="23" name=""/>
-    <alias field="cmp_ID" index="24" name=""/>
-    <alias field="cmp_ID_priority" index="25" name=""/>
-    <alias field="cmp_functiegemaal" index="26" name=""/>
-    <alias field="cmp_functiegemaal_priority" index="27" name=""/>
-    <alias field="cmp_maximalecapaciteit" index="28" name=""/>
-    <alias field="cmp_maximalecapaciteit_change_NaN" index="29" name=""/>
-    <alias field="cmp_maximalecapaciteit_priority" index="30" name=""/>
-    <alias field="cmp_categorie" index="31" name=""/>
-    <alias field="cmp_categorie_priority" index="32" name=""/>
-    <alias field="cmp_geom_type" index="33" name=""/>
-    <alias field="cmp_geom_type_priority" index="34" name=""/>
-    <alias field="number_of_info" index="35" name=""/>
-    <alias field="number_of_warning" index="36" name=""/>
-    <alias field="number_of_critical" index="37" name=""/>
+    <alias field="doorstroombreedte_New" index="5" name=""/>
+    <alias field="kruinbreedte_New" index="6" name=""/>
+    <alias field="laagstedoorstroomhoogte_New" index="7" name=""/>
+    <alias field="hoogstedoorstroomhoogte_New" index="8" name=""/>
+    <alias field="soortregelbaarheid_New" index="9" name=""/>
+    <alias field="ws_categorie_New" index="10" name=""/>
+    <alias field="ws_kruinvorm_New" index="11" name=""/>
+    <alias field="ws_functiestuw_New" index="12" name=""/>
+    <alias field="geom_type_New" index="13" name=""/>
+    <alias field="geom_length_New" index="14" name=""/>
+    <alias field="geom_area_New" index="15" name=""/>
+    <alias field="dataset_New" index="16" name=""/>
+    <alias field="origin_New" index="17" name=""/>
+    <alias field="naam_Old" index="18" name=""/>
+    <alias field="doorstroombreedte_Old" index="19" name=""/>
+    <alias field="kruinbreedte_Old" index="20" name=""/>
+    <alias field="laagstedoorstroomhoogte_Old" index="21" name=""/>
+    <alias field="hoogstedoorstroomhoogte_Old" index="22" name=""/>
+    <alias field="soortregelbaarheid_Old" index="23" name=""/>
+    <alias field="ws_categorie_Old" index="24" name=""/>
+    <alias field="ws_kruinvorm_Old" index="25" name=""/>
+    <alias field="ws_functiestuw_Old" index="26" name=""/>
+    <alias field="geom_type_Old" index="27" name=""/>
+    <alias field="geom_length_Old" index="28" name=""/>
+    <alias field="geom_area_Old" index="29" name=""/>
+    <alias field="dataset_Old" index="30" name=""/>
+    <alias field="origin_Old" index="31" name=""/>
+    <alias field="in_both" index="32" name=""/>
+    <alias field="geometry_adjusted" index="33" name=""/>
+    <alias field="cmp_doorstroombreedte" index="34" name=""/>
+    <alias field="cmp_doorstroombreedte_change_NaN" index="35" name=""/>
+    <alias field="cmp_doorstroombreedte_priority" index="36" name=""/>
+    <alias field="cmp_kruinbreedte" index="37" name=""/>
+    <alias field="cmp_kruinbreedte_change_NaN" index="38" name=""/>
+    <alias field="cmp_kruinbreedte_priority" index="39" name=""/>
+    <alias field="cmp_laagstedoorstroomhoogte" index="40" name=""/>
+    <alias field="cmp_laagstedoorstroomhoogte_change_NaN" index="41" name=""/>
+    <alias field="cmp_laagstedoorstroomhoogte_priority" index="42" name=""/>
+    <alias field="cmp_hoogstedoorstroomhoogte" index="43" name=""/>
+    <alias field="cmp_hoogstedoorstroomhoogte_change_NaN" index="44" name=""/>
+    <alias field="cmp_hoogstedoorstroomhoogte_priority" index="45" name=""/>
+    <alias field="cmp_soortregelbaarheid" index="46" name=""/>
+    <alias field="cmp_soortregelbaarheid_priority" index="47" name=""/>
+    <alias field="cmp_ws_categorie" index="48" name=""/>
+    <alias field="cmp_ws_categorie_priority" index="49" name=""/>
+    <alias field="cmp_ws_kruinvorm" index="50" name=""/>
+    <alias field="cmp_ws_kruinvorm_priority" index="51" name=""/>
+    <alias field="cmp_ws_functie" index="52" name=""/>
+    <alias field="cmp_ws_functie_priority" index="53" name=""/>
+    <alias field="cmp_geom_type" index="54" name=""/>
+    <alias field="cmp_geom_type_priority" index="55" name=""/>
+    <alias field="number_of_info" index="56" name=""/>
+    <alias field="number_of_warning" index="57" name=""/>
+    <alias field="number_of_critical" index="58" name=""/>
   </aliases>
   <splitPolicies>
-    <policy policy="DefaultValue" field="fid"/>
-    <policy policy="DefaultValue" field="level_0"/>
-    <policy policy="DefaultValue" field="level_1"/>
+    <policy policy="Duplicate" field="fid"/>
+    <policy policy="Duplicate" field="level_0"/>
+    <policy policy="Duplicate" field="level_1"/>
     <policy policy="Duplicate" field="code"/>
     <policy policy="Duplicate" field="naam_New"/>
-    <policy policy="DefaultValue" field="functiegemaal_New"/>
-    <policy policy="DefaultValue" field="maximalecapaciteit_New"/>
-    <policy policy="DefaultValue" field="ws_categorie_New"/>
-    <policy policy="DefaultValue" field="geom_type_New"/>
-    <policy policy="DefaultValue" field="geom_length_New"/>
-    <policy policy="DefaultValue" field="geom_area_New"/>
-    <policy policy="DefaultValue" field="dataset_New"/>
-    <policy policy="DefaultValue" field="origin_New"/>
-    <policy policy="DefaultValue" field="naam_Old"/>
-    <policy policy="Duplicate" field="functiegemaal_Old"/>
-    <policy policy="Duplicate" field="maximalecapaciteit_Old"/>
-    <policy policy="DefaultValue" field="ws_categorie_Old"/>
-    <policy policy="DefaultValue" field="geom_type_Old"/>
-    <policy policy="DefaultValue" field="geom_length_Old"/>
-    <policy policy="DefaultValue" field="geom_area_Old"/>
-    <policy policy="DefaultValue" field="dataset_Old"/>
-    <policy policy="DefaultValue" field="origin_Old"/>
-    <policy policy="DefaultValue" field="in_both"/>
-    <policy policy="DefaultValue" field="geometry_adjusted"/>
-    <policy policy="DefaultValue" field="cmp_ID"/>
-    <policy policy="DefaultValue" field="cmp_ID_priority"/>
-    <policy policy="DefaultValue" field="cmp_functiegemaal"/>
-    <policy policy="DefaultValue" field="cmp_functiegemaal_priority"/>
-    <policy policy="DefaultValue" field="cmp_maximalecapaciteit"/>
-    <policy policy="DefaultValue" field="cmp_maximalecapaciteit_change_NaN"/>
-    <policy policy="DefaultValue" field="cmp_maximalecapaciteit_priority"/>
-    <policy policy="DefaultValue" field="cmp_categorie"/>
-    <policy policy="DefaultValue" field="cmp_categorie_priority"/>
-    <policy policy="DefaultValue" field="cmp_geom_type"/>
-    <policy policy="DefaultValue" field="cmp_geom_type_priority"/>
-    <policy policy="DefaultValue" field="number_of_info"/>
+    <policy policy="Duplicate" field="doorstroombreedte_New"/>
+    <policy policy="Duplicate" field="kruinbreedte_New"/>
+    <policy policy="Duplicate" field="laagstedoorstroomhoogte_New"/>
+    <policy policy="Duplicate" field="hoogstedoorstroomhoogte_New"/>
+    <policy policy="Duplicate" field="soortregelbaarheid_New"/>
+    <policy policy="Duplicate" field="ws_categorie_New"/>
+    <policy policy="Duplicate" field="ws_kruinvorm_New"/>
+    <policy policy="Duplicate" field="ws_functiestuw_New"/>
+    <policy policy="Duplicate" field="geom_type_New"/>
+    <policy policy="Duplicate" field="geom_length_New"/>
+    <policy policy="Duplicate" field="geom_area_New"/>
+    <policy policy="Duplicate" field="dataset_New"/>
+    <policy policy="Duplicate" field="origin_New"/>
+    <policy policy="Duplicate" field="naam_Old"/>
+    <policy policy="Duplicate" field="doorstroombreedte_Old"/>
+    <policy policy="Duplicate" field="kruinbreedte_Old"/>
+    <policy policy="Duplicate" field="laagstedoorstroomhoogte_Old"/>
+    <policy policy="Duplicate" field="hoogstedoorstroomhoogte_Old"/>
+    <policy policy="Duplicate" field="soortregelbaarheid_Old"/>
+    <policy policy="Duplicate" field="ws_categorie_Old"/>
+    <policy policy="Duplicate" field="ws_kruinvorm_Old"/>
+    <policy policy="Duplicate" field="ws_functiestuw_Old"/>
+    <policy policy="Duplicate" field="geom_type_Old"/>
+    <policy policy="Duplicate" field="geom_length_Old"/>
+    <policy policy="Duplicate" field="geom_area_Old"/>
+    <policy policy="Duplicate" field="dataset_Old"/>
+    <policy policy="Duplicate" field="origin_Old"/>
+    <policy policy="Duplicate" field="in_both"/>
+    <policy policy="Duplicate" field="geometry_adjusted"/>
+    <policy policy="Duplicate" field="cmp_doorstroombreedte"/>
+    <policy policy="Duplicate" field="cmp_doorstroombreedte_change_NaN"/>
+    <policy policy="Duplicate" field="cmp_doorstroombreedte_priority"/>
+    <policy policy="Duplicate" field="cmp_kruinbreedte"/>
+    <policy policy="Duplicate" field="cmp_kruinbreedte_change_NaN"/>
+    <policy policy="Duplicate" field="cmp_kruinbreedte_priority"/>
+    <policy policy="Duplicate" field="cmp_laagstedoorstroomhoogte"/>
+    <policy policy="Duplicate" field="cmp_laagstedoorstroomhoogte_change_NaN"/>
+    <policy policy="Duplicate" field="cmp_laagstedoorstroomhoogte_priority"/>
+    <policy policy="Duplicate" field="cmp_hoogstedoorstroomhoogte"/>
+    <policy policy="Duplicate" field="cmp_hoogstedoorstroomhoogte_change_NaN"/>
+    <policy policy="Duplicate" field="cmp_hoogstedoorstroomhoogte_priority"/>
+    <policy policy="Duplicate" field="cmp_soortregelbaarheid"/>
+    <policy policy="Duplicate" field="cmp_soortregelbaarheid_priority"/>
+    <policy policy="Duplicate" field="cmp_ws_categorie"/>
+    <policy policy="Duplicate" field="cmp_ws_categorie_priority"/>
+    <policy policy="Duplicate" field="cmp_ws_kruinvorm"/>
+    <policy policy="Duplicate" field="cmp_ws_kruinvorm_priority"/>
+    <policy policy="Duplicate" field="cmp_ws_functie"/>
+    <policy policy="Duplicate" field="cmp_ws_functie_priority"/>
+    <policy policy="Duplicate" field="cmp_geom_type"/>
+    <policy policy="Duplicate" field="cmp_geom_type_priority"/>
+    <policy policy="Duplicate" field="number_of_info"/>
     <policy policy="Duplicate" field="number_of_warning"/>
-    <policy policy="DefaultValue" field="number_of_critical"/>
+    <policy policy="Duplicate" field="number_of_critical"/>
   </splitPolicies>
   <defaults>
     <default field="fid" expression="" applyOnUpdate="0"/>
@@ -1266,18 +1482,28 @@
     <default field="level_1" expression="" applyOnUpdate="0"/>
     <default field="code" expression="" applyOnUpdate="0"/>
     <default field="naam_New" expression="" applyOnUpdate="0"/>
-    <default field="functiegemaal_New" expression="" applyOnUpdate="0"/>
-    <default field="maximalecapaciteit_New" expression="" applyOnUpdate="0"/>
+    <default field="doorstroombreedte_New" expression="" applyOnUpdate="0"/>
+    <default field="kruinbreedte_New" expression="" applyOnUpdate="0"/>
+    <default field="laagstedoorstroomhoogte_New" expression="" applyOnUpdate="0"/>
+    <default field="hoogstedoorstroomhoogte_New" expression="" applyOnUpdate="0"/>
+    <default field="soortregelbaarheid_New" expression="" applyOnUpdate="0"/>
     <default field="ws_categorie_New" expression="" applyOnUpdate="0"/>
+    <default field="ws_kruinvorm_New" expression="" applyOnUpdate="0"/>
+    <default field="ws_functiestuw_New" expression="" applyOnUpdate="0"/>
     <default field="geom_type_New" expression="" applyOnUpdate="0"/>
     <default field="geom_length_New" expression="" applyOnUpdate="0"/>
     <default field="geom_area_New" expression="" applyOnUpdate="0"/>
     <default field="dataset_New" expression="" applyOnUpdate="0"/>
     <default field="origin_New" expression="" applyOnUpdate="0"/>
     <default field="naam_Old" expression="" applyOnUpdate="0"/>
-    <default field="functiegemaal_Old" expression="" applyOnUpdate="0"/>
-    <default field="maximalecapaciteit_Old" expression="" applyOnUpdate="0"/>
+    <default field="doorstroombreedte_Old" expression="" applyOnUpdate="0"/>
+    <default field="kruinbreedte_Old" expression="" applyOnUpdate="0"/>
+    <default field="laagstedoorstroomhoogte_Old" expression="" applyOnUpdate="0"/>
+    <default field="hoogstedoorstroomhoogte_Old" expression="" applyOnUpdate="0"/>
+    <default field="soortregelbaarheid_Old" expression="" applyOnUpdate="0"/>
     <default field="ws_categorie_Old" expression="" applyOnUpdate="0"/>
+    <default field="ws_kruinvorm_Old" expression="" applyOnUpdate="0"/>
+    <default field="ws_functiestuw_Old" expression="" applyOnUpdate="0"/>
     <default field="geom_type_Old" expression="" applyOnUpdate="0"/>
     <default field="geom_length_Old" expression="" applyOnUpdate="0"/>
     <default field="geom_area_Old" expression="" applyOnUpdate="0"/>
@@ -1285,15 +1511,26 @@
     <default field="origin_Old" expression="" applyOnUpdate="0"/>
     <default field="in_both" expression="" applyOnUpdate="0"/>
     <default field="geometry_adjusted" expression="" applyOnUpdate="0"/>
-    <default field="cmp_ID" expression="" applyOnUpdate="0"/>
-    <default field="cmp_ID_priority" expression="" applyOnUpdate="0"/>
-    <default field="cmp_functiegemaal" expression="" applyOnUpdate="0"/>
-    <default field="cmp_functiegemaal_priority" expression="" applyOnUpdate="0"/>
-    <default field="cmp_maximalecapaciteit" expression="" applyOnUpdate="0"/>
-    <default field="cmp_maximalecapaciteit_change_NaN" expression="" applyOnUpdate="0"/>
-    <default field="cmp_maximalecapaciteit_priority" expression="" applyOnUpdate="0"/>
-    <default field="cmp_categorie" expression="" applyOnUpdate="0"/>
-    <default field="cmp_categorie_priority" expression="" applyOnUpdate="0"/>
+    <default field="cmp_doorstroombreedte" expression="" applyOnUpdate="0"/>
+    <default field="cmp_doorstroombreedte_change_NaN" expression="" applyOnUpdate="0"/>
+    <default field="cmp_doorstroombreedte_priority" expression="" applyOnUpdate="0"/>
+    <default field="cmp_kruinbreedte" expression="" applyOnUpdate="0"/>
+    <default field="cmp_kruinbreedte_change_NaN" expression="" applyOnUpdate="0"/>
+    <default field="cmp_kruinbreedte_priority" expression="" applyOnUpdate="0"/>
+    <default field="cmp_laagstedoorstroomhoogte" expression="" applyOnUpdate="0"/>
+    <default field="cmp_laagstedoorstroomhoogte_change_NaN" expression="" applyOnUpdate="0"/>
+    <default field="cmp_laagstedoorstroomhoogte_priority" expression="" applyOnUpdate="0"/>
+    <default field="cmp_hoogstedoorstroomhoogte" expression="" applyOnUpdate="0"/>
+    <default field="cmp_hoogstedoorstroomhoogte_change_NaN" expression="" applyOnUpdate="0"/>
+    <default field="cmp_hoogstedoorstroomhoogte_priority" expression="" applyOnUpdate="0"/>
+    <default field="cmp_soortregelbaarheid" expression="" applyOnUpdate="0"/>
+    <default field="cmp_soortregelbaarheid_priority" expression="" applyOnUpdate="0"/>
+    <default field="cmp_ws_categorie" expression="" applyOnUpdate="0"/>
+    <default field="cmp_ws_categorie_priority" expression="" applyOnUpdate="0"/>
+    <default field="cmp_ws_kruinvorm" expression="" applyOnUpdate="0"/>
+    <default field="cmp_ws_kruinvorm_priority" expression="" applyOnUpdate="0"/>
+    <default field="cmp_ws_functie" expression="" applyOnUpdate="0"/>
+    <default field="cmp_ws_functie_priority" expression="" applyOnUpdate="0"/>
     <default field="cmp_geom_type" expression="" applyOnUpdate="0"/>
     <default field="cmp_geom_type_priority" expression="" applyOnUpdate="0"/>
     <default field="number_of_info" expression="" applyOnUpdate="0"/>
@@ -1306,18 +1543,28 @@
     <constraint field="level_1" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
     <constraint field="code" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
     <constraint field="naam_New" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
-    <constraint field="functiegemaal_New" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
-    <constraint field="maximalecapaciteit_New" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
+    <constraint field="doorstroombreedte_New" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
+    <constraint field="kruinbreedte_New" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
+    <constraint field="laagstedoorstroomhoogte_New" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
+    <constraint field="hoogstedoorstroomhoogte_New" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
+    <constraint field="soortregelbaarheid_New" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
     <constraint field="ws_categorie_New" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
+    <constraint field="ws_kruinvorm_New" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
+    <constraint field="ws_functiestuw_New" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
     <constraint field="geom_type_New" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
     <constraint field="geom_length_New" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
     <constraint field="geom_area_New" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
     <constraint field="dataset_New" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
     <constraint field="origin_New" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
     <constraint field="naam_Old" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
-    <constraint field="functiegemaal_Old" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
-    <constraint field="maximalecapaciteit_Old" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
+    <constraint field="doorstroombreedte_Old" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
+    <constraint field="kruinbreedte_Old" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
+    <constraint field="laagstedoorstroomhoogte_Old" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
+    <constraint field="hoogstedoorstroomhoogte_Old" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
+    <constraint field="soortregelbaarheid_Old" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
     <constraint field="ws_categorie_Old" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
+    <constraint field="ws_kruinvorm_Old" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
+    <constraint field="ws_functiestuw_Old" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
     <constraint field="geom_type_Old" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
     <constraint field="geom_length_Old" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
     <constraint field="geom_area_Old" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
@@ -1325,15 +1572,26 @@
     <constraint field="origin_Old" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
     <constraint field="in_both" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
     <constraint field="geometry_adjusted" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
-    <constraint field="cmp_ID" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
-    <constraint field="cmp_ID_priority" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
-    <constraint field="cmp_functiegemaal" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
-    <constraint field="cmp_functiegemaal_priority" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
-    <constraint field="cmp_maximalecapaciteit" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
-    <constraint field="cmp_maximalecapaciteit_change_NaN" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
-    <constraint field="cmp_maximalecapaciteit_priority" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
-    <constraint field="cmp_categorie" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
-    <constraint field="cmp_categorie_priority" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
+    <constraint field="cmp_doorstroombreedte" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
+    <constraint field="cmp_doorstroombreedte_change_NaN" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
+    <constraint field="cmp_doorstroombreedte_priority" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
+    <constraint field="cmp_kruinbreedte" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
+    <constraint field="cmp_kruinbreedte_change_NaN" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
+    <constraint field="cmp_kruinbreedte_priority" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
+    <constraint field="cmp_laagstedoorstroomhoogte" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
+    <constraint field="cmp_laagstedoorstroomhoogte_change_NaN" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
+    <constraint field="cmp_laagstedoorstroomhoogte_priority" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
+    <constraint field="cmp_hoogstedoorstroomhoogte" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
+    <constraint field="cmp_hoogstedoorstroomhoogte_change_NaN" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
+    <constraint field="cmp_hoogstedoorstroomhoogte_priority" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
+    <constraint field="cmp_soortregelbaarheid" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
+    <constraint field="cmp_soortregelbaarheid_priority" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
+    <constraint field="cmp_ws_categorie" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
+    <constraint field="cmp_ws_categorie_priority" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
+    <constraint field="cmp_ws_kruinvorm" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
+    <constraint field="cmp_ws_kruinvorm_priority" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
+    <constraint field="cmp_ws_functie" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
+    <constraint field="cmp_ws_functie_priority" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
     <constraint field="cmp_geom_type" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
     <constraint field="cmp_geom_type_priority" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
     <constraint field="number_of_info" unique_strength="0" constraints="0" notnull_strength="0" exp_strength="0"/>
@@ -1346,18 +1604,28 @@
     <constraint field="level_1" desc="" exp=""/>
     <constraint field="code" desc="" exp=""/>
     <constraint field="naam_New" desc="" exp=""/>
-    <constraint field="functiegemaal_New" desc="" exp=""/>
-    <constraint field="maximalecapaciteit_New" desc="" exp=""/>
+    <constraint field="doorstroombreedte_New" desc="" exp=""/>
+    <constraint field="kruinbreedte_New" desc="" exp=""/>
+    <constraint field="laagstedoorstroomhoogte_New" desc="" exp=""/>
+    <constraint field="hoogstedoorstroomhoogte_New" desc="" exp=""/>
+    <constraint field="soortregelbaarheid_New" desc="" exp=""/>
     <constraint field="ws_categorie_New" desc="" exp=""/>
+    <constraint field="ws_kruinvorm_New" desc="" exp=""/>
+    <constraint field="ws_functiestuw_New" desc="" exp=""/>
     <constraint field="geom_type_New" desc="" exp=""/>
     <constraint field="geom_length_New" desc="" exp=""/>
     <constraint field="geom_area_New" desc="" exp=""/>
     <constraint field="dataset_New" desc="" exp=""/>
     <constraint field="origin_New" desc="" exp=""/>
     <constraint field="naam_Old" desc="" exp=""/>
-    <constraint field="functiegemaal_Old" desc="" exp=""/>
-    <constraint field="maximalecapaciteit_Old" desc="" exp=""/>
+    <constraint field="doorstroombreedte_Old" desc="" exp=""/>
+    <constraint field="kruinbreedte_Old" desc="" exp=""/>
+    <constraint field="laagstedoorstroomhoogte_Old" desc="" exp=""/>
+    <constraint field="hoogstedoorstroomhoogte_Old" desc="" exp=""/>
+    <constraint field="soortregelbaarheid_Old" desc="" exp=""/>
     <constraint field="ws_categorie_Old" desc="" exp=""/>
+    <constraint field="ws_kruinvorm_Old" desc="" exp=""/>
+    <constraint field="ws_functiestuw_Old" desc="" exp=""/>
     <constraint field="geom_type_Old" desc="" exp=""/>
     <constraint field="geom_length_Old" desc="" exp=""/>
     <constraint field="geom_area_Old" desc="" exp=""/>
@@ -1365,15 +1633,26 @@
     <constraint field="origin_Old" desc="" exp=""/>
     <constraint field="in_both" desc="" exp=""/>
     <constraint field="geometry_adjusted" desc="" exp=""/>
-    <constraint field="cmp_ID" desc="" exp=""/>
-    <constraint field="cmp_ID_priority" desc="" exp=""/>
-    <constraint field="cmp_functiegemaal" desc="" exp=""/>
-    <constraint field="cmp_functiegemaal_priority" desc="" exp=""/>
-    <constraint field="cmp_maximalecapaciteit" desc="" exp=""/>
-    <constraint field="cmp_maximalecapaciteit_change_NaN" desc="" exp=""/>
-    <constraint field="cmp_maximalecapaciteit_priority" desc="" exp=""/>
-    <constraint field="cmp_categorie" desc="" exp=""/>
-    <constraint field="cmp_categorie_priority" desc="" exp=""/>
+    <constraint field="cmp_doorstroombreedte" desc="" exp=""/>
+    <constraint field="cmp_doorstroombreedte_change_NaN" desc="" exp=""/>
+    <constraint field="cmp_doorstroombreedte_priority" desc="" exp=""/>
+    <constraint field="cmp_kruinbreedte" desc="" exp=""/>
+    <constraint field="cmp_kruinbreedte_change_NaN" desc="" exp=""/>
+    <constraint field="cmp_kruinbreedte_priority" desc="" exp=""/>
+    <constraint field="cmp_laagstedoorstroomhoogte" desc="" exp=""/>
+    <constraint field="cmp_laagstedoorstroomhoogte_change_NaN" desc="" exp=""/>
+    <constraint field="cmp_laagstedoorstroomhoogte_priority" desc="" exp=""/>
+    <constraint field="cmp_hoogstedoorstroomhoogte" desc="" exp=""/>
+    <constraint field="cmp_hoogstedoorstroomhoogte_change_NaN" desc="" exp=""/>
+    <constraint field="cmp_hoogstedoorstroomhoogte_priority" desc="" exp=""/>
+    <constraint field="cmp_soortregelbaarheid" desc="" exp=""/>
+    <constraint field="cmp_soortregelbaarheid_priority" desc="" exp=""/>
+    <constraint field="cmp_ws_categorie" desc="" exp=""/>
+    <constraint field="cmp_ws_categorie_priority" desc="" exp=""/>
+    <constraint field="cmp_ws_kruinvorm" desc="" exp=""/>
+    <constraint field="cmp_ws_kruinvorm_priority" desc="" exp=""/>
+    <constraint field="cmp_ws_functie" desc="" exp=""/>
+    <constraint field="cmp_ws_functie_priority" desc="" exp=""/>
     <constraint field="cmp_geom_type" desc="" exp=""/>
     <constraint field="cmp_geom_type_priority" desc="" exp=""/>
     <constraint field="number_of_info" desc="" exp=""/>
@@ -1384,7 +1663,7 @@
   <attributeactions>
     <defaultAction value="{00000000-0000-0000-0000-000000000000}" key="Canvas"/>
   </attributeactions>
-  <attributetableconfig sortExpression="&quot;number_of_critical&quot;" actionWidgetStyle="dropDown" sortOrder="1">
+  <attributetableconfig sortExpression="&quot;ws_categorie_Old&quot;" actionWidgetStyle="dropDown" sortOrder="0">
     <columns>
       <column type="field" hidden="0" width="-1" name="fid"/>
       <column type="field" hidden="0" width="-1" name="code"/>
@@ -1393,37 +1672,58 @@
       <column type="field" hidden="0" width="-1" name="level_0"/>
       <column type="field" hidden="0" width="-1" name="level_1"/>
       <column type="field" hidden="0" width="-1" name="naam_New"/>
-      <column type="field" hidden="0" width="-1" name="functiegemaal_New"/>
-      <column type="field" hidden="0" width="-1" name="maximalecapaciteit_New"/>
+      <column type="field" hidden="0" width="-1" name="doorstroombreedte_New"/>
+      <column type="field" hidden="0" width="-1" name="kruinbreedte_New"/>
+      <column type="field" hidden="0" width="-1" name="laagstedoorstroomhoogte_New"/>
+      <column type="field" hidden="0" width="-1" name="hoogstedoorstroomhoogte_New"/>
+      <column type="field" hidden="0" width="-1" name="soortregelbaarheid_New"/>
       <column type="field" hidden="0" width="-1" name="ws_categorie_New"/>
+      <column type="field" hidden="0" width="-1" name="ws_kruinvorm_New"/>
+      <column type="field" hidden="0" width="-1" name="ws_functiestuw_New"/>
       <column type="field" hidden="0" width="-1" name="geom_type_New"/>
       <column type="field" hidden="0" width="-1" name="geom_length_New"/>
       <column type="field" hidden="0" width="-1" name="geom_area_New"/>
       <column type="field" hidden="0" width="-1" name="dataset_New"/>
       <column type="field" hidden="0" width="-1" name="origin_New"/>
       <column type="field" hidden="0" width="-1" name="naam_Old"/>
-      <column type="field" hidden="0" width="-1" name="functiegemaal_Old"/>
-      <column type="field" hidden="0" width="-1" name="maximalecapaciteit_Old"/>
+      <column type="field" hidden="0" width="-1" name="doorstroombreedte_Old"/>
+      <column type="field" hidden="0" width="-1" name="kruinbreedte_Old"/>
+      <column type="field" hidden="0" width="-1" name="laagstedoorstroomhoogte_Old"/>
+      <column type="field" hidden="0" width="-1" name="hoogstedoorstroomhoogte_Old"/>
+      <column type="field" hidden="0" width="-1" name="soortregelbaarheid_Old"/>
       <column type="field" hidden="0" width="-1" name="ws_categorie_Old"/>
+      <column type="field" hidden="0" width="-1" name="ws_kruinvorm_Old"/>
+      <column type="field" hidden="0" width="-1" name="ws_functiestuw_Old"/>
       <column type="field" hidden="0" width="-1" name="geom_type_Old"/>
       <column type="field" hidden="0" width="-1" name="geom_length_Old"/>
       <column type="field" hidden="0" width="-1" name="geom_area_Old"/>
       <column type="field" hidden="0" width="-1" name="dataset_Old"/>
       <column type="field" hidden="0" width="-1" name="origin_Old"/>
-      <column type="field" hidden="0" width="-1" name="cmp_functiegemaal"/>
-      <column type="field" hidden="0" width="-1" name="cmp_functiegemaal_priority"/>
-      <column type="field" hidden="0" width="-1" name="cmp_maximalecapaciteit"/>
-      <column type="field" hidden="0" width="-1" name="cmp_maximalecapaciteit_change_NaN"/>
-      <column type="field" hidden="0" width="-1" name="cmp_maximalecapaciteit_priority"/>
+      <column type="field" hidden="0" width="-1" name="cmp_doorstroombreedte"/>
+      <column type="field" hidden="0" width="-1" name="cmp_doorstroombreedte_change_NaN"/>
+      <column type="field" hidden="0" width="-1" name="cmp_doorstroombreedte_priority"/>
+      <column type="field" hidden="0" width="-1" name="cmp_kruinbreedte"/>
+      <column type="field" hidden="0" width="-1" name="cmp_kruinbreedte_change_NaN"/>
+      <column type="field" hidden="0" width="-1" name="cmp_kruinbreedte_priority"/>
+      <column type="field" hidden="0" width="-1" name="cmp_laagstedoorstroomhoogte"/>
+      <column type="field" hidden="0" width="-1" name="cmp_laagstedoorstroomhoogte_change_NaN"/>
+      <column type="field" hidden="0" width="-1" name="cmp_laagstedoorstroomhoogte_priority"/>
+      <column type="field" hidden="0" width="-1" name="cmp_hoogstedoorstroomhoogte"/>
+      <column type="field" hidden="0" width="-1" name="cmp_hoogstedoorstroomhoogte_change_NaN"/>
+      <column type="field" hidden="0" width="-1" name="cmp_hoogstedoorstroomhoogte_priority"/>
+      <column type="field" hidden="0" width="-1" name="cmp_soortregelbaarheid"/>
+      <column type="field" hidden="0" width="-1" name="cmp_soortregelbaarheid_priority"/>
+      <column type="field" hidden="0" width="-1" name="cmp_ws_categorie"/>
+      <column type="field" hidden="0" width="-1" name="cmp_ws_categorie_priority"/>
+      <column type="field" hidden="0" width="-1" name="cmp_ws_kruinvorm"/>
+      <column type="field" hidden="0" width="-1" name="cmp_ws_kruinvorm_priority"/>
+      <column type="field" hidden="0" width="-1" name="cmp_ws_functie"/>
+      <column type="field" hidden="0" width="-1" name="cmp_ws_functie_priority"/>
+      <column type="field" hidden="0" width="-1" name="cmp_geom_type"/>
+      <column type="field" hidden="0" width="-1" name="cmp_geom_type_priority"/>
       <column type="field" hidden="0" width="-1" name="number_of_info"/>
       <column type="field" hidden="0" width="-1" name="number_of_warning"/>
       <column type="field" hidden="0" width="-1" name="number_of_critical"/>
-      <column type="field" hidden="0" width="-1" name="cmp_categorie"/>
-      <column type="field" hidden="0" width="-1" name="cmp_categorie_priority"/>
-      <column type="field" hidden="0" width="-1" name="cmp_geom_type"/>
-      <column type="field" hidden="0" width="-1" name="cmp_geom_type_priority"/>
-      <column type="field" hidden="0" width="-1" name="cmp_ID"/>
-      <column type="field" hidden="0" width="-1" name="cmp_ID_priority"/>
       <column type="actions" hidden="1" width="-1"/>
     </columns>
   </attributetableconfig>
@@ -1473,81 +1773,21 @@ def my_form_open(dialog, layer, feature):
           <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
         </labelStyle>
       </attributeEditorField>
-      <attributeEditorField showLabel="1" verticalStretch="0" index="4" horizontalStretch="0" name="naam_New">
+      <attributeEditorContainer showLabel="1" type="GroupBox" verticalStretch="0" columnCount="1" collapsedExpressionEnabled="0" visibilityExpressionEnabled="0" groupBox="1" collapsed="0" horizontalStretch="0" collapsedExpression="" visibilityExpression="" name="Naam">
         <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
           <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
         </labelStyle>
-      </attributeEditorField>
-      <attributeEditorField showLabel="1" verticalStretch="0" index="13" horizontalStretch="0" name="naam_Old">
-        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
-          <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
-        </labelStyle>
-      </attributeEditorField>
-      <attributeEditorField showLabel="1" verticalStretch="0" index="24" horizontalStretch="0" name="cmp_ID">
-        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
-          <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
-        </labelStyle>
-      </attributeEditorField>
-      <attributeEditorField showLabel="1" verticalStretch="0" index="25" horizontalStretch="0" name="cmp_ID_priority">
-        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
-          <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
-        </labelStyle>
-      </attributeEditorField>
-    </attributeEditorContainer>
-    <attributeEditorContainer showLabel="1" type="Tab" verticalStretch="0" columnCount="1" collapsedExpressionEnabled="0" visibilityExpressionEnabled="0" groupBox="0" collapsed="0" horizontalStretch="0" collapsedExpression="" visibilityExpression="" name="Category">
-      <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="1">
-        <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,75,0,0,0,0,0" bold="1" style="" italic="0" underline="0"/>
-      </labelStyle>
-      <attributeEditorField showLabel="1" verticalStretch="0" index="7" horizontalStretch="0" name="ws_categorie_New">
-        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
-          <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
-        </labelStyle>
-      </attributeEditorField>
-      <attributeEditorField showLabel="1" verticalStretch="0" index="16" horizontalStretch="0" name="ws_categorie_Old">
-        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
-          <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
-        </labelStyle>
-      </attributeEditorField>
-      <attributeEditorField showLabel="1" verticalStretch="0" index="31" horizontalStretch="0" name="cmp_categorie">
-        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
-          <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
-        </labelStyle>
-      </attributeEditorField>
-      <attributeEditorField showLabel="1" verticalStretch="0" index="32" horizontalStretch="0" name="cmp_categorie_priority">
-        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
-          <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
-        </labelStyle>
-      </attributeEditorField>
-    </attributeEditorContainer>
-    <attributeEditorContainer showLabel="1" type="Tab" verticalStretch="0" columnCount="1" collapsedExpressionEnabled="0" visibilityExpressionEnabled="0" groupBox="0" collapsed="0" horizontalStretch="0" collapsedExpression="" visibilityExpression="" name="Capacity">
-      <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="1">
-        <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,75,0,0,0,0,0" bold="1" style="" italic="0" underline="0"/>
-      </labelStyle>
-      <attributeEditorField showLabel="1" verticalStretch="0" index="6" horizontalStretch="0" name="maximalecapaciteit_New">
-        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
-          <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
-        </labelStyle>
-      </attributeEditorField>
-      <attributeEditorField showLabel="1" verticalStretch="0" index="15" horizontalStretch="0" name="maximalecapaciteit_Old">
-        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
-          <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
-        </labelStyle>
-      </attributeEditorField>
-      <attributeEditorField showLabel="1" verticalStretch="0" index="28" horizontalStretch="0" name="cmp_maximalecapaciteit">
-        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
-          <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
-        </labelStyle>
-      </attributeEditorField>
-      <attributeEditorField showLabel="1" verticalStretch="0" index="29" horizontalStretch="0" name="cmp_maximalecapaciteit_change_NaN">
-        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
-          <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
-        </labelStyle>
-      </attributeEditorField>
-      <attributeEditorField showLabel="1" verticalStretch="0" index="30" horizontalStretch="0" name="cmp_maximalecapaciteit_priority">
-        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
-          <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
-        </labelStyle>
-      </attributeEditorField>
+        <attributeEditorField showLabel="1" verticalStretch="0" index="4" horizontalStretch="0" name="naam_New">
+          <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+            <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
+          </labelStyle>
+        </attributeEditorField>
+        <attributeEditorField showLabel="1" verticalStretch="0" index="18" horizontalStretch="0" name="naam_Old">
+          <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+            <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
+          </labelStyle>
+        </attributeEditorField>
+      </attributeEditorContainer>
     </attributeEditorContainer>
     <attributeEditorContainer showLabel="1" type="Tab" verticalStretch="0" columnCount="1" collapsedExpressionEnabled="0" visibilityExpressionEnabled="0" groupBox="0" collapsed="0" horizontalStretch="0" collapsedExpression="" visibilityExpression="" name="Dataset_Origin">
       <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="1">
@@ -1557,12 +1797,12 @@ def my_form_open(dialog, layer, feature):
         <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
           <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
         </labelStyle>
-        <attributeEditorField showLabel="1" verticalStretch="0" index="11" horizontalStretch="0" name="dataset_New">
+        <attributeEditorField showLabel="1" verticalStretch="0" index="16" horizontalStretch="0" name="dataset_New">
           <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
             <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
           </labelStyle>
         </attributeEditorField>
-        <attributeEditorField showLabel="1" verticalStretch="0" index="20" horizontalStretch="0" name="dataset_Old">
+        <attributeEditorField showLabel="1" verticalStretch="0" index="30" horizontalStretch="0" name="dataset_Old">
           <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
             <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
           </labelStyle>
@@ -1572,18 +1812,68 @@ def my_form_open(dialog, layer, feature):
         <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
           <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
         </labelStyle>
-        <attributeEditorField showLabel="1" verticalStretch="0" index="12" horizontalStretch="0" name="origin_New">
+        <attributeEditorField showLabel="1" verticalStretch="0" index="17" horizontalStretch="0" name="origin_New">
           <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
             <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
           </labelStyle>
         </attributeEditorField>
-        <attributeEditorField showLabel="1" verticalStretch="0" index="21" horizontalStretch="0" name="origin_Old">
+        <attributeEditorField showLabel="1" verticalStretch="0" index="31" horizontalStretch="0" name="origin_Old">
           <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
             <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
           </labelStyle>
         </attributeEditorField>
       </attributeEditorContainer>
-      <attributeEditorField showLabel="1" verticalStretch="0" index="22" horizontalStretch="0" name="in_both">
+      <attributeEditorField showLabel="1" verticalStretch="0" index="32" horizontalStretch="0" name="in_both">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
+        </labelStyle>
+      </attributeEditorField>
+    </attributeEditorContainer>
+    <attributeEditorContainer showLabel="1" type="Tab" verticalStretch="0" columnCount="1" collapsedExpressionEnabled="0" visibilityExpressionEnabled="0" groupBox="0" collapsed="0" horizontalStretch="0" collapsedExpression="" visibilityExpression="" name="Category">
+      <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="1">
+        <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,75,0,0,0,0,0" bold="1" style="" italic="0" underline="0"/>
+      </labelStyle>
+      <attributeEditorField showLabel="1" verticalStretch="0" index="10" horizontalStretch="0" name="ws_categorie_New">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
+        </labelStyle>
+      </attributeEditorField>
+      <attributeEditorField showLabel="1" verticalStretch="0" index="24" horizontalStretch="0" name="ws_categorie_Old">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
+        </labelStyle>
+      </attributeEditorField>
+      <attributeEditorField showLabel="1" verticalStretch="0" index="48" horizontalStretch="0" name="cmp_ws_categorie">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
+        </labelStyle>
+      </attributeEditorField>
+      <attributeEditorField showLabel="1" verticalStretch="0" index="49" horizontalStretch="0" name="cmp_ws_categorie_priority">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
+        </labelStyle>
+      </attributeEditorField>
+    </attributeEditorContainer>
+    <attributeEditorContainer showLabel="1" type="Tab" verticalStretch="0" columnCount="1" collapsedExpressionEnabled="0" visibilityExpressionEnabled="0" groupBox="0" collapsed="0" horizontalStretch="0" collapsedExpression="" visibilityExpression="" name="Form">
+      <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="1">
+        <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,75,0,0,0,0,0" bold="1" style="" italic="0" underline="0"/>
+      </labelStyle>
+      <attributeEditorField showLabel="1" verticalStretch="0" index="11" horizontalStretch="0" name="ws_kruinvorm_New">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
+        </labelStyle>
+      </attributeEditorField>
+      <attributeEditorField showLabel="1" verticalStretch="0" index="25" horizontalStretch="0" name="ws_kruinvorm_Old">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
+        </labelStyle>
+      </attributeEditorField>
+      <attributeEditorField showLabel="1" verticalStretch="0" index="50" horizontalStretch="0" name="cmp_ws_kruinvorm">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
+        </labelStyle>
+      </attributeEditorField>
+      <attributeEditorField showLabel="1" verticalStretch="0" index="51" horizontalStretch="0" name="cmp_ws_kruinvorm_priority">
         <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
           <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
         </labelStyle>
@@ -1593,87 +1883,172 @@ def my_form_open(dialog, layer, feature):
       <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="1">
         <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,75,0,0,0,0,0" bold="1" style="" italic="0" underline="0"/>
       </labelStyle>
-      <attributeEditorField showLabel="1" verticalStretch="0" index="5" horizontalStretch="0" name="functiegemaal_New">
+      <attributeEditorField showLabel="1" verticalStretch="0" index="12" horizontalStretch="0" name="ws_functiestuw_New">
         <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
           <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
         </labelStyle>
       </attributeEditorField>
-      <attributeEditorField showLabel="1" verticalStretch="0" index="14" horizontalStretch="0" name="functiegemaal_Old">
+      <attributeEditorField showLabel="1" verticalStretch="0" index="26" horizontalStretch="0" name="ws_functiestuw_Old">
         <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
           <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
         </labelStyle>
       </attributeEditorField>
-      <attributeEditorField showLabel="1" verticalStretch="0" index="26" horizontalStretch="0" name="cmp_functiegemaal">
+      <attributeEditorField showLabel="1" verticalStretch="0" index="52" horizontalStretch="0" name="cmp_ws_functie">
         <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
           <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
         </labelStyle>
       </attributeEditorField>
-      <attributeEditorField showLabel="1" verticalStretch="0" index="27" horizontalStretch="0" name="cmp_functiegemaal_priority">
+      <attributeEditorField showLabel="1" verticalStretch="0" index="53" horizontalStretch="0" name="cmp_ws_functie_priority">
         <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
           <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
         </labelStyle>
       </attributeEditorField>
     </attributeEditorContainer>
-    <attributeEditorContainer showLabel="1" type="Tab" verticalStretch="0" columnCount="1" collapsedExpressionEnabled="0" visibilityExpressionEnabled="0" groupBox="0" collapsed="0" horizontalStretch="0" collapsedExpression="" visibilityExpression="" name="Geometry">
+    <attributeEditorContainer showLabel="1" type="Tab" verticalStretch="0" columnCount="1" collapsedExpressionEnabled="0" visibilityExpressionEnabled="0" groupBox="0" collapsed="0" horizontalStretch="0" collapsedExpression="" visibilityExpression="" name="Hydraulic Dimension">
       <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="1">
         <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,75,0,0,0,0,0" bold="1" style="" italic="0" underline="0"/>
       </labelStyle>
-      <attributeEditorContainer showLabel="1" type="GroupBox" verticalStretch="0" columnCount="1" collapsedExpressionEnabled="0" visibilityExpressionEnabled="0" groupBox="1" collapsed="0" horizontalStretch="0" collapsedExpression="" visibilityExpression="" name="Area">
+      <attributeEditorContainer showLabel="1" type="GroupBox" verticalStretch="0" columnCount="1" collapsedExpressionEnabled="0" visibilityExpressionEnabled="0" groupBox="1" collapsed="0" horizontalStretch="0" collapsedExpression="" visibilityExpression="" name="Doorstroombreedte">
         <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
           <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
         </labelStyle>
-        <attributeEditorField showLabel="1" verticalStretch="0" index="10" horizontalStretch="0" name="geom_area_New">
+        <attributeEditorField showLabel="1" verticalStretch="0" index="19" horizontalStretch="0" name="doorstroombreedte_Old">
           <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
             <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
           </labelStyle>
         </attributeEditorField>
-        <attributeEditorField showLabel="1" verticalStretch="0" index="19" horizontalStretch="0" name="geom_area_Old">
+        <attributeEditorField showLabel="1" verticalStretch="0" index="5" horizontalStretch="0" name="doorstroombreedte_New">
+          <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+            <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
+          </labelStyle>
+        </attributeEditorField>
+        <attributeEditorField showLabel="1" verticalStretch="0" index="36" horizontalStretch="0" name="cmp_doorstroombreedte_priority">
+          <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+            <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
+          </labelStyle>
+        </attributeEditorField>
+        <attributeEditorField showLabel="1" verticalStretch="0" index="35" horizontalStretch="0" name="cmp_doorstroombreedte_change_NaN">
+          <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+            <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
+          </labelStyle>
+        </attributeEditorField>
+        <attributeEditorField showLabel="1" verticalStretch="0" index="34" horizontalStretch="0" name="cmp_doorstroombreedte">
           <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
             <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
           </labelStyle>
         </attributeEditorField>
       </attributeEditorContainer>
-      <attributeEditorContainer showLabel="1" type="GroupBox" verticalStretch="0" columnCount="1" collapsedExpressionEnabled="0" visibilityExpressionEnabled="0" groupBox="1" collapsed="0" horizontalStretch="0" collapsedExpression="" visibilityExpression="" name="Length">
+      <attributeEditorContainer showLabel="1" type="GroupBox" verticalStretch="0" columnCount="1" collapsedExpressionEnabled="0" visibilityExpressionEnabled="0" groupBox="1" collapsed="0" horizontalStretch="0" collapsedExpression="" visibilityExpression="" name="Kruinbreedte">
         <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
           <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
         </labelStyle>
-        <attributeEditorField showLabel="1" verticalStretch="0" index="9" horizontalStretch="0" name="geom_length_New">
+        <attributeEditorField showLabel="1" verticalStretch="0" index="6" horizontalStretch="0" name="kruinbreedte_New">
           <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
             <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
           </labelStyle>
         </attributeEditorField>
-        <attributeEditorField showLabel="1" verticalStretch="0" index="18" horizontalStretch="0" name="geom_length_Old">
+        <attributeEditorField showLabel="1" verticalStretch="0" index="20" horizontalStretch="0" name="kruinbreedte_Old">
+          <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+            <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
+          </labelStyle>
+        </attributeEditorField>
+        <attributeEditorField showLabel="1" verticalStretch="0" index="37" horizontalStretch="0" name="cmp_kruinbreedte">
+          <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+            <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
+          </labelStyle>
+        </attributeEditorField>
+        <attributeEditorField showLabel="1" verticalStretch="0" index="38" horizontalStretch="0" name="cmp_kruinbreedte_change_NaN">
+          <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+            <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
+          </labelStyle>
+        </attributeEditorField>
+        <attributeEditorField showLabel="1" verticalStretch="0" index="39" horizontalStretch="0" name="cmp_kruinbreedte_priority">
           <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
             <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
           </labelStyle>
         </attributeEditorField>
       </attributeEditorContainer>
-      <attributeEditorContainer showLabel="1" type="GroupBox" verticalStretch="0" columnCount="1" collapsedExpressionEnabled="0" visibilityExpressionEnabled="0" groupBox="1" collapsed="0" horizontalStretch="0" collapsedExpression="" visibilityExpression="" name="Type">
+      <attributeEditorContainer showLabel="1" type="GroupBox" verticalStretch="0" columnCount="1" collapsedExpressionEnabled="0" visibilityExpressionEnabled="0" groupBox="1" collapsed="0" horizontalStretch="0" collapsedExpression="" visibilityExpression="" name="Laagstedoorstroomhoogte">
         <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
           <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
         </labelStyle>
-        <attributeEditorField showLabel="1" verticalStretch="0" index="8" horizontalStretch="0" name="geom_type_New">
+        <attributeEditorField showLabel="1" verticalStretch="0" index="7" horizontalStretch="0" name="laagstedoorstroomhoogte_New">
           <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
             <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
           </labelStyle>
         </attributeEditorField>
-        <attributeEditorField showLabel="1" verticalStretch="0" index="17" horizontalStretch="0" name="geom_type_Old">
+        <attributeEditorField showLabel="1" verticalStretch="0" index="21" horizontalStretch="0" name="laagstedoorstroomhoogte_Old">
           <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
             <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
           </labelStyle>
         </attributeEditorField>
-        <attributeEditorField showLabel="1" verticalStretch="0" index="33" horizontalStretch="0" name="cmp_geom_type">
+        <attributeEditorField showLabel="1" verticalStretch="0" index="40" horizontalStretch="0" name="cmp_laagstedoorstroomhoogte">
           <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
             <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
           </labelStyle>
         </attributeEditorField>
-        <attributeEditorField showLabel="1" verticalStretch="0" index="34" horizontalStretch="0" name="cmp_geom_type_priority">
+        <attributeEditorField showLabel="1" verticalStretch="0" index="41" horizontalStretch="0" name="cmp_laagstedoorstroomhoogte_change_NaN">
+          <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+            <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
+          </labelStyle>
+        </attributeEditorField>
+        <attributeEditorField showLabel="1" verticalStretch="0" index="42" horizontalStretch="0" name="cmp_laagstedoorstroomhoogte_priority">
           <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
             <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
           </labelStyle>
         </attributeEditorField>
       </attributeEditorContainer>
-      <attributeEditorField showLabel="1" verticalStretch="0" index="23" horizontalStretch="0" name="geometry_adjusted">
+      <attributeEditorContainer showLabel="1" type="GroupBox" verticalStretch="0" columnCount="1" collapsedExpressionEnabled="0" visibilityExpressionEnabled="0" groupBox="1" collapsed="0" horizontalStretch="0" collapsedExpression="" visibilityExpression="" name="Hoogstedoorstroomhoogte">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
+        </labelStyle>
+        <attributeEditorField showLabel="1" verticalStretch="0" index="8" horizontalStretch="0" name="hoogstedoorstroomhoogte_New">
+          <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+            <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
+          </labelStyle>
+        </attributeEditorField>
+        <attributeEditorField showLabel="1" verticalStretch="0" index="22" horizontalStretch="0" name="hoogstedoorstroomhoogte_Old">
+          <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+            <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
+          </labelStyle>
+        </attributeEditorField>
+        <attributeEditorField showLabel="1" verticalStretch="0" index="43" horizontalStretch="0" name="cmp_hoogstedoorstroomhoogte">
+          <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+            <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
+          </labelStyle>
+        </attributeEditorField>
+        <attributeEditorField showLabel="1" verticalStretch="0" index="44" horizontalStretch="0" name="cmp_hoogstedoorstroomhoogte_change_NaN">
+          <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+            <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
+          </labelStyle>
+        </attributeEditorField>
+        <attributeEditorField showLabel="1" verticalStretch="0" index="45" horizontalStretch="0" name="cmp_hoogstedoorstroomhoogte_priority">
+          <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+            <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
+          </labelStyle>
+        </attributeEditorField>
+      </attributeEditorContainer>
+    </attributeEditorContainer>
+    <attributeEditorContainer showLabel="1" type="Tab" verticalStretch="0" columnCount="1" collapsedExpressionEnabled="0" visibilityExpressionEnabled="0" groupBox="0" collapsed="0" horizontalStretch="0" collapsedExpression="" visibilityExpression="" name="Soortregelbaarheid">
+      <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="1">
+        <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,75,0,0,0,0,0" bold="1" style="" italic="0" underline="0"/>
+      </labelStyle>
+      <attributeEditorField showLabel="1" verticalStretch="0" index="9" horizontalStretch="0" name="soortregelbaarheid_New">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
+        </labelStyle>
+      </attributeEditorField>
+      <attributeEditorField showLabel="1" verticalStretch="0" index="23" horizontalStretch="0" name="soortregelbaarheid_Old">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
+        </labelStyle>
+      </attributeEditorField>
+      <attributeEditorField showLabel="1" verticalStretch="0" index="46" horizontalStretch="0" name="cmp_soortregelbaarheid">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
+        </labelStyle>
+      </attributeEditorField>
+      <attributeEditorField showLabel="1" verticalStretch="0" index="47" horizontalStretch="0" name="cmp_soortregelbaarheid_priority">
         <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
           <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
         </labelStyle>
@@ -1683,17 +2058,82 @@ def my_form_open(dialog, layer, feature):
       <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="1">
         <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,75,0,0,0,0,0" bold="1" style="" italic="0" underline="0"/>
       </labelStyle>
-      <attributeEditorField showLabel="1" verticalStretch="0" index="35" horizontalStretch="0" name="number_of_info">
+      <attributeEditorField showLabel="1" verticalStretch="0" index="56" horizontalStretch="0" name="number_of_info">
         <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
           <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
         </labelStyle>
       </attributeEditorField>
-      <attributeEditorField showLabel="1" verticalStretch="0" index="36" horizontalStretch="0" name="number_of_warning">
+      <attributeEditorField showLabel="1" verticalStretch="0" index="57" horizontalStretch="0" name="number_of_warning">
         <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
           <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
         </labelStyle>
       </attributeEditorField>
-      <attributeEditorField showLabel="1" verticalStretch="0" index="37" horizontalStretch="0" name="number_of_critical">
+      <attributeEditorField showLabel="1" verticalStretch="0" index="58" horizontalStretch="0" name="number_of_critical">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
+        </labelStyle>
+      </attributeEditorField>
+    </attributeEditorContainer>
+    <attributeEditorContainer showLabel="1" type="Tab" verticalStretch="0" columnCount="1" collapsedExpressionEnabled="0" visibilityExpressionEnabled="0" groupBox="0" collapsed="0" horizontalStretch="0" collapsedExpression="" visibilityExpression="" name="Geometry">
+      <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="1">
+        <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,75,0,0,0,0,0" bold="1" style="" italic="0" underline="0"/>
+      </labelStyle>
+      <attributeEditorContainer showLabel="1" type="GroupBox" verticalStretch="0" columnCount="1" collapsedExpressionEnabled="0" visibilityExpressionEnabled="0" groupBox="1" collapsed="0" horizontalStretch="0" collapsedExpression="" visibilityExpression="" name="Type">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
+        </labelStyle>
+        <attributeEditorField showLabel="1" verticalStretch="0" index="13" horizontalStretch="0" name="geom_type_New">
+          <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+            <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
+          </labelStyle>
+        </attributeEditorField>
+        <attributeEditorField showLabel="1" verticalStretch="0" index="27" horizontalStretch="0" name="geom_type_Old">
+          <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+            <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
+          </labelStyle>
+        </attributeEditorField>
+        <attributeEditorField showLabel="1" verticalStretch="0" index="54" horizontalStretch="0" name="cmp_geom_type">
+          <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+            <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
+          </labelStyle>
+        </attributeEditorField>
+        <attributeEditorField showLabel="1" verticalStretch="0" index="55" horizontalStretch="0" name="cmp_geom_type_priority">
+          <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+            <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
+          </labelStyle>
+        </attributeEditorField>
+      </attributeEditorContainer>
+      <attributeEditorContainer showLabel="1" type="GroupBox" verticalStretch="0" columnCount="1" collapsedExpressionEnabled="0" visibilityExpressionEnabled="0" groupBox="1" collapsed="0" horizontalStretch="0" collapsedExpression="" visibilityExpression="" name="Lenght">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
+        </labelStyle>
+        <attributeEditorField showLabel="1" verticalStretch="0" index="14" horizontalStretch="0" name="geom_length_New">
+          <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+            <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
+          </labelStyle>
+        </attributeEditorField>
+        <attributeEditorField showLabel="1" verticalStretch="0" index="28" horizontalStretch="0" name="geom_length_Old">
+          <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+            <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
+          </labelStyle>
+        </attributeEditorField>
+      </attributeEditorContainer>
+      <attributeEditorContainer showLabel="1" type="GroupBox" verticalStretch="0" columnCount="1" collapsedExpressionEnabled="0" visibilityExpressionEnabled="0" groupBox="1" collapsed="0" horizontalStretch="0" collapsedExpression="" visibilityExpression="" name="Area">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
+        </labelStyle>
+        <attributeEditorField showLabel="1" verticalStretch="0" index="15" horizontalStretch="0" name="geom_area_New">
+          <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+            <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
+          </labelStyle>
+        </attributeEditorField>
+        <attributeEditorField showLabel="1" verticalStretch="0" index="29" horizontalStretch="0" name="geom_area_Old">
+          <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+            <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
+          </labelStyle>
+        </attributeEditorField>
+      </attributeEditorContainer>
+      <attributeEditorField showLabel="1" verticalStretch="0" index="33" horizontalStretch="0" name="geometry_adjusted">
         <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
           <labelFont strikethrough="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" style="" italic="0" underline="0"/>
         </labelStyle>
@@ -1710,28 +2150,39 @@ def my_form_open(dialog, layer, feature):
     <field editable="1" name="aantal_doorstroomopeningen_B"/>
     <field editable="1" name="brug_id_A"/>
     <field editable="1" name="brug_id_B"/>
-    <field editable="1" name="cmp_ID"/>
-    <field editable="1" name="cmp_ID_priority"/>
     <field editable="1" name="cmp_aantal_doorstroomopeningen"/>
     <field editable="1" name="cmp_aantal_doorstroomopeningen_change_NaN"/>
     <field editable="1" name="cmp_aantal_doorstroomopeningen_priority"/>
-    <field editable="1" name="cmp_categorie"/>
-    <field editable="1" name="cmp_categorie_priority"/>
+    <field editable="1" name="cmp_doorstroombreedte"/>
+    <field editable="1" name="cmp_doorstroombreedte_change_NaN"/>
+    <field editable="1" name="cmp_doorstroombreedte_priority"/>
     <field editable="1" name="cmp_doorvaarbreedte"/>
     <field editable="1" name="cmp_doorvaarbreedte_change_NaN"/>
     <field editable="1" name="cmp_doorvaarbreedte_priority"/>
-    <field editable="1" name="cmp_functiegemaal"/>
-    <field editable="1" name="cmp_functiegemaal_priority"/>
     <field editable="1" name="cmp_geom_type"/>
     <field editable="1" name="cmp_geom_type_priority"/>
+    <field editable="1" name="cmp_hoogstedoorstroomhoogte"/>
+    <field editable="1" name="cmp_hoogstedoorstroomhoogte_change_NaN"/>
+    <field editable="1" name="cmp_hoogstedoorstroomhoogte_priority"/>
     <field editable="1" name="cmp_hoogteonderzijde"/>
     <field editable="1" name="cmp_hoogteonderzijde_change_NaN"/>
     <field editable="1" name="cmp_hoogteonderzijde_priority"/>
-    <field editable="1" name="cmp_maximalecapaciteit"/>
-    <field editable="1" name="cmp_maximalecapaciteit_change_NaN"/>
-    <field editable="1" name="cmp_maximalecapaciteit_priority"/>
+    <field editable="1" name="cmp_kruinbreedte"/>
+    <field editable="1" name="cmp_kruinbreedte_change_NaN"/>
+    <field editable="1" name="cmp_kruinbreedte_priority"/>
+    <field editable="1" name="cmp_laagstedoorstroomhoogte"/>
+    <field editable="1" name="cmp_laagstedoorstroomhoogte_change_NaN"/>
+    <field editable="1" name="cmp_laagstedoorstroomhoogte_priority"/>
+    <field editable="1" name="cmp_soortregelbaarheid"/>
+    <field editable="1" name="cmp_soortregelbaarheid_priority"/>
     <field editable="1" name="cmp_ws_categorie"/>
     <field editable="1" name="cmp_ws_categorie_priority"/>
+    <field editable="1" name="cmp_ws_functie"/>
+    <field editable="1" name="cmp_ws_functie_priority"/>
+    <field editable="1" name="cmp_ws_functiestuw"/>
+    <field editable="1" name="cmp_ws_functiestuw_priority"/>
+    <field editable="1" name="cmp_ws_kruinvorm"/>
+    <field editable="1" name="cmp_ws_kruinvorm_priority"/>
     <field editable="1" name="code"/>
     <field editable="1" name="dataset_A"/>
     <field editable="1" name="dataset_B"/>
@@ -1739,13 +2190,13 @@ def my_form_open(dialog, layer, feature):
     <field editable="1" name="dataset_Old"/>
     <field editable="1" name="doorstroombreedte_A"/>
     <field editable="1" name="doorstroombreedte_B"/>
+    <field editable="1" name="doorstroombreedte_New"/>
+    <field editable="1" name="doorstroombreedte_Old"/>
     <field editable="1" name="doorvaartbreedte_A"/>
     <field editable="1" name="doorvaartbreedte_B"/>
     <field editable="1" name="fid"/>
     <field editable="1" name="functie_A"/>
     <field editable="1" name="functie_B"/>
-    <field editable="1" name="functiegemaal_New"/>
-    <field editable="1" name="functiegemaal_Old"/>
     <field editable="1" name="geom_area_A"/>
     <field editable="1" name="geom_area_B"/>
     <field editable="1" name="geom_area_New"/>
@@ -1761,19 +2212,23 @@ def my_form_open(dialog, layer, feature):
     <field editable="1" name="geometry_adjusted"/>
     <field editable="1" name="hoogstedoorstroomhoogte_A"/>
     <field editable="1" name="hoogstedoorstroomhoogte_B"/>
+    <field editable="1" name="hoogstedoorstroomhoogte_New"/>
+    <field editable="1" name="hoogstedoorstroomhoogte_Old"/>
     <field editable="1" name="hoogteonderzijde_A"/>
     <field editable="1" name="hoogteonderzijde_B"/>
     <field editable="1" name="in_both"/>
     <field editable="1" name="kruinbreedte_A"/>
     <field editable="1" name="kruinbreedte_B"/>
+    <field editable="1" name="kruinbreedte_New"/>
+    <field editable="1" name="kruinbreedte_Old"/>
     <field editable="1" name="kruinhoogte_hdb_A"/>
     <field editable="1" name="kruinhoogte_hdb_B"/>
     <field editable="1" name="laagstedoorstroomhoogte_A"/>
     <field editable="1" name="laagstedoorstroomhoogte_B"/>
+    <field editable="1" name="laagstedoorstroomhoogte_New"/>
+    <field editable="1" name="laagstedoorstroomhoogte_Old"/>
     <field editable="1" name="level_0"/>
     <field editable="1" name="level_1"/>
-    <field editable="1" name="maximalecapaciteit_New"/>
-    <field editable="1" name="maximalecapaciteit_Old"/>
     <field editable="1" name="moet_op_peilgrens_A"/>
     <field editable="1" name="moet_op_peilgrens_B"/>
     <field editable="1" name="naam_A"/>
@@ -1797,14 +2252,20 @@ def my_form_open(dialog, layer, feature):
     <field editable="1" name="som_doorstroombreedte_B"/>
     <field editable="1" name="soortregelbaarheid_A"/>
     <field editable="1" name="soortregelbaarheid_B"/>
+    <field editable="1" name="soortregelbaarheid_New"/>
+    <field editable="1" name="soortregelbaarheid_Old"/>
     <field editable="1" name="ws_categorie_A"/>
     <field editable="1" name="ws_categorie_B"/>
     <field editable="1" name="ws_categorie_New"/>
     <field editable="1" name="ws_categorie_Old"/>
     <field editable="1" name="ws_functiestuw_A"/>
     <field editable="1" name="ws_functiestuw_B"/>
+    <field editable="1" name="ws_functiestuw_New"/>
+    <field editable="1" name="ws_functiestuw_Old"/>
     <field editable="1" name="ws_kruinvorm_A"/>
     <field editable="1" name="ws_kruinvorm_B"/>
+    <field editable="1" name="ws_kruinvorm_New"/>
+    <field editable="1" name="ws_kruinvorm_Old"/>
   </editable>
   <labelOnTop>
     <field labelOnTop="0" name="Naam_verschil"/>
@@ -1816,28 +2277,39 @@ def my_form_open(dialog, layer, feature):
     <field labelOnTop="0" name="aantal_doorstroomopeningen_B"/>
     <field labelOnTop="0" name="brug_id_A"/>
     <field labelOnTop="0" name="brug_id_B"/>
-    <field labelOnTop="0" name="cmp_ID"/>
-    <field labelOnTop="0" name="cmp_ID_priority"/>
     <field labelOnTop="0" name="cmp_aantal_doorstroomopeningen"/>
     <field labelOnTop="0" name="cmp_aantal_doorstroomopeningen_change_NaN"/>
     <field labelOnTop="0" name="cmp_aantal_doorstroomopeningen_priority"/>
-    <field labelOnTop="0" name="cmp_categorie"/>
-    <field labelOnTop="0" name="cmp_categorie_priority"/>
+    <field labelOnTop="0" name="cmp_doorstroombreedte"/>
+    <field labelOnTop="0" name="cmp_doorstroombreedte_change_NaN"/>
+    <field labelOnTop="0" name="cmp_doorstroombreedte_priority"/>
     <field labelOnTop="0" name="cmp_doorvaarbreedte"/>
     <field labelOnTop="0" name="cmp_doorvaarbreedte_change_NaN"/>
     <field labelOnTop="0" name="cmp_doorvaarbreedte_priority"/>
-    <field labelOnTop="0" name="cmp_functiegemaal"/>
-    <field labelOnTop="0" name="cmp_functiegemaal_priority"/>
     <field labelOnTop="0" name="cmp_geom_type"/>
     <field labelOnTop="0" name="cmp_geom_type_priority"/>
+    <field labelOnTop="0" name="cmp_hoogstedoorstroomhoogte"/>
+    <field labelOnTop="0" name="cmp_hoogstedoorstroomhoogte_change_NaN"/>
+    <field labelOnTop="0" name="cmp_hoogstedoorstroomhoogte_priority"/>
     <field labelOnTop="0" name="cmp_hoogteonderzijde"/>
     <field labelOnTop="0" name="cmp_hoogteonderzijde_change_NaN"/>
     <field labelOnTop="0" name="cmp_hoogteonderzijde_priority"/>
-    <field labelOnTop="0" name="cmp_maximalecapaciteit"/>
-    <field labelOnTop="0" name="cmp_maximalecapaciteit_change_NaN"/>
-    <field labelOnTop="0" name="cmp_maximalecapaciteit_priority"/>
+    <field labelOnTop="0" name="cmp_kruinbreedte"/>
+    <field labelOnTop="0" name="cmp_kruinbreedte_change_NaN"/>
+    <field labelOnTop="0" name="cmp_kruinbreedte_priority"/>
+    <field labelOnTop="0" name="cmp_laagstedoorstroomhoogte"/>
+    <field labelOnTop="0" name="cmp_laagstedoorstroomhoogte_change_NaN"/>
+    <field labelOnTop="0" name="cmp_laagstedoorstroomhoogte_priority"/>
+    <field labelOnTop="0" name="cmp_soortregelbaarheid"/>
+    <field labelOnTop="0" name="cmp_soortregelbaarheid_priority"/>
     <field labelOnTop="0" name="cmp_ws_categorie"/>
     <field labelOnTop="0" name="cmp_ws_categorie_priority"/>
+    <field labelOnTop="0" name="cmp_ws_functie"/>
+    <field labelOnTop="0" name="cmp_ws_functie_priority"/>
+    <field labelOnTop="0" name="cmp_ws_functiestuw"/>
+    <field labelOnTop="0" name="cmp_ws_functiestuw_priority"/>
+    <field labelOnTop="0" name="cmp_ws_kruinvorm"/>
+    <field labelOnTop="0" name="cmp_ws_kruinvorm_priority"/>
     <field labelOnTop="0" name="code"/>
     <field labelOnTop="0" name="dataset_A"/>
     <field labelOnTop="0" name="dataset_B"/>
@@ -1845,13 +2317,13 @@ def my_form_open(dialog, layer, feature):
     <field labelOnTop="0" name="dataset_Old"/>
     <field labelOnTop="0" name="doorstroombreedte_A"/>
     <field labelOnTop="0" name="doorstroombreedte_B"/>
+    <field labelOnTop="0" name="doorstroombreedte_New"/>
+    <field labelOnTop="0" name="doorstroombreedte_Old"/>
     <field labelOnTop="0" name="doorvaartbreedte_A"/>
     <field labelOnTop="0" name="doorvaartbreedte_B"/>
     <field labelOnTop="0" name="fid"/>
     <field labelOnTop="0" name="functie_A"/>
     <field labelOnTop="0" name="functie_B"/>
-    <field labelOnTop="0" name="functiegemaal_New"/>
-    <field labelOnTop="0" name="functiegemaal_Old"/>
     <field labelOnTop="0" name="geom_area_A"/>
     <field labelOnTop="0" name="geom_area_B"/>
     <field labelOnTop="0" name="geom_area_New"/>
@@ -1867,19 +2339,23 @@ def my_form_open(dialog, layer, feature):
     <field labelOnTop="0" name="geometry_adjusted"/>
     <field labelOnTop="0" name="hoogstedoorstroomhoogte_A"/>
     <field labelOnTop="0" name="hoogstedoorstroomhoogte_B"/>
+    <field labelOnTop="0" name="hoogstedoorstroomhoogte_New"/>
+    <field labelOnTop="0" name="hoogstedoorstroomhoogte_Old"/>
     <field labelOnTop="0" name="hoogteonderzijde_A"/>
     <field labelOnTop="0" name="hoogteonderzijde_B"/>
     <field labelOnTop="0" name="in_both"/>
     <field labelOnTop="0" name="kruinbreedte_A"/>
     <field labelOnTop="0" name="kruinbreedte_B"/>
+    <field labelOnTop="0" name="kruinbreedte_New"/>
+    <field labelOnTop="0" name="kruinbreedte_Old"/>
     <field labelOnTop="0" name="kruinhoogte_hdb_A"/>
     <field labelOnTop="0" name="kruinhoogte_hdb_B"/>
     <field labelOnTop="0" name="laagstedoorstroomhoogte_A"/>
     <field labelOnTop="0" name="laagstedoorstroomhoogte_B"/>
+    <field labelOnTop="0" name="laagstedoorstroomhoogte_New"/>
+    <field labelOnTop="0" name="laagstedoorstroomhoogte_Old"/>
     <field labelOnTop="0" name="level_0"/>
     <field labelOnTop="0" name="level_1"/>
-    <field labelOnTop="0" name="maximalecapaciteit_New"/>
-    <field labelOnTop="0" name="maximalecapaciteit_Old"/>
     <field labelOnTop="0" name="moet_op_peilgrens_A"/>
     <field labelOnTop="0" name="moet_op_peilgrens_B"/>
     <field labelOnTop="0" name="naam_A"/>
@@ -1903,14 +2379,20 @@ def my_form_open(dialog, layer, feature):
     <field labelOnTop="0" name="som_doorstroombreedte_B"/>
     <field labelOnTop="0" name="soortregelbaarheid_A"/>
     <field labelOnTop="0" name="soortregelbaarheid_B"/>
+    <field labelOnTop="0" name="soortregelbaarheid_New"/>
+    <field labelOnTop="0" name="soortregelbaarheid_Old"/>
     <field labelOnTop="0" name="ws_categorie_A"/>
     <field labelOnTop="0" name="ws_categorie_B"/>
     <field labelOnTop="0" name="ws_categorie_New"/>
     <field labelOnTop="0" name="ws_categorie_Old"/>
     <field labelOnTop="0" name="ws_functiestuw_A"/>
     <field labelOnTop="0" name="ws_functiestuw_B"/>
+    <field labelOnTop="0" name="ws_functiestuw_New"/>
+    <field labelOnTop="0" name="ws_functiestuw_Old"/>
     <field labelOnTop="0" name="ws_kruinvorm_A"/>
     <field labelOnTop="0" name="ws_kruinvorm_B"/>
+    <field labelOnTop="0" name="ws_kruinvorm_New"/>
+    <field labelOnTop="0" name="ws_kruinvorm_Old"/>
   </labelOnTop>
   <reuseLastValue>
     <field reuseLastValue="0" name="Naam_verschil"/>
@@ -1922,28 +2404,39 @@ def my_form_open(dialog, layer, feature):
     <field reuseLastValue="0" name="aantal_doorstroomopeningen_B"/>
     <field reuseLastValue="0" name="brug_id_A"/>
     <field reuseLastValue="0" name="brug_id_B"/>
-    <field reuseLastValue="0" name="cmp_ID"/>
-    <field reuseLastValue="0" name="cmp_ID_priority"/>
     <field reuseLastValue="0" name="cmp_aantal_doorstroomopeningen"/>
     <field reuseLastValue="0" name="cmp_aantal_doorstroomopeningen_change_NaN"/>
     <field reuseLastValue="0" name="cmp_aantal_doorstroomopeningen_priority"/>
-    <field reuseLastValue="0" name="cmp_categorie"/>
-    <field reuseLastValue="0" name="cmp_categorie_priority"/>
+    <field reuseLastValue="0" name="cmp_doorstroombreedte"/>
+    <field reuseLastValue="0" name="cmp_doorstroombreedte_change_NaN"/>
+    <field reuseLastValue="0" name="cmp_doorstroombreedte_priority"/>
     <field reuseLastValue="0" name="cmp_doorvaarbreedte"/>
     <field reuseLastValue="0" name="cmp_doorvaarbreedte_change_NaN"/>
     <field reuseLastValue="0" name="cmp_doorvaarbreedte_priority"/>
-    <field reuseLastValue="0" name="cmp_functiegemaal"/>
-    <field reuseLastValue="0" name="cmp_functiegemaal_priority"/>
     <field reuseLastValue="0" name="cmp_geom_type"/>
     <field reuseLastValue="0" name="cmp_geom_type_priority"/>
+    <field reuseLastValue="0" name="cmp_hoogstedoorstroomhoogte"/>
+    <field reuseLastValue="0" name="cmp_hoogstedoorstroomhoogte_change_NaN"/>
+    <field reuseLastValue="0" name="cmp_hoogstedoorstroomhoogte_priority"/>
     <field reuseLastValue="0" name="cmp_hoogteonderzijde"/>
     <field reuseLastValue="0" name="cmp_hoogteonderzijde_change_NaN"/>
     <field reuseLastValue="0" name="cmp_hoogteonderzijde_priority"/>
-    <field reuseLastValue="0" name="cmp_maximalecapaciteit"/>
-    <field reuseLastValue="0" name="cmp_maximalecapaciteit_change_NaN"/>
-    <field reuseLastValue="0" name="cmp_maximalecapaciteit_priority"/>
+    <field reuseLastValue="0" name="cmp_kruinbreedte"/>
+    <field reuseLastValue="0" name="cmp_kruinbreedte_change_NaN"/>
+    <field reuseLastValue="0" name="cmp_kruinbreedte_priority"/>
+    <field reuseLastValue="0" name="cmp_laagstedoorstroomhoogte"/>
+    <field reuseLastValue="0" name="cmp_laagstedoorstroomhoogte_change_NaN"/>
+    <field reuseLastValue="0" name="cmp_laagstedoorstroomhoogte_priority"/>
+    <field reuseLastValue="0" name="cmp_soortregelbaarheid"/>
+    <field reuseLastValue="0" name="cmp_soortregelbaarheid_priority"/>
     <field reuseLastValue="0" name="cmp_ws_categorie"/>
     <field reuseLastValue="0" name="cmp_ws_categorie_priority"/>
+    <field reuseLastValue="0" name="cmp_ws_functie"/>
+    <field reuseLastValue="0" name="cmp_ws_functie_priority"/>
+    <field reuseLastValue="0" name="cmp_ws_functiestuw"/>
+    <field reuseLastValue="0" name="cmp_ws_functiestuw_priority"/>
+    <field reuseLastValue="0" name="cmp_ws_kruinvorm"/>
+    <field reuseLastValue="0" name="cmp_ws_kruinvorm_priority"/>
     <field reuseLastValue="0" name="code"/>
     <field reuseLastValue="0" name="dataset_A"/>
     <field reuseLastValue="0" name="dataset_B"/>
@@ -1951,13 +2444,13 @@ def my_form_open(dialog, layer, feature):
     <field reuseLastValue="0" name="dataset_Old"/>
     <field reuseLastValue="0" name="doorstroombreedte_A"/>
     <field reuseLastValue="0" name="doorstroombreedte_B"/>
+    <field reuseLastValue="0" name="doorstroombreedte_New"/>
+    <field reuseLastValue="0" name="doorstroombreedte_Old"/>
     <field reuseLastValue="0" name="doorvaartbreedte_A"/>
     <field reuseLastValue="0" name="doorvaartbreedte_B"/>
     <field reuseLastValue="0" name="fid"/>
     <field reuseLastValue="0" name="functie_A"/>
     <field reuseLastValue="0" name="functie_B"/>
-    <field reuseLastValue="0" name="functiegemaal_New"/>
-    <field reuseLastValue="0" name="functiegemaal_Old"/>
     <field reuseLastValue="0" name="geom_area_A"/>
     <field reuseLastValue="0" name="geom_area_B"/>
     <field reuseLastValue="0" name="geom_area_New"/>
@@ -1973,19 +2466,23 @@ def my_form_open(dialog, layer, feature):
     <field reuseLastValue="0" name="geometry_adjusted"/>
     <field reuseLastValue="0" name="hoogstedoorstroomhoogte_A"/>
     <field reuseLastValue="0" name="hoogstedoorstroomhoogte_B"/>
+    <field reuseLastValue="0" name="hoogstedoorstroomhoogte_New"/>
+    <field reuseLastValue="0" name="hoogstedoorstroomhoogte_Old"/>
     <field reuseLastValue="0" name="hoogteonderzijde_A"/>
     <field reuseLastValue="0" name="hoogteonderzijde_B"/>
     <field reuseLastValue="0" name="in_both"/>
     <field reuseLastValue="0" name="kruinbreedte_A"/>
     <field reuseLastValue="0" name="kruinbreedte_B"/>
+    <field reuseLastValue="0" name="kruinbreedte_New"/>
+    <field reuseLastValue="0" name="kruinbreedte_Old"/>
     <field reuseLastValue="0" name="kruinhoogte_hdb_A"/>
     <field reuseLastValue="0" name="kruinhoogte_hdb_B"/>
     <field reuseLastValue="0" name="laagstedoorstroomhoogte_A"/>
     <field reuseLastValue="0" name="laagstedoorstroomhoogte_B"/>
+    <field reuseLastValue="0" name="laagstedoorstroomhoogte_New"/>
+    <field reuseLastValue="0" name="laagstedoorstroomhoogte_Old"/>
     <field reuseLastValue="0" name="level_0"/>
     <field reuseLastValue="0" name="level_1"/>
-    <field reuseLastValue="0" name="maximalecapaciteit_New"/>
-    <field reuseLastValue="0" name="maximalecapaciteit_Old"/>
     <field reuseLastValue="0" name="moet_op_peilgrens_A"/>
     <field reuseLastValue="0" name="moet_op_peilgrens_B"/>
     <field reuseLastValue="0" name="naam_A"/>
@@ -2009,14 +2506,20 @@ def my_form_open(dialog, layer, feature):
     <field reuseLastValue="0" name="som_doorstroombreedte_B"/>
     <field reuseLastValue="0" name="soortregelbaarheid_A"/>
     <field reuseLastValue="0" name="soortregelbaarheid_B"/>
+    <field reuseLastValue="0" name="soortregelbaarheid_New"/>
+    <field reuseLastValue="0" name="soortregelbaarheid_Old"/>
     <field reuseLastValue="0" name="ws_categorie_A"/>
     <field reuseLastValue="0" name="ws_categorie_B"/>
     <field reuseLastValue="0" name="ws_categorie_New"/>
     <field reuseLastValue="0" name="ws_categorie_Old"/>
     <field reuseLastValue="0" name="ws_functiestuw_A"/>
     <field reuseLastValue="0" name="ws_functiestuw_B"/>
+    <field reuseLastValue="0" name="ws_functiestuw_New"/>
+    <field reuseLastValue="0" name="ws_functiestuw_Old"/>
     <field reuseLastValue="0" name="ws_kruinvorm_A"/>
     <field reuseLastValue="0" name="ws_kruinvorm_B"/>
+    <field reuseLastValue="0" name="ws_kruinvorm_New"/>
+    <field reuseLastValue="0" name="ws_kruinvorm_Old"/>
   </reuseLastValue>
   <dataDefinedFieldProperties/>
   <widgets/>
