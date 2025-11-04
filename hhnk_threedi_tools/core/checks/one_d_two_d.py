@@ -30,7 +30,7 @@ from hhnk_threedi_tools.variables.one_d_two_d import (
 logger = hrt.logging.get_logger(__name__, level="INFO")
 
 
-class OneDTwoDTest:
+class OneDTwoDCheck:
     TIMESTEPS = [1, 3, 15]  # hours, 1=start rain, 3=end rain, 15=end calculation
 
     def __init__(self, folder: Folders, revision=0, dem_path=None):

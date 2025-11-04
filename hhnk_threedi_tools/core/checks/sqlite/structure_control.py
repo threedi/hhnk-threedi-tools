@@ -21,7 +21,7 @@ class StructureControl:
     def __init__(self, model: hrt.Sqlite, hdb_control_layer: hrt.SpatialDatabaseLayer, output_file: str):
         self.model = model  # folder.model.schema_base.database
         self.hdb_control_layer = hdb_control_layer  # folder.source_data.hdb.layers.sturing_kunstwerken
-        self.output_file = Path(output_file)  # folder.output.sqlite_tests.gestuurde_kunstwerken.base
+        self.output_file = Path(output_file)  # folder.output.hhnk_schematisation_checks.gestuurde_kunstwerken.base
 
         self.layers = self.Layers()
 
@@ -183,6 +183,6 @@ if __name__ == "__main__":
     self = StructureControl(
         model=folder.model.schema_base.database,
         hdb_control_layer=folder.source_data.hdb.layers.sturing_kunstwerken,
-        output_file=folder.output.sqlite_tests.gestuurde_kunstwerken.path,
+        output_file=folder.output.hhnk_schematisation_checks.gestuurde_kunstwerken.path,
     )
     self.run(overwrite=True)
