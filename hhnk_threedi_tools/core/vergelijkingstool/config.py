@@ -13,8 +13,8 @@ SQLITE_LAYER_CROSS_SECTION_DEFINITION = "v2_cross_section_definition"
 
 DAMO_LAYERS = [
     "AfvoergebiedAanvoergebied",
-    "AquaductLijn",  # Niet in beide datasets
-    "Bergingsgebied",  # Niet in beide datasets
+    # "AquaductLijn",  # Niet in beide datasets
+    # "Bergingsgebied",  # Niet in beide datasets
     "Brug",
     # "Doorstroomopening", not a gdf
     "DuikerSifonHevel",
