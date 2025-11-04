@@ -1,18 +1,35 @@
+# %%#
+
 # %%
-"""
-Note: the curent tests are only ran to check if the functions work.
-They still must be checked qualitatively
-
-"""
-
-import sys
-
-import pytest
+import os
 
 from hhnk_threedi_tools.core.checks.bank_levels import BankLevelCheck
 from tests.config import FOLDER_TEST
 
-# pd.options.mode.chained_assignment = 'raise' #catch SettingWithCopyWarning
+bl_check = BankLevelCheck(FOLDER_TEST)
+bl_check.import_data()
+bl_check.line_intersections()
+
+
+# %%
+def test_import_data(bl_check: BankLevelCheck):
+    """Test if the import of data works, if the correct amount is imported"""
+    bl_check.import_data()
+
+    assert bl_check.fixeddrainage_gdf.count()["peil_id"] == 32
+    assert bl_check.fixeddrainage_boundary_gdf.count()["peil_id"] == 35
+    assert bl_check.lines_1d2d.count()["id"] == 105
+    assert bl_check.channel_gdf.count()["code"] == 49
+    assert bl_check.connection_node_gdf.count()["code"] == 72
+    assert bl_check.cross_section_gdf.count()["code"] == 96
+    assert bl_check.obstacle_gdf.count()["code"] == 54
+    assert bl_check.obstacle_gdf["crest_level"][54] == 0.159
+
+
+def test_levee_intersections(bl_check: BankLevelCheck):
+    """Test if levee intersections can be done"""
+    assert bl_check.intersections["crest_level"][165] == 0.510
+    assert bl_check.intersections.count()["type"] == 10
 
 
 class TestBankLevel:
@@ -21,29 +38,6 @@ class TestBankLevel:
         bl = BankLevelCheck(FOLDER_TEST)
         bl.import_data()
         return bl
-
-    @pytest.mark.skipif(sys.version_info < (3, 12), reason="# TODO bank level check moet nog bijgewerkt worden.")
-    def test_import_information_object(self, bl_check):
-        """Test if the import of information works, if the correct amount is imported"""
-
-        # look at counts
-        assert all(bl_check.imports["manholes"].count() == 0)  # no manholes
-        assert bl_check.imports["fixeddrainage"].count()["id"] == 32
-        assert bl_check.imports["fixeddrainage_lines"].count()["id"] == 35
-        assert bl_check.imports["lines_1d2d"].count()["node_id"] == 104
-        assert bl_check.imports["conn_nodes"].count()["conn_node_id"] == 72
-        assert bl_check.imports["channels"].count()["channel_id"] == 49
-        assert bl_check.imports["cross_loc"].count()["cross_loc_id"] == 96
-        assert bl_check.imports["levee_lines"].count()["levee_id"] == 54
-
-        # look at random info
-        assert bl_check.imports["fixeddrainage"]["peil_id"][0] == "46442"
-        assert bl_check.imports["fixeddrainage_lines"]["streefpeil_bwn2"][1].values[0] == -0.85
-        assert bl_check.imports["lines_1d2d"]["storage_area"][423] == 20.5620565088836
-        assert bl_check.imports["conn_nodes"]["conn_node_id"][15] == 15
-        assert bl_check.imports["channels"]["initial_waterlevel"][487] == -0.55
-        assert bl_check.imports["cross_loc"]["reference_level"][282] == -0.94
-        assert bl_check.imports["levee_lines"]["levee_height"][54] == 0.159
 
     @pytest.mark.skipif(sys.version_info < (3, 12), reason="# TODO bank level check moet nog bijgewerkt worden.")
     def test_levee_intersections(self, bl_check):
@@ -117,3 +111,5 @@ if __name__ == "__main__":
         if i.startswith("test_") and hasattr(inspect.getattr_static(selftest, i), "__call__"):
             print(i)
             getattr(selftest, i)(bl_check)
+
+# %%
