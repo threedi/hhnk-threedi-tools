@@ -1,17 +1,17 @@
 {
-	"gemalen_op_peilgrens": {
-		"name": "gemalen_op_peilgrens",
+	"stuwen_op_peilgrens": {
+		"name": "stuwen_op_peilgrens",
 		"columns": {
 			"CODE": "code",
 			"WS_CATEGORIE": "ws_categorie",
 			"geometry": "geometry"
 		}
 	},
-    "stuwen_op_peilgrens": {
-		"name": "stuwen_op_peilgrens",
+	"duikers_op_peilgrens": {
+		"name": "duikers_op_peilgrens",
 		"columns": {
 			"CODE": "code",
-			"kruinhoogte_hdb": "kruinhoogte",
+			"modelleren_als": "modelleren_als",
 			"geometry": "geometry"
 		}
 	}

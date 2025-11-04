@@ -38,6 +38,9 @@ from hhnk_threedi_tools.core.schematisation.model_backup import (
     update_bank_levels_last_calc,
 )
 
+# backup
+from hhnk_threedi_tools.core.vergelijkingstool import *
+
 #
 from hhnk_threedi_tools.qgis.layer_structure import (
     LayerStructure,

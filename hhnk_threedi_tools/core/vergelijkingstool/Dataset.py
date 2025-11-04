@@ -1,3 +1,5 @@
+# %%
+
 import json
 import math
 import sqlite3
@@ -7,6 +9,9 @@ import pandas as pd
 from shapely.geometry import LineString, Polygon
 
 from hhnk_threedi_tools.core.vergelijkingstool.config import *
+from hhnk_threedi_tools.core.vergelijkingstool.utils import ModelInfo
+
+# %%
 
 
 class DataSet:
@@ -14,17 +19,17 @@ class DataSet:
     Parent class of DAMO and Threedimodel
     """
 
-    def __init__(self):
-        """
-        Initialisation of a dataset.
-        """
-        # Set priority columns
+    def __init__(self, model_info: ModelInfo):
+        """Initizialize of a dataset."""
+
+        self.model_name = model_info.model_name
         self.data = None
+        # Set priority columns
         self.priority_columns = {}
 
     def add_layer_styling(self, fn_export_gpkg, layer_styles):
         """
-        Adds and fills a helper table 'layer_styles' to the GeoPackage containing the style per layer.
+        Add and fills a helper table 'layer_styles' to the GeoPackage containing the style per layer.
         When the GeoPackage is loaded into QGIS, the layers are auto-loaded
 
         :param fn_export_gpkg: Filename of the GeoPackage to write to
@@ -68,7 +73,7 @@ class DataSet:
 
     def get_significant_geometry(self, dataset, geometry_A, geometry_B):
         """
-        Returns the significant geometry based on the origin of the geometry in the datasets.
+        Return the significant geometry based on the origin of the geometry in the datasets.
         If an asset occurs in dataset A (self) or in A AND B, geometry A is returned.
         If an asset occurs ONLY in dataset B, geometry B is returned.
 
@@ -77,14 +82,14 @@ class DataSet:
         :param geometry_B: Shapely geometry
         :return: Shapely geometry
         """
-        if dataset == "A" or dataset == "AB":
+        if dataset == f"{self.model_name} new" or dataset == f"{self.model_name} both":
             return geometry_A
         else:
             return geometry_B
 
     def create_structure_geometry(self, point_start, point_end):
         """
-        Creates a LineString from structures that are only defined by a start and end point.
+        Create a LineString from structures that are only defined by a start and end point.
         If only a start point is supplied, the start point is returned
 
         :param point_start: Shapely geometry of the start point
@@ -100,7 +105,7 @@ class DataSet:
 
     def add_geometry_info(self, gdf):
         """
-        Adds columns regarding the geometry type, length and area as attributes to a GeoDatarame
+        Add columns regarding the geometry type, length and area as attributes to a GeoDatarame
 
         :param gdf: GeoDataframe to be analyzed
         :return: GeoDataframe with added columns
@@ -113,7 +118,7 @@ class DataSet:
 
     def drop_unused_geoseries(self, gdf, keep="geometry"):
         """
-        Removes all GeoSeries from a GeoDataframe except the column indicated with the 'keep' parameter.
+        Remove all GeoSeries from a GeoDataframe except the column indicated with the 'keep' parameter.
         Used because for the export to GeoPackage, a GeoDataframe is only allowed to have 1 geometry column
 
         :param gdf: GeoDataframe to be stripped of unused GeoSeries
@@ -140,7 +145,7 @@ class DataSet:
 
         def resolve_parameter(table, parameter):
             """
-            Resolves the parameters of a function. If the parameter is a string, the column in the table with that header is returned.
+            Resolve the parameters of a function. If the parameter is a string, the column in the table with that header is returned.
             If the parameter is a dict, a recursive function is applied.
             If the parameter is a number, the value is used
 
@@ -181,10 +186,10 @@ class DataSet:
             else:
                 change_na = None
 
-            # try:
-            #    change_na = (left.isna() & right.notna()) | (left.notna() & right.isna())
-            # except:
-            #    change_na = None
+            try:
+                change_na = (left.isna() & right.notna()) | (left.notna() & right.isna())
+            except:
+                change_na = None
 
             ### DIFFERENCE ###
             if function_name == "difference":
@@ -200,7 +205,9 @@ class DataSet:
                 result = pd.concat([left, right], axis=1).max(axis=1, skipna=skipna)
             elif function_name == "multiply":
                 result = left * right
-
+            ### TEXT DIFFERENCE ###
+            # elif function_name == "text_difference":
+            #     result = left == right
             else:
                 self.logger.error(f"Comparison function {function_name} not recognized")
                 result = None
@@ -219,14 +226,14 @@ class DataSet:
 
     def compare_category(self, row, priority):
         """
-        Compares two values in a row on category. Returns a value only if the asset occurs in A and B (or DAMO and Model)
+        Compare two values in a row on category. Returns a value only if the asset occurs in A and B (or DAMO and Model)
         Returns not changed if there is no change in the category
 
         :param row: row containing the left and right column to be compared and the 'in_both' column.
         :return: String containing the change in category, if any.
         """
 
-        if row.in_both == "AB" or row.in_both == "both":
+        if "both" in row.in_both:
             left = row[0]
             right = row[1]
 
@@ -260,7 +267,6 @@ class DataSet:
         :param comparison: Dictionary with the comparison rules
         :return:
         """
-
         self.logger.debug(f"Applying comparison with the following data: {comparison}")
 
         name = comparison["name"]
@@ -268,6 +274,10 @@ class DataSet:
         comparison_type = comparison["type"]
         table_name = comparison["table"]
         table = df[table_name]
+
+        # Compare only with the selection that has been made, table_names comes from names of the of the table dictionary
+        # used in the function apply_attribute_comparison
+        print(f"the name to compare is {table_name}")
 
         # Try reading the priority, if not set, use "critical"
         try:
@@ -278,7 +288,7 @@ class DataSet:
 
         if comparison_type == "numeric":
             function = comparison["function"]
-            self.logger.debug(f"Comparison type: numeric")
+            self.logger.debug("Comparison type: numeric")
 
             # Try to read the numerical threshold, if not set, use default value
             try:
@@ -322,7 +332,7 @@ class DataSet:
                 # raise
 
         elif comparison_type == "category":
-            self.logger.debug(f"Comparison type: category")
+            self.logger.debug("Comparison type: category")
             left = comparison["left"]
             right = comparison["right"]
 
@@ -366,19 +376,28 @@ class DataSet:
 
     def apply_attribute_comparison(self, attribute_comparison, table):
         """
-        Loads a attribute comparison json file and applies the comparison rules in the json on the supplied table
+        Load a attribute comparison json file and applies the comparison rules in the json on the supplied table
 
         :param attribute_comparison: Path to file containing comparison rules
         :param table: Table to apply the comparison rules on
         :return:
         """
+        print(attribute_comparison)
+        self.logger.debug("Start applying attribute comparison")
 
-        self.logger.debug(f"Start applying attribute comparison")
         try:
             with open(attribute_comparison) as file:
                 att_comp = json.load(file)
                 for comparison in att_comp["comparisons"]:
-                    table = self.compare_attribute(table, comparison)
+                    description = comparison["description"]
+                    table_name = comparison["table"]
+
+                    if table_name in table.keys():
+                        print(f"comparing {description}")
+                        table = self.compare_attribute(table, comparison)
+                    else:
+                        # table = self.compare_attribute(table, comparison)
+                        print(f"The table {table_name} is not included in the comparision process")
 
         except json.decoder.JSONDecodeError as err:
             self.logger.error(
@@ -392,7 +411,7 @@ class DataSet:
 
     def get_structure_by_code(self, code_start: str, layers):
         """
-        Searches in all layers for entries based on code.
+        Search in all layers for entries based on code.
         If a rows 'code' column starts with code_start, it is appended to the return table,
         keeping all columns from different sources.
         Example, when searching for 'KDU' it returns all assets (in this case 'Duikers'),
@@ -404,6 +423,7 @@ class DataSet:
         tabel = pd.DataFrame()
         for layer in layers:
             codes = []
+            # (print("Capas disponibles:", list(self.data.keys())))
             for i in self.data[layer].code.values:
                 if i is not None:
                     i = str(i)
