@@ -150,7 +150,7 @@
       <rule label="Bestond nog niet in DAMO oud" symbol="1" filter=" &quot;in_both&quot;  LIKE  '%new' " key="{d545ced7-b5df-4458-a9a9-a98877bf496a}"/>
       <rule label="Kritiek verschil tussen beide datasets" symbol="2" filter=" &quot;in_both&quot;   LIKE  '%both' AND  &quot;number_of_critical&quot; > 0" key="{913b76ee-b6ec-4170-8a4d-9a19e579395e}"/>
       <rule label="Klein verschil tussen beide datasets" symbol="3" filter=" &quot;in_both&quot;   LIKE  '%both' AND  &quot;number_of_critical&quot; = 0 AND ( &quot;number_of_info&quot;  +  &quot;number_of_warning&quot; ) > 0" key="{e9832d88-8009-43af-89ae-bba834bd0966}"/>
-      <rule label="castricum both - niet vergeleken" symbol="4" filter="ELSE" key="{ae471d64-ae9c-4285-8e7f-07c8b8b3a2af}"/>
+      <rule label="Geen verschillen gevonden" symbol="4" filter="ELSE" key="{ae471d64-ae9c-4285-8e7f-07c8b8b3a2af}"/>
     </rules>
     <symbols>
       <symbol name="0" force_rhr="0" frame_rate="10" clip_to_extent="1" alpha="1" is_animated="0" type="fill">

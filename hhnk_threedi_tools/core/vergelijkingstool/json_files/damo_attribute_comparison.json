@@ -1487,8 +1487,8 @@
 			"type": "category",
 			"description": "Verschil in hydroobject_naam",
 			"priority": "warning",
-			"left": "hydroobject_naam_New",
-			"right": "hydroobject_naam_Old"
+			"left": "naam_New",
+			"right": "naam_Old"
 		},
 		{
 			"name": "cmp_soortafvoeraanvoergebied",
