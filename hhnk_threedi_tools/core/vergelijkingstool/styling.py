@@ -140,11 +140,11 @@ def export_comparison_DAMO(table_C, statistics, filename, model_info: ModelInfo,
     for i, layer_name in enumerate(table_C):
         gdf = table_C[layer_name]
 
-        kind = geom_kind(gdf)
+        # kind = geom_kind(gdf)
 
         # Check if the layer name has a style in the styling folder
         if styling_path is not None:
-            qml_name = kind + ".qml"
+            qml_name = layer_name + ".qml"
             qml_file = (styling_path) / qml_name
             print(qml_file)
         if qml_file.exists():

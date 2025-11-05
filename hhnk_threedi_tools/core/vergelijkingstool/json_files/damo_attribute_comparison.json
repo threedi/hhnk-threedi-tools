@@ -1489,6 +1489,72 @@
 			"priority": "warning",
 			"left": "hydroobject_naam_New",
 			"right": "hydroobject_naam_Old"
+		},
+		{
+			"name": "cmp_soortafvoeraanvoergebied",
+			"table": "afvoergebiedaanvoergebied",
+			"type": "category",
+			"description": "Verschil in soortafvoeraanvoergebied",
+			"priority": "warning",
+			"left": "soortafvoeraanvoergebied_New",
+			"right": "soortafvoeraanvoergebied_Old"
+		},
+		{
+			"name": "cmp_soortafvoeraanvoergebied",
+			"table": "afvoergebiedaanvoergebied",
+			"type": "category",
+			"description": "Verschil in soortafvoeraanvoergebied",
+			"priority": "warning",
+			"left": "soortafvoeraanvoergebied_New",
+			"right": "soortafvoeraanvoergebied_Old"
+		},
+		{
+			"name": "cmp_oppervlak",
+			"table": "afvoergebiedaanvoergebied",
+			"type": "category",
+			"description": "Verschil in oppervlak",
+			"priority": "warning",
+			"left": "oppervlakte_New",
+			"right": "oppervlakte_Old"
+		},
+		{
+			"name": "cmp_geom_length",
+			"table": "afvoergebiedaanvoergebied",
+			"type": "numeric",
+			"description": "Verschil in geometrie lengte",
+			"priority": "critical",
+			"function": {
+				"difference": {
+					"left": "geom_length_New",
+					"right": "geom_length_Old"
+				}
+			}
+		},
+		{
+			"name": "cmp_geom_area",
+			"table": "afvoergebiedaanvoergebied",
+			"type": "numeric",
+			"description": "Verschil in geometrie oppervlakte",
+			"priority": "critical",
+			"function": {
+				"difference": {
+					"left": "geom_area_New",
+					"right": "geom_area_Old"
+				}
+			}
+		},
+		{
+			"name": "cmp_geom_type",
+			"table": "afvoergebiedaanvoergebied",
+			"type": "numeric",
+			"description": "Verschil in geometrie type",
+			"priority": "critical",
+			"function": {
+				"difference": {
+					"left": "geom_type_New",
+					"right": "geom_type_Old"
+				}
+			}
 		}
 	]
 }
