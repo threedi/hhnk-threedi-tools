@@ -20,7 +20,7 @@ DAMO_LAYERS = [
     "DuikerSifonHevel",
     "Gemaal",
     # "GW_PBP", no gdf
-    "GW_PRO",
+    # "GW_PRO",
     # "GW_PRW", no gdf
     "HydroObject",
     #'IWS_GEO_BESCHR_PROFIELPUNTEN',
