@@ -220,7 +220,7 @@ if __name__ == "__main__":
 
     # Layers To Compare DAMO_DAMO
     layer_selection = True
-    layers_input_damo_selection = ["AfvoergebiedAanvoergebied", "PeilafwijkingGebied",'PeilgebiedPraktijk']
+    layers_input_damo_selection = ["AfvoergebiedAanvoergebied", "PeilafwijkingGebied", "PeilgebiedPraktijk"]
     layers_input_hdb_selection = ["Levee_overstromingsmodel", "Sturing_3Di"]
     fn_threedi_comparison_export = out_put_files / "Threedi_comparison_54.gpkg"
 
