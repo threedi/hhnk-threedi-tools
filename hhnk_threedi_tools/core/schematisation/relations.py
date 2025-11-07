@@ -50,6 +50,7 @@ class ChannelRelations:
             return width_wl
         else:
             logger.warning(f"Channel shape is not tabulated (type 6) for channel index {channel_gdf_row.index}")
+            return np.nan
 
     @cached_property
     def gdf(self) -> gpd.GeoDataFrame:
@@ -102,7 +103,7 @@ class ChannelRelations:
             left_index=True,
             right_on="channel_id",
             how="left",
-        )
+        ).drop(columns=["channel_id_x"])
 
         # Calculate depth and width at waterlevel
         channel_gdf["depth"] = channel_gdf["initial_water_level_average"] - channel_gdf["reference_level"]

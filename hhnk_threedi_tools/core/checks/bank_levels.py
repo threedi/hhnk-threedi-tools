@@ -57,8 +57,7 @@ class BankLevelCheck:
             "diverging_wl_nodes": self.available("diverging_wl_nodes"),
             "manholes_info": self.available("manholes_info"),
             "new_manholes_df": self.available("new_manholes_df"),
-            "all_1d2d_flowlines": self.available("all_1d2d_flowlines"),  # TODO deze heb ik weggehaald, waarvoor nodig?
-            "cross_loc_new_filtered": self.available("cross_loc_new_filtered"),
+            "all_1d2d_flowlines": self.available("lines_1d2d"),
             "cross_loc_new": self.available("cross_loc_new"),
             "new_channels": self.available("new_channels"),
         }
@@ -86,7 +85,7 @@ class BankLevelCheck:
         channel_rel = ChannelRelations(folder=self.folder)
         self.channel_gdf = channel_rel.gdf
         self.cross_section_gdf = self.database.load(layer="cross_section_location", index_column="id")
-        self.cross_section_gdf["crs_id"] = self.cross_section_gdf.index
+        self.cross_section_gdf["cross_loc_id"] = self.cross_section_gdf.index
         self.connection_node_gdf = self.database.load(layer="connection_node", index_column="id")
         self.connection_node_gdf["conn_node_id"] = self.connection_node_gdf.index
         self.obstacle_gdf = self.database.load(layer="obstacle", index_column="id")
@@ -110,7 +109,7 @@ class BankLevelCheck:
 
         # Find intersection of 1d2d calculation grid lines with obstacles.
         obstacle_intersects = gpd.sjoin(self.lines_1d2d, self.obstacle_gdf, lsuffix="1d2d", rsuffix="obstacle")
-        obstacle_intersects["type"] = "1d2d_crosses_obstacle"
+        obstacle_intersects["intersect_type"] = "1d2d_crosses_obstacle"
 
         # remove duplicate 1d2d lines, created because multiple obstacles are crossed. Only the highest levee height is taken.
         obstacle_intersects = (
@@ -121,7 +120,7 @@ class BankLevelCheck:
         fixeddrainage_intersects = gpd.sjoin(
             self.lines_1d2d, self.fixeddrainage_boundary_gdf, lsuffix="1d2d", rsuffix="fdlab"
         )
-        fixeddrainage_intersects["type"] = "1d2d_crosses_fixeddrainage"
+        fixeddrainage_intersects["intersect_type"] = "1d2d_crosses_fixeddrainage"
         fixeddrainage_intersects = fixeddrainage_intersects.drop_duplicates("id_1d2d").sort_index()
 
         # Combine intersections with obstacles and fixeddrainagelevelarea
@@ -132,7 +131,7 @@ class BankLevelCheck:
         )
         # Drop duplicate node id's, keeping highest levee. Levee intersection takes precedence over fixeddrainage intersection
         self.line_intersects = (
-            self.line_intersects.sort_values(["crest_level", "type", "streefpeil_bwn2"], ascending=False)
+            self.line_intersects.sort_values(["crest_level", "intersect_type", "streefpeil_bwn2"], ascending=False)
             .drop_duplicates("id_1d2d")
             .sort_index()
         )
@@ -267,159 +266,81 @@ class BankLevelCheck:
 
         return self.new_manholes_df
 
-    def generate_cross_section_locations(self, write=False):
+    def generate_cross_section_locations(self) -> gpd.GeoDataFrame:
         """Generate cross section locations that need new bank levels"""
-        # Add nodes from leaking 1d2d obstacle instersections
-        intersects_on_channel = self.line_intersects[self.line_intersects["content_type"] == "TYPE_V2_CHANNEL"]
-
         # Join initial water levels on cross section locations
-        crs_data_all = self.cross_section_gdf.merge(
+        self.cross_loc_new = self.cross_section_gdf.merge(
             self.channel_gdf[["channel_id", "initial_water_level_start", "initial_water_level_end"]],
             how="left",
             on="channel_id",
         )
         # Add maximum initial water level at start and end in new column
-        crs_data_all["initial_water_level"] = crs_data_all[
+        self.cross_loc_new["initial_water_level"] = self.cross_loc_new[
             ["initial_water_level_start", "initial_water_level_end"]
         ].max(axis=1)
+        self.cross_loc_new.drop(columns=["initial_water_level_start", "initial_water_level_end"], inplace=True)
+
+        # new bank levels (lowest possible)
+        self.cross_loc_new["new_bank_level"] = round(
+            self.cross_loc_new[["initial_water_level", "reference_level"]].max(axis=1, skipna=True) + 0.1, 2
+        )
+        self.cross_loc_new["tags"] = "bank_level reset to lowest possible + 10 cm"
+
+        # Select 1d2d intersections that originate from channel-obstacle intersections
+        intersects_on_channel = self.line_intersects[self.line_intersects["content_type"] == "TYPE_V2_CHANNEL"]
+        # NOTE banklevels are lowered above, so take all intersections and set the bank level to crest level for these
+
         # Filter cross sections that need modified bank level to prevent leaks
-        crs_leak = crs_data_all.merge(
-            intersects_on_channel[["content_pk", "crest_level"]],
+        crs_raise = self.cross_loc_new.merge(
+            intersects_on_channel[["content_pk", "intersect_type", "crest_level", "streefpeil_bwn2"]],
             how="inner",
             left_on="channel_id",
             right_on="content_pk",
         )
-        crs_data_all[crs_data_all["channel_id"].isin(intersects_on_channel["content_pk"])]
+        crs_raise_obstacle = crs_raise[
+            (crs_raise["bank_level"] < crs_raise["crest_level"])
+            & (crs_raise["intersect_type"] == "1d2d_crosses_obstacle")
+        ]
+        crs_raise_fdla = crs_raise[
+            (crs_raise["bank_level"] < crs_raise["streefpeil_bwn2"])
+            & (crs_raise["intersect_type"] == "1d2d_crosses_fixeddrainage")
+        ]
 
-        # update bank levels (lower where possible, raise where needed to prevent leaks)
-        crs_data_all["temp_ref_level_added"] = crs_data_all["reference_level"] + 0.1
-        crs_data_all["bank_level"] = crs_data_all[["bank_level", "temp_ref_level_added"]].max(axis=1)
-        # fill in crest level where higher than current bank level # TODO niet alleen waar hij nu lekt gebruiken als leak, maar alle intersects om opnieuw goed in te stellen
-        # crs_data_all["bank_level"] =
+        # Fill in crest level / streefpeil where higher than current bank level
+        if not crs_raise_obstacle.empty:
+            self.cross_loc_new.loc[crs_raise_obstacle.index, "new_bank_level"] = crs_raise_obstacle["crest_level"]
+            self.cross_loc_new.loc[crs_raise_obstacle.index, "tags"] = crs_raise["intersect_type"]
+        if not crs_raise_fdla.empty:
+            self.cross_loc_new.loc[crs_raise_fdla.index, "new_bank_level"] = crs_raise_fdla["streefpeil_bwn2"] + 0.2
+            self.cross_loc_new.loc[crs_raise_fdla.index, "tags"] = crs_raise["intersect_type"]
 
-        def new_cross_loc_bank_levels(intersect_1d2d_all, channel_line_geo, cross_loc):
-            try:
-                """2. if the 1d2d line originates from an added calculation node -> find the channel this node is on and keep the
-                bank levels for this channel equal to the maximum levee height.
+        # Add column to show difference between old and new bank level
+        self.cross_loc_new["bank_level_diff"] = self.cross_loc_new["new_bank_level"] - self.cross_loc_new["bank_level"]
 
-                Function calculates new bank levels. Initially, we set them to either initial water level or
-                reference level, depending on which is higher. For cross section locations that cross over obstacles,
-                we set the bank level to levee height.
-
-                """
-
-                # filter nodes that need to have channels with bank levels equal to levee height
-                nodes_on_channel = intersect_1d2d_all[intersect_1d2d_all["node_type"] == "added_calculation"].copy()
-                # nodes_on_channel = nodes_on_channel.rename(columns={'node_geometry': 'geometry'})
-
-                nodes_on_channel.drop(["initial_waterlevel"], axis=1, inplace=True)
-                # nodes_on_channel = nodes_on_channel.rename(columns={'node_geometry': 'geometry'})
-
-                # Buffer point to find intersections with the channels (buffering returns point within given distance of geometry)
-                nodes_on_channel["geometry"] = nodes_on_channel.buffer(0.1)
-
-                # join channels on these nodes (meaning added calculation nodes) to get the channels that need higher bank levels.
-                if not nodes_on_channel.empty:
-                    channels_bank_level = gpd.sjoin(nodes_on_channel, channel_line_geo).drop(["index_right"], axis=1)
-                else:
-                    # Create emtpy df with same columns as the sjoin when there are no nodes_on_channels
-                    channels_bank_level = nodes_on_channel.reindex(
-                        columns=set(nodes_on_channel.columns.tolist() + channel_line_geo.columns.tolist())
-                    )
-
-                # sort so duplicate channel id's are removed, crossings with obstacles take priority over crossings
-                # with peilgrenzen (fixeddrainage)
-                channels_bank_level.sort_values(by=["channel_id", "type"], ascending=[True, False], inplace=True)
-                channels_bank_level.drop_duplicates("channel_id", inplace=True)
-                channels_bank_level.set_index(["channel_id"], inplace=True, drop=True)
-
-                # join cross_section_location on these channels
-                # get cross section locations where corresponding channel id matches channel id's that need
-                # higher bank levels (aka channels that intersect with added calculation nodes)
-                cross_loc_levee = cross_loc[cross_loc["channel_id"].isin(channels_bank_level.index.tolist())]
-
-                # Add initial water levels and levee heights to the previously obtained info about channels
-                # that need higher bank levels
-                cross_loc_levee = cross_loc_levee.join(
-                    channels_bank_level[["levee_height", "initial_waterlevel"]], on="channel_id"
-                )
-
-                # If a row doesn't have a levee height, the 1d2d line crosses with a fixeddrainagelevelarea (peilgrens).
-                cross_loc_fixeddrainage = cross_loc_levee[cross_loc_levee["levee_height"].isna()]
-
-                # If there is a levee height, the 1d2d line crosses with a levee
-                cross_loc_levee = cross_loc_levee[cross_loc_levee["levee_height"].notna()]
-
-                # Find initial waterlevels for cross section locations by matching them to corresponding id of channels
-                cross_loc_new_all = cross_loc.join(channel_line_geo[["initial_waterlevel"]], on="channel_id")
-
-                # All bank levels are set to initial waterlevel +10cm
-                cross_loc_new_all["new_bank_level"] = np.round(
-                    cross_loc_new_all["initial_waterlevel"] + 0.1, 3
-                ).astype(float)
-                cross_loc_new_all["bank_level_source"] = "initial+10cm"
-
-                # We start by setting the bank level of all cross location to either initial waterlevel or reference level
-                # If the reference level is higher than the initial waterlevel,
-                # use this for the banks. (dry bedding in e.g. wieringermeer)
-                ref_higher_than_init = cross_loc_new_all["reference_level"] > cross_loc_new_all["initial_waterlevel"]
-                cross_loc_new_all.loc[ref_higher_than_init, "new_bank_level"] = np.round(
-                    cross_loc_new_all["reference_level"] + 0.1, 3
-                ).astype(float)
-                cross_loc_new_all.loc[ref_higher_than_init, "bank_level_source"] = "reference+10cm"
-
-                # The cross locations that need levee height are set here
-                cross_loc_new_all.loc[cross_loc_levee.index, "new_bank_level"] = cross_loc_levee[
-                    "levee_height"
-                ].astype(float)
-                cross_loc_new_all.loc[cross_loc_levee.index, "bank_level_source"] = "levee_height"
-
-                # Cross locations that are associated with peilgrenzen get a special label for recognition (values are already set)
-                cross_loc_new_all.loc[
-                    (cross_loc_new_all.index.isin(cross_loc_fixeddrainage.index)),
-                    "bank_level_source",
-                ] = cross_loc_new_all["bank_level_source"] + "_fixeddrainage"
-
-                # Calculate difference between new and old bank level
-                cross_loc_new_all["bank_level_diff"] = np.round(
-                    cross_loc_new_all["new_bank_level"] - cross_loc_new_all["bank_level"], 2
-                )
-
-                # reorder columns
-                cross_loc_new_all_filtered = cross_loc_new_all[
-                    [
-                        "cross_loc_id",
-                        "channel_id",
-                        "reference_level",
-                        "initial_waterlevel",
-                        "bank_level",
-                        "new_bank_level",
-                        "bank_level_diff",
-                        "bank_level_source",
-                        "geometry",
-                    ]
-                ]
-
-                cross_loc_new_all_filtered.reset_index(drop=True, inplace=True)
-
-                # Filter the results only on cross section locations where a new bank level is proposed.
-                # If the new banklevel is a NaN value, remove it from the list as this implicates that the cross section
-                # is on a channel with connection nodes that do not have an initial water level
-                cross_loc_new = cross_loc_new_all_filtered.loc[
-                    (cross_loc_new_all_filtered["bank_level_diff"] != 0)
-                    & (cross_loc_new_all_filtered["bank_level"].notna())
-                ]
-                return cross_loc_new_all_filtered, cross_loc_new
-            except Exception as e:
-                raise e from None
-
-        self.cross_loc_new_filtered, self.cross_loc_new = new_cross_loc_bank_levels(
-            self.line_intersects, self.imports["channels"], self.imports["cross_loc"]
-        )
-        if write:
-            self.cross_loc_new_filtered.to_file("cross_loc_new_filtered.gpkg", driver="GPKG")
+        return self.cross_loc_new
 
     def generate_channels(self, write=False):
+        # cross_loc_new_all_filtered = cross_loc_new_all[
+        #             [
+        #                 "cross_loc_id",
+        #                 "channel_id",
+        #                 "reference_level",
+        #                 "initial_waterlevel",
+        #                 "bank_level",
+        #                 "new_bank_level",
+        #                 "bank_level_diff",
+        #                 "bank_level_source",
+        #                 "geometry",
+        #             ]
+        #         ]
+        # cross_loc_new_all_filtered.reset_index(drop=True, inplace=True)
+        # Filter the results only on cross section locations where a new bank level is proposed.
+        # If the new banklevel is a NaN value, remove it from the list as this implicates that the cross section
+        # is on a channel with connection nodes that do not have an initial water level
+        # cross_loc_new = cross_loc_new_all_filtered.loc[
+        #     (cross_loc_new_all_filtered["bank_level_diff"] != 0)
+        #     & (cross_loc_new_all_filtered["bank_level"].notna())
+        # ]
         self.new_channels = get_updated_channels(self.imports["channels"], self.cross_loc_new_filtered)
 
         if write:
@@ -431,9 +352,9 @@ class BankLevelCheck:
         self.divergent_waterlevel_nodes()
         # manholes
         self.get_new_manholes()
-
-        # generate locations and update channels
+        # generate locations
         self.generate_cross_section_locations()
+
         self.generate_channels()
 
     def write_csv_gpkg(self, result, filename, csv_path, gpkg_path):
@@ -494,6 +415,7 @@ if __name__ == "__main__":
     self.divergent_waterlevel_nodes()
     # manholes
     self.get_new_manholes()
+    self.generate_cross_section_locations()
     self.folder = folder
     self.database = folder.model.schema_base.database
     self.dem = self.folder.model.schema_base.rasters.dem
