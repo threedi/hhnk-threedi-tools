@@ -391,7 +391,7 @@ class DataSet:
                 for comparison in att_comp["comparisons"]:
                     description = comparison["description"]
                     table_name = comparison["table"]
-
+                    self.logger.debug(f"Start applying attribute comparison, table name {table_name}")
                     if table_name in table.keys():
                         print(f"comparing {description}")
                         table = self.compare_attribute(table, comparison)
@@ -420,7 +420,7 @@ class DataSet:
         :param code_start: Start of code to search for
         :return: DataFrame containing all found entries
         """
-        tabel = pd.DataFrame()
+        tabel = gpd.GeoDataFrame()
         for layer in layers:
             codes = []
             # (print("Capas disponibles:", list(self.data.keys())))
@@ -432,8 +432,14 @@ class DataSet:
             if codes:
                 layer_data = self.data[layer][self.data[layer]["code"].isin(codes)].copy()
                 layer_data["origin"] = layer
-                tabel = pd.concat((tabel, layer_data))
 
+                if "geometry" in layer_data.columns:
+                    layer_data = layer_data.set_geometry("geometry")
+
+                if layer_data.crs is None:
+                    layer_data.set_crs("EPSG:28992", inplace=True)
+                tabel = pd.concat((tabel, layer_data))
+                tabel = tabel.set_geometry("geometry")
         return tabel
 
     def export_statistics(self, statistics, filename):
