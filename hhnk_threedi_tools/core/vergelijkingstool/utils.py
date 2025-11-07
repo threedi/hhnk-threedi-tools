@@ -10,6 +10,7 @@ import geopandas as gpd
 
 from hhnk_threedi_tools.core.folders import Folders
 from hhnk_threedi_tools.core.vergelijkingstool import config
+from hhnk_threedi_tools.core.vergelijkingstool import json_files
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -51,7 +52,7 @@ def get_model_info(path: str) -> ModelInfo:
 
     source_data_old = source_data / "vergelijkingsTool" / "old"
     fn_damo_old = source_data_old / "DAMO.gdb"
-    json_folder = source_data / "vergelijkingsTool" / "json_files"
+    json_folder = Path(__file__).parent / "json_files"
     fn_hdb_old = source_data_old / "HDB.gdb"
     fn_damo_new = source_data / "DAMO.gpkg"
     fn_hdb_new = source_data / "HDB.gpkg"
@@ -104,7 +105,7 @@ def translate(data, translation_file):
         for layer_name in mapping.keys():
             if layer == layer_name:
                 # Map column names
-                logger.debug(f"Mapping column names of layer {layer}")
+                # logger.debug(f"Mapping column names of layer {layer}")
 
                 # Rename de columns within the data dictionary following the damo_translation.json file
                 data[layer].rename(columns=mapping[layer]["columns"], inplace=True)
@@ -142,14 +143,14 @@ def load_file_and_translate(
     """
 
     data = {}
-    logger.debug("Find layer names within geopackages")
+    # logger.debug("Find layer names within geopackages")
 
     # Determine layers to load depending on mode
     if layer_selection:
         layers_damo = layers_input_damo_selection
         layers_hdb = layers_input_hdb_selection
         layers_3di = layers_input_threedi_selection
-        logger.debug("Layer selection enabled")
+        # logger.debug("Layer selection enabled")
     else:
         layers_damo = fiona.listlayers(damo_filename) if damo_filename else []
         layers_hdb = fiona.listlayers(hdb_filename) if hdb_filename else []
@@ -160,7 +161,7 @@ def load_file_and_translate(
     if mode in ["damo", "both"]:
         for layer in layers_damo:
             if layer in config.DAMO_LAYERS:
-                logger.debug(f"Reading DAMO layer {layer}")
+                # logger.debug(f"Reading DAMO layer {layer}")
                 try:
                     gdf = gpd.read_file(damo_filename, layer=layer)
                     gdf.columns = gdf.columns.str.lower()
@@ -170,7 +171,7 @@ def load_file_and_translate(
 
         for layer in layers_hdb:
             if layer in config.HDB_LAYERS:
-                logger.debug(f"Reading HDB layer {layer}")
+                # logger.debug(f"Reading HDB layer {layer}")
                 try:
                     gdf = gpd.read_file(hdb_filename, layer=layer)
                     gdf.columns = gdf.columns.str.lower()
@@ -179,19 +180,19 @@ def load_file_and_translate(
                     logger.error(f"Error loading HDB layer {layer}: {e}")
         # Start translation DAMO
         if translation_DAMO is not None:
-            logger.debug("Start mapping layer and column names of DAMO layers")
+            # logger.debug("Start mapping layer and column names of DAMO layers")
             data = translate(data, translation_DAMO)
 
         # Start translation DAMO
         if translation_HDB is not None:
-            logger.debug("Start mapping layer and column names of HDB layers")
+            # logger.debug("Start mapping layer and column names of HDB layers")
             data = translate(data, translation_HDB)
 
     # Load 3Di dataset
 
     if mode in ["threedi", "both"]:
         for layer in layers_3di:
-            logger.debug(f"Loading 3Di layer {layer}")
+            # logger.debug(f"Loading 3Di layer {layer}")
             try:
                 gdf = gpd.read_file(threedi_filename, layer=layer)
                 gdf.columns = gdf.columns.str.lower()
@@ -200,7 +201,7 @@ def load_file_and_translate(
                 logger.error(f"Error loading 3Di layer {layer}: {e}")
 
         if translation_HDB is not None:
-            logger.debug("Start mapping layer and column names of 3di layers")
+            # logger.debug("Start mapping layer and column names of 3di layers")
             data = translate(data, translation_3Di)
 
     return data

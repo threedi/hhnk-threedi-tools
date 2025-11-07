@@ -9,7 +9,6 @@ import numpy as np
 import pandas as pd
 
 import hhnk_threedi_tools.core.vergelijkingstool.config as config
-from hhnk_threedi_tools.core.vergelijkingstool import json_files as json_files_path
 from hhnk_threedi_tools.core.vergelijkingstool import styling, utils
 from hhnk_threedi_tools.core.vergelijkingstool.config import *
 from hhnk_threedi_tools.core.vergelijkingstool.Dataset import DataSet
@@ -27,9 +26,9 @@ class Threedimodel(DataSet):
         :param filename: Path of the .sqlite file to be loaded
         :param translation: Path of the translation dictionary to be used
         """
-        # super().__init__(model_info)
+        super().__init__(model_info)
 
-        self.json_files_path = Path(json_files_path.__file__).resolve().parent
+        self.json_files_path = model_info.json_folder
         self.styling_path = Path(Threedi_styling_path.__file__).resolve().parent
 
         self.model_info = model_info
@@ -90,8 +89,8 @@ class Threedimodel(DataSet):
                     elif cross_section_table is not None:
                         data = [list(map(float, line.split(","))) for line in cross_section_table.strip().split("\n")]
                         array = np.array(data)
-                        cross_section_max_width = np.max(array[:, 0])
-                        cross_section_max_height = np.max(array[:, 1])
+                        cross_section_max_width = np.max(array[:, 1])
+                        cross_section_max_height = np.max(array[:, 0])
                     elif shape == 5 and cross_section_table is None:
                         cross_section_max_width = row.cross_section_width
                         cross_section_max_height = row.crest_level
@@ -266,10 +265,12 @@ class Threedimodel(DataSet):
         for struc in STRUCTURE_CODES:
             table_struc_model[struc] = self.get_structure_by_code(struc, THREEDI_STRUCTURE_LAYERS)
             table_struc_DAMO[struc] = DAMO.get_structure_by_code(struc, DAMO_HDB_STRUCTURE_LAYERS)
-
+            print(table_struc_model[struc])
         table_C = {}
         for layer in table_struc_model.keys():
+            print(layer)
             # print(f"the crs for {layer} in DAMO is {table_struc_DAMO[layer].crs}")
+            self.logger.debug(f"the crs for {layer}")
             if table_struc_DAMO[layer].crs == table_struc_model[layer].crs:
                 self.logger.debug(f"CRS of DAMO and model data {layer} is equal")
             else:
@@ -330,6 +331,7 @@ class Threedimodel(DataSet):
 
         # Apply attribute comparison
         if attribute_comparison is not None:
+            print(f"applying attribute comparison, {self.json_files_path}")
             table_C = self.apply_attribute_comparison(attribute_comparison, table_C)
             table_C = self.summarize_attribute_comparison(table_C)
 
