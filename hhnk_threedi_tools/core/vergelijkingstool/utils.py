@@ -9,8 +9,7 @@ import fiona
 import geopandas as gpd
 
 from hhnk_threedi_tools.core.folders import Folders
-from hhnk_threedi_tools.core.vergelijkingstool import config
-from hhnk_threedi_tools.core.vergelijkingstool import json_files
+from hhnk_threedi_tools.core.vergelijkingstool import config, json_files
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
