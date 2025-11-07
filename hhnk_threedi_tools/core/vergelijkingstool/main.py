@@ -187,55 +187,55 @@ def main(
 if __name__ == "__main__":
     # name
     path = r"E:\02.modellen\castricum"
-    info = get_model_info(path)
-    source_data = info.source_data
+    model_info = get_model_info(path)
+    source_data = model_info.source_data
 
     # polder polygon. It should be a geopackge file
-    selection_shape = fn_DAMO_selection = info.damo_selection
-    fn_threedimodel = info.fn_threedimodel
+    selection_shape = fn_DAMO_selection = model_info.damo_selection
+    fn_threedimodel = model_info.fn_threedimodel
     # Base folder initial files.
-    source_data_old = info.source_data_old
+    source_data_old = model_info.source_data_old
 
     # output location.
-    out_put_files = info.output_folder
+    out_put_files = model_info.output_folder
 
-    json_file = info.json_folder
+    json_file = model_info.json_folder
     # Old DAMO (DCMB/FME export) location .
-    fn_damo_old = info.fn_damo_old
+    fn_damo_old = model_info.fn_damo_old
 
     # the last version
-    fn_damo_new = info.fn_damo_new
+    fn_damo_new = model_info.fn_damo_new
 
     # fn_damo_new_translation = Path(os.path.join(source_data_old, 'damo_translation.json'))
 
     # Old HDB (DCMB/FME export) location .
-    fn_hdb_old = info.fn_hdb_old
+    fn_hdb_old = model_info.fn_hdb_old
 
     # the last version
-    fn_hdb_new = info.fn_hdb_new
+    fn_hdb_new = model_info.fn_hdb_new
 
     # fn_model_attribute_comparison = json_file / "model_attribute_comparison.json"
     # Define outputs
-    fn_DAMO_comparison_export = out_put_files / "DAMOPeilafwijking_Praktijk_sturing_147.gpkg"
+    fn_DAMO_comparison_export = out_put_files / "DAMO_comparison_148.gpkg"
 
     # Layers To Compare DAMO_DAMO
-    layer_selection = True
+    layer_selection = False
     layers_input_damo_selection = ["AfvoergebiedAanvoergebied", "PeilafwijkingGebied", "PeilgebiedPraktijk"]
     layers_input_hdb_selection = ["Levee_overstromingsmodel", "Sturing_3Di"]
-    fn_threedi_comparison_export = out_put_files / "Threedi_comparison_54.gpkg"
+    fn_threedi_comparison_export = out_put_files / "Threedi_comparison_65.gpkg"
 
-    compare_with = "Compare with Damo"
-    # compare_with = "Compare with 3Di"
+    # compare_with = "Compare with Damo"
+    compare_with = "Compare with 3Di"
     # config.UPDATE_SYMBOLOGY = True
 
     # Layers to Compare DAMO_3di
     threedi_layer_selector = False
-    threedi_structure_selection = ["channel"]
-    damo_structure_selection = ["hydroobject"]
-    structure_codes = ["OAF"]
+    threedi_structure_selection = ["orifice"]
+    damo_structure_selection = ["brug"]
+    structure_codes = ["KBR"]
     # %%
     main(
-        model_info=info,
+        model_info=model_info,
         fn_DAMO_selection=fn_DAMO_selection,
         fn_damo_new=fn_damo_new,
         fn_hdb_new=fn_hdb_new,
