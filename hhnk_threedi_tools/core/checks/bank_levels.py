@@ -1,13 +1,5 @@
 # %%
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Aug 19 09:04:52 2021
-
-@author: chris.kerklaan
-
-Bank level testing made into an object to have more overview
-
-"""
+from pathlib import Path
 
 import geopandas as gpd
 import hhnk_research_tools as hrt
@@ -16,19 +8,8 @@ import pandas as pd
 from hhnk_research_tools.folder_file_classes.spatial_database_class import SpatialDatabase
 from threedigrid_builder import make_gridadmin
 
-# from hhnk_research_tools.threedi.geometry_functions import extract_boundary_from_polygon
-# from hhnk_research_tools.threedi.grid import Grid
-# Local imports
 from hhnk_threedi_tools.core.folders import Folders
 from hhnk_threedi_tools.core.schematisation.relations import ChannelRelations
-from hhnk_threedi_tools.variables.bank_levels import (
-    bank_level_diff_col,
-    new_bank_level_col,
-    new_bank_level_source_col,
-)
-from hhnk_threedi_tools.variables.database_aliases import (
-    a_chan_id,
-)
 
 # Globals
 NEW_STORAGE_AREA_COL = "new_storage_area"
@@ -38,12 +19,41 @@ FLOW_1D2D_CROSS_SECTIONS_NAME = "stroming_1d2d_cross_sections"
 FLOW_1D2D_CHANNELS_NAME = "stroming_1d2d_watergangen"
 FLOW_1D2D_MANHOLES_NAME = "stroming_1d2d_putten"
 
-# %%
 
-
-# %%
 class BankLevelCheck:
-    """An object that reads and runs bank level checks"""
+    """Performs bank level validation and adjustment checks for 3Di model components.
+
+    This class analyzes and validates bank levels in relation to water levels, obstacles,
+    and fixed drainage areas. It identifies potential leakage points and generates
+    corrections for:
+    - Cross-section bank levels
+    - Manhole configurations
+
+    The check includes:
+    1. Detection of 1D2D flow line intersections with obstacles or FDLA boundaries
+    2. Identification of nodes with divergent water levels
+    3. Generation of corrective manholes
+    4. Adjustment of cross-section bank levels
+
+    Attributes
+    ----------
+        folder (Folders): Directory structure containing model and result paths
+        database (SpatialDatabase): Spatial database containing the model schematisation
+        dem: Digital Elevation Model raster
+        lines_1d2d (GeoDataFrame): 1D2D connection lines from the calculation grid
+        gridnodes (GeoDataFrame): Grid nodes from the calculation grid
+        channel_gdf (GeoDataFrame): Channel data with relations
+        cross_section_gdf (GeoDataFrame): Cross-section locations with properties
+        connection_node_gdf (GeoDataFrame): Connection nodes with properties
+        obstacle_gdf (GeoDataFrame): Obstacles (e.g., levees) in the model
+        fixeddrainage_gdf (GeoDataFrame): Fixed drainage level areas
+        fixeddrainage_boundary_gdf (GeoDataFrame): Boundaries of fixed drainage areas
+
+    Note:
+        The check helps prevent unintended water flows across obstacles and between
+        areas with different water level regimes by adjusting bank levels and adding
+        control structures where needed.
+    """
 
     def __init__(self, folder: Folders):
         self.folder = folder
@@ -145,8 +155,6 @@ class BankLevelCheck:
         self.line_intersects = self.line_intersects.merge(
             self.gridnodes.drop(columns="geometry", axis=1), how="left", left_on="node_2", right_on="id"
         )
-
-        # TODO WvE de fouten die hier uit komen (leaks bij crest level) moeten naar N&S denk ik.
 
         return self.line_intersects
 
@@ -292,59 +300,42 @@ class BankLevelCheck:
 
         # Filter cross sections that need modified bank level to prevent leaks
         crs_raise = self.cross_loc_new.merge(
-            intersects_on_channel[["content_pk", "intersect_type", "crest_level", "streefpeil_bwn2"]],
+            intersects_on_channel[["content_pk", "leak", "intersect_type", "crest_level", "streefpeil_bwn2"]],
             how="inner",
             left_on="channel_id",
             right_on="content_pk",
         )
-        crs_raise_obstacle = crs_raise[
-            (crs_raise["bank_level"] < crs_raise["crest_level"])
-            & (crs_raise["intersect_type"] == "1d2d_crosses_obstacle")
-        ]
-        crs_raise_fdla = crs_raise[
-            (crs_raise["bank_level"] < crs_raise["streefpeil_bwn2"])
-            & (crs_raise["intersect_type"] == "1d2d_crosses_fixeddrainage")
-        ]
 
-        # Fill in crest level / streefpeil where higher than current bank level
-        if not crs_raise_obstacle.empty:
-            self.cross_loc_new.loc[crs_raise_obstacle.index, "new_bank_level"] = crs_raise_obstacle["crest_level"]
-            self.cross_loc_new.loc[crs_raise_obstacle.index, "tags"] = crs_raise["intersect_type"]
-        if not crs_raise_fdla.empty:
-            self.cross_loc_new.loc[crs_raise_fdla.index, "new_bank_level"] = crs_raise_fdla["streefpeil_bwn2"] + 0.2
-            self.cross_loc_new.loc[crs_raise_fdla.index, "tags"] = crs_raise["intersect_type"]
+        for index, row in self.cross_loc_new.iterrows():
+            # Find matching crs to raise
+            crs_intersect = crs_raise[crs_raise["channel_id"] == row["channel_id"]]
+            if not crs_intersect.empty:
+                # Get maximum of all values available
+                new_bank_level = crs_raise[["crest_level", "streefpeil_bwn2"]].max(axis=None)
+                self.cross_loc_new.loc[index, "new_bank_level"] = new_bank_level
+                self.cross_loc_new.loc[index, "tags"] = (
+                    self.cross_loc_new.loc[index, "tags"] + ";" + "bank level raised to obstacle of fdla level"
+                )
 
         # Add column to show difference between old and new bank level
         self.cross_loc_new["bank_level_diff"] = self.cross_loc_new["new_bank_level"] - self.cross_loc_new["bank_level"]
 
         return self.cross_loc_new
 
-    def generate_channels(self, write=False):
-        # cross_loc_new_all_filtered = cross_loc_new_all[
-        #             [
-        #                 "cross_loc_id",
-        #                 "channel_id",
-        #                 "reference_level",
-        #                 "initial_waterlevel",
-        #                 "bank_level",
-        #                 "new_bank_level",
-        #                 "bank_level_diff",
-        #                 "bank_level_source",
-        #                 "geometry",
-        #             ]
-        #         ]
-        # cross_loc_new_all_filtered.reset_index(drop=True, inplace=True)
-        # Filter the results only on cross section locations where a new bank level is proposed.
-        # If the new banklevel is a NaN value, remove it from the list as this implicates that the cross section
-        # is on a channel with connection nodes that do not have an initial water level
-        # cross_loc_new = cross_loc_new_all_filtered.loc[
-        #     (cross_loc_new_all_filtered["bank_level_diff"] != 0)
-        #     & (cross_loc_new_all_filtered["bank_level"].notna())
-        # ]
-        self.new_channels = get_updated_channels(self.imports["channels"], self.cross_loc_new_filtered)
-
-        if write:
-            self.new_channels.to_file("new_channels.gpkg", driver="GPKG")
+    def generate_channels(self) -> gpd.GeoDataFrame:
+        """Create overview of channels, 1d2d lines and cross section location to see differente bank levels"""
+        crs_per_channel = (
+            self.cross_loc_new.drop_duplicates("channel_id")
+            .sort_values("new_bank_level", ascending=True)[["channel_id", "new_bank_level", "bank_level_diff", "tags"]]
+            .reset_index(drop=True)
+        )
+        # join cross locations on channels so we have a bank level per channel
+        self.all_channels = self.channel_gdf.reset_index(drop=True).merge(
+            crs_per_channel,
+            left_on="channel_id",
+            right_on="channel_id",
+        )
+        return self.all_channels
 
     def run(self):
         # Check grid for leaks
@@ -354,55 +345,23 @@ class BankLevelCheck:
         self.get_new_manholes()
         # generate locations
         self.generate_cross_section_locations()
-
+        # generate channel overview
         self.generate_channels()
 
-    def write_csv_gpkg(self, result, filename, csv_path, gpkg_path):
-        """writes a csv and geopackage, name is the name wo extension"""
-        if not result.empty:
-            hrt.gdf_write_to_csv(result, csv_path, filename)
-            hrt.gdf_write_to_geopackage(result, gpkg_path, filename)
+    def write(self, csv_path: Path, gpkg_path: Path):
+        """Write selected ouput used in QGIS plugin GUI"""
 
-    def write(self, csv_path, gpkg_path):
-        self.write_csv_gpkg(
-            self.results["all_1d2d_flowlines"],
-            FLOW_1D2D_FLOWLINES_NAME,
-            csv_path,
-            gpkg_path,
-        )
+        def write_csv_gpkg(gdf: gpd.GeoDataFrame, filename: str, csv_path: Path, gpkg_path: Path):
+            """Write a csv and geopackage, name is the name without extension"""
+            if not gdf.empty:
+                hrt.gdf_write_to_csv(gdf, csv_path, filename)
+                hrt.gdf_write_to_geopackage(gdf, gpkg_path, filename)
 
-        self.write_csv_gpkg(
-            self.results["cross_loc_new"],
-            FLOW_1D2D_CROSS_SECTIONS_NAME,
-            csv_path,
-            gpkg_path,
-        )
-
-        self.write_csv_gpkg(self.results["new_channels"], FLOW_1D2D_CHANNELS_NAME, csv_path, gpkg_path)
+        write_csv_gpkg(self.results["all_1d2d_flowlines"], FLOW_1D2D_FLOWLINES_NAME, csv_path, gpkg_path)
+        write_csv_gpkg(self.results["cross_loc_new"], FLOW_1D2D_CROSS_SECTIONS_NAME, csv_path, gpkg_path)
+        write_csv_gpkg(self.results["new_channels"], FLOW_1D2D_CHANNELS_NAME, csv_path, gpkg_path)
 
         hrt.gdf_write_to_csv(gdf=self.results["new_manholes_df"], filename=FLOW_1D2D_MANHOLES_NAME, path=csv_path)
-
-    def write_output(self, name):
-        """writes to output folder"""
-        new_folder = self.folder.output.bank_levels.full_path(name)
-        new_folder.path.mkdir(parents=True, exist_ok=True)
-        self.write(str(new_folder), str(new_folder))
-
-
-def get_updated_channels(channel_line_geo, cross_loc_new_all):
-    """With the new (and old) bank levels at cross_section_locations we make a new overview of the channels here.
-    In qgis this can be plotted to show how the channels interact with 1d2d (considering bank heights)"""
-    cross_locs = cross_loc_new_all.drop_duplicates(a_chan_id)[
-        [a_chan_id, new_bank_level_col, bank_level_diff_col, new_bank_level_source_col]
-    ].reset_index(drop=True)
-    # join cross locations on channels so we have a bank level per channel
-    all_channels = pd.merge(
-        channel_line_geo.reset_index(drop=True),
-        cross_locs,
-        left_on=a_chan_id,
-        right_on=a_chan_id,
-    )
-    return all_channels
 
 
 if __name__ == "__main__":
