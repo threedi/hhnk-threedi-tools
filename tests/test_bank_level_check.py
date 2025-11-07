@@ -1,5 +1,7 @@
 # %%
 
+import sys
+
 import pytest
 
 from hhnk_threedi_tools.core.checks.bank_levels import BankLevelCheck
@@ -18,6 +20,7 @@ def bl_check():
     return check
 
 
+@pytest.mark.skipif(sys.version_info < (3, 12), reason="Requires Python 3.12 or higher")
 def test_import_data(bl_check: BankLevelCheck):
     """Test if the import of data works, if the correct amount is imported"""
     assert bl_check.fixeddrainage_gdf.count()["peil_id"] == 32
@@ -30,6 +33,7 @@ def test_import_data(bl_check: BankLevelCheck):
     assert bl_check.obstacle_gdf["crest_level"][54] == 0.159
 
 
+@pytest.mark.skipif(sys.version_info < (3, 12), reason="Requires Python 3.12 or higher")
 def test_intersections(bl_check: BankLevelCheck):
     """Test intersection detection between obstacles and 1d2d lines.
 
@@ -44,6 +48,7 @@ def test_intersections(bl_check: BankLevelCheck):
     assert bl_check.line_intersects["intersect_type"][0] == "1d2d_crosses_obstacle"
 
 
+@pytest.mark.skipif(sys.version_info < (3, 12), reason="Requires Python 3.12 or higher")
 def test_divergent_waterlevel_nodes(bl_check: BankLevelCheck):
     """Test detection of nodes with divergent water levels.
 
@@ -55,6 +60,7 @@ def test_divergent_waterlevel_nodes(bl_check: BankLevelCheck):
     assert result["type"][0] == "node_in_wrong_fixeddrainage_area"
 
 
+@pytest.mark.skipif(sys.version_info < (3, 12), reason="Requires Python 3.12 or higher")
 def test_get_new_manholes(bl_check: BankLevelCheck):
     """Test generation of new manholes at problematic locations.
 
@@ -69,6 +75,7 @@ def test_get_new_manholes(bl_check: BankLevelCheck):
     assert result["tags"][9] == "leak across obstacle from node"
 
 
+@pytest.mark.skipif(sys.version_info < (3, 12), reason="Requires Python 3.12 or higher")
 def test_generate_cross_section_locations(bl_check: BankLevelCheck):
     """Test generation of cross-section locations with adjusted bank levels.
 
@@ -87,6 +94,7 @@ def test_generate_cross_section_locations(bl_check: BankLevelCheck):
     assert result["bank_level_diff"][82] == -1.662
 
 
+@pytest.mark.skipif(sys.version_info < (3, 12), reason="Requires Python 3.12 or higher")
 def test_generate_channels(bl_check: BankLevelCheck):
     """Test channel generation with updated bank levels.
 
@@ -120,6 +128,7 @@ def test_generate_channels(bl_check: BankLevelCheck):
     assert row["new_bank_level"].iloc[0] == 0.244
 
 
+@pytest.mark.skipif(sys.version_info < (3, 12), reason="Requires Python 3.12 or higher")
 def test_results(bl_check: BankLevelCheck):
     """Test the complete bank level check workflow results.
 
