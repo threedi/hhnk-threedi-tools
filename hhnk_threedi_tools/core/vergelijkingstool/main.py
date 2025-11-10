@@ -194,7 +194,7 @@ if __name__ == "__main__":
     selection_shape = fn_DAMO_selection = model_info.damo_selection
     fn_threedimodel = model_info.fn_threedimodel
     # Base folder initial files.
-    source_data_old = model_info.source_data_old
+    input_data_old = model_info.input_data_old
 
     # output location.
     out_put_files = model_info.output_folder
@@ -206,15 +206,12 @@ if __name__ == "__main__":
     # the last version
     fn_damo_new = model_info.fn_damo_new
 
-    # fn_damo_new_translation = Path(os.path.join(source_data_old, 'damo_translation.json'))
-
     # Old HDB (DCMB/FME export) location .
     fn_hdb_old = model_info.fn_hdb_old
 
     # the last version
     fn_hdb_new = model_info.fn_hdb_new
 
-    # fn_model_attribute_comparison = json_file / "model_attribute_comparison.json"
     # Define outputs
     fn_DAMO_comparison_export = out_put_files / "DAMO_comparison_148.gpkg"
 
@@ -242,7 +239,6 @@ if __name__ == "__main__":
         fn_damo_old=fn_damo_old,
         fn_hdb_old=fn_hdb_old,
         fn_threedimodel=fn_threedimodel,
-        # fn_model_attribute_comparison=fn_model_attribute_comparison,
         fn_DAMO_comparison_export=fn_DAMO_comparison_export,
         fn_threedi_comparison_export=fn_threedi_comparison_export,
         compare_with=compare_with,
