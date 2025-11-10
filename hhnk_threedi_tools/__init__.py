@@ -25,12 +25,12 @@ from hhnk_threedi_tools.core.result_rasters.grid_to_raster import GridToWaterDep
 from hhnk_threedi_tools.core.result_rasters.grid_to_raster_old import GridToRaster  # TODO deprecate
 from hhnk_threedi_tools.core.result_rasters.netcdf_to_gridgpkg import NetcdfToGPKG
 from hhnk_threedi_tools.core.schematisation import (
-    migrate,  # TODO fix or do we still need it?
+    # migrate,  # TODO fix or do we still need it?
     model_backup,
     model_splitter,
     upload,
 )
-from hhnk_threedi_tools.core.schematisation.migrate import MigrateSchema
+# from hhnk_threedi_tools.core.schematisation.migrate import MigrateSchema
 
 # backup
 from hhnk_threedi_tools.core.schematisation.model_backup import (
