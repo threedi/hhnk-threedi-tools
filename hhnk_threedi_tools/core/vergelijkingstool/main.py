@@ -51,10 +51,9 @@ def main(
     fn_damo_old,
     fn_hdb_old,
     fn_threedimodel,
-    # fn_model_attribute_comparison,
     fn_DAMO_comparison_export,
     fn_threedi_comparison_export,
-    compare_with: str = "Compare with 3Di",
+    compare_with: str = "Damo Updated vs 3Di model",
     layer_selection=True,
     layers_input_hdb_selection=None,
     layers_input_damo_selection=None,
@@ -83,7 +82,7 @@ def main(
 
     selection_compare = compare_with
 
-    if selection_compare == "Compare with Damo":
+    if selection_compare == "Damo Export vs Damo Updated":
         damo_old = DAMO(
             model_info,
             fn_damo_old,
@@ -112,7 +111,7 @@ def main(
 
         return fn_DAMO_comparison_export
 
-    elif selection_compare == "Compare with 3Di":
+    elif selection_compare == "Damo Updated vs 3Di model":
         # Create Threedimodel object
         threedi_model = Threedimodel(fn_threedimodel, model_info=model_info)
         damo_new = DAMO(
@@ -213,7 +212,7 @@ if __name__ == "__main__":
     layer_selection = False
     layers_input_damo_selection = ["AfvoergebiedAanvoergebied", "PeilafwijkingGebied", "PeilgebiedPraktijk"]
     layers_input_hdb_selection = ["Levee_overstromingsmodel", "Sturing_3Di"]
-    fn_threedi_comparison_export = out_put_files / "Threedi_comparison_68.gpkg"
+    fn_threedi_comparison_export = out_put_files / "Threedi_comparison_70.gpkg"
 
     # compare_with = "Compare with Damo"
     compare_with = "Compare with 3Di"

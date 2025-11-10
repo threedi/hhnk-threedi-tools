@@ -38,7 +38,8 @@ class Threedimodel(DataSet):
         self.model_path = model_info.fn_threedimodel
         self.logger = logging.getLogger("Threedimodel")
         self.logger.debug("Created Threedimodel object")
-
+        self.THREEDI_STRUCTURE_LAYERS = config.THREEDI_STRUCTURE_LAYERS
+        self.DAMO_HDB_STRUCTURE_LAYERS = config.DAMO_HDB_STRUCTURE_LAYERS
         self.data = utils.load_file_and_translate(
             damo_filename=None,
             hdb_filename=None,
@@ -247,8 +248,6 @@ class Threedimodel(DataSet):
         model_name = self.model_name
         table_struc_model = {}
         table_struc_DAMO = {}
-        THREEDI_STRUCTURE_LAYERS = config.THREEDI_STRUCTURE_LAYERS
-        DAMO_HDB_STRUCTURE_LAYERS = config.DAMO_HDB_STRUCTURE_LAYERS
         # base_     output = r"E:\02.modellen\castricum\01_source_data\vergelijkingsTool\output"
         if threedi_layer_selector is True:
             STRUCTURE_CODES = structure_codes
