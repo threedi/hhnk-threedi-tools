@@ -13,7 +13,7 @@ from hhnk_threedi_tools.core.vergelijkingstool.utils import get_model_info
 class VergelijkingstoolGUI:
     def __init__(self):
         #  Styling
-        desc_style = {"description_width": "160px"}
+        desc_style = {"description_width": "200px"}
         text_w = "95%"
 
         self.output_box = widgets.Output()
@@ -22,7 +22,7 @@ class VergelijkingstoolGUI:
         self.model_base_path_input = Text(
             value="",
             placeholder=r"e.g. E:\02.modellen\castricum",
-            description="Model folder:",
+            description="Enter the Model folder path:",
             layout=widgets.Layout(width=text_w),
             style=desc_style,
         )
@@ -37,7 +37,7 @@ class VergelijkingstoolGUI:
         )
         self.output_name_input = Text(
             value=".gpkg",
-            description="Output name:",
+            description="Enter output file name:",
             layout=widgets.Layout(width=text_w),
             style=desc_style,
         )
@@ -50,23 +50,26 @@ class VergelijkingstoolGUI:
         )
 
         # Compare options
-        self.compare_title = HTML("<b>Which database do you want to compare with?</b>")
+        self.compare_title = HTML("<b>Choose the datasets to compare:</b>")
         self.compare_buttons = ToggleButtons(
-            options=["Compare with Damo", "Compare with 3Di", "Both"],
+            options=["Damo Export vs Damo Updated", "Damo Updated vs 3Di model", "Both"],
             value=None,
             layout=widgets.Layout(width="auto"),
+            style={"button_width": "250px"},
         )
 
         # Checkboxes
         self.select_layer_damo = Checkbox(
             value=False,
-            description="Select specific DAMO/DAMO layers?",
+            description="Select this option to compare specific layers between DAMO Export and DAMO Updated:",
             indent=False,
+            layout=widgets.Layout(width="100%"),
         )
         self.select_layer_3di = Checkbox(
             value=False,
-            description="Select specific 3Di/DAMO layers?",
+            description="Select this option to compare specific layers between Damo Updated and 3Di model:",
             indent=False,
+            layout=widgets.Layout(width="100%"),
         )
 
         # run button
@@ -138,12 +141,12 @@ class VergelijkingstoolGUI:
             # Limpia handlers viejos del botón
             self.run_button._click_handlers.callbacks = []
 
-            if val == "Compare with Damo":
+            if val == "Damo Export vs Damo Updated":
                 display(self.select_layer_damo, self.run_button)
                 # Handler por defecto (todas las capas)
                 self.run_button.on_click(self._run_damo_all)
 
-            elif val == "Compare with 3Di":
+            elif val == "Damo Updated vs 3Di model":
                 display(self.select_layer_3di, self.run_button)
                 self.run_button.on_click(self._run_3di_all)
 
@@ -159,7 +162,7 @@ class VergelijkingstoolGUI:
     #  DAMO branch
     def _on_damo_checkbox_change(self, change: Any):
         """Show llist of layers only if the checkbox is activated"""
-        if self.compare_buttons.value != "Compare with Damo":
+        if self.compare_buttons.value != "Damo Export vs Damo Updated":
             return
 
         with self.output_box:
@@ -224,7 +227,7 @@ class VergelijkingstoolGUI:
                 fn_threedimodel=mi.fn_threedimodel,
                 fn_DAMO_comparison_export=self.output_file_path.value,
                 fn_threedi_comparison_export=self.output_file_path.value,
-                compare_with="Compare with Damo",
+                compare_with="Damo Export vs Damo Updated",
                 layer_selection=False,
                 layers_input_hdb_selection=[],
                 layers_input_damo_selection=fiona.listlayers(mi.fn_damo_new),
@@ -255,7 +258,7 @@ class VergelijkingstoolGUI:
                 fn_threedimodel=mi.fn_threedimodel,
                 fn_DAMO_comparison_export=self.output_file_path.value,
                 fn_threedi_comparison_export=self.output_file_path.value,
-                compare_with="Compare with Damo",
+                compare_with="Damo Export vs Damo Updated",
                 layer_selection=True,
                 layers_input_hdb_selection=sel_hdb,
                 layers_input_damo_selection=sel_damo,
@@ -268,7 +271,7 @@ class VergelijkingstoolGUI:
 
     #  3Di branch
     def _on_3di_checkbox_change(self, change: Any):
-        if self.compare_buttons.value != "Compare with 3Di":
+        if self.compare_buttons.value != "Damo Updated vs 3Di model":
             return
 
         with self.output_box:
@@ -340,7 +343,7 @@ class VergelijkingstoolGUI:
                 fn_threedimodel=mi.fn_threedimodel,
                 fn_DAMO_comparison_export=self.output_file_path.value,
                 fn_threedi_comparison_export=self.output_file_path.value,
-                compare_with="Compare with 3Di",
+                compare_with="Damo Updated vs 3Di model",
                 layer_selection=False,
                 layers_input_hdb_selection=[],
                 layers_input_damo_selection=[],
@@ -372,7 +375,7 @@ class VergelijkingstoolGUI:
                 fn_threedimodel=mi.fn_threedimodel,
                 fn_DAMO_comparison_export=self.output_file_path.value,
                 fn_threedi_comparison_export=self.output_file_path.value,
-                compare_with="Compare with 3Di",
+                compare_with="Damo Updated vs 3Di model",
                 layer_selection=False,
                 layers_input_hdb_selection=[],
                 layers_input_damo_selection=[],
@@ -403,7 +406,7 @@ class VergelijkingstoolGUI:
                 fn_threedimodel=mi.fn_threedimodel,
                 fn_DAMO_comparison_export=self.output_file_path.value,
                 fn_threedi_comparison_export=self.output_file_path.value,
-                compare_with="Compare with Damo",
+                compare_with="Damo Export vs Damo Updated",
                 layer_selection=False,
                 layers_input_hdb_selection=[],
                 layers_input_damo_selection=fiona.listlayers(mi.fn_damo_new),
@@ -423,7 +426,7 @@ class VergelijkingstoolGUI:
                 fn_threedimodel=mi.fn_threedimodel,
                 fn_DAMO_comparison_export=self.output_file_path.value,
                 fn_threedi_comparison_export=self.output_file_path.value,
-                compare_with="Compare with 3Di",
+                compare_with="Damo Updated vs 3Di model",
                 layer_selection=False,
                 layers_input_hdb_selection=[],
                 layers_input_damo_selection=[],
