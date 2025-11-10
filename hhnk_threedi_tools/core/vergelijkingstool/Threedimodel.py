@@ -226,8 +226,6 @@ class Threedimodel(DataSet):
         filename=None,
         overwrite=False,
         threedi_layer_selector=False,
-        threedi_structure_selection=None,
-        damo_structure_selection=None,
         structure_codes=None,
     ):
         """
@@ -249,18 +247,14 @@ class Threedimodel(DataSet):
         model_name = self.model_name
         table_struc_model = {}
         table_struc_DAMO = {}
-
+        THREEDI_STRUCTURE_LAYERS = config.THREEDI_STRUCTURE_LAYERS
+        DAMO_HDB_STRUCTURE_LAYERS = config.DAMO_HDB_STRUCTURE_LAYERS
         # base_     output = r"E:\02.modellen\castricum\01_source_data\vergelijkingsTool\output"
-        base_output = self.sourcedata / "vergelijkingsTool\output"  # TODO THIS NEED TO BE FIX
         if threedi_layer_selector is True:
-            THREEDI_STRUCTURE_LAYERS = threedi_structure_selection
-            DAMO_HDB_STRUCTURE_LAYERS = damo_structure_selection
             STRUCTURE_CODES = structure_codes
         else:
             STRUCTURE_CODES = config.STRUCTURE_CODES
             print("threedi layer selection is OFF")
-            THREEDI_STRUCTURE_LAYERS = config.THREEDI_STRUCTURE_LAYERS
-            DAMO_HDB_STRUCTURE_LAYERS = config.DAMO_HDB_STRUCTURE_LAYERS
 
         for struc in STRUCTURE_CODES:
             table_struc_model[struc] = self.get_structure_by_code(struc, THREEDI_STRUCTURE_LAYERS)

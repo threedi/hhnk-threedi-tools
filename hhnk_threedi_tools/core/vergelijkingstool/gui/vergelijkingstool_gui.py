@@ -67,7 +67,7 @@ class VergelijkingstoolGUI:
         )
         self.select_layer_3di = Checkbox(
             value=False,
-            description="Select this option to compare specific layers between Damo Updated and 3Di model:",
+            description="Select this specific Structures to compare between Damo Updated and 3Di model:",
             indent=False,
             layout=widgets.Layout(width="100%"),
         )
@@ -232,8 +232,6 @@ class VergelijkingstoolGUI:
                 layers_input_hdb_selection=[],
                 layers_input_damo_selection=fiona.listlayers(mi.fn_damo_new),
                 threedi_layer_selector=False,
-                threedi_structure_selection=[],
-                damo_structure_selection=[],
                 structure_codes=[],
             )
             print("Finished.")
@@ -263,8 +261,6 @@ class VergelijkingstoolGUI:
                 layers_input_hdb_selection=sel_hdb,
                 layers_input_damo_selection=sel_damo,
                 threedi_layer_selector=False,
-                threedi_structure_selection=[],
-                damo_structure_selection=[],
                 structure_codes=[],
             )
             print("Finished.")
@@ -289,16 +285,8 @@ class VergelijkingstoolGUI:
                 print("Enter a valid model folder first.")
                 return
 
-            threedi_layers = config.THREEDI_STRUCTURE_LAYERS
-            damo_layers = config.DAMO_HDB_STRUCTURE_LAYERS
             codes = config.STRUCTURE_CODES
 
-            self._threedi_buttons = [
-                widgets.ToggleButton(description=l, layout=widgets.Layout(width="48%")) for l in threedi_layers
-            ]
-            self._damo_struct_buttons = [
-                widgets.ToggleButton(description=l, layout=widgets.Layout(width="48%")) for l in damo_layers
-            ]
             self._code_buttons = [
                 widgets.ToggleButton(description=c, layout=widgets.Layout(width="48%")) for c in codes
             ]
@@ -312,11 +300,6 @@ class VergelijkingstoolGUI:
                     ]
                 )
 
-            display(
-                HTML("<b>3Di structure layers:</b>"),
-                HBox(self._threedi_buttons, layout=widgets.Layout(flex_flow="row wrap", gap="6px")),
-            )
-            display(HTML("<b>DAMO/HDB layers:</b>"), two_rows(self._damo_struct_buttons))
             display(
                 HTML("<b>Structure codes:</b>"),
                 HBox(self._code_buttons, layout=widgets.Layout(flex_flow="row wrap", gap="6px")),
@@ -348,8 +331,6 @@ class VergelijkingstoolGUI:
                 layers_input_hdb_selection=[],
                 layers_input_damo_selection=[],
                 threedi_layer_selector=True,
-                threedi_structure_selection=config.THREEDI_STRUCTURE_LAYERS,
-                damo_structure_selection=config.DAMO_HDB_STRUCTURE_LAYERS,
                 structure_codes=config.STRUCTURE_CODES,
             )
             print("Finished.")
@@ -361,10 +342,12 @@ class VergelijkingstoolGUI:
             if not mi:
                 print("Enter a valid model folder.")
                 return
-            sel_3di = [b.description for b in getattr(self, "_threedi_buttons", []) if b.value]
-            sel_damo_struct = [b.description for b in getattr(self, "_damo_struct_buttons", []) if b.value]
+            # sel_3di = [b.description for b in getattr(self, "_threedi_buttons", []) if b.value]
+            # sel_damo_struct = [b.description for b in getattr(self, "_damo_struct_buttons", []) if b.value]
             sel_codes = [b.description for b in getattr(self, "_code_buttons", []) if b.value]
-            print(f"3Di: {sel_3di}\nDAMO/HDB: {sel_damo_struct}\nCodes: {sel_codes}\n⚙️ Running...")
+            # print(f"3Di: {sel_3di}\nDAMO/HDB: {sel_damo_struct}\nCodes: {sel_codes}\n⚙️ Running...")
+            print(f"Used Codes to compare: {sel_codes}\n⚙️ Running...")
+
             main.main(
                 model_info=mi,
                 fn_DAMO_selection=mi.damo_selection,
@@ -380,8 +363,6 @@ class VergelijkingstoolGUI:
                 layers_input_hdb_selection=[],
                 layers_input_damo_selection=[],
                 threedi_layer_selector=True,
-                threedi_structure_selection=sel_3di,
-                damo_structure_selection=sel_damo_struct,
                 structure_codes=sel_codes,
             )
             print("Finished.")
@@ -411,8 +392,6 @@ class VergelijkingstoolGUI:
                 layers_input_hdb_selection=[],
                 layers_input_damo_selection=fiona.listlayers(mi.fn_damo_new),
                 threedi_layer_selector=False,
-                threedi_structure_selection=[],
-                damo_structure_selection=[],
                 structure_codes=[],
             )
             # 3Di
@@ -431,8 +410,6 @@ class VergelijkingstoolGUI:
                 layers_input_hdb_selection=[],
                 layers_input_damo_selection=[],
                 threedi_layer_selector=True,
-                threedi_structure_selection=config.THREEDI_STRUCTURE_LAYERS,
-                damo_structure_selection=config.DAMO_HDB_STRUCTURE_LAYERS,
                 structure_codes=config.STRUCTURE_CODES,
             )
             print("Both finished.")

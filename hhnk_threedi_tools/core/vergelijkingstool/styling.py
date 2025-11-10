@@ -217,11 +217,11 @@ def export_comparison_3di(
         # if not hasattr(gdf, "geometry") or gdf.geometry is None:
         #     continue
         # else:
-        kind = geom_kind(gdf)
+        # kind = geom_kind(gdf)
 
         # Check if the layer name has a style in the styling folder
         if styling_path is not None:
-            qml_name = kind + ".qml"
+            qml_name = layer_name + ".qml"
             qml_file = (styling_path) / qml_name
 
         if qml_file.exists():

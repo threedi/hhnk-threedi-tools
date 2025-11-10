@@ -59,8 +59,6 @@ def main(
     layers_input_hdb_selection=None,
     layers_input_damo_selection=None,
     threedi_layer_selector=False,
-    threedi_structure_selection=None,
-    damo_structure_selection=None,
     structure_codes=None,
 ):
     # fn_damo_new_translation
@@ -133,8 +131,6 @@ def main(
             filename=fn_threedi_comparison_export,
             overwrite=True,
             threedi_layer_selector=threedi_layer_selector,
-            threedi_structure_selection=threedi_structure_selection,
-            damo_structure_selection=damo_structure_selection,
             structure_codes=structure_codes,
         )
 
@@ -172,8 +168,6 @@ def main(
             filename=fn_threedi_comparison_export,
             overwrite=True,
             threedi_layer_selector=threedi_layer_selector,
-            threedi_structure_selection=threedi_structure_selection,
-            damo_structure_selection=damo_structure_selection,
             structure_codes=structure_codes,
         )
         return (fn_DAMO_comparison_export, fn_threedi_comparison_export)
@@ -219,17 +213,15 @@ if __name__ == "__main__":
     layer_selection = False
     layers_input_damo_selection = ["AfvoergebiedAanvoergebied", "PeilafwijkingGebied", "PeilgebiedPraktijk"]
     layers_input_hdb_selection = ["Levee_overstromingsmodel", "Sturing_3Di"]
-    fn_threedi_comparison_export = out_put_files / "Threedi_comparison_66.gpkg"
+    fn_threedi_comparison_export = out_put_files / "Threedi_comparison_68.gpkg"
 
     # compare_with = "Compare with Damo"
     compare_with = "Compare with 3Di"
     # config.UPDATE_SYMBOLOGY = True
 
     # Layers to Compare DAMO_3di
-    threedi_layer_selector = False
-    threedi_structure_selection = ["orifice"]
-    damo_structure_selection = ["brug"]
-    structure_codes = ["KBR"]
+    threedi_layer_selector = True
+    structure_codes = ["KST"]
     # %%
     main(
         model_info=model_info,
@@ -246,8 +238,6 @@ if __name__ == "__main__":
         layers_input_hdb_selection=layers_input_hdb_selection,
         layers_input_damo_selection=layers_input_damo_selection,
         threedi_layer_selector=threedi_layer_selector,
-        threedi_structure_selection=threedi_structure_selection,
-        damo_structure_selection=damo_structure_selection,
         structure_codes=structure_codes,
     )
 # %%
