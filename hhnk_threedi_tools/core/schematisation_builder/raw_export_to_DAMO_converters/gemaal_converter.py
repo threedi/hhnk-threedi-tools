@@ -29,6 +29,10 @@ POMP_COLUMNS = [
 class GemaalConverter(RawExportToDAMOConverter):
     """Gemaal-specific converter implementation."""
 
+    def __init__(self, raw_export_converter: RawExportToDAMOConverter):
+        self.data = raw_export_converter.data
+        self.logger = raw_export_converter.logger
+
     def run(self):
         """Run the converter to update the gemaal layer."""
         if self.has_executed():
@@ -36,9 +40,7 @@ class GemaalConverter(RawExportToDAMOConverter):
             return
 
         self.logger.info("Running GemaalConverter...")
-        # self.load_layers()  # STEP 1
-        self.update_gemaal_layer()  # STEP 2
-        self.write_outputs()  # STEP 3
+        self.update_gemaal_layer()
         self.mark_executed()
 
     def update_gemaal_layer(self):

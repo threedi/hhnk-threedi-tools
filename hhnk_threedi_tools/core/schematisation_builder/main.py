@@ -11,8 +11,15 @@ from hhnk_threedi_tools.core.folders import Project
 from hhnk_threedi_tools.core.schematisation_builder.DAMO_HyDAMO_converter import DAMO_to_HyDAMO_Converter
 from hhnk_threedi_tools.core.schematisation_builder.DB_exporter import db_exporter
 from hhnk_threedi_tools.core.schematisation_builder.HyDAMO_validator import validate_hydamo
+from hhnk_threedi_tools.core.schematisation_builder.raw_export_to_DAMO_converter import RawExportToDAMOConverter
 from hhnk_threedi_tools.core.schematisation_builder.raw_export_to_DAMO_converters.gemaal_converter import (
     GemaalConverter,
+)
+from hhnk_threedi_tools.core.schematisation_builder.raw_export_to_DAMO_converters.peilgebied_converter import (
+    PeilgebiedConverter,
+)
+from hhnk_threedi_tools.core.schematisation_builder.raw_export_to_DAMO_converters.profiel_converter import (
+    ProfielConverter,
 )
 
 
@@ -21,7 +28,7 @@ class SchematisationBuilder:
         self,
         project_folder: Path,
         default_polder_polygon_path: Path,
-        table_names: list,
+        table_names: list = None,
         damo_version: str = "2.4.1",
         hydamo_version: str = "2.4",
     ):
@@ -49,7 +56,7 @@ class SchematisationBuilder:
                 f"polder_polygon.shp not found in {self.project_folder}/01_source_data, copying from default location."
             )
             shutil.copytree(
-                self.default_polder_polygon_path,
+                self.default_polder_polygon_path.parent,
                 self.project_folder / "01_source_data",
                 dirs_exist_ok=True,
             )
@@ -65,7 +72,7 @@ class SchematisationBuilder:
             logging_DAMO = db_exporter(
                 model_extent_gdf=gdf_polder,
                 output_file=self.raw_export_file_path,
-                table_names=self.table_names,
+                table_names=self.table_names,  # if None, all tables will be exported
             )
 
             if len(logging_DAMO) > 0:
@@ -77,14 +84,30 @@ class SchematisationBuilder:
 
             gdf_polder.to_file(self.raw_export_file_path, layer="polder", driver="GPKG")
 
-            converter = GemaalConverter(
+            raw_export_converter = RawExportToDAMOConverter(
                 raw_export_file_path=self.raw_export_file_path,
                 output_file_path=self.damo_file_path,
                 logger=self.logger,
             )
-            converter.run()
 
-            converter = DAMO_to_HyDAMO_Converter(
+            gemaal_converter = GemaalConverter(
+                raw_export_converter=raw_export_converter,
+            )
+            gemaal_converter.run()
+
+            peilgebied_converter = PeilgebiedConverter(
+                raw_export_converter=raw_export_converter,
+            )
+            peilgebied_converter.run()
+
+            profiel_converter = ProfielConverter(
+                raw_export_converter=raw_export_converter,
+            )
+            profiel_converter.run()
+
+            raw_export_converter.write_outputs()
+
+            damo_to_hydamo_converter = DAMO_to_HyDAMO_Converter(
                 damo_file_path=self.damo_file_path,
                 damo_version=self.damo_version,
                 hydamo_file_path=self.hydamo_file_path,
@@ -94,7 +117,7 @@ class SchematisationBuilder:
                 convert_domain_values=False,
             )
 
-            converter.run()
+            damo_to_hydamo_converter.run()
             self.logger.info(f"HyDAMO exported for file: {self.polder_file_path}")
 
         else:

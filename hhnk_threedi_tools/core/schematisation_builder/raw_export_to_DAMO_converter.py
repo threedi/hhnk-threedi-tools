@@ -1,4 +1,3 @@
-# %%
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -6,7 +5,6 @@ from typing import Optional
 
 import geopandas as gpd
 import hhnk_research_tools as hrt
-import shapely
 from shapely.validation import make_valid
 
 CRS = "EPSG:28992"
@@ -14,56 +12,22 @@ CRS = "EPSG:28992"
 
 @dataclass
 class _Data:
-    """Available as .data under RawExportToDAMOConverter"""
-
-    # DAMO tables
-    # Tables are not Optional[gpd.GeoDataFrame] because it causes issues with mypy typechecking.
-    gemaal: gpd.GeoDataFrame = field(default_factory=gpd.GeoDataFrame)
-    hydroobject: gpd.GeoDataFrame = field(default_factory=gpd.GeoDataFrame)
-    pomp: gpd.GeoDataFrame = field(default_factory=gpd.GeoDataFrame)
-    duikersifonhevel: gpd.GeoDataFrame = field(default_factory=gpd.GeoDataFrame)
-    combinatiepeilgebied: gpd.GeoDataFrame = field(default_factory=gpd.GeoDataFrame)
-
-    # Specific hhnk tables
-    hydroobject_linemerged: gpd.GeoDataFrame = field(default_factory=gpd.GeoDataFrame)
-    gw_pro: gpd.GeoDataFrame = field(default_factory=gpd.GeoDataFrame)
-    gw_prw: gpd.GeoDataFrame = field(default_factory=gpd.GeoDataFrame)
-    gw_pbp: gpd.GeoDataFrame = field(default_factory=gpd.GeoDataFrame)
-    iws_geo_beschr_profielpunten: gpd.GeoDataFrame = field(default_factory=gpd.GeoDataFrame)
-
-    # CSO tables
-    peilgebiedpraktijk: gpd.GeoDataFrame = field(default_factory=gpd.GeoDataFrame)
-    polder: gpd.GeoDataFrame = field(default_factory=gpd.GeoDataFrame)
-
-    # Output tables
+    # Output tables (explicitly defined, because not in raw export)
     profielgroep: gpd.GeoDataFrame = field(default_factory=gpd.GeoDataFrame)
     profiellijn: gpd.GeoDataFrame = field(default_factory=gpd.GeoDataFrame)
     profielpunt: gpd.GeoDataFrame = field(default_factory=gpd.GeoDataFrame)
 
-    def _ensure_loaded(self, layers: list[str], previous_method: str) -> None:
-        """
-        Ensure a table is properly loaded. Will raise ValueError when Empty.
+    # Dynamically loaded raw export layers will be added as attributes
 
-        Parameters
-        ----------
-        layers : list
-            These layers are checked. raises ValueError if the table is empty without columns
-        previous_method : str
-            The previous function that should be run to load the given layer.
-        """
+    def _ensure_loaded(self, layers: list[str], previous_method: str) -> None:
         for layer in layers:
-            gdf = getattr(self, layer)
+            gdf = getattr(self, layer, None)
             if gdf is None or (gdf.empty and len(gdf.columns) == 0):
                 raise ValueError(f"Layer '{layer}' not loaded. Call {previous_method}() first.")
 
 
 class RawExportToDAMOConverter:
-    """
-    Base class for intermediate converters, converting raw export data to DAMO format.
-    Handles reading, validating, and writing layers, and provides general utility functions.
-    """
-
-    _executed = set()  # keeps track of executed converters (child classes)
+    _executed = set()
 
     def __init__(
         self,
@@ -80,24 +44,26 @@ class RawExportToDAMOConverter:
         self.load_layers()
 
     def load_layers(self):
-        self.logger.info("Loading all layers...")
-
+        self.logger.info("Loading all raw export layers...")
         for layer_name in self.hrt_raw_export_file_path.available_layers():
-            setattr(self.data, layer_name.lower(), self._load_and_validate(self.raw_export_file_path, layer_name))
+            gdf = self._load_and_validate(self.raw_export_file_path, layer_name)
 
-        peilgebiedpraktijk = self._load_and_validate(self.raw_export_file_path, "peilgebiedpraktijk")
-        self.data.peilgebiedpraktijk = peilgebiedpraktijk.explode(index_parts=False).reset_index(drop=True)
+            if layer_name == "peilgebiedpraktijk":
+                self.data.peilgebiedpraktijk = gdf.explode(index_parts=False).reset_index(drop=True)
 
-        self.logger.info("All layers loaded.")
+            setattr(self.data, layer_name.lower(), gdf)
+        self.logger.info("All raw export layers loaded.")
 
     def mark_executed(self):
         RawExportToDAMOConverter._executed.add(self.__class__)
         self.logger.debug(f"{self.__class__.__name__} marked as executed.")
 
+    @classmethod
     def has_executed(cls) -> bool:
         return cls in RawExportToDAMOConverter._executed
 
     def write_outputs(self):
+        # Collect all GeoDataFrames in self.data (raw + output tables)
         output_gdf_dict = {name: val for name, val in self.data.__dict__.items() if isinstance(val, gpd.GeoDataFrame)}
 
         if not output_gdf_dict:
@@ -118,10 +84,7 @@ class RawExportToDAMOConverter:
                     self.logger.warning(f"Layer {name} is empty.")
                 else:
                     self.logger.info(f"Layer {name} has no geometry.")
-
             self.logger.info(f"Wrote layer '{name}' to {self.output_file_path}")
-
-    # ---------- Generic Helpers ----------
 
     @staticmethod
     def _load_and_validate(source_path: Path, layer_name: str) -> gpd.GeoDataFrame:
