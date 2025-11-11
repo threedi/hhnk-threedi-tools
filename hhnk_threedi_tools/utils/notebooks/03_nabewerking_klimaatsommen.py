@@ -113,15 +113,15 @@ precipitation_zone_box = widgets.Select(
 )
 
 print("Selecteer map met batch resultaten")
-display(output_folder_box)  # type: ignore
+display(output_folder_box)  # type: ignore  # noqa: F821
 
 print("Selecteer neerslagzone")
-display(precipitation_zone_box)  # type: ignore
+display(precipitation_zone_box)  # type: ignore  # noqa: F821
 if dem.exists():
     print(f"Geselecteerd DEM bestand: {dem}")
 else:
     print("Selecteer DEM")
-    display(dem_path_dropdown)  # type: ignore
+    display(dem_path_dropdown)  # type: ignore  # noqa: F821
 
 # %% [markdown]
 # ## Lokaliseren polder folder
