@@ -50,6 +50,7 @@ class ChannelRelations:
             return width_wl
         else:
             logger.warning(f"Channel shape is not tabulated (type 6) for channel index {channel_gdf_row.index}")
+
             return -9999.0
 
     @cached_property
@@ -77,7 +78,7 @@ class ChannelRelations:
             how="left",
             left_on="connection_node_id_start",
             right_index=True,
-        ).rename(columns={"initial_water_level": "initial_water_level_start", "storage_area": "storage_areastart"})
+        ).rename(columns={"initial_water_level": "initial_water_level_start", "storage_area": "storage_area_start"})
         channel_gdf = channel_gdf.merge(
             connection_node_gdf[["initial_water_level", "storage_area"]],
             how="left",
@@ -103,7 +104,7 @@ class ChannelRelations:
             left_index=True,
             right_on="channel_id",
             how="left",
-        )
+        ).drop(columns=["channel_id_x"])
 
         # Calculate depth and width at waterlevel
         channel_gdf["depth"] = channel_gdf["initial_water_level_average"] - channel_gdf["reference_level"]
@@ -136,6 +137,7 @@ class ChannelRelations:
         channel_gdf = channel_gdf.merge(max_depths, how="left", left_on="channel_id", right_index=True).rename(
             columns={"depth": "depth_max"}
         )
+        channel_gdf.reset_index()
 
         return channel_gdf
 

@@ -35,4 +35,5 @@
     "jupyter.notebookFileRoot": "${workspaceFolder}",
     "python-envs.defaultEnvManager": "ms-python.python:system",
     "python-envs.pythonProjects": [],
+    "python-envs.defaultPackageManager": "ms-python.python:pip",
 }
