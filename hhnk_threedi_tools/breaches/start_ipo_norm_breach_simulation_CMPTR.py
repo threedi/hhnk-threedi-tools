@@ -260,8 +260,6 @@ if __name__ == "__main__":
     # model_name = "RegionalFloodModel - deelmodel Schermer Midden Noord"
     model_name = "RegionalFloodModel - deelmodel Schermer Midden Noord"
 
-
-
     model_folder = ModelFolder(rf"{base_folder}\{model_name}")
 
     # id_filter corresponds to the column 'id' of the potential breach table of the model we are working with.
@@ -279,9 +277,7 @@ if __name__ == "__main__":
     # Structure to be close after 12 hours of compartimetering.
     # structures_info_sbmn = {632: "v2_weir", 19: "v2_orifice", 316: "v2_orifice", 641: "v2_orifice", 203: "v2_orifice"}
     structures_info = {632: "v2_weir", 19: "v2_orifice", 316: "v2_orifice", 641: "v2_orifice", 203: "v2_orifice"}
-    
-    
-    
+
     start_ipo_norm_breach_simulation(
         structures_info,
         organisation_name,
