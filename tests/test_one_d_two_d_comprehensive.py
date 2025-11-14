@@ -182,7 +182,7 @@ def test_worst_case_read_flowline_results_extreme_values(mock_coords):
     df = pd.DataFrame({"t_start_rain": [0], "t_end_rain": [1], "t_end_sum": [2]})
     # Add .value property to series for backward compatibility with old pandas
     for col in df.columns:
-        setattr(df[col], 'value', df[col].iloc[0])
+        setattr(df[col], "value", df[col].iloc[0])
 
     check = MockableOneDTwoDCheck()
     check.grid_result = grid_result
