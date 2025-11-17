@@ -248,7 +248,7 @@ if __name__ == "__main__":
     modeller_initial = "_JA"
 
     # Define a simulation name prefix for all simulation
-    simulation_name = "IPO_SBMN_CMPTR"
+    simulation_name = "IPO_SBMZ_CMPTR"
 
     # Use organisation_name 'BWN HHNK' for standard simulation. Use the other one for very specific cases
     organisation_name = "Hoogheemraadschap Hollands Noorderkwartier"
@@ -258,13 +258,16 @@ if __name__ == "__main__":
 
     # Define model name to set up its location
     # model_name = "RegionalFloodModel - deelmodel Schermer Midden Noord"
-    model_name = "RegionalFloodModel - deelmodel Schermer Midden Noord"
+    model_name = "RegionalFloodModel - deelmodel Schermer Midden ZUID"
 
     model_folder = ModelFolder(rf"{base_folder}\{model_name}")
 
     # id_filter corresponds to the column 'id' of the potential breach table of the model we are working with.
     # In case of willing to run all the potential breach, leave the list empty  --> filter_id = []
-    filter_id = [23]
+    # SBMN
+    # filter_id = [23]
+    # SBMZ
+    filter_id = [75]
 
     # location of the metadata file. Important to have at least 2 version: One for uploading and run model and the other one for downloading.
     metadata_path = Path(
@@ -276,8 +279,14 @@ if __name__ == "__main__":
 
     # Structure to be close after 12 hours of compartimetering.
     # structures_info_sbmn = {632: "v2_weir", 19: "v2_orifice", 316: "v2_orifice", 641: "v2_orifice", 203: "v2_orifice"}
-    structures_info = {632: "v2_weir", 19: "v2_orifice", 316: "v2_orifice", 641: "v2_orifice", 203: "v2_orifice"}
-
+    # structures_info_sbmz = {79: "v2_orifice", 317: "v2_orifice", 216: "v2_orifice", 184: "v2_orifice",} -> breach id 75
+    # structures_info_sbmz = {140: "v2_orifice", 144: "v2_orifice", 107: "v2_orifice", 646: "v2_orifice", 857: "v2_orifice"} -> breach id 92
+    structures_info = {
+        79: "v2_orifice",
+        317: "v2_orifice",
+        216: "v2_orifice",
+        184: "v2_orifice",
+    }
     start_ipo_norm_breach_simulation(
         structures_info,
         organisation_name,
