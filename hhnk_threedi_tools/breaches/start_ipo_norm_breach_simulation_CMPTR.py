@@ -167,10 +167,10 @@ def start_ipo_norm_breach_simulation(
         # api_client.simulations_initial1d_water_level_predefined_delete(
         #     simulation_pk=simulation.id, data={}, async_req=False
         # )
-        api_client.simulations_initial1d_water_level_predefined_create(
-            simulation_pk=simulation.id, data={}, async_req=False
-        )
-        time.sleep(sleeptime)
+        # api_client.simulations_initial1d_water_level_predefined_create(
+        #     simulation_pk=simulation.id, data={}, async_req=False
+        # )
+        # time.sleep(sleeptime)
 
         # Set up numerical setting
         api_client.simulations_settings_time_step_delete(simulation_pk=simulation.id)
