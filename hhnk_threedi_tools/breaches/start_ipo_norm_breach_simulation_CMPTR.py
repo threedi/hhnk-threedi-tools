@@ -164,7 +164,9 @@ def start_ipo_norm_breach_simulation(
         )
 
         time.sleep(sleeptime)
-
+        # api_client.simulations_initial1d_water_level_predefined_delete(
+        #     simulation_pk=simulation.id, data={}, async_req=False
+        # )
         api_client.simulations_initial1d_water_level_predefined_create(
             simulation_pk=simulation.id, data={}, async_req=False
         )
@@ -267,7 +269,7 @@ if __name__ == "__main__":
     # SBMN
     # filter_id = [23]
     # SBMZ
-    filter_id = [75]
+    filter_id = [92]
 
     # location of the metadata file. Important to have at least 2 version: One for uploading and run model and the other one for downloading.
     metadata_path = Path(
@@ -281,12 +283,7 @@ if __name__ == "__main__":
     # structures_info_sbmn = {632: "v2_weir", 19: "v2_orifice", 316: "v2_orifice", 641: "v2_orifice", 203: "v2_orifice"}
     # structures_info_sbmz = {79: "v2_orifice", 317: "v2_orifice", 216: "v2_orifice", 184: "v2_orifice",} -> breach id 75
     # structures_info_sbmz = {140: "v2_orifice", 144: "v2_orifice", 107: "v2_orifice", 646: "v2_orifice", 857: "v2_orifice"} -> breach id 92
-    structures_info = {
-        79: "v2_orifice",
-        317: "v2_orifice",
-        216: "v2_orifice",
-        184: "v2_orifice",
-    }
+    structures_info = {140: "v2_orifice", 144: "v2_orifice", 107: "v2_orifice", 646: "v2_orifice", 857: "v2_orifice"}
     start_ipo_norm_breach_simulation(
         structures_info,
         organisation_name,
