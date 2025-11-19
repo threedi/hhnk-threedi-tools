@@ -10,7 +10,7 @@ from threedi_api_client.openapi import ApiException
 from threedi_api_client.versions import V3Api
 from threedi_scenario_downloader import downloader as dl
 
-output_folder = r"E:\03.resultaten\Overstromingsberekeningen primaire doorbraken 2024\output"
+output_folder = r"E:\03.resultaten\IPO_Overstromingsberekeningen_compartimentering\output"
 # id_search = 'ROR-PRI-NOORDERDIJK VAN DRECHTERLAND (OOST)_'
 
 
