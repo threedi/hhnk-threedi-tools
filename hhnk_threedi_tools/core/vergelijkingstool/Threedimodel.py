@@ -327,7 +327,7 @@ class Threedimodel(DataSet):
             print(f"applying attribute comparison, {self.json_files_path}")
             table_C = self.apply_attribute_comparison(attribute_comparison, table_C)
             table_C = self.summarize_attribute_comparison(table_C)
-
+            table_C = utils.add_priority_summaries(table_C)
         # determine statistics: count amount of shapes per layer for model and damo
         statistics = self.determine_statistics(table_C)
 

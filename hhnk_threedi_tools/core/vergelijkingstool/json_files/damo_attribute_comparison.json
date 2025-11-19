@@ -5,7 +5,7 @@
 			"table": "bergingsgebied",
 			"type": "numeric",
 			"description": "Verschil in bergend vermogen",
-			"priority": "information",
+			"priority": "category",
 			"function": {
 				"difference": {
 					"left": "bergendvermogen_Old",
@@ -18,7 +18,7 @@
 			"table": "bergingsgebied",
 			"type": "numeric",
 			"description": "Verschil in bergend vermogen peil",
-			"priority": "information",
+			"priority": "category",
 			"function": {
 				"difference": {
 					"left": "ws_bergend_vermogen_bij_peil_Old",

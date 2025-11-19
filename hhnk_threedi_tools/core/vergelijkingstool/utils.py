@@ -288,3 +288,38 @@ def update_channel_codes(
     gdf_channel.to_file(model_path, layer="channel", driver="GPKG")
 
     return gdf_channel
+
+
+def add_priority_summaries(table_dict):
+    """
+    For each table create a dictionary that create columns
+    Summary_Critical and  Summary_Warnings with the respective
+    columns name inside
+    """
+    for layer_name, gdf in table_dict.items():
+        # find the columns that ends with "_priority"
+        priority_cols = [c for c in gdf.columns if c.endswith("_priority")]
+        if not priority_cols:
+            # if a table does not have those columns continue
+            gdf["Summary_Critical"] = ""
+            gdf["Summary_Warnings"] = ""
+            table_dict[layer_name] = gdf
+            continue
+
+        # collect the columns name with out sufix
+        def collect_names(row, level):
+            hits = []
+            for col in priority_cols:
+                val = str(row.get(col, "")).strip().lower()
+                if val == level:
+                    # set priority column name with out priority
+                    hits.append(col[:-9])  # len("_priority") == 9
+            return " | ".join(hits)
+
+        # apply the previous function per row
+        gdf["Summary_Critical"] = gdf.apply(lambda r: collect_names(r, "critical"), axis=1)
+        gdf["Summary_Warnings"] = gdf.apply(lambda r: collect_names(r, "warning"), axis=1)
+
+        table_dict[layer_name] = gdf
+
+    return table_dict

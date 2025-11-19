@@ -329,6 +329,7 @@ class DAMO(DataSet):
         if attribute_comparison is not None:
             table_C = self.apply_attribute_comparison(attribute_comparison, table_C)
             table_C = self.summarize_attribute_comparison(table_C)
+            table_C = utils.add_priority_summaries(table_C)
 
         # determine statistics: count amount of shapes per layer for dataset A and B
         self.logger.debug("create statistics")
@@ -411,9 +412,6 @@ class DAMO(DataSet):
         if filename is not None:
             print(filename)
             self.export_comparison_new(table_C, statistics, filename, overwrite=overwrite)
-
-        statistics.to_csv(r"E:\02.modellen\castricum\01_source_data\vergelijkingsTool\output\statistics.csv", sep=";")
-        # table_C.to_csv(r"E:\02.modellen\castricum\01_source_data\vergelijkingsTool\output\TableC.csv", sep = ';')
 
         return table_C, statistics
 
