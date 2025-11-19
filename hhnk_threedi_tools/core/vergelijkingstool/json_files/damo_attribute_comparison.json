@@ -8,8 +8,8 @@
 			"priority": "information",
 			"function": {
 				"difference": {
-					"left": "bergendvermogen_New",
-					"right": "bergendvermogen_Old"
+					"left": "bergendvermogen_Old",
+					"right": "bergendvermogen_New"
 				}
 			}
 		},
@@ -21,8 +21,8 @@
 			"priority": "information",
 			"function": {
 				"difference": {
-					"left": "ws_bergend_vermogen_bij_peil_New",
-					"right": "ws_bergend_vermogen_bij_peil_Old"
+					"left": "ws_bergend_vermogen_bij_peil_Old",
+					"right": "ws_bergend_vermogen_bij_peil_New"
 				}
 			}
 		},
@@ -34,8 +34,8 @@
 			"priority": "critical",
 			"function": {
 				"difference": {
-					"left": "geom_area_New",
-					"right": "geom_area_Old"
+					"left": "geom_area_Old",
+					"right": "geom_area_New"
 				}
 			}
 		},
@@ -47,8 +47,8 @@
 			"priority": "critical",
 			"function": {
 				"difference": {
-					"left": "hoogteonderzijde_New",
-					"right": "hoogteonderzijde_Old"
+					"left": "hoogteonderzijde_Old",
+					"right": "hoogteonderzijde_New"
 				}
 			}
 		},
@@ -60,8 +60,8 @@
 			"priority": "critical",
 			"function": {
 				"difference": {
-					"left": "hoogteonderzijde_New",
-					"right": "hoogteonderzijde_Old"
+					"left": "hoogteonderzijde_Old",
+					"right": "hoogteonderzijde_New"
 				}
 			}
 		},
@@ -71,8 +71,8 @@
 			"type": "category",
 			"description": "Verschil in categorie",
 			"priority": "warning",
-			"left": "ws_categorie_New",
-			"right": "ws_categorie_Old"
+			"left": "ws_categorie_Old",
+			"right": "ws_categorie_New"
 		},
 		{
 			"name": "cmp_aantal_doorstroomopeningen",
@@ -82,8 +82,8 @@
 			"priority": "critical",
 			"function": {
 				"difference": {
-					"left": "aantal_doorstroomopeningen_New",
-					"right": "aantal_doorstroomopeningen_Old"
+					"left": "aantal_doorstroomopeningen_Old",
+					"right": "aantal_doorstroomopeningen_New"
 				}
 			}
 		},
@@ -95,8 +95,8 @@
 			"priority": "critical",
 			"function": {
 				"difference": {
-					"left": "som_doorstroombreedte_New",
-					"right": "som_doorstroombreedte_Old"
+					"left": "som_doorstroombreedte_Old",
+					"right": "som_doorstroombreedte_New"
 				}
 			}
 		},
@@ -106,8 +106,8 @@
 			"type": "category",
 			"description": "Verschil in code een naam",
 			"priority": "warning",
-			"left": "brug_id_New",
-			"right": "brug_id_Old"
+			"left": "brug_id_Old",
+			"right": "brug_id_New"
 		},
 		{
 			"name": "cmp_indicatiewaterkerend",
@@ -115,8 +115,8 @@
 			"type": "category",
 			"description": "Verschil in indicatiewaterkerend",
 			"priority": "critical",
-			"left": "indicatiewaterkerend_New",
-			"right": "indicatiewaterkerend_Old"
+			"left": "indicatiewaterkerend_Old",
+			"right": "indicatiewaterkerend_New"
 		},
 		{
 			"name": "cmp_indpeilregulpeilscheidend",
@@ -124,8 +124,8 @@
 			"type": "category",
 			"description": "Verschil in indpeilregulpeilscheidend",
 			"priority": "critical",
-			"left": "indpeilregulpeilscheidend_New",
-			"right": "indpeilregulpeilscheidend_Old"
+			"left": "indpeilregulpeilscheidend_Old",
+			"right": "indpeilregulpeilscheidend_New"
 		},
 		{
 			"name": "cmp_hoogteopening",
@@ -136,8 +136,8 @@
 			"threshold": 0.1,
 			"function": {
 				"difference": {
-					"left": "hoogteopening_New",
-					"right": "hoogteopening_Old"
+					"left": "hoogteopening_Old",
+					"right": "hoogteopening_New"
 				}
 			}
 		},
@@ -149,8 +149,8 @@
 			"priority": "critical",
 			"function": {
 				"difference": {
-					"left": "breedteopening_New",
-					"right": "breedteopening_Old"
+					"left": "breedteopening_Old",
+					"right": "breedteopening_New"
 				}
 			}
 		},
@@ -162,8 +162,8 @@
 			"priority": "critical",
 			"function": {
 				"difference": {
-					"left": "hoogtebinnenonderkantbene_New",
-					"right": "hoogtebinnenonderkantbene_Old"
+					"left": "hoogtebinnenonderkantbene_Old",
+					"right": "hoogtebinnenonderkantbene_New"
 				}
 			}
 		},
@@ -175,8 +175,8 @@
 			"priority": "critical",
 			"function": {
 				"difference": {
-					"left": "hoogtebinnenonderkantbov_New",
-					"right": "hoogtebinnenonderkantbov_Old"
+					"left": "hoogtebinnenonderkantbov_Old",
+					"right": "hoogtebinnenonderkantbov_New"
 				}
 			}
 		},
@@ -186,8 +186,8 @@
 			"type": "category",
 			"description": "Verschil in vormkoker",
 			"priority": "critical",
-			"left": "vormkoker_New",
-			"right": "vormkoker_Old"
+			"left": "vormkoker_Old",
+			"right": "vormkoker_New"
 		},
 		{
 			"name": "cmp_soortmateriaal",
@@ -195,8 +195,8 @@
 			"type": "category",
 			"description": "Verschil in soortmateriaal",
 			"priority": "critical",
-			"left": "soortmateriaal_New",
-			"right": "soortmateriaal_Old"
+			"left": "soortmateriaal_Old",
+			"right": "soortmateriaal_New"
 		},
 		{
 			"name": "cmp_typekruising",
@@ -204,8 +204,8 @@
 			"type": "category",
 			"description": "Verschil in typekruising",
 			"priority": "critical",
-			"left": "typekruising_New",
-			"right": "typekruising_Old"
+			"left": "typekruising_Old",
+			"right": "typekruising_New"
 		},
 		{
 			"name": "cmp_ws_categorie",
@@ -213,8 +213,8 @@
 			"type": "category",
 			"description": "Verschil in ws_categorie",
 			"priority": "warning",
-			"left": "ws_categorie_New",
-			"right": "ws_categorie_Old"
+			"left": "ws_categorie_Old",
+			"right": "ws_categorie_New"
 		},
 		{
 			"name": "cmp_inlaatfunctie",
@@ -222,8 +222,8 @@
 			"type": "category",
 			"description": "Verschil in inlaatfunctie",
 			"priority": "critical",
-			"left": "ws_inlaatfunctie_New",
-			"right": "ws_inlaatfunctie_Old"
+			"left": "ws_inlaatfunctie_Old",
+			"right": "ws_inlaatfunctie_New"
 		},
 		{
 			"name": "cmp_ws_afsluitwijze1",
@@ -231,8 +231,8 @@
 			"type": "category",
 			"description": "Verschil in afsluitwijze 1",
 			"priority": "critical",
-			"left": "ws_afsluitwijze1_New",
-			"right": "ws_afsluitwijze1_Old"
+			"left": "ws_afsluitwijze1_Old",
+			"right": "ws_afsluitwijze1_New"
 		},
 		{
 			"name": "cmp_ws_afsluitwijze2",
@@ -240,8 +240,8 @@
 			"type": "category",
 			"description": "Verschil in afsluitwijze 2",
 			"priority": "warning",
-			"left": "ws_afsluitwijze2_New",
-			"right": "ws_afsluitwijze2_Old"
+			"left": "ws_afsluitwijze2_Old",
+			"right": "ws_afsluitwijze2_New"
 		},
 		{
 			"name": "cmp_geom_length",
@@ -251,8 +251,8 @@
 			"priority": "critical",
 			"function": {
 				"difference": {
-					"left": "geom_length_New",
-					"right": "geom_length_Old"
+					"left": "geom_length_Old",
+					"right": "geom_length_New"
 				}
 			}
 		},
@@ -264,8 +264,8 @@
 			"priority": "critical",
 			"function": {
 				"difference": {
-					"left": "geom_length_New",
-					"right": "geom_length_Old"
+					"left": "geom_length_Old",
+					"right": "geom_length_New"
 				}
 			}
 		},
@@ -275,8 +275,8 @@
 			"type": "category",
 			"description": "Verschil in geometry type",
 			"priority": "critical",
-			"left": "geom_type_New",
-			"right": "geom_type_Old"
+			"left": "geom_type_Old",
+			"right": "geom_type_New"
 		},
 		{
 			"name": "cmp_ws_categorie",
@@ -284,8 +284,8 @@
 			"type": "category",
 			"description": "Verschil in ws_categorie",
 			"priority": "warning",
-			"left": "categorie_New",
-			"right": "categorie_Old"
+			"left": "categorie_Old",
+			"right": "categorie_New"
 		},
 		{
 			"name": "cmp_modelleren_als",
@@ -293,8 +293,8 @@
 			"type": "category",
 			"description": "Verschil in open of dicht ",
 			"priority": "critical",
-			"left": "modelleren_als_New",
-			"right": "modelleren_als_Old"
+			"left": "modelleren_als_Old",
+			"right": "modelleren_als_New"
 		},
 		{
 			"name": "cmp_area",
@@ -304,8 +304,8 @@
 			"priority": "critical",
 			"function": {
 				"difference": {
-					"left": "geom_area_New",
-					"right": "geom_area_Old"
+					"left": "geom_area_Old",
+					"right": "geom_area_New"
 				}
 			}
 		},
@@ -315,8 +315,8 @@
 			"type": "category",
 			"description": "Verschil in geometry type",
 			"priority": "critical",
-			"left": "geom_type_New",
-			"right": "geom_type_Old"
+			"left": "geom_type_Old",
+			"right": "geom_type_New"
 		},
 		{
 			"name": "cmp_ID",
@@ -324,8 +324,8 @@
 			"type": "category",
 			"description": "Verschil in code een naam",
 			"priority": "warning",
-			"left": "naam_New",
-			"right": "naam_Old"
+			"left": "naam_Old",
+			"right": "naam_New"
 		},
 		{
 			"name": "cmp_functiegemaal",
@@ -333,8 +333,8 @@
 			"type": "category",
 			"description": "Verschil in functiegemaal",
 			"priority": "critical",
-			"left": "functiegemaal_New",
-			"right": "functiegemaal_Old"
+			"left": "functiegemaal_Old",
+			"right": "functiegemaal_New"
 		},
 		{
 			"name": "cmp_maximalecapaciteit",
@@ -344,8 +344,8 @@
 			"priority": "critical",
 			"function": {
 				"difference": {
-					"left": "maximalecapaciteit_New",
-					"right": "maximalecapaciteit_Old"
+					"left": "maximalecapaciteit_Old",
+					"right": "maximalecapaciteit_New"
 				}
 			}
 		},
@@ -355,8 +355,8 @@
 			"type": "category",
 			"description": "Verschil in categorie",
 			"priority": "warning",
-			"left": "ws_categorie_New",
-			"right": "ws_categorie_Old"
+			"left": "ws_categorie_Old",
+			"right": "ws_categorie_New"
 		},
 		{
 			"name": "cmp_geom_type",
@@ -364,8 +364,8 @@
 			"type": "category",
 			"description": "Verschil in categorie",
 			"priority": "critical",
-			"left": "geom_type_New",
-			"right": "geom_type_Old"
+			"left": "geom_type_Old",
+			"right": "geom_type_New"
 		},
 		{
 			"name": "cmp_modelleren_als",
@@ -373,8 +373,8 @@
 			"type": "category",
 			"description": "Verschil in open of dicht",
 			"priority": "critical",
-			"left": "moet_op_peilgrens_New",
-			"right": "moet_op_peilgrens_Old"
+			"left": "moet_op_peilgrens_Old",
+			"right": "moet_op_peilgrens_New"
 		},
 		{
 			"name": "cmp_geom_type",
@@ -382,8 +382,8 @@
 			"type": "critical",
 			"description": "Verschil in geometry type",
 			"priority": "critical",
-			"left": "geom_type_New",
-			"right": "geom_type_Old"
+			"left": "geom_type_Old",
+			"right": "geom_type_New"
 		},
 		{
 			"name": "cmp_categorie",
@@ -391,8 +391,8 @@
 			"type": "category",
 			"description": "Verschil in open of dicht ",
 			"priority": "critical",
-			"left": "ws_categorie_New",
-			"right": "ws_categorie_Old"
+			"left": "ws_categorie_Old",
+			"right": "ws_categorie_New"
 		},
 		{
 			"name": "cmp_origin",
@@ -400,8 +400,8 @@
 			"type": "category",
 			"description": "Verschil in origin",
 			"priority": "warning",
-			"left": "origin_New",
-			"right": "origin_Old"
+			"left": "origin_Old",
+			"right": "origin_New"
 		},
 		{
 			"name": "cmp_bron",
@@ -409,8 +409,8 @@
 			"type": "category",
 			"description": "Verschil in bron",
 			"priority": "warning",
-			"left": "ws_bron_New",
-			"right": "ws_bron_Old"
+			"left": "ws_bron_Old",
+			"right": "ws_bron_New"
 		},
 		{
 			"name": "cmp_zomerpeil",
@@ -420,8 +420,8 @@
 			"priority": "critical",
 			"function": {
 				"difference": {
-					"left": "zomerpeil_New",
-					"right": "zomerpeil_Old"
+					"left": "zomerpeil_Old",
+					"right": "zomerpeil_New"
 				}
 			}
 		},
@@ -433,8 +433,8 @@
 			"priority": "critical",
 			"function": {
 				"difference": {
-					"left": "winterpeil_New",
-					"right": "winterpeil_Old"
+					"left": "winterpeil_Old",
+					"right": "winterpeil_New"
 				}
 			}
 		},
@@ -444,8 +444,8 @@
 			"type": "category",
 			"description": "Verschil in peilbrond",
 			"priority": "warning",
-			"left": "peil_bron_New",
-			"right": "peil_bron_Old"
+			"left": "peil_bron_Old",
+			"right": "peil_bron_New"
 		},
 		{
 			"name": "cmp_name",
@@ -453,8 +453,8 @@
 			"type": "category",
 			"description": "Verschil in naam",
 			"priority": "warning",
-			"left": "naam_New",
-			"right": "naam_Old"
+			"left": "naam_Old",
+			"right": "naam_New"
 		},
 		{
 			"name": "cmp_datum",
@@ -462,8 +462,8 @@
 			"type": "category",
 			"description": "Verschil in datum",
 			"priority": "warning",
-			"left": "peil_datum_New",
-			"right": "peil_datum_Old"
+			"left": "peil_datum_Old",
+			"right": "peil_datum_New"
 		},
 		{
 			"name": "cmp_geom_length",
@@ -473,8 +473,8 @@
 			"priority": "critical",
 			"function": {
 				"difference": {
-					"left": "geom_length_New",
-					"right": "geom_length_Old"
+					"left": "geom_length_Old",
+					"right": "geom_length_New"
 				}
 			}
 		},
@@ -486,8 +486,8 @@
 			"priority": "critical",
 			"function": {
 				"difference": {
-					"left": "geom_area_New",
-					"right": "geom_area_Old"
+					"left": "geom_area_Old",
+					"right": "geom_area_New"
 				}
 			}
 		},
@@ -497,8 +497,8 @@
 			"type": "category",
 			"description": "Verschil in hydroobject_id",
 			"priority": "critical",
-			"left": "hydroobject_id_New",
-			"right": "hydroobject_id_Old"
+			"left": "hydroobject_id_Old",
+			"right": "hydroobject_id_New"
 		},
 		{
 			"name": "cmp_naam",
@@ -506,8 +506,8 @@
 			"type": "category",
 			"description": "Verschil in naam",
 			"priority": "warning",
-			"left": "naam_New",
-			"right": "naam_Old"
+			"left": "naam_Old",
+			"right": "naam_New"
 		},
 		{
 			"name": "cmp_soortoppwaterkwantiteit",
@@ -515,8 +515,8 @@
 			"type": "category",
 			"description": "Verschil in soortoppwaterkwantiteit",
 			"priority": "warning",
-			"left": "soortoppwaterkwantiteit_New",
-			"right": "soortoppwaterkwantiteit_Old"
+			"left": "soortoppwaterkwantiteit_Old",
+			"right": "soortoppwaterkwantiteit_New"
 		},
 		{
 			"name": "cmp_cateogorieoppwaterlichaam",
@@ -524,8 +524,8 @@
 			"type": "category",
 			"description": "Verschil in categorieoppwaterlichaam",
 			"priority": "warning",
-			"left": "categorieoppwaterlichaam_New",
-			"right": "categorieoppwaterlichaam_Old"
+			"left": "categorieoppwaterlichaam_Old",
+			"right": "categorieoppwaterlichaam_New"
 		},
 		{
 			"name": "cmp_bodemhoogte",
@@ -533,8 +533,8 @@
 			"type": "category",
 			"description": "Verschil in bodemhoogte",
 			"priority": "critical",
-			"left": "ws_bodemhoogte_New",
-			"right": "ws_bodemhoogte_Old"
+			"left": "ws_bodemhoogte_Old",
+			"right": "ws_bodemhoogte_New"
 		},
 		{
 			"name": "cmp_ws_bodembreedte",
@@ -542,8 +542,8 @@
 			"type": "category",
 			"description": "Verschil in ws_bodembreedte",
 			"priority": "critical",
-			"left": "ws_bodembreedte_New",
-			"right": "ws_bodembreedte_Old"
+			"left": "ws_bodembreedte_Old",
+			"right": "ws_bodembreedte_New"
 		},
 		{
 			"name": "cmp_talud_links",
@@ -551,8 +551,8 @@
 			"type": "category",
 			"description": "Verschil in talud_links",
 			"priority": "critical",
-			"left": "ws_talud_links_New",
-			"right": "ws_talud_links_Old"
+			"left": "ws_talud_links_Old",
+			"right": "ws_talud_links_New"
 		},
 		{
 			"name": "cmp_talud_rechts",
@@ -560,8 +560,8 @@
 			"type": "category",
 			"description": "Verschil in talud_rechts",
 			"priority": "critical",
-			"left": "ws_talud_rechts_New",
-			"right": "ws_talud_rechts_Old"
+			"left": "ws_talud_rechts_Old",
+			"right": "ws_talud_rechts_New"
 		},
 		{
 			"name": "cmp_in_peilgebied",
@@ -569,8 +569,8 @@
 			"type": "category",
 			"description": "Verschil in peilgebied",
 			"priority": "critical",
-			"left": "ws_in_peilgebied_New",
-			"right": "ws_in_peilgebied_Old"
+			"left": "ws_in_peilgebied_Old",
+			"right": "ws_in_peilgebied_New"
 		},
 		{
 			"name": "cmp_bodemhoogte_nap",
@@ -578,8 +578,8 @@
 			"type": "category",
 			"description": "Verschil in bodemhoogte_nap",
 			"priority": "critical",
-			"left": "bodemhoogte_nap_New",
-			"right": "bodemhoogte_nap_Old"
+			"left": "bodemhoogte_nap_Old",
+			"right": "bodemhoogte_nap_New"
 		},
 		{
 			"name": "cmp_hoogte_getabuleerd",
@@ -587,8 +587,8 @@
 			"type": "category",
 			"description": "Verschil in hoogte_getabuleerd",
 			"priority": "critical",
-			"left": "hoogte_getabuleerd_New",
-			"right": "hoogte_getabuleerd_Old"
+			"left": "hoogte_getabuleerd_Old",
+			"right": "hoogte_getabuleerd_New"
 		},
 		{
 			"name": "cmp_keuze_profiel",
@@ -596,8 +596,8 @@
 			"type": "category",
 			"description": "Verschil in keuze_profiel",
 			"priority": "critical",
-			"left": "keuze_profiel_New",
-			"right": "keuze_profiel_Old"
+			"left": "keuze_profiel_Old",
+			"right": "keuze_profiel_New"
 		},
 		{
 			"name": "cmp_geom_type",
@@ -605,8 +605,8 @@
 			"type": "category",
 			"description": "Verschil in geom_type",
 			"priority": "critical",
-			"left": "geom_type_New",
-			"right": "geom_type_Old"
+			"left": "geom_type_Old",
+			"right": "geom_type_New"
 		},
 		{
 			"name": "cmp_geom_length",
@@ -616,8 +616,8 @@
 			"priority": "critical",
 			"function": {
 				"difference": {
-					"left": "geom_area_New",
-					"right": "geom_area_Old"
+					"left": "geom_area_Old",
+					"right": "geom_area_New"
 				}
 			}
 		},
@@ -627,8 +627,8 @@
 			"type": "category",
 			"description": "Verschil in material",
 			"priority": "critical",
-			"left": "material_New",
-			"right": "material_Old"
+			"left": "material_Old",
+			"right": "material_New"
 		},
 		{
 			"name": "cmp_crest_level",
@@ -636,8 +636,8 @@
 			"type": "category",
 			"description": "Verschil in crest_level",
 			"priority": "critical",
-			"left": "crest_level_New",
-			"right": "crest_level_Old"
+			"left": "crest_level_Old",
+			"right": "crest_level_New"
 		},
 		{
 			"name": "cmp_max_breach_depth",
@@ -645,8 +645,8 @@
 			"type": "category",
 			"description": "Verschil in max_breach_depth",
 			"priority": "critical",
-			"left": "max_breach_depth_New",
-			"right": "max_breach_depth_Old"
+			"left": "max_breach_depth_Old",
+			"right": "max_breach_depth_New"
 		},
 		{
 			"name": "cmp_ID",
@@ -654,8 +654,8 @@
 			"type": "category",
 			"description": "Verschil in ID",
 			"priority": "warning",
-			"left": "id_New",
-			"right": "id_Old"
+			"left": "id_Old",
+			"right": "id_New"
 		},
 		{
 			"name": "cmp_geom_length",
@@ -665,8 +665,8 @@
 			"priority": "critical",
 			"function": {
 				"difference": {
-					"left": "geom_length_New",
-					"right": "geom_length_Old"
+					"left": "geom_length_Old",
+					"right": "geom_length_New"
 				}
 			}
 		},
@@ -676,8 +676,8 @@
 			"type": "category",
 			"description": "Verschil in geom_type",
 			"priority": "critical",
-			"left": "geom_type_New",
-			"right": "geom_type_Old"
+			"left": "geom_type_Old",
+			"right": "geom_type_New"
 		},
 		{
 			"name": "cmp_peilafwijkinggebied_id",
@@ -685,8 +685,8 @@
 			"type": "category",
 			"description": "Verschil in peilafwijkinggebied_id",
 			"priority": "warning",
-			"left": "peilafwijkinggebied_id_New",
-			"right": "peilafwijkinggebied_id_Old"
+			"left": "peilafwijkinggebied_id_Old",
+			"right": "peilafwijkinggebied_id_New"
 		},
 		{
 			"name": "cmp_naam",
@@ -694,8 +694,8 @@
 			"type": "category",
 			"description": "Verschil in naam",
 			"priority": "warning",
-			"left": "naam_New",
-			"right": "naam_Old"
+			"left": "naam_Old",
+			"right": "naam_New"
 		},
 		{
 			"name": "cmp_peil_wsa",
@@ -705,8 +705,8 @@
 			"priority": "critical",
 			"function": {
 				"difference": {
-					"left": "peil_wsa_New",
-					"right": "peil_wsa_Old"
+					"left": "peil_wsa_Old",
+					"right": "peil_wsa_New"
 				}
 			}
 		},
@@ -716,8 +716,8 @@
 			"type": "category",
 			"description": "Verschil in keuze_wsa",
 			"priority": "warning",
-			"left": "keuze_wsa_New",
-			"right": "keuze_wsa_Old"
+			"left": "keuze_wsa_Old",
+			"right": "keuze_wsa_New"
 		},
 		{
 			"name": "cmp_zomerpeil",
@@ -727,8 +727,8 @@
 			"priority": "critical",
 			"function": {
 				"difference": {
-					"left": "zomerpeil_New",
-					"right": "zomerpeil_Old"
+					"left": "zomerpeil_Old",
+					"right": "zomerpeil_New"
 				}
 			}
 		},
@@ -740,8 +740,8 @@
 			"priority": "critical",
 			"function": {
 				"difference": {
-					"left": "winterpeil_New",
-					"right": "winterpeil_Old"
+					"left": "winterpeil_Old",
+					"right": "winterpeil_New"
 				}
 			}
 		},
@@ -751,8 +751,8 @@
 			"type": "category",
 			"description": "Verschil in ws_bron",
 			"priority": "warning",
-			"left": "ws_bron_New",
-			"right": "ws_bron_Old"
+			"left": "ws_bron_Old",
+			"right": "ws_bron_New"
 		},
 		{
 			"name": "cmp_created_date",
@@ -760,8 +760,8 @@
 			"type": "category",
 			"description": "Verschil in created_date",
 			"priority": "warning",
-			"left": "created_date_New",
-			"right": "created_date_Old"
+			"left": "created_date_Old",
+			"right": "created_date_New"
 		},
 		{
 			"name": "cmp_last_edited_date",
@@ -769,8 +769,8 @@
 			"type": "category",
 			"description": "Verschil in last_edited_date",
 			"priority": "warning",
-			"left": "last_edited_date_New",
-			"right": "last_edited_date_Old"
+			"left": "last_edited_date_Old",
+			"right": "last_edited_date_New"
 		},
 		{
 			"name": "cmp_ws_oppervlakte",
@@ -780,8 +780,8 @@
 			"priority": "warning",
 			"function": {
 				"difference": {
-					"left": "ws_oppervlakte_New",
-					"right": "ws_oppervlakte_Old"
+					"left": "ws_oppervlakte_Old",
+					"right": "ws_oppervlakte_New"
 				}
 			}
 		},
@@ -793,8 +793,8 @@
 			"priority": "critical",
 			"function": {
 				"difference": {
-					"left": "geom_area_New",
-					"right": "geom_area_Old"
+					"left": "geom_area_Old",
+					"right": "geom_area_New"
 				}
 			}
 		},
@@ -806,8 +806,8 @@
 			"priority": "critical",
 			"function": {
 				"difference": {
-					"left": "geom_length_New",
-					"right": "geom_length_Old"
+					"left": "geom_length_Old",
+					"right": "geom_length_New"
 				}
 			}
 		},
@@ -817,8 +817,8 @@
 			"type": "category",
 			"description": "Verschil in geom_type",
 			"priority": "critical",
-			"left": "geom_type_New",
-			"right": "geom_type_Old"
+			"left": "geom_type_Old",
+			"right": "geom_type_New"
 		},
 		{
 			"name": "cmp_peilgebiedpraktijk_id",
@@ -826,8 +826,8 @@
 			"type": "category",
 			"description": "Verschil in peilgebiedpraktijk_id",
 			"priority": "critical",
-			"left": "peilgebiedpraktijk_id_New",
-			"right": "peilgebiedpraktijk_id_Old"
+			"left": "peilgebiedpraktijk_id_Old",
+			"right": "peilgebiedpraktijk_id_New"
 		},
 		{
 			"name": "cmp_naam",
@@ -835,8 +835,8 @@
 			"type": "category",
 			"description": "Verschil in naam",
 			"priority": "critical",
-			"left": "naam_New",
-			"right": "naam_Old"
+			"left": "naam_Old",
+			"right": "naam_New"
 		},
 		{
 			"name": "cmp_keuze_wsa",
@@ -844,8 +844,8 @@
 			"type": "category",
 			"description": "Verschil in keuze_wsa",
 			"priority": "critical",
-			"left": "keuze_wsa_New",
-			"right": "keuze_wsa_Old"
+			"left": "keuze_wsa_Old",
+			"right": "keuze_wsa_New"
 		},
 		{
 			"name": "cmp_peil_wsa",
@@ -855,8 +855,8 @@
 			"priority": "critical",
 			"function": {
 				"difference": {
-					"left": "peil_wsa_New",
-					"right": "peil_wsa_Old"
+					"left": "peil_wsa_Old",
+					"right": "peil_wsa_New"
 				}
 			}
 		},
@@ -868,8 +868,8 @@
 			"priority": "critical",
 			"function": {
 				"difference": {
-					"left": "zomerpeil_New",
-					"right": "zomerpeil_Old"
+					"left": "zomerpeil_Old",
+					"right": "zomerpeil_New"
 				}
 			}
 		},
@@ -881,8 +881,8 @@
 			"priority": "critical",
 			"function": {
 				"difference": {
-					"left": "winterpeil_New",
-					"right": "winterpeil_Old"
+					"left": "winterpeil_Old",
+					"right": "winterpeil_New"
 				}
 			}
 		},
@@ -892,8 +892,8 @@
 			"type": "category",
 			"description": "Verschil in ws_peilbesluitplichtig",
 			"priority": "critical",
-			"left": "ws_peilbesluitplichtig_New",
-			"right": "ws_peilbesluitplichtig_Old"
+			"left": "ws_peilbesluitplichtig_Old",
+			"right": "ws_peilbesluitplichtig_New"
 		},
 		{
 			"name": "cmp_brond",
@@ -901,8 +901,8 @@
 			"type": "category",
 			"description": "Verschil in brond",
 			"priority": "warning",
-			"left": "ws_bron_New",
-			"right": "ws_bron_Old"
+			"left": "ws_bron_Old",
+			"right": "ws_bron_New"
 		},
 		{
 			"name": "cmp_created_date",
@@ -910,8 +910,8 @@
 			"type": "category",
 			"description": "Verschil in created_date",
 			"priority": "warning",
-			"left": "created_date_New",
-			"right": "created_date_Old"
+			"left": "created_date_Old",
+			"right": "created_date_New"
 		},
 		{
 			"name": "cmp_last_edited_date",
@@ -919,8 +919,8 @@
 			"type": "category",
 			"description": "Verschil in last_edited_date",
 			"priority": "warning",
-			"left": "last_edited_date_New",
-			"right": "last_edited_date_Old"
+			"left": "last_edited_date_Old",
+			"right": "last_edited_date_New"
 		},
 		{
 			"name": "cmp_ws_oppervlakte",
@@ -928,8 +928,8 @@
 			"type": "category",
 			"description": "Verschil in ws_oppervlakte",
 			"priority": "critical",
-			"left": "ws_oppervlakte_New",
-			"right": "ws_oppervlakte_Old"
+			"left": "ws_oppervlakte_Old",
+			"right": "ws_oppervlakte_New"
 		},
 		{
 			"name": "cmp_geom_length",
@@ -939,8 +939,8 @@
 			"priority": "critical",
 			"function": {
 				"difference": {
-					"left": "geom_length_New",
-					"right": "geom_length_Old"
+					"left": "geom_length_Old",
+					"right": "geom_length_New"
 				}
 			}
 		},
@@ -950,8 +950,8 @@
 			"type": "category",
 			"description": "Verschil in geom_type",
 			"priority": "critical",
-			"left": "geom_type_New",
-			"right": "geom_type_Old"
+			"left": "geom_type_Old",
+			"right": "geom_type_New"
 		},
 		{
 			"name": "cmp_geom_area",
@@ -961,8 +961,8 @@
 			"priority": "critical",
 			"function": {
 				"difference": {
-					"left": "geom_area_New",
-					"right": "geom_area_Old"
+					"left": "geom_area_Old",
+					"right": "geom_area_New"
 				}
 			}
 		},
@@ -972,8 +972,8 @@
 			"type": "category",
 			"description": "Verschil in meetvariabele",
 			"priority": "critical",
-			"left": "meetvariabele_New",
-			"right": "meetvariabele_Old"
+			"left": "meetvariabele_Old",
+			"right": "meetvariabele_New"
 		},
 		{
 			"name": "cmp_actievariabele",
@@ -981,8 +981,8 @@
 			"type": "category",
 			"description": "Verschil in actievariabele",
 			"priority": "critical",
-			"left": "actievariabele_New",
-			"right": "actievariabele_Old"
+			"left": "actievariabele_Old",
+			"right": "actievariabele_New"
 		},
 		{
 			"name": "cmp_drempel",
@@ -990,8 +990,8 @@
 			"type": "category",
 			"description": "Verschil in drempel",
 			"priority": "critical",
-			"left": "drempel_New",
-			"right": "drempel_Old"
+			"left": "drempel_Old",
+			"right": "drempel_New"
 		},
 		{
 			"name": "cmp_streefpeil",
@@ -1001,8 +1001,8 @@
 			"priority": "critical",
 			"function": {
 				"difference": {
-					"left": "streefpeil_New",
-					"right": "streefpeil_Old"
+					"left": "streefpeil_Old",
+					"right": "streefpeil_New"
 				}
 			}
 		},
@@ -1014,8 +1014,8 @@
 			"priority": "critical",
 			"function": {
 				"difference": {
-					"left": "overlastpeil_New",
-					"right": "overlastpeil_Old"
+					"left": "overlastpeil_Old",
+					"right": "overlastpeil_New"
 				}
 			}
 		},
@@ -1027,8 +1027,8 @@
 			"priority": "critical",
 			"function": {
 				"difference": {
-					"left": "min_kruinhoogte_New",
-					"right": "min_kruinhoogte_Old"
+					"left": "min_kruinhoogte_Old",
+					"right": "min_kruinhoogte_New"
 				}
 			}
 		},
@@ -1040,8 +1040,8 @@
 			"priority": "critical",
 			"function": {
 				"difference": {
-					"left": "max_kruinhoogte_New",
-					"right": "max_kruinhoogte_Old"
+					"left": "max_kruinhoogte_Old",
+					"right": "max_kruinhoogte_New"
 				}
 			}
 		},
@@ -1051,8 +1051,8 @@
 			"type": "category",
 			"description": "Verschil in meetwaarden",
 			"priority": "critical",
-			"left": "meetwaarden_New",
-			"right": "meetwaarden_Old"
+			"left": "meetwaarden_Old",
+			"right": "meetwaarden_New"
 		},
 		{
 			"name": "cmp_actiewaarden",
@@ -1060,8 +1060,8 @@
 			"type": "category",
 			"description": "Verschil in actiewaarden",
 			"priority": "critical",
-			"left": "actiewaarden_New",
-			"right": "actiewaarden_Old"
+			"left": "actiewaarden_Old",
+			"right": "actiewaarden_New"
 		},
 		{
 			"name": "cmp_action_table",
@@ -1069,8 +1069,8 @@
 			"type": "category",
 			"description": "Verschil in action_table",
 			"priority": "critical",
-			"left": "action_table_New",
-			"right": "action_table_Old"
+			"left": "action_table_Old",
+			"right": "action_table_New"
 		},
 		{
 			"name": "cmp_type_kunstwerk",
@@ -1078,8 +1078,8 @@
 			"type": "category",
 			"description": "Verschil in type_kunstwerk",
 			"priority": "critical",
-			"left": "type_kunstwerk_New",
-			"right": "type_kunstwerk_Old"
+			"left": "type_kunstwerk_Old",
+			"right": "type_kunstwerk_New"
 		},
 		{
 			"name": "cmp_keuzeregeling",
@@ -1087,8 +1087,8 @@
 			"type": "category",
 			"description": "Verschil in keuzeregeling",
 			"priority": "warning",
-			"left": "keuzeregeling_New",
-			"right": "keuzeregeling_Old"
+			"left": "keuzeregeling_Old",
+			"right": "keuzeregeling_New"
 		},
 		{
 			"name": "cmp_poldercluster",
@@ -1096,8 +1096,8 @@
 			"type": "category",
 			"description": "Verschil in poldercluster",
 			"priority": "warning",
-			"left": "poldercluster_New",
-			"right": "poldercluster_Old"
+			"left": "poldercluster_Old",
+			"right": "poldercluster_New"
 		},
 		{
 			"name": "cmp_poldercluster",
@@ -1105,8 +1105,8 @@
 			"type": "category",
 			"description": "Verschil in poldercluster",
 			"priority": "warning",
-			"left": "poldercluster_New",
-			"right": "poldercluster_Old"
+			"left": "poldercluster_Old",
+			"right": "poldercluster_New"
 		},
 		{
 			"name": "cmp_geom_type",
@@ -1114,8 +1114,8 @@
 			"type": "category",
 			"description": "Verschil in geom_type",
 			"priority": "critical",
-			"left": "geom_type_New",
-			"right": "geom_type_Old"
+			"left": "geom_type_Old",
+			"right": "geom_type_New"
 		},
 		{
 			"name": "cmp_doorstroombreedte",
@@ -1125,8 +1125,8 @@
 			"priority": "critical",
 			"function": {
 				"difference": {
-					"left": "doorstroombreedte_New",
-					"right": "doorstroombreedte_Old"
+					"left": "doorstroombreedte_Old",
+					"right": "doorstroombreedte_New"
 				}
 			}
 		},
@@ -1138,8 +1138,8 @@
 			"priority": "critical",
 			"function": {
 				"difference": {
-					"left": "kruinbreedte_New",
-					"right": "kruinbreedte_Old"
+					"left": "kruinbreedte_Old",
+					"right": "kruinbreedte_New"
 				}
 			}
 		},
@@ -1151,8 +1151,8 @@
 			"priority": "critical",
 			"function": {
 				"difference": {
-					"left": "laagstedoorstroomhoogte_New",
-					"right": "laagstedoorstroomhoogte_Old"
+					"left": "laagstedoorstroomhoogte_Old",
+					"right": "laagstedoorstroomhoogte_New"
 				}
 			}
 		},
@@ -1164,8 +1164,8 @@
 			"priority": "critical",
 			"function": {
 				"difference": {
-					"left": "hoogstedoorstroomhoogte_New",
-					"right": "hoogstedoorstroomhoogte_Old"
+					"left": "hoogstedoorstroomhoogte_Old",
+					"right": "hoogstedoorstroomhoogte_New"
 				}
 			}
 		},
@@ -1175,8 +1175,8 @@
 			"type": "category",
 			"description": "Verschil in soortregelbaarheid",
 			"priority": "critical",
-			"left": "soortregelbaarheid_New",
-			"right": "soortregelbaarheid_Old"
+			"left": "soortregelbaarheid_Old",
+			"right": "soortregelbaarheid_New"
 		},
 		{
 			"name": "cmp_ws_categorie",
@@ -1184,8 +1184,8 @@
 			"type": "category",
 			"description": "Verschil in ws_categorie",
 			"priority": "warning",
-			"left": "ws_categorie_New",
-			"right": "ws_categorie_Old"
+			"left": "ws_categorie_Old",
+			"right": "ws_categorie_New"
 		},
 		{
 			"name": "cmp_ws_kruinvorm",
@@ -1193,8 +1193,8 @@
 			"type": "category",
 			"description": "Verschil in ws_kruinvorm",
 			"priority": "critical",
-			"left": "ws_kruinvorm_New",
-			"right": "ws_kruinvorm_Old"
+			"left": "ws_kruinvorm_Old",
+			"right": "ws_kruinvorm_New"
 		},
 		{
 			"name": "cmp_ws_functie",
@@ -1202,8 +1202,8 @@
 			"type": "category",
 			"description": "Verschil in ws_functie",
 			"priority": "warning",
-			"left": "ws_functiestuw_New",
-			"right": "ws_functiestuw_Old"
+			"left": "ws_functiestuw_Old",
+			"right": "ws_functiestuw_New"
 		},
 		{
 			"name": "cmp_geom_type",
@@ -1211,8 +1211,8 @@
 			"type": "category",
 			"description": "Verschil in geom_type",
 			"priority": "critical",
-			"left": "geom_type_New",
-			"right": "geom_type_Old"
+			"left": "geom_type_Old",
+			"right": "geom_type_New"
 		},
 		{
 			"name": "cmp_categorie",
@@ -1220,8 +1220,8 @@
 			"type": "category",
 			"description": "Verschil in categorie",
 			"priority": "critical",
-			"left": "ws_categorie_New",
-			"right": "ws_categorie_Old"
+			"left": "ws_categorie_Old",
+			"right": "ws_categorie_New"
 		},
 		{
 			"name": "cmp_moet_op_peilgrens",
@@ -1229,8 +1229,8 @@
 			"type": "category",
 			"description": "Verschil in moet_op_peilgrens",
 			"priority": "critical",
-			"left": "moet_op_peilgrens_New",
-			"right": "moet_op_peilgrens_Old"
+			"left": "moet_op_peilgrens_Old",
+			"right": "moet_op_peilgrens_New"
 		},
 		{
 			"name": "cmp_functie",
@@ -1238,8 +1238,8 @@
 			"type": "category",
 			"description": "Verschil in functie",
 			"priority": "warning",
-			"left": "functie_New",
-			"right": "functie_Old"
+			"left": "functie_Old",
+			"right": "functie_New"
 		},
 		{
 			"name": "cmp_kruinhoogte_hdb",
@@ -1247,8 +1247,8 @@
 			"type": "category",
 			"description": "Verschil in kruinhoogte_hdb",
 			"priority": "critical",
-			"left": "kruinhoogte_hdb_New",
-			"right": "kruinhoogte_hdb_Old"
+			"left": "kruinhoogte_hdb_Old",
+			"right": "kruinhoogte_hdb_New"
 		},
 		{
 			"name": "cmp_geom_type",
@@ -1256,8 +1256,8 @@
 			"type": "category",
 			"description": "Verschil in geom_type",
 			"priority": "critical",
-			"left": "geom_type_New",
-			"right": "geom_type_Old"
+			"left": "geom_type_Old",
+			"right": "geom_type_New"
 		},
 		{
 			"name": "cmp_ws_categorie",
@@ -1265,8 +1265,8 @@
 			"type": "category",
 			"description": "Verschil in ws_categorie",
 			"priority": "warning",
-			"left": "ws_categorie_New",
-			"right": "ws_categorie_Old"
+			"left": "ws_categorie_Old",
+			"right": "ws_categorie_New"
 		},
 		{
 			"name": "cmp_geom_type",
@@ -1274,8 +1274,8 @@
 			"type": "category",
 			"description": "Verschil in geom_type",
 			"priority": "critical",
-			"left": "geom_type_New",
-			"right": "geom_type_Old"
+			"left": "geom_type_Old",
+			"right": "geom_type_New"
 		},
 		{
 			"name": "cmp_geom_area",
@@ -1285,8 +1285,8 @@
 			"priority": "warning",
 			"function": {
 				"difference": {
-					"left": "geom_area_New",
-					"right": "geom_area_Old"
+					"left": "geom_area_Old",
+					"right": "geom_area_New"
 				}
 			}
 		},
@@ -1296,8 +1296,8 @@
 			"type": "category",
 			"description": "Verschil in ws_categorie",
 			"priority": "warning",
-			"left": "ws_categorie_New",
-			"right": "ws_categorie_Old"
+			"left": "ws_categorie_Old",
+			"right": "ws_categorie_New"
 		},
 		{
 			"name": "cmp_ws_naam",
@@ -1305,8 +1305,8 @@
 			"type": "category",
 			"description": "Verschil in ws_naam",
 			"priority": "warning",
-			"left": "naam_New",
-			"right": "naam_Old"
+			"left": "naam_Old",
+			"right": "naam_New"
 		},
 		{
 			"name": "cmp_geom_type",
@@ -1314,8 +1314,8 @@
 			"type": "category",
 			"description": "Verschil in geom_type",
 			"priority": "critical",
-			"left": "geom_type_New",
-			"right": "geom_type_Old"
+			"left": "geom_type_Old",
+			"right": "geom_type_New"
 		},
 		{
 			"name": "cmp_geom_area",
@@ -1325,8 +1325,8 @@
 			"priority": "warning",
 			"function": {
 				"difference": {
-					"left": "geom_area_New",
-					"right": "geom_area_Old"
+					"left": "geom_area_Old",
+					"right": "geom_area_New"
 				}
 			}
 		},
@@ -1336,8 +1336,8 @@
 			"type": "category",
 			"description": "Verschil in categorie",
 			"priority": "warning",
-			"left": "ws_categorie_New",
-			"right": "ws_categorie_Old"
+			"left": "ws_categorie_Old",
+			"right": "ws_categorie_New"
 		},
 		{
 			"name": "cmp_geom_type",
@@ -1345,8 +1345,8 @@
 			"type": "category",
 			"description": "Verschil in categorie",
 			"priority": "critical",
-			"left": "geom_type_New",
-			"right": "geom_type_Old"
+			"left": "geom_type_Old",
+			"right": "geom_type_New"
 		},
 		{
 			"name": "cmp_modelleren_als",
@@ -1354,8 +1354,8 @@
 			"type": "category",
 			"description": "Verschil in open of dicht",
 			"priority": "critical",
-			"left": "moet_op_peilgrens_New",
-			"right": "moet_op_peilgrens_Old"
+			"left": "moet_op_peilgrens_Old",
+			"right": "moet_op_peilgrens_New"
 		},
 		{
 			"name": "cmp_geom_type",
@@ -1363,8 +1363,8 @@
 			"type": "critical",
 			"description": "Verschil in geometry type",
 			"priority": "critical",
-			"left": "geom_type_New",
-			"right": "geom_type_Old"
+			"left": "geom_type_Old",
+			"right": "geom_type_New"
 		},
 		{
 			"name": "cmp_categorie",
@@ -1372,8 +1372,8 @@
 			"type": "category",
 			"description": "Verschil in open of dicht ",
 			"priority": "critical",
-			"left": "ws_categorie_New",
-			"right": "ws_categorie_Old"
+			"left": "ws_categorie_Old",
+			"right": "ws_categorie_New"
 		},
 		{
 			"name": "cmp_origin",
@@ -1381,8 +1381,8 @@
 			"type": "category",
 			"description": "Verschil in origin",
 			"priority": "warning",
-			"left": "origin_New",
-			"right": "origin_Old"
+			"left": "origin_Old",
+			"right": "origin_New"
 		},
 		{
 			"name": "cmp_bron",
@@ -1390,8 +1390,8 @@
 			"type": "category",
 			"description": "Verschil in bron",
 			"priority": "warning",
-			"left": "ws_bron_New",
-			"right": "ws_bron_Old"
+			"left": "ws_bron_Old",
+			"right": "ws_bron_New"
 		},
 		{
 			"name": "cmp_zomerpeil",
@@ -1401,8 +1401,8 @@
 			"priority": "critical",
 			"function": {
 				"difference": {
-					"left": "zomerpeil_New",
-					"right": "zomerpeil_Old"
+					"left": "zomerpeil_Old",
+					"right": "zomerpeil_New"
 				}
 			}
 		},
@@ -1414,8 +1414,8 @@
 			"priority": "critical",
 			"function": {
 				"difference": {
-					"left": "winterpeil_New",
-					"right": "winterpeil_Old"
+					"left": "winterpeil_Old",
+					"right": "winterpeil_New"
 				}
 			}
 		},
@@ -1425,8 +1425,8 @@
 			"type": "category",
 			"description": "Verschil in peilbrond",
 			"priority": "warning",
-			"left": "peil_bron_New",
-			"right": "peil_bron_Old"
+			"left": "peil_bron_Old",
+			"right": "peil_bron_New"
 		},
 		{
 			"name": "cmp_name",
@@ -1434,8 +1434,8 @@
 			"type": "category",
 			"description": "Verschil in naam",
 			"priority": "warning",
-			"left": "naam_New",
-			"right": "naam_Old"
+			"left": "naam_Old",
+			"right": "naam_New"
 		},
 		{
 			"name": "cmp_datum",
@@ -1443,8 +1443,8 @@
 			"type": "category",
 			"description": "Verschil in datum",
 			"priority": "warning",
-			"left": "peil_datum_New",
-			"right": "peil_datum_Old"
+			"left": "peil_datum_Old",
+			"right": "peil_datum_New"
 		},
 		{
 			"name": "cmp_geom_length",
@@ -1454,8 +1454,8 @@
 			"priority": "critical",
 			"function": {
 				"difference": {
-					"left": "geom_length_New",
-					"right": "geom_length_Old"
+					"left": "geom_length_Old",
+					"right": "geom_length_New"
 				}
 			}
 		},
@@ -1467,8 +1467,8 @@
 			"priority": "critical",
 			"function": {
 				"difference": {
-					"left": "geom_area_New",
-					"right": "geom_area_Old"
+					"left": "geom_area_Old",
+					"right": "geom_area_New"
 				}
 			}
 		},
@@ -1478,8 +1478,8 @@
 			"type": "category",
 			"description": "Verschil in hydroobject_id",
 			"priority": "critical",
-			"left": "hydroobject_id_New",
-			"right": "hydroobject_id_Old"
+			"left": "hydroobject_id_Old",
+			"right": "hydroobject_id_New"
 		},
 		{
 			"name": "cmp_hydroobject_naam",
@@ -1487,8 +1487,8 @@
 			"type": "category",
 			"description": "Verschil in hydroobject_naam",
 			"priority": "warning",
-			"left": "naam_New",
-			"right": "naam_Old"
+			"left": "naam_Old",
+			"right": "naam_New"
 		},
 		{
 			"name": "cmp_soortafvoeraanvoergebied",
@@ -1496,8 +1496,8 @@
 			"type": "category",
 			"description": "Verschil in soortafvoeraanvoergebied",
 			"priority": "warning",
-			"left": "soortafvoeraanvoergebied_New",
-			"right": "soortafvoeraanvoergebied_Old"
+			"left": "soortafvoeraanvoergebied_Old",
+			"right": "soortafvoeraanvoergebied_New"
 		},
 		{
 			"name": "cmp_soortafvoeraanvoergebied",
@@ -1505,8 +1505,8 @@
 			"type": "category",
 			"description": "Verschil in soortafvoeraanvoergebied",
 			"priority": "warning",
-			"left": "soortafvoeraanvoergebied_New",
-			"right": "soortafvoeraanvoergebied_Old"
+			"left": "soortafvoeraanvoergebied_Old",
+			"right": "soortafvoeraanvoergebied_New"
 		},
 		{
 			"name": "cmp_oppervlak",
@@ -1514,8 +1514,8 @@
 			"type": "category",
 			"description": "Verschil in oppervlak",
 			"priority": "warning",
-			"left": "oppervlakte_New",
-			"right": "oppervlakte_Old"
+			"left": "oppervlakte_Old",
+			"right": "oppervlakte_New"
 		},
 		{
 			"name": "cmp_geom_length",
@@ -1525,8 +1525,8 @@
 			"priority": "critical",
 			"function": {
 				"difference": {
-					"left": "geom_length_New",
-					"right": "geom_length_Old"
+					"left": "geom_length_Old",
+					"right": "geom_length_New"
 				}
 			}
 		},
@@ -1538,8 +1538,8 @@
 			"priority": "critical",
 			"function": {
 				"difference": {
-					"left": "geom_area_New",
-					"right": "geom_area_Old"
+					"left": "geom_area_Old",
+					"right": "geom_area_New"
 				}
 			}
 		},
@@ -1551,8 +1551,8 @@
 			"priority": "critical",
 			"function": {
 				"difference": {
-					"left": "geom_type_New",
-					"right": "geom_type_Old"
+					"left": "geom_type_Old",
+					"right": "geom_type_New"
 				}
 			}
 		}

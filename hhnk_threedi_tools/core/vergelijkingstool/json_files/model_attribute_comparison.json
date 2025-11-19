@@ -137,13 +137,13 @@
 			"priority": "critical",
 			"function": {
 				"difference": {
-					"left": {
+					"left": "maximalecapaciteit_damo",
+					"right": {
 						"multiply": {
 							"left": "capacity_model",
 							"right": 0.06
 						}
-					},
-					"right": "maximalecapaciteit_damo"
+					}
 				}
 			}
 		},
