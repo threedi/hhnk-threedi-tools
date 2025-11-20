@@ -1,5 +1,5 @@
 <!DOCTYPE qgis PUBLIC 'http://mrcc.com/qgis.dtd' 'SYSTEM'>
-<qgis minScale="0" labelsEnabled="1" styleCategories="AllStyleCategories" simplifyDrawingHints="1" readOnly="0" version="3.34.4-Prizren" simplifyLocal="1" maxScale="0" simplifyAlgorithm="0" simplifyDrawingTol="1" symbologyReferenceScale="-1" hasScaleBasedVisibilityFlag="0" simplifyMaxScale="1">
+<qgis minScale="100000000" labelsEnabled="0" styleCategories="AllStyleCategories" simplifyDrawingHints="1" readOnly="0" version="3.34.4-Prizren" simplifyLocal="1" maxScale="0" simplifyAlgorithm="0" simplifyDrawingTol="1" symbologyReferenceScale="-1" hasScaleBasedVisibilityFlag="0" simplifyMaxScale="1">
   <flags>
     <Identifiable>1</Identifiable>
     <Removable>1</Removable>
@@ -29,7 +29,7 @@
             <Option type="QString" value="collection" name="type"/>
           </Option>
         </data_defined_properties>
-        <layer pass="0" enabled="1" id="{c04cdfe7-2d12-4332-bdb9-c941130da9de}" locked="0" class="SimpleLine">
+        <layer pass="0" enabled="1" id="{adcda140-4cc2-4bf9-ae4e-59f1d714b002}" locked="0" class="SimpleLine">
           <Option type="Map">
             <Option type="QString" value="0" name="align_dash_pattern"/>
             <Option type="QString" value="square" name="capstyle"/>
@@ -41,7 +41,7 @@
             <Option type="QString" value="MM" name="dash_pattern_offset_unit"/>
             <Option type="QString" value="0" name="draw_inside_polygon"/>
             <Option type="QString" value="bevel" name="joinstyle"/>
-            <Option type="QString" value="229,182,54,255" name="line_color"/>
+            <Option type="QString" value="164,113,88,255" name="line_color"/>
             <Option type="QString" value="solid" name="line_style"/>
             <Option type="QString" value="0.6" name="line_width"/>
             <Option type="QString" value="MM" name="line_width_unit"/>
@@ -78,15 +78,15 @@
             <Option type="QString" value="collection" name="type"/>
           </Option>
         </data_defined_properties>
-        <layer pass="0" enabled="1" id="{7356122b-ba33-492c-80f7-a7e7df1cc607}" locked="0" class="SimpleFill">
+        <layer pass="0" enabled="1" id="{33cfc979-b825-4030-9d18-c823a67e8dff}" locked="0" class="SimpleFill">
           <Option type="Map">
             <Option type="QString" value="3x:0,0,0,0,0,0" name="border_width_map_unit_scale"/>
-            <Option type="QString" value="229,182,54,255" name="color"/>
+            <Option type="QString" value="164,113,88,255" name="color"/>
             <Option type="QString" value="bevel" name="joinstyle"/>
             <Option type="QString" value="0,0" name="offset"/>
             <Option type="QString" value="3x:0,0,0,0,0,0" name="offset_map_unit_scale"/>
             <Option type="QString" value="MM" name="offset_unit"/>
-            <Option type="QString" value="164,130,39,255" name="outline_color"/>
+            <Option type="QString" value="117,81,63,255" name="outline_color"/>
             <Option type="QString" value="solid" name="outline_style"/>
             <Option type="QString" value="0.2" name="outline_width"/>
             <Option type="QString" value="MM" name="outline_width_unit"/>
@@ -111,18 +111,18 @@
             <Option type="QString" value="collection" name="type"/>
           </Option>
         </data_defined_properties>
-        <layer pass="0" enabled="1" id="{3ae0bb1b-0b00-4cb2-9cd7-d4752855c5b2}" locked="0" class="SimpleMarker">
+        <layer pass="0" enabled="1" id="{6fb5edc4-8cee-4d43-88c5-16806ab491b0}" locked="0" class="SimpleMarker">
           <Option type="Map">
             <Option type="QString" value="0" name="angle"/>
             <Option type="QString" value="square" name="cap_style"/>
-            <Option type="QString" value="229,182,54,255" name="color"/>
+            <Option type="QString" value="164,113,88,255" name="color"/>
             <Option type="QString" value="1" name="horizontal_anchor_point"/>
             <Option type="QString" value="bevel" name="joinstyle"/>
             <Option type="QString" value="diamond" name="name"/>
             <Option type="QString" value="0,0" name="offset"/>
             <Option type="QString" value="3x:0,0,0,0,0,0" name="offset_map_unit_scale"/>
             <Option type="QString" value="MM" name="offset_unit"/>
-            <Option type="QString" value="164,130,39,255" name="outline_color"/>
+            <Option type="QString" value="117,81,63,255" name="outline_color"/>
             <Option type="QString" value="solid" name="outline_style"/>
             <Option type="QString" value="0.2" name="outline_width"/>
             <Option type="QString" value="3x:0,0,0,0,0,0" name="outline_width_map_unit_scale"/>
@@ -146,14 +146,14 @@
   </elevation>
   <renderer-v2 type="RuleRenderer" symbollevels="0" forceraster="0" referencescale="-1" enableorderby="0">
     <rules key="{55e35520-7748-4c51-be6e-504f9631408b}">
-      <rule key="{25cd74e8-9c05-4019-b9ec-f7d9456bbed3}" label="Pimaire watersysteem" filter=" &quot;categorieoppwaterlichaam_damo&quot; = 1">
+      <rule key="{25cd74e8-9c05-4019-b9ec-f7d9456bbed3}" label="Pimaire watersysteem" filter=" &quot;ws_categorie_damo&quot;  = 1">
         <rule key="{e10e995c-155e-4a90-b489-8c36f9721e05}" label="Bestaat in het Model" symbol="0" filter=" &quot;in_both&quot;  LIKE  '%sqlitel' "/>
         <rule key="{6af62301-4150-4f59-97ef-43a297e807b6}" label="Bestond nog niet in het Model" symbol="1" filter=" &quot;in_both&quot;  LIKE  '%damo' "/>
         <rule key="{2b7144fe-e044-4f09-8bb1-24f666d4f468}" label="Kritiek verschil tussen beide datasets" symbol="2" filter=" &quot;in_both&quot;   LIKE  '%both' AND  &quot;number_of_critical&quot; > 0"/>
-        <rule key="{b2db38fb-38c9-4149-aa28-962a969d3d09}" label="Klein verschillen gevonden" symbol="3" checkstate="0" filter=" &quot;in_both&quot;   LIKE  '%both' AND  &quot;number_of_critical&quot; = 0 AND ( &quot;number_of_info&quot;  +  &quot;number_of_warning&quot; ) > 0"/>
+        <rule key="{b2db38fb-38c9-4149-aa28-962a969d3d09}" label="Klein verschillen gevonden" symbol="3" filter=" &quot;in_both&quot;   LIKE  '%both' AND  &quot;number_of_critical&quot; = 0 AND ( &quot;number_of_info&quot;  +  &quot;number_of_warning&quot; ) > 0"/>
         <rule key="{7c029e2c-b2a5-47b0-b8bd-a7193005556b}" label="Geen verschillen gevonden" symbol="4" filter="ELSE"/>
       </rule>
-      <rule key="{768a9da6-a936-42a4-8b0c-70467ba2cab4}" label="Niet-primaire watersysteem" filter=" &quot;categorieoppwaterlichaam_damo&quot;   != 1">
+      <rule key="{768a9da6-a936-42a4-8b0c-70467ba2cab4}" label="Niet-primaire watersysteem" filter=" &quot;ws_categorie_damo&quot;  != 1">
         <rule key="{0a48c200-58df-4e3f-967a-9686fb24b127}" label="Bestaat in het Model" symbol="5" filter=" &quot;in_both&quot;  LIKE  '%sqlitel'"/>
         <rule key="{1128bab2-d6af-4660-9fda-bdf09f2acfc8}" label="Bestond nog niet in het Model" symbol="6" filter=" &quot;in_both&quot;  LIKE  '%damo'"/>
         <rule key="{006a251d-5485-4caa-b5bf-77db4f4f74a5}" label="Kritiek verschil tussen beide datasets" symbol="7" filter=" &quot;in_both&quot;   LIKE  '%both' AND  &quot;number_of_critical&quot; > 0"/>
@@ -1026,134 +1026,6 @@
       </symbol>
     </selectionSymbol>
   </selection>
-  <labeling type="rule-based">
-    <rules key="{f1867aba-78b3-4e94-a253-38e0f0cafdef}">
-      <rule scalemaxdenom="15000" description="Aantal kritieke fouten" key="{ebc0f611-63b7-46d9-9fd1-f8bab4d01e03}" filter="&quot;in_both&quot;   LIKE  '%both' AND  &quot;number_of_critical&quot; > 0">
-        <settings calloutType="simple">
-          <text-style legendString="Aa" textOrientation="horizontal" allowHtml="0" blendMode="0" previewBkgrdColor="255,255,255,255" fontLetterSpacing="0" fontWordSpacing="0" multilineHeightUnit="Percentage" multilineHeight="1" textColor="227,26,28,255" forcedItalic="0" fontKerning="1" fontSize="10" useSubstitutions="0" fontFamily="Arial" forcedBold="0" fontSizeUnit="Point" isExpression="1" fontUnderline="0" fontWeight="50" capitalization="0" fontStrikeout="0" namedStyle="Standaard" fieldName="CASE&#xd;&#xa;  WHEN &quot;in_both&quot; LIKE '%both' AND &quot;number_of_critical&quot; > 0 &#xd;&#xa;  THEN 'Aantal Kritieke Fouten: ' || &quot;number_of_critical&quot;&#xd;&#xa;  ELSE ''&#xd;&#xa;END&#xd;&#xa;" textOpacity="1" fontSizeMapUnitScale="3x:0,0,0,0,0,0" fontItalic="0">
-            <families/>
-            <text-buffer bufferSizeUnits="MM" bufferDraw="1" bufferSizeMapUnitScale="3x:0,0,0,0,0,0" bufferOpacity="1" bufferColor="250,250,250,255" bufferBlendMode="0" bufferJoinStyle="128" bufferNoFill="1" bufferSize="1"/>
-            <text-mask maskJoinStyle="128" maskSize="0" maskEnabled="0" maskSizeUnits="MM" maskOpacity="1" maskType="0" maskSizeMapUnitScale="3x:0,0,0,0,0,0" maskedSymbolLayers=""/>
-            <background shapeBlendMode="0" shapeDraw="0" shapeRotation="0" shapeRotationType="0" shapeRadiiX="0" shapeSizeY="0" shapeBorderWidth="0" shapeOffsetUnit="Point" shapeOffsetY="0" shapeOpacity="1" shapeRadiiMapUnitScale="3x:0,0,0,0,0,0" shapeFillColor="255,255,255,255" shapeRadiiY="0" shapeBorderWidthMapUnitScale="3x:0,0,0,0,0,0" shapeSizeUnit="Point" shapeSVGFile="" shapeBorderColor="128,128,128,255" shapeOffsetX="0" shapeBorderWidthUnit="Point" shapeJoinStyle="64" shapeRadiiUnit="Point" shapeSizeMapUnitScale="3x:0,0,0,0,0,0" shapeOffsetMapUnitScale="3x:0,0,0,0,0,0" shapeType="0" shapeSizeX="0" shapeSizeType="0">
-              <symbol type="marker" is_animated="0" alpha="1" name="markerSymbol" frame_rate="10" clip_to_extent="1" force_rhr="0">
-                <data_defined_properties>
-                  <Option type="Map">
-                    <Option type="QString" value="" name="name"/>
-                    <Option name="properties"/>
-                    <Option type="QString" value="collection" name="type"/>
-                  </Option>
-                </data_defined_properties>
-                <layer pass="0" enabled="1" id="" locked="0" class="SimpleMarker">
-                  <Option type="Map">
-                    <Option type="QString" value="0" name="angle"/>
-                    <Option type="QString" value="square" name="cap_style"/>
-                    <Option type="QString" value="232,113,141,255" name="color"/>
-                    <Option type="QString" value="1" name="horizontal_anchor_point"/>
-                    <Option type="QString" value="bevel" name="joinstyle"/>
-                    <Option type="QString" value="circle" name="name"/>
-                    <Option type="QString" value="0,0" name="offset"/>
-                    <Option type="QString" value="3x:0,0,0,0,0,0" name="offset_map_unit_scale"/>
-                    <Option type="QString" value="MM" name="offset_unit"/>
-                    <Option type="QString" value="35,35,35,255" name="outline_color"/>
-                    <Option type="QString" value="solid" name="outline_style"/>
-                    <Option type="QString" value="0" name="outline_width"/>
-                    <Option type="QString" value="3x:0,0,0,0,0,0" name="outline_width_map_unit_scale"/>
-                    <Option type="QString" value="MM" name="outline_width_unit"/>
-                    <Option type="QString" value="diameter" name="scale_method"/>
-                    <Option type="QString" value="2" name="size"/>
-                    <Option type="QString" value="3x:0,0,0,0,0,0" name="size_map_unit_scale"/>
-                    <Option type="QString" value="MM" name="size_unit"/>
-                    <Option type="QString" value="1" name="vertical_anchor_point"/>
-                  </Option>
-                  <data_defined_properties>
-                    <Option type="Map">
-                      <Option type="QString" value="" name="name"/>
-                      <Option name="properties"/>
-                      <Option type="QString" value="collection" name="type"/>
-                    </Option>
-                  </data_defined_properties>
-                </layer>
-              </symbol>
-              <symbol type="fill" is_animated="0" alpha="1" name="fillSymbol" frame_rate="10" clip_to_extent="1" force_rhr="0">
-                <data_defined_properties>
-                  <Option type="Map">
-                    <Option type="QString" value="" name="name"/>
-                    <Option name="properties"/>
-                    <Option type="QString" value="collection" name="type"/>
-                  </Option>
-                </data_defined_properties>
-                <layer pass="0" enabled="1" id="" locked="0" class="SimpleFill">
-                  <Option type="Map">
-                    <Option type="QString" value="3x:0,0,0,0,0,0" name="border_width_map_unit_scale"/>
-                    <Option type="QString" value="255,255,255,255" name="color"/>
-                    <Option type="QString" value="bevel" name="joinstyle"/>
-                    <Option type="QString" value="0,0" name="offset"/>
-                    <Option type="QString" value="3x:0,0,0,0,0,0" name="offset_map_unit_scale"/>
-                    <Option type="QString" value="MM" name="offset_unit"/>
-                    <Option type="QString" value="128,128,128,255" name="outline_color"/>
-                    <Option type="QString" value="no" name="outline_style"/>
-                    <Option type="QString" value="0" name="outline_width"/>
-                    <Option type="QString" value="Point" name="outline_width_unit"/>
-                    <Option type="QString" value="solid" name="style"/>
-                  </Option>
-                  <data_defined_properties>
-                    <Option type="Map">
-                      <Option type="QString" value="" name="name"/>
-                      <Option name="properties"/>
-                      <Option type="QString" value="collection" name="type"/>
-                    </Option>
-                  </data_defined_properties>
-                </layer>
-              </symbol>
-            </background>
-            <shadow shadowOffsetMapUnitScale="3x:0,0,0,0,0,0" shadowOffsetDist="1" shadowOpacity="0.69999999999999996" shadowOffsetUnit="MM" shadowRadius="1.5" shadowRadiusMapUnitScale="3x:0,0,0,0,0,0" shadowOffsetGlobal="1" shadowDraw="0" shadowScale="100" shadowUnder="0" shadowRadiusUnit="MM" shadowColor="0,0,0,255" shadowBlendMode="6" shadowRadiusAlphaOnly="0" shadowOffsetAngle="135"/>
-            <dd_properties>
-              <Option type="Map">
-                <Option type="QString" value="" name="name"/>
-                <Option name="properties"/>
-                <Option type="QString" value="collection" name="type"/>
-              </Option>
-            </dd_properties>
-            <substitutions/>
-          </text-style>
-          <text-format decimals="3" rightDirectionSymbol=">" wrapChar="" leftDirectionSymbol="&lt;" reverseDirectionSymbol="0" plussign="0" autoWrapLength="0" addDirectionSymbol="0" formatNumbers="0" multilineAlign="3" useMaxLineLengthForAutoWrap="1" placeDirectionSymbol="0"/>
-          <placement quadOffset="1" lineAnchorClipping="0" predefinedPositionOrder="TR,TL,BR,BL,R,L,TSR,BSR" repeatDistanceUnits="MM" labelOffsetMapUnitScale="3x:0,0,0,0,0,0" repeatDistanceMapUnitScale="3x:0,0,0,0,0,0" geometryGenerator="" geometryGeneratorEnabled="0" placement="1" lineAnchorPercent="0.5" fitInPolygonOnly="0" overlapHandling="PreventOverlap" layerType="PointGeometry" allowDegraded="0" offsetType="1" distUnits="MM" priority="5" geometryGeneratorType="PointGeometry" lineAnchorType="0" dist="0" overrunDistanceUnit="MM" centroidWhole="0" offsetUnits="MM" distMapUnitScale="3x:0,0,0,0,0,0" maxCurvedCharAngleOut="-25" overrunDistanceMapUnitScale="3x:0,0,0,0,0,0" preserveRotation="1" rotationAngle="0" overrunDistance="0" rotationUnit="AngleDegrees" placementFlags="10" yOffset="-2.5" xOffset="0" centroidInside="0" maxCurvedCharAngleIn="25" polygonPlacementFlags="2" repeatDistance="0" lineAnchorTextPoint="FollowPlacement"/>
-          <rendering upsidedownLabels="0" labelPerPart="0" scaleMax="0" limitNumLabels="0" maxNumLabels="2000" drawLabels="1" scaleMin="0" fontLimitPixelSize="0" scaleVisibility="0" fontMaxPixelSize="10000" mergeLines="0" unplacedVisibility="0" obstacle="1" minFeatureSize="0" obstacleFactor="1" obstacleType="1" fontMinPixelSize="3" zIndex="0"/>
-          <dd_properties>
-            <Option type="Map">
-              <Option type="QString" value="" name="name"/>
-              <Option name="properties"/>
-              <Option type="QString" value="collection" name="type"/>
-            </Option>
-          </dd_properties>
-          <callout type="simple">
-            <Option type="Map">
-              <Option type="QString" value="pole_of_inaccessibility" name="anchorPoint"/>
-              <Option type="int" value="0" name="blendMode"/>
-              <Option type="Map" name="ddProperties">
-                <Option type="QString" value="" name="name"/>
-                <Option name="properties"/>
-                <Option type="QString" value="collection" name="type"/>
-              </Option>
-              <Option type="bool" value="false" name="drawToAllParts"/>
-              <Option type="QString" value="0" name="enabled"/>
-              <Option type="QString" value="point_on_exterior" name="labelAnchorPoint"/>
-              <Option type="QString" value="&lt;symbol type=&quot;line&quot; is_animated=&quot;0&quot; alpha=&quot;1&quot; name=&quot;symbol&quot; frame_rate=&quot;10&quot; clip_to_extent=&quot;1&quot; force_rhr=&quot;0&quot;>&lt;data_defined_properties>&lt;Option type=&quot;Map&quot;>&lt;Option type=&quot;QString&quot; value=&quot;&quot; name=&quot;name&quot;/>&lt;Option name=&quot;properties&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;collection&quot; name=&quot;type&quot;/>&lt;/Option>&lt;/data_defined_properties>&lt;layer pass=&quot;0&quot; enabled=&quot;1&quot; id=&quot;{0559038c-a499-456c-a734-3f312effd6b5}&quot; locked=&quot;0&quot; class=&quot;SimpleLine&quot;>&lt;Option type=&quot;Map&quot;>&lt;Option type=&quot;QString&quot; value=&quot;0&quot; name=&quot;align_dash_pattern&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;square&quot; name=&quot;capstyle&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;5;2&quot; name=&quot;customdash&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;3x:0,0,0,0,0,0&quot; name=&quot;customdash_map_unit_scale&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;MM&quot; name=&quot;customdash_unit&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;0&quot; name=&quot;dash_pattern_offset&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;3x:0,0,0,0,0,0&quot; name=&quot;dash_pattern_offset_map_unit_scale&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;MM&quot; name=&quot;dash_pattern_offset_unit&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;0&quot; name=&quot;draw_inside_polygon&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;bevel&quot; name=&quot;joinstyle&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;60,60,60,255&quot; name=&quot;line_color&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;solid&quot; name=&quot;line_style&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;0.3&quot; name=&quot;line_width&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;MM&quot; name=&quot;line_width_unit&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;0&quot; name=&quot;offset&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;3x:0,0,0,0,0,0&quot; name=&quot;offset_map_unit_scale&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;MM&quot; name=&quot;offset_unit&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;0&quot; name=&quot;ring_filter&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;0&quot; name=&quot;trim_distance_end&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;3x:0,0,0,0,0,0&quot; name=&quot;trim_distance_end_map_unit_scale&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;MM&quot; name=&quot;trim_distance_end_unit&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;0&quot; name=&quot;trim_distance_start&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;3x:0,0,0,0,0,0&quot; name=&quot;trim_distance_start_map_unit_scale&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;MM&quot; name=&quot;trim_distance_start_unit&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;0&quot; name=&quot;tweak_dash_pattern_on_corners&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;0&quot; name=&quot;use_custom_dash&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;3x:0,0,0,0,0,0&quot; name=&quot;width_map_unit_scale&quot;/>&lt;/Option>&lt;data_defined_properties>&lt;Option type=&quot;Map&quot;>&lt;Option type=&quot;QString&quot; value=&quot;&quot; name=&quot;name&quot;/>&lt;Option name=&quot;properties&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;collection&quot; name=&quot;type&quot;/>&lt;/Option>&lt;/data_defined_properties>&lt;/layer>&lt;/symbol>" name="lineSymbol"/>
-              <Option type="double" value="0" name="minLength"/>
-              <Option type="QString" value="3x:0,0,0,0,0,0" name="minLengthMapUnitScale"/>
-              <Option type="QString" value="MM" name="minLengthUnit"/>
-              <Option type="double" value="0" name="offsetFromAnchor"/>
-              <Option type="QString" value="3x:0,0,0,0,0,0" name="offsetFromAnchorMapUnitScale"/>
-              <Option type="QString" value="MM" name="offsetFromAnchorUnit"/>
-              <Option type="double" value="0" name="offsetFromLabel"/>
-              <Option type="QString" value="3x:0,0,0,0,0,0" name="offsetFromLabelMapUnitScale"/>
-              <Option type="QString" value="MM" name="offsetFromLabelUnit"/>
-            </Option>
-          </callout>
-        </settings>
-      </rule>
-    </rules>
-  </labeling>
   <customproperties>
     <Option type="Map">
       <Option type="List" name="dualview/previewExpressions">
@@ -1168,9 +1040,8 @@
   <featureBlendMode>0</featureBlendMode>
   <layerOpacity>1</layerOpacity>
   <SingleCategoryDiagramRenderer diagramType="Histogram" attributeLegend="1">
-    <DiagramCategory spacingUnit="MM" maxScaleDenominator="0" width="15" scaleDependency="Area" labelPlacementMethod="XHeight" direction="0" sizeType="MM" spacingUnitScale="3x:0,0,0,0,0,0" penAlpha="255" showAxis="1" penColor="#000000" diagramOrientation="Up" minimumSize="0" lineSizeType="MM" height="15" sizeScale="3x:0,0,0,0,0,0" scaleBasedVisibility="0" minScaleDenominator="0" opacity="1" barWidth="5" spacing="5" rotationOffset="270" lineSizeScale="3x:0,0,0,0,0,0" backgroundAlpha="255" penWidth="0" backgroundColor="#ffffff" enabled="0">
+    <DiagramCategory spacingUnit="MM" maxScaleDenominator="1e+08" width="15" scaleDependency="Area" labelPlacementMethod="XHeight" direction="0" sizeType="MM" spacingUnitScale="3x:0,0,0,0,0,0" penAlpha="255" showAxis="1" penColor="#000000" diagramOrientation="Up" minimumSize="0" lineSizeType="MM" height="15" sizeScale="3x:0,0,0,0,0,0" scaleBasedVisibility="0" minScaleDenominator="0" opacity="1" barWidth="5" spacing="5" rotationOffset="270" lineSizeScale="3x:0,0,0,0,0,0" backgroundAlpha="255" penWidth="0" backgroundColor="#ffffff" enabled="0">
       <fontProperties style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
-      <attribute colorOpacity="1" field="" label="" color="#000000"/>
       <axisSymbol>
         <symbol type="line" is_animated="0" alpha="1" name="" frame_rate="10" clip_to_extent="1" force_rhr="0">
           <data_defined_properties>
@@ -1180,7 +1051,7 @@
               <Option type="QString" value="collection" name="type"/>
             </Option>
           </data_defined_properties>
-          <layer pass="0" enabled="1" id="{decb052b-133a-4573-afbf-f7ec0ebe7e40}" locked="0" class="SimpleLine">
+          <layer pass="0" enabled="1" id="{bc4a8092-9790-47ce-a456-16929418d834}" locked="0" class="SimpleLine">
             <Option type="Map">
               <Option type="QString" value="0" name="align_dash_pattern"/>
               <Option type="QString" value="square" name="capstyle"/>
@@ -1292,10 +1163,64 @@
         </config>
       </editWidget>
     </field>
+    <field configurationFlags="NoFlag" name="friction_value_model">
+      <editWidget type="TextEdit">
+        <config>
+          <Option type="Map">
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
+          </Option>
+        </config>
+      </editWidget>
+    </field>
+    <field configurationFlags="NoFlag" name="friction_type_model">
+      <editWidget type="TextEdit">
+        <config>
+          <Option type="Map">
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
+          </Option>
+        </config>
+      </editWidget>
+    </field>
     <field configurationFlags="NoFlag" name="calculation_point_distance_model">
       <editWidget type="TextEdit">
         <config>
           <Option/>
+        </config>
+      </editWidget>
+    </field>
+    <field configurationFlags="NoFlag" name="discharge_coefficient_positive_model">
+      <editWidget type="TextEdit">
+        <config>
+          <Option/>
+        </config>
+      </editWidget>
+    </field>
+    <field configurationFlags="NoFlag" name="discharge_coefficient_negative_model">
+      <editWidget type="TextEdit">
+        <config>
+          <Option/>
+        </config>
+      </editWidget>
+    </field>
+    <field configurationFlags="NoFlag" name="invert_level_start_model">
+      <editWidget type="TextEdit">
+        <config>
+          <Option type="Map">
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
+          </Option>
+        </config>
+      </editWidget>
+    </field>
+    <field configurationFlags="NoFlag" name="invert_level_end_model">
+      <editWidget type="TextEdit">
+        <config>
+          <Option type="Map">
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
+          </Option>
         </config>
       </editWidget>
     </field>
@@ -1313,21 +1238,31 @@
         </config>
       </editWidget>
     </field>
-    <field configurationFlags="NoFlag" name="exchange_thickness_model">
+    <field configurationFlags="NoFlag" name="cross_section_table_model">
       <editWidget type="TextEdit">
         <config>
           <Option/>
         </config>
       </editWidget>
     </field>
-    <field configurationFlags="NoFlag" name="hydraulic_conductivity_in_model">
+    <field configurationFlags="NoFlag" name="cross_section_shape_model">
       <editWidget type="TextEdit">
         <config>
           <Option/>
         </config>
       </editWidget>
     </field>
-    <field configurationFlags="NoFlag" name="hydraulic_conductivity_out_model">
+    <field configurationFlags="NoFlag" name="cross_section_width_model">
+      <editWidget type="TextEdit">
+        <config>
+          <Option type="Map">
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
+          </Option>
+        </config>
+      </editWidget>
+    </field>
+    <field configurationFlags="NoFlag" name="cross_section_height_model">
       <editWidget type="TextEdit">
         <config>
           <Option/>
@@ -1341,10 +1276,33 @@
         </config>
       </editWidget>
     </field>
-    <field configurationFlags="NoFlag" name="id_model">
+    <field configurationFlags="NoFlag" name="material_id_model">
       <editWidget type="TextEdit">
         <config>
-          <Option/>
+          <Option type="Map">
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
+          </Option>
+        </config>
+      </editWidget>
+    </field>
+    <field configurationFlags="NoFlag" name="cross_section_max_width_model">
+      <editWidget type="TextEdit">
+        <config>
+          <Option type="Map">
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
+          </Option>
+        </config>
+      </editWidget>
+    </field>
+    <field configurationFlags="NoFlag" name="cross_section_max_height_model">
+      <editWidget type="TextEdit">
+        <config>
+          <Option type="Map">
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
+          </Option>
         </config>
       </editWidget>
     </field>
@@ -1355,6 +1313,33 @@
             <Option type="bool" value="false" name="IsMultiline"/>
             <Option type="bool" value="false" name="UseHtml"/>
           </Option>
+        </config>
+      </editWidget>
+    </field>
+    <field configurationFlags="NoFlag" name="crest_type_model">
+      <editWidget type="TextEdit">
+        <config>
+          <Option type="Map">
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
+          </Option>
+        </config>
+      </editWidget>
+    </field>
+    <field configurationFlags="NoFlag" name="crest_level_model">
+      <editWidget type="TextEdit">
+        <config>
+          <Option type="Map">
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
+          </Option>
+        </config>
+      </editWidget>
+    </field>
+    <field configurationFlags="NoFlag" name="sewerage_model">
+      <editWidget type="TextEdit">
+        <config>
+          <Option/>
         </config>
       </editWidget>
     </field>
@@ -1400,20 +1385,6 @@
         </config>
       </editWidget>
     </field>
-    <field configurationFlags="NoFlag" name="ws_bodembreedte_damo">
-      <editWidget type="TextEdit">
-        <config>
-          <Option/>
-        </config>
-      </editWidget>
-    </field>
-    <field configurationFlags="NoFlag" name="hydroobject_id_damo">
-      <editWidget type="TextEdit">
-        <config>
-          <Option/>
-        </config>
-      </editWidget>
-    </field>
     <field configurationFlags="NoFlag" name="naam_damo">
       <editWidget type="TextEdit">
         <config>
@@ -1421,70 +1392,141 @@
         </config>
       </editWidget>
     </field>
-    <field configurationFlags="NoFlag" name="soortoppwaterkwantiteit_damo">
+    <field configurationFlags="NoFlag" name="opmerking_damo">
       <editWidget type="TextEdit">
         <config>
           <Option/>
         </config>
       </editWidget>
     </field>
-    <field configurationFlags="NoFlag" name="categorieoppwaterlichaam_damo">
+    <field configurationFlags="NoFlag" name="indicatiewaterkerend_damo">
       <editWidget type="TextEdit">
         <config>
           <Option/>
         </config>
       </editWidget>
     </field>
-    <field configurationFlags="NoFlag" name="ws_bodemhoogte_damo">
+    <field configurationFlags="NoFlag" name="indpeilregulpeilscheidend_damo">
       <editWidget type="TextEdit">
         <config>
           <Option/>
         </config>
       </editWidget>
     </field>
-    <field configurationFlags="NoFlag" name="ws_talud_links_damo">
+    <field configurationFlags="NoFlag" name="lengte_damo">
       <editWidget type="TextEdit">
         <config>
           <Option/>
         </config>
       </editWidget>
     </field>
-    <field configurationFlags="NoFlag" name="ws_talud_rechts_damo">
+    <field configurationFlags="NoFlag" name="hoogteopening_damo">
+      <editWidget type="TextEdit">
+        <config>
+          <Option type="Map">
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
+          </Option>
+        </config>
+      </editWidget>
+    </field>
+    <field configurationFlags="NoFlag" name="breedteopening_damo">
+      <editWidget type="TextEdit">
+        <config>
+          <Option type="Map">
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
+          </Option>
+        </config>
+      </editWidget>
+    </field>
+    <field configurationFlags="NoFlag" name="hoogtebinnenonderkantbene_damo">
+      <editWidget type="TextEdit">
+        <config>
+          <Option type="Map">
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
+          </Option>
+        </config>
+      </editWidget>
+    </field>
+    <field configurationFlags="NoFlag" name="hoogtebinnenonderkantbov_damo">
+      <editWidget type="TextEdit">
+        <config>
+          <Option type="Map">
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
+          </Option>
+        </config>
+      </editWidget>
+    </field>
+    <field configurationFlags="NoFlag" name="vormkoker_damo">
       <editWidget type="TextEdit">
         <config>
           <Option/>
         </config>
       </editWidget>
     </field>
-    <field configurationFlags="NoFlag" name="ws_in_peilgebied_damo">
+    <field configurationFlags="NoFlag" name="soortmateriaal_damo">
       <editWidget type="TextEdit">
         <config>
           <Option/>
         </config>
       </editWidget>
     </field>
-    <field configurationFlags="NoFlag" name="bodemhoogte_nap_damo">
+    <field configurationFlags="NoFlag" name="typekruising_damo">
       <editWidget type="TextEdit">
         <config>
           <Option/>
         </config>
       </editWidget>
     </field>
-    <field configurationFlags="NoFlag" name="breedte_getabuleerd_damo">
+    <field configurationFlags="NoFlag" name="ws_categorie_damo">
+      <editWidget type="TextEdit">
+        <config>
+          <Option type="Map">
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
+          </Option>
+        </config>
+      </editWidget>
+    </field>
+    <field configurationFlags="NoFlag" name="ws_bron_damo">
       <editWidget type="TextEdit">
         <config>
           <Option/>
         </config>
       </editWidget>
     </field>
-    <field configurationFlags="NoFlag" name="hoogte_getabuleerd_damo">
+    <field configurationFlags="NoFlag" name="ws_inwinningswijze_damo">
       <editWidget type="TextEdit">
         <config>
           <Option/>
         </config>
       </editWidget>
     </field>
-    <field configurationFlags="NoFlag" name="keuze_profiel_damo">
+    <field configurationFlags="NoFlag" name="ws_inwinningsdatum_damo">
+      <editWidget type="TextEdit">
+        <config>
+          <Option/>
+        </config>
+      </editWidget>
+    </field>
+    <field configurationFlags="NoFlag" name="ws_inlaatfunctie_damo">
+      <editWidget type="TextEdit">
+        <config>
+          <Option/>
+        </config>
+      </editWidget>
+    </field>
+    <field configurationFlags="NoFlag" name="ws_afsluitwijze1_damo">
+      <editWidget type="TextEdit">
+        <config>
+          <Option/>
+        </config>
+      </editWidget>
+    </field>
+    <field configurationFlags="NoFlag" name="ws_afsluitwijze2_damo">
       <editWidget type="TextEdit">
         <config>
           <Option/>
@@ -1560,65 +1602,94 @@
         </config>
       </editWidget>
     </field>
-    <field configurationFlags="NoFlag" name="cmp_geometry_type">
+    <field configurationFlags="NoFlag" name="cmp_hoogtebinnenonderkantbov">
       <editWidget type="TextEdit">
         <config>
-          <Option type="Map">
-            <Option type="bool" value="false" name="IsMultiline"/>
-            <Option type="bool" value="false" name="UseHtml"/>
-          </Option>
+          <Option/>
         </config>
       </editWidget>
     </field>
-    <field configurationFlags="NoFlag" name="cmp_geometry_type_priority">
-      <editWidget type="TextEdit">
-        <config>
-          <Option type="Map">
-            <Option type="bool" value="false" name="IsMultiline"/>
-            <Option type="bool" value="false" name="UseHtml"/>
-          </Option>
-        </config>
-      </editWidget>
-    </field>
-    <field configurationFlags="NoFlag" name="cmp_geometry_length">
-      <editWidget type="TextEdit">
-        <config>
-          <Option type="Map">
-            <Option type="bool" value="false" name="IsMultiline"/>
-            <Option type="bool" value="false" name="UseHtml"/>
-          </Option>
-        </config>
-      </editWidget>
-    </field>
-    <field configurationFlags="NoFlag" name="cmp_geometry_length_change_NaN">
+    <field configurationFlags="NoFlag" name="cmp_hoogtebinnenonderkantbov_change_NaN">
       <editWidget type="CheckBox">
         <config>
-          <Option type="Map">
-            <Option type="bool" value="false" name="AllowNullState"/>
-            <Option type="QString" value="" name="CheckedState"/>
-            <Option type="int" value="0" name="TextDisplayMethod"/>
-            <Option type="QString" value="" name="UncheckedState"/>
-          </Option>
+          <Option/>
         </config>
       </editWidget>
     </field>
-    <field configurationFlags="NoFlag" name="cmp_geometry_length_priority">
+    <field configurationFlags="NoFlag" name="cmp_hoogtebinnenonderkantbov_priority">
       <editWidget type="TextEdit">
         <config>
-          <Option type="Map">
-            <Option type="bool" value="false" name="IsMultiline"/>
-            <Option type="bool" value="false" name="UseHtml"/>
-          </Option>
+          <Option/>
+        </config>
+      </editWidget>
+    </field>
+    <field configurationFlags="NoFlag" name="cmp_hoogtebinnenonderkantbene">
+      <editWidget type="TextEdit">
+        <config>
+          <Option/>
+        </config>
+      </editWidget>
+    </field>
+    <field configurationFlags="NoFlag" name="cmp_hoogtebinnenonderkantbene_change_NaN">
+      <editWidget type="CheckBox">
+        <config>
+          <Option/>
+        </config>
+      </editWidget>
+    </field>
+    <field configurationFlags="NoFlag" name="cmp_hoogtebinnenonderkantbene_priority">
+      <editWidget type="TextEdit">
+        <config>
+          <Option/>
+        </config>
+      </editWidget>
+    </field>
+    <field configurationFlags="NoFlag" name="cmp_max_breedteopening">
+      <editWidget type="TextEdit">
+        <config>
+          <Option/>
+        </config>
+      </editWidget>
+    </field>
+    <field configurationFlags="NoFlag" name="cmp_max_breedteopening_change_NaN">
+      <editWidget type="CheckBox">
+        <config>
+          <Option/>
+        </config>
+      </editWidget>
+    </field>
+    <field configurationFlags="NoFlag" name="cmp_max_breedteopening_priority">
+      <editWidget type="TextEdit">
+        <config>
+          <Option/>
+        </config>
+      </editWidget>
+    </field>
+    <field configurationFlags="NoFlag" name="cmp_max_hoogteopening">
+      <editWidget type="TextEdit">
+        <config>
+          <Option/>
+        </config>
+      </editWidget>
+    </field>
+    <field configurationFlags="NoFlag" name="cmp_max_hoogteopening_change_NaN">
+      <editWidget type="CheckBox">
+        <config>
+          <Option/>
+        </config>
+      </editWidget>
+    </field>
+    <field configurationFlags="NoFlag" name="cmp_max_hoogteopening_priority">
+      <editWidget type="TextEdit">
+        <config>
+          <Option/>
         </config>
       </editWidget>
     </field>
     <field configurationFlags="NoFlag" name="number_of_info">
       <editWidget type="TextEdit">
         <config>
-          <Option type="Map">
-            <Option type="bool" value="false" name="IsMultiline"/>
-            <Option type="bool" value="false" name="UseHtml"/>
-          </Option>
+          <Option/>
         </config>
       </editWidget>
     </field>
@@ -1632,10 +1703,7 @@
     <field configurationFlags="NoFlag" name="number_of_critical">
       <editWidget type="TextEdit">
         <config>
-          <Option type="Map">
-            <Option type="bool" value="false" name="IsMultiline"/>
-            <Option type="bool" value="false" name="UseHtml"/>
-          </Option>
+          <Option/>
         </config>
       </editWidget>
     </field>
@@ -1667,49 +1735,74 @@
     <alias field="display_name_model" name="" index="3"/>
     <alias field="code" name="" index="4"/>
     <alias field="exchange_type_model" name="" index="5"/>
-    <alias field="calculation_point_distance_model" name="" index="6"/>
-    <alias field="connection_node_id_start_model" name="" index="7"/>
-    <alias field="connection_node_id_end_model" name="" index="8"/>
-    <alias field="exchange_thickness_model" name="" index="9"/>
-    <alias field="hydraulic_conductivity_in_model" name="" index="10"/>
-    <alias field="hydraulic_conductivity_out_model" name="" index="11"/>
-    <alias field="tags_model" name="" index="12"/>
-    <alias field="id_model" name="" index="13"/>
-    <alias field="origin_model" name="" index="14"/>
-    <alias field="geom_type_model" name="" index="15"/>
-    <alias field="geom_length_model" name="" index="16"/>
-    <alias field="geom_area_model" name="" index="17"/>
-    <alias field="dataset_model" name="" index="18"/>
-    <alias field="ws_bodembreedte_damo" name="" index="19"/>
-    <alias field="hydroobject_id_damo" name="" index="20"/>
-    <alias field="naam_damo" name="" index="21"/>
-    <alias field="soortoppwaterkwantiteit_damo" name="" index="22"/>
-    <alias field="categorieoppwaterlichaam_damo" name="" index="23"/>
-    <alias field="ws_bodemhoogte_damo" name="" index="24"/>
-    <alias field="ws_talud_links_damo" name="" index="25"/>
-    <alias field="ws_talud_rechts_damo" name="" index="26"/>
-    <alias field="ws_in_peilgebied_damo" name="" index="27"/>
-    <alias field="bodemhoogte_nap_damo" name="" index="28"/>
-    <alias field="breedte_getabuleerd_damo" name="" index="29"/>
-    <alias field="hoogte_getabuleerd_damo" name="" index="30"/>
-    <alias field="keuze_profiel_damo" name="" index="31"/>
-    <alias field="shape_length_damo" name="" index="32"/>
-    <alias field="origin_damo" name="" index="33"/>
-    <alias field="geom_type_damo" name="" index="34"/>
-    <alias field="geom_length_damo" name="" index="35"/>
-    <alias field="geom_area_damo" name="" index="36"/>
-    <alias field="dataset_damo" name="" index="37"/>
-    <alias field="in_both" name="" index="38"/>
-    <alias field="cmp_geometry_type" name="" index="39"/>
-    <alias field="cmp_geometry_type_priority" name="" index="40"/>
-    <alias field="cmp_geometry_length" name="" index="41"/>
-    <alias field="cmp_geometry_length_change_NaN" name="" index="42"/>
-    <alias field="cmp_geometry_length_priority" name="" index="43"/>
-    <alias field="number_of_info" name="" index="44"/>
-    <alias field="number_of_warning" name="" index="45"/>
-    <alias field="number_of_critical" name="" index="46"/>
-    <alias field="Summary_Critical" name="" index="47"/>
-    <alias field="Summary_Warnings" name="" index="48"/>
+    <alias field="friction_value_model" name="" index="6"/>
+    <alias field="friction_type_model" name="" index="7"/>
+    <alias field="calculation_point_distance_model" name="" index="8"/>
+    <alias field="discharge_coefficient_positive_model" name="" index="9"/>
+    <alias field="discharge_coefficient_negative_model" name="" index="10"/>
+    <alias field="invert_level_start_model" name="" index="11"/>
+    <alias field="invert_level_end_model" name="" index="12"/>
+    <alias field="connection_node_id_start_model" name="" index="13"/>
+    <alias field="connection_node_id_end_model" name="" index="14"/>
+    <alias field="cross_section_table_model" name="" index="15"/>
+    <alias field="cross_section_shape_model" name="" index="16"/>
+    <alias field="cross_section_width_model" name="" index="17"/>
+    <alias field="cross_section_height_model" name="" index="18"/>
+    <alias field="tags_model" name="" index="19"/>
+    <alias field="material_id_model" name="" index="20"/>
+    <alias field="cross_section_max_width_model" name="" index="21"/>
+    <alias field="cross_section_max_height_model" name="" index="22"/>
+    <alias field="origin_model" name="" index="23"/>
+    <alias field="crest_type_model" name="" index="24"/>
+    <alias field="crest_level_model" name="" index="25"/>
+    <alias field="sewerage_model" name="" index="26"/>
+    <alias field="geom_type_model" name="" index="27"/>
+    <alias field="geom_length_model" name="" index="28"/>
+    <alias field="geom_area_model" name="" index="29"/>
+    <alias field="dataset_model" name="" index="30"/>
+    <alias field="naam_damo" name="" index="31"/>
+    <alias field="opmerking_damo" name="" index="32"/>
+    <alias field="indicatiewaterkerend_damo" name="" index="33"/>
+    <alias field="indpeilregulpeilscheidend_damo" name="" index="34"/>
+    <alias field="lengte_damo" name="" index="35"/>
+    <alias field="hoogteopening_damo" name="" index="36"/>
+    <alias field="breedteopening_damo" name="" index="37"/>
+    <alias field="hoogtebinnenonderkantbene_damo" name="" index="38"/>
+    <alias field="hoogtebinnenonderkantbov_damo" name="" index="39"/>
+    <alias field="vormkoker_damo" name="" index="40"/>
+    <alias field="soortmateriaal_damo" name="" index="41"/>
+    <alias field="typekruising_damo" name="" index="42"/>
+    <alias field="ws_categorie_damo" name="" index="43"/>
+    <alias field="ws_bron_damo" name="" index="44"/>
+    <alias field="ws_inwinningswijze_damo" name="" index="45"/>
+    <alias field="ws_inwinningsdatum_damo" name="" index="46"/>
+    <alias field="ws_inlaatfunctie_damo" name="" index="47"/>
+    <alias field="ws_afsluitwijze1_damo" name="" index="48"/>
+    <alias field="ws_afsluitwijze2_damo" name="" index="49"/>
+    <alias field="shape_length_damo" name="" index="50"/>
+    <alias field="origin_damo" name="" index="51"/>
+    <alias field="geom_type_damo" name="" index="52"/>
+    <alias field="geom_length_damo" name="" index="53"/>
+    <alias field="geom_area_damo" name="" index="54"/>
+    <alias field="dataset_damo" name="" index="55"/>
+    <alias field="in_both" name="" index="56"/>
+    <alias field="cmp_hoogtebinnenonderkantbov" name="" index="57"/>
+    <alias field="cmp_hoogtebinnenonderkantbov_change_NaN" name="" index="58"/>
+    <alias field="cmp_hoogtebinnenonderkantbov_priority" name="" index="59"/>
+    <alias field="cmp_hoogtebinnenonderkantbene" name="" index="60"/>
+    <alias field="cmp_hoogtebinnenonderkantbene_change_NaN" name="" index="61"/>
+    <alias field="cmp_hoogtebinnenonderkantbene_priority" name="" index="62"/>
+    <alias field="cmp_max_breedteopening" name="" index="63"/>
+    <alias field="cmp_max_breedteopening_change_NaN" name="" index="64"/>
+    <alias field="cmp_max_breedteopening_priority" name="" index="65"/>
+    <alias field="cmp_max_hoogteopening" name="" index="66"/>
+    <alias field="cmp_max_hoogteopening_change_NaN" name="" index="67"/>
+    <alias field="cmp_max_hoogteopening_priority" name="" index="68"/>
+    <alias field="number_of_info" name="" index="69"/>
+    <alias field="number_of_warning" name="" index="70"/>
+    <alias field="number_of_critical" name="" index="71"/>
+    <alias field="Summary_Critical" name="" index="72"/>
+    <alias field="Summary_Warnings" name="" index="73"/>
   </aliases>
   <splitPolicies>
     <policy field="fid" policy="Duplicate"/>
@@ -1718,32 +1811,50 @@
     <policy field="display_name_model" policy="Duplicate"/>
     <policy field="code" policy="Duplicate"/>
     <policy field="exchange_type_model" policy="Duplicate"/>
+    <policy field="friction_value_model" policy="Duplicate"/>
+    <policy field="friction_type_model" policy="Duplicate"/>
     <policy field="calculation_point_distance_model" policy="Duplicate"/>
+    <policy field="discharge_coefficient_positive_model" policy="Duplicate"/>
+    <policy field="discharge_coefficient_negative_model" policy="Duplicate"/>
+    <policy field="invert_level_start_model" policy="Duplicate"/>
+    <policy field="invert_level_end_model" policy="Duplicate"/>
     <policy field="connection_node_id_start_model" policy="Duplicate"/>
     <policy field="connection_node_id_end_model" policy="Duplicate"/>
-    <policy field="exchange_thickness_model" policy="Duplicate"/>
-    <policy field="hydraulic_conductivity_in_model" policy="Duplicate"/>
-    <policy field="hydraulic_conductivity_out_model" policy="Duplicate"/>
+    <policy field="cross_section_table_model" policy="Duplicate"/>
+    <policy field="cross_section_shape_model" policy="Duplicate"/>
+    <policy field="cross_section_width_model" policy="Duplicate"/>
+    <policy field="cross_section_height_model" policy="Duplicate"/>
     <policy field="tags_model" policy="Duplicate"/>
-    <policy field="id_model" policy="Duplicate"/>
+    <policy field="material_id_model" policy="Duplicate"/>
+    <policy field="cross_section_max_width_model" policy="Duplicate"/>
+    <policy field="cross_section_max_height_model" policy="Duplicate"/>
     <policy field="origin_model" policy="Duplicate"/>
+    <policy field="crest_type_model" policy="Duplicate"/>
+    <policy field="crest_level_model" policy="Duplicate"/>
+    <policy field="sewerage_model" policy="Duplicate"/>
     <policy field="geom_type_model" policy="Duplicate"/>
     <policy field="geom_length_model" policy="Duplicate"/>
     <policy field="geom_area_model" policy="Duplicate"/>
     <policy field="dataset_model" policy="Duplicate"/>
-    <policy field="ws_bodembreedte_damo" policy="Duplicate"/>
-    <policy field="hydroobject_id_damo" policy="Duplicate"/>
     <policy field="naam_damo" policy="Duplicate"/>
-    <policy field="soortoppwaterkwantiteit_damo" policy="Duplicate"/>
-    <policy field="categorieoppwaterlichaam_damo" policy="Duplicate"/>
-    <policy field="ws_bodemhoogte_damo" policy="Duplicate"/>
-    <policy field="ws_talud_links_damo" policy="Duplicate"/>
-    <policy field="ws_talud_rechts_damo" policy="Duplicate"/>
-    <policy field="ws_in_peilgebied_damo" policy="Duplicate"/>
-    <policy field="bodemhoogte_nap_damo" policy="Duplicate"/>
-    <policy field="breedte_getabuleerd_damo" policy="Duplicate"/>
-    <policy field="hoogte_getabuleerd_damo" policy="Duplicate"/>
-    <policy field="keuze_profiel_damo" policy="Duplicate"/>
+    <policy field="opmerking_damo" policy="Duplicate"/>
+    <policy field="indicatiewaterkerend_damo" policy="Duplicate"/>
+    <policy field="indpeilregulpeilscheidend_damo" policy="Duplicate"/>
+    <policy field="lengte_damo" policy="Duplicate"/>
+    <policy field="hoogteopening_damo" policy="Duplicate"/>
+    <policy field="breedteopening_damo" policy="Duplicate"/>
+    <policy field="hoogtebinnenonderkantbene_damo" policy="Duplicate"/>
+    <policy field="hoogtebinnenonderkantbov_damo" policy="Duplicate"/>
+    <policy field="vormkoker_damo" policy="Duplicate"/>
+    <policy field="soortmateriaal_damo" policy="Duplicate"/>
+    <policy field="typekruising_damo" policy="Duplicate"/>
+    <policy field="ws_categorie_damo" policy="Duplicate"/>
+    <policy field="ws_bron_damo" policy="Duplicate"/>
+    <policy field="ws_inwinningswijze_damo" policy="Duplicate"/>
+    <policy field="ws_inwinningsdatum_damo" policy="Duplicate"/>
+    <policy field="ws_inlaatfunctie_damo" policy="Duplicate"/>
+    <policy field="ws_afsluitwijze1_damo" policy="Duplicate"/>
+    <policy field="ws_afsluitwijze2_damo" policy="Duplicate"/>
     <policy field="shape_length_damo" policy="Duplicate"/>
     <policy field="origin_damo" policy="Duplicate"/>
     <policy field="geom_type_damo" policy="Duplicate"/>
@@ -1751,11 +1862,18 @@
     <policy field="geom_area_damo" policy="Duplicate"/>
     <policy field="dataset_damo" policy="Duplicate"/>
     <policy field="in_both" policy="Duplicate"/>
-    <policy field="cmp_geometry_type" policy="Duplicate"/>
-    <policy field="cmp_geometry_type_priority" policy="Duplicate"/>
-    <policy field="cmp_geometry_length" policy="Duplicate"/>
-    <policy field="cmp_geometry_length_change_NaN" policy="Duplicate"/>
-    <policy field="cmp_geometry_length_priority" policy="Duplicate"/>
+    <policy field="cmp_hoogtebinnenonderkantbov" policy="Duplicate"/>
+    <policy field="cmp_hoogtebinnenonderkantbov_change_NaN" policy="Duplicate"/>
+    <policy field="cmp_hoogtebinnenonderkantbov_priority" policy="Duplicate"/>
+    <policy field="cmp_hoogtebinnenonderkantbene" policy="Duplicate"/>
+    <policy field="cmp_hoogtebinnenonderkantbene_change_NaN" policy="Duplicate"/>
+    <policy field="cmp_hoogtebinnenonderkantbene_priority" policy="Duplicate"/>
+    <policy field="cmp_max_breedteopening" policy="Duplicate"/>
+    <policy field="cmp_max_breedteopening_change_NaN" policy="Duplicate"/>
+    <policy field="cmp_max_breedteopening_priority" policy="Duplicate"/>
+    <policy field="cmp_max_hoogteopening" policy="Duplicate"/>
+    <policy field="cmp_max_hoogteopening_change_NaN" policy="Duplicate"/>
+    <policy field="cmp_max_hoogteopening_priority" policy="Duplicate"/>
     <policy field="number_of_info" policy="Duplicate"/>
     <policy field="number_of_warning" policy="Duplicate"/>
     <policy field="number_of_critical" policy="Duplicate"/>
@@ -1769,32 +1887,50 @@
     <default field="display_name_model" applyOnUpdate="0" expression=""/>
     <default field="code" applyOnUpdate="0" expression=""/>
     <default field="exchange_type_model" applyOnUpdate="0" expression=""/>
+    <default field="friction_value_model" applyOnUpdate="0" expression=""/>
+    <default field="friction_type_model" applyOnUpdate="0" expression=""/>
     <default field="calculation_point_distance_model" applyOnUpdate="0" expression=""/>
+    <default field="discharge_coefficient_positive_model" applyOnUpdate="0" expression=""/>
+    <default field="discharge_coefficient_negative_model" applyOnUpdate="0" expression=""/>
+    <default field="invert_level_start_model" applyOnUpdate="0" expression=""/>
+    <default field="invert_level_end_model" applyOnUpdate="0" expression=""/>
     <default field="connection_node_id_start_model" applyOnUpdate="0" expression=""/>
     <default field="connection_node_id_end_model" applyOnUpdate="0" expression=""/>
-    <default field="exchange_thickness_model" applyOnUpdate="0" expression=""/>
-    <default field="hydraulic_conductivity_in_model" applyOnUpdate="0" expression=""/>
-    <default field="hydraulic_conductivity_out_model" applyOnUpdate="0" expression=""/>
+    <default field="cross_section_table_model" applyOnUpdate="0" expression=""/>
+    <default field="cross_section_shape_model" applyOnUpdate="0" expression=""/>
+    <default field="cross_section_width_model" applyOnUpdate="0" expression=""/>
+    <default field="cross_section_height_model" applyOnUpdate="0" expression=""/>
     <default field="tags_model" applyOnUpdate="0" expression=""/>
-    <default field="id_model" applyOnUpdate="0" expression=""/>
+    <default field="material_id_model" applyOnUpdate="0" expression=""/>
+    <default field="cross_section_max_width_model" applyOnUpdate="0" expression=""/>
+    <default field="cross_section_max_height_model" applyOnUpdate="0" expression=""/>
     <default field="origin_model" applyOnUpdate="0" expression=""/>
+    <default field="crest_type_model" applyOnUpdate="0" expression=""/>
+    <default field="crest_level_model" applyOnUpdate="0" expression=""/>
+    <default field="sewerage_model" applyOnUpdate="0" expression=""/>
     <default field="geom_type_model" applyOnUpdate="0" expression=""/>
     <default field="geom_length_model" applyOnUpdate="0" expression=""/>
     <default field="geom_area_model" applyOnUpdate="0" expression=""/>
     <default field="dataset_model" applyOnUpdate="0" expression=""/>
-    <default field="ws_bodembreedte_damo" applyOnUpdate="0" expression=""/>
-    <default field="hydroobject_id_damo" applyOnUpdate="0" expression=""/>
     <default field="naam_damo" applyOnUpdate="0" expression=""/>
-    <default field="soortoppwaterkwantiteit_damo" applyOnUpdate="0" expression=""/>
-    <default field="categorieoppwaterlichaam_damo" applyOnUpdate="0" expression=""/>
-    <default field="ws_bodemhoogte_damo" applyOnUpdate="0" expression=""/>
-    <default field="ws_talud_links_damo" applyOnUpdate="0" expression=""/>
-    <default field="ws_talud_rechts_damo" applyOnUpdate="0" expression=""/>
-    <default field="ws_in_peilgebied_damo" applyOnUpdate="0" expression=""/>
-    <default field="bodemhoogte_nap_damo" applyOnUpdate="0" expression=""/>
-    <default field="breedte_getabuleerd_damo" applyOnUpdate="0" expression=""/>
-    <default field="hoogte_getabuleerd_damo" applyOnUpdate="0" expression=""/>
-    <default field="keuze_profiel_damo" applyOnUpdate="0" expression=""/>
+    <default field="opmerking_damo" applyOnUpdate="0" expression=""/>
+    <default field="indicatiewaterkerend_damo" applyOnUpdate="0" expression=""/>
+    <default field="indpeilregulpeilscheidend_damo" applyOnUpdate="0" expression=""/>
+    <default field="lengte_damo" applyOnUpdate="0" expression=""/>
+    <default field="hoogteopening_damo" applyOnUpdate="0" expression=""/>
+    <default field="breedteopening_damo" applyOnUpdate="0" expression=""/>
+    <default field="hoogtebinnenonderkantbene_damo" applyOnUpdate="0" expression=""/>
+    <default field="hoogtebinnenonderkantbov_damo" applyOnUpdate="0" expression=""/>
+    <default field="vormkoker_damo" applyOnUpdate="0" expression=""/>
+    <default field="soortmateriaal_damo" applyOnUpdate="0" expression=""/>
+    <default field="typekruising_damo" applyOnUpdate="0" expression=""/>
+    <default field="ws_categorie_damo" applyOnUpdate="0" expression=""/>
+    <default field="ws_bron_damo" applyOnUpdate="0" expression=""/>
+    <default field="ws_inwinningswijze_damo" applyOnUpdate="0" expression=""/>
+    <default field="ws_inwinningsdatum_damo" applyOnUpdate="0" expression=""/>
+    <default field="ws_inlaatfunctie_damo" applyOnUpdate="0" expression=""/>
+    <default field="ws_afsluitwijze1_damo" applyOnUpdate="0" expression=""/>
+    <default field="ws_afsluitwijze2_damo" applyOnUpdate="0" expression=""/>
     <default field="shape_length_damo" applyOnUpdate="0" expression=""/>
     <default field="origin_damo" applyOnUpdate="0" expression=""/>
     <default field="geom_type_damo" applyOnUpdate="0" expression=""/>
@@ -1802,11 +1938,18 @@
     <default field="geom_area_damo" applyOnUpdate="0" expression=""/>
     <default field="dataset_damo" applyOnUpdate="0" expression=""/>
     <default field="in_both" applyOnUpdate="0" expression=""/>
-    <default field="cmp_geometry_type" applyOnUpdate="0" expression=""/>
-    <default field="cmp_geometry_type_priority" applyOnUpdate="0" expression=""/>
-    <default field="cmp_geometry_length" applyOnUpdate="0" expression=""/>
-    <default field="cmp_geometry_length_change_NaN" applyOnUpdate="0" expression=""/>
-    <default field="cmp_geometry_length_priority" applyOnUpdate="0" expression=""/>
+    <default field="cmp_hoogtebinnenonderkantbov" applyOnUpdate="0" expression=""/>
+    <default field="cmp_hoogtebinnenonderkantbov_change_NaN" applyOnUpdate="0" expression=""/>
+    <default field="cmp_hoogtebinnenonderkantbov_priority" applyOnUpdate="0" expression=""/>
+    <default field="cmp_hoogtebinnenonderkantbene" applyOnUpdate="0" expression=""/>
+    <default field="cmp_hoogtebinnenonderkantbene_change_NaN" applyOnUpdate="0" expression=""/>
+    <default field="cmp_hoogtebinnenonderkantbene_priority" applyOnUpdate="0" expression=""/>
+    <default field="cmp_max_breedteopening" applyOnUpdate="0" expression=""/>
+    <default field="cmp_max_breedteopening_change_NaN" applyOnUpdate="0" expression=""/>
+    <default field="cmp_max_breedteopening_priority" applyOnUpdate="0" expression=""/>
+    <default field="cmp_max_hoogteopening" applyOnUpdate="0" expression=""/>
+    <default field="cmp_max_hoogteopening_change_NaN" applyOnUpdate="0" expression=""/>
+    <default field="cmp_max_hoogteopening_priority" applyOnUpdate="0" expression=""/>
     <default field="number_of_info" applyOnUpdate="0" expression=""/>
     <default field="number_of_warning" applyOnUpdate="0" expression=""/>
     <default field="number_of_critical" applyOnUpdate="0" expression=""/>
@@ -1820,32 +1963,50 @@
     <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="display_name_model"/>
     <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="code"/>
     <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="exchange_type_model"/>
+    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="friction_value_model"/>
+    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="friction_type_model"/>
     <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="calculation_point_distance_model"/>
+    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="discharge_coefficient_positive_model"/>
+    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="discharge_coefficient_negative_model"/>
+    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="invert_level_start_model"/>
+    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="invert_level_end_model"/>
     <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="connection_node_id_start_model"/>
     <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="connection_node_id_end_model"/>
-    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="exchange_thickness_model"/>
-    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="hydraulic_conductivity_in_model"/>
-    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="hydraulic_conductivity_out_model"/>
+    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="cross_section_table_model"/>
+    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="cross_section_shape_model"/>
+    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="cross_section_width_model"/>
+    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="cross_section_height_model"/>
     <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="tags_model"/>
-    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="id_model"/>
+    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="material_id_model"/>
+    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="cross_section_max_width_model"/>
+    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="cross_section_max_height_model"/>
     <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="origin_model"/>
+    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="crest_type_model"/>
+    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="crest_level_model"/>
+    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="sewerage_model"/>
     <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="geom_type_model"/>
     <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="geom_length_model"/>
     <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="geom_area_model"/>
     <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="dataset_model"/>
-    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="ws_bodembreedte_damo"/>
-    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="hydroobject_id_damo"/>
     <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="naam_damo"/>
-    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="soortoppwaterkwantiteit_damo"/>
-    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="categorieoppwaterlichaam_damo"/>
-    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="ws_bodemhoogte_damo"/>
-    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="ws_talud_links_damo"/>
-    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="ws_talud_rechts_damo"/>
-    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="ws_in_peilgebied_damo"/>
-    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="bodemhoogte_nap_damo"/>
-    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="breedte_getabuleerd_damo"/>
-    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="hoogte_getabuleerd_damo"/>
-    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="keuze_profiel_damo"/>
+    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="opmerking_damo"/>
+    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="indicatiewaterkerend_damo"/>
+    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="indpeilregulpeilscheidend_damo"/>
+    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="lengte_damo"/>
+    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="hoogteopening_damo"/>
+    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="breedteopening_damo"/>
+    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="hoogtebinnenonderkantbene_damo"/>
+    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="hoogtebinnenonderkantbov_damo"/>
+    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="vormkoker_damo"/>
+    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="soortmateriaal_damo"/>
+    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="typekruising_damo"/>
+    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="ws_categorie_damo"/>
+    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="ws_bron_damo"/>
+    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="ws_inwinningswijze_damo"/>
+    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="ws_inwinningsdatum_damo"/>
+    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="ws_inlaatfunctie_damo"/>
+    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="ws_afsluitwijze1_damo"/>
+    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="ws_afsluitwijze2_damo"/>
     <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="shape_length_damo"/>
     <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="origin_damo"/>
     <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="geom_type_damo"/>
@@ -1853,11 +2014,18 @@
     <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="geom_area_damo"/>
     <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="dataset_damo"/>
     <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="in_both"/>
-    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="cmp_geometry_type"/>
-    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="cmp_geometry_type_priority"/>
-    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="cmp_geometry_length"/>
-    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="cmp_geometry_length_change_NaN"/>
-    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="cmp_geometry_length_priority"/>
+    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="cmp_hoogtebinnenonderkantbov"/>
+    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="cmp_hoogtebinnenonderkantbov_change_NaN"/>
+    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="cmp_hoogtebinnenonderkantbov_priority"/>
+    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="cmp_hoogtebinnenonderkantbene"/>
+    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="cmp_hoogtebinnenonderkantbene_change_NaN"/>
+    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="cmp_hoogtebinnenonderkantbene_priority"/>
+    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="cmp_max_breedteopening"/>
+    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="cmp_max_breedteopening_change_NaN"/>
+    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="cmp_max_breedteopening_priority"/>
+    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="cmp_max_hoogteopening"/>
+    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="cmp_max_hoogteopening_change_NaN"/>
+    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="cmp_max_hoogteopening_priority"/>
     <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="number_of_info"/>
     <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="number_of_warning"/>
     <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="number_of_critical"/>
@@ -1871,32 +2039,50 @@
     <constraint field="display_name_model" desc="" exp=""/>
     <constraint field="code" desc="" exp=""/>
     <constraint field="exchange_type_model" desc="" exp=""/>
+    <constraint field="friction_value_model" desc="" exp=""/>
+    <constraint field="friction_type_model" desc="" exp=""/>
     <constraint field="calculation_point_distance_model" desc="" exp=""/>
+    <constraint field="discharge_coefficient_positive_model" desc="" exp=""/>
+    <constraint field="discharge_coefficient_negative_model" desc="" exp=""/>
+    <constraint field="invert_level_start_model" desc="" exp=""/>
+    <constraint field="invert_level_end_model" desc="" exp=""/>
     <constraint field="connection_node_id_start_model" desc="" exp=""/>
     <constraint field="connection_node_id_end_model" desc="" exp=""/>
-    <constraint field="exchange_thickness_model" desc="" exp=""/>
-    <constraint field="hydraulic_conductivity_in_model" desc="" exp=""/>
-    <constraint field="hydraulic_conductivity_out_model" desc="" exp=""/>
+    <constraint field="cross_section_table_model" desc="" exp=""/>
+    <constraint field="cross_section_shape_model" desc="" exp=""/>
+    <constraint field="cross_section_width_model" desc="" exp=""/>
+    <constraint field="cross_section_height_model" desc="" exp=""/>
     <constraint field="tags_model" desc="" exp=""/>
-    <constraint field="id_model" desc="" exp=""/>
+    <constraint field="material_id_model" desc="" exp=""/>
+    <constraint field="cross_section_max_width_model" desc="" exp=""/>
+    <constraint field="cross_section_max_height_model" desc="" exp=""/>
     <constraint field="origin_model" desc="" exp=""/>
+    <constraint field="crest_type_model" desc="" exp=""/>
+    <constraint field="crest_level_model" desc="" exp=""/>
+    <constraint field="sewerage_model" desc="" exp=""/>
     <constraint field="geom_type_model" desc="" exp=""/>
     <constraint field="geom_length_model" desc="" exp=""/>
     <constraint field="geom_area_model" desc="" exp=""/>
     <constraint field="dataset_model" desc="" exp=""/>
-    <constraint field="ws_bodembreedte_damo" desc="" exp=""/>
-    <constraint field="hydroobject_id_damo" desc="" exp=""/>
     <constraint field="naam_damo" desc="" exp=""/>
-    <constraint field="soortoppwaterkwantiteit_damo" desc="" exp=""/>
-    <constraint field="categorieoppwaterlichaam_damo" desc="" exp=""/>
-    <constraint field="ws_bodemhoogte_damo" desc="" exp=""/>
-    <constraint field="ws_talud_links_damo" desc="" exp=""/>
-    <constraint field="ws_talud_rechts_damo" desc="" exp=""/>
-    <constraint field="ws_in_peilgebied_damo" desc="" exp=""/>
-    <constraint field="bodemhoogte_nap_damo" desc="" exp=""/>
-    <constraint field="breedte_getabuleerd_damo" desc="" exp=""/>
-    <constraint field="hoogte_getabuleerd_damo" desc="" exp=""/>
-    <constraint field="keuze_profiel_damo" desc="" exp=""/>
+    <constraint field="opmerking_damo" desc="" exp=""/>
+    <constraint field="indicatiewaterkerend_damo" desc="" exp=""/>
+    <constraint field="indpeilregulpeilscheidend_damo" desc="" exp=""/>
+    <constraint field="lengte_damo" desc="" exp=""/>
+    <constraint field="hoogteopening_damo" desc="" exp=""/>
+    <constraint field="breedteopening_damo" desc="" exp=""/>
+    <constraint field="hoogtebinnenonderkantbene_damo" desc="" exp=""/>
+    <constraint field="hoogtebinnenonderkantbov_damo" desc="" exp=""/>
+    <constraint field="vormkoker_damo" desc="" exp=""/>
+    <constraint field="soortmateriaal_damo" desc="" exp=""/>
+    <constraint field="typekruising_damo" desc="" exp=""/>
+    <constraint field="ws_categorie_damo" desc="" exp=""/>
+    <constraint field="ws_bron_damo" desc="" exp=""/>
+    <constraint field="ws_inwinningswijze_damo" desc="" exp=""/>
+    <constraint field="ws_inwinningsdatum_damo" desc="" exp=""/>
+    <constraint field="ws_inlaatfunctie_damo" desc="" exp=""/>
+    <constraint field="ws_afsluitwijze1_damo" desc="" exp=""/>
+    <constraint field="ws_afsluitwijze2_damo" desc="" exp=""/>
     <constraint field="shape_length_damo" desc="" exp=""/>
     <constraint field="origin_damo" desc="" exp=""/>
     <constraint field="geom_type_damo" desc="" exp=""/>
@@ -1904,11 +2090,18 @@
     <constraint field="geom_area_damo" desc="" exp=""/>
     <constraint field="dataset_damo" desc="" exp=""/>
     <constraint field="in_both" desc="" exp=""/>
-    <constraint field="cmp_geometry_type" desc="" exp=""/>
-    <constraint field="cmp_geometry_type_priority" desc="" exp=""/>
-    <constraint field="cmp_geometry_length" desc="" exp=""/>
-    <constraint field="cmp_geometry_length_change_NaN" desc="" exp=""/>
-    <constraint field="cmp_geometry_length_priority" desc="" exp=""/>
+    <constraint field="cmp_hoogtebinnenonderkantbov" desc="" exp=""/>
+    <constraint field="cmp_hoogtebinnenonderkantbov_change_NaN" desc="" exp=""/>
+    <constraint field="cmp_hoogtebinnenonderkantbov_priority" desc="" exp=""/>
+    <constraint field="cmp_hoogtebinnenonderkantbene" desc="" exp=""/>
+    <constraint field="cmp_hoogtebinnenonderkantbene_change_NaN" desc="" exp=""/>
+    <constraint field="cmp_hoogtebinnenonderkantbene_priority" desc="" exp=""/>
+    <constraint field="cmp_max_breedteopening" desc="" exp=""/>
+    <constraint field="cmp_max_breedteopening_change_NaN" desc="" exp=""/>
+    <constraint field="cmp_max_breedteopening_priority" desc="" exp=""/>
+    <constraint field="cmp_max_hoogteopening" desc="" exp=""/>
+    <constraint field="cmp_max_hoogteopening_change_NaN" desc="" exp=""/>
+    <constraint field="cmp_max_hoogteopening_priority" desc="" exp=""/>
     <constraint field="number_of_info" desc="" exp=""/>
     <constraint field="number_of_warning" desc="" exp=""/>
     <constraint field="number_of_critical" desc="" exp=""/>
@@ -1919,52 +2112,77 @@
   <attributeactions>
     <defaultAction key="Canvas" value="{00000000-0000-0000-0000-000000000000}"/>
   </attributeactions>
-  <attributetableconfig actionWidgetStyle="dropDown" sortOrder="0" sortExpression="&quot;in_both&quot;">
+  <attributetableconfig actionWidgetStyle="dropDown" sortOrder="0" sortExpression="">
     <columns>
       <column type="field" width="-1" name="fid" hidden="0"/>
       <column type="field" width="-1" name="level_0" hidden="0"/>
       <column type="field" width="-1" name="level_1" hidden="0"/>
       <column type="field" width="-1" name="display_name_model" hidden="0"/>
       <column type="field" width="-1" name="code" hidden="0"/>
+      <column type="field" width="-1" name="exchange_type_model" hidden="0"/>
+      <column type="field" width="-1" name="friction_value_model" hidden="0"/>
+      <column type="field" width="-1" name="friction_type_model" hidden="0"/>
+      <column type="field" width="-1" name="calculation_point_distance_model" hidden="0"/>
+      <column type="field" width="-1" name="discharge_coefficient_positive_model" hidden="0"/>
+      <column type="field" width="-1" name="discharge_coefficient_negative_model" hidden="0"/>
+      <column type="field" width="-1" name="invert_level_start_model" hidden="0"/>
+      <column type="field" width="-1" name="invert_level_end_model" hidden="0"/>
+      <column type="field" width="-1" name="connection_node_id_start_model" hidden="0"/>
+      <column type="field" width="-1" name="connection_node_id_end_model" hidden="0"/>
+      <column type="field" width="-1" name="cross_section_table_model" hidden="0"/>
+      <column type="field" width="-1" name="cross_section_shape_model" hidden="0"/>
+      <column type="field" width="-1" name="cross_section_width_model" hidden="0"/>
+      <column type="field" width="-1" name="cross_section_height_model" hidden="0"/>
+      <column type="field" width="-1" name="tags_model" hidden="0"/>
+      <column type="field" width="-1" name="material_id_model" hidden="0"/>
+      <column type="field" width="-1" name="cross_section_max_width_model" hidden="0"/>
+      <column type="field" width="-1" name="cross_section_max_height_model" hidden="0"/>
       <column type="field" width="-1" name="origin_model" hidden="0"/>
+      <column type="field" width="-1" name="crest_type_model" hidden="0"/>
+      <column type="field" width="-1" name="crest_level_model" hidden="0"/>
+      <column type="field" width="-1" name="sewerage_model" hidden="0"/>
       <column type="field" width="-1" name="geom_type_model" hidden="0"/>
       <column type="field" width="-1" name="geom_length_model" hidden="0"/>
       <column type="field" width="-1" name="geom_area_model" hidden="0"/>
       <column type="field" width="-1" name="dataset_model" hidden="0"/>
+      <column type="field" width="-1" name="naam_damo" hidden="0"/>
+      <column type="field" width="-1" name="opmerking_damo" hidden="0"/>
+      <column type="field" width="-1" name="indicatiewaterkerend_damo" hidden="0"/>
+      <column type="field" width="-1" name="indpeilregulpeilscheidend_damo" hidden="0"/>
+      <column type="field" width="-1" name="lengte_damo" hidden="0"/>
+      <column type="field" width="125" name="hoogteopening_damo" hidden="0"/>
+      <column type="field" width="130" name="breedteopening_damo" hidden="0"/>
+      <column type="field" width="204" name="hoogtebinnenonderkantbene_damo" hidden="0"/>
+      <column type="field" width="197" name="hoogtebinnenonderkantbov_damo" hidden="0"/>
+      <column type="field" width="-1" name="vormkoker_damo" hidden="0"/>
+      <column type="field" width="-1" name="soortmateriaal_damo" hidden="0"/>
+      <column type="field" width="109" name="typekruising_damo" hidden="0"/>
+      <column type="field" width="113" name="ws_categorie_damo" hidden="0"/>
+      <column type="field" width="-1" name="ws_bron_damo" hidden="0"/>
+      <column type="field" width="-1" name="ws_inwinningswijze_damo" hidden="0"/>
+      <column type="field" width="-1" name="ws_inwinningsdatum_damo" hidden="0"/>
+      <column type="field" width="-1" name="ws_inlaatfunctie_damo" hidden="0"/>
+      <column type="field" width="-1" name="ws_afsluitwijze1_damo" hidden="0"/>
+      <column type="field" width="-1" name="ws_afsluitwijze2_damo" hidden="0"/>
+      <column type="field" width="-1" name="shape_length_damo" hidden="0"/>
+      <column type="field" width="-1" name="origin_damo" hidden="0"/>
       <column type="field" width="-1" name="geom_type_damo" hidden="0"/>
       <column type="field" width="-1" name="geom_length_damo" hidden="0"/>
       <column type="field" width="-1" name="geom_area_damo" hidden="0"/>
       <column type="field" width="-1" name="dataset_damo" hidden="0"/>
-      <column type="field" width="-1" name="origin_damo" hidden="0"/>
       <column type="field" width="-1" name="in_both" hidden="0"/>
-      <column type="field" width="-1" name="connection_node_id_start_model" hidden="0"/>
-      <column type="field" width="-1" name="connection_node_id_end_model" hidden="0"/>
-      <column type="field" width="-1" name="tags_model" hidden="0"/>
-      <column type="field" width="-1" name="exchange_type_model" hidden="0"/>
-      <column type="field" width="-1" name="calculation_point_distance_model" hidden="0"/>
-      <column type="field" width="-1" name="naam_damo" hidden="0"/>
-      <column type="field" width="-1" name="shape_length_damo" hidden="0"/>
-      <column type="field" width="-1" name="exchange_thickness_model" hidden="0"/>
-      <column type="field" width="-1" name="hydraulic_conductivity_in_model" hidden="0"/>
-      <column type="field" width="-1" name="hydraulic_conductivity_out_model" hidden="0"/>
-      <column type="field" width="-1" name="id_model" hidden="0"/>
-      <column type="field" width="-1" name="ws_bodembreedte_damo" hidden="0"/>
-      <column type="field" width="-1" name="hydroobject_id_damo" hidden="0"/>
-      <column type="field" width="-1" name="soortoppwaterkwantiteit_damo" hidden="0"/>
-      <column type="field" width="210" name="categorieoppwaterlichaam_damo" hidden="0"/>
-      <column type="field" width="-1" name="ws_bodemhoogte_damo" hidden="0"/>
-      <column type="field" width="-1" name="ws_talud_links_damo" hidden="0"/>
-      <column type="field" width="-1" name="ws_talud_rechts_damo" hidden="0"/>
-      <column type="field" width="-1" name="ws_in_peilgebied_damo" hidden="0"/>
-      <column type="field" width="-1" name="bodemhoogte_nap_damo" hidden="0"/>
-      <column type="field" width="-1" name="breedte_getabuleerd_damo" hidden="0"/>
-      <column type="field" width="-1" name="hoogte_getabuleerd_damo" hidden="0"/>
-      <column type="field" width="-1" name="keuze_profiel_damo" hidden="0"/>
-      <column type="field" width="-1" name="cmp_geometry_type" hidden="0"/>
-      <column type="field" width="-1" name="cmp_geometry_type_priority" hidden="0"/>
-      <column type="field" width="-1" name="cmp_geometry_length" hidden="0"/>
-      <column type="field" width="-1" name="cmp_geometry_length_change_NaN" hidden="0"/>
-      <column type="field" width="-1" name="cmp_geometry_length_priority" hidden="0"/>
+      <column type="field" width="-1" name="cmp_hoogtebinnenonderkantbov" hidden="0"/>
+      <column type="field" width="-1" name="cmp_hoogtebinnenonderkantbov_change_NaN" hidden="0"/>
+      <column type="field" width="-1" name="cmp_hoogtebinnenonderkantbov_priority" hidden="0"/>
+      <column type="field" width="-1" name="cmp_hoogtebinnenonderkantbene" hidden="0"/>
+      <column type="field" width="-1" name="cmp_hoogtebinnenonderkantbene_change_NaN" hidden="0"/>
+      <column type="field" width="-1" name="cmp_hoogtebinnenonderkantbene_priority" hidden="0"/>
+      <column type="field" width="-1" name="cmp_max_breedteopening" hidden="0"/>
+      <column type="field" width="-1" name="cmp_max_breedteopening_change_NaN" hidden="0"/>
+      <column type="field" width="-1" name="cmp_max_breedteopening_priority" hidden="0"/>
+      <column type="field" width="-1" name="cmp_max_hoogteopening" hidden="0"/>
+      <column type="field" width="-1" name="cmp_max_hoogteopening_change_NaN" hidden="0"/>
+      <column type="field" width="-1" name="cmp_max_hoogteopening_priority" hidden="0"/>
       <column type="field" width="-1" name="number_of_info" hidden="0"/>
       <column type="field" width="-1" name="number_of_warning" hidden="0"/>
       <column type="field" width="-1" name="number_of_critical" hidden="0"/>
@@ -2005,16 +2223,16 @@ def my_form_open(dialog, layer, feature):
     <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
       <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
     </labelStyle>
-    <attributeEditorContainer type="GroupBox" collapsedExpression="" verticalStretch="0" groupBox="1" horizontalStretch="0" visibilityExpression="" name="Raport" columnCount="1" collapsed="0" collapsedExpressionEnabled="0" showLabel="1" visibilityExpressionEnabled="0">
+    <attributeEditorContainer type="GroupBox" collapsedExpression="" verticalStretch="0" groupBox="1" horizontalStretch="0" visibilityExpression="" name="Report" columnCount="1" collapsed="0" collapsedExpressionEnabled="0" showLabel="1" visibilityExpressionEnabled="0">
       <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
         <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
       </labelStyle>
-      <attributeEditorField verticalStretch="0" horizontalStretch="0" name="Summary_Critical" showLabel="1" index="47">
+      <attributeEditorField verticalStretch="0" horizontalStretch="0" name="Summary_Critical" showLabel="1" index="72">
         <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
           <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
         </labelStyle>
       </attributeEditorField>
-      <attributeEditorField verticalStretch="0" horizontalStretch="0" name="Summary_Warnings" showLabel="1" index="48">
+      <attributeEditorField verticalStretch="0" horizontalStretch="0" name="Summary_Warnings" showLabel="1" index="73">
         <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
           <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
         </labelStyle>
@@ -2039,7 +2257,7 @@ def my_form_open(dialog, layer, feature):
           <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
         </labelStyle>
       </attributeEditorField>
-      <attributeEditorField verticalStretch="0" horizontalStretch="0" name="ws_categorie_damo" showLabel="1" index="-1">
+      <attributeEditorField verticalStretch="0" horizontalStretch="0" name="ws_categorie_damo" showLabel="1" index="43">
         <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
           <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
         </labelStyle>
@@ -2053,12 +2271,12 @@ def my_form_open(dialog, layer, feature):
         <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
           <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
         </labelStyle>
-        <attributeEditorField verticalStretch="0" horizontalStretch="0" name="dataset_model" showLabel="1" index="18">
+        <attributeEditorField verticalStretch="0" horizontalStretch="0" name="dataset_model" showLabel="1" index="30">
           <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
             <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
           </labelStyle>
         </attributeEditorField>
-        <attributeEditorField verticalStretch="0" horizontalStretch="0" name="dataset_damo" showLabel="1" index="37">
+        <attributeEditorField verticalStretch="0" horizontalStretch="0" name="dataset_damo" showLabel="1" index="55">
           <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
             <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
           </labelStyle>
@@ -2068,18 +2286,138 @@ def my_form_open(dialog, layer, feature):
         <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
           <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
         </labelStyle>
-        <attributeEditorField verticalStretch="0" horizontalStretch="0" name="origin_model" showLabel="1" index="14">
+        <attributeEditorField verticalStretch="0" horizontalStretch="0" name="origin_model" showLabel="1" index="23">
           <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
             <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
           </labelStyle>
         </attributeEditorField>
-        <attributeEditorField verticalStretch="0" horizontalStretch="0" name="origin_damo" showLabel="1" index="33">
+        <attributeEditorField verticalStretch="0" horizontalStretch="0" name="origin_damo" showLabel="1" index="51">
           <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
             <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
           </labelStyle>
         </attributeEditorField>
       </attributeEditorContainer>
-      <attributeEditorField verticalStretch="0" horizontalStretch="0" name="in_both" showLabel="1" index="38">
+      <attributeEditorField verticalStretch="0" horizontalStretch="0" name="in_both" showLabel="1" index="56">
+        <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
+          <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+        </labelStyle>
+      </attributeEditorField>
+    </attributeEditorContainer>
+    <attributeEditorContainer type="Tab" collapsedExpression="" verticalStretch="0" groupBox="0" horizontalStretch="0" visibilityExpression="" name="Invert_level_end_model" columnCount="1" collapsed="0" collapsedExpressionEnabled="0" showLabel="1" visibilityExpressionEnabled="0">
+      <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="1">
+        <labelFont style="" bold="1" description="MS Shell Dlg 2,8.25,-1,5,75,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+      </labelStyle>
+      <attributeEditorField verticalStretch="0" horizontalStretch="0" name="hoogtebinnenonderkantbene_damo" showLabel="1" index="38">
+        <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
+          <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+        </labelStyle>
+      </attributeEditorField>
+      <attributeEditorField verticalStretch="0" horizontalStretch="0" name="invert_level_end_model" showLabel="1" index="12">
+        <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
+          <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+        </labelStyle>
+      </attributeEditorField>
+      <attributeEditorField verticalStretch="0" horizontalStretch="0" name="cmp_hoogtebinnenonderkantbene" showLabel="1" index="60">
+        <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
+          <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+        </labelStyle>
+      </attributeEditorField>
+      <attributeEditorField verticalStretch="0" horizontalStretch="0" name="cmp_hoogtebinnenonderkantbene_change_NaN" showLabel="1" index="61">
+        <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
+          <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+        </labelStyle>
+      </attributeEditorField>
+      <attributeEditorField verticalStretch="0" horizontalStretch="0" name="cmp_hoogtebinnenonderkantbene_priority" showLabel="1" index="62">
+        <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
+          <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+        </labelStyle>
+      </attributeEditorField>
+    </attributeEditorContainer>
+    <attributeEditorContainer type="Tab" collapsedExpression="" verticalStretch="0" groupBox="0" horizontalStretch="0" visibilityExpression="" name="Invert_level_start_model" columnCount="1" collapsed="0" collapsedExpressionEnabled="0" showLabel="1" visibilityExpressionEnabled="0">
+      <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="1">
+        <labelFont style="" bold="1" description="MS Shell Dlg 2,8.25,-1,5,75,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+      </labelStyle>
+      <attributeEditorField verticalStretch="0" horizontalStretch="0" name="invert_level_start_model" showLabel="1" index="11">
+        <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
+          <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+        </labelStyle>
+      </attributeEditorField>
+      <attributeEditorField verticalStretch="0" horizontalStretch="0" name="hoogtebinnenonderkantbov_damo" showLabel="1" index="39">
+        <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
+          <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+        </labelStyle>
+      </attributeEditorField>
+      <attributeEditorField verticalStretch="0" horizontalStretch="0" name="cmp_hoogtebinnenonderkantbov_priority" showLabel="1" index="59">
+        <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
+          <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+        </labelStyle>
+      </attributeEditorField>
+      <attributeEditorField verticalStretch="0" horizontalStretch="0" name="cmp_hoogtebinnenonderkantbov" showLabel="1" index="57">
+        <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
+          <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+        </labelStyle>
+      </attributeEditorField>
+      <attributeEditorField verticalStretch="0" horizontalStretch="0" name="cmp_hoogtebinnenonderkantbov_change_NaN" showLabel="1" index="58">
+        <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
+          <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+        </labelStyle>
+      </attributeEditorField>
+    </attributeEditorContainer>
+    <attributeEditorContainer type="Tab" collapsedExpression="" verticalStretch="0" groupBox="0" horizontalStretch="0" visibilityExpression="" name="Hoogteopening" columnCount="1" collapsed="0" collapsedExpressionEnabled="0" showLabel="1" visibilityExpressionEnabled="0">
+      <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="1">
+        <labelFont style="" bold="1" description="MS Shell Dlg 2,8.25,-1,5,75,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+      </labelStyle>
+      <attributeEditorField verticalStretch="0" horizontalStretch="0" name="cross_section_max_height_model" showLabel="1" index="22">
+        <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
+          <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+        </labelStyle>
+      </attributeEditorField>
+      <attributeEditorField verticalStretch="0" horizontalStretch="0" name="hoogteopening_damo" showLabel="1" index="36">
+        <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
+          <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+        </labelStyle>
+      </attributeEditorField>
+      <attributeEditorField verticalStretch="0" horizontalStretch="0" name="cmp_max_hoogteopening_priority" showLabel="1" index="68">
+        <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
+          <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+        </labelStyle>
+      </attributeEditorField>
+      <attributeEditorField verticalStretch="0" horizontalStretch="0" name="cmp_max_hoogteopening" showLabel="1" index="66">
+        <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
+          <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+        </labelStyle>
+      </attributeEditorField>
+      <attributeEditorField verticalStretch="0" horizontalStretch="0" name="cmp_max_hoogteopening_change_NaN" showLabel="1" index="67">
+        <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
+          <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+        </labelStyle>
+      </attributeEditorField>
+    </attributeEditorContainer>
+    <attributeEditorContainer type="Tab" collapsedExpression="" verticalStretch="0" groupBox="0" horizontalStretch="0" visibilityExpression="" name="Breedteopening" columnCount="1" collapsed="0" collapsedExpressionEnabled="0" showLabel="1" visibilityExpressionEnabled="0">
+      <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="1">
+        <labelFont style="" bold="1" description="MS Shell Dlg 2,8.25,-1,5,75,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+      </labelStyle>
+      <attributeEditorField verticalStretch="0" horizontalStretch="0" name="cross_section_width_model" showLabel="1" index="17">
+        <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
+          <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+        </labelStyle>
+      </attributeEditorField>
+      <attributeEditorField verticalStretch="0" horizontalStretch="0" name="breedteopening_damo" showLabel="1" index="37">
+        <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
+          <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+        </labelStyle>
+      </attributeEditorField>
+      <attributeEditorField verticalStretch="0" horizontalStretch="0" name="cmp_max_breedteopening" showLabel="1" index="63">
+        <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
+          <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+        </labelStyle>
+      </attributeEditorField>
+      <attributeEditorField verticalStretch="0" horizontalStretch="0" name="cmp_max_breedteopening_change_NaN" showLabel="1" index="64">
+        <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
+          <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+        </labelStyle>
+      </attributeEditorField>
+      <attributeEditorField verticalStretch="0" horizontalStretch="0" name="cmp_max_breedteopening_priority" showLabel="1" index="65">
         <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
           <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
         </labelStyle>
@@ -2093,22 +2431,22 @@ def my_form_open(dialog, layer, feature):
         <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
           <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
         </labelStyle>
-        <attributeEditorField verticalStretch="0" horizontalStretch="0" name="geom_type_model" showLabel="1" index="15">
+        <attributeEditorField verticalStretch="0" horizontalStretch="0" name="geom_type_model" showLabel="1" index="27">
           <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
             <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
           </labelStyle>
         </attributeEditorField>
-        <attributeEditorField verticalStretch="0" horizontalStretch="0" name="geom_type_damo" showLabel="1" index="34">
+        <attributeEditorField verticalStretch="0" horizontalStretch="0" name="geom_type_damo" showLabel="1" index="52">
           <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
             <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
           </labelStyle>
         </attributeEditorField>
-        <attributeEditorField verticalStretch="0" horizontalStretch="0" name="cmp_geometry_type_priority" showLabel="1" index="40">
+        <attributeEditorField verticalStretch="0" horizontalStretch="0" name="cmp_geometry_type_priority" showLabel="1" index="-1">
           <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
             <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
           </labelStyle>
         </attributeEditorField>
-        <attributeEditorField verticalStretch="0" horizontalStretch="0" name="cmp_geometry_type" showLabel="1" index="39">
+        <attributeEditorField verticalStretch="0" horizontalStretch="0" name="cmp_geometry_type" showLabel="1" index="-1">
           <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
             <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
           </labelStyle>
@@ -2118,27 +2456,27 @@ def my_form_open(dialog, layer, feature):
         <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
           <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
         </labelStyle>
-        <attributeEditorField verticalStretch="0" horizontalStretch="0" name="geom_length_model" showLabel="1" index="16">
+        <attributeEditorField verticalStretch="0" horizontalStretch="0" name="geom_length_model" showLabel="1" index="28">
           <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
             <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
           </labelStyle>
         </attributeEditorField>
-        <attributeEditorField verticalStretch="0" horizontalStretch="0" name="geom_length_damo" showLabel="1" index="35">
+        <attributeEditorField verticalStretch="0" horizontalStretch="0" name="geom_length_damo" showLabel="1" index="53">
           <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
             <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
           </labelStyle>
         </attributeEditorField>
-        <attributeEditorField verticalStretch="0" horizontalStretch="0" name="cmp_geometry_length_priority" showLabel="1" index="43">
+        <attributeEditorField verticalStretch="0" horizontalStretch="0" name="cmp_geometry_length_priority" showLabel="1" index="-1">
           <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
             <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
           </labelStyle>
         </attributeEditorField>
-        <attributeEditorField verticalStretch="0" horizontalStretch="0" name="cmp_geometry_length_change_NaN" showLabel="1" index="42">
+        <attributeEditorField verticalStretch="0" horizontalStretch="0" name="cmp_geometry_length_change_NaN" showLabel="1" index="-1">
           <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
             <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
           </labelStyle>
         </attributeEditorField>
-        <attributeEditorField verticalStretch="0" horizontalStretch="0" name="cmp_geometry_length" showLabel="1" index="41">
+        <attributeEditorField verticalStretch="0" horizontalStretch="0" name="cmp_geometry_length" showLabel="1" index="-1">
           <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
             <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
           </labelStyle>
@@ -2207,7 +2545,6 @@ def my_form_open(dialog, layer, feature):
     <field editable="1" name="display_name_model"/>
     <field editable="1" name="dist_calc_points_model"/>
     <field editable="1" name="doorvaartbreedte_damo"/>
-    <field editable="1" name="exchange_thickness_model"/>
     <field editable="1" name="exchange_type_model"/>
     <field editable="1" name="fid"/>
     <field editable="1" name="friction_type_model"/>
@@ -2223,8 +2560,6 @@ def my_form_open(dialog, layer, feature):
     <field editable="1" name="hoogtebinnenonderkantbov_damo"/>
     <field editable="1" name="hoogteonderzijde_damo"/>
     <field editable="1" name="hoogteopening_damo"/>
-    <field editable="1" name="hydraulic_conductivity_in_model"/>
-    <field editable="1" name="hydraulic_conductivity_out_model"/>
     <field editable="1" name="hydroobject_id_damo"/>
     <field editable="1" name="id_end_model"/>
     <field editable="1" name="id_model"/>
@@ -2332,7 +2667,6 @@ def my_form_open(dialog, layer, feature):
     <field labelOnTop="0" name="display_name_model"/>
     <field labelOnTop="0" name="dist_calc_points_model"/>
     <field labelOnTop="0" name="doorvaartbreedte_damo"/>
-    <field labelOnTop="0" name="exchange_thickness_model"/>
     <field labelOnTop="0" name="exchange_type_model"/>
     <field labelOnTop="0" name="fid"/>
     <field labelOnTop="0" name="friction_type_model"/>
@@ -2348,8 +2682,6 @@ def my_form_open(dialog, layer, feature):
     <field labelOnTop="0" name="hoogtebinnenonderkantbov_damo"/>
     <field labelOnTop="0" name="hoogteonderzijde_damo"/>
     <field labelOnTop="0" name="hoogteopening_damo"/>
-    <field labelOnTop="0" name="hydraulic_conductivity_in_model"/>
-    <field labelOnTop="0" name="hydraulic_conductivity_out_model"/>
     <field labelOnTop="0" name="hydroobject_id_damo"/>
     <field labelOnTop="0" name="id_end_model"/>
     <field labelOnTop="0" name="id_model"/>
@@ -2457,7 +2789,6 @@ def my_form_open(dialog, layer, feature):
     <field name="display_name_model" reuseLastValue="0"/>
     <field name="dist_calc_points_model" reuseLastValue="0"/>
     <field name="doorvaartbreedte_damo" reuseLastValue="0"/>
-    <field name="exchange_thickness_model" reuseLastValue="0"/>
     <field name="exchange_type_model" reuseLastValue="0"/>
     <field name="fid" reuseLastValue="0"/>
     <field name="friction_type_model" reuseLastValue="0"/>
@@ -2473,8 +2804,6 @@ def my_form_open(dialog, layer, feature):
     <field name="hoogtebinnenonderkantbov_damo" reuseLastValue="0"/>
     <field name="hoogteonderzijde_damo" reuseLastValue="0"/>
     <field name="hoogteopening_damo" reuseLastValue="0"/>
-    <field name="hydraulic_conductivity_in_model" reuseLastValue="0"/>
-    <field name="hydraulic_conductivity_out_model" reuseLastValue="0"/>
     <field name="hydroobject_id_damo" reuseLastValue="0"/>
     <field name="id_end_model" reuseLastValue="0"/>
     <field name="id_model" reuseLastValue="0"/>

@@ -212,7 +212,7 @@ if __name__ == "__main__":
     layer_selection = False
     layers_input_damo_selection = ["AfvoergebiedAanvoergebied", "PeilafwijkingGebied", "PeilgebiedPraktijk"]
     layers_input_hdb_selection = ["Levee_overstromingsmodel", "Sturing_3Di"]
-    fn_threedi_comparison_export = out_put_files / "Threedi_comparison_71.gpkg"
+    fn_threedi_comparison_export = out_put_files / "Threedi_comparison_72.gpkg"
     # compare_with = "Damo Export vs Damo Updated"
     compare_with = "Damo Updated vs 3Di model"
     # config.UPDATE_SYMBOLOGY = True
