@@ -1546,15 +1546,11 @@
 		{
 			"name": "cmp_geom_type",
 			"table": "afvoergebiedaanvoergebied",
-			"type": "numeric",
+			"type": "category",
 			"description": "Verschil in geometrie type",
 			"priority": "critical",
-			"function": {
-				"difference": {
-					"left": "geom_type_Old",
-					"right": "geom_type_New"
-				}
-			}
+			"left": "geom_type_Old",
+			"right": "geom_type_New"
 		}
 	]
 }

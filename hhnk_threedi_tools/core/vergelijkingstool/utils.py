@@ -323,3 +323,110 @@ def add_priority_summaries(table_dict):
         table_dict[layer_name] = gdf
 
     return table_dict
+
+
+from typing import Dict
+
+import geopandas as gpd
+import pandas as pd
+
+
+def build_summary_layers(table_dict: Dict[str, gpd.GeoDataFrame]) -> Dict[str, gpd.GeoDataFrame]:
+    """
+    For each compared layer (brug, gemaal, etc.) build a non-spatial
+    summary table with:
+        - code (if present)
+        - number_of_critical
+        - number_of_warning
+        - Summary_Critical
+        - Summary_Warnings
+        - in_both
+        - source_layer  (name of the original layer)
+
+    Only rows that have at least one critical/warning OR in_both != '* both'
+    are kept.
+
+    Returns a dict[layer_name] = summary_df
+    """
+    result: Dict[str, gpd.GeoDataFrame] = {}
+
+    for layer_name, gdf in table_dict.items():
+        if gdf.empty:
+            continue
+
+        gdf = gdf.copy()
+
+        # locate columns priority
+        priority_cols = [c for c in gdf.columns if c.endswith("_priority")]
+
+        if not priority_cols:
+            
+            continue
+
+        # count warnings
+        def count_level(row, level: str) -> int:
+            level = level.lower()
+            return sum(str(row[c]).strip().lower() == level for c in priority_cols)
+
+        gdf["number_of_critical"] = gdf.apply(lambda r: count_level(r, "critical"), axis=1)
+        gdf["number_of_warning"] = gdf.apply(lambda r: count_level(r, "warning"), axis=1)
+
+        #collect summaries
+        def collect_names(row, level: str) -> str:
+            level = level.lower()
+            hits = []
+            for col in priority_cols:
+                val = str(row[col]).strip().lower()
+                if val == level:
+                    # quitar sufijo "_priority"
+                    hits.append(col[:-9])
+            return " | ".join(hits)
+
+        gdf["Summary_Critical"] = gdf.apply(lambda r: collect_names(r, "critical"), axis=1)
+        gdf["Summary_Warnings"] = gdf.apply(lambda r: collect_names(r, "warning"), axis=1)
+
+        # add column in both 
+        mask_problem = (gdf["number_of_critical"] > 0) | (gdf["number_of_warning"] > 0)
+
+        if "in_both" in gdf.columns:
+            mask_not_both = ~gdf["in_both"].str.contains(" both", case=False, na=False)
+            mask = mask_problem | mask_not_both
+        else:
+            mask = mask_problem
+
+        summary = gdf.loc[mask].copy()
+        if summary.empty:
+            continue
+
+        # select final columns 
+        cols = []
+
+        # if code exits
+        if "code" in summary.columns:
+            cols.append("code")
+
+        cols += [
+            "number_of_critical",
+            "number_of_warning",
+            "Summary_Critical",
+            "Summary_Warnings",
+        ]
+
+        if "in_both" in summary.columns:
+            cols.append("in_both")
+
+        # add soruce layers
+        summary["source_layer"] = layer_name
+        cols.append("source_layer")
+
+        summary = summary[cols]
+
+        # sabe ass gpkg withoutgeometry
+        summary_gdf = gpd.GeoDataFrame(summary, geometry=None)
+        # # opcional: setear un CRS para que QGIS no se queje
+        # if hasattr(gdf, "crs"):
+        #     summary_gdf.set_crs(gdf.crs, inplace=True, allow_override=True)
+
+        result[layer_name] = summary_gdf
+
+    return result

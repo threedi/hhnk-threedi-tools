@@ -220,6 +220,11 @@ class Threedimodel(DataSet):
         self.export_statistics(statistics, filename)
         self.logger.info(f"Finished exporting to {filename}")
 
+        # summary per shape
+        self.export_summary_layers(table_C, filename)
+
+        self.logger.info(f"Finished exporting to {filename}")
+
     def compare_with_DAMO(
         self,
         DAMO,

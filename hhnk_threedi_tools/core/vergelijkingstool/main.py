@@ -206,15 +206,15 @@ if __name__ == "__main__":
     fn_hdb_new = model_info.fn_hdb_new
 
     # Define outputs
-    fn_DAMO_comparison_export = out_put_files / "DAMO_comparison_149.gpkg"
+    fn_DAMO_comparison_export = out_put_files / "DAMO_comparison_151.gpkg"
 
     # Layers To Compare DAMO_DAMO
     layer_selection = False
     layers_input_damo_selection = ["AfvoergebiedAanvoergebied", "PeilafwijkingGebied", "PeilgebiedPraktijk"]
     layers_input_hdb_selection = ["Levee_overstromingsmodel", "Sturing_3Di"]
-    fn_threedi_comparison_export = out_put_files / "Threedi_comparison_72.gpkg"
-    # compare_with = "Damo Export vs Damo Updated"
-    compare_with = "Damo Updated vs 3Di model"
+    fn_threedi_comparison_export = out_put_files / "Threedi_comparison_73.gpkg"
+    compare_with = "Damo Export vs Damo Updated"
+    # compare_with = "Damo Updated vs 3Di model"
     # config.UPDATE_SYMBOLOGY = True
 
     # Layers to Compare DAMO_3di

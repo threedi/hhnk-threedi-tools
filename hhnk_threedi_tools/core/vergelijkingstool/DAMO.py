@@ -113,7 +113,6 @@ class DAMO(DataSet):
         with the exact same name as the layer
         :return:
         """
-
         layer_styles = styling.export_comparison_DAMO(
             table_C,
             statistics,
@@ -126,6 +125,11 @@ class DAMO(DataSet):
 
         # Export statistics
         self.export_statistics(statistics, filename)
+        self.logger.info(f"Finished exporting to {filename}")
+
+        #  export summary per shape
+        self.export_summary_layers(table_C, filename)
+
         self.logger.info(f"Finished exporting to {filename}")
 
     def compare_with_damo(

@@ -10,7 +10,7 @@ from shapely.geometry import LineString, Polygon
 
 from hhnk_threedi_tools.core.vergelijkingstool.config import *
 from hhnk_threedi_tools.core.vergelijkingstool.utils import ModelInfo
-
+from hhnk_threedi_tools.core.vergelijkingstool import utils
 # %%
 
 
@@ -455,3 +455,20 @@ class DataSet:
         # For export to GeoPackage a geometry column is needed, fill it with None to create attribute only layer
         statistics["geometry"] = None
         gpd.GeoDataFrame(statistics, geometry="geometry").to_file(filename, layer="statistics", driver="GPKG")
+
+    def export_summary_layers(self, table_C, filename: str):
+        """
+        Build and export per-layer summary tables to the same GeoPackage.
+
+        Each summary layer is written as: <layer_name>_summary
+        """
+        summary_layers = utils.build_summary_layers(table_C)
+
+        if not summary_layers:
+            self.logger.info("No summary layers to export (no _priority columns found).")
+            return
+
+        for layer_name, summary_gdf in summary_layers.items():
+            layer_out_name = f"{layer_name}_summary"
+            self.logger.debug(f"Exporting summary table {layer_out_name} to {filename}")
+            summary_gdf.to_file(filename, layer=layer_out_name, driver="GPKG")
