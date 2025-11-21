@@ -1027,8 +1027,8 @@
     </selectionSymbol>
   </selection>
   <labeling type="rule-based">
-    <rules key="{6b3207b1-e109-4616-89fc-fca1edfacbe3}">
-      <rule key="{553f36fe-070c-4015-a7cd-c5072d41a46a}" description="Aantal kritieke fouten" filter="&quot;in_both&quot;   LIKE  '%both' AND  &quot;number_of_critical&quot; > 0" scalemaxdenom="15000">
+    <rules key="{4f98bf0b-dc73-4ffa-aa7c-5d474442c3b3}">
+      <rule key="{0e92312d-43fb-4012-ba0c-11f4f7508cb3}" description="Aantal kritieke fouten" filter="&quot;in_both&quot;   LIKE  '%both' AND  &quot;number_of_critical&quot; > 0">
         <settings calloutType="simple">
           <text-style fontSizeMapUnitScale="3x:0,0,0,0,0,0" textOrientation="horizontal" allowHtml="0" fontWordSpacing="0" forcedItalic="0" fieldName="CASE&#xd;&#xa;  WHEN &quot;in_both&quot; LIKE '%both' AND &quot;number_of_critical&quot; > 0 &#xd;&#xa;  THEN 'Aantal Kritieke Fouten: ' || &quot;number_of_critical&quot;&#xd;&#xa;  ELSE ''&#xd;&#xa;END&#xd;&#xa;" blendMode="0" fontFamily="Arial" forcedBold="0" useSubstitutions="0" textOpacity="1" fontSize="10" fontWeight="50" namedStyle="Standaard" fontLetterSpacing="0" textColor="227,26,28,255" fontItalic="0" capitalization="0" previewBkgrdColor="255,255,255,255" fontStrikeout="0" multilineHeight="1" fontSizeUnit="Point" fontUnderline="0" multilineHeightUnit="Percentage" isExpression="1" legendString="Aa" fontKerning="1">
             <families/>
@@ -1116,8 +1116,8 @@
             </dd_properties>
             <substitutions/>
           </text-style>
-          <text-format decimals="3" leftDirectionSymbol="&lt;" formatNumbers="0" placeDirectionSymbol="0" wrapChar="" autoWrapLength="0" multilineAlign="3" rightDirectionSymbol=">" addDirectionSymbol="0" useMaxLineLengthForAutoWrap="1" plussign="0" reverseDirectionSymbol="0"/>
-          <placement rotationUnit="AngleDegrees" fitInPolygonOnly="0" preserveRotation="1" lineAnchorClipping="0" repeatDistanceMapUnitScale="3x:0,0,0,0,0,0" priority="5" offsetType="1" maxCurvedCharAngleIn="25" layerType="PointGeometry" overlapHandling="PreventOverlap" centroidWhole="0" geometryGenerator="" distMapUnitScale="3x:0,0,0,0,0,0" distUnits="MM" dist="0" maxCurvedCharAngleOut="-25" placement="1" rotationAngle="0" labelOffsetMapUnitScale="3x:0,0,0,0,0,0" polygonPlacementFlags="2" centroidInside="0" repeatDistance="0" overrunDistance="0" allowDegraded="0" geometryGeneratorType="PointGeometry" geometryGeneratorEnabled="0" quadOffset="1" lineAnchorType="0" lineAnchorPercent="0.5" offsetUnits="MM" lineAnchorTextPoint="FollowPlacement" predefinedPositionOrder="TR,TL,BR,BL,R,L,TSR,BSR" overrunDistanceMapUnitScale="3x:0,0,0,0,0,0" xOffset="0" repeatDistanceUnits="MM" yOffset="-2.5" placementFlags="10" overrunDistanceUnit="MM"/>
+          <text-format decimals="3" leftDirectionSymbol="&lt;" formatNumbers="0" placeDirectionSymbol="0" wrapChar="" autoWrapLength="0" multilineAlign="0" rightDirectionSymbol=">" addDirectionSymbol="0" useMaxLineLengthForAutoWrap="1" plussign="0" reverseDirectionSymbol="0"/>
+          <placement rotationUnit="AngleDegrees" fitInPolygonOnly="0" preserveRotation="1" lineAnchorClipping="0" repeatDistanceMapUnitScale="3x:0,0,0,0,0,0" priority="5" offsetType="1" maxCurvedCharAngleIn="25" layerType="LineGeometry" overlapHandling="PreventOverlap" centroidWhole="0" geometryGenerator="" distMapUnitScale="3x:0,0,0,0,0,0" distUnits="MM" dist="0" maxCurvedCharAngleOut="-25" placement="2" rotationAngle="0" labelOffsetMapUnitScale="3x:0,0,0,0,0,0" polygonPlacementFlags="2" centroidInside="0" repeatDistance="0" overrunDistance="0" allowDegraded="0" geometryGeneratorType="PointGeometry" geometryGeneratorEnabled="0" quadOffset="1" lineAnchorType="0" lineAnchorPercent="0.5" offsetUnits="MM" lineAnchorTextPoint="FollowPlacement" predefinedPositionOrder="TR,TL,BR,BL,R,L,TSR,BSR" overrunDistanceMapUnitScale="3x:0,0,0,0,0,0" xOffset="0" repeatDistanceUnits="MM" yOffset="-2.5" placementFlags="10" overrunDistanceUnit="MM"/>
           <rendering labelPerPart="0" zIndex="0" maxNumLabels="2000" fontMaxPixelSize="10000" upsidedownLabels="0" fontLimitPixelSize="0" drawLabels="1" scaleVisibility="0" scaleMin="0" obstacleFactor="1" minFeatureSize="0" unplacedVisibility="0" fontMinPixelSize="3" obstacle="1" limitNumLabels="0" obstacleType="1" scaleMax="0" mergeLines="0"/>
           <dd_properties>
             <Option type="Map">
@@ -2516,8 +2516,8 @@
   </conditionalstyles>
   <storedexpressions/>
   <editform tolerant="1"></editform>
-  <editforminit/>
-  <editforminitcodesource>0</editforminitcodesource>
+  <editforminit>highlight_priority_tabs</editforminit>
+  <editforminitcodesource>2</editforminitcodesource>
   <editforminitfilepath></editforminitfilepath>
   <editforminitcode><![CDATA[# -*- coding: utf-8 -*-
 """
@@ -2530,11 +2530,204 @@ Enter the name of the function in the "Python Init function"
 field.
 An example follows:
 """
-from qgis.PyQt.QtWidgets import QWidget
+# -*- coding: utf-8 -*-
+from qgis.PyQt.QtWidgets import QTabWidget, QGroupBox, QWidget
+from qgis.PyQt.QtGui import QColor
 
-def my_form_open(dialog, layer, feature):
-    geom = feature.geometry()
-    control = dialog.findChild(QWidget, "MyLineEdit")
+def highlight_priority_tabs(dialog, layer, feature):
+    """
+    Python Init Function for QGIS attribute forms.
+
+    Logic:
+    - Look for all widgets bound to fields whose name ends with 'priority'
+      (via 'field' property or widget objectName matching a field name).
+    - If the field value is:
+        * 'critical'  -> severity = 2 (highest)
+        * 'warning'   -> severity = 1
+        * otherwise   -> ignored
+    - For each tab:
+        * If any field inside it has severity 2 -> tab text is red.
+        * Else if any field has severity 1      -> tab text is orange.
+        * Else                                  -> tab text is black.
+    - For each QGroupBox:
+        * If any field inside it has severity 2 -> group title is red.
+        * Else if any field has severity 1      -> group title is orange.
+    """
+
+    if feature is None:
+        return
+
+    # ---------------------------------
+    # 1) Find all QTabWidget instances
+    # ---------------------------------
+    tab_widgets = dialog.findChildren(QTabWidget)
+    if not tab_widgets:
+        return
+
+    # Set of field names for quick membership checks
+    field_names = {f.name() for f in feature.fields()}
+
+    # ---------------------------------
+    # 2) Reset colors to default
+    # ---------------------------------
+    for tw in tab_widgets:
+        tab_bar = tw.tabBar()
+        if tab_bar is None:
+            continue
+
+        for i in range(tw.count()):
+            # Reset tab text color to black
+            tab_bar.setTabTextColor(i, QColor("black"))
+
+            # Reset styles of all group boxes inside the page
+            page = tw.widget(i)
+            if page is None:
+                continue
+            for gb in page.findChildren(QGroupBox):
+                gb.setStyleSheet("")  # back to default style
+
+    # ---------------------------------
+    # 3) Helper functions
+    # ---------------------------------
+    def get_field_value(field_name: str):
+        """Return the field value as a lowercase string, or None if it does not exist."""
+        if not field_name:
+            return None
+
+        if field_name not in field_names:
+            return None
+
+        value = feature[field_name]
+        if value is None:
+            return None
+
+        return str(value).strip().lower()
+
+    def find_field_name_from_widget(widget: QWidget):
+        """
+        Try to infer the field name for a widget:
+        - First, use the dynamic 'field' property.
+        - If not present, use objectName() and check if it matches a field name.
+        Walks up the parent chain because the property may be set on a container.
+        """
+        w = widget
+        while w is not None:
+            # 1) 'field' property
+            field_prop = w.property("field")
+            if isinstance(field_prop, str) and field_prop in field_names:
+                return field_prop
+
+            # 2) objectName that matches a field name
+            obj_name = w.objectName()
+            if isinstance(obj_name, str) and obj_name in field_names:
+                return obj_name
+
+            w = w.parent()
+
+        return None
+
+    # ---------------------------------
+    # 4) Prepare severity tracking
+    # ---------------------------------
+    # Severity levels:
+    #   0 = none
+    #   1 = warning
+    #   2 = critical (highest priority)
+    tab_severity = {}
+    for tw in tab_widgets:
+        tab_severity[tw] = {i: 0 for i in range(tw.count())}
+
+    group_severity = {}  # QGroupBox -> severity (0, 1, or 2)
+
+    # ---------------------------------
+    # 5) Scan all widgets and update severities
+    # ---------------------------------
+    all_widgets = dialog.findChildren(QWidget)
+
+    for w in all_widgets:
+        field_name = find_field_name_from_widget(w)
+        if not field_name:
+            continue
+
+        # Only evaluate fields whose name ends with 'priority'
+        if not field_name.lower().endswith("priority"):
+            continue
+
+        val = get_field_value(field_name)
+        if val not in ("critical", "warning"):
+            # Only care about these two values
+            continue
+
+        # Map value to severity
+        if val == "critical":
+            severity = 2
+        else:  # "warning"
+            severity = 1
+
+        # Collect widget ancestors
+        ancestors = []
+        a = w.parent()
+        while a is not None:
+            ancestors.append(a)
+            a = a.parent()
+
+        # Find the QGroupBox (if any) that contains this widget
+        group_box = None
+        for anc in ancestors:
+            if isinstance(anc, QGroupBox):
+                group_box = anc
+                break
+
+        if group_box is not None:
+            current_g_sev = group_severity.get(group_box, 0)
+            if severity > current_g_sev:
+                group_severity[group_box] = severity
+
+        # Update tab severity for any tab page that is an ancestor
+        for tw in tab_widgets:
+            tab_bar = tw.tabBar()
+            if tab_bar is None:
+                continue
+
+            for i in range(tw.count()):
+                page = tw.widget(i)
+                if page is None:
+                    continue
+
+                if page in ancestors:
+                    current_t_sev = tab_severity[tw][i]
+                    if severity > current_t_sev:
+                        tab_severity[tw][i] = severity
+
+    # ---------------------------------
+    # 6) Apply colors based on severity
+    # ---------------------------------
+    # Tabs
+    for tw in tab_widgets:
+        tab_bar = tw.tabBar()
+        if tab_bar is None:
+            continue
+
+        for i, sev in tab_severity[tw].items():
+            if sev == 2:
+                # critical -> red
+                tab_bar.setTabTextColor(i, QColor("red"))
+            elif sev == 1:
+                # warning -> orange
+                tab_bar.setTabTextColor(i, QColor("orange"))
+            else:
+                # none -> black
+                tab_bar.setTabTextColor(i, QColor("black"))
+
+    # Group boxes
+    for gb, sev in group_severity.items():
+        if sev == 2:
+            # critical -> red title
+            gb.setStyleSheet("QGroupBox { color: red; }")
+        elif sev == 1:
+            # warning -> orange title
+            gb.setStyleSheet("QGroupBox { color: orange; }")
+        # no need to handle 0: already reset to default earlier
 ]]></editforminitcode>
   <featformsuppress>0</featformsuppress>
   <editorlayout>tablayout</editorlayout>
@@ -2571,12 +2764,12 @@ def my_form_open(dialog, layer, feature):
           <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
         </labelStyle>
       </attributeEditorField>
-      <attributeEditorField horizontalStretch="0" index="6" name="naam_New" verticalStretch="0" showLabel="1">
+      <attributeEditorField horizontalStretch="0" index="25" name="naam_Old" verticalStretch="0" showLabel="1">
         <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
           <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
         </labelStyle>
       </attributeEditorField>
-      <attributeEditorField horizontalStretch="0" index="25" name="naam_Old" verticalStretch="0" showLabel="1">
+      <attributeEditorField horizontalStretch="0" index="6" name="naam_New" verticalStretch="0" showLabel="1">
         <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
           <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
         </labelStyle>
@@ -2596,12 +2789,12 @@ def my_form_open(dialog, layer, feature):
       <labelStyle labelColor="0,0,0,255" overrideLabelFont="1" overrideLabelColor="0">
         <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,75,0,0,0,0,0" bold="1" italic="0" underline="0" strikethrough="0"/>
       </labelStyle>
-      <attributeEditorField horizontalStretch="0" index="8" name="categorieoppwaterlichaam_New" verticalStretch="0" showLabel="1">
+      <attributeEditorField horizontalStretch="0" index="27" name="categorieoppwaterlichaam_Old" verticalStretch="0" showLabel="1">
         <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
           <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
         </labelStyle>
       </attributeEditorField>
-      <attributeEditorField horizontalStretch="0" index="27" name="categorieoppwaterlichaam_Old" verticalStretch="0" showLabel="1">
+      <attributeEditorField horizontalStretch="0" index="8" name="categorieoppwaterlichaam_New" verticalStretch="0" showLabel="1">
         <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
           <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
         </labelStyle>
@@ -2625,12 +2818,12 @@ def my_form_open(dialog, layer, feature):
         <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
           <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
         </labelStyle>
-        <attributeEditorField horizontalStretch="0" index="21" name="dataset_New" verticalStretch="0" showLabel="1">
+        <attributeEditorField horizontalStretch="0" index="40" name="dataset_Old" verticalStretch="0" showLabel="1">
           <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
             <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
           </labelStyle>
         </attributeEditorField>
-        <attributeEditorField horizontalStretch="0" index="40" name="dataset_Old" verticalStretch="0" showLabel="1">
+        <attributeEditorField horizontalStretch="0" index="21" name="dataset_New" verticalStretch="0" showLabel="1">
           <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
             <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
           </labelStyle>
@@ -2640,12 +2833,12 @@ def my_form_open(dialog, layer, feature):
         <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
           <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
         </labelStyle>
-        <attributeEditorField horizontalStretch="0" index="22" name="origin_New" verticalStretch="0" showLabel="1">
+        <attributeEditorField horizontalStretch="0" index="41" name="origin_Old" verticalStretch="0" showLabel="1">
           <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
             <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
           </labelStyle>
         </attributeEditorField>
-        <attributeEditorField horizontalStretch="0" index="41" name="origin_Old" verticalStretch="0" showLabel="1">
+        <attributeEditorField horizontalStretch="0" index="22" name="origin_New" verticalStretch="0" showLabel="1">
           <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
             <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
           </labelStyle>
@@ -2665,12 +2858,12 @@ def my_form_open(dialog, layer, feature):
         <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
           <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
         </labelStyle>
-        <attributeEditorField horizontalStretch="0" index="15" name="hoogte_getabuleerd_New" verticalStretch="0" showLabel="1">
+        <attributeEditorField horizontalStretch="0" index="34" name="hoogte_getabuleerd_Old" verticalStretch="0" showLabel="1">
           <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
             <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
           </labelStyle>
         </attributeEditorField>
-        <attributeEditorField horizontalStretch="0" index="34" name="hoogte_getabuleerd_Old" verticalStretch="0" showLabel="1">
+        <attributeEditorField horizontalStretch="0" index="15" name="hoogte_getabuleerd_New" verticalStretch="0" showLabel="1">
           <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
             <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
           </labelStyle>
@@ -2690,12 +2883,12 @@ def my_form_open(dialog, layer, feature):
         <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
           <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
         </labelStyle>
-        <attributeEditorField horizontalStretch="0" index="14" name="breedte_getabuleerd_New" verticalStretch="0" showLabel="1">
+        <attributeEditorField horizontalStretch="0" index="33" name="breedte_getabuleerd_Old" verticalStretch="0" showLabel="1">
           <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
             <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
           </labelStyle>
         </attributeEditorField>
-        <attributeEditorField horizontalStretch="0" index="33" name="breedte_getabuleerd_Old" verticalStretch="0" showLabel="1">
+        <attributeEditorField horizontalStretch="0" index="14" name="breedte_getabuleerd_New" verticalStretch="0" showLabel="1">
           <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
             <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
           </labelStyle>
@@ -2705,12 +2898,12 @@ def my_form_open(dialog, layer, feature):
         <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
           <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
         </labelStyle>
-        <attributeEditorField horizontalStretch="0" index="13" name="bodemhoogte_nap_New" verticalStretch="0" showLabel="1">
+        <attributeEditorField horizontalStretch="0" index="32" name="bodemhoogte_nap_Old" verticalStretch="0" showLabel="1">
           <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
             <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
           </labelStyle>
         </attributeEditorField>
-        <attributeEditorField horizontalStretch="0" index="32" name="bodemhoogte_nap_Old" verticalStretch="0" showLabel="1">
+        <attributeEditorField horizontalStretch="0" index="13" name="bodemhoogte_nap_New" verticalStretch="0" showLabel="1">
           <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
             <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
           </labelStyle>
@@ -2731,12 +2924,12 @@ def my_form_open(dialog, layer, feature):
       <labelStyle labelColor="0,0,0,255" overrideLabelFont="1" overrideLabelColor="0">
         <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,75,0,0,0,0,0" bold="1" italic="0" underline="0" strikethrough="0"/>
       </labelStyle>
-      <attributeEditorField horizontalStretch="0" index="12" name="ws_in_peilgebied_New" verticalStretch="0" showLabel="1">
+      <attributeEditorField horizontalStretch="0" index="31" name="ws_in_peilgebied_Old" verticalStretch="0" showLabel="1">
         <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
           <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
         </labelStyle>
       </attributeEditorField>
-      <attributeEditorField horizontalStretch="0" index="31" name="ws_in_peilgebied_Old" verticalStretch="0" showLabel="1">
+      <attributeEditorField horizontalStretch="0" index="12" name="ws_in_peilgebied_New" verticalStretch="0" showLabel="1">
         <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
           <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
         </labelStyle>
@@ -2756,12 +2949,12 @@ def my_form_open(dialog, layer, feature):
       <labelStyle labelColor="0,0,0,255" overrideLabelFont="1" overrideLabelColor="0">
         <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,75,0,0,0,0,0" bold="1" italic="0" underline="0" strikethrough="0"/>
       </labelStyle>
-      <attributeEditorField horizontalStretch="0" index="16" name="keuze_profiel_New" verticalStretch="0" showLabel="1">
+      <attributeEditorField horizontalStretch="0" index="35" name="keuze_profiel_Old" verticalStretch="0" showLabel="1">
         <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
           <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
         </labelStyle>
       </attributeEditorField>
-      <attributeEditorField horizontalStretch="0" index="35" name="keuze_profiel_Old" verticalStretch="0" showLabel="1">
+      <attributeEditorField horizontalStretch="0" index="16" name="keuze_profiel_New" verticalStretch="0" showLabel="1">
         <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
           <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
         </labelStyle>
@@ -2785,12 +2978,12 @@ def my_form_open(dialog, layer, feature):
         <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
           <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
         </labelStyle>
-        <attributeEditorField horizontalStretch="0" index="10" name="ws_talud_links_New" verticalStretch="0" showLabel="1">
+        <attributeEditorField horizontalStretch="0" index="29" name="ws_talud_links_Old" verticalStretch="0" showLabel="1">
           <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
             <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
           </labelStyle>
         </attributeEditorField>
-        <attributeEditorField horizontalStretch="0" index="29" name="ws_talud_links_Old" verticalStretch="0" showLabel="1">
+        <attributeEditorField horizontalStretch="0" index="10" name="ws_talud_links_New" verticalStretch="0" showLabel="1">
           <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
             <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
           </labelStyle>
@@ -2810,12 +3003,12 @@ def my_form_open(dialog, layer, feature):
         <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
           <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
         </labelStyle>
-        <attributeEditorField horizontalStretch="0" index="11" name="ws_talud_rechts_New" verticalStretch="0" showLabel="1">
+        <attributeEditorField horizontalStretch="0" index="30" name="ws_talud_rechts_Old" verticalStretch="0" showLabel="1">
           <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
             <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
           </labelStyle>
         </attributeEditorField>
-        <attributeEditorField horizontalStretch="0" index="30" name="ws_talud_rechts_Old" verticalStretch="0" showLabel="1">
+        <attributeEditorField horizontalStretch="0" index="11" name="ws_talud_rechts_New" verticalStretch="0" showLabel="1">
           <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
             <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
           </labelStyle>
@@ -2860,12 +3053,12 @@ def my_form_open(dialog, layer, feature):
         <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
           <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
         </labelStyle>
-        <attributeEditorField horizontalStretch="0" index="20" name="geom_area_New" verticalStretch="0" showLabel="1">
+        <attributeEditorField horizontalStretch="0" index="39" name="geom_area_Old" verticalStretch="0" showLabel="1">
           <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
             <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
           </labelStyle>
         </attributeEditorField>
-        <attributeEditorField horizontalStretch="0" index="39" name="geom_area_Old" verticalStretch="0" showLabel="1">
+        <attributeEditorField horizontalStretch="0" index="20" name="geom_area_New" verticalStretch="0" showLabel="1">
           <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
             <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
           </labelStyle>
@@ -2875,12 +3068,12 @@ def my_form_open(dialog, layer, feature):
         <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
           <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
         </labelStyle>
-        <attributeEditorField horizontalStretch="0" index="18" name="geom_type_New" verticalStretch="0" showLabel="1">
+        <attributeEditorField horizontalStretch="0" index="37" name="geom_type_Old" verticalStretch="0" showLabel="1">
           <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
             <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
           </labelStyle>
         </attributeEditorField>
-        <attributeEditorField horizontalStretch="0" index="37" name="geom_type_Old" verticalStretch="0" showLabel="1">
+        <attributeEditorField horizontalStretch="0" index="18" name="geom_type_New" verticalStretch="0" showLabel="1">
           <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
             <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
           </labelStyle>
@@ -2891,26 +3084,6 @@ def my_form_open(dialog, layer, feature):
           <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
         </labelStyle>
         <attributeEditorField horizontalStretch="0" index="19" name="geom_length_New" verticalStretch="0" showLabel="1">
-          <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
-            <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
-          </labelStyle>
-        </attributeEditorField>
-        <attributeEditorField horizontalStretch="0" index="-1" name="lengte_New" verticalStretch="0" showLabel="1">
-          <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
-            <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
-          </labelStyle>
-        </attributeEditorField>
-        <attributeEditorField horizontalStretch="0" index="17" name="shape_length_New" verticalStretch="0" showLabel="1">
-          <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
-            <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
-          </labelStyle>
-        </attributeEditorField>
-        <attributeEditorField horizontalStretch="0" index="36" name="shape_length_Old" verticalStretch="0" showLabel="1">
-          <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
-            <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
-          </labelStyle>
-        </attributeEditorField>
-        <attributeEditorField horizontalStretch="0" index="-1" name="lengte_Old" verticalStretch="0" showLabel="1">
           <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
             <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
           </labelStyle>
