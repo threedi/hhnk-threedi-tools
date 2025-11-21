@@ -1,21 +1,29 @@
 @echo off
 
-REM Call Python inside the pixi environment, forwarding all arguments.
-REM Use %* to forward all command-line arguments in cmd.exe (Windows).
+REM Roep Python aan binnen de pixi-omgeving
+rem Prefer an explicit project root so pixi always uses the intended pixi.toml.
+rem Fallback to three-levels-up from the script location if explicit root is not available.
+set "EXPLICIT_ROOT=D:\\github\\jkaptein\\hhnk-threedi-tools"
 
-REM When hooks or callers start cmd.exe with a UNC working directory, some
-REM commands fail. Temporarily switch to the script's parent directory which
-REM resides on a local drive using pushd. After running, restore the
-REM original directory with popd. This prevents the "UNC paths are not
-REM supported" behaviour.
-pushd "%~dp0.." >nul 2>&1
+if exist "%EXPLICIT_ROOT%\pixi.toml" (
+    pushd "%EXPLICIT_ROOT%" >NUL 2>&1 || (
+        echo Failed to change directory to explicit project root "%EXPLICIT_ROOT%"
+        exit /b 1
+    )
+) else (
+    rem Fallback: change to the repository root (three levels up from this script)
+    pushd "%~dp0..\..\.." >NUL 2>&1 || (
+        echo Failed to change directory to project root "%~dp0..\..\.."
+        exit /b 1
+    )
+)
 
 pixi run python %*
-set "_RC=%ERRORLEVEL%"
+set "rc=%ERRORLEVEL%"
 
-popd >nul 2>&1
-
-if not "%_RC%"=="0" (
-    echo Error: Python script failed (exit code %_RC%)
-    exit /b %_RC%
+if %rc% neq 0 (
+    echo Error: Python script failed (exit %rc%)
 )
+
+popd
+exit /b %rc%
