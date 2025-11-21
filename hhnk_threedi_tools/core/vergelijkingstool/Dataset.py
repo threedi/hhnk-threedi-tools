@@ -8,9 +8,10 @@ import geopandas as gpd
 import pandas as pd
 from shapely.geometry import LineString, Polygon
 
+from hhnk_threedi_tools.core.vergelijkingstool import utils
 from hhnk_threedi_tools.core.vergelijkingstool.config import *
 from hhnk_threedi_tools.core.vergelijkingstool.utils import ModelInfo
-from hhnk_threedi_tools.core.vergelijkingstool import utils
+
 # %%
 
 

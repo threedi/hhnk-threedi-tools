@@ -360,7 +360,6 @@ def build_summary_layers(table_dict: Dict[str, gpd.GeoDataFrame]) -> Dict[str, g
         priority_cols = [c for c in gdf.columns if c.endswith("_priority")]
 
         if not priority_cols:
-            
             continue
 
         # count warnings
@@ -371,7 +370,7 @@ def build_summary_layers(table_dict: Dict[str, gpd.GeoDataFrame]) -> Dict[str, g
         gdf["number_of_critical"] = gdf.apply(lambda r: count_level(r, "critical"), axis=1)
         gdf["number_of_warning"] = gdf.apply(lambda r: count_level(r, "warning"), axis=1)
 
-        #collect summaries
+        # collect summaries
         def collect_names(row, level: str) -> str:
             level = level.lower()
             hits = []
@@ -385,7 +384,7 @@ def build_summary_layers(table_dict: Dict[str, gpd.GeoDataFrame]) -> Dict[str, g
         gdf["Summary_Critical"] = gdf.apply(lambda r: collect_names(r, "critical"), axis=1)
         gdf["Summary_Warnings"] = gdf.apply(lambda r: collect_names(r, "warning"), axis=1)
 
-        # add column in both 
+        # add column in both
         mask_problem = (gdf["number_of_critical"] > 0) | (gdf["number_of_warning"] > 0)
 
         if "in_both" in gdf.columns:
@@ -398,7 +397,7 @@ def build_summary_layers(table_dict: Dict[str, gpd.GeoDataFrame]) -> Dict[str, g
         if summary.empty:
             continue
 
-        # select final columns 
+        # select final columns
         cols = []
 
         # if code exits
