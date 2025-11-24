@@ -67,11 +67,10 @@ class ChannelRelations:
         channel_gdf = self.database.load(layer="channel", index_column="id")
         cross_section_gdf = self.database.load(layer="cross_section_location", index_column="id")
         connection_node_gdf = self.database.load(layer="connection_node", index_column="id")
+        tags_df = self.database.load(layer="tags", index_column="id")
 
         channel_gdf["channel_id"] = channel_gdf.index
-        channel_gdf["is_primary"] = channel_gdf["tags"].apply(
-            lambda tags: "is_primary" in tags if isinstance(tags, (list, str, np.ndarray)) else False
-        )
+
         # Join connection node data to channel table
         channel_gdf = channel_gdf.merge(
             connection_node_gdf[["initial_water_level", "storage_area"]],
@@ -105,6 +104,32 @@ class ChannelRelations:
             right_on="channel_id",
             how="left",
         ).drop(columns=["channel_id_x"])
+
+        # Split comma seperated tags into comma separated array
+        tags_map = {}
+        for idx, row in tags_df.iterrows():
+            val = row["description"]
+            tags_map[int(idx)] = val
+
+        # map tags from array of id into array of string descriptions from tags table
+        def _map_tags_array_to_descriptions(tags: list[int]) -> list[int]:
+            """Convert array of tag keys to array of tag descriptions using tags table from model database"""
+            if isinstance(tags, np.ndarray):
+                return []
+            out = []
+            for key in tags:
+                if pd.isna(key):
+                    continue
+                if not isinstance(key, int):
+                    logger.error(f"Tag key {key} is not an integer")
+                    continue
+                if key in tags_map:
+                    out.append(tags_map[key])
+                else:
+                    logger.error(f"Tag key {key} not found in tags talbe from model database")
+            return out
+
+        channel_gdf["tags_description"] = channel_gdf["tags"].apply(_map_tags_array_to_descriptions)
 
         # Calculate depth and width at waterlevel
         channel_gdf["depth"] = channel_gdf["initial_water_level_average"] - channel_gdf["reference_level"]

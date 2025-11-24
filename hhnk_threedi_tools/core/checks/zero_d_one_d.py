@@ -255,7 +255,9 @@ def check_primary(structure, structure_lines, structure_name, primary_nodes):
 
     if structure_name == res_channels:
         # Classify parts of channels as primary if zoom category is 4
-        structure[primary_col] = structure[zoom_cat_col].apply(lambda x: True if x == 4 else False)
+        structure[primary_col] = structure[zoom_cat_col].apply(
+            lambda x: True if x == 4 else False
+        )  # FIXME WvE column is zoom cat no longer exists
     else:
         # We use nodes qualified as primary by above method for other structure types
         structure[primary_col] = structure.apply(
