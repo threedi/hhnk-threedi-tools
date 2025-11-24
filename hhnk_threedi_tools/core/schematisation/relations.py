@@ -12,6 +12,33 @@ from hhnk_threedi_tools.core.folders import Folders
 logger = logging.get_logger(name=__name__)
 
 
+def load_tags_map(database: SpatialDatabase) -> dict:
+    """Load tags table and return mapping of id (int and str) -> description."""
+    tags_df = database.load(layer="tags", index_column="id")
+    tags_map = {}
+    for idx, row in tags_df.iterrows():
+        tags_map[int(idx)] = row["description"]
+    return tags_map
+
+
+# map tags from array of id into array of string descriptions from tags table
+def _map_tags_array_to_descriptions(tags, tags_map) -> list[str]:
+    """Convert array of tag keys to array of tag descriptions using provided tags_map."""
+    if tags is None:
+        return []
+    desc = []
+    for key in tags:
+        try:
+            key = int(key)
+        except TypeError:
+            logger.error(f"Tag key {key} is not convertible to int, tags should refer to integer ids from tags table")
+        if key in tags_map:
+            desc.append(tags_map[key])
+        else:
+            logger.error(f"Tag key {key} not found in tags table from model database")
+    return desc
+
+
 class ChannelRelations:
     """
     Class that adds properties from the connection nodes and cross section location to the channel
@@ -24,6 +51,8 @@ class ChannelRelations:
     ):
         self.folder = folder
         self.database: SpatialDatabase = folder.model.schema_base.database
+        # Make tags_map available on this instance
+        self.tags_map = load_tags_map(self.database)
 
     def get_width_and_depth_from_tabulated_profile(self, channel_gdf_row: pd.Series) -> float:
         """
@@ -65,11 +94,15 @@ class ChannelRelations:
         """
         # Load tables
         channel_gdf = self.database.load(layer="channel", index_column="id")
+        channel_gdf["channel_id"] = channel_gdf.index
         cross_section_gdf = self.database.load(layer="cross_section_location", index_column="id")
         connection_node_gdf = self.database.load(layer="connection_node", index_column="id")
-        tags_df = self.database.load(layer="tags", index_column="id")
 
-        channel_gdf["channel_id"] = channel_gdf.index
+        # Split comma separated tags into arrays
+        channel_gdf["tags"] = channel_gdf["tags"].apply(lambda x: x.split(",") if isinstance(x, str) else [])
+        channel_gdf["tags_description"] = channel_gdf["tags"].apply(
+            lambda t: _map_tags_array_to_descriptions(t, self.tags_map)
+        )
 
         # Join connection node data to channel table
         channel_gdf = channel_gdf.merge(
@@ -104,32 +137,6 @@ class ChannelRelations:
             right_on="channel_id",
             how="left",
         ).drop(columns=["channel_id_x"])
-
-        # Split comma seperated tags into comma separated array
-        tags_map = {}
-        for idx, row in tags_df.iterrows():
-            val = row["description"]
-            tags_map[int(idx)] = val
-
-        # map tags from array of id into array of string descriptions from tags table
-        def _map_tags_array_to_descriptions(tags: list[int]) -> list[int]:
-            """Convert array of tag keys to array of tag descriptions using tags table from model database"""
-            if isinstance(tags, np.ndarray):
-                return []
-            out = []
-            for key in tags:
-                if pd.isna(key):
-                    continue
-                if not isinstance(key, int):
-                    logger.error(f"Tag key {key} is not an integer")
-                    continue
-                if key in tags_map:
-                    out.append(tags_map[key])
-                else:
-                    logger.error(f"Tag key {key} not found in tags talbe from model database")
-            return out
-
-        channel_gdf["tags_description"] = channel_gdf["tags"].apply(_map_tags_array_to_descriptions)
 
         # Calculate depth and width at waterlevel
         channel_gdf["depth"] = channel_gdf["initial_water_level_average"] - channel_gdf["reference_level"]
@@ -182,6 +189,8 @@ class StructureRelations:
     ):
         self.folder = folder
         self.database: SpatialDatabase = folder.model.schema_base.database
+        # Make tags_map available on this instance
+        self.tags_map = load_tags_map(self.database)
 
         if structure_table not in ["weir", "culvert", "pump", "orifice"]:
             raise ValueError("Provide structure table weir, culvert, pump or orifice")
@@ -622,6 +631,12 @@ class StructureRelations:
         # Load table
         structure_gdf = self.database.load(layer=self.structure_table, index_column="id")
         structure_gdf[f"{self.structure_table}_id"] = structure_gdf.index
+
+        # Split comma separated tags into arrays
+        structure_gdf["tags"] = structure_gdf["tags"].apply(lambda x: x.split(",") if isinstance(x, str) else [])
+        structure_gdf["tags_description"] = structure_gdf["tags"].apply(
+            lambda t: _map_tags_array_to_descriptions(t, self.tags_map)
+        )
 
         for side in ["start", "end"]:
             structure_gdf = self.get_manhole_data_at_connection_node(structure_gdf=structure_gdf, side=side)
