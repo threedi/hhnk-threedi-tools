@@ -13,7 +13,7 @@ logger = logging.get_logger(name=__name__)
 
 
 def load_tags_map(database: SpatialDatabase) -> dict:
-    """Load tags table and return mapping of id (int and str) -> description."""
+    """Load tags table and return mapping of id (int) -> description."""
     tags_df = database.load(layer="tags", index_column="id")
     tags_map = {}
     for idx, row in tags_df.iterrows():
@@ -22,7 +22,7 @@ def load_tags_map(database: SpatialDatabase) -> dict:
 
 
 # map tags from array of id into array of string descriptions from tags table
-def _map_tags_array_to_descriptions(tags, tags_map) -> list[str]:
+def _map_tags_array_to_descriptions(tags: list[int], tags_map: dict[int, str]) -> list[str]:
     """Convert array of tag keys to array of tag descriptions using provided tags_map."""
     if tags is None:
         return []
