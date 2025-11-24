@@ -12,8 +12,23 @@ from hhnk_threedi_tools.core.folders import Folders
 logger = logging.get_logger(name=__name__)
 
 
-def load_tags_map(database: SpatialDatabase) -> dict:
-    """Load tags table and return mapping of id (int) -> description."""
+def _load_tags_map(database: SpatialDatabase) -> dict[int, str]:
+    """
+    Load tags table and return mapping of id (int) -> description.
+    Tags are a way to add extra properties to various tables in the model database.
+    Available tags are stored in seperate tag table, with id and description.
+    In object-talbes tags are stored as comma separated list of tag ids.
+
+    Parameters
+    ----------
+    database : SpatialDatabase
+        Model database to load tags from.
+
+    Returns
+    -------
+    dict
+        Mapping of tag id (int) to description (str).
+    """
     tags_df = database.load(layer="tags", index_column="id")
     tags_map = {}
     for idx, row in tags_df.iterrows():
@@ -21,7 +36,6 @@ def load_tags_map(database: SpatialDatabase) -> dict:
     return tags_map
 
 
-# map tags from array of id into array of string descriptions from tags table
 def _map_tags_array_to_descriptions(tags: list[int], tags_map: dict[int, str]) -> list[str]:
     """Convert array of tag keys to array of tag descriptions using provided tags_map."""
     if tags is None:
@@ -52,7 +66,7 @@ class ChannelRelations:
         self.folder = folder
         self.database: SpatialDatabase = folder.model.schema_base.database
         # Make tags_map available on this instance
-        self.tags_map = load_tags_map(self.database)
+        self.tags_map = _load_tags_map(self.database)
 
     def get_width_and_depth_from_tabulated_profile(self, channel_gdf_row: pd.Series) -> float:
         """
@@ -193,7 +207,7 @@ class StructureRelations:
         self.folder = folder
         self.database: SpatialDatabase = folder.model.schema_base.database
         # Make tags_map available on this instance
-        self.tags_map = load_tags_map(self.database)
+        self.tags_map = _load_tags_map(self.database)
 
         if structure_table not in ["weir", "culvert", "pump", "orifice"]:
             raise ValueError("Provide structure table weir, culvert, pump or orifice")
