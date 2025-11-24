@@ -194,7 +194,7 @@
 			"table": "duikersifonhevel",
 			"type": "category",
 			"description": "Verschil in soortmateriaal",
-			"priority": "critical",
+			"priority": "warning",
 			"left": "soortmateriaal_Old",
 			"right": "soortmateriaal_New"
 		},
@@ -626,7 +626,7 @@
 			"table": "levee_overstromingsmodel",
 			"type": "category",
 			"description": "Verschil in material",
-			"priority": "critical",
+			"priority": "warning",
 			"left": "material_Old",
 			"right": "material_New"
 		},

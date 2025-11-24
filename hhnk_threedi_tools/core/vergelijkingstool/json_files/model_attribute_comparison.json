@@ -242,6 +242,15 @@
 					"right": "cross_section_max_height_model"
 				}
 			}
+		},
+		{
+			"name": "cmp_geometry_type",
+			"table": "KVD",
+			"type": "category",
+			"description": "Verschil tussen max hoogteopening (DAMO) en de max hoogteopening (model)",
+			"priority": "critical",
+			"left": "geom_type_damo",
+			"right": "geom_type_model"
 		}
 	]
 }
