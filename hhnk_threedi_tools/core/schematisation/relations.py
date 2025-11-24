@@ -103,6 +103,9 @@ class ChannelRelations:
         channel_gdf["tags_description"] = channel_gdf["tags"].apply(
             lambda t: _map_tags_array_to_descriptions(t, self.tags_map)
         )
+        channel_gdf["is_primary"] = channel_gdf["tags_description"].apply(
+            lambda x: True if "is_primary" in x else False
+        )
 
         # Join connection node data to channel table
         channel_gdf = channel_gdf.merge(
@@ -636,6 +639,9 @@ class StructureRelations:
         structure_gdf["tags"] = structure_gdf["tags"].apply(lambda x: x.split(",") if isinstance(x, str) else [])
         structure_gdf["tags_description"] = structure_gdf["tags"].apply(
             lambda t: _map_tags_array_to_descriptions(t, self.tags_map)
+        )
+        structure_gdf["is_primary"] = structure_gdf["tags_description"].apply(
+            lambda x: True if "is_primary" in x else False
         )
 
         for side in ["start", "end"]:
