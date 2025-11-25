@@ -17,7 +17,7 @@ def _load_tags_map(database: SpatialDatabase) -> dict[int, str]:
     Load tags table and return mapping of id (int) -> description.
     Tags are a way to add extra properties to various tables in the model database.
     Available tags are stored in seperate tag table, with id and description.
-    In object-talbes tags are stored as comma separated list of tag ids.
+    In object-tables tags are stored as comma separated list of tag ids.
 
     Parameters
     ----------
@@ -65,8 +65,11 @@ class ChannelRelations:
     ):
         self.folder = folder
         self.database: SpatialDatabase = folder.model.schema_base.database
-        # Make tags_map available on this instance
-        self.tags_map = _load_tags_map(self.database)
+
+    @cached_property
+    def tags_map(self) -> dict[int, str]:
+        tags_map = _load_tags_map(self.database)
+        return tags_map
 
     def get_width_and_depth_from_tabulated_profile(self, channel_gdf_row: pd.Series) -> float:
         """
@@ -206,13 +209,16 @@ class StructureRelations:
     ):
         self.folder = folder
         self.database: SpatialDatabase = folder.model.schema_base.database
-        # Make tags_map available on this instance
-        self.tags_map = _load_tags_map(self.database)
 
         if structure_table not in ["weir", "culvert", "pump", "orifice"]:
             raise ValueError("Provide structure table weir, culvert, pump or orifice")
         else:
             self.structure_table = structure_table
+
+    @cached_property
+    def tags_map(self) -> dict[int, str]:
+        tags_map = _load_tags_map(self.database)
+        return tags_map
 
     def concat_channel_ids(self) -> gpd.GeoDataFrame:
         """Concatenate channel_id and connection_node_id from channels_gdf for both start and end side.
