@@ -23,7 +23,7 @@ from hhnk_threedi_tools.resources.schematisation_builder.db_layer_mapping import
 
 try:
     from hhnk_threedi_tools.local_settings_htt import DATABASES
-except ImportError as e:
+except ImportError:
     load_dotenv()
     if os.getenv("SKIP_DATABASE") == "1":
         DATABASES = {}  # No DB in CI environment
@@ -97,7 +97,8 @@ def update_model_extent_from_combinatiepeilgebieden(
         # Filter combinatiepeilgebieden en merge
         model_extent_gdf["geometry"] = pgb_combi_gdf[
             pgb_combi_gdf["code"].isin(pgb_combi_rp_gdf["code"])
-        ].geometry.unary_union
+        ].geometry.union_all
+        logger.info(f"Updated model extent with {len(pgb_combi_rp_gdf)} Combinatiepeilgebieden from the database.")
 
     return model_extent_gdf
 
@@ -325,7 +326,14 @@ def db_exporter(
     if update_extent:
         logger.info("Updating model extent with geometry from Combinatiepeilgebieden")
         # Update model extent with geometry from Combinatiepeilgebieden
-        model_extent_gdf = update_model_extent_from_combinatiepeilgebieden(model_extent_gdf)
+        model_extent_gdf = update_model_extent_from_combinatiepeilgebieden(
+            model_extent_gdf=model_extent_gdf, logger=logger
+        )
+    # Export extent used for export including mettadata
+    model_extent_gdf["export_datetime"] = pd.Timestamp.now()
+    model_extent_gdf["export_user"] = os.getlogin()
+
+    model_extent_gdf.to_file(output_file, layer="model_extent", driver="GPKG")
 
     # Apply buffer distance
     model_extent_gdf["geometry"] = model_extent_gdf.buffer(buffer_distance)
@@ -337,7 +345,7 @@ def db_exporter(
     for table in table_names:
         table_config: dict = DB_LAYER_MAPPING.get(table)
         if table_config is None:
-            # FIXME wvg: wil je hier een warning / error en de loop verder skippen?
+            logger.warning(f"Table {table} not found in DB_LAYER_MAPPING, skipping export.")
             table_config = {}  # explicit check for mypy
         layer_db = table_config.get("source")
         schema = table_config.get("schema")
@@ -391,7 +399,7 @@ def db_exporter(
                 )
 
             # adds table to geopackage file as a layer
-            model_gdf.to_file(output_file, layer=layername, driver="GPKG", engine="pyogrio")
+            model_gdf.to_file(output_file, layer=layername, driver="GPKG")
 
             logger.info(f"Finished export of {len(model_gdf)} elements from table {table} from {service_name}")
 
@@ -417,7 +425,7 @@ def db_exporter(
                 )
 
                 # Write to geopackage
-                sub_model_gdf.to_file(output_file, layer=sub_table, driver="GPKG", engine="pyogrio")
+                sub_model_gdf.to_file(output_file, layer=sub_table, driver="GPKG")
 
                 logger.info(
                     f"Finished export of {len(sub_model_gdf)} elements from table {sub_table} from {service_name}"
@@ -444,7 +452,7 @@ def db_exporter(
                         schema=schema,
                     )
                     # Write to geopackage
-                    sub2_model_gdf.to_file(output_file, layer=sub2_table, driver="GPKG", engine="pyogrio")
+                    sub2_model_gdf.to_file(output_file, layer=sub2_table, driver="GPKG")
 
                     logger.info(
                         f"Finished export of {len(sub2_model_gdf)} elements from table {sub2_table} from {service_name}"
