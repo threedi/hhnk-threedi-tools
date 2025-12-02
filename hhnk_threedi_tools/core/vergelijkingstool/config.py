@@ -31,6 +31,7 @@ DAMO_LAYERS = [
     "Stuw",
     "VasteDam",
     "Vispassage",
+    "Waterdeel",
     # "Waterdeel", it does not contains code should be done in a different way
 ]
 
@@ -73,16 +74,13 @@ STRUCTURE_CODES = [
     "KDU",
     "KST",
     "KGM",
-    "KSY",
     "KVD",
-    "KBR",
     "OAF",
+    "KBR",
+    # "KSY",
     # @TODO: introduce 'other' category, so we don't miss any that don't have a nice code
 ]
 
-GEOMETRICAL_COMPARISON_LAYERS = [
-    "PeilafwijkingGebied",
-    "PeilgebiedPraktijk",
-]
+GEOMETRICAL_COMPARISON_LAYERS = ["PeilafwijkingGebied", "PeilgebiedPraktijk", "Waterdeel"]
 # "Waterdeel"
 COMPARISON_GENERAL_THRESHOLD = 0.00001
