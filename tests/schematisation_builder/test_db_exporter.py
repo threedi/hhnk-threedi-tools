@@ -30,7 +30,7 @@ def test_db_exporter_one_feature():
     output_file = db_export_output_dir / "test_damo_gemaal_helsdeur.gpkg"
     db_export_output_dir.mkdir(exist_ok=True)
 
-    model_extent_gdf = gpd.read_file(model_extent_path, engine="pyogrio")
+    model_extent_gdf = gpd.read_file(model_extent_path)
     table_names = ["GEMAAL_DAMO", "GEMAAL"]
 
     logging_DAMO = db_exporter(
@@ -64,7 +64,7 @@ def test_db_exporter_polder():
     model_extent_path = TEST_DIRECTORY / r"model_test\01_source_data\polder_polygon.shp"
     output_file = db_export_output_dir / "test_export.gpkg"
 
-    model_extent_gdf = gpd.read_file(model_extent_path, engine="pyogrio")
+    model_extent_gdf = gpd.read_file(model_extent_path)
 
     logging_DAMO = db_exporter(
         model_extent_gdf=model_extent_gdf,
