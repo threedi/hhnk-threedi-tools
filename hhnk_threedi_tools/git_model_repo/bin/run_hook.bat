@@ -1,14 +1,9 @@
 @echo off
+
 cls
 
-setlocal
-
 set PYTHON_CMD="%~dp0python.bat"
-set SCRIPT="%~dp0..\run_hook.py"
-
-echo Using Python: %PYTHON_CMD%
-echo Running script: %SCRIPT%
+set SCRIPT="D:\github\00_modellen_db\hhnk-threedi-tools\hhnk_threedi_tools\git_model_repo\run_hook.py"
 
 call %PYTHON_CMD% %SCRIPT% %*
 
-endlocal
