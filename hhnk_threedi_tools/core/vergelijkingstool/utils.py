@@ -4,14 +4,13 @@ import os
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict
+from typing import Any, Dict, List, Optional, Union
 
 import fiona
 import geopandas as gpd
-import pandas as pd
 
 from hhnk_threedi_tools.core.folders import Folders
-from hhnk_threedi_tools.core.vergelijkingstool import config, json_files
+from hhnk_threedi_tools.core.vergelijkingstool import config
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -39,7 +38,7 @@ class ModelInfo:
     date_sqlite: str
 
 
-def get_model_info(path: str) -> ModelInfo:
+def get_model_info(path: Union[str, Path]) -> ModelInfo:
     """
     Get model information from the given path.
     :param path: Path to the model folder
@@ -80,7 +79,7 @@ def get_model_info(path: str) -> ModelInfo:
     )
 
 
-def translate(data, translation_file):
+def translate(data: Dict[str, gpd.GeoDataFrame], translation_file: Union[str, Path]) -> Dict[str, gpd.GeoDataFrame]:
     """
     Load a translation file and translates the data datastructure.
     Renames tables and columns as indicated in the translation_file
@@ -90,7 +89,7 @@ def translate(data, translation_file):
     :return: Translated data
     """
 
-    # load file
+    # load and lower-case the json mapping then apply to data dict
     f = open(translation_file)
 
     try:
@@ -105,9 +104,6 @@ def translate(data, translation_file):
         # Check if the layer name is mapped in the translation file
         for layer_name in mapping.keys():
             if layer == layer_name:
-                # Map column names
-                # logger.debug(f"Mapping column names of layer {layer}")
-
                 # Rename de columns within the data dictionary following the damo_translation.json file
                 data[layer].rename(columns=mapping[layer]["columns"], inplace=True)
 
@@ -122,18 +118,18 @@ def translate(data, translation_file):
 
 
 def load_file_and_translate(
-    damo_filename=None,
-    hdb_filename=None,
-    threedi_filename=None,
-    translation_DAMO=None,
-    translation_HDB=None,
-    translation_3Di=None,
-    layer_selection=False,
-    layers_input_damo_selection=None,
-    layers_input_hdb_selection=None,
-    layers_input_threedi_selection=None,
-    mode="damo",  # options: "damo", "threedi", "both"
-):
+    damo_filename: Optional[Union[str, Path]] = None,
+    hdb_filename: Optional[Union[str, Path]] = None,
+    threedi_filename: Optional[Union[str, Path]] = None,
+    translation_DAMO: Optional[Union[str, Path]] = None,
+    translation_HDB: Optional[Union[str, Path]] = None,
+    translation_3Di: Optional[Union[str, Path]] = None,
+    layer_selection: bool = False,
+    layers_input_damo_selection: Optional[List[str]] = None,
+    layers_input_hdb_selection: Optional[List[str]] = None,
+    layers_input_threedi_selection: Optional[List[str]] = None,
+    mode: str = "damo",
+) -> Dict[str, gpd.GeoDataFrame]:
     """
     Load for DAMO, HDB, and 3Di datasets.
     Depending on `mode`
@@ -142,9 +138,8 @@ def load_file_and_translate(
     mode = "threedi" loads 3Di layers
     mode = "both" loads all (if paths are provided)
     """
-
-    data = {}
-    # logger.debug("Find layer names within geopackages")
+    # load requested layers from given datasources and apply optional translations
+    data: Dict[str, gpd.GeoDataFrame] = {}
 
     # Determine layers to load depending on mode
     if layer_selection:
@@ -225,33 +220,9 @@ def update_channel_codes(
     - Maps the found codes onto the channels by matching the channel "id" to the derived mapping and writes the
       updated channel layer back to `model_path` (layer "channel", driver "GPKG").
     - Removes the temporary "id" column from the original `channel` if it existed.
-
-    Parameters
-    ----------
-    channel : geopandas.GeoDataFrame
-        GeoDataFrame representing channel features to update. Column names will be treated case-insensitively
-        (lowercased earlier in the pipeline).
-    cross_section_location : geopandas.GeoDataFrame
-        GeoDataFrame with cross-section locations. Must contain a "channel_id" column and geometries used to
-        find the nearest DAMO hydroobject for each channel.
-    damo : str or pathlib.Path
-        Path to the DAMO datasource (e.g. GPKG) containing a "hydroobject" layer with a code column.
-    model_path : str or pathlib.Path
-        Path to the model datasource (e.g. GeoPackage) containing a "channel" layer. This file will be written.
-
-    Returns
-    -------
-    geopandas.GeoDataFrame
-        A new GeoDataFrame with updated "code" values for channels (and same geometry/attributes as input `channel`).
-
-    Notes
-    -----
-    - The spatial nearest join uses a max_distance of 5 (CRS units). Increase this value if your data CRS uses degrees
-      or if features are further apart.
-    - If the DAMO hydroobject code column is named "CODE" it will be renamed to "code" for consistency.
-    - Side effects: writes the updated "channel" layer into `model_path` using the GPKG driver.
-    - Exceptions from Fiona/GeoPandas (file access, missing layers, CRS mismatches) are propagated.
     """
+
+    # if all channel codes already start with OAF return unchanged
     if "code" in channel.columns:
         codes = channel["code"].astype(str).str.strip()  # delete spaces
         starts_with_oaf = codes.str.startswith("OAF", na=False)
@@ -259,6 +230,7 @@ def update_channel_codes(
         print("all the codes are updated")
         return channel
 
+    # read feature ids from model file to preserve ordering
     with fiona.open(model_path, layer="channel") as src:
         ids = [feat["id"] for feat in src]
 
@@ -274,6 +246,7 @@ def update_channel_codes(
 
     damo_gdf = damo_gdf[["code", "geometry"]].copy()
 
+    # nearest join to find matching hydroobject code per channel location
     joined = gpd.sjoin_nearest(cross, damo_gdf, how="left", max_distance=5)
 
     code_map = joined.groupby("channel_id")["code"].first()
@@ -285,6 +258,7 @@ def update_channel_codes(
 
     gdf_channel = gdf_channel.copy()
 
+    # remove temporary id column from original if it existed
     if "id" in channel.columns:
         channel.drop(columns=["id"], inplace=True)
     gdf_channel.to_file(model_path, layer="channel", driver="GPKG")
@@ -292,12 +266,13 @@ def update_channel_codes(
     return gdf_channel
 
 
-def add_priority_summaries(table_dict):
+def add_priority_summaries(table_dict: Dict[str, gpd.GeoDataFrame]) -> Dict[str, gpd.GeoDataFrame]:
     """
     For each table create a dictionary that create columns
     Summary_Critical and  Summary_Warnings with the respective
     columns name inside
     """
+    # create readable summary columns from *_priority columns
     for layer_name, gdf in table_dict.items():
         # find the columns that ends with "_priority"
         priority_cols = [c for c in gdf.columns if c.endswith("_priority")]
@@ -338,7 +313,7 @@ def build_summary_layers(table_dict: Dict[str, gpd.GeoDataFrame]) -> Dict[str, g
         - Keep key columns and add source_layer
         - Return a dictionary of GeoDataFrames without geometry
     """
-
+    # construct per-layer summary GeoDataFrames without geometry for export
     result: Dict[str, gpd.GeoDataFrame] = {}
 
     for layer_name, gdf in table_dict.items():

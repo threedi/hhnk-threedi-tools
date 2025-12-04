@@ -32,3 +32,4 @@ empty.gpkg
 tests/data/model_test/02_schematisation/00_basis/bwn_test.gpkg-shm
 tests/data/model_test/02_schematisation/00_basis/bwn_test.gpkg-wal
 
+tests/data/model_test/01_source_data/polder_polygon.gpkg
