@@ -3,7 +3,7 @@
 REM Roep Python aan binnen de pixi-omgeving
 rem Prefer an explicit project root so pixi always uses the intended pixi.toml.
 rem Fallback to three-levels-up from the script location if explicit root is not available.
-set "EXPLICIT_ROOT=E:\\02.modelrepos\\hhnk-threedi-tools"
+set "EXPLICIT_ROOT=D:\\github\\00_modellen_db\\hhnk-threedi-tools"
 
 if exist "%EXPLICIT_ROOT%\pixi.toml" (
     pushd "%EXPLICIT_ROOT%" >NUL 2>&1 || (
