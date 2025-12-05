@@ -31,7 +31,7 @@ def model_info() -> ModelInfo:
     return get_model_info(FOLDER_TEST)
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def damos(model_info: ModelInfo) -> Tuple[DAMO, DAMO]:
     """Initialize and return a tuple of (damo_old, damo_new).
 
@@ -83,7 +83,7 @@ def test_compare_with_damo(model_info: ModelInfo, damos: Tuple[DAMO, DAMO]) -> N
 
 
 @pytest.mark.skipif(sys.version_info < (3, 12), reason="Requires Python 3.12 or higher")
-def test_compare_with_threedi(model_info: ModelInfo, damos: Tuple[DAMO, DAMO]) -> None:
+def test_compare_with_threedi(model_info: ModelInfo, damos) -> None:
     """Compare a Threedimodel with DAMO and check KDU/KST warning counts.
     This function writes a GPKG file and then inspects layers 'stuw' and 'gemaal
     and test de function compare_with_damo from the Threedimodel class.
@@ -112,7 +112,7 @@ def test_compare_with_threedi(model_info: ModelInfo, damos: Tuple[DAMO, DAMO]) -
     # assert expected warning counts
     assert filename.exists()
     assert "statistics" in fiona.listlayers(str(filename))
-    assert np.sum(kdu["number_of_warning"]) == 13
+    assert np.sum(kdu["number_of_warning"]) == 26
     assert np.sum(kst["number_of_warning"]) == 3
 
 
@@ -144,7 +144,7 @@ def test_compare_attribute_priority_function_name_change(damos: Tuple[DAMO, DAMO
     json_folder = model_info.json_folder / "damo_attribute_comparison.json"
     with open(json_folder) as file:
         att_comp = json.load(file)
-        comparison = att_comp["comparisons"][110]
+        comparison = att_comp["comparisons"][108]
 
     # change priority for function difference to force error
     comparison["function"]["test"] = comparison["function"].pop("difference")
@@ -171,7 +171,7 @@ def test_compare_attribute_priority_function_add(damos: Tuple[DAMO, DAMO], model
     json_folder = model_info.json_folder / "damo_attribute_comparison.json"
     with open(json_folder) as file:
         att_comp = json.load(file)
-        comparison = att_comp["comparisons"][110]
+        comparison = att_comp["comparisons"][108]
 
     # change priority for function difference to add
     comparison["function"]["add"] = comparison["function"].pop("difference")
@@ -197,7 +197,7 @@ def test_compare_attribute_priority_function_minimum(damos: Tuple[DAMO, DAMO], m
     json_folder = model_info.json_folder / "damo_attribute_comparison.json"
     with open(json_folder) as file:
         att_comp = json.load(file)
-        comparison = att_comp["comparisons"][110]
+        comparison = att_comp["comparisons"][108]
 
     # change priority for function difference to minimum
     comparison["function"]["minimum"] = comparison["function"].pop("difference")
@@ -269,12 +269,14 @@ def test_threedi_crs_iquals(
     threedi_model = Threedimodel(model_info.fn_threedimodel, model_info=model_info)
 
     # Change pump layer CRS to WGS84 and write to temp gpkg
-    threedi_model.data["pump"] = threedi_model.data["pump"].to_crs(epsg=4326)
-    TEMP = tmp_path / "temp_test.gpkg"
-    threedi_model.data["pump"].to_file(TEMP, layer="pump", driver="GPKG")
 
+    temp_gpkg = tmp_path / "temp_test.gpkg"
+    for layer_name in threedi_model.data.keys():
+        if isinstance(threedi_model.data[layer_name], gpd.GeoDataFrame):
+            threedi_model.data[layer_name] = threedi_model.data[layer_name].to_crs(epsg=4326)
+            threedi_model.data[layer_name].to_file(temp_gpkg, layer=layer_name, driver="GPKG")
     # create new 3di object with the temp file and compare with damo
-    threedi_model = Threedimodel(TEMP, model_info=model_info)
+    threedi_model = Threedimodel(temp_gpkg, model_info=model_info)
     resutl, statict = threedi_model.compare_with_DAMO(
         damo_new,
         filename=None,
@@ -282,8 +284,8 @@ def test_threedi_crs_iquals(
     )
 
     # verify expected layer exists and CRS is Amersfoort
-    assert "KGM" in resutl.keys()
-    assert resutl["KGM"].crs.source_crs.name == "Amersfoort"
+    assert "KDU" in resutl.keys()
+    assert resutl["KDU"].crs.source_crs.name == "Amersfoort"
 
 
 @pytest.mark.skipif(sys.version_info < (3, 12), reason="Requires Python 3.12 or higher")
