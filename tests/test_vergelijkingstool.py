@@ -4,7 +4,7 @@ import os
 import shutil
 import sys
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Tuple
 
 import fiona
 import geopandas as gpd
@@ -16,7 +16,7 @@ from hhnk_threedi_tools.core.vergelijkingstool import styling, utils
 from hhnk_threedi_tools.core.vergelijkingstool.DAMO import DAMO
 from hhnk_threedi_tools.core.vergelijkingstool.Threedimodel import Threedimodel
 from hhnk_threedi_tools.core.vergelijkingstool.utils import ModelInfo, get_model_info
-from tests.config import FOLDER_TEST, TEMP_DIR
+from tests.config import FOLDER_TEST
 
 # model_info = get_model_info(FOLDER_TEST)
 
@@ -258,16 +258,19 @@ def test_update_channel_codes(model_info: ModelInfo, tmp_path) -> None:
 
 
 @pytest.mark.skipif(sys.version_info < (3, 12), reason="Requires Python 3.12 or higher")
-def test_threedi_crs_iquals(model_info: ModelInfo) -> None:
+def test_threedi_crs_iquals(
+    model_info: ModelInfo,
+    tmp_path: Path,
+) -> None:
     """Test compare with damo to catch the case where the projection sytem is different"""
     # get damo object
     damo_new = DAMO(model_info, model_info.fn_damo_new, model_info.fn_hdb_new, clip_shape=model_info.damo_selection)
     # get 3di object
     threedi_model = Threedimodel(model_info.fn_threedimodel, model_info=model_info)
 
-    # change pump layer CRS to WGS84 and write to temp gpkg
+    # Change pump layer CRS to WGS84 and write to temp gpkg
     threedi_model.data["pump"] = threedi_model.data["pump"].to_crs(epsg=4326)
-    TEMP = os.path.join((r"D:\github\jacostabarragan\hhnk-threedi-tools\tests\data"), "temp_test.gpkg")
+    TEMP = tmp_path / "temp_test.gpkg"
     threedi_model.data["pump"].to_file(TEMP, layer="pump", driver="GPKG")
 
     # create new 3di object with the temp file and compare with damo

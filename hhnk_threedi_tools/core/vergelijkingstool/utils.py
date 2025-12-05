@@ -324,6 +324,9 @@ def build_summary_layers(table_dict: Dict[str, gpd.GeoDataFrame]) -> Dict[str, g
         gdf = gdf.copy()
 
         # First condition: rows with critical issues
+        if "number_of_critical" not in gdf.columns:
+            continue
+
         mask_critical = gdf["number_of_critical"] > 0
 
         mask_not_both = ~gdf["in_both"].str.contains("both", case=False, na=False)

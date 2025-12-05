@@ -198,6 +198,14 @@ class DAMO(DataSet):
                 table_A[layer]["origin"] = layer
                 table_B[layer]["origin"] = layer
 
+                if "code" not in table_A[layer].columns:
+                    if layer == "waterdeel":
+                        table_A[layer]["code"] = table_A[layer].index.astype("string")
+
+                if "code" not in table_B[layer].columns:
+                    if layer == "waterdeel":
+                        table_B[layer]["code"] = table_B[layer].index.astype("string")
+
                 # outer merge on the two tables with suffixes
                 table_A[layer] = table_A[layer].add_suffix("_New").rename(columns={"code_New": "code"})
                 table_B[layer] = table_B[layer].add_suffix("_Old").rename(columns={"code_Old": "code"})
@@ -298,7 +306,7 @@ class DAMO(DataSet):
                             pd.concat(
                                 [
                                     table_merged.code,
-                                    table_merged["geometry_New"].difference(table_merged["geometry_Old"]),
+                                    table_merged["geometry_Old"].difference(table_merged["geometry_New"]),
                                 ],
                                 axis=1,
                             )
