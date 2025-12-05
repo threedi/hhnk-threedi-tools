@@ -78,7 +78,6 @@ class Threedimodel(DataSet):
             # layer = 'cross_section_location'
             # If this layer contains cross section tabulated data, compute max values.
             if "cross_section_table" in (self.data[layer].keys()):
-                print(layer)
                 gdf = self.data[layer]
 
                 max_widths = []
@@ -243,7 +242,7 @@ class Threedimodel(DataSet):
 
     def compare_with_DAMO(
         self,
-        DAMO_obj: Any,
+        DAMO: Any,
         filename: Optional[Union[str, Path]] = None,
         overwrite: bool = False,
         threedi_layer_selector: bool = False,
@@ -278,21 +277,23 @@ class Threedimodel(DataSet):
             # collect per-structure GeoDataFrames from model and DAMO
             table_struc_model[struc] = self.get_structure_by_code(struc, THREEDI_STRUCTURE_LAYERS)
             table_struc_DAMO[struc] = DAMO.get_structure_by_code(struc, DAMO_HDB_STRUCTURE_LAYERS)
-            print(table_struc_model[struc])
 
         table_C: Dict[str, gpd.GeoDataFrame] = {}
         for layer in table_struc_model.keys():
-            print(layer)
             # check and align CRS between model and DAMO
             self.logger.debug(f"the crs for {layer}")
-            if table_struc_DAMO[layer].crs == table_struc_model[layer].crs:
-                self.logger.debug(f"CRS of DAMO and model data {layer} is equal")
+            if table_struc_model[layer].empty:
+                self.logger.debug(f"One of the datasets for {layer} is empty, skipping comparison")
+                continue
             else:
-                self.logger.debug(f"CRS of DAMO and model data {layer} is not equal")
+                if table_struc_DAMO[layer].crs == table_struc_model[layer].crs:
+                    self.logger.debug(f"CRS of DAMO and model data {layer} is equal")
+                else:
+                    self.logger.debug(f"CRS of DAMO and model data {layer} is not equal")
 
-                table_struc_model[layer] = (
-                    table_struc_model[layer].set_crs(epsg=4326).to_crs(crs=table_struc_DAMO[layer].crs)
-                )
+                    table_struc_model[layer] = (
+                        table_struc_model[layer].set_crs(epsg=4326).to_crs(crs=table_struc_DAMO[layer].crs)
+                    )
             self.crs = table_struc_DAMO[layer].crs
 
             # Add geometry information (length/area) to dataframe
