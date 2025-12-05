@@ -1,0 +1,256 @@
+{
+	"comparisons": [
+		{
+			"name": "cmp_hoogtebinnenonderkantbov",
+			"table": "KDU",
+			"type": "numeric",
+			"description": "Verschil tussen bovenstroomse BOB en de bovenstroomse culvert invert level",
+			"priority": "critical",
+			"function": {
+				"difference": {
+					"left": "hoogtebinnenonderkantbov_damo",
+					"right": "invert_level_start_model"
+				}
+			}
+		},
+		{
+			"name": "cmp_hoogtebinnenonderkantbene",
+			"table": "KDU",
+			"type": "numeric",
+			"description": "Verschil tussen bovenstroomse BOB en de bovenstroomse culvert invert level",
+			"priority": "critical",
+			"function": {
+				"difference": {
+					"left": "hoogtebinnenonderkantbene_damo",
+					"right": "invert_level_end_model"
+				}
+			}
+		},
+		{
+			"name": "cmp_bob_max",
+			"table": "KDU",
+			"type": "numeric",
+			"description": "Verschil tussen maximale BOB en de maximale culvert invert level",
+			"priority": "critical",
+			"function": {
+				"difference": {
+					"left": {
+						"maximum": {
+							"left": "hoogtebinnenonderkantbov_damo",
+							"right": "hoogtebinnenonderkantbene_damo",
+							"skipna": true
+						}
+					},
+					"right": {
+						"maximum": {
+							"left": "invert_level_start_model",
+							"right": "invert_level_end_model"
+						}
+					}
+				}
+			}
+		},
+		{
+			"name": "cmp_max_hoogteopening",
+			"table": "KDU",
+			"type": "numeric",
+			"description": "Verschil tussen max hoogteopening (DAMO) en de max hoogteopening (model)",
+			"priority": "critical",
+			"function": {
+				"difference": {
+					"left": "hoogteopening_damo",
+					"right": "cross_section_max_height_model"
+				}
+			}
+		},
+		{
+			"name": "cmp_max_breedteopening",
+			"table": "KDU",
+			"type": "numeric",
+			"description": "Verschil tussen max breedteopening (DAMO) en de max breedteopening (model)",
+			"priority": "critical",
+			"function": {
+				"difference": {
+					"left": "breedteopening_damo",
+					"right": "cross_section_max_width_model"
+				}
+			}
+		},
+		{
+			"name": "cmp_geometry_type",
+			"table": "KDU",
+			"type": "category",
+			"description": "Verschil tussen geometrie type (DAMO) en de geometrie type (model)",
+			"priority": "warning",
+			"left": "geom_type_damo",
+			"right": "geom_type_model"
+		},
+		{
+			"name": "cmp_geometry_length",
+			"table": "KDU",
+			"type": "numeric",
+			"description": "Verschil tussen geometrie lengte (DAMO) en de geometrie lengte (model)",
+			"priority": "warning",
+			"function": {
+				"difference": {
+					"left": "geom_length_damo",
+					"right": "geom_length_model"
+				}
+			}
+		},
+		{
+			"name": "cmp_hoogteonderzijde",
+			"table": "KBR",
+			"type": "numeric",
+			"description": "Verschil tussen hoogteonderzijde (DAMO) en de crest_level+cross_section_max_height (model)",
+			"priority": "critical",
+			"function": {
+				"difference": {
+					"left": "hoogteonderzijde_damo",
+					"right": {
+						"add": {
+							"left": "crest_level_model",
+							"right": "cross_section_max_height_model"
+						}
+					}
+				}
+			}
+		},
+		{
+			"name": "cmp_doorstroombreedte",
+			"table": "KBR",
+			"type": "numeric",
+			"description": "Verschil tussen doorstroombreedte (DAMO) en de witdth (model)",
+			"priority": "warning",
+			"function": {
+				"difference": {
+					"left": "som_doorstroombreedte_damo",
+					"right": "cross_section_max_width_model"
+				}
+			}
+		},
+		{
+			"name": "cmp_capaciteit",
+			"table": "KGM",
+			"type": "numeric",
+			"description": "Verschil tussen gemaalcapaciteit in DAMO en het model (met omrekenfactor)",
+			"priority": "critical",
+			"function": {
+				"difference": {
+					"left": "maximalecapaciteit_damo",
+					"right": {
+						"multiply": {
+							"left": "capacity_model",
+							"right": 0.06
+						}
+					}
+				}
+			}
+		},
+		{
+			"name": "cmp_geometry_type",
+			"table": "KGM",
+			"type": "category",
+			"description": "Verschil tussen geometrie type (DAMO) en de geometrie type (model)",
+			"priority": "warning",
+			"left": "geom_type_damo",
+			"right": "geom_type_model"
+		},
+		{
+			"name": "cmp_doorstroombreedte",
+			"table": "KST",
+			"type": "numeric",
+			"description": "Verschil tussen doorstroombreedte",
+			"priority": "warning",
+			"function": {
+				"difference": {
+					"left": "doorstroombreedte_damo",
+					"right": "cross_section_width_model"
+				}
+			}
+		},
+		{
+			"name": "cmp_geometry_type",
+			"table": "OAF",
+			"type": "category",
+			"description": "Verschil tussen geometrie type (DAMO) en de geometrie type (model)",
+			"priority": "warning",
+			"left": "geom_type_damo",
+			"right": "geom_type_model"
+		},
+		{
+			"name": "cmp_geometry_length",
+			"table": "OAF",
+			"type": "numeric",
+			"description": "Verschil tussen geometrie lengte (DAMO) en de geometrie lengte (model)",
+			"priority": "warning",
+			"function": {
+				"difference": {
+					"left": "geom_length_damo",
+					"right": "geom_length_model"
+				}
+			}
+		},
+		{
+			"name": "cmp_hoogtebinnenonderkantbov",
+			"table": "KSY",
+			"type": "numeric",
+			"description": "Verschil tussen bovenstroomse BOB en de bovenstroomse culvert invert level",
+			"priority": "critical",
+			"function": {
+				"difference": {
+					"left": "hoogtebinnenonderkantbov_damo",
+					"right": "invert_level_start_model"
+				}
+			}
+		},
+		{
+			"name": "cmp_hoogtebinnenonderkantbene",
+			"table": "KSY",
+			"type": "numeric",
+			"description": "Verschil tussen bovenstroomse BOB en de bovenstroomse culvert invert level",
+			"priority": "critical",
+			"function": {
+				"difference": {
+					"left": "hoogtebinnenonderkantbene_damo",
+					"right": "invert_level_end_model"
+				}
+			}
+		},
+		{
+			"name": "cmp_max_breedteopening",
+			"table": "KSY",
+			"type": "numeric",
+			"description": "Verschil tussen max breedteopening (DAMO) en de max breedteopening (model)",
+			"priority": "critical",
+			"function": {
+				"difference": {
+					"left": "breedteopening_damo",
+					"right": "cross_section_max_width_model"
+				}
+			}
+		},
+		{
+			"name": "cmp_max_hoogteopening",
+			"table": "KSY",
+			"type": "numeric",
+			"description": "Verschil tussen max hoogteopening (DAMO) en de max hoogteopening (model)",
+			"priority": "critical",
+			"function": {
+				"difference": {
+					"left": "hoogteopening_damo",
+					"right": "cross_section_max_height_model"
+				}
+			}
+		},
+		{
+			"name": "cmp_geometry_type",
+			"table": "KVD",
+			"type": "category",
+			"description": "Verschil tussen max hoogteopening (DAMO) en de max hoogteopening (model)",
+			"priority": "critical",
+			"left": "geom_type_damo",
+			"right": "geom_type_model"
+		}
+	]
+}
