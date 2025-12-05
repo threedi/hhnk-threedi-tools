@@ -3,6 +3,7 @@
 import logging
 import os
 from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import geopandas as gpd
 import numpy as np
@@ -18,7 +19,7 @@ from hhnk_threedi_tools.core.vergelijkingstool.utils import ModelInfo
 
 
 class Threedimodel(DataSet):
-    def __init__(self, filename, model_info: ModelInfo, translation=None):
+    def __init__(self, filename: Union[str, Path], model_info: ModelInfo, translation: Optional[dict] = None) -> None:
         """
         Create a Threedimodel object and reads the data from the 3Di schematisation sqlite.
         If translation dictionaries are supplied, layer and column names are mapped.
@@ -67,7 +68,7 @@ class Threedimodel(DataSet):
         for key in self.data.keys():
             self.__setattr__(key, self.data[key])
 
-    def max_value_from_tabulated(self):
+    def max_value_from_tabulated(self) -> None:
         """
         Determine the maximum value in a tabultated string
         :param self:
@@ -75,6 +76,7 @@ class Threedimodel(DataSet):
         """
         for layer in self.data:
             # layer = 'cross_section_location'
+            # If this layer contains cross section tabulated data, compute max values.
             if "cross_section_table" in (self.data[layer].keys()):
                 print(layer)
                 gdf = self.data[layer]
@@ -84,14 +86,17 @@ class Threedimodel(DataSet):
                 for index, row in gdf.iterrows():
                     shape = row.cross_section_shape
                     cross_section_table = row.cross_section_table
+                    # handle shape 2 directly from width/height columns
                     if shape == 2:
                         cross_section_max_width = row.cross_section_width
                         cross_section_max_height = row.cross_section_height
+                    # parse tabulated string into numeric array and take maxima
                     elif cross_section_table is not None:
                         data = [list(map(float, line.split(","))) for line in cross_section_table.strip().split("\n")]
                         array = np.array(data)
                         cross_section_max_width = np.max(array[:, 1])
                         cross_section_max_height = np.max(array[:, 0])
+                    # shape 5 fallback uses width and crest_level
                     elif shape == 5 and cross_section_table is None:
                         cross_section_max_width = row.cross_section_width
                         cross_section_max_height = row.crest_level
@@ -101,7 +106,7 @@ class Threedimodel(DataSet):
                 gdf["cross_section_max_width"] = max_widths
                 gdf["cross_section_max_height"] = max_heights
 
-    def determine_statistics(self, table_C):
+    def determine_statistics(self, table_C: Dict[str, gpd.GeoDataFrame]) -> pd.DataFrame:
         """
         Per layer aggregate statistics like amount of entries, total length or total area for a layer,
         and compare these model statistics with DAMO statistics.
@@ -109,7 +114,7 @@ class Threedimodel(DataSet):
         :param table_C: Dict with GeoDataFrames containing the compared data
         :return: DataFrame containing statistics
         """
-
+        # prepare empty statistics dataframe with expected columns
         statistics = pd.DataFrame(
             columns=[
                 "Count DAMO",
@@ -126,6 +131,7 @@ class Threedimodel(DataSet):
 
         model_name = self.model_name
         for i, layer_name in enumerate(table_C):
+            # count features for model and DAMO per layer using 'in_both' marker
             count_model = len(
                 table_C[layer_name].loc[
                     (table_C[layer_name]["in_both"] == f"{model_name} sqlite")
@@ -140,6 +146,7 @@ class Threedimodel(DataSet):
             )
             count_diff = count_model - count_DAMO
 
+            # sum geometry-based metrics (length/area) per dataset
             length_model = sum(
                 table_C[layer_name]
                 .loc[
@@ -148,6 +155,7 @@ class Threedimodel(DataSet):
                 ]
                 .geom_length_model
             )
+
             length_DAMO = sum(
                 table_C[layer_name]
                 .loc[
@@ -189,7 +197,14 @@ class Threedimodel(DataSet):
         statistics = statistics.fillna(0).astype(int)
         return statistics
 
-    def export_comparison_3di(self, table_C, statistics, filename, overwrite=False, crs=None):
+    def export_comparison_3di(
+        self,
+        table_C: Dict[str, gpd.GeoDataFrame],
+        statistics: pd.DataFrame,
+        filename: Union[str, Path],
+        overwrite: bool = False,
+        crs: Optional[Any] = None,
+    ) -> None:
         """
         Export all compared layers and statistics to a GeoPackage.
 
@@ -204,7 +219,7 @@ class Threedimodel(DataSet):
 
         styling_path = self.styling_path
 
-        # add styling to layers
+        # add styling to layers and write gpkg
         layer_styles = styling.export_comparison_3di(
             table_C,
             statistics,
@@ -214,9 +229,10 @@ class Threedimodel(DataSet):
             styling_path=styling_path,
             crs=self.crs,
         )
+        # attach QML styling to the exported layers
         self.add_layer_styling(fn_export_gpkg=filename, layer_styles=layer_styles)
 
-        # Export statistics
+        # Export statistics table and summary layers
         self.export_statistics(statistics, filename)
         self.logger.info(f"Finished exporting to {filename}")
 
@@ -227,13 +243,12 @@ class Threedimodel(DataSet):
 
     def compare_with_DAMO(
         self,
-        DAMO,
-        # attribute_comparison=None,
-        filename=None,
-        overwrite=False,
-        threedi_layer_selector=False,
-        structure_codes=None,
-    ):
+        DAMO_obj: Any,
+        filename: Optional[Union[str, Path]] = None,
+        overwrite: bool = False,
+        threedi_layer_selector: bool = False,
+        structure_codes: Optional[List[str]] = None,
+    ) -> Tuple[Dict[str, gpd.GeoDataFrame], pd.DataFrame]:
         """
         Compare the Threedi object with a DAMO object.
         Looks in all layers containing structures (defined in the config.py) for the 'code' column. Creates a joined
@@ -247,13 +262,12 @@ class Threedimodel(DataSet):
         :return: Dictionary containing GeoDataframes with compared data and a Dataframe with statistics
         """
         attribute_comparison = self.json_files_path / "model_attribute_comparison.json"
-        # print(attribute_comparison)
 
         # sort model and damo data by structure code instead of model and damo layers
         model_name = self.model_name
-        table_struc_model = {}
-        table_struc_DAMO = {}
-        # base_     output = r"E:\02.modellen\castricum\01_source_data\vergelijkingsTool\output"
+        table_struc_model: Dict[str, gpd.GeoDataFrame] = {}
+        table_struc_DAMO: Dict[str, gpd.GeoDataFrame] = {}
+
         if threedi_layer_selector is True:
             STRUCTURE_CODES = structure_codes
         else:
@@ -261,13 +275,15 @@ class Threedimodel(DataSet):
             print("threedi layer selection is OFF")
 
         for struc in STRUCTURE_CODES:
+            # collect per-structure GeoDataFrames from model and DAMO
             table_struc_model[struc] = self.get_structure_by_code(struc, THREEDI_STRUCTURE_LAYERS)
             table_struc_DAMO[struc] = DAMO.get_structure_by_code(struc, DAMO_HDB_STRUCTURE_LAYERS)
             print(table_struc_model[struc])
-        table_C = {}
+
+        table_C: Dict[str, gpd.GeoDataFrame] = {}
         for layer in table_struc_model.keys():
             print(layer)
-            # print(f"the crs for {layer} in DAMO is {table_struc_DAMO[layer].crs}")
+            # check and align CRS between model and DAMO
             self.logger.debug(f"the crs for {layer}")
             if table_struc_DAMO[layer].crs == table_struc_model[layer].crs:
                 self.logger.debug(f"CRS of DAMO and model data {layer} is equal")
@@ -283,7 +299,7 @@ class Threedimodel(DataSet):
             table_struc_model[layer] = self.add_geometry_info(table_struc_model[layer])
             table_struc_DAMO[layer] = self.add_geometry_info(table_struc_DAMO[layer])
 
-            # Add 'dataset' column, after merging this will become 'dataset_model' and 'dataset_damo'
+            # mark presence in dataset for later 'in_both' column
             table_struc_model[layer]["dataset"] = True
             table_struc_DAMO[layer]["dataset"] = True
 

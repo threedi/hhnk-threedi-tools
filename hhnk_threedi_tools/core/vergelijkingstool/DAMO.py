@@ -1,6 +1,7 @@
 # %%
 import logging
 from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import geopandas as gpd
 import pandas as pd
@@ -10,7 +11,6 @@ from hhnk_threedi_tools.core.vergelijkingstool import styling, utils
 from hhnk_threedi_tools.core.vergelijkingstool.config import *
 from hhnk_threedi_tools.core.vergelijkingstool.Dataset import DataSet
 from hhnk_threedi_tools.core.vergelijkingstool.qml_styling_files import DAMO as DAMO_styling_path
-from hhnk_threedi_tools.core.vergelijkingstool.styling import *
 from hhnk_threedi_tools.core.vergelijkingstool.utils import ModelInfo
 
 
@@ -18,13 +18,13 @@ class DAMO(DataSet):
     def __init__(
         self,
         model_info: ModelInfo,
-        damo_filename,
-        hdb_filename,
-        clip_shape=None,
-        layer_selection=None,
-        layers_input_hdb_selection=None,
-        layers_input_damo_selection=None,
-    ):
+        damo_filename: Union[str, Path],
+        hdb_filename: Union[str, Path],
+        clip_shape: Optional[Any] = None,
+        layer_selection: Optional[bool] = None,
+        layers_input_hdb_selection: Optional[List[str]] = None,
+        layers_input_damo_selection: Optional[List[str]] = None,
+    ) -> None:
         """
         Create a DAMO object and reads the data from the DAMO and HDB FileGeoDatabase.
         If translation dictionaries are supplied, layer and column names are mapped.
@@ -35,7 +35,7 @@ class DAMO(DataSet):
         :param translation_HDB: Path to the HDB translation dictionary.
         :param clip_shape: Shapely shape to subset data on
         """
-        # Set up logger
+        # set up logger and file paths for DAMO instance
         self.logger = logging.getLogger("DAMO")
         self.logger.debug("Created DAMO object")
 
@@ -72,7 +72,7 @@ class DAMO(DataSet):
         for key in self.data.keys():
             self.__setattr__(key, self.data[key])
 
-    def clip_data(self, data, shape):
+    def clip_data(self, data: Dict[str, Any], shape: Any) -> Dict[str, Any]:
         """
         Interates over all layers within the DAMO/HDB data, and only keeps entries that have an intersection
         (or no geometry) with the supplied shape. Original geometries are preserved, so the data is clipped, not the
@@ -82,6 +82,7 @@ class DAMO(DataSet):
         :param shape: (Multi)Polygon used for the clipping of the data
         :return: Clipped data
         """
+        # Clip geo-layers by shape, non-geo layers are removed.
         layers_to_remove = []
         for layer in data.keys():
             # layers_to_remove = []
@@ -101,7 +102,13 @@ class DAMO(DataSet):
 
         return data
 
-    def export_comparison_new(self, table_C, statistics, filename, overwrite=False):
+    def export_comparison_new(
+        self,
+        table_C: Dict[str, gpd.GeoDataFrame],
+        statistics: pd.DataFrame,
+        filename: Union[str, Path],
+        overwrite: bool = False,
+    ) -> None:
         """
         Export all compared layers and statistics to a GeoPackage.
 
@@ -113,6 +120,7 @@ class DAMO(DataSet):
         with the exact same name as the layer
         :return:
         """
+        # export DAMO-styled layers and statistics to a GeoPackage
         layer_styles = styling.export_comparison_DAMO(
             table_C,
             statistics,
@@ -134,10 +142,10 @@ class DAMO(DataSet):
 
     def compare_with_damo(
         self,
-        damo_b,
-        filename=None,
-        overwrite=False,
-    ):
+        damo_b: "DAMO",
+        filename: Optional[Union[str, Path]] = None,
+        overwrite: bool = False,
+    ) -> Tuple[Dict[str, gpd.GeoDataFrame], pd.DataFrame]:
         """
         Compare two DAMO objects with eachother, self (damo_a) and other (damo_b).
         For every layer in the datasets (brug, duikersyfonhevel, etc.) an outer join based on the code will be made.
@@ -151,7 +159,9 @@ class DAMO(DataSet):
         geometries differ, the geometry of A is exported.
         Additionally, a table with statistics is returned
         """
+        # prepare attribute comparison json path
         attribute_comparison = self.json_files_path / "damo_attribute_comparison.json"
+
         # copy damo data and add column with True values
         self.logger.debug("create copies of tables")
         table_A = self.data.copy()
@@ -159,7 +169,7 @@ class DAMO(DataSet):
         table_C = {}
 
         for layer in table_A.keys():
-            print(layer)
+            # skip missing layers in the other dataset
             if not table_B.keys().__contains__(layer):
                 self.logger.warning(f"Layer {layer} does not exist in the other dataset, skipping layer")
                 continue
@@ -206,8 +216,7 @@ class DAMO(DataSet):
                 )
 
                 # add column with values A, B or AB, depending on code
-                inboth = []
-                geometry_adjusted = []
+                inboth: List[str] = []
                 for i in range(len(table_merged)):
                     if table_merged["dataset_New"][i] & table_merged["dataset_Old"][i]:
                         inboth.append(f"{self.model_name} both")
@@ -221,12 +230,10 @@ class DAMO(DataSet):
                 table_merged["in_both"] = inboth
                 table_merged["geometry_adjusted"] = table_merged["geometry_New"] != table_merged["geometry_Old"]
 
-                # use geometry of A (new) when feature exists in A or in A and B, use geometry of B (old) when feature
-                # only exists in B
+                # handle geometrical comparison layers separately (polygons/complex ops)
                 if layer in [x.lower() for x in GEOMETRICAL_COMPARISON_LAYERS]:
                     if layer == "waterdeel":
-                        # For waterdeel we cannot compare based on code. So we treat A and B as one big polygon and
-                        # determine the intersection and the differences
+                        # union/intersect/difference approach for 'waterdeel'
                         union_A = table_merged.geometry_New.unary_union
                         union_B = table_merged.geometry_Old.unary_union
                         intersection = union_A.intersection(union_B)
@@ -244,6 +251,7 @@ class DAMO(DataSet):
                         df_intersections = df_intersections.explode(column="geometry", index_parts=True)
                         table_merged = df_intersections[df_intersections.geometry.geom_type == "Polygon"].copy()
 
+                        # set geometry area columns appropriately
                         table_merged.loc[
                             table_merged["in_both"].isin([f"{self.model_name} new", f"{self.model_name} both"]),
                             "geom_area_New",
@@ -265,7 +273,7 @@ class DAMO(DataSet):
                         table_merged["geom_length_New"] = 0
                         table_merged["geom_length_Old"] = 0
                     else:
-                        # hier iets om geometrieen te bepalen
+                        # compute intersection/difference geometries per code
                         intersection = gpd.GeoDataFrame(
                             pd.concat(
                                 [
@@ -301,9 +309,7 @@ class DAMO(DataSet):
                         df_intersections = df_intersections[df_intersections["geometry_diff"].notna()]
                         table_merged = table_merged.merge(df_intersections, how="outer", on="code")
 
-                        # table_merged = table_merged.explode(column='geometry_diff', index_parts=True)
-                        # table_merged = table_merged[table_merged.geometry_diff.geom_type == 'Polygon']
-
+                        # choose significant geometry when geometry_diff missing
                         table_merged["geometry_diff"] = table_merged.apply(
                             lambda x: self.get_significant_geometry(x["in_both"], x["geometry_New"], x["geometry_Old"])
                             if (x["geometry_diff"] is None)
@@ -317,25 +323,27 @@ class DAMO(DataSet):
                         table_merged = table_merged[table_merged.geometry.geom_type == "Polygon"]
 
                 else:
+                    # prefer model (New) geometry when present
                     table_merged["geometry"] = table_merged.apply(
                         lambda x: self.get_significant_geometry(x["in_both"], x["geometry_New"], x["geometry_Old"]),
                         axis=1,
                     )
-                # remove all geometry columns except 'geometry'
+                # remove temporary geo-series columns and store resulting GeoDataFrame
                 table_merged = self.drop_unused_geoseries(table_merged, keep="geometry")
                 table_C[layer] = gpd.GeoDataFrame(table_merged, geometry="geometry", crs=crs)
 
             except KeyError as err:
+                # missing expected column -> skip layer
                 self.logger.warning(f"Column {err.args[0]} not found in layer {layer}, skipping layer")
                 continue
 
-        # Apply attribute comparison
+        # apply attribute comparisons if configuration present
         if attribute_comparison is not None:
             table_C = self.apply_attribute_comparison(attribute_comparison, table_C)
             table_C = self.summarize_attribute_comparison(table_C)
             table_C = utils.add_priority_summaries(table_C)
 
-        # determine statistics: count amount of shapes per layer for dataset A and B
+        # compile statistics per layer
         self.logger.debug("create statistics")
         statistics = pd.DataFrame(
             columns=[
@@ -365,6 +373,8 @@ class DAMO(DataSet):
                 ]
             )
             count_diff = count_B - count_A
+
+            # sum geometry-based metrics
             length_A = sum(
                 table_C[layer_name]
                 .loc[
@@ -412,7 +422,7 @@ class DAMO(DataSet):
             ]
         statistics = statistics.fillna(0).astype("int64")
 
-        # check if filename already exists. Cr
+        # optionally export results to a GeoPackage file
         if filename is not None:
             print(filename)
             self.export_comparison_new(table_C, statistics, filename, overwrite=overwrite)

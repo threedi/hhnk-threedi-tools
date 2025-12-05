@@ -5,7 +5,7 @@
 			"table": "bergingsgebied",
 			"type": "numeric",
 			"description": "Verschil in bergend vermogen",
-			"priority": "category",
+			"priority": "critical",
 			"function": {
 				"difference": {
 					"left": "bergendvermogen_Old",
@@ -18,7 +18,7 @@
 			"table": "bergingsgebied",
 			"type": "numeric",
 			"description": "Verschil in bergend vermogen peil",
-			"priority": "category",
+			"priority": "critical",
 			"function": {
 				"difference": {
 					"left": "ws_bergend_vermogen_bij_peil_Old",
@@ -53,15 +53,15 @@
 			}
 		},
 		{
-			"name": "cmp_doorvaarbreedte",
+			"name": "cmp_doorvaartbreedte",
 			"table": "brug",
 			"type": "numeric",
 			"description": "Verschil in doorvaarbreedte",
 			"priority": "critical",
 			"function": {
 				"difference": {
-					"left": "hoogteonderzijde_Old",
-					"right": "hoogteonderzijde_New"
+					"left": "doorvaartbreedte_Old",
+					"right": "doorvaartbreedte_New"
 				}
 			}
 		},
@@ -375,15 +375,6 @@
 			"priority": "critical",
 			"left": "moet_op_peilgrens_Old",
 			"right": "moet_op_peilgrens_New"
-		},
-		{
-			"name": "cmp_geom_type",
-			"table": "gemalen_op_peilgrens",
-			"type": "critical",
-			"description": "Verschil in geometry type",
-			"priority": "critical",
-			"left": "geom_type_Old",
-			"right": "geom_type_New"
 		},
 		{
 			"name": "cmp_categorie",
@@ -1100,15 +1091,6 @@
 			"right": "poldercluster_New"
 		},
 		{
-			"name": "cmp_poldercluster",
-			"table": "sturing_3di",
-			"type": "category",
-			"description": "Verschil in poldercluster",
-			"priority": "warning",
-			"left": "poldercluster_Old",
-			"right": "poldercluster_New"
-		},
-		{
 			"name": "cmp_geom_type",
 			"table": "sturing_3di",
 			"type": "category",
@@ -1489,15 +1471,6 @@
 			"priority": "warning",
 			"left": "naam_Old",
 			"right": "naam_New"
-		},
-		{
-			"name": "cmp_soortafvoeraanvoergebied",
-			"table": "afvoergebiedaanvoergebied",
-			"type": "category",
-			"description": "Verschil in soortafvoeraanvoergebied",
-			"priority": "warning",
-			"left": "soortafvoeraanvoergebied_Old",
-			"right": "soortafvoeraanvoergebied_New"
 		},
 		{
 			"name": "cmp_soortafvoeraanvoergebied",

@@ -1,4 +1,7 @@
-SQLITE_LAYERS = [
+from typing import List
+
+# SQLite layers expected in 3Di schema
+SQLITE_LAYERS: List[str] = [
     "connection_node",
     "obstacle",
     "channel",
@@ -9,9 +12,11 @@ SQLITE_LAYERS = [
     "weir",
 ]
 
-SQLITE_LAYER_CROSS_SECTION_DEFINITION = "v2_cross_section_definition"
+# Name of the table containing cross-section definitions
+SQLITE_LAYER_CROSS_SECTION_DEFINITION: str = "v2_cross_section_definition"
 
-DAMO_LAYERS = [
+# DAMO layer names (source dataset)
+DAMO_LAYERS: List[str] = [
     "AfvoergebiedAanvoergebied",
     # "AquaductLijn",  # Niet in beide datasets
     # "Bergingsgebied",  # Niet in beide datasets
@@ -31,10 +36,12 @@ DAMO_LAYERS = [
     "Stuw",
     "VasteDam",
     "Vispassage",
+    "Waterdeel",
     # "Waterdeel", it does not contains code should be done in a different way
 ]
 
-HDB_LAYERS = [
+# HDB layer names (HDB exports)
+HDB_LAYERS: List[str] = [
     "gemalen_op_peilgrens",
     "stuwen_op_peilgrens",
     "hydro_deelgebieden",
@@ -45,7 +52,7 @@ HDB_LAYERS = [
     "duikers_op_peilgrens",
 ]
 
-THREEDI_STRUCTURE_LAYERS = [
+THREEDI_STRUCTURE_LAYERS: List[str] = [
     "culvert",
     "pump",
     "weir",
@@ -53,7 +60,7 @@ THREEDI_STRUCTURE_LAYERS = [
     "channel",
 ]
 
-DAMO_HDB_STRUCTURE_LAYERS = [
+DAMO_HDB_STRUCTURE_LAYERS: List[str] = [
     "gemalen_op_peilgrens",
     "stuwen_op_peilgrens",
     "brug",
@@ -64,25 +71,19 @@ DAMO_HDB_STRUCTURE_LAYERS = [
     "hydroobject",
 ]
 
-# DAMO_HDB_STRUCTURE_LAYERS = [
-#     'duikersifonhevel',
-#     'stuw',
-# ]
-
-STRUCTURE_CODES = [
+STRUCTURE_CODES: List[str] = [
     "KDU",
     "KST",
     "KGM",
-    "KSY",
     "KVD",
-    "KBR",
     "OAF",
+    "KBR",
+    # "KSY",
     # @TODO: introduce 'other' category, so we don't miss any that don't have a nice code
 ]
 
-GEOMETRICAL_COMPARISON_LAYERS = [
-    "PeilafwijkingGebied",
-    "PeilgebiedPraktijk",
-]
-# "Waterdeel"
-COMPARISON_GENERAL_THRESHOLD = 0.00001
+# Layers that require geometrical (polygon) comparison logic
+GEOMETRICAL_COMPARISON_LAYERS: List[str] = ["PeilafwijkingGebied", "PeilgebiedPraktijk", "Waterdeel"]
+
+# Default numeric threshold for numeric comparisons
+COMPARISON_GENERAL_THRESHOLD: float = 0.00001
