@@ -24,3 +24,8 @@ project.json
 tests/data/schematisation_builder/test_schematisation_builder
 
 empty.gpkg
+tests/data/model_test/01_source_data/polder_polygon.gpkg
+tests/data/model_test/01_source_data/vergelijkingstool/input_data_old/DAMO.gpkg
+tests/data/model_test/01_source_data/vergelijkingstool/input_data_old/HDB.gpkg
+tests/data/model_test/01_source_data/vergelijkingstool/output/DAMO_comparison.gpkg
+tests/data/model_test/01_source_data/vergelijkingstool/output/threedi_comparison.gpkg
