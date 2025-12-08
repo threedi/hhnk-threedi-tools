@@ -228,7 +228,7 @@ def test_apply_attribute_comparison(
 
     # use caplog to catch error messages.
     with caplog.at_level("ERROR"):
-        result = damo_new.apply_attribute_comparison(json_folder, DAMO_comparison)
+        damo_new.apply_attribute_comparison(json_folder, DAMO_comparison)
 
     # assert that the error message was logged
     assert any("Unable to load attribute comparison file. File" in message for message in caplog.messages)
@@ -301,7 +301,7 @@ def test_translate_invalid_json(damos: Tuple[DAMO, DAMO], tmp_path: Path, caplog
 
     # use caplog to catch error messages.
     with caplog.at_level("ERROR"):
-        result = damo_new.apply_attribute_comparison(bad_json_file, DAMO_comparison)
+        damo_new.apply_attribute_comparison(bad_json_file, DAMO_comparison)
 
     # use caplog to catch error messages.
     with caplog.at_level("ERROR"):
