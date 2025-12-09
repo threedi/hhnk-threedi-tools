@@ -1,4 +1,3 @@
-import json
 import logging
 import shutil
 from pathlib import Path
@@ -53,14 +52,10 @@ class SchematisationBuilder:
             not self.polder_file_path.exists()
         ):  # TODO remove once implemented in plugin, then polder_polygon.shp is always present
             self.logger.info(
-                f"polder_polygon.shp not found in {self.project_folder}/01_source_data, copying from default location."
+                f"polder_polygon.shp not found in {self.project_folder}/01_source_data, using from default location."
             )
-            shutil.copytree(
-                self.default_polder_polygon_path.parent,
-                self.project_folder / "01_source_data",
-                dirs_exist_ok=True,
-            )
-            self.logger.info(f"polder_polygon.shp copied to {self.project_folder}/01_source_data")
+            self.polder_file_path = self.default_polder_polygon_path
+
         else:
             self.logger.info(
                 f"polder_polygon.shp found in {self.project_folder}/01_source_data, using this file for export."
@@ -124,7 +119,7 @@ class SchematisationBuilder:
             self.logger.error("No polder_polygon.shp available, so no file selected for export.")
             raise SystemExit
 
-    def validate_hydamo_package(self):
+    def validate_hydamo_package(self, coverage_location: Path):
         if self.hydamo_file_path.exists():
             self.logger.info(f"Start validation of HyDAMO file: {self.hydamo_file_path}")
 
@@ -138,20 +133,17 @@ class SchematisationBuilder:
             if not validation_rules_json_path.exists():
                 shutil.copyfile(resources_validationrules_path, validation_rules_json_path)
 
-            coverage_location = validation_directory_path / "dtm"
             if not Path(coverage_location).exists():
-                static_data = json.loads(
-                    hrt.get_pkg_resource_path(schematisation_builder_resources, "static_data_paths.json").read_text()
+                raise FileNotFoundError(
+                    f"Coverage data for validation not found in {coverage_location}. Please provide location with index.shp and tiles to this location."
                 )
-                dtm_path = Path(static_data["dtm_path"])
-                shutil.copytree(dtm_path, coverage_location)
 
             result_summary = validate_hydamo(
                 hydamo_file_path=self.hydamo_file_path,
                 validation_rules_json_path=validation_rules_json_path,
                 validation_directory_path=validation_directory_path,
                 coverages_dict={"AHN": coverage_location},
-                output_types=["geopackage", "csv", "geojson"],
+                output_types=["geopackage"],
             )
 
             self.logger.info(f"Validation of HyDAMO file: {self.hydamo_file_path} is done.")
@@ -170,16 +162,3 @@ class SchematisationBuilder:
     def convert_to_3Di(self):
         self.logger.info("convert_to_3Di not implemented yet.")
         pass
-
-
-if __name__ == "__main__":
-    # ask input from user
-    project_folder = Path("E:/09.modellen_speeltuin/test_main_esther2")
-    default_polder_polygon_path = Path("E:/09.modellen_speeltuin/place_polder_polygon_here_for_schematisationbuilder")
-    TABLE_NAMES = ["HYDROOBJECT", "GEMAAL", "COMBINATIEPEILGEBIED", "DUIKERSIFONHEVEL"]
-
-    builder = SchematisationBuilder(project_folder, default_polder_polygon_path, TABLE_NAMES)
-    builder.make_hydamo_package()
-    builder.validate_hydamo_package()
-    # builder.fix_hydamo_package()
-    # builder.convert_to_3Di()

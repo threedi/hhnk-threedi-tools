@@ -1,5 +1,5 @@
 # %%
-
+import json
 import os
 from pathlib import Path
 
@@ -7,6 +7,8 @@ import dotenv
 import geopandas as gpd
 import hhnk_research_tools as hrt
 import pytest
+
+import hhnk_threedi_tools.resources.schematisation_builder as schematisation_builder_resources
 
 # Import DATABASES to check if database settings are available
 from tests.config import TEMP_DIR, TEST_DIRECTORY
@@ -37,12 +39,14 @@ def test_main():
     # default polder polygon is of polder 't hoekje
     default_polder_polygon_path = TEST_DIRECTORY / "model_test" / "01_source_data" / "polder_polygon.shp"
 
-    # all layers which are ready to be exported from DAMO/CSO, convertered to HyDAMO and to be validated
+    # all layers which are ready to be exported from DAMO/CSO, converted to HyDAMO and to be validated
     TABLE_NAMES = ["HYDROOBJECT", "GEMAAL", "DUIKERSIFONHEVEL"]
 
     # run schematisation builder
     logger.info(f"Starting SchematisationBuilder test with project folder: {temp_project_folder}")
-    builder = SchematisationBuilder(temp_project_folder, default_polder_polygon_path)
+    builder = SchematisationBuilder(
+        project_folder=temp_project_folder, default_polder_polygon_path=default_polder_polygon_path
+    )
 
     # Part 1: Make DAMO and HyDAMO package
     builder.make_hydamo_package()
@@ -60,13 +64,28 @@ def test_main():
     # A raw export to DAMO converter should be made for these layers in the future.
 
     if hydamo_file_path.exists():
-        with sqlite3.connect(hydamo_file_path) as conn:
-            cursor = conn.cursor()
-            cursor.execute(f"DROP TABLE IF EXISTS {'stuw'};")
-            cursor.execute(f"DROP TABLE IF EXISTS {'brug'};")
-            conn.commit()
+        hydamo_layers = hrt.SpatialDatabase(hydamo_file_path).available_layers()
+        if "kunstwerkopening" not in [layer.lower() for layer in hydamo_layers]:
+            with sqlite3.connect(hydamo_file_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute(f"DROP TABLE IF EXISTS {'stuw'};")
+                cursor.execute(f"DROP TABLE IF EXISTS {'brug'};")
+                conn.commit()
 
-    builder.validate_hydamo_package()
+    # try:
+    #     static_data = json.loads(
+    #         hrt.get_pkg_resource_path(schematisation_builder_resources, "static_data_paths.json").read_text()
+    #     )
+    #     coverage_location = Path(static_data["dtm_path"])
+    # except FileNotFoundError:
+    #     raise FileNotFoundError(
+    #         f"Coverage data for validation not found in {hrt.get_pkg_resource_path(schematisation_builder_resources, 'static_data_paths.json')}. Please provide location with index.shp and dtm tiles to this location."
+    #     )
+
+    # path to dtm data
+    coverage_location = TEST_DIRECTORY / "model_test" / "02_schematisation" / "00_basis" / "rasters"
+
+    builder.validate_hydamo_package(coverage_location=coverage_location)
     # check if validation results are created
     validation_result_file_path = (
         temp_project_folder / "01_source_data" / "hydamo_validation" / "results" / "results.gpkg"
@@ -115,3 +134,5 @@ def test_main():
 if __name__ == "__main__":
     print(f"SKIP_DATABASE: {os.getenv('SKIP_DATABASE')}")
     test_main()
+
+# %%
