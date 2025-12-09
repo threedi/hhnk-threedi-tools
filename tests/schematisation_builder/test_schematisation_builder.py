@@ -66,6 +66,7 @@ def test_main():
     if hydamo_file_path.exists():
         hydamo_layers = hrt.SpatialDatabase(hydamo_file_path).available_layers()
         if "kunstwerkopening" not in [layer.lower() for layer in hydamo_layers]:
+            logger.warning("Removing unsupported layers from HyDAMO package for now.")
             with sqlite3.connect(hydamo_file_path) as conn:
                 cursor = conn.cursor()
                 cursor.execute(f"DROP TABLE IF EXISTS {'stuw'};")
