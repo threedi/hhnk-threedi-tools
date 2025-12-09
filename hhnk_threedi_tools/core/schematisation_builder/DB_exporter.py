@@ -97,7 +97,7 @@ def update_model_extent_from_combinatiepeilgebieden(
         # Filter combinatiepeilgebieden en merge
         model_extent_gdf["geometry"] = pgb_combi_gdf[
             pgb_combi_gdf["code"].isin(pgb_combi_rp_gdf["code"])
-        ].geometry.union_all
+        ].geometry.union_all()
         logger.info(f"Updated model extent with {len(pgb_combi_rp_gdf)} Combinatiepeilgebieden from the database.")
 
     return model_extent_gdf
@@ -474,3 +474,23 @@ def db_exporter(
 
 
 # %%
+if __name__ == "__main__":
+    # Example usage
+    from tests.config import TEMP_DIR, TEST_DIRECTORY
+
+    # Create output directory for db exporter tests
+    db_export_output_dir = TEMP_DIR / f"temp_db_exporter_{hrt.current_time(date=True)}"
+    db_export_output_dir.mkdir(exist_ok=True)
+
+    model_extent_path = TEST_DIRECTORY / r"model_test\01_source_data\polder_polygon.shp"
+    output_file = db_export_output_dir / "test_export.gpkg"
+
+    model_extent_gdf = gpd.read_file(model_extent_path)
+    table_names = ["COMBINATIEPEILGEBIED"]
+
+    logging_DAMO = db_exporter(
+        model_extent_gdf=model_extent_gdf,
+        table_names=table_names,
+        output_file=output_file,
+        update_extent=True,
+    )
