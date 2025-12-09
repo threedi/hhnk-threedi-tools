@@ -1,5 +1,5 @@
 <!DOCTYPE qgis PUBLIC 'http://mrcc.com/qgis.dtd' 'SYSTEM'>
-<qgis simplifyAlgorithm="0" simplifyLocal="1" simplifyDrawingTol="1" simplifyMaxScale="1" symbologyReferenceScale="-1" version="3.22.7-Białowieża" minScale="2500" readOnly="0" styleCategories="AllStyleCategories" hasScaleBasedVisibilityFlag="0" simplifyDrawingHints="0" labelsEnabled="0" maxScale="0">
+<qgis simplifyAlgorithm="0" simplifyLocal="1" simplifyDrawingTol="1" simplifyMaxScale="1" symbologyReferenceScale="-1" version="3.22.7-Białowieża" minScale="800000" readOnly="0" styleCategories="AllStyleCategories" hasScaleBasedVisibilityFlag="0" simplifyDrawingHints="0" labelsEnabled="0" maxScale="0">
   <flags>
     <Identifiable>1</Identifiable>
     <Removable>1</Removable>

@@ -1,0 +1,20 @@
+{
+	"GW_PRO": {
+		"name": "GW_PRO",
+		"columns": {
+			"PROIDENT": "code"
+		}
+	},
+	"Waterdeel": {
+		"name": "Waterdeel",
+		"columns": {
+			"identificatie": "code"
+		}
+	},
+	"GW_PRW": {
+		"name": "GW_PRW",
+		"columns": {
+			"PRW_ID": "code"
+		}
+	}
+}
