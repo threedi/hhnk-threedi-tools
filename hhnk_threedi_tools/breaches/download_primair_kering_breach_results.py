@@ -16,14 +16,15 @@ import geopandas as gpd
 import hhnk_research_tools as hrt
 import numpy as np
 import pandas as pd
-from breaches import Breaches
-from create_breach_graph import create_breach_graph
-from download_results_from_3di import download_results_from_3di
 from threedi_api_client.api import ThreediApi
 from threedi_api_client.openapi import ApiException
 from threedi_api_client.versions import V3Api
 from threedi_scenario_downloader import downloader as dl
 from threedigrid.admin.gridresultadmin import GridH5AggregateResultAdmin, GridH5ResultAdmin
+
+from hhnk_threedi_tools.breaches.breaches import Breaches
+from hhnk_threedi_tools.breaches.create_breach_graph import create_breach_graph
+from hhnk_threedi_tools.breaches.download_results_from_3di import download_results_from_3di
 
 
 def download_breach_scenario(base_folder, model_name, metadata_path, new_metadata_path, filter_names):
@@ -107,7 +108,6 @@ def download_breach_scenario(base_folder, model_name, metadata_path, new_metadat
 
     for x_name in name:
         print(x_name)
-
         # set main output folder for the scenario with name x_name
         breach_folder = Path(os.path.join(base_folder, model_name, x_name))
         if not breach_folder.exists():
@@ -170,6 +170,7 @@ def download_breach_scenario(base_folder, model_name, metadata_path, new_metadat
             breach_width = gr.lines.timeseries(start_time=0, end_time=gr.lines.timestamps[-1]).breach_width[
                 :, breach_mask
             ][:, 0]
+
             breach_width[breach_width <= -999] = np.nan
             max_breach_width = np.nanmax(breach_width)
 
@@ -205,6 +206,7 @@ def download_breach_scenario(base_folder, model_name, metadata_path, new_metadat
 
             start_time = datetime.strptime(gr.lines.dt_timestamps[0].split(".")[0], "%Y-%m-%dT%H:%M:%S")
             end_time = datetime.strptime(gr.lines.dt_timestamps[-1].split(".")[0], "%Y-%m-%dT%H:%M:%S")
+
             timestamps = gr.lines.dt_timestamps
             time_sec = gr.lines.timestamps
             time_sec_agg = ga.lines.timestamps["q_avg"]
@@ -218,7 +220,7 @@ def download_breach_scenario(base_folder, model_name, metadata_path, new_metadat
             q_cuml = (
                 ga.lines.filter(id__eq=breach_line)
                 .timeseries(start_time=0, end_time=gr.lines.timestamps[-1])
-                .q_cum[:, 0]
+                .q_max[:, 0]
             )
             vol_max = q_cuml[-1]
 
@@ -414,12 +416,15 @@ def download_breach_scenario(base_folder, model_name, metadata_path, new_metadat
             log_total_time_format = datetime(1, 1, 1) + log_total_time_raw
             log_total_time = "0 " + log_total_time_format.strftime("%H:%M:%S")
             log_end_datum = simulation.finished.strftime("%d-%m-%Y %H:%M:%S")
-            low_crest_level = (
+            if "DBR_INI_CR" not in metadata_gdf.columns:
+                metadata_gdf["DBR_INI_CR"] = 0
+
+            metadata_gdf["DBR_INI_CR"] = low_crest_level = (
                 metadata_gdf.loc[metadata_gdf["SC_NAAM"] == scenario_name, "DBR_INI_CR"].values[0] - max_breach_depth
             )
             simulation_id = simulation.simulation.id
 
-            relative_path = (os.path.relpath(resultnc))[3:]
+            # relative_path = (os.path.relpath(resultnc))[3:]
 
             # Add metadata info following the scenario name.
             metadata_gdf.loc[metadata_gdf["SC_NAAM"] == scenario_name, "DBR_BR_MAX"] = breach_width_max
@@ -434,29 +439,25 @@ def download_breach_scenario(base_folder, model_name, metadata_path, new_metadat
             metadata_gdf.loc[metadata_gdf["SC_NAAM"] == scenario_name, "MOD_SIM_DU"] = sim_duur
             metadata_gdf.loc[metadata_gdf["SC_NAAM"] == scenario_name, "DBR_LOW_CR"] = low_crest_level
             metadata_gdf.loc[metadata_gdf["SC_NAAM"] == scenario_name, "BUW_HMAX"] = max_breach_wlev_upstream_list[0]
-            metadata_gdf.loc[metadata_gdf["SC_NAAM"] == scenario_name, "BES_3Di_RE"] = relative_path
+            # metadata_gdf.loc[metadata_gdf["SC_NAAM"] == scenario_name, "BES_3Di_RE"] = relative_path
             metadata_gdf.loc[metadata_gdf["SC_NAAM"] == scenario_name, "DBR_VTOT"] = vol_max
             metadata_gdf.loc[metadata_gdf["SC_NAAM"] == scenario_name, "SC_IDENT"] = simulation_id
-            metadata_gdf.loc[metadata_gdf["SC_NAAM"] == scenario_name, "ID"] = breach_id
+            metadata_gdf.loc[metadata_gdf["SC_NAAM"] == scenario_name, "BREACH_ID"] = breach_id
             metadata_gdf.loc[metadata_gdf["SC_NAAM"] == scenario_name, "SC_DATE"] = simuatlion_started
 
             # Save metadata in the last vesion file.
-            path_gdf = r"E:\03.resultaten\Overstromingsberekeningen primaire doorbraken 2024\metadata\v7"
-            metadata_path = os.path.join(path_gdf, "metadata_shapefile.shp")
-            metadata_gdf.to_file(metadata_path, driver="Shapefile")
+            path_gdf = r"E:\03.resultaten\IPO_Overstromingsberekeningen_compartimentering\metadata"
+            metadata_path = os.path.join(path_gdf, "metadata_shapefile.gpkg")
+            metadata_gdf.to_file(metadata_path, driver="GPKG")
 
 
 # %%
 if __name__ == "__main__":
-    base_folder = r"E:\03.resultaten\Overstromingsberekeningen primaire doorbraken 2024\output\test"
+    base_folder = r"E:\03.resultaten\IPO_Overstromingsberekeningen_compartimentering\output"
     model_name = "ROR PRI - dijktraject 13-5"
-    metadata_path = (
-        r"E:\03.resultaten\Overstromingsberekeningen primaire doorbraken 2024\metadata\v6\metadata_shapefile.shp"
-    )
-    new_metadata_path = (
-        r"E:\03.resultaten\Overstromingsberekeningen primaire doorbraken 2024\metadata\v5\metadata_shapefile.shp"
-    )
-    filter_names = ["DUIN KM_11-T10"]
+    metadata_path = r"E:\03.resultaten\IPO_Overstromingsberekeningen_compartimentering\metadata\metadata.gpkg"
+    new_metadata_path = r"E:\03.resultaten\IPO_Overstromingsberekeningen_compartimentering\metadata\metadata.gpkg"
+    filter_names = ["IPO_SBMZ_CMPTR_92_JA", "IPO_SBMZ_CMPTR_75_JA", "IPO_SBMN_CMPTR_23_JA"]
 
     download_breach_scenario(base_folder, model_name, metadata_path, new_metadata_path, filter_names)
 # %%
