@@ -149,7 +149,21 @@ def start_simulation_breaches(model_folder, organisation_name, scenarios, filter
     breach = {}
     # Start simulations in a loop
     # set up metadata
+<<<<<<< Updated upstream
     metadata_gdf = gpd.read_file(metadata_path, driver="Shapefile")
+=======
+
+    if os.path.exists(metadata_path):
+        metadata_gdf = gpd.read_file(metadata_path, driver="Shapefile")
+    else:
+        metadata_columns = ["SC_NAAM", "SC_IDENT", "ID", "SC_DATE", "MOD_VERSIE", "geometry"]
+
+        metadata_gdf = gpd.GeoDataFrame(
+            columns=metadata_columns,
+            geometry="geometry",
+            crs=potential_breach_gdf.crs,  # asumimos que existe
+        )
+>>>>>>> Stashed changes
 
     for x in breach_selected_idxs:
         # if x >= 32: # DEBUGGING
@@ -273,7 +287,7 @@ if __name__ == "__main__":
     model_folder = ModelFolder(rf"{base_folder}\{model_name}")
     model_folder.schema.base
     # Select the return periods you want to start with. If you want to use all of them keep it.
-    scenarios = [100]
+    scenarios = [1000]
 
     # id_filter corresponds to the column 'id' of the potential breach table of the model we are working with.
     # In case of willing to run all the potential breach, leave the list empty  --> filter_id = []
