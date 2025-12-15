@@ -29,7 +29,7 @@ def test_main():
     logger = hrt.logging.get_logger(__name__)
 
     # import SchematisationBuilder here to avoid import issues related to missing database settings
-    import sqlite3
+    # import sqlite3
 
     from hhnk_threedi_tools.core.schematisation_builder.main import SchematisationBuilder
 
@@ -59,19 +59,19 @@ def test_main():
 
     # Part 2: Validate HyDAMO package
 
-    # TODO TEMP REMOVE LATER
+    # TODO TEMP REMOVE LATER - COMMENTED OUT NOW THAT STUW AND BRUG CONVERTERS ARE IMPLEMENTED
     # Remove unsupported layers from the HyDAMO package for now.
     # A raw export to DAMO converter should be made for these layers in the future.
 
-    if hydamo_file_path.exists():
-        hydamo_layers = hrt.SpatialDatabase(hydamo_file_path).available_layers()
-        if "kunstwerkopening" not in [layer.lower() for layer in hydamo_layers]:
-            logger.warning("Removing unsupported layers from HyDAMO package for now.")
-            with sqlite3.connect(hydamo_file_path) as conn:
-                cursor = conn.cursor()
-                cursor.execute(f"DROP TABLE IF EXISTS {'stuw'};")
-                cursor.execute(f"DROP TABLE IF EXISTS {'brug'};")
-                conn.commit()
+    # if hydamo_file_path.exists():
+    #     hydamo_layers = hrt.SpatialDatabase(hydamo_file_path).available_layers()
+    #     if "kunstwerkopening" not in [layer.lower() for layer in hydamo_layers]:
+    #         logger.warning("Removing unsupported layers from HyDAMO package for now.")
+    #         with sqlite3.connect(hydamo_file_path) as conn:
+    #             cursor = conn.cursor()
+    #             cursor.execute(f"DROP TABLE IF EXISTS {'stuw'};")
+    #             cursor.execute(f"DROP TABLE IF EXISTS {'brug'};")
+    #             conn.commit()
 
     # try:
     #     static_data = json.loads(

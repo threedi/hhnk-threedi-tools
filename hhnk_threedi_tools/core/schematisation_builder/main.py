@@ -11,6 +11,9 @@ from hhnk_threedi_tools.core.schematisation_builder.DAMO_HyDAMO_converter import
 from hhnk_threedi_tools.core.schematisation_builder.DB_exporter import db_exporter
 from hhnk_threedi_tools.core.schematisation_builder.HyDAMO_validator import validate_hydamo
 from hhnk_threedi_tools.core.schematisation_builder.raw_export_to_DAMO_converter import RawExportToDAMOConverter
+from hhnk_threedi_tools.core.schematisation_builder.raw_export_to_DAMO_converters.brug_converter import (
+    BrugConverter,
+)
 from hhnk_threedi_tools.core.schematisation_builder.raw_export_to_DAMO_converters.gemaal_converter import (
     GemaalConverter,
 )
@@ -20,6 +23,18 @@ from hhnk_threedi_tools.core.schematisation_builder.raw_export_to_DAMO_converter
 from hhnk_threedi_tools.core.schematisation_builder.raw_export_to_DAMO_converters.profiel_converter import (
     ProfielConverter,
 )
+from hhnk_threedi_tools.core.schematisation_builder.raw_export_to_DAMO_converters.stuw_converter import (
+    StuwConverter,
+)
+
+# Define converter classes to run in order
+CONVERTERS = [
+    GemaalConverter,
+    StuwConverter,
+    BrugConverter,
+    PeilgebiedConverter,
+    ProfielConverter,
+]
 
 
 class SchematisationBuilder:
@@ -85,20 +100,10 @@ class SchematisationBuilder:
                 logger=self.logger,
             )
 
-            gemaal_converter = GemaalConverter(
-                raw_export_converter=raw_export_converter,
-            )
-            gemaal_converter.run()
-
-            peilgebied_converter = PeilgebiedConverter(
-                raw_export_converter=raw_export_converter,
-            )
-            peilgebied_converter.run()
-
-            profiel_converter = ProfielConverter(
-                raw_export_converter=raw_export_converter,
-            )
-            profiel_converter.run()
+            # Run all converters
+            for converter_class in CONVERTERS:
+                converter = converter_class(raw_export_converter=raw_export_converter)
+                converter.run()
 
             raw_export_converter.write_outputs()
 
