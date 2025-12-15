@@ -67,6 +67,7 @@ pytest = "*"
 pytest-cov = "*"
 tqdm = "*"
 xarray = "*"
+cftime = "*"
 
 pip = "*"
 git = ">=2.51.1,<3"
