@@ -8,31 +8,29 @@ import geopandas as gpd
 import hhnk_research_tools as hrt
 import pytest
 
-try:
-    from hhnk_threedi_tools.core.schematisation_builder.DB_exporter import db_exporter
-except ImportError:
-    db_exporter = None
 from tests.config import FOLDER_TEST, TEMP_DIR, TEST_DIRECTORY
 
 TEST_DIRECTORY_SB = TEST_DIRECTORY / "schematisation_builder"
 # Create output directory for db exporter tests
 db_export_output_dir = TEMP_DIR / f"temp_db_exporter_{hrt.current_time(date=True)}"
 
-# skip_db is True when db_exporter could not be imported or when the environment variable SKIP_DATABASE is set to '1'
-skip_db = db_exporter is None or os.getenv("SKIP_DATABASE", "0") == "1"
 
-
-@pytest.mark.skipif(skip_db, reason="Skipping DB test because no local_settings_htt.py or DATABASES available.")
+@pytest.mark.skipif(
+    str(os.getenv("SKIP_DATABASE")) == "1",
+    reason="Skipping DB test because no local_settings_htt.py or DATABASES available.",
+)
 def test_db_exporter_one_feature():
     """
     Test the db_exporter function with a single feature from the GEMAAL table from DAMO and CSO
     Includes test of sub table.
     """
+    from hhnk_threedi_tools.core.schematisation_builder.DB_exporter import db_exporter
+
     model_extent_path = TEST_DIRECTORY_SB / "area_test_sql_helsdeur.gpkg"
     output_file = db_export_output_dir / "test_damo_gemaal_helsdeur.gpkg"
     db_export_output_dir.mkdir(exist_ok=True)
 
-    model_extent_gdf = gpd.read_file(model_extent_path, engine="pyogrio")
+    model_extent_gdf = gpd.read_file(model_extent_path)
     table_names = ["GEMAAL_DAMO", "GEMAAL"]
 
     logging_DAMO = db_exporter(
@@ -47,22 +45,29 @@ def test_db_exporter_one_feature():
     gemaal_damo_gdf = gpd.read_file(output_file, layer="GEMAAL_DAMO")
     gemaal_cso_gdf = gpd.read_file(output_file, layer="GEMAAL")
     pomp_gdf = gpd.read_file(output_file, layer="POMP")
+    model_extent_new_gdf = gpd.read_file(output_file, layer="model_extent")
 
     assert gemaal_damo_gdf.loc[0, "code"] == "KGM-Q-29234"  # export uit DAMO_W gelukt
     assert gemaal_cso_gdf.loc[0, "code"] == "KGM-Q-29234"  # export uit CSO gelukt
     assert len(pomp_gdf) == 4  # Export van sub tabel uit cso gelukt
     assert "afvoeren" in gemaal_damo_gdf["functiegemaal"].unique()  # omzetten domeinen gelukt
     assert logging_DAMO == []  # test geen errors
+    assert not model_extent_new_gdf.empty  # test model extent export
 
 
-@pytest.mark.skipif(skip_db, reason="Skipping DB test because no local_settings_htt.py or DATABASES available.")
+@pytest.mark.skipif(
+    str(os.getenv("SKIP_DATABASE")) == "1",
+    reason="Skipping DB test because no local_settings_htt.py or DATABASES available.",
+)
 def test_db_exporter_polder():
     """Test the db_exporter function using all default tables for the test polder."""
+    from hhnk_threedi_tools.core.schematisation_builder.DB_exporter import db_exporter
 
     model_extent_path = TEST_DIRECTORY / r"model_test\01_source_data\polder_polygon.shp"
     output_file = db_export_output_dir / "test_export.gpkg"
+    db_export_output_dir.mkdir(exist_ok=True)
 
-    model_extent_gdf = gpd.read_file(model_extent_path, engine="pyogrio")
+    model_extent_gdf = gpd.read_file(model_extent_path)
 
     logging_DAMO = db_exporter(
         model_extent_gdf=model_extent_gdf,
@@ -77,7 +82,7 @@ def test_db_exporter_polder():
 # %%
 # Test
 if __name__ == "__main__":
-    print(os.getenv("SKIP_DATABASE"))
+    print(f"SKIP_DATABASE: {os.getenv('SKIP_DATABASE')}")
 
     Path(db_export_output_dir).mkdir(exist_ok=True, parents=True)
     test_db_exporter_one_feature()
