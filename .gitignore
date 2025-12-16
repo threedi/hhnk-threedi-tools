@@ -29,4 +29,6 @@ project.json
 tests/data/schematisation_builder/test_schematisation_builder
 
 empty.gpkg
+tests/data/model_test/02_schematisation/00_basis/bwn_test.gpkg-shm
+tests/data/model_test/02_schematisation/00_basis/bwn_test.gpkg-wal
 
