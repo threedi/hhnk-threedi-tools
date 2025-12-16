@@ -35,7 +35,7 @@ def run(repo_root: Path, commit_msg_rel_file_path: str = None):
     else:
         file_path = repo_root / commit_msg_rel_file_path
 
-    commit_msg = file_path.open("r").read()
+    commit_msg = file_path.read_text(encoding="utf-8")
 
     if len(commit_msg) < 8:
         print("commit message is too short")
