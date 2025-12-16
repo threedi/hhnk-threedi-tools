@@ -90,7 +90,7 @@ class RawExportToDAMOConverter:
     def _load_and_validate(source_path: Path, layer_name: str) -> gpd.GeoDataFrame:
         gdf = gpd.read_file(source_path, layer=layer_name)
         if "geometry" in gdf.columns:
-            gdf["geometry"] = gdf["geometry"].apply(make_valid)
+            gdf["geometry"] = gdf["geometry"].apply(lambda geom: make_valid(geom) if geom is not None else None)
         return gdf
 
     @staticmethod
