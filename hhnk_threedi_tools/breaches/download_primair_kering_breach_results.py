@@ -16,6 +16,7 @@ import geopandas as gpd
 import hhnk_research_tools as hrt
 import numpy as np
 import pandas as pd
+from shapely.geometry import Point
 from threedi_api_client.api import ThreediApi
 from threedi_api_client.openapi import ApiException
 from threedi_api_client.versions import V3Api
@@ -27,12 +28,13 @@ from hhnk_threedi_tools.breaches.create_breach_graph import create_breach_graph
 from hhnk_threedi_tools.breaches.download_results_from_3di import download_results_from_3di
 
 
-def download_breach_scenario(base_folder, model_name, metadata_path, new_metadata_path, filter_names):
+def download_breach_scenario(base_folder, model_name, metadata_path, filter_names):
     api_keys_path = (
         rf"{os.getenv('APPDATA')}\3Di\QGIS3\profiles\default\python\plugins\hhnk_threedi_plugin\api_key.txt"
     )
 
     api_keys = hrt.read_api_file(api_keys_path)
+
     # Loggin code.
     config = {
         "THREEDI_API_HOST": "https://api.3di.live",
@@ -56,15 +58,15 @@ def download_breach_scenario(base_folder, model_name, metadata_path, new_metadat
 
     if not filter_names:
         # look up tabel
-        metadata_gdf_v6 = gpd.read_file(metadata_path, driver="Shapefile")
+        # metadata_gdf_v6 = gpd.read_file(metadata_path, driver="Shapefile")
 
         # Filter Scenarios
-        name_ids = metadata_gdf_v6.loc[(metadata_gdf_v6["model"] == model_name), "SC_IDENT"].values
+        # name_ids = metadata_gdf_v6.loc[(metadata_gdf_v6["model"] == model_name), "SC_IDENT"].values
         # remove nan values
         id_simulations = [name_id for name_id in name_ids if not np.isnan(name_id)]
 
         for id_simulation in id_simulations:
-            scenario_name = metadata_gdf_v6.loc[(metadata_gdf_v6["SC_IDENT"] == id_simulation), "SC_NAAM"].values[0]
+            # scenario_name = metadata_gdf_v6.loc[(metadata_gdf_v6["SC_IDENT"] == id_simulation), "SC_NAAM"].values[0]
             scenario_count = api_client.usage_list(simulation__name=scenario_name).count
 
             if scenario_count == 0:
@@ -103,8 +105,34 @@ def download_breach_scenario(base_folder, model_name, metadata_path, new_metadat
     max_breach_depth_list = []
     max_breach_width_list = []
 
+    crs_epsg = 28992
     # look up tabel
-    metadata_gdf = gpd.read_file(new_metadata_path, driver="Shapefile")
+    if os.path.exists(metadata_path):
+        metadata_gdf = gpd.read_file(metadata_path)
+    else:
+        cols = [
+            "SC_NAAM",
+            "DBR_BR_MAX",
+            "DBR_BRESDI",
+            "DBR_QMAX",
+            "MOD_DATE",
+            "MOD_START",
+            "MOD_EIND",
+            "MOD_REKEND",
+            "MOD_SIM_ST",
+            "MOD_SIM_EI",
+            "MOD_SIM_DU",
+            "DBR_INI_CR",
+            "DBR_LOW_CR",
+            "BUW_HMAX",
+            "DBR_VTOT",
+            "SC_IDENT",
+            "BREACH_ID",
+            "SC_DATE",
+            "BES_3Di_REgeometry",
+        ]
+
+        metadata_gdf = gpd.GeoDataFrame(columns=cols + ["geometry"], geometry="geometry", crs=f"EPSG:{crs_epsg}")
 
     for x_name in name:
         print(x_name)
@@ -119,7 +147,7 @@ def download_breach_scenario(base_folder, model_name, metadata_path, new_metadat
         netcdf_path = breach_folder.netcdf.path
 
         # Set netcdf files locations
-        resultnc = os.path.join(netcdf_path, "results_3di.nc")
+        resultnc = netcdf_path / "results_3di.nc"
         resulth5 = os.path.join(netcdf_path, "gridadmin.h5")
         aggregated_result = os.path.join(netcdf_path, "aggregate_results_3di.nc")
         if not os.path.exists(aggregated_result):
@@ -198,7 +226,7 @@ def download_breach_scenario(base_folder, model_name, metadata_path, new_metadat
             breach_u_agg = (
                 ga.lines.filter(id__eq=breach_line)
                 .timeseries(start_time=0, end_time=gr.lines.timestamps[-1])
-                .u1_avg[:, 0]
+                .u1_max[:, 0]
             )
             breach_u_agg[breach_u_agg <= -999] = 0
             breach_u_agg = np.abs(breach_u_agg)
@@ -294,7 +322,7 @@ def download_breach_scenario(base_folder, model_name, metadata_path, new_metadat
             # save to csv file
             df.to_csv(csv_result, sep=";", decimal=",")
 
-            # Re order data into dataframe for breach data
+            # # Re order data into dataframe for breach data
             df_agg = pd.DataFrame(
                 {
                     "name": x_name,
@@ -313,7 +341,7 @@ def download_breach_scenario(base_folder, model_name, metadata_path, new_metadat
                 }
             )
 
-            # save to csv file
+            # # save to csv file
             df_agg.to_csv(csv_result_agg, sep=";", decimal=",")
 
             # APPEND new values to list
@@ -346,7 +374,7 @@ def download_breach_scenario(base_folder, model_name, metadata_path, new_metadat
                 fig_path_name,
             )
 
-            # figuur aggregated maken
+            # # figuur aggregated maken
             create_breach_graph(
                 x_name,
                 time_sec_agg,
@@ -416,48 +444,71 @@ def download_breach_scenario(base_folder, model_name, metadata_path, new_metadat
             log_total_time_format = datetime(1, 1, 1) + log_total_time_raw
             log_total_time = "0 " + log_total_time_format.strftime("%H:%M:%S")
             log_end_datum = simulation.finished.strftime("%d-%m-%Y %H:%M:%S")
-            if "DBR_INI_CR" not in metadata_gdf.columns:
-                metadata_gdf["DBR_INI_CR"] = 0
-
-            metadata_gdf["DBR_INI_CR"] = low_crest_level = (
-                metadata_gdf.loc[metadata_gdf["SC_NAAM"] == scenario_name, "DBR_INI_CR"].values[0] - max_breach_depth
-            )
             simulation_id = simulation.simulation.id
+            relative_path = os.path.relpath(resultnc, start=netcdf_path)
 
-            # relative_path = (os.path.relpath(resultnc))[3:]
+            mask = metadata_gdf["SC_NAAM"] == scenario_name
 
-            # Add metadata info following the scenario name.
-            metadata_gdf.loc[metadata_gdf["SC_NAAM"] == scenario_name, "DBR_BR_MAX"] = breach_width_max
-            metadata_gdf.loc[metadata_gdf["SC_NAAM"] == scenario_name, "DBR_BRESDI"] = max_breach_depth
-            metadata_gdf.loc[metadata_gdf["SC_NAAM"] == scenario_name, "DBR_QMAX"] = breach_qmax
-            metadata_gdf.loc[metadata_gdf["SC_NAAM"] == scenario_name, "MOD_DATE"] = mod_date
-            metadata_gdf.loc[metadata_gdf["SC_NAAM"] == scenario_name, "MOD_START"] = log_start_datum
-            metadata_gdf.loc[metadata_gdf["SC_NAAM"] == scenario_name, "MOD_EIND"] = log_end_datum
-            metadata_gdf.loc[metadata_gdf["SC_NAAM"] == scenario_name, "MOD_REKEND"] = log_total_time
-            metadata_gdf.loc[metadata_gdf["SC_NAAM"] == scenario_name, "MOD_SIM_ST"] = simulation_start
-            metadata_gdf.loc[metadata_gdf["SC_NAAM"] == scenario_name, "MOD_SIM_EI"] = simulation_end
-            metadata_gdf.loc[metadata_gdf["SC_NAAM"] == scenario_name, "MOD_SIM_DU"] = sim_duur
-            metadata_gdf.loc[metadata_gdf["SC_NAAM"] == scenario_name, "DBR_LOW_CR"] = low_crest_level
-            metadata_gdf.loc[metadata_gdf["SC_NAAM"] == scenario_name, "BUW_HMAX"] = max_breach_wlev_upstream_list[0]
-            # metadata_gdf.loc[metadata_gdf["SC_NAAM"] == scenario_name, "BES_3Di_RE"] = relative_path
-            metadata_gdf.loc[metadata_gdf["SC_NAAM"] == scenario_name, "DBR_VTOT"] = vol_max
-            metadata_gdf.loc[metadata_gdf["SC_NAAM"] == scenario_name, "SC_IDENT"] = simulation_id
-            metadata_gdf.loc[metadata_gdf["SC_NAAM"] == scenario_name, "BREACH_ID"] = breach_id
-            metadata_gdf.loc[metadata_gdf["SC_NAAM"] == scenario_name, "SC_DATE"] = simuatlion_started
+            if mask.any():
+                idx = metadata_gdf.index[mask][0]
+            else:
+                idx = len(metadata_gdf)
+                metadata_gdf.loc[idx, "SC_NAAM"] = scenario_name
+                metadata_gdf.loc[idx, "geometry"] = Point(x, y)
+
+            # DBR_INI_CR default = 0 si está vacío
+            ini_crest = metadata_gdf.loc[idx, "DBR_INI_CR"]
+            ini_crest = 0 if pd.isna(ini_crest) else ini_crest
+            low_crest_level = ini_crest - max_breach_depth
+
+            # update
+            metadata_gdf.loc[idx, "DBR_BR_MAX"] = breach_width_max
+            metadata_gdf.loc[idx, "DBR_BRESDI"] = max_breach_depth
+            metadata_gdf.loc[idx, "DBR_QMAX"] = breach_qmax
+            metadata_gdf.loc[idx, "MOD_DATE"] = mod_date
+            metadata_gdf.loc[idx, "MOD_START"] = log_start_datum
+            metadata_gdf.loc[idx, "MOD_EIND"] = log_end_datum
+            metadata_gdf.loc[idx, "MOD_REKEND"] = log_total_time
+            metadata_gdf.loc[idx, "MOD_SIM_ST"] = simulation_start
+            metadata_gdf.loc[idx, "MOD_SIM_EI"] = simulation_end
+            metadata_gdf.loc[idx, "MOD_SIM_DU"] = sim_duur
+            metadata_gdf.loc[idx, "DBR_LOW_CR"] = low_crest_level
+            metadata_gdf.loc[idx, "BUW_HMAX"] = max_breach_wlev_upstream_list[0]
+            metadata_gdf.loc[idx, "DBR_VTOT"] = vol_max
+            metadata_gdf.loc[idx, "SC_IDENT"] = simulation_id
+            metadata_gdf.loc[idx, "BREACH_ID"] = breach_id[0] if hasattr(breach_id, "__len__") else breach_id
+            metadata_gdf.loc[idx, "SC_DATE"] = simuatlion_started
+            metadata_gdf.loc[idx, "BES_3Di_RE"] = relative_path
 
             # Save metadata in the last vesion file.
-            path_gdf = r"E:\03.resultaten\IPO_Overstromingsberekeningen_compartimentering\metadata"
-            metadata_path = os.path.join(path_gdf, "metadata_shapefile.gpkg")
             metadata_gdf.to_file(metadata_path, driver="GPKG")
 
 
 # %%
 if __name__ == "__main__":
-    base_folder = r"E:\03.resultaten\IPO_Overstromingsberekeningen_compartimentering\output"
-    model_name = "ROR PRI - dijktraject 13-5"
-    metadata_path = r"E:\03.resultaten\IPO_Overstromingsberekeningen_compartimentering\metadata\metadata.gpkg"
-    new_metadata_path = r"E:\03.resultaten\IPO_Overstromingsberekeningen_compartimentering\metadata\metadata.gpkg"
-    filter_names = ["IPO_SBMZ_CMPTR_92_JA", "IPO_SBMZ_CMPTR_75_JA", "IPO_SBMN_CMPTR_23_JA"]
+    base_folder = r"\\corp.hhnk.nl\data\Hydrologen_data\Data\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\output\test_waterbalance"
+    model_name = "test_water_balance"
+    # metadata_path = r"E:\03.resultaten\IPO_Overstromingsberekeningen_compartimentering\metadata\metadata.gpkg"
+    metadata_path = r"\\corp.hhnk.nl\data\Hydrologen_data\Data\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\output\test_waterbalance\metadata.gpkg"
 
-    download_breach_scenario(base_folder, model_name, metadata_path, new_metadata_path, filter_names)
+    filter_names = [
+        # "IPO_DWK-R32-06_DID454_SBLN_EQ_573",
+        "test_breach_storage",
+        # "IPO_DWK-R32-10_DID459_VRNK_O_EQ_401",
+        # "IPO_DWK-R30-06_DID424_VRNK_W_EQ_1292",
+        # "IPO_DWK-R55-10_DID768_SBLZ_EQ_1097",
+        # "IPO_DWK-R44-39_DID928_SBHZ_EQ_765",
+        # "IPO_DWK-R23-45_DID333_SBMZ_EQ_914",
+        # "IPO_DWK-R06-08_DID124_SBMN_EQ_2024",
+        # "IPO_DWK-R02-01_DID80_SBHN_EQ_862",
+        # "IPO_D96_DID999_AB_EQ_995",
+        "ROR-PRI-test_T100000",
+        # "IPO_DWK-R24-04_DID360_SKB_EQ_3828",
+        # "IPO_DWK-I\/-003863_DID52_WL1D_EQ_27881",
+        # "IPO_DWK-R24-04_DID360_SKB_EQ_3828",
+    ]
+
+    # download_breach_scenario(base_folder, model_name, filter_names)
+    download_breach_scenario(base_folder, model_name, metadata_path, filter_names)
+
 # %%
