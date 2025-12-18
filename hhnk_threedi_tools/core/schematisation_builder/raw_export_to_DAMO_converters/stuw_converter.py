@@ -302,9 +302,9 @@ class StuwConverter(RawExportToDAMOConverter):
             if col not in self.data.kunstwerkopening.columns:
                 self.data.kunstwerkopening[col] = None
 
-        # Convert both to object dtype for all columns to ensure consistent dtypes
-        existing_df = self.data.kunstwerkopening[KUNSTWERKOPENING_COLUMNS].astype(object)
-        new_df_typed = new_df[KUNSTWERKOPENING_COLUMNS].astype(object)
+        # Select columns for both DataFrames
+        existing_df = self.data.kunstwerkopening[KUNSTWERKOPENING_COLUMNS].copy()
+        new_df_typed = new_df[KUNSTWERKOPENING_COLUMNS].copy()
 
         # Append to existing kunstwerkopeningen
         self.data.kunstwerkopening = pd.concat([existing_df, new_df_typed], ignore_index=True)

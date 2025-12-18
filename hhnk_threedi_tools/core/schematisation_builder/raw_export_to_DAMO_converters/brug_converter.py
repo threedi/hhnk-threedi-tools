@@ -196,9 +196,9 @@ class BrugConverter(RawExportToDAMOConverter):
             if col not in self.data.doorstroomopening.columns:
                 self.data.doorstroomopening[col] = None
 
-        # Convert both to object dtype for all columns to ensure consistent dtypes
-        existing_df = self.data.doorstroomopening[DOORSTROOMOPENING_COLUMNS].astype(object)
-        new_df_typed = new_df[DOORSTROOMOPENING_COLUMNS].astype(object)
+        # Select columns for both DataFrames
+        existing_df = self.data.doorstroomopening[DOORSTROOMOPENING_COLUMNS].copy()
+        new_df_typed = new_df[DOORSTROOMOPENING_COLUMNS].copy()
 
         # Append to existing doorstroomopeningen
         self.data.doorstroomopening = pd.concat(
