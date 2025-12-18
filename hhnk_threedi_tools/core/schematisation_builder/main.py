@@ -62,7 +62,7 @@ class SchematisationBuilder:
         self.logger.setLevel(logging.INFO)
 
     def make_hydamo_package(self):
-        # Check if polder_polygon.shp exists, copy if not
+        # Check if polder_polygon.shp exists, use from default location if not
         if (
             not self.polder_file_path.exists()
         ):  # TODO remove once implemented in plugin, then polder_polygon.shp is always present

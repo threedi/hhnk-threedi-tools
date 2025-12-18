@@ -41,13 +41,8 @@ class BrugConverter(RawExportToDAMOConverter):
 
     def run(self):
         """Execute the converter to create/update brug and doorstroomopening layers."""
-        if self.has_executed():
-            self.logger.debug("Skipping BrugConverter, already executed.")
-            return
-
         self.logger.info("Running BrugConverter...")
         self.update_brug_layers()
-        self.mark_executed()
 
     def update_brug_layers(self):
         """Update brug and doorstroomopening layers with proper relationships and IDs."""

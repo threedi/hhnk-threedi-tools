@@ -27,8 +27,6 @@ class _Data:
 
 
 class RawExportToDAMOConverter:
-    _executed = set()
-
     def __init__(
         self,
         raw_export_file_path: Path,
@@ -53,14 +51,6 @@ class RawExportToDAMOConverter:
 
             setattr(self.data, layer_name.lower(), gdf)
         self.logger.info("All raw export layers loaded.")
-
-    def mark_executed(self):
-        RawExportToDAMOConverter._executed.add(self.__class__)
-        self.logger.debug(f"{self.__class__.__name__} marked as executed.")
-
-    @classmethod
-    def has_executed(cls) -> bool:
-        return cls in RawExportToDAMOConverter._executed
 
     def write_outputs(self):
         import pandas as pd

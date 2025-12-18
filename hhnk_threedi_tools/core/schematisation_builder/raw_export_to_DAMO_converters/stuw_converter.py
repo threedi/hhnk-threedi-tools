@@ -64,13 +64,8 @@ class StuwConverter(RawExportToDAMOConverter):
 
     def run(self):
         """Execute the converter to create/update stuw, kunstwerkopening, and regelmiddel layers."""
-        if self.has_executed():
-            self.logger.debug("Skipping StuwConverter, already executed.")
-            return
-
         self.logger.info("Running StuwConverter...")
         self.update_stuw_layers()
-        self.mark_executed()
 
     def update_stuw_layers(self):
         """Update stuw, kunstwerkopening, and regelmiddel layers with proper relationships and IDs."""

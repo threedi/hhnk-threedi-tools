@@ -51,13 +51,8 @@ class GemaalConverter(RawExportToDAMOConverter):
 
     def run(self):
         """Execute the converter to create/update gemaal and pomp layers."""
-        if self.has_executed():
-            self.logger.debug("Skipping GemaalConverter, already executed.")
-            return
-
         self.logger.info("Running GemaalConverter...")
         self.update_gemaal_layer()
-        self.mark_executed()
 
     def update_gemaal_layer(self):
         """Update gemaal and pomp layers with proper relationships and IDs."""

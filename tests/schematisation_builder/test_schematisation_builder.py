@@ -58,31 +58,6 @@ def test_main():
     assert hydamo_file_path.exists()
 
     # Part 2: Validate HyDAMO package
-
-    # TODO TEMP REMOVE LATER - COMMENTED OUT NOW THAT STUW AND BRUG CONVERTERS ARE IMPLEMENTED
-    # Remove unsupported layers from the HyDAMO package for now.
-    # A raw export to DAMO converter should be made for these layers in the future.
-
-    # if hydamo_file_path.exists():
-    #     hydamo_layers = hrt.SpatialDatabase(hydamo_file_path).available_layers()
-    #     if "kunstwerkopening" not in [layer.lower() for layer in hydamo_layers]:
-    #         logger.warning("Removing unsupported layers from HyDAMO package for now.")
-    #         with sqlite3.connect(hydamo_file_path) as conn:
-    #             cursor = conn.cursor()
-    #             cursor.execute(f"DROP TABLE IF EXISTS {'stuw'};")
-    #             cursor.execute(f"DROP TABLE IF EXISTS {'brug'};")
-    #             conn.commit()
-
-    # try:
-    #     static_data = json.loads(
-    #         hrt.get_pkg_resource_path(schematisation_builder_resources, "static_data_paths.json").read_text()
-    #     )
-    #     coverage_location = Path(static_data["dtm_path"])
-    # except FileNotFoundError:
-    #     raise FileNotFoundError(
-    #         f"Coverage data for validation not found in {hrt.get_pkg_resource_path(schematisation_builder_resources, 'static_data_paths.json')}. Please provide location with index.shp and dtm tiles to this location."
-    #     )
-
     # path to dtm data
     coverage_location = TEST_DIRECTORY / "model_test" / "02_schematisation" / "00_basis" / "rasters"
 
