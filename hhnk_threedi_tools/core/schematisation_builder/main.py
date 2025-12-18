@@ -11,6 +11,9 @@ from hhnk_threedi_tools.core.schematisation_builder.DAMO_HyDAMO_converter import
 from hhnk_threedi_tools.core.schematisation_builder.DB_exporter import db_exporter
 from hhnk_threedi_tools.core.schematisation_builder.HyDAMO_validator import validate_hydamo
 from hhnk_threedi_tools.core.schematisation_builder.raw_export_to_DAMO_converter import RawExportToDAMOConverter
+from hhnk_threedi_tools.core.schematisation_builder.raw_export_to_DAMO_converters.aquaduct_converter import (
+    AquaductConverter,
+)
 from hhnk_threedi_tools.core.schematisation_builder.raw_export_to_DAMO_converters.brug_converter import (
     BrugConverter,
 )
@@ -32,6 +35,7 @@ CONVERTERS = [
     GemaalConverter,
     StuwConverter,
     BrugConverter,
+    AquaductConverter,
     PeilgebiedConverter,
     ProfielConverter,
 ]
