@@ -12,11 +12,10 @@ ATTRIBUTE_MAPPING = {
     "soortmateriaal": "soortmateriaal",
     "typemethoderuwheid": "typemethoderuwheid",
     "ruwheid": "ruwheid",
-    # Height/width mappings
-    "hoogteconstructie": "hoogteopening",  # Construction height → opening height
-    "breedte": "breedteopening",  # Width → opening width
-    "bodemhoogtebenedenstrooms": "hoogtebinnenonderkantbene",  # Bottom height downstream → inside bottom downstream
-    "bodemhoogtebovenstrooms": "hoogtebinnenonderkantbov",  # Bottom height upstream → inside bottom upstream
+    "hoogteconstructie": "hoogteopening",
+    "breedte": "breedteopening",
+    "bodemhoogtebenedenstrooms": "hoogtebinnenonderkantbene",
+    "bodemhoogtebovenstrooms": "hoogtebinnenonderkantbov",
 }
 
 DUIKERSIFONHEVEL_COLUMNS = [
@@ -150,7 +149,7 @@ class AquaductConverter(RawExportToDAMOConverter):
             record = {
                 "globalid": row.get("globalid") if self._is_valid_value(row.get("globalid")) else str(uuid.uuid4()),
                 "code": row.get("code", f"aquaduct_{idx}"),
-                "geometry": row.geometry,  # Keep original geometry (typically LineString for aquaducts)
+                "geometry": row.geometry,
                 "typekruising": "Aquaduct",  # Always set to Aquaduct to identify these records
             }
 
