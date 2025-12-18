@@ -93,11 +93,9 @@ class GemaalConverter(RawExportToDAMOConverter):
 
     def _has_existing_pomp_layer(self):
         """Check if pomp layer already exists with data."""
-        try:
-            self.data._ensure_loaded(["pomp"], previous_method="load_layers")
-            return self.data.pomp is not None and not self.data.pomp.empty
-        except (ValueError, AttributeError):
+        if not hasattr(self.data, "pomp"):
             return False
+        return self.data.pomp is not None and not self.data.pomp.empty
 
     def _validate_gemaal_columns(self):
         """Validate required columns exist, warn for missing optional columns."""

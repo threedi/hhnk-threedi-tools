@@ -83,11 +83,9 @@ class BrugConverter(RawExportToDAMOConverter):
 
     def _has_existing_doorstroomopening_layer(self):
         """Check if doorstroomopening layer already exists with data."""
-        try:
-            self.data._ensure_loaded(["doorstroomopening"], previous_method="load_layers")
-            return self.data.doorstroomopening is not None and not self.data.doorstroomopening.empty
-        except (ValueError, AttributeError):
+        if not hasattr(self.data, "doorstroomopening"):
             return False
+        return self.data.doorstroomopening is not None and not self.data.doorstroomopening.empty
 
     def _validate_brug_columns(self):
         """Validate required columns exist, warn for missing optional columns."""

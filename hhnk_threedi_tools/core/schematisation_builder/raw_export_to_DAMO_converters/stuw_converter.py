@@ -119,19 +119,15 @@ class StuwConverter(RawExportToDAMOConverter):
 
     def _has_existing_kunstwerkopening_layer(self):
         """Check if kunstwerkopening layer already exists with data."""
-        try:
-            self.data._ensure_loaded(["kunstwerkopening"], previous_method="load_layers")
-            return self.data.kunstwerkopening is not None and not self.data.kunstwerkopening.empty
-        except (ValueError, AttributeError):
+        if not hasattr(self.data, "kunstwerkopening"):
             return False
+        return self.data.kunstwerkopening is not None and not self.data.kunstwerkopening.empty
 
     def _has_existing_regelmiddel_layer(self):
         """Check if regelmiddel layer already exists with data."""
-        try:
-            self.data._ensure_loaded(["regelmiddel"], previous_method="load_layers")
-            return self.data.regelmiddel is not None and not self.data.regelmiddel.empty
-        except (ValueError, AttributeError):
+        if not hasattr(self.data, "regelmiddel"):
             return False
+        return self.data.regelmiddel is not None and not self.data.regelmiddel.empty
 
     def _validate_stuw_columns(self):
         """Validate required columns exist, warn for missing optional columns."""
