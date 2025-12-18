@@ -2,8 +2,8 @@ from pathlib import Path
 
 import geopandas as gpd
 import hhnk_research_tools as hrt
-from core.schematisation_builder.raw_export_to_DAMO_converter import RawExportToDAMOConverter
 
+from hhnk_threedi_tools.core.schematisation_builder.raw_export_to_DAMO_converter import RawExportToDAMOConverter
 from hhnk_threedi_tools.core.schematisation_builder.raw_export_to_DAMO_converters.stuw_converter import (
     StuwConverter,
 )
