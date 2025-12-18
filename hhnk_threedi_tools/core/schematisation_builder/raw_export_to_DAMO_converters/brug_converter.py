@@ -31,8 +31,8 @@ class BrugConverter(RawExportToDAMOConverter):
     Manages parent-child relationship:
     - brug → doorstroomopening (flow opening)
 
-    Creates one doorstroomopening per brug with proper brugid foreign key relationship,
-    ensuring globalid identifiers and referential integrity.
+    Creates one doorstroomopening per brug and links them with brugid,
+    ensuring each has a unique identifier.
     """
 
     def __init__(self, raw_export_converter: RawExportToDAMOConverter):
@@ -117,6 +117,7 @@ class BrugConverter(RawExportToDAMOConverter):
     def _create_empty_doorstroomopening_layer(self):
         """Create empty doorstroomopening layer with correct schema."""
         self.logger.info("Creating empty doorstroomopening layer...")
+        # Use DataFrame because doorstroomopening has no geometry in DAMO schema
         self.data.doorstroomopening = pd.DataFrame(columns=DOORSTROOMOPENING_COLUMNS)
 
     def _create_doorstroomopening_from_brug(self):

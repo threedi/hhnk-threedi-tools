@@ -43,7 +43,7 @@ def test_brug_converter():
         assert layer["globalid"].notna().all(), f"{layer_name} has null globalid values"
         assert layer["globalid"].is_unique, f"{layer_name} has duplicate globalid values"
 
-    # Test 3: Referential integrity - all brugid values exist in brug.globalid
+    # Test 3: Check brug→doorstroomopening links - all brugid values should exist in brug.globalid
     assert "brugid" in doorstroomopening.columns, "Doorstroomopening layer missing brugid"
     invalid_refs = doorstroomopening[~doorstroomopening["brugid"].isin(brug["globalid"])]
     assert invalid_refs.empty, f"Found {len(invalid_refs)} doorstroomopening(en) with invalid brugid"
@@ -98,10 +98,10 @@ def _test_brug_converter_with_existing_layer():
     # Test: Existing layer was updated, not replaced
     assert len(doorstroomopening) == len(brug), "Doorstroomopening count changed"
 
-    # Test: Foreign keys were populated
+    # Test: Links were populated
     assert doorstroomopening["brugid"].notna().all(), "Some doorstroomopeningen still have null brugid"
 
-    # Test: Referential integrity
+    # Test: All links are valid
     invalid_refs = doorstroomopening[~doorstroomopening["brugid"].isin(brug["globalid"])]
     assert invalid_refs.empty, f"Found {len(invalid_refs)} doorstroomopeningen with invalid brugid"
 

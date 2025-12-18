@@ -55,7 +55,7 @@ class StuwConverter(RawExportToDAMOConverter):
     - kunstwerkopening → regelmiddel (control device)
 
     Creates one kunstwerkopening per stuw and one regelmiddel per kunstwerkopening,
-    ensuring proper foreign key relationships and globalid identifiers.
+    linking them together with unique identifiers.
     """
 
     def __init__(self, raw_export_converter: RawExportToDAMOConverter):
@@ -161,12 +161,14 @@ class StuwConverter(RawExportToDAMOConverter):
     def _create_empty_kunstwerkopening_layer(self):
         """Create empty kunstwerkopening layer with correct schema."""
         self.logger.info("Creating empty kunstwerkopening layer...")
+        # Use DataFrame because kunstwerkopening has no geometry in DAMO schema
         self.data.kunstwerkopening = pd.DataFrame(columns=KUNSTWERKOPENING_COLUMNS)
 
     def _create_empty_regelmiddel_layer(self):
         """Create empty regelmiddel layer with correct schema."""
         self.logger.info("Creating empty regelmiddel layer...")
         crs = getattr(self.data.stuw, "crs", None) if hasattr(self.data, "stuw") else None
+        # Use GeoDataFrame because regelmiddel has geometry (inherited from stuw)
         self.data.regelmiddel = gpd.GeoDataFrame(columns=REGELMIDDEL_COLUMNS, geometry="geometry", crs=crs)
 
     def _create_kunstwerkopening_from_stuw(self):
@@ -304,10 +306,12 @@ class StuwConverter(RawExportToDAMOConverter):
             if col not in self.data.kunstwerkopening.columns:
                 self.data.kunstwerkopening[col] = None
 
+        # Convert both to object dtype for all columns to ensure consistent dtypes
+        existing_df = self.data.kunstwerkopening[KUNSTWERKOPENING_COLUMNS].astype(object)
+        new_df_typed = new_df[KUNSTWERKOPENING_COLUMNS].astype(object)
+
         # Append to existing kunstwerkopeningen
-        self.data.kunstwerkopening = pd.concat(
-            [self.data.kunstwerkopening[KUNSTWERKOPENING_COLUMNS], new_df[KUNSTWERKOPENING_COLUMNS]], ignore_index=True
-        )
+        self.data.kunstwerkopening = pd.concat([existing_df, new_df_typed], ignore_index=True)
 
         self.logger.info(f"Added {len(new_kunstwerkopeningen)} new kunstwerkopening(en)")
 

@@ -46,13 +46,13 @@ def test_stuw_converter():
         assert layer["globalid"].notna().all(), f"{layer_name} has null globalid values"
         assert layer["globalid"].is_unique, f"{layer_name} has duplicate globalid values"
 
-    # Test 3: Referential integrity - stuw→kunstwerkopening
+    # Test 3: Check stuw→kunstwerkopening links - all stuwid values should exist in stuw.globalid
     assert "stuwid" in kunstwerkopening.columns, "Kunstwerkopening layer missing stuwid"
     invalid_refs = kunstwerkopening[~kunstwerkopening["stuwid"].isin(stuw["globalid"])]
     assert invalid_refs.empty, f"Found {len(invalid_refs)} kunstwerkopening(en) with invalid stuwid"
     assert kunstwerkopening["stuwid"].notna().all(), "Some kunstwerkopeningen have null stuwid"
 
-    # Test 4: Referential integrity - kunstwerkopening→regelmiddel
+    # Test 4: Check kunstwerkopening→regelmiddel links - all kunstwerkopeningid values should exist
     assert "kunstwerkopeningid" in regelmiddel.columns, "Regelmiddel layer missing kunstwerkopeningid"
     invalid_refs = regelmiddel[~regelmiddel["kunstwerkopeningid"].isin(kunstwerkopening["globalid"])]
     assert invalid_refs.empty, f"Found {len(invalid_refs)} regelmiddel(en) with invalid kunstwerkopeningid"
@@ -121,11 +121,11 @@ def _test_stuw_converter_with_existing_layers():
     assert len(kunstwerkopening) == len(stuw), "Kunstwerkopening count changed"
     assert len(regelmiddel) == len(stuw), "Regelmiddel count changed"
 
-    # Test: Foreign keys were populated
+    # Test: Links were populated
     assert kunstwerkopening["stuwid"].notna().all(), "Some kunstwerkopeningen still have null stuwid"
     assert regelmiddel["kunstwerkopeningid"].notna().all(), "Some regelmiddelen still have null kunstwerkopeningid"
 
-    # Test: Referential integrity
+    # Test: All links are valid
     invalid_stuw_refs = kunstwerkopening[~kunstwerkopening["stuwid"].isin(stuw["globalid"])]
     assert invalid_stuw_refs.empty, f"Found {len(invalid_stuw_refs)} kunstwerkopeningen with invalid stuwid"
 
