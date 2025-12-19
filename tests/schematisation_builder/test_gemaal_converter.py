@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import geopandas as gpd
 import hhnk_research_tools as hrt
 
@@ -9,7 +11,7 @@ from tests.config import TEMP_DIR, TEST_DIRECTORY
 
 
 def test_gemaal_converter():
-    """Test GemaalConverter creates proper gemaal-pomp relationships."""
+    """Test GemaalConverter creates proper gemaal→pomp relationships."""
     # Setup
     logger = hrt.logging.get_logger(__name__)
     raw_export_file = TEST_DIRECTORY / "schematisation_builder" / "raw_export.gpkg"

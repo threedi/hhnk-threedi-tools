@@ -10,13 +10,8 @@ class PeilgebiedConverter(RawExportToDAMOConverter):
 
     def run(self):
         """Run the converter to update the peilgebied layer."""
-        if self.has_executed():
-            self.logger.debug("Skipping PeilgebiedConverter, already executed.")
-            return
-
         self.logger.info("Running PeilgebiedConverter...")
         self.update_peilgebied_layer()
-        self.mark_executed()
         self.logger.info("PeilgebiedConverter run completed.")
 
     def update_peilgebied_layer(self):

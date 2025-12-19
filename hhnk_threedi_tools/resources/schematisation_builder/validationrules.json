@@ -1,6 +1,6 @@
 {
 	"schema": "1.5",
-	"hydamo_version": "2.2",
+	"hydamo_version": "2.4",
 	"status_object": [
 		"planvorming",
 		"gerealiseerd"
@@ -1237,34 +1237,23 @@
 			"general_rules": [
 				{
 					"id": 1,
-					"result_variable": "kunstwerkopening_laagstedoorstroomhoogte",
+					"result_variable": "doorstroomopening_laagstedoorstroomhoogte",
 					"function": {
 						"object_relation": {
 							"statistic": "min",
-							"related_object": "kunstwerkopening",
+							"related_object": "doorstroomopening",
 							"related_parameter": "laagstedoorstroomhoogte"
 						}
 					}
 				},
 				{
 					"id": 2,
-					"result_variable": "kunstwerkopening_laagstedoorstroombreedte",
+					"result_variable": "doorstroomopening_breedteopening",
 					"function": {
 						"object_relation": {
 							"statistic": "sum",
-							"related_object": "kunstwerkopening",
-							"related_parameter": "laagstedoorstroombreedte"
-						}
-					}
-				},
-				{
-					"id": 3,
-					"result_variable": "kunstwerkopening_hoogstedoorstroombreedte",
-					"function": {
-						"object_relation": {
-							"statistic": "sum",
-							"related_object": "kunstwerkopening",
-							"related_parameter": "hoogstedoorstroombreedte"
+							"related_object": "doorstroomopening",
+							"related_parameter": "breedteopening"
 						}
 					}
 				}
@@ -1329,35 +1318,16 @@
 				},
 				{
 					"id": 3,
-					"name": "Een brug moet een plausibele laagste doorstroombreedte hebben",
+					"name": "Een brug moet een plausibele doorstroombreedte hebben",
 					"type": "logic",
 					"validation_rule_set": "basic",
 					"error_type": "critical",
-					"result_variable": "laagstedoorstroombreedte_plausibel",
-					"error_message": "laagstedoorstroombreedte niet plausibel",
+					"result_variable": "doorstroomopening_breedteopening_plausibel",
+					"error_message": "breedteopening niet plausibel",
 					"active": true,
 					"function": {
 						"BE": {
-							"parameter": "kunstwerkopening_laagstedoorstroombreedte",
-							"min": 1,
-							"max": 50,
-							"inclusive": false
-						}
-					},
-					"auto_fixable": false
-				},
-				{
-					"id": 4,
-					"name": "Een brug moet een plausibele hoogste doorstroombreedte hebben",
-					"type": "logic",
-					"validation_rule_set": "basic",
-					"error_type": "critical",
-					"result_variable": "hoogstedoorstroombreedte_plausibel",
-					"error_message": "hoogstedoorstroombreedte niet_plausibel",
-					"active": true,
-					"function": {
-						"BE": {
-							"parameter": "kunstwerkopening_hoogstedoorstroombreedte",
+							"parameter": "doorstroomopening_breedteopening",
 							"min": 1,
 							"max": 50,
 							"inclusive": false

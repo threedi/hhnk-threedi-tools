@@ -27,8 +27,6 @@ class _Data:
 
 
 class RawExportToDAMOConverter:
-    _executed = set()
-
     def __init__(
         self,
         raw_export_file_path: Path,
@@ -54,20 +52,16 @@ class RawExportToDAMOConverter:
             setattr(self.data, layer_name.lower(), gdf)
         self.logger.info("All raw export layers loaded.")
 
-    def mark_executed(self):
-        RawExportToDAMOConverter._executed.add(self.__class__)
-        self.logger.debug(f"{self.__class__.__name__} marked as executed.")
-
-    @classmethod
-    def has_executed(cls) -> bool:
-        return cls in RawExportToDAMOConverter._executed
-
     def write_outputs(self):
-        # Collect all GeoDataFrames in self.data (raw + output tables)
-        output_gdf_dict = {name: val for name, val in self.data.__dict__.items() if isinstance(val, gpd.GeoDataFrame)}
+        import pandas as pd
+
+        # Collect all GeoDataFrames and DataFrames in self.data (raw + output tables)
+        output_gdf_dict = {
+            name: val for name, val in self.data.__dict__.items() if isinstance(val, (gpd.GeoDataFrame, pd.DataFrame))
+        }
 
         if not output_gdf_dict:
-            self.logger.warning("No GeoDataFrames found to write.")
+            self.logger.warning("No GeoDataFrames or DataFrames found to write.")
             return
 
         if self.output_file_path.suffix != ".gpkg":
@@ -75,9 +69,11 @@ class RawExportToDAMOConverter:
             self.output_file_path = self.output_file_path / f"{self.output_file_path.name}.gpkg"
 
         for name, gdf in output_gdf_dict.items():
-            if isinstance(gdf, gpd.GeoDataFrame) and "geometry" in gdf.columns:
+            if isinstance(gdf, gpd.GeoDataFrame) and "geometry" in gdf.columns and gdf["geometry"].notna().any():
+                # GeoDataFrame with valid geometry
                 gdf.to_file(self.output_file_path, layer=name, engine="pyogrio", overwrite=True, driver="GPKG")
-            else:  # dataframe handling
+            else:  # DataFrame or GeoDataFrame without geometry
+                # Convert to GeoDataFrame with empty geometry for GeoPackage compatibility
                 gdf_no_geom = gpd.GeoDataFrame(gdf, geometry=[None] * len(gdf), crs=CRS)
                 gdf_no_geom.to_file(self.output_file_path, layer=name, engine="pyogrio", overwrite=True, driver="GPKG")
                 if gdf_no_geom.empty:
