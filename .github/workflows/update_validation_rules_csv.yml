@@ -42,9 +42,8 @@ jobs:
         id: check_changes
         shell: pwsh
         run: |
-          $ErrorActionPreference = 'Continue'
-          git diff --quiet hhnk_threedi_tools/resources/schematisation_builder/hhnk_validationrules.csv
-          if ($LASTEXITCODE -eq 0) {
+          $diff = git diff hhnk_threedi_tools/resources/schematisation_builder/hhnk_validationrules.csv
+          if ([string]::IsNullOrEmpty($diff)) {
             "changed=false" >> $env:GITHUB_OUTPUT
           } else {
             "changed=true" >> $env:GITHUB_OUTPUT
