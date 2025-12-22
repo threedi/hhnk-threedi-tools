@@ -24,7 +24,7 @@ jobs:
         uses: prefix-dev/setup-pixi@v0.9.0
         with:
           pixi-version: "latest"
-          cache: false  # Temporarily disabled to clear cache
+          cache: true
           environments: default
           post-cleanup: false
       
@@ -40,30 +40,35 @@ jobs:
       
       - name: Check for changes
         id: check_changes
+        shell: pwsh
         run: |
-          if git diff --quiet hhnk_threedi_tools/resources/schematisation_builder/hhnk_validationrules.csv; then
-            echo "changed=false" >> $GITHUB_OUTPUT
-          else
-            echo "changed=true" >> $GITHUB_OUTPUT
-          fi
+          git diff --quiet hhnk_threedi_tools/resources/schematisation_builder/hhnk_validationrules.csv
+          if ($LASTEXITCODE -eq 0) {
+            "changed=false" >> $env:GITHUB_OUTPUT
+          } else {
+            "changed=true" >> $env:GITHUB_OUTPUT
+          }
       
       - name: Show diff (if any)
         if: steps.check_changes.outputs.changed == 'true'
+        shell: pwsh
         run: |
-          echo "Changes detected in hhnk_validationrules.csv:"
+          Write-Host "Changes detected in hhnk_validationrules.csv:"
           git diff hhnk_threedi_tools/resources/schematisation_builder/hhnk_validationrules.csv
       
       # On PR: Fail if the CSV is out of date
       - name: Check CSV is up-to-date (PR)
         if: github.event_name == 'pull_request' && steps.check_changes.outputs.changed == 'true'
+        shell: pwsh
         run: |
-          echo "❌ ERROR: hhnk_validationrules.csv is out of date!"
-          echo "Please run 'python hhnk_threedi_tools/core/schematisation_builder/utils/export_validation_rules_overview.py' locally and commit the changes."
+          Write-Host "❌ ERROR: hhnk_validationrules.csv is out of date!"
+          Write-Host "Please run 'python -m hhnk_threedi_tools.core.schematisation_builder.utils.export_validation_rules_overview' locally and commit the changes."
           exit 1
       
       # On push to main: Commit changes if any
       - name: Commit and push changes (Main)
         if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.check_changes.outputs.changed == 'true'
+        shell: pwsh
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
