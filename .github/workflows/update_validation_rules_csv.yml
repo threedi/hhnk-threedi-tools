@@ -56,18 +56,9 @@ jobs:
           Write-Host "Changes detected in hhnk_validationrules.csv:"
           git diff hhnk_threedi_tools/resources/schematisation_builder/hhnk_validationrules.csv
       
-      # On PR: Fail if the CSV is out of date
-      - name: Check CSV is up-to-date (PR)
-        if: github.event_name == 'pull_request' && steps.check_changes.outputs.changed == 'true'
-        shell: pwsh
-        run: |
-          Write-Host "❌ ERROR: hhnk_validationrules.csv is out of date!"
-          Write-Host "Please run 'python -m hhnk_threedi_tools.core.schematisation_builder.utils.export_validation_rules_overview' locally and commit the changes."
-          exit 1
-      
-      # On push to main: Commit changes if any
-      - name: Commit and push changes (Main)
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.check_changes.outputs.changed == 'true'
+      # Auto-commit changes for both PRs and main
+      - name: Commit and push changes
+        if: steps.check_changes.outputs.changed == 'true'
         shell: pwsh
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
@@ -78,5 +69,6 @@ jobs:
       
       - name: Success message
         if: steps.check_changes.outputs.changed == 'false'
+        shell: pwsh
         run: |
-          echo "✅ hhnk_validationrules.csv is up-to-date!"
+          Write-Host "✅ hhnk_validationrules.csv is up-to-date!"
