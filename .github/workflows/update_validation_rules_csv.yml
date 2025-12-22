@@ -1,0 +1,74 @@
+name: Update Validation Rules CSV
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:  # Allows manual triggering from GitHub UI
+
+# Automatically stop old builds on the same branch/PR
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
+jobs:
+  update-validation-rules:
+    if: |
+      github.event_name == 'push' ||
+      github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Setup pixi
+        uses: prefix-dev/setup-pixi@v0.9.0
+        with:
+          pixi-version: "latest"
+          cache: true
+          environments: default
+      
+      - name: Generate validation rules CSV
+        shell: bash
+        run: |
+          pixi run python -m hhnk_threedi_tools.core.schematisation_builder.utils.export_validation_rules_overview
+      
+      - name: Check for changes
+        id: check_changes
+        run: |
+          if git diff --quiet hhnk_threedi_tools/resources/schematisation_builder/hhnk_validationrules.csv; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Show diff (if any)
+        if: steps.check_changes.outputs.changed == 'true'
+        run: |
+          echo "Changes detected in hhnk_validationrules.csv:"
+          git diff hhnk_threedi_tools/resources/schematisation_builder/hhnk_validationrules.csv
+      
+      # On PR: Fail if the CSV is out of date
+      - name: Check CSV is up-to-date (PR)
+        if: github.event_name == 'pull_request' && steps.check_changes.outputs.changed == 'true'
+        run: |
+          echo "❌ ERROR: hhnk_validationrules.csv is out of date!"
+          echo "Please run 'python hhnk_threedi_tools/core/schematisation_builder/utils/export_validation_rules_overview.py' locally and commit the changes."
+          exit 1
+      
+      # On push to main: Commit changes if any
+      - name: Commit and push changes (Main)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.check_changes.outputs.changed == 'true'
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add hhnk_threedi_tools/resources/schematisation_builder/hhnk_validationrules.csv
+          git commit -m "chore: auto-update validation rules CSV [skip ci]"
+          git push
+      
+      - name: Success message
+        if: steps.check_changes.outputs.changed == 'false'
+        run: |
+          echo "✅ hhnk_validationrules.csv is up-to-date!"
