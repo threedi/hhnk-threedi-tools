@@ -28,6 +28,11 @@ jobs:
           environments: default
           post-cleanup: false
       
+      - name: Install dependencies (postinstall)
+        shell: pwsh
+        run: |
+          pixi run postinstall
+      
       - name: Generate validation rules CSV
         shell: bash
         run: |
