@@ -26,6 +26,7 @@ jobs:
           pixi-version: "latest"
           cache: true
           environments: default
+          post-cleanup: false
       
       - name: Generate validation rules CSV
         shell: bash
