@@ -30,7 +30,7 @@ def export_validation_rules_overview():
                     )
 
         for rule in obj["validation_rules"]:
-            if rule["validation_rule_set"] == "hhnk":
+            if rule["validation_rule_set"] == "hhnk" or rule["id"] >= 100:
                 rows.append(
                     {
                         "id": int(rule["id"]),

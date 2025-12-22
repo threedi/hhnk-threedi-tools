@@ -2,9 +2,9 @@ import uuid
 
 import geopandas as gpd
 import hhnk_research_tools as hrt
-from core.schematisation_builder.raw_export_to_DAMO_converter import RawExportToDAMOConverter
 from shapely.geometry import LineString
 
+from hhnk_threedi_tools.core.schematisation_builder.raw_export_to_DAMO_converter import RawExportToDAMOConverter
 from hhnk_threedi_tools.core.schematisation_builder.raw_export_to_DAMO_converters.aquaduct_converter import (
     AquaductConverter,
 )
