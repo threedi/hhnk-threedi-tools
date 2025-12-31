@@ -492,7 +492,7 @@
 					"validation_rule_set": "basic",
 					"error_type": "critical",
 					"result_variable": "op_hydroobject",
-					"error_message": "hydroobject niet op hydroobject",
+					"error_message": "object niet op hydroobject",
 					"active": true,
 					"function": {
 						"snaps_to_hydroobject": {
