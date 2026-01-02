@@ -6,6 +6,10 @@ import hhnk_research_tools as hrt
 import pytest
 
 import hhnk_threedi_tools as htt
+from tests.config import TEMP_DIR, TEST_DIRECTORY
+
+LAYERS = ["duikersifonhevels"]
+temp_dir_out = TEMP_DIR / f"temp_Fixer1_converter_{hrt.current_time(date=True)}"
 
 
 # test for creation of summary validation and fix report gpkg
@@ -32,7 +36,7 @@ def test_creation_validation_fixes_summary(tmp_path: Path):
     report_layers = gpd.io.file.fiona.listlayers(report_gpkg_path)
 
     # TODO: add more layers when more layers are in fixconfig
-    expected_layers = ["duikersifonhevels"]
+    expected_layers = LAYERS
     for layer in expected_layers:
         assert layer in report_layers
     # check if expected columns are in one of the layers

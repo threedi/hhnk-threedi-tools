@@ -1,6 +1,6 @@
 {
 	"schema": "1.5",
-	"hydamo_version": "2.2",
+	"hydamo_version": "2.4",
 	"status_object": [
 		"planvorming",
 		"gerealiseerd"
@@ -8,6 +8,21 @@
 	"objects": [
 		{
 			"object": "profiellijn",
+			"general_rules_temp_excluded": [
+				{
+					"id": 110,
+					"result_variable": "maaiveldhoogte",
+					"function": {
+						"buffer": {
+							"radius": 10,
+							"percentile": 95,
+							"coverage": "AHN",
+							"fill_value": 325
+						}
+					},
+					"description": "berekent de maaiveldhoogte op basis van een buffer van 10 meter rond de profiellijn en de AHN data"
+				}
+			],
 			"general_rules": [
 				{
 					"id": 0,
@@ -136,19 +151,6 @@
 						}
 					},
 					"description": "berekent de breedte van het profiel op basis van de profielpunten"
-				},
-				{
-					"id": 110,
-					"result_variable": "maaiveldhoogte",
-					"function": {
-						"buffer": {
-							"radius": 10,
-							"percentile": 95,
-							"coverage": "AHN",
-							"fill_value": 325
-						}
-					},
-					"description": "berekent de maaiveldhoogte op basis van een buffer van 10 meter rond de profiellijn en de AHN data"
 				}
 			],
 			"validation_rules": [
@@ -165,7 +167,8 @@
 						"snaps_to_hydroobject": {
 							"method": "overall"
 						}
-					}
+					},
+					"auto_fixable": false
 				},
 				{
 					"id": 100,
@@ -182,7 +185,8 @@
 							"left": "nr_of_profielpunten",
 							"right": 3
 						}
-					}
+					},
+					"auto_fixable": false
 				},
 				{
 					"id": 101,
@@ -201,7 +205,8 @@
 							"max": 2,
 							"inclusive": false
 						}
-					}
+					},
+					"auto_fixable": false
 				},
 				{
 					"id": 102,
@@ -220,7 +225,8 @@
 							"max": 20,
 							"inclusive": false
 						}
-					}
+					},
+					"auto_fixable": false
 				},
 				{
 					"id": 103,
@@ -237,7 +243,8 @@
 							"left": "jaarinwinning",
 							"right": 2009
 						}
-					}
+					},
+					"auto_fixable": false
 				},
 				{
 					"id": 104,
@@ -256,7 +263,8 @@
 							"max": 3,
 							"inclusive": false
 						}
-					}
+					},
+					"auto_fixable": false
 				},
 				{
 					"id": 105,
@@ -273,7 +281,8 @@
 							"left": "maximalehoogteprofiel",
 							"right": 6
 						}
-					}
+					},
+					"auto_fixable": false
 				},
 				{
 					"id": 106,
@@ -290,7 +299,8 @@
 							"left": "max_cross_product",
 							"right": 0.5
 						}
-					}
+					},
+					"auto_fixable": false
 				},
 				{
 					"id": 107,
@@ -301,13 +311,14 @@
 					"error_type": "non-critical",
 					"result_variable": "ingemeten_profiel_boven_maaiveld",
 					"error_message": "ingemeten profiel > maaiveld",
-					"active": true,
+					"active": false,
 					"function": {
 						"LT": {
 							"left": "bodemhoogte",
 							"right": "maaiveldhoogte"
 						}
-					}
+					},
+					"auto_fixable": false
 				},
 				{
 					"id": 108,
@@ -324,13 +335,14 @@
 							"left": "isascending",
 							"right": 1
 						}
-					}
+					},
+					"auto_fixable": false
 				}
 			]
 		},
 		{
 			"object": "duikersifonhevel",
-			"general_rules": [
+			"general_rules_temp_excluded": [
 				{
 					"id": 0,
 					"result_variable": "maaiveldhoogte",
@@ -342,7 +354,9 @@
 							"fill_value": 325
 						}
 					}
-				},
+				}
+			],
+			"general_rules": [
 				{
 					"id": 1,
 					"result_variable": "delta_h",
@@ -393,7 +407,8 @@
 							"max": 325,
 							"inclusive": false
 						}
-					}
+					},
+					"auto_fixable": false
 				},
 				{
 					"id": 1,
@@ -411,7 +426,8 @@
 							"max": 325,
 							"inclusive": false
 						}
-					}
+					},
+					"auto_fixable": false
 				},
 				{
 					"id": 2,
@@ -421,13 +437,14 @@
 					"error_type": "critical",
 					"result_variable": "bok_boven_lt_maaiveld",
 					"error_message": "bok_boven > maaiveld",
-					"active": true,
+					"active": false,
 					"function": {
 						"LT": {
 							"left": "hoogtebinnenonderkantbov",
 							"right": "maaiveldhoogte"
 						}
-					}
+					},
+					"auto_fixable": false
 				},
 				{
 					"id": 3,
@@ -437,13 +454,14 @@
 					"error_type": "critical",
 					"result_variable": "bok_beneden_lt_maaiveld",
 					"error_message": "bok_beneden > maaiveld",
-					"active": true,
+					"active": false,
 					"function": {
 						"LT": {
 							"left": "hoogtebinnenonderkantbene",
 							"right": "maaiveldhoogte"
 						}
-					}
+					},
+					"auto_fixable": false
 				},
 				{
 					"id": 4,
@@ -459,7 +477,8 @@
 							"left": "lengte",
 							"right": 1.0
 						}
-					}
+					},
+					"auto_fixable": false
 				},
 				{
 					"id": 5,
@@ -483,7 +502,8 @@
 							"left": "breedteopening",
 							"right": "hoogteopening"
 						}
-					}
+					},
+					"auto_fixable": false
 				},
 				{
 					"id": 6,
@@ -499,7 +519,8 @@
 							"tolerance": 0.01,
 							"method": "ends"
 						}
-					}
+					},
+					"auto_fixable": false
 				},
 				{
 					"id": 7,
@@ -517,7 +538,8 @@
 							"max": 0.05,
 							"inclusive": false
 						}
-					}
+					},
+					"auto_fixable": false
 				},
 				{
 					"id": 8,
@@ -533,7 +555,8 @@
 							"left": "verval",
 							"right": 0.5
 						}
-					}
+					},
+					"auto_fixable": false
 				},
 				{
 					"id": 9,
@@ -548,7 +571,8 @@
 						"not_overlapping": {
 							"tolerance": 0.01
 						}
-					}
+					},
+					"auto_fixable": false
 				},
 				{
 					"id": 10,
@@ -567,7 +591,8 @@
 							"logical_operator": "GT",
 							"direction": "upstream"
 						}
-					}
+					},
+					"auto_fixable": false
 				},
 				{
 					"id": 11,
@@ -586,7 +611,8 @@
 							"logical_operator": "GT",
 							"direction": "downstream"
 						}
-					}
+					},
+					"auto_fixable": false
 				}
 			]
 		},
@@ -641,7 +667,8 @@
 							"max": 325,
 							"inclusive": false
 						}
-					}
+					},
+					"auto_fixable": false
 				},
 				{
 					"id": 1,
@@ -659,7 +686,8 @@
 							"max": 325,
 							"inclusive": false
 						}
-					}
+					},
+					"auto_fixable": false
 				},
 				{
 					"id": 2,
@@ -677,7 +705,8 @@
 							"max": 10,
 							"inclusive": false
 						}
-					}
+					},
+					"auto_fixable": false
 				},
 				{
 					"id": 3,
@@ -695,7 +724,8 @@
 							"max": 50,
 							"inclusive": false
 						}
-					}
+					},
+					"auto_fixable": false
 				},
 				{
 					"id": 4,
@@ -711,7 +741,8 @@
 							"left": "hoogteopening",
 							"right": 0
 						}
-					}
+					},
+					"auto_fixable": false
 				},
 				{
 					"id": 5,
@@ -735,7 +766,8 @@
 							"left": "maximalehoogteopening",
 							"right": "kunstwerkopening_hoogte_m"
 						}
-					}
+					},
+					"auto_fixable": false
 				},
 				{
 					"id": 6,
@@ -759,7 +791,8 @@
 							"left": "minimalehoogtebovenkant",
 							"right": "kunstwerkopening_laagstedoorstroomhoogte"
 						}
-					}
+					},
+					"auto_fixable": false
 				},
 				{
 					"id": 7,
@@ -783,7 +816,8 @@
 							"left": "maximalehoogtebovenkant",
 							"right": "kunstwerkopening_hoogstedoorstroomhoogte"
 						}
-					}
+					},
+					"auto_fixable": false
 				}
 			]
 		},
@@ -852,7 +886,8 @@
 							"max": 325,
 							"inclusive": false
 						}
-					}
+					},
+					"auto_fixable": false
 				},
 				{
 					"id": 1,
@@ -870,7 +905,8 @@
 							"max": 325,
 							"inclusive": false
 						}
-					}
+					},
+					"auto_fixable": false
 				},
 				{
 					"id": 2,
@@ -895,7 +931,8 @@
 							"left": "laagstedoorstroombreedte",
 							"right": "hoogstedoorstroombreedte"
 						}
-					}
+					},
+					"auto_fixable": false
 				},
 				{
 					"id": 3,
@@ -911,7 +948,8 @@
 							"left": "laagstedoorstroomhoogte",
 							"right": "hoogstedoorstroomhoogte"
 						}
-					}
+					},
+					"auto_fixable": false
 				},
 				{
 					"id": 4,
@@ -937,12 +975,26 @@
 							"left": "laagstedoorstroomhoogte",
 							"right": "hoogstedoorstroomhoogte"
 						}
-					}
+					},
+					"auto_fixable": false
 				}
 			]
 		},
 		{
 			"object": "stuw",
+			"general_rules_temp_excluded": [
+				{
+					"id": 1,
+					"result_variable": "maaiveldhoogte",
+					"function": {
+						"buffer": {
+							"radius": "buffer_radius",
+							"percentile": 95,
+							"coverage": "AHN"
+						}
+					}
+				}
+			],
 			"general_rules": [
 				{
 					"id": 0,
@@ -953,17 +1005,6 @@
 								"kruinbreedte",
 								30
 							]
-						}
-					}
-				},
-				{
-					"id": 1,
-					"result_variable": "maaiveldhoogte",
-					"function": {
-						"buffer": {
-							"radius": "buffer_radius",
-							"percentile": 95,
-							"coverage": "AHN"
 						}
 					}
 				},
@@ -1042,7 +1083,8 @@
 							"max": 325,
 							"inclusive": false
 						}
-					}
+					},
+					"auto_fixable": false
 				},
 				{
 					"id": 1,
@@ -1053,13 +1095,14 @@
 					"penalty": 2,
 					"result_variable": "constructie_lager_dan_maaiveld",
 					"error_message": "constructie_boven_maaiveld",
-					"active": true,
+					"active": false,
 					"function": {
 						"LT": {
 							"left": "hoogteconstructie",
 							"right": "maaiveldhoogte"
 						}
-					}
+					},
+					"auto_fixable": false
 				},
 				{
 					"id": 2,
@@ -1075,7 +1118,8 @@
 							"left": "kruinbreedte",
 							"right": 0.3
 						}
-					}
+					},
+					"auto_fixable": false
 				},
 				{
 					"id": 3,
@@ -1091,7 +1135,8 @@
 							"method": "overall",
 							"tolerance": 1
 						}
-					}
+					},
+					"auto_fixable": false
 				},
 				{
 					"id": 4,
@@ -1107,7 +1152,8 @@
 							"left": "kruinbreedte",
 							"right": "kunstwerkopening_hoogstedoorstroombreedte"
 						}
-					}
+					},
+					"auto_fixable": false
 				},
 				{
 					"id": 5,
@@ -1123,7 +1169,8 @@
 							"left": "kunstwerkopening_hoogstedoorstroomhoogte",
 							"right": "hoogteconstructie"
 						}
-					}
+					},
+					"auto_fixable": false
 				},
 				{
 					"id": 6,
@@ -1138,7 +1185,8 @@
 						"distant_to_others": {
 							"distance": 1
 						}
-					}
+					},
+					"auto_fixable": false
 				},
 				{
 					"id": 7,
@@ -1163,7 +1211,8 @@
 							"left": "kunstwerkopening_regelmiddel_aantal_regelmiddelen",
 							"right": 0
 						}
-					}
+					},
+					"auto_fixable": false
 				},
 				{
 					"id": 8,
@@ -1178,7 +1227,8 @@
 						"not_overlapping": {
 							"tolerance": 1
 						}
-					}
+					},
+					"auto_fixable": false
 				}
 			]
 		},
@@ -1187,34 +1237,23 @@
 			"general_rules": [
 				{
 					"id": 1,
-					"result_variable": "kunstwerkopening_laagstedoorstroomhoogte",
+					"result_variable": "doorstroomopening_laagstedoorstroomhoogte",
 					"function": {
 						"object_relation": {
 							"statistic": "min",
-							"related_object": "kunstwerkopening",
+							"related_object": "doorstroomopening",
 							"related_parameter": "laagstedoorstroomhoogte"
 						}
 					}
 				},
 				{
 					"id": 2,
-					"result_variable": "kunstwerkopening_laagstedoorstroombreedte",
+					"result_variable": "doorstroomopening_breedteopening",
 					"function": {
 						"object_relation": {
 							"statistic": "sum",
-							"related_object": "kunstwerkopening",
-							"related_parameter": "laagstedoorstroombreedte"
-						}
-					}
-				},
-				{
-					"id": 3,
-					"result_variable": "kunstwerkopening_hoogstedoorstroombreedte",
-					"function": {
-						"object_relation": {
-							"statistic": "sum",
-							"related_object": "kunstwerkopening",
-							"related_parameter": "hoogstedoorstroombreedte"
+							"related_object": "doorstroomopening",
+							"related_parameter": "breedteopening"
 						}
 					}
 				}
@@ -1236,7 +1275,8 @@
 							"max": 325,
 							"inclusive": false
 						}
-					}
+					},
+					"auto_fixable": false
 				},
 				{
 					"id": 1,
@@ -1254,7 +1294,8 @@
 							"max": 325,
 							"inclusive": false
 						}
-					}
+					},
+					"auto_fixable": false
 				},
 				{
 					"id": 2,
@@ -1272,43 +1313,27 @@
 							"max": 30,
 							"inclusive": false
 						}
-					}
+					},
+					"auto_fixable": false
 				},
 				{
 					"id": 3,
-					"name": "Een brug moet een plausibele laagste doorstroombreedte hebben",
+					"name": "Een brug moet een plausibele doorstroombreedte hebben",
 					"type": "logic",
 					"validation_rule_set": "basic",
 					"error_type": "critical",
-					"result_variable": "laagstedoorstroombreedte_plausibel",
-					"error_message": "laagstedoorstroombreedte niet plausibel",
+					"result_variable": "doorstroomopening_breedteopening_plausibel",
+					"error_message": "breedteopening niet plausibel",
 					"active": true,
 					"function": {
 						"BE": {
-							"parameter": "kunstwerkopening_laagstedoorstroombreedte",
+							"parameter": "doorstroomopening_breedteopening",
 							"min": 1,
 							"max": 50,
 							"inclusive": false
 						}
-					}
-				},
-				{
-					"id": 4,
-					"name": "Een brug moet een plausibele hoogste doorstroombreedte hebben",
-					"type": "logic",
-					"validation_rule_set": "basic",
-					"error_type": "critical",
-					"result_variable": "hoogstedoorstroombreedte_plausibel",
-					"error_message": "hoogstedoorstroombreedte niet_plausibel",
-					"active": true,
-					"function": {
-						"BE": {
-							"parameter": "kunstwerkopening_hoogstedoorstroombreedte",
-							"min": 1,
-							"max": 50,
-							"inclusive": false
-						}
-					}
+					},
+					"auto_fixable": false
 				}
 			]
 		},
@@ -1330,7 +1355,8 @@
 							"left": "maximalecapaciteit",
 							"right": 0
 						}
-					}
+					},
+					"auto_fixable": false
 				}
 			]
 		},
@@ -1340,6 +1366,8 @@
 				{
 					"id": 0,
 					"result_variable": "pomp_aantal_pompen",
+					"name": "Aantal gekoppelde pompen",
+					"description": "Berekent het aantal pompen dat aan het gemaal is gekoppeld",
 					"function": {
 						"object_relation": {
 							"statistic": "count",
@@ -1351,6 +1379,8 @@
 				{
 					"id": 1,
 					"result_variable": "pomp_capaciteit",
+					"name": "Totale capaciteit van gekoppelde pompen",
+					"description": "Som van de maximale capaciteit van alle gekoppelde pompen",
 					"function": {
 						"object_relation": {
 							"statistic": "sum",
@@ -1364,7 +1394,8 @@
 			"validation_rules": [
 				{
 					"id": 0,
-					"name": "Het aantal pompen is groter dan nul",
+					"name": "Aantal pompen groter dan nul",
+					"description": "Het gemaal moet minimaal één gekoppelde pomp hebben",
 					"type": "logic",
 					"validation_rule_set": "basic",
 					"error_type": "critical",
@@ -1376,11 +1407,13 @@
 							"left": "pomp_aantal_pompen",
 							"right": 0
 						}
-					}
+					},
+					"auto_fixable": false
 				},
 				{
 					"id": 1,
-					"name": "Totale capaciteit is groter dan nul",
+					"name": "Totale capaciteit groter dan nul",
+					"description": "De totale capaciteit van alle pompen bij het gemaal moet groter zijn dan nul",
 					"type": "logic",
 					"validation_rule_set": "basic",
 					"error_type": "critical",
@@ -1392,11 +1425,13 @@
 							"left": "pomp_capaciteit",
 							"right": 0
 						}
-					}
+					},
+					"auto_fixable": false
 				},
 				{
 					"id": 2,
-					"name": "Een gemaal zal geen overlap met een ander gemaal hebben",
+					"name": "Geen overlap met ander gemaal",
+					"description": "Het gemaal mag niet overlappen met een ander gemaal",
 					"type": "topologic",
 					"validation_rule_set": "basic",
 					"error_type": "critical",
@@ -1407,7 +1442,46 @@
 						"not_overlapping": {
 							"tolerance": 1
 						}
-					}
+					},
+					"auto_fixable": false
+				},
+				{
+					"id": 101,
+					"name": "Capaciteit binnen logisch bereik",
+					"description": "De maximale capaciteit van het gemaal ligt tussen 0.92 en 700",
+					"type": "logic",
+					"validation_rule_set": "hhnk",
+					"error_type": "critical",
+					"result_variable": "logische_capacteit",
+					"error_message": "check capacteit van de gemaal",
+					"active": true,
+					"function": {
+						"BE": {
+							"parameter": "maximalecapaciteit",
+							"min": 0.92,
+							"max": 700,
+							"inclusive": true
+						}
+					},
+					"auto_fixable": false
+				},
+				{
+					"id": 102,
+					"name": "Gemaal op watergang",
+					"description": "Het gemaal moet binnen 1 meter van de as van de watergang liggen",
+					"type": "topologic",
+					"validation_rule_set": "hhnk",
+					"error_type": "critical",
+					"result_variable": "gemaal_op_watergang",
+					"error_message": "gemaal niet op watergang",
+					"active": true,
+					"function": {
+						"snaps_to_hydroobject": {
+							"method": "overall",
+							"tolerance": 1
+						}
+					},
+					"auto_fixable": false
 				}
 			]
 		},
@@ -1428,7 +1502,8 @@
 							"length": 1,
 							"statistic": "min"
 						}
-					}
+					},
+					"auto_fixable": false
 				},
 				{
 					"id": 1,
@@ -1443,7 +1518,8 @@
 						"splitted_at_junction": {
 							"tolerance": 0.01
 						}
-					}
+					},
+					"auto_fixable": false
 				},
 				{
 					"id": 2,
@@ -1461,7 +1537,8 @@
 								"duikersifonhevel"
 							]
 						}
-					}
+					},
+					"auto_fixable": false
 				},
 				{
 					"id": 3,
@@ -1476,7 +1553,8 @@
 						"no_dangling_node": {
 							"tolerance": 0.01
 						}
-					}
+					},
+					"auto_fixable": false
 				},
 				{
 					"id": 4,
@@ -1498,7 +1576,8 @@
 							"tolerance": 0.01,
 							"distance": 25
 						}
-					}
+					},
+					"auto_fixable": false
 				},
 				{
 					"id": 5,
@@ -1518,7 +1597,8 @@
 							],
 							"tolerance": 1
 						}
-					}
+					},
+					"auto_fixable": false
 				},
 				{
 					"id": 6,
@@ -1540,7 +1620,8 @@
 							"tolerance": 0.01,
 							"distance": 25
 						}
-					}
+					},
+					"auto_fixable": false
 				}
 			]
 		},
@@ -1616,7 +1697,8 @@
 						"consistent_period": {
 							"max_gap": 1
 						}
-					}
+					},
+					"auto_fixable": false
 				},
 				{
 					"id": 1,
@@ -1636,7 +1718,8 @@
 						"join_object_exists": {
 							"join_object": "pomp"
 						}
-					}
+					},
+					"auto_fixable": false
 				},
 				{
 					"id": 2,
@@ -1656,7 +1739,8 @@
 						"join_object_exists": {
 							"join_object": "regelmiddel"
 						}
-					}
+					},
+					"auto_fixable": false
 				},
 				{
 					"id": 3,
@@ -1676,7 +1760,8 @@
 						"join_object_exists": {
 							"join_object": "hydrologischerandvoorwaarde"
 						}
-					}
+					},
+					"auto_fixable": false
 				},
 				{
 					"id": 4,
@@ -1700,7 +1785,8 @@
 							"left": "vastewaarde",
 							"right": "pomp_pompcapaciteit_m3s"
 						}
-					}
+					},
+					"auto_fixable": false
 				},
 				{
 					"id": 5,
@@ -1724,7 +1810,8 @@
 							"left": "vastewaarde",
 							"right": "hoogteopening"
 						}
-					}
+					},
+					"auto_fixable": false
 				},
 				{
 					"id": 6,
@@ -1750,7 +1837,8 @@
 							"max": "maximalehoogtebovenkant",
 							"inclusive": true
 						}
-					}
+					},
+					"auto_fixable": false
 				},
 				{
 					"id": 7,
@@ -1773,7 +1861,8 @@
 								"pompdebiet"
 							]
 						}
-					}
+					},
+					"auto_fixable": false
 				},
 				{
 					"id": 8,
@@ -1797,7 +1886,8 @@
 								"hoogte opening"
 							]
 						}
-					}
+					},
+					"auto_fixable": false
 				}
 			]
 		}
