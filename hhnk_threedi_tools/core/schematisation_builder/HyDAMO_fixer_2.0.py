@@ -10,7 +10,7 @@ import hhnk_threedi_tools.resources.schematisation_builder as schematisation_bui
 class Hydamo_fixer:
     def __init__(
         self,
-        hydamo_gpkg_path: str,
+        hydamo_gpkg_path: Path,
         validation_directory_path: Path,
         logger: hrt.logging.Logger = None,
     ) -> None:
@@ -18,10 +18,11 @@ class Hydamo_fixer:
             logger = hrt.logging.get_logger(__name__)
         self.logger = logger
 
-        self.hydamo_gpkg_path = hydamo_gpkg_path
-
-        self.hydamo_layers = gpd.read_file(hydamo_gpkg_path, layer=None)
+        # define paths
+        self.hydamo_gpkg_path = hydamo_gpkg_path / "HyDAMO.gpkg"
         self.validation_directory_path = validation_directory_path
+        self.validation_results_gpkg_path = validation_directory_path / "results" / "results.gpkg"
+        self.report_gpkg_path = self.validation_directory_path / "fix_tussenstappen" / "summary_val_fix.gpkg"
 
         # open validation rules and fix config
         resources_validationrules_path = hrt.get_pkg_resource_path(
@@ -34,12 +35,8 @@ class Hydamo_fixer:
         with open(resources_fixconfig_path, "r") as f:
             self.fix_config = json.load(f)
 
-        # define path to results.gpkg of validation
-        self.validation_results_gpkg_path = validation_directory_path / "results" / "results.gpkg"
-
-        self.report_gpkg_path = self.validation_directory_path / "fix_tussenstappen" / "summary_val_fix.gpkg"
-
     def create_validation_fix_reports(self):
+        # create report gpkg with per layer a summary of validation and fix suggestions
         for layer in self.fix_config["objects"]:
             layer_name = layer["object"]
 
