@@ -43,6 +43,9 @@ class Hydamo_fixer:
         for layer in self.fix_config["objects"]:
             layer_name = layer["object"]
 
+            # open hydamo layer gdf
+            hydamo_layer_gdf = gpd.read_file(self.hydamo_gpkg_path, layer=layer_name)
+
             # fill in standard columns based on validation results
             val_results_layer_gdf = gpd.read_file(self.validation_results_gpkg_path, layer=layer_name)
 
@@ -55,16 +58,22 @@ class Hydamo_fixer:
             layer_report_gdf["invalid_non_critical"] = layer_report_gdf["invalid_non_critical"].replace("", None)
             layer_report_gdf = layer_report_gdf.dropna(subset=["invalid_critical", "invalid_non_critical"], how="all")
 
-            # add layer specifivc columns based on fix config
+            # add layer specific columns based on fix config
+            add_specific_columns = []
             for fix in layer["fixes"]:
                 attribute_name = fix["attribute_name"]
-                if attribute_name not in list(layer_report_gdf.columns):
+                if attribute_name not in add_specific_columns:
+                    add_specific_columns.append(attribute_name)
                     # add columns to layer report gdf
-                    layer_report_gdf[attribute_name] = None
+                    print(attribute_name)
+                    if attribute_name != "geometry":
+                        layer_report_gdf[attribute_name] = None
                     layer_report_gdf[f"validation_sum_{attribute_name}"] = None
                     layer_report_gdf[f"fixes_{attribute_name}"] = None
                     layer_report_gdf[f"manual_overwrite_{attribute_name}"] = None
 
+            # fill in validation and fix information
+            list_attributes_filled = []
             for index, row in layer_report_gdf.iterrows():
                 # connect IDs of invalid_critical to validation_id in fix config
                 if row["invalid_critical"] is not None or row["invalid_non_critical"] is not None:
@@ -81,6 +90,10 @@ class Hydamo_fixer:
                         fix_name = fix["fix_name"]
 
                         if validation_id in invalid_ids:
+                            # mark attribute as filled
+                            if attribute_name not in list_attributes_filled:
+                                list_attributes_filled.append(attribute_name)
+
                             # define validation sum text
                             if fix["error_type"] == "critical":
                                 text_val_sum = f"C{validation_id}:{fix['error_message']}"
@@ -111,14 +124,26 @@ class Hydamo_fixer:
                                 layer_report_gdf.at[index, f"fixes_{attribute_name}"] = (
                                     f"{current_fix};{text_fix_suggestion}"
                                 )
-                            # TODO: fill met attribute value if present
 
-            # remove columns with no data
-            for col in layer_report_gdf.columns:
-                # TODO: attribute en manual overwrite moeten blijven staan
-                if col not in ["code", "geometry", "valid", "invalid_critical", "invalid_non_critical", "ignored"]:
-                    if layer_report_gdf[col].isnull().all():
-                        layer_report_gdf = layer_report_gdf.drop(columns=[col])
-            # save layer report gdf to gpkg
+                            # fill in attribute value if present in hydamo layer
+                            if attribute_name in hydamo_layer_gdf.columns and attribute_name != "geometry":
+                                code = row["code"]
+                                hydamo_value = hydamo_layer_gdf.loc[
+                                    hydamo_layer_gdf["code"] == code, attribute_name
+                                ].values
+                                if len(hydamo_value) > 0:
+                                    layer_report_gdf.at[index, attribute_name] = hydamo_value[0]
 
+            # remove columns with no values filled in
+            cols_to_save = ["code", "geometry", "valid", "invalid_critical", "invalid_non_critical", "ignored"]
+            for attribute_name in list_attributes_filled:
+                cols_to_save += [
+                    attribute_name,
+                    f"validation_sum_{attribute_name}",
+                    f"fixes_{attribute_name}",
+                    f"manual_overwrite_{attribute_name}",
+                ]
+            layer_report_gdf = layer_report_gdf[cols_to_save]
+
+            # save layer report gdf to report gpkg
             layer_report_gdf.to_file(self.report_gpkg_path, layer=layer_name, driver="GPKG")
