@@ -616,6 +616,7 @@ class OutputDirParent(Folder):
             self.add_file("gebruikte_profielen", "gebruikte_profielen.gpkg")
             self.add_file("geisoleerde_watergangen", "geisoleerde_watergangen.gpkg")
             self.add_file("gestuurde_kunstwerken", "gestuurde_kunstwerken.gpkg")
+            self.add_file("gestuurde_orifice", "gestuurde_orifice.gpkg")
             self.add_file("drooglegging", "drooglegging.tif")
             self.add_file("geometry_check", "geometry_check.csv")
             self.add_file("general_hhnk_schematisation_checks", "general_hhnk_schematisation_checks.csv")
