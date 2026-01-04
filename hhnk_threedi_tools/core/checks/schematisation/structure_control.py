@@ -5,7 +5,6 @@ import geopandas as gpd
 import hhnk_research_tools as hrt
 import numpy as np
 import pandas as pd
-
 from core.folders import Folders
 
 logger = hrt.logging.get_logger(name=__name__)
@@ -31,7 +30,13 @@ class StructureControl:
     #### TODO there is no check on the control logic in this class...
     """
 
-    def __init__(self, model: hrt.SpatialDatabase, hdb_control_layer: hrt.SpatialDatabaseLayer, output_file: str, output_orifice_file: None,):
+    def __init__(
+        self,
+        model: hrt.SpatialDatabase,
+        hdb_control_layer: hrt.SpatialDatabaseLayer,
+        output_file: str,
+        output_orifice_file: None,
+    ):
         self.model = model
         self.hdb_control_layer = hdb_control_layer
         self.output_file = Path(output_file)
@@ -218,7 +223,7 @@ class StructureControl:
 
         out = self.output_orifice_file
         create = hrt.check_create_new_file(output_file=out, overwrite=overwrite)
-        
+
         if create:
             gdf_orifice = self.control_gdf.loc[self.control_gdf["target_type"] == "v2_orifice"].copy()
             gdf_orifice = gpd.GeoDataFrame(gdf_orifice, geometry="geometry", crs=self.control_gdf.crs)
@@ -256,7 +261,7 @@ class StructureControl:
 
             self.export_gestuurde_orifice(overwrite=overwrite)
             return self.control_gdf
-        
+
 
 def create_sorted_actiontable_queries(database: hrt.SpatialDatabase) -> list[str]:
     """
@@ -326,12 +331,11 @@ def update_sorted_actiontable(database: hrt.SpatialDatabase, queries: list[str])
         database.modify_gpkg_using_query(query=query)
 
 
-
 # %%
 if __name__ == "__main__":
     for i in range(1, 5):
         TEST_MODEL = Path(__file__).parents[i].absolute() / "tests/data/model_test/"
-        TEST_MODEL = r'Y:\02.modellen\grootslag_leggertool'
+        TEST_MODEL = r"Y:\02.modellen\grootslag_leggertool"
         folder = Folders(TEST_MODEL)
         if folder.exists():
             break
@@ -340,7 +344,7 @@ if __name__ == "__main__":
         model=folder.model.schema_base.database,
         hdb_control_layer=folder.source_data.hdb.layers.sturing_kunstwerken,
         output_file=folder.output.hhnk_schematisation_checks.gestuurde_kunstwerken.path,
-        output_orifice_file=folder.output.hhnk_schematisation_checks.gestuurde_orifice.path, 
+        output_orifice_file=folder.output.hhnk_schematisation_checks.gestuurde_orifice.path,
     )
     self.run(overwrite=True)
 
