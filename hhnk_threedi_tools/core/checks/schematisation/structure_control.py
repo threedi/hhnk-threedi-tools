@@ -6,7 +6,7 @@ import hhnk_research_tools as hrt
 import numpy as np
 import pandas as pd
 
-from hhnk_threedi_tools.core.folders import Folders
+from core.folders import Folders
 
 logger = hrt.logging.get_logger(name=__name__)
 
@@ -31,11 +31,11 @@ class StructureControl:
     #### TODO there is no check on the control logic in this class...
     """
 
-    def __init__(self, model: hrt.SpatialDatabase, hdb_control_layer: hrt.SpatialDatabaseLayer, output_file: str):
+    def __init__(self, model: hrt.SpatialDatabase, hdb_control_layer: hrt.SpatialDatabaseLayer, output_file: str, output_orifice_file: None,):
         self.model = model
         self.hdb_control_layer = hdb_control_layer
         self.output_file = Path(output_file)
-
+        self.output_orifice_file: Path(output_orifice_file) if output_orifice_file else None
         self.layers = self.Layers()
 
     class Layers:
@@ -206,6 +206,33 @@ class StructureControl:
         self.control_gdf = gpd.GeoDataFrame(self.control_gdf)
         self.control_gdf.to_file(self.output_file)
 
+    def export_gestuurde_orifice(self, overwrite: bool = False) -> gpd.GeoDataFrame:
+        """
+        Export controlled v2_orifice rows to self.output_orifice_file.
+        Uses the SAME geometry as self.control_gdf (i.e. the StructureControl result).
+        If there are none, writes an empty layer and logs info.
+        """
+        if self.output_orifice_file is None:
+            logger.debug("No output_orifice_file configured; skipping orifice export.")
+            return gpd.GeoDataFrame()
+
+        out = self.output_orifice_file
+        create = hrt.check_create_new_file(output_file=out, overwrite=overwrite)
+        
+        if create:
+            gdf_orifice = self.control_gdf.loc[self.control_gdf["target_type"] == "v2_orifice"].copy()
+            gdf_orifice = gpd.GeoDataFrame(gdf_orifice, geometry="geometry", crs=self.control_gdf.crs)
+
+            # Always write (even empty) so the check workflow produces a predictable artifact
+            gdf_orifice.to_file(out, driver="GPKG", layer=out.stem)
+
+            if gdf_orifice.empty:
+                logger.info(f"No controlled v2_orifice found. Wrote empty layer to {out}.")
+            else:
+                logger.warning(f"Found {len(gdf_orifice)} controlled v2_orifice. Saved to {out}.")
+
+        return gdf_orifice
+
     def run(self, overwrite: bool = False) -> gpd.GeoDataFrame:
         # Check overwrite
         create = hrt.check_create_new_file(output_file=self.output_file, overwrite=overwrite)
@@ -226,8 +253,10 @@ class StructureControl:
             self.control_gdf = self.append_hdb_layer()
 
             self.save()
-            return self.control_gdf
 
+            self.export_gestuurde_orifice(overwrite=overwrite)
+            return self.control_gdf
+        
 
 def create_sorted_actiontable_queries(database: hrt.SpatialDatabase) -> list[str]:
     """
@@ -297,10 +326,12 @@ def update_sorted_actiontable(database: hrt.SpatialDatabase, queries: list[str])
         database.modify_gpkg_using_query(query=query)
 
 
+
 # %%
 if __name__ == "__main__":
     for i in range(1, 5):
         TEST_MODEL = Path(__file__).parents[i].absolute() / "tests/data/model_test/"
+        TEST_MODEL = r'Y:\02.modellen\grootslag_leggertool'
         folder = Folders(TEST_MODEL)
         if folder.exists():
             break
@@ -309,6 +340,7 @@ if __name__ == "__main__":
         model=folder.model.schema_base.database,
         hdb_control_layer=folder.source_data.hdb.layers.sturing_kunstwerken,
         output_file=folder.output.hhnk_schematisation_checks.gestuurde_kunstwerken.path,
+        output_orifice_file=folder.output.hhnk_schematisation_checks.gestuurde_orifice.path, 
     )
     self.run(overwrite=True)
 
