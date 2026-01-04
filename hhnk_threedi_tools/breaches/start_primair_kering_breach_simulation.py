@@ -149,9 +149,6 @@ def start_simulation_breaches(model_folder, organisation_name, scenarios, filter
     breach = {}
     # Start simulations in a loop
     # set up metadata
-<<<<<<< Updated upstream
-    metadata_gdf = gpd.read_file(metadata_path, driver="Shapefile")
-=======
 
     if os.path.exists(metadata_path):
         metadata_gdf = gpd.read_file(metadata_path, driver="Shapefile")
@@ -161,9 +158,8 @@ def start_simulation_breaches(model_folder, organisation_name, scenarios, filter
         metadata_gdf = gpd.GeoDataFrame(
             columns=metadata_columns,
             geometry="geometry",
-            crs=potential_breach_gdf.crs,  # asumimos que existe
+            crs=potential_breach_gdf.crs,
         )
->>>>>>> Stashed changes
 
     for x in breach_selected_idxs:
         # if x >= 32: # DEBUGGING
