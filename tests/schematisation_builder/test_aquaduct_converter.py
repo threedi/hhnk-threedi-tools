@@ -124,8 +124,8 @@ def test_aquaduct_converter():
 
     # Test dimension mappings
     if "breedte" in original_aquaduct.columns and original_row.get("breedte") is not None:
-        expected_breedte = original_row["breedte"]
-        actual_breedte = converted_row["breedteopening"]
+        expected_breedte = float(original_row["breedte"])
+        actual_breedte = float(converted_row["breedteopening"])
         assert actual_breedte == expected_breedte, (
             f"breedte ({expected_breedte}) should map to breedteopening, got {actual_breedte}"
         )
@@ -134,8 +134,8 @@ def test_aquaduct_converter():
         "bodemhoogtebenedenstrooms" in original_aquaduct.columns
         and original_row.get("bodemhoogtebenedenstrooms") is not None
     ):
-        expected_bodem_bene = original_row["bodemhoogtebenedenstrooms"]
-        actual_bodem_bene = converted_row["hoogtebinnenonderkantbene"]
+        expected_bodem_bene = float(original_row["bodemhoogtebenedenstrooms"])
+        actual_bodem_bene = float(converted_row["hoogtebinnenonderkantbene"])
         assert actual_bodem_bene == expected_bodem_bene, (
             f"bodemhoogtebenedenstrooms ({expected_bodem_bene}) should map to hoogtebinnenonderkantbene, got {actual_bodem_bene}"
         )
