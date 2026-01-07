@@ -5,6 +5,8 @@ from typing import Optional
 
 import geopandas as gpd
 import hhnk_research_tools as hrt
+import numpy as np
+import rasterio
 from shapely.validation import make_valid
 
 CRS = "EPSG:28992"
@@ -17,6 +19,10 @@ class _Data:
     profiellijn: gpd.GeoDataFrame = field(default_factory=gpd.GeoDataFrame)
     profielpunt: gpd.GeoDataFrame = field(default_factory=gpd.GeoDataFrame)
 
+    # DEM data
+    dem_path: Optional[Path] = None
+    dem_dataset: Optional[rasterio.DatasetReader] = None
+
     # Dynamically loaded raw export layers will be added as attributes
 
     def _ensure_loaded(self, layers: list[str], previous_method: str) -> None:
@@ -24,6 +30,30 @@ class _Data:
             gdf = getattr(self, layer, None)
             if gdf is None or (gdf.empty and len(gdf.columns) == 0):
                 raise ValueError(f"Layer '{layer}' not loaded. Call {previous_method}() first.")
+
+    def load_dem(self, dem_path: Path) -> bool:
+        """Load DEM raster for height extraction.
+
+        Args:
+            dem_path: Path to the DEM .tif file
+
+        Returns:
+            True if loaded successfully, False otherwise
+        """
+        if not dem_path.exists():
+            return False
+
+        self.dem_path = dem_path
+        try:
+            self.dem_dataset = rasterio.open(dem_path)
+            return True
+        except Exception:
+            return False
+
+    def __del__(self):
+        """Close DEM dataset on cleanup."""
+        if self.dem_dataset is not None:
+            self.dem_dataset.close()
 
 
 class RawExportToDAMOConverter:
@@ -40,6 +70,7 @@ class RawExportToDAMOConverter:
         self.data = _Data()
 
         self.load_layers()
+        self._try_load_dem()
 
     def load_layers(self):
         self.logger.info("Loading all raw export layers...")
@@ -51,6 +82,14 @@ class RawExportToDAMOConverter:
 
             setattr(self.data, layer_name.lower(), gdf)
         self.logger.info("All raw export layers loaded.")
+
+    def _try_load_dem(self):
+        """Try to load ahn.tif from the same folder as raw export."""
+        dem_path = self.raw_export_file_path.parent / "ahn.tif"
+        if self.data.load_dem(dem_path):
+            self.logger.info(f"Loaded DEM from {dem_path}")
+        else:
+            self.logger.warning(f"DEM not found at {dem_path}. Height extraction will not be available.")
 
     def write_outputs(self):
         import pandas as pd
