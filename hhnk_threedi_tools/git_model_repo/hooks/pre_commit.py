@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import List
 
 from hhnk_threedi_tools.git_model_repo.tasks.dump_files_in_directory import dump_files_in_directory
-from hhnk_threedi_tools.git_model_repo.utils.show_message_mbox import show_message_mbox
+from hhnk_threedi_tools.git_model_repo.utils.show_message_box import show_message_mbox
 from hhnk_threedi_tools.git_model_repo.utils.timer_log import SubTimer
 
 logger = logging.getLogger(__name__)

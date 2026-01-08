@@ -111,10 +111,16 @@ def install_hooks(git_root_dir: Path):
     ignores = [
         "*_backup.gpkg",
         "*_backup.xlsx",
-        "_backup\\",
+        "_backup/",
         "*.zip",
         "*_",
+        "03_3di_results/./",
+        "04_test_results/./",
+        "02_schematisation/*/",
+        "!02_schematisation/00_basis*",
+        "Notebooks/.*",
     ]
+
     for ignore in ignores:
         if not any([l.startswith(ignore) for l in lines]):
             lines.append(f"{ignore}\n")
