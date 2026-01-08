@@ -178,7 +178,7 @@ class PeilgebiedConverter(RawExportToDAMOConverter):
 
         for i, segment in enumerate(raw_segments):
             is_duplicate = False
-            seg_buffer = segment.buffer(0.01)  # 1cm buffer for near-duplicate detection
+            seg_buffer = segment.buffer(0.05)  # 5cm buffer for near-duplicate detection
 
             for existing in unique_segments:
                 # Check if segments are nearly identical (>90% overlap in both directions)
@@ -212,17 +212,20 @@ class PeilgebiedConverter(RawExportToDAMOConverter):
             crs=self.data.peilgebiedpraktijk.crs if self.data.peilgebiedpraktijk is not None else "EPSG:28992",
         )
 
-        # Split segments and extract heights
+        # Split network segments
+        lines_gdf = self._split_lines_into_segments(lines_gdf, max_segment_length=DEFAULT_SEGMENT_LENGTH)
+
+        # Remove overlapping segments
+        self.logger.info(f"Removing overlapping segments (initial: {len(lines_gdf)})...")
+        lines_gdf = self._remove_overlapping_segments_robust(lines_gdf)
+        self.logger.info(f"After deduplication: {len(lines_gdf)} segments")
+
+        # Extract heights for remaining segments
         if self.data.dem_dataset is not None:
-            lines_gdf = self._split_lines_and_extract_heights(
-                lines_gdf,
-                max_segment_length=DEFAULT_SEGMENT_LENGTH,
-                search_distance=DEFAULT_BUFFER_WIDTH,
-            )
+            lines_gdf = self._extract_heights_for_segments(lines_gdf, search_distance=DEFAULT_BUFFER_WIDTH)
         else:
             self.logger.warning("DEM not available, skipping height extraction")
             lines_gdf["min_height"] = None
-            lines_gdf["length_m"] = lines_gdf.geometry.length.apply(lambda l: round(l, 2))
 
         # 8. Map to DAMO schema
         damo_gdf = self._map_to_damo_waterkering(lines_gdf)
@@ -763,31 +766,18 @@ class PeilgebiedConverter(RawExportToDAMOConverter):
         self.logger.debug(f"Column '{target_name}' not found in source data")
         return None
 
-    def _split_lines_and_extract_heights(
-        self, gdf: gpd.GeoDataFrame, max_segment_length: float = 50.0, search_distance: float = 10.0
-    ) -> gpd.GeoDataFrame:
-        """Split lines using vertex-based approach and extract heights for each segment.
-
-        This method:
-        1. Splits each line by examining segments between consecutive vertices
-        2. Only subdivides segments longer than max_segment_length
-        3. Extracts crest height for each resulting segment
+    def _split_lines_into_segments(self, gdf: gpd.GeoDataFrame, max_segment_length: float = 50.0) -> gpd.GeoDataFrame:
+        """Split lines into segments using vertex-based approach.
 
         Args:
             gdf: GeoDataFrame with linestring geometries
             max_segment_length: Maximum segment length in meters
-            search_distance: Distance to search perpendicular to line for crest
 
         Returns:
-            GeoDataFrame with split segments, each with height and length
+            GeoDataFrame with split segments including length_m
         """
-        if self.data.dem_dataset is None:
-            self.logger.warning("No DEM available for height extraction")
-            return gdf
+        self.logger.info(f"Splitting lines into segments (max_segment: {max_segment_length}m)...")
 
-        self.logger.info(f"Splitting lines and extracting heights (max_segment: {max_segment_length}m)...")
-
-        dem = self.data.dem_dataset
         segments_data = []
 
         for idx, row in gdf.iterrows():
@@ -796,53 +786,54 @@ class PeilgebiedConverter(RawExportToDAMOConverter):
             if geom is None or geom.is_empty:
                 continue
 
-            # Split using vertex-based approach
             segments = self._split_line_by_vertices(geom, max_segment_length)
 
-            # Extract height for each segment
             for segment_geom in segments:
-                crest_height = self._sample_crest_height_perpendicular(segment_geom, dem, search_distance)
-
-                # Round to 2 decimals
-                if crest_height is not None:
-                    crest_height = round(crest_height, 2)
-
-                segment_length_m = round(segment_geom.length, 2)
-
-                # Create row for this segment
                 segment_row = row.copy()
                 segment_row["geometry"] = segment_geom
-                segment_row["min_height"] = crest_height
-                segment_row["length_m"] = segment_length_m
+                segment_row["length_m"] = round(segment_geom.length, 2)
                 segments_data.append(segment_row)
 
         if not segments_data:
             self.logger.warning("No segments created")
-            return gpd.GeoDataFrame(columns=gdf.columns.tolist() + ["min_height", "length_m"], crs=gdf.crs)
+            return gpd.GeoDataFrame(columns=gdf.columns.tolist() + ["length_m"], crs=gdf.crs)
 
         result = gpd.GeoDataFrame(segments_data, crs=gdf.crs).reset_index(drop=True)
-
-        # CRITICAL: Remove duplicate/overlapping segments created during splitting
-        self.logger.info(f"Removing duplicate segments after splitting (initial: {len(result)})...")
-        result = self._remove_overlapping_segments_robust(result)
-        self.logger.info(f"After deduplication: {len(result)} segments")
-
-        # Log statistics
-        valid_heights = result["min_height"].dropna()
         self.logger.info(
-            f"Created {len(result)} segments from {len(gdf)} lines "
-            f"(avg {len(result) / len(gdf):.1f} segments per line)"
+            f"Created {len(result)} segments from {len(gdf)} lines (avg {len(result) / len(gdf):.1f} per line)"
         )
 
+        return result
+
+    def _extract_heights_for_segments(self, gdf: gpd.GeoDataFrame, search_distance: float = 10.0) -> gpd.GeoDataFrame:
+        """Extract heights for line segments from DEM.
+
+        Args:
+            gdf: GeoDataFrame with linestring segments
+            search_distance: Distance to search perpendicular to line for crest
+
+        Returns:
+            GeoDataFrame with min_height column added
+        """
+        self.logger.info(f"Extracting heights for {len(gdf)} segments...")
+
+        dem = self.data.dem_dataset
+        gdf["min_height"] = gdf.geometry.apply(
+            lambda geom: round(self._sample_crest_height_perpendicular(geom, dem, search_distance), 2)
+            if self._sample_crest_height_perpendicular(geom, dem, search_distance) is not None
+            else None
+        )
+
+        valid_heights = gdf["min_height"].dropna()
         if len(valid_heights) > 0:
             self.logger.info(
-                f"Extracted heights for {len(valid_heights)}/{len(result)} segments "
+                f"Extracted heights for {len(valid_heights)}/{len(gdf)} segments "
                 f"(min: {valid_heights.min():.2f}m, max: {valid_heights.max():.2f}m)"
             )
         else:
             self.logger.warning("No valid heights extracted")
 
-        return result
+        return gdf
 
     def _split_line_by_vertices(self, geom, max_length: float) -> list[LineString]:
         """Split line by examining segments between consecutive vertices.
@@ -920,7 +911,7 @@ class PeilgebiedConverter(RawExportToDAMOConverter):
                 continue
 
             is_duplicate = False
-            buffer_i = geom_i.buffer(0.01)  # 1cm buffer
+            buffer_i = geom_i.buffer(0.05)  # 5cm buffer
 
             # Check against all previously kept segments
             for j in kept_indices:
