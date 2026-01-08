@@ -1,13 +1,15 @@
 import geopandas as gpd
 
 
+# Example function
+# TODO: list_features could also be summary validation/fix dataframe with codes to remove.
 def remove_features(gdf_HyDAMO: "gpd.GeoDataFrame", layer: str, list_features: list, logger) -> "gpd.GeoDataFrame":
-    """Remove old profiles from the HyDAMO geodataframe.
+    """Remove features from the HyDAMO geodataframe.
 
     Args:
         gdf_HyDAMO (gpd.GeoDataFrame): HyDAMO geodataframe.
-        layer (str): The layer from which to remove old profiles.
-        list_old_profiles (list): List of old profile IDs to remove.
+        layer (str): The layer from which to remove old features.
+        list_features (list): List of old feature IDs to remove.
 
     Returns:
         gpd.GeoDataFrame: HyDAMO geodataframe without the specified features.
