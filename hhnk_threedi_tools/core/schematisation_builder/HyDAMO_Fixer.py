@@ -22,7 +22,7 @@ class Hydamo_fixer:
     Returns
     -------
     intermediate results are saved in the fix_phase folder in the validation_directory_path
-    intermediate results are:
+    intermediate results are (until now):
     - summary_val_fix.gpkg : geopackage with per layer a summary of validation and fix suggestions
 
     """
