@@ -1,0 +1,102 @@
+name: Update Validation Rules CSV
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:  # Allows manual triggering from GitHub UI
+
+# Automatically stop old builds on the same branch/PR
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
+permissions:
+  contents: write  # Allow workflow to commit and push changes
+
+jobs:
+  update-validation-rules:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: ${{ github.head_ref }}  # Checkout the PR branch, not detached HEAD
+      
+      - name: Setup pixi
+        uses: prefix-dev/setup-pixi@v0.9.0
+        with:
+          pixi-version: "latest"
+          cache: true
+          environments: default
+          post-cleanup: false
+      
+      - name: Check if last commit was from bot
+        id: check_bot
+        shell: pwsh
+        run: |
+          $lastAuthor = git log -1 --pretty=format:'%an'
+          if ($lastAuthor -eq 'github-actions[bot]') {
+            Write-Host "Last commit was from bot, skipping to avoid infinite loop"
+            "skip=true" >> $env:GITHUB_OUTPUT
+          } else {
+            "skip=false" >> $env:GITHUB_OUTPUT
+          }
+      
+      - name: Install dependencies (postinstall)
+        if: steps.check_bot.outputs.skip == 'false'
+        shell: pwsh
+        run: |
+          pixi run postinstall
+      
+      - name: Generate validation rules CSVs
+        if: steps.check_bot.outputs.skip == 'false'
+        shell: bash
+        run: |
+          pixi run python -m hhnk_threedi_tools.core.schematisation_builder.utils.export_validation_rules_overview
+      
+      - name: Check for changes
+        if: steps.check_bot.outputs.skip == 'false'
+        id: check_changes
+        shell: pwsh
+        run: |
+          $diff_validation = git diff -- hhnk_threedi_tools/resources/schematisation_builder/hhnk_validation_rules.csv
+          $diff_general = git diff -- hhnk_threedi_tools/resources/schematisation_builder/hhnk_general_functions.csv
+          if (-not [string]::IsNullOrEmpty($diff_validation) -or -not [string]::IsNullOrEmpty($diff_general)) {
+            "changed=true" >> $env:GITHUB_OUTPUT
+          } else {
+            "changed=false" >> $env:GITHUB_OUTPUT
+          }
+      
+      - name: Show diff (if any)
+        if: steps.check_bot.outputs.skip == 'false' && steps.check_changes.outputs.changed == 'true'
+        shell: pwsh
+        run: |
+          Write-Host "Changes detected in hhnk_validation_rules.csv (if any):"
+          git diff -- hhnk_threedi_tools/resources/schematisation_builder/hhnk_validation_rules.csv || true
+          Write-Host "Changes detected in hhnk_general_functions.csv (if any):"
+          git diff -- hhnk_threedi_tools/resources/schematisation_builder/hhnk_general_functions.csv || true
+      
+      # Auto-commit changes for both PRs and main
+      - name: Commit and push changes
+        if: steps.check_bot.outputs.skip == 'false' && steps.check_changes.outputs.changed == 'true'
+        shell: pwsh
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add hhnk_threedi_tools/resources/schematisation_builder/hhnk_validation_rules.csv hhnk_threedi_tools/resources/schematisation_builder/hhnk_general_functions.csv
+          git commit -m "chore: auto-update validation rules CSV [skip ci]"
+          git push
+      
+      - name: Success message
+        if: steps.check_bot.outputs.skip == 'false' && steps.check_changes.outputs.changed == 'false'
+        shell: pwsh
+        run: |
+          Write-Host "✅ hhnk_validation_rules.csv and hhnk_general_functions.csv are up-to-date!"
+      
+      - name: Skipped message
+        if: steps.check_bot.outputs.skip == 'true'
+        shell: pwsh
+        run: |
+          Write-Host "⏭️ Skipped: Last commit was from github-actions[bot]"
