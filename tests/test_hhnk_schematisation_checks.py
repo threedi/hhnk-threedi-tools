@@ -47,7 +47,7 @@ class TestSchematisation:
 
         output_df = output_file.load()
         assert output_df["hdb_kruin_max"][0] == -0.25
-    
+
     def test_structure_control_no_culverts(self, hhnk_schematisation_checks):
         output = hhnk_schematisation_checks.run_model_checks()
 
@@ -57,7 +57,6 @@ class TestSchematisation:
             na=False,
         )
         assert output.loc[culvert_structure_control].empty
-
 
     def test_run_dem_max_value(self, hhnk_schematisation_checks):
         output = hhnk_schematisation_checks.run_dem_max_value()
