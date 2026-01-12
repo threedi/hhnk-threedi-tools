@@ -216,11 +216,11 @@ class StructureControl:
         self,
     ) -> gpd.GeoDataFrame:
         """
-        Export orifice rows to self.output_file.Uses the same geometry as self.control_gdf.
+        Export culvert rows to self.output_file.Uses the same geometry as self.control_gdf.
         If there are none, writes an empty layer and logs info.
         """
         if self.output_file is None:
-            logger.debug("No output_file configured; skipping orifice export.")
+            logger.debug("No output_file configured; skipping culvert export.")
             return gpd.GeoDataFrame()
 
         out = self.output_file
