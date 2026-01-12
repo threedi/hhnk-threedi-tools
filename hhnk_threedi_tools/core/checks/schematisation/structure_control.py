@@ -212,7 +212,7 @@ class StructureControl:
         self.control_gdf = gpd.GeoDataFrame(self.control_gdf)
         self.control_gdf.to_file(self.output_file)
 
-    def export_gestuurde_orifice(
+    def export_gestuurde_culvert(
         self,
     ) -> gpd.GeoDataFrame:
         """
@@ -224,8 +224,8 @@ class StructureControl:
             return gpd.GeoDataFrame()
 
         out = self.output_file
-        layer_name = "gestuurde_orifice"
-        gdf_orifice = self.control_gdf.loc[self.control_gdf["target_type"] == "v2_orifice"].copy()
+        layer_name = "gestuurde_culvert"
+        gdf_orifice = self.control_gdf.loc[self.control_gdf["target_type"] == "culvert"].copy()
 
         if out.exists() and layer_name in fiona.listlayers(out):
             fiona.remove(str(out), layer=layer_name, driver="GPKG")
@@ -255,7 +255,7 @@ class StructureControl:
 
             self.save()
 
-            self.export_gestuurde_orifice()
+            self.export_gestuurde_culvert()
             return self.control_gdf
 
 
@@ -331,7 +331,6 @@ def update_sorted_actiontable(database: hrt.SpatialDatabase, queries: list[str])
 if __name__ == "__main__":
     for i in range(1, 5):
         TEST_MODEL = Path(__file__).parents[i].absolute() / "tests/data/model_test/"
-        TEST_MODEL = r"Y:\02.modellen\grootslag_leggertool"
         folder = Folders(TEST_MODEL)
         if folder.exists():
             break
