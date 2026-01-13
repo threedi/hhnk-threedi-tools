@@ -212,11 +212,11 @@ class StructureControl:
         self.control_gdf = gpd.GeoDataFrame(self.control_gdf)
         self.control_gdf.to_file(self.output_file)
 
-    def export_gestuurde_culvert(
+    def export_gestuurde_duiker(
         self,
     ) -> gpd.GeoDataFrame:
         """
-        Export culvert rows to self.output_file.Uses the same geometry as self.control_gdf.
+        Export culvert to self.output_file.Uses the same geometry as self.control_gdf.
         If there are none, writes an empty layer and logs info.
         """
         if self.output_file is None:
@@ -224,15 +224,19 @@ class StructureControl:
             return gpd.GeoDataFrame()
 
         out = self.output_file
-        layer_name = "gestuurde_culvert"
-        gdf_orifice = self.control_gdf.loc[self.control_gdf["target_type"] == "culvert"].copy()
+        layer_name = "gestuurde_duiker"
+        gdf_gestuurde_culvert = self.control_gdf.loc[self.control_gdf["target_type"] == "culvert"].copy()
 
-        if out.exists() and layer_name in fiona.listlayers(out):
-            fiona.remove(str(out), layer=layer_name, driver="GPKG")
+        sturing_kunstwerken = hrt.SpatialDatabase(out)
+        available_layers = sturing_kunstwerken.available_layers()
 
-        gdf_orifice.to_file(out, driver="GPKG", layer=layer_name)
+        if layer_name in available_layers:
+            logger.info(f"Overwriting existing layer '{layer_name}' in {out}.")
+        else:
+            logger.info(f"Creating new layer '{layer_name}' in {out}.")
+            gdf_gestuurde_culvert.to_file(out, driver="GPKG", layer=layer_name)
 
-        return gdf_orifice
+        return gdf_gestuurde_culvert
 
     def run(self, overwrite: bool = False) -> gpd.GeoDataFrame:
         # Check overwrite
@@ -255,7 +259,7 @@ class StructureControl:
 
             self.save()
 
-            self.export_gestuurde_culvert()
+            self.export_gestuurde_duiker()
             return self.control_gdf
 
 

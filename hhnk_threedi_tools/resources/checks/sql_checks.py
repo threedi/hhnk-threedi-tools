@@ -244,7 +244,7 @@ UNION ALL
 SELECT
 'table_control' as table_name,
 table_control.id as id,
-'warning: structure control does not work for culverts' as error 
+'ERROR: structure control does not work for culverts' as error 
 FROM table_control
 WHERE action_table IS NOT NULL 
 AND target_type LIKE 'culvert%';
