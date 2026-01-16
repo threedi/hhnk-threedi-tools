@@ -69,9 +69,18 @@ class Hydamo_fixer:
 
     def create_validation_fix_reports(self):
         """
-        Create validation and fix summary report geopackage in which:
-          - current attribute values are updated (from hydamo.gpkg)
-          - manual adjustments can be made (see manual_overwrite_* columns)
+        Create validation and fix summary report
+        Inputs:
+            1. HyDAMO.gpkg
+            2. validation results gpkg (results.gpkg in validation directory)
+            3. validation_rules.json
+            4. FixConfig.json
+        Report includes per layer:
+          - current attribute values (from hydamo.gpkg)
+          - colomn for manual adjustments (see manual_overwrite_* columns)
+          - validation summary per attribute
+          - fix suggestions per attribute
+          - summary columns (similar to validation results gpkg)
         Returns:
             None
         """
@@ -139,7 +148,7 @@ class Hydamo_fixer:
                             # open validation_rules.json for specific layer
                             validation_rules_layer = self._select_validation_rules_layer(layer_name)
 
-                            # TODO loop through all validation ids of attribute fix which are present in invalid ids'
+                            # Loop through all validation ids of attribute fix which are present in invalid ids'
                             for validation_id in validation_ids:
                                 if validation_id in invalid_ids:
                                     # based on validation_rules.json, check error type and message
