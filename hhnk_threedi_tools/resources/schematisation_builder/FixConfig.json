@@ -15,7 +15,8 @@
                     "fix_ids": 1,
                     "fix_action": "Remove",
                     "fix_type": "automatic",
-                    "fix_method": ""
+                    "fix_method": "",
+                    "fix_description": "Remove feature"
                 },
                 {
                     "attribute_name": "hoogtebinnenonderkantbene",
@@ -23,7 +24,8 @@
                     "fix_ids": 1,
                     "fix_action": "Remove",
                     "fix_type": "automatic",
-                    "fix_method": ""
+                    "fix_method": {},
+                    "fix_description": "Remove feature"
                 },
                 {
                     "attribute_name": "lengte",
@@ -31,7 +33,8 @@
                     "fix_ids": 1,
                     "fix_action": "Remove",
                     "fix_type": "automatic",
-                    "fix_method": ""
+                    "fix_method": {},
+                    "fix_description": "Remove feature"
                 },
                 {
                     "attribute_name": "breedteopening",
@@ -39,7 +42,8 @@
                     "fix_ids": 2,
                     "fix_action": "Derived assumption",
                     "fix_type": "automatic",
-                    "fix_method": {"equal_to_attribute":"hoogteopening"}
+                    "fix_method": {"equal_to_attribute":"hoogteopening"},
+                    "fix_description": "DA:breedteopening equal to hoogteopening"
                 },
                 {
                     "attribute_name": "geometry",
@@ -47,7 +51,8 @@
                     "fix_ids": 5,
                     "fix_action": "Manual adjustment",
                     "fix_type": "manual",
-                    "fix_method": {}
+                    "fix_method": {},
+                    "fix_description": "Remove feature"
                 },
                 {
                     "attribute_name": "slope",
@@ -55,7 +60,8 @@
                     "fix_ids": 1,
                     "fix_action": "Remove",
                     "fix_type": "automatic",
-                    "fix_method": {}
+                    "fix_method": {},
+                    "fix_description": "Remove feature"
                 },
                 {
                     "attribute_name": "verval",
@@ -63,7 +69,8 @@
                     "fix_ids": 1,
                     "fix_action": "Remove",
                     "fix_type": "automatic",
-                    "fix_method": {}
+                    "fix_method": {},
+                    "fix_description": "Remove feature"
                 }
             ]
         }

@@ -125,38 +125,50 @@ class Hydamo_fixer:
                     if row["invalid_non_critical"] is not None:
                         invalid_ids += [int(x) for x in row["invalid_non_critical"].split(";")]
 
-                    for fix in layer["fixes"]:
-                        validation_id = fix["validation_id"]
-                        attribute_name = fix["attribute_name"]
-                        fix_id = fix["fix_id"]
-                        fix_name = fix["fix_name"]
+                    for attribute_fix in layer["fixes"]:
+                        validation_ids = attribute_fix["validation_ids"]
+                        attribute_name = attribute_fix["attribute_name"]
+                        fix_id = attribute_fix["fix_id"]
+                        fix_description = attribute_fix["fix_description"]
 
-                        if validation_id in invalid_ids:
+                        if any(validation_id in invalid_ids for validation_id in validation_ids):
                             # mark attribute as filled
                             if attribute_name not in list_attributes_filled:
                                 list_attributes_filled.append(attribute_name)
 
-                            # define validation sum text
-                            if fix["error_type"] == "critical":
-                                text_val_sum = f"C{validation_id}:{fix['error_message']}"
-                            else:
-                                text_val_sum = f"W{validation_id}:{fix['error_message']}"
+                            # open validation_rules.json for specific layer
+                            validation_rules_layer = self._select_validation_rules_layer(layer_name)
 
-                            # fill in the validation sum column
-                            current_val_sum = layer_report_gdf.at[index, f"validation_sum_{attribute_name}"]
-                            if current_val_sum is None:
-                                layer_report_gdf.at[index, f"validation_sum_{attribute_name}"] = text_val_sum
-                            else:
-                                layer_report_gdf.at[index, f"validation_sum_{attribute_name}"] = (
-                                    f"{current_val_sum};{text_val_sum}"
-                                )
+                            # TODO loop through all validation ids of attribute fix which are present in invalid ids'
+                            for validation_id in validation_ids:
+                                if validation_id in invalid_ids:
+                                    # based on validation_rules.json, check error type and message
+                                    for rule in validation_rules_layer:
+                                        if rule["id"] == validation_id:
+                                            # define validation sum text
+                                            if rule["error_type"] == "critical":
+                                                text_val_sum = f"C{validation_id}:{rule['error_message']}"
+                                            else:
+                                                text_val_sum = f"W{validation_id}:{rule['error_message']}"
+
+                                            # fill in the validation sum column
+                                            current_val_sum = layer_report_gdf.at[
+                                                index, f"validation_sum_{attribute_name}"
+                                            ]
+                                            if current_val_sum is None:
+                                                layer_report_gdf.at[index, f"validation_sum_{attribute_name}"] = (
+                                                    text_val_sum
+                                                )
+                                            else:
+                                                layer_report_gdf.at[index, f"validation_sum_{attribute_name}"] = (
+                                                    f"{current_val_sum};{text_val_sum}"
+                                                )
 
                             # define fix suggestion text
-                            if fix["fix_type"] == "automatic":
-                                text_fix_suggestion = f"AF{fix_id}:{fix_name}"
+                            if attribute_fix["fix_type"] == "automatic":
+                                text_fix_suggestion = f"AF{fix_id}:{fix_description}"
                             else:
-                                text_fix_suggestion = f"MF{fix_id}:{fix_name}"
-                            # TODO: als er een aanname of berekning is, deze ook toevoegen aan fix suggestion
+                                text_fix_suggestion = f"MF{fix_id}:{fix_description}"
 
                             # fill in fix suggestion column
                             current_fix = layer_report_gdf.at[index, f"fixes_{attribute_name}"]
@@ -198,3 +210,16 @@ class Hydamo_fixer:
             # save layer report gdf to report gpkg
             layer_report_gdf.to_file(self.report_gpkg_path, layer=layer_name, driver="GPKG")
             self.logger.info(f"Finshed and saved report gdf for layer {layer_name} to {self.report_gpkg_path}")
+
+    def _select_validation_rules_layer(self, layer_name: str):
+        """
+        Select validation rules for a specific layer from the validation_rules.json
+        Parameters:
+            layer_name (str): Name of the layer to select validation rules for.
+        Returns:
+            List of validation rules for the specified layer.
+        """
+        for rules_layer in self.validation_rules["objects"]:
+            if rules_layer["object"] == layer_name:
+                return rules_layer["validation_rules"]
+        return []  # Return empty list if layer not found
