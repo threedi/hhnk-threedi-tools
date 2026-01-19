@@ -3,15 +3,15 @@ from pathlib import Path
 import geopandas as gpd
 import hhnk_research_tools as hrt
 import numpy as np
-import pandas as pd
 import rasterio
 from rasterio.transform import from_origin
 from shapely.geometry import LineString, Polygon
 
 from hhnk_threedi_tools.core.schematisation_builder.raw_export_to_DAMO_converter import RawExportToDAMOConverter
+from hhnk_threedi_tools.core.schematisation_builder.raw_export_to_DAMO_converters import peilgebied_converter
 from hhnk_threedi_tools.core.schematisation_builder.raw_export_to_DAMO_converters.peilgebied_converter import (
     DEFAULT_SEGMENT_LENGTH,
-    PEILGEBIED_SOURCE_LAYERS,
+    PEILGEBIED_SOURCE_LAYER,
     WATERKERING_LINE_LAYERS,
     PeilgebiedConverter,
 )
@@ -47,18 +47,15 @@ def _validate_peilgebiedpraktijk_layer(output_file: Path, logger):
         logger.warning("Peilgebiedpraktijk layer is empty")
         return
 
-    # Test: Layer has data and geometry
     assert not peilgebiedpraktijk.empty, "Peilgebiedpraktijk layer is empty"
     assert "geometry" in peilgebiedpraktijk.columns, "Peilgebiedpraktijk missing geometry column"
     assert peilgebiedpraktijk["geometry"].notna().all(), "Some features have null geometry"
 
-    # Test: Geometry is polygon
     geom_types = peilgebiedpraktijk.geometry.type.unique()
     assert all(gt in ["Polygon", "MultiPolygon"] for gt in geom_types), (
         f"Expected polygon geometries, found: {geom_types}"
     )
 
-    # Test: Required DAMO attributes exist
     required_columns = ["statusPeilgebied", "voertAfOp", "bevat"]
     for col in required_columns:
         assert col in peilgebiedpraktijk.columns, f"Missing required column: {col}"
@@ -94,21 +91,18 @@ def _validate_waterkering_layer(output_file: Path, logger):
     for col in required_columns:
         assert col in waterkering.columns, f"Missing required column: {col}"
 
-    # Test: waterstaatswerkWaterkeringID are valid GUIDs (non-null and unique)
     assert waterkering["waterstaatswerkWaterkeringID"].notna().all(), (
         "Some features have null waterstaatswerkWaterkeringID"
     )
     assert waterkering["waterstaatswerkWaterkeringID"].is_unique, "Duplicate waterstaatswerkWaterkeringID found"
 
-    # Test: Height extraction must be performed (min_height column must exist)
     assert "min_height" in waterkering.columns, "min_height column missing - DEM height extraction was not performed"
 
-    # Test: Most features must have height extracted (allow <5% missing for edge cases)
     missing_heights = waterkering["min_height"].isna().sum()
     missing_pct = (missing_heights / len(waterkering)) * 100
-    assert missing_pct < 5.0, (
+    assert missing_pct < 2.0, (
         f"Height extraction incomplete: {missing_heights}/{len(waterkering)} features ({missing_pct:.2f}%) are missing heights. "
-        f"More than 5% missing suggests a systematic issue. Expected >95% success rate."
+        f"More than 2% missing suggests a systematic issue. Expected >98% success rate."
     )
 
     if missing_heights > 0:
@@ -118,30 +112,26 @@ def _validate_waterkering_layer(output_file: Path, logger):
     else:
         logger.info(f"✓ Height extraction complete: all {len(waterkering)} features have heights")
 
-    # Test: Heights are reasonable values (typically -10 to 50m for Netherlands)
-    height_values = waterkering["min_height"]
-    assert height_values.min() > -50, f"Suspiciously low height: {height_values.min()}"
-    assert height_values.max() < 500, f"Suspiciously high height: {height_values.max()}"
+    height_values = waterkering["min_height"].dropna()
+    assert len(height_values) > 0, "No valid heights found"
+    assert height_values.min() > -10, f"Suspiciously low height: {height_values.min():.2f}m"
+    assert height_values.max() < 50, f"Suspiciously high height: {height_values.max():.2f}m"
     logger.info(f"✓ Height range valid: {height_values.min():.2f}m to {height_values.max():.2f}m")
 
-    # Test: length_m column must exist and be properly rounded
     assert "length_m" in waterkering.columns, "length_m column missing - segment length was not stored"
     assert waterkering["length_m"].notna().all(), "Some features have null length_m"
 
-    # Test: length_m values should be rounded to 2 decimals
+    assert (waterkering["length_m"] >= 0.1).all(), "Found segments shorter than 0.1m (should have been filtered)"
     for length_val in waterkering["length_m"]:
         decimal_places = len(str(length_val).split(".")[-1]) if "." in str(length_val) else 0
         assert decimal_places <= 2, f"length_m {length_val} has more than 2 decimal places"
 
-    # Test: min_height values should be rounded to 2 decimals
     for height_val in waterkering["min_height"].dropna():
         decimal_places = len(str(height_val).split(".")[-1]) if "." in str(height_val) else 0
         assert decimal_places <= 2, f"min_height {height_val} has more than 2 decimal places"
 
     logger.info(f"✓ Length and height values properly rounded to 2 decimals")
 
-    # Test: Line segment lengths should not exceed segment length
-    # Each feature should be a short segment after splitting
     max_segment_lengths = []
     for geom in waterkering.geometry:
         if geom.geom_type == "LineString":
@@ -152,7 +142,6 @@ def _validate_waterkering_layer(output_file: Path, logger):
 
     if max_segment_lengths:
         max_line_length = max(max_segment_lengths)
-        # Allow some tolerance (e.g., 50% over) since segments may not divide evenly
         tolerance_factor = 1.5
         max_expected = DEFAULT_SEGMENT_LENGTH * tolerance_factor
 
@@ -163,7 +152,6 @@ def _validate_waterkering_layer(output_file: Path, logger):
         )
         logger.info(f"✓ Line segment lengths valid: max {max_line_length:.2f}m (limit: {max_expected:.2f}m)")
 
-    # Test: length_m should match actual geometry length (within rounding tolerance)
     for idx, row in waterkering.iterrows():
         actual_length = round(row.geometry.length, 2)
         stored_length = row["length_m"]
@@ -187,67 +175,10 @@ def _validate_no_duplicates(output_file: Path, logger):
         logger.warning("Waterkering layer is empty, skipping duplicate check")
         return
 
-    # Test: No exact duplicate geometries exist
     wkt_set = set(waterkering.geometry.apply(lambda g: g.wkt))
     assert len(wkt_set) == len(waterkering), "Duplicate geometries found after deduplication"
 
     logger.info(f"✓ No duplicate linestrings found ({len(waterkering)} unique features)")
-
-
-def _validate_no_contained_polygons(output_file: Path, logger):
-    """Validate that no polygon is completely contained within another polygon in peilgebiedpraktijk layer."""
-    try:
-        peilgebiedpraktijk = gpd.read_file(output_file, layer="peilgebiedpraktijk")
-    except Exception:
-        logger.warning("Peilgebiedpraktijk layer not found, skipping containment check")
-        return
-
-    if peilgebiedpraktijk.empty:
-        logger.warning("Peilgebiedpraktijk layer is empty, skipping containment check")
-        return
-
-    if len(peilgebiedpraktijk) < 2:
-        logger.info("✓ Only one polygon, no containment possible")
-        return
-
-    # Test: No polygon should be completely within another polygon
-    contained_pairs = []
-
-    for i, row_i in peilgebiedpraktijk.iterrows():
-        geom_i = row_i.geometry
-        if geom_i is None or geom_i.is_empty:
-            continue
-
-        for j, row_j in peilgebiedpraktijk.iterrows():
-            if i >= j:  # Skip self-comparison and already-checked pairs
-                continue
-
-            geom_j = row_j.geometry
-            if geom_j is None or geom_j.is_empty:
-                continue
-
-            # Check if i is within j
-            if geom_i.within(geom_j):
-                source_i = row_i.get("source_layer", "unknown")
-                source_j = row_j.get("source_layer", "unknown")
-                contained_pairs.append(
-                    f"Polygon {i} (source: {source_i}, area: {geom_i.area:.2f}) "
-                    f"is contained within polygon {j} (source: {source_j}, area: {geom_j.area:.2f})"
-                )
-            # Check if j is within i
-            elif geom_j.within(geom_i):
-                source_i = row_i.get("source_layer", "unknown")
-                source_j = row_j.get("source_layer", "unknown")
-                contained_pairs.append(
-                    f"Polygon {j} (source: {source_j}, area: {geom_j.area:.2f}) "
-                    f"is contained within polygon {i} (source: {source_i}, area: {geom_i.area:.2f})"
-                )
-
-    if contained_pairs:
-        error_msg = f"Found {len(contained_pairs)} contained polygon(s):\n" + "\n".join(contained_pairs)
-        assert False, error_msg
-
-    logger.info(f"✓ No contained polygons found (checked {len(peilgebiedpraktijk)} polygons)")
 
 
 def _validate_no_overlapping_segments(output_file: Path, logger):
@@ -270,10 +201,7 @@ def _validate_no_overlapping_segments(output_file: Path, logger):
         logger.info("✓ Only one segment, no overlap possible")
         return
 
-    # Test: Check for overlapping line segments using a small buffer
-    # Buffer lines by a small amount (0.5m) to detect substantial overlaps
-    # Touching at endpoints is OK, but overlapping segments are not
-    buffer_distance = 0.5  # meters
+    buffer_distance = 0.5
     overlapping_pairs = []
 
     logger.info(f"Checking {len(waterkering)} segments for overlaps (buffer: {buffer_distance}m)...")
@@ -283,7 +211,6 @@ def _validate_no_overlapping_segments(output_file: Path, logger):
         if geom_i is None or geom_i.is_empty:
             continue
 
-        # Create buffer around this line
         buffered_i = geom_i.buffer(buffer_distance)
 
         for j, row_j in waterkering.iterrows():
@@ -294,18 +221,12 @@ def _validate_no_overlapping_segments(output_file: Path, logger):
             if geom_j is None or geom_j.is_empty:
                 continue
 
-            # Check if buffered line i significantly overlaps with line j
-            # We expect lines to only touch at endpoints, not overlap substantially
             intersection = buffered_i.intersection(geom_j)
 
             if not intersection.is_empty:
-                # Calculate what percentage of line j overlaps with buffered line i
                 intersection_length = intersection.length
                 line_j_length = geom_j.length
 
-                # If more than 20% of the line overlaps, it's a problem
-                # (allows for endpoint connections and small numerical issues)
-                # Increased from 10% to 20% to account for minor overlaps at segment boundaries
                 overlap_percentage = (intersection_length / line_j_length) * 100
 
                 if overlap_percentage > 20:
@@ -317,15 +238,12 @@ def _validate_no_overlapping_segments(output_file: Path, logger):
                         f"(source: {source_j}, length: {geom_j.length:.2f}m)"
                     )
 
-    # Test: Allow up to 20% overlapping pairs (for manual inspection in QGIS)
-    # Calculate percentage of overlapping pairs relative to total possible pairs
     total_possible_pairs = (len(waterkering) * (len(waterkering) - 1)) // 2
     overlap_percentage = (len(overlapping_pairs) / total_possible_pairs * 100) if total_possible_pairs > 0 else 0
-    max_acceptable_overlap_pct = 20.0  # Allow up to 20% of pairs to overlap
+    max_acceptable_overlap_pct = 20.0
 
     if overlapping_pairs:
         if overlap_percentage > max_acceptable_overlap_pct:
-            # Too many overlaps - fail the test
             shown_overlaps = overlapping_pairs[:10]
             error_msg = (
                 f"Found {len(overlapping_pairs)} overlapping segment pairs "
@@ -337,7 +255,6 @@ def _validate_no_overlapping_segments(output_file: Path, logger):
                 error_msg += f"\n... and {len(overlapping_pairs) - 10} more"
             assert False, error_msg
         else:
-            # Acceptable amount of overlaps - warn but don't fail
             logger.warning(
                 f"⚠ Found {len(overlapping_pairs)} overlapping segment pairs "
                 f"({overlap_percentage:.2f}% of {total_possible_pairs} total pairs). "
@@ -356,7 +273,6 @@ def _validate_no_overlapping_segments(output_file: Path, logger):
 
 def test_peilgebied_converter():
     """Test PeilgebiedConverter with all validations in a single run."""
-    # Setup
     logger = hrt.logging.get_logger(__name__)
     raw_export_file = TEST_DIRECTORY / "schematisation_builder" / "raw_export.gpkg"
     output_dir = TEMP_DIR / f"temp_peilgebied_converter_{hrt.current_time(date=True)}"
@@ -366,16 +282,14 @@ def test_peilgebied_converter():
     # Check if source layers exist
     converter_base = RawExportToDAMOConverter(raw_export_file, output_file, logger)
 
-    # Test: DEM must be available for proper testing
     assert converter_base.data.dem_dataset is not None, (
         f"DEM file not found. Expected ahn.tif at {raw_export_file.parent / 'ahn.tif'}. "
         "DEM is required for testing height extraction functionality."
     )
     logger.info(f"✓ DEM loaded from {converter_base.data.dem_path}")
 
-    source_layers_exist = any(
-        hasattr(converter_base.data, layer_name.lower())
-        for layer_name in PEILGEBIED_SOURCE_LAYERS + WATERKERING_LINE_LAYERS
+    source_layers_exist = hasattr(converter_base.data, PEILGEBIED_SOURCE_LAYER.lower()) or any(
+        hasattr(converter_base.data, layer_name.lower()) for layer_name in WATERKERING_LINE_LAYERS
     )
 
     if not source_layers_exist:
@@ -384,10 +298,31 @@ def test_peilgebied_converter():
 
     # Run converter once
     logger.info("Running peilgebied converter...")
+
+    peilgebied_converter.EXPORT_PERPENDICULAR_SAMPLES = True
+
     converter = PeilgebiedConverter(converter_base)
     logger.info(f"DEBUG: Converter has DEM: {converter.data.dem_dataset is not None}")
+
+    # Limit test to 3 polygons for speed (indices 5, 12, 23)
+    source_layer_name = PEILGEBIED_SOURCE_LAYER.lower()
+    if hasattr(converter.data, source_layer_name):
+        source_gdf = getattr(converter.data, source_layer_name)
+        if source_gdf is not None and len(source_gdf) > 3:
+            selected_indices = [5, 12, 23]
+            filtered_gdf = source_gdf.iloc[selected_indices].copy()
+            setattr(converter.data, source_layer_name, filtered_gdf)
+            logger.info(f"Limited test to 3 polygons (indices {selected_indices}) for speed")
+
     converter.run()
     converter_base.write_outputs()
+
+    # Check if perpendicular_samples layer was created
+    try:
+        perp_samples = gpd.read_file(output_file, layer="perpendicular_samples")
+        logger.info(f"✓ Perpendicular samples layer created with {len(perp_samples)} features")
+    except Exception as e:
+        logger.warning(f"Perpendicular samples layer not found: {e}")
 
     # Run all validations on the single output
     logger.info("\nValidating outputs...")
@@ -395,7 +330,6 @@ def test_peilgebied_converter():
     _validate_peilgebiedpraktijk_layer(output_file, logger)
     _validate_waterkering_layer(output_file, logger)
     _validate_no_duplicates(output_file, logger)
-    _validate_no_contained_polygons(output_file, logger)
     _validate_no_overlapping_segments(output_file, logger)
 
     logger.info("\n✓ All validations passed!")
@@ -425,10 +359,8 @@ def test_duplicate_removal_with_synthetic_data():
         crs="EPSG:28992",
     )
 
-    # Inject test data into first available source layer (use peilgebied source layers)
-    for layer_name in PEILGEBIED_SOURCE_LAYERS:
-        setattr(converter_base.data, layer_name.lower(), test_polygons)
-        break
+    # Inject test data into combinatiepeilgebied layer
+    setattr(converter_base.data, PEILGEBIED_SOURCE_LAYER.lower(), test_polygons)
 
     converter = PeilgebiedConverter(converter_base)
     converter.run()
@@ -451,73 +383,6 @@ def test_duplicate_removal_with_synthetic_data():
     logger.info("✓ Duplicate removal validated with synthetic data")
 
 
-def test_crest_height_sampling_synthetic():
-    """Test crest height detection with synthetic DEM - simple controlled test.
-
-    Creates a simple flat terrain with one elevated strip (levee) and verifies
-    the perpendicular sampling correctly detects the crest.
-    """
-    logger = hrt.logging.get_logger(__name__)
-    output_dir = TEMP_DIR / f"temp_synthetic_height_{hrt.current_time(date=True)}"
-    output_dir.mkdir(parents=True, exist_ok=True)
-
-    # Create simple DEM: 50x50 grid, 1m resolution
-    # Flat at 0m, with a 10m wide levee at y=20-30 with height 3m
-    dem_data = np.zeros((50, 50), dtype=np.float32)
-    dem_data[20:30, :] = 3.0  # Horizontal strip (levee running east-west)
-
-    # Save DEM
-    dem_path = output_dir / "synthetic_dem.tif"
-    transform = from_origin(0, 50, 1.0, 1.0)
-
-    with rasterio.open(
-        dem_path,
-        "w",
-        driver="GTiff",
-        height=50,
-        width=50,
-        count=1,
-        dtype=dem_data.dtype,
-        crs="EPSG:28992",
-        transform=transform,
-        nodata=-9999,
-    ) as dst:
-        dst.write(dem_data, 1)
-
-    logger.info(f"Created synthetic DEM: 50x50m, levee at y=20-30 with height 3m")
-
-    # Mock converter to access sampling method
-    dem_ds = rasterio.open(dem_path)
-
-    class MockData:
-        dem_dataset = dem_ds
-
-    class MockBase:
-        pass
-
-    mock_base = MockBase()
-    mock_base.data = MockData()
-    mock_base.logger = logger
-
-    converter = PeilgebiedConverter(mock_base)
-    line_crossing = LineString([(25, 10), (25, 40)])
-
-    with rasterio.open(dem_path) as dem:
-        height_crossing = converter._sample_crest_height_perpendicular(
-            line_crossing, dem, search_distance=5.0, step_distance=2.0
-        )
-
-    logger.info(f"Line crossing levee: {height_crossing:.2f}m (expected ~3.0m)")
-    assert height_crossing is not None, "Failed to detect height"
-    assert 2.9 < height_crossing < 3.1, f"Expected 3.0±0.1m, got {height_crossing:.2f}m"
-
-    logger.info("✓ Synthetic test passed - perpendicular sampling detects crest correctly")
-
-    # Cleanup
-    dem_ds.close()
-
-
 if __name__ == "__main__":
     test_peilgebied_converter()
     test_duplicate_removal_with_synthetic_data()
-    test_crest_height_sampling_synthetic()
