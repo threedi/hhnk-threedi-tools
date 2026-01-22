@@ -1,10 +1,6 @@
 {
     "schema": "1.5",
     "hydamo_version": "2.2",
-    "status_object": [
-        "planvorming",
-        "gerealiseerd"
-    ],
     "objects": [
         {
             "object": "duikersifonhevel",

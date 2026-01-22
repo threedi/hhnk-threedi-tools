@@ -9,12 +9,12 @@ import hhnk_research_tools as hrt
 import hhnk_threedi_tools.resources.schematisation_builder as schematisation_builder_resources
 
 
-class Hydamo_fixer:
+class HYDAMOFixer:
     """Class to fix HyDAMO validation issues and create summary reports.
     Parameters
     ----------
-    hydamo_gpkg_path : Path
-        Path to the HyDAMO geopackage directory.
+    hydamo_file_path : Path
+        Path to the HyDAMO geopackage file.
     validation_directory_path : Path
         Path to the validation directory containing results.
     logger : Optional[logging.Logger], optional
@@ -29,7 +29,7 @@ class Hydamo_fixer:
 
     def __init__(
         self,
-        hydamo_gpkg_path: Path,
+        hydamo_file_path: Path,
         validation_directory_path: Path,
         logger: Optional[logging.Logger] = None,
     ) -> None:
@@ -38,14 +38,14 @@ class Hydamo_fixer:
         self.logger = logger
 
         # define paths
-        self.hydamo_gpkg_path = hydamo_gpkg_path / "HyDAMO.gpkg"
+        self.hydamo_file_path = hydamo_file_path / "HyDAMO.gpkg"
         self.validation_directory_path = validation_directory_path
         self.validation_results_gpkg_path = validation_directory_path / "results" / "results.gpkg"
         self.report_gpkg_path = self.validation_directory_path / "fix_phase" / "summary_val_fix.gpkg"
 
         # check if hydamo gpkg exists
-        if not self.hydamo_gpkg_path.exists():
-            raise FileNotFoundError(f"HyDAMO gpkg not found at {self.hydamo_gpkg_path}")
+        if not self.hydamo_file_path.exists():
+            raise FileNotFoundError(f"HyDAMO gpkg not found at {self.hydamo_file_path}")
 
         # check if validation results gpkg exists
         if not self.validation_results_gpkg_path.exists():
@@ -82,7 +82,7 @@ class Hydamo_fixer:
           - fix suggestions per attribute
           - summary columns (similar to validation results gpkg)
         Returns:
-            None
+            NoneSS
         """
         # create report gpkg with per layer a summary of validation and fix suggestions
         for layer in self.fix_config["objects"]:
@@ -91,7 +91,7 @@ class Hydamo_fixer:
             self.logger.info(f"Start creating validation and fix summary for layer: {layer_name}")
 
             # open hydamo layer gdf
-            hydamo_layer_gdf = gpd.read_file(self.hydamo_gpkg_path, layer=layer_name)
+            hydamo_layer_gdf = gpd.read_file(self.hydamo_file_path, layer=layer_name)
 
             # fill in standard columns based on validation results
             val_results_layer_gdf = gpd.read_file(self.validation_results_gpkg_path, layer=layer_name)

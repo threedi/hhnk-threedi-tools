@@ -1,13 +1,11 @@
 import shutil
 import sys
-from pathlib import Path
 
 import fiona
 import geopandas as gpd
 import hhnk_research_tools as hrt
 import pytest
 
-import hhnk_threedi_tools as htt
 from tests.config import TEMP_DIR, TEST_DIRECTORY
 
 LAYERS = ["duikersifonhevel"]
@@ -17,7 +15,7 @@ temp_dir_out = TEMP_DIR / f"temp_Fixer1_converter_{hrt.current_time(date=True)}"
 # test for creation of summary validation and fix report gpkg
 @pytest.mark.skipif(sys.version_info < (3, 12), reason="Requires Python 3.12 or higher")
 def test_creation_validation_fixes_summary():
-    from hhnk_threedi_tools.core.schematisation_builder.HyDAMO_fixer import Hydamo_fixer
+    from hhnk_threedi_tools.core.schematisation_builder.HyDAMO_fixer import HYDAMOFixer
 
     # arrange
     hydamo_gpkg_path = TEST_DIRECTORY / "schematisation_builder"
@@ -32,7 +30,7 @@ def test_creation_validation_fixes_summary():
     validation_results_dst = validation_directory_path / "results" / "results.gpkg"
     shutil.copy(validation_results_src, validation_results_dst)
 
-    fixer = Hydamo_fixer(
+    fixer = HYDAMOFixer(
         hydamo_gpkg_path=hydamo_gpkg_path,
         validation_directory_path=validation_directory_path,
     )
