@@ -18,7 +18,7 @@ class StructureControl:
     Parameters
     ----------
     model: hrt.SpatialDatabase
-    
+
         SpatialDatabase object that is your model (gpkg), i.e. folder.model.schema_base.database
     hdb_control_layer: hrt.SpatialDatabaseLayer
         SpatialDatabase object that referes to the control table overview in the HDB, i.e. folder.source_data.hdb.layers.sturing_kunstwerken
