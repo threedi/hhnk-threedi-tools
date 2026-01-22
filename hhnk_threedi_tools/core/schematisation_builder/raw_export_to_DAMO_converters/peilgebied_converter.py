@@ -1,12 +1,32 @@
 import uuid
+from typing import Optional, TypedDict, Union
 
 import geopandas as gpd
 import numpy as np
 import rasterio
 from rasterio.features import rasterize
 from shapely.geometry import LineString, MultiLineString, Point
+from shapely.geometry.base import BaseGeometry
+from shapely.ops import unary_union
 
 from hhnk_threedi_tools.core.schematisation_builder.raw_export_to_DAMO_converter import RawExportToDAMOConverter
+
+
+class PerpendicularSample(TypedDict):
+    """Type definition for perpendicular sample data structure."""
+
+    geometry: LineString
+    height_min: float
+    height_p10: float
+    height_avg: float
+    height_p90: float
+    height_max: float
+    sample_index: int
+    n_samples: int
+    n_total: int
+    center_x: float
+    center_y: float
+
 
 PEILGEBIED_SOURCE_LAYER = "combinatiepeilgebied"
 
@@ -44,9 +64,9 @@ class PeilgebiedConverter(RawExportToDAMOConverter):
     def __init__(self, raw_export_converter: RawExportToDAMOConverter):
         self.data = raw_export_converter.data
         self.logger = raw_export_converter.logger
-        self.perpendicular_samples = []
+        self.perpendicular_samples: list[PerpendicularSample] = []
 
-    def run(self):
+    def run(self) -> None:
         """Create peilgebiedpraktijk and waterkering layers."""
         self.logger.info("Running PeilgebiedConverter...")
         self._create_peilgebiedpraktijk_layer()
@@ -112,7 +132,6 @@ class PeilgebiedConverter(RawExportToDAMOConverter):
 
         # Create topologically clean network: snap, union, explode, deduplicate
         self.logger.info("Creating topologically clean network...")
-        from shapely.ops import unary_union
 
         snap_tolerance = 0.001
         snapped_lines = []
@@ -224,7 +243,7 @@ class PeilgebiedConverter(RawExportToDAMOConverter):
             self._export_perpendicular_samples()
 
     @staticmethod
-    def _snap_coords(geom, tolerance: float = SNAP_TOLERANCE):
+    def _snap_coords(geom: Optional[BaseGeometry], tolerance: float = SNAP_TOLERANCE) -> Optional[BaseGeometry]:
         """Snap geometry coordinates to grid for consistent topology."""
         if geom is None or geom.is_empty:
             return None
@@ -468,7 +487,9 @@ class PeilgebiedConverter(RawExportToDAMOConverter):
         self.logger.info(f"Mapped {len(result)} features to DAMO waterkering schema")
         return result
 
-    def _get_column_value(self, gdf: gpd.GeoDataFrame, column_names: list[str], target_name: str):
+    def _get_column_value(
+        self, gdf: gpd.GeoDataFrame, column_names: list[str], target_name: str
+    ) -> Optional[gpd.GeoSeries]:
         """Get column value from GeoDataFrame, trying multiple possible column names.
 
         Args:
@@ -564,7 +585,7 @@ class PeilgebiedConverter(RawExportToDAMOConverter):
 
         return gdf
 
-    def _split_line_by_vertices(self, geom, max_length: float) -> list[LineString]:
+    def _split_line_by_vertices(self, geom: Union[LineString, MultiLineString], max_length: float) -> list[LineString]:
         """Split line by examining segments between consecutive vertices.
 
         Only subdivides individual segments that exceed max_length.
@@ -671,10 +692,10 @@ class PeilgebiedConverter(RawExportToDAMOConverter):
     def _sample_crest_height_perpendicular(
         self,
         line: LineString,
-        dem_dataset,
+        dem_dataset: rasterio.DatasetReader,
         search_distance: float,
         step_distance: float = DEFAULT_PERPENDICULAR_SAMPLE_DISTANCE,
-    ) -> float | None:
+    ) -> Optional[float]:
         """Extract crest height using perpendicular sampling.
 
         Samples the DEM perpendicular to the line at regular intervals,
@@ -882,7 +903,9 @@ class PeilgebiedConverter(RawExportToDAMOConverter):
         self.data.perpendicular_samples = perp_gdf
         self.logger.info(f"✓ Created perpendicular_samples layer with {len(perp_gdf)} features")
 
-    def _get_min_height_from_buffered_geometry(self, buffered_geom, dem):
+    def _get_min_height_from_buffered_geometry(
+        self, buffered_geom: BaseGeometry, dem: rasterio.DatasetReader
+    ) -> Optional[float]:
         """Extract minimum height from DEM for a buffered geometry using windowed reading.
 
         Args:
