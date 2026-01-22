@@ -18,7 +18,7 @@ def test_creation_validation_fixes_summary():
     from hhnk_threedi_tools.core.schematisation_builder.HyDAMO_fixer import HYDAMOFixer
 
     # arrange
-    hydamo_gpkg_path = TEST_DIRECTORY / "schematisation_builder"
+    hydamo_file_path = TEST_DIRECTORY / "schematisation_builder" / "HyDAMO.gpkg"
     validation_directory_path = TEMP_DIR / f"temp_HyDAMO_Fixer1_ValFix_summary_{hrt.current_time(date=True)}"
 
     # create folder results and fix_phase
@@ -31,7 +31,7 @@ def test_creation_validation_fixes_summary():
     shutil.copy(validation_results_src, validation_results_dst)
 
     fixer = HYDAMOFixer(
-        hydamo_gpkg_path=hydamo_gpkg_path,
+        hydamo_file_path=hydamo_file_path,
         validation_directory_path=validation_directory_path,
     )
 
