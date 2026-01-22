@@ -16,10 +16,6 @@ class PerpendicularSample(TypedDict):
     """Type definition for perpendicular sample data structure."""
 
     geometry: LineString
-    height_min: float
-    height_p10: float
-    height_avg: float
-    height_p90: float
     height_max: float
     sample_index: int
     n_samples: int
@@ -54,6 +50,7 @@ WATERKERING_COLUMNS = [
 DEFAULT_SEGMENT_LENGTH = 50.0
 DEFAULT_BUFFER_WIDTH = 10.0
 DEFAULT_PERPENDICULAR_SAMPLE_DISTANCE = 5.0
+CREST_HEIGHT_PERCENTILE = 10.0  # Percentile of max heights of perpendicular samples to use as crest height
 EXPORT_PERPENDICULAR_SAMPLES = False
 SNAP_TOLERANCE = 0.01
 
@@ -700,7 +697,8 @@ class PeilgebiedConverter(RawExportToDAMOConverter):
 
         Samples the DEM perpendicular to the line at regular intervals,
         finds the maximum elevation on each side (the crest), and returns
-        the 10th percentile along the line to capture weak points for flood modeling.
+        a low percentile (configurable via CREST_HEIGHT_PERCENTILE) along the line
+        to capture weak points for flood modeling.
 
         This is based on the threedi_beta_processing crest level algorithm.
 
@@ -711,7 +709,7 @@ class PeilgebiedConverter(RawExportToDAMOConverter):
             step_distance: Distance between perpendicular sample lines in meters (default: DEFAULT_PERPENDICULAR_SAMPLE_DISTANCE)
 
         Returns:
-            10th percentile crest height or None if no valid data
+            Percentile crest height (see CREST_HEIGHT_PERCENTILE) or None if no valid data
         """
         try:
             # Get DEM pixel size
@@ -837,10 +835,6 @@ class PeilgebiedConverter(RawExportToDAMOConverter):
                         self.perpendicular_samples.append(
                             {
                                 "geometry": perp_line,
-                                "height_min": round(np.min(perp_heights), 3),
-                                "height_p10": round(np.percentile(perp_heights, 10), 3),
-                                "height_avg": round(np.mean(perp_heights), 3),
-                                "height_p90": round(np.percentile(perp_heights, 90), 3),
                                 "height_max": round(np.max(perp_heights), 3),
                                 "sample_index": i,
                                 "n_samples": len(perp_heights),
@@ -871,11 +865,11 @@ class PeilgebiedConverter(RawExportToDAMOConverter):
                 )
                 return None
 
-            # Return 10th percentile to capture low points for flood modeling
+            # Return configured percentile to capture low points for flood modeling
             heights = np.array(heights)
-            percentile_10 = np.percentile(heights, 10)
+            percentile = np.percentile(heights, CREST_HEIGHT_PERCENTILE)
 
-            return float(percentile_10)
+            return float(percentile)
 
         except Exception as e:
             self.logger.error(f"Error in perpendicular sampling: {e}")
