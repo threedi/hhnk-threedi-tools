@@ -65,8 +65,8 @@ def export_validation_rules_overview():
     val_df = df[df["type_functie"] == "validation rules"].reset_index(drop=True)
     fun_df = df[df["type_functie"] == "general rules"].reset_index(drop=True)
 
-    val_fp = hrt.get_pkg_resource_path(sb_resources, "hhnk_validation_rules.csv")
-    fun_fp = hrt.get_pkg_resource_path(sb_resources, "hhnk_general_functions.csv")
+    val_fp = hrt.get_pkg_resource_path(sb_resources, "validation_rules.csv")
+    fun_fp = hrt.get_pkg_resource_path(sb_resources, "general_rules.csv")
 
     val_df.to_csv(val_fp, index=True)
     fun_df.to_csv(fun_fp, index=True)
