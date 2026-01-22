@@ -1,4 +1,4 @@
-[project]
+[workspace]
 channels = ["conda-forge"]
 name = "hhnk-threedi-tools"
 platforms = ["win-64"]
@@ -67,8 +67,11 @@ pytest = "*"
 pytest-cov = "*"
 tqdm = "*"
 xarray = "*"
+cftime = "*"
 
 pip = "*"
+git = ">=2.51.1,<3"
+gitpython = ">=3.1.45,<4"
 
 [pypi-dependencies]
 # NenS deps
@@ -81,6 +84,9 @@ threedigrid = "==2.3.5"
 threedigrid-builder = ">=1.24.3"
 threedidepth = "==0.6.3"
 # hhnk-research-tools = { git = "https://github.com/hhnk/hhnk-research-tools.git", rev = "main" }
+
+# modellen repo deps
+gitpython = "*"
 
 # HHNK deps
 hhnk-threedi-tools = { path = ".", editable = true }
@@ -145,6 +151,7 @@ seaborn = "*"
 pip = "*"
 urllib3= "1.*"
 ruff = "*"
+gitpython = "*"
 
 [feature.py39.pypi-dependencies]
 lazy_loader= "*"

@@ -56,11 +56,11 @@ FOLDER_STRUCTURE = """
         │ └── 1d2d_results
         | |__ batch_results
         └── 04_test_results
-            ├── 0d1d_tests
+            ├── 0d1d_checks
             │   ├── *some revision*
             │     ├── Layers
             │     └── Logs
-            ├── 1d2d_tests
+            ├── 1d2d_checks
             │ └── *some revision*
             │     ├── Layers
             │     └── Logs
@@ -585,8 +585,8 @@ class OutputDirParent(Folder):
             self.full_path("hhnk_schematisation_checks"), create=create
         )
         self.bank_levels = self.OutputDirBankLevel(self.full_path("bank_levels"), create=create)
-        self.zero_d_one_d = self.OutputDir0d1d(base=self.base, name="0d1d_tests", create=create)
-        self.one_d_two_d = self.OutputDir1d2d(base=self.base, name="1d2d_tests", create=create)
+        self.zero_d_one_d = self.OutputDir0d1d(base=self.base, name="0d1d_checks", create=create)
+        self.one_d_two_d = self.OutputDir1d2d(base=self.base, name="1d2d_checks", create=create)
         self.climate = self.OutputDirClimate(base=self.base, name="climate", create=create)
 
         if create:
@@ -670,7 +670,7 @@ class OutputDirParent(Folder):
             def __init__(self, base, create=False):
                 super().__init__(base, create=create)
 
-                self.add_file("nodes_0d1d_test", "nodes_0d1d_test.gpkg")
+                self.add_file("nodes_0d1d_check", "nodes_0d1d_check.gpkg")
                 self.add_file(
                     "hydraulische_toets_kunstwerken",
                     "hydraulische_toets_kunstwerken.gpkg",
@@ -696,7 +696,7 @@ class OutputDirParent(Folder):
 
                 self.add_file("grid_nodes_2d", "grid_nodes_2d.gpkg")
                 self.add_file("grid_wlvl", "grid_wlvl.gpkg")
-                self.add_file("stroming_1d2d_test", "stroming_1d2d_test.gpkg")
+                self.add_file("stroming_1d2d_check", "stroming_1d2d_check.gpkg")
                 for T in [1, 3, 15]:
                     self.add_file(f"waterstand_T{T}", f"waterstand_T{T}.tif")
                     self.add_file(f"waterdiepte_T{T}", f"waterdiepte_T{T}.tif")

@@ -1,4 +1,5 @@
 import uuid
+import warnings
 
 import geopandas as gpd
 import pandas as pd
@@ -25,139 +26,230 @@ POMP_COLUMNS = [
     "typepompschakeling",
 ]  # Columns according to DAMO schema 2.4.1
 
+# TODO: Future improvement - retrieve pomp columns dynamically from DAMO schema instead of using hardcoded POMP_COLUMNS list
+
+REQUIRED_GEMAAL_COLUMNS = ["code", "globalid", "geometry"]
+OPTIONAL_GEMAAL_COLUMNS = ["maximalecapaciteit"]
+
 
 class GemaalConverter(RawExportToDAMOConverter):
-    """Gemaal-specific converter implementation."""
+    """
+    Convert raw export gemaal data to DAMO schema (2.4.1) format.
+
+    Manages the parent-child relationship between gemaal (pumping station) and pomp (pump) layers:
+    - Creates one pomp per gemaal and links them with gemaalid
+    - Generates unique globalid identifiers for all records
+    - Transfers capacity data for single-pump gemalen
+    - Ensures all pompen are correctly linked to their gemaal
+
+    Handles edge cases including missing/empty pomp layers and invalid data gracefully.
+    """
+
+    def __init__(self, raw_export_converter: RawExportToDAMOConverter):
+        self.data = raw_export_converter.data
+        self.logger = raw_export_converter.logger
 
     def run(self):
-        """Run the converter to update the gemaal layer."""
-        if self.has_executed():
-            self.logger.debug("Skipping GemaalConverter, already executed.")
+        """Execute the converter to create/update gemaal and pomp layers."""
+        self.logger.info("Running GemaalConverter...")
+        self.update_gemaal_layers()
+
+    def update_gemaal_layers(self):
+        """Update gemaal and pomp layers with proper relationships and IDs."""
+        self.logger.info("Updating gemaal layers...")
+
+        if not self._has_valid_gemaal_layer():
+            self.logger.warning("No valid gemaal layer found. Creating empty pomp layer.")
+            self._create_empty_pomp_layer()
             return
 
-        self.logger.info("Running GemaalConverter...")
-        # self.load_layers()  # STEP 1
-        self.update_gemaal_layer()  # STEP 2
-        self.write_outputs()  # STEP 3
-        self.mark_executed()
+        self._validate_gemaal_columns()
+        self._ensure_globalids(self.data.gemaal, "gemaal")
 
-    def update_gemaal_layer(self):
-        self.logger.info("Updating gemaal layer...")
-
-        # Ensure the pomp layer is loaded or create it if missing/empty
-        try:
-            self.data._ensure_loaded(["pomp"], previous_method="load_layers")
-            pomp_empty = self.data.pomp is None or self.data.pomp.empty
-        except ValueError:
-            pomp_empty = True
-
-        if pomp_empty:
-            self.logger.info("Pomp layer is empty or not loaded. Creating a dummy pomp layer...")
-            self._make_pomp_layer()
+        if self._has_existing_pomp_layer():
+            self.logger.info("Updating existing pomp layer...")
+            self._update_existing_pomp_layer()
+            # Create missing pompen for gemalen that don't have them
+            self._create_missing_pompen()
         else:
-            self.logger.info("Pomp layer already exists. Updating with gemaalid...")
-            self._add_column_gemaalid()
+            self.logger.info("Creating pomp layer from gemaal data...")
+            self._create_pomp_layer_from_gemaal()
 
-        # Add globalid column to the pomp layer if needed
-        self._add_column_globalid()
+        self._ensure_globalids(self.data.pomp, "pomp")
+        self._transfer_capacity_for_single_pump_gemalen()
 
-        # Adjust maximalecapaciteit for pompen linked to a single gemaal
-        self._adjust_pomp_maximalecapaciteit()
+    def _is_valid_value(self, value):
+        """Check if value is not None, NaN, or empty string."""
+        return value is not None and not pd.isna(value) and (not isinstance(value, str) or value.strip())
 
-    def _add_column_gemaalid(self):
-        """Add gemaalid column to the pomp layer."""
-        # Merge pomp with gemaal based on CODEBEHEEROBJECT (pomp) and code (gemaal)
-        merged = self.data.pomp.merge(
-            self.data.gemaal[["code", "globalid"]], left_on="codebeheerobject", right_on="code", how="left"
-        )
+    def _has_valid_gemaal_layer(self):
+        """Check if gemaal layer exists and contains data."""
+        try:
+            self.data._ensure_loaded(["gemaal"], previous_method="load_layers")
+            return self.data.gemaal is not None and not self.data.gemaal.empty
+        except (ValueError, AttributeError) as e:
+            self.logger.debug(f"Gemaal layer check failed: {e}")
+            return False
 
-        # Assign the globalid from gemaal as gemaalid in pomp
-        self.data.pomp["gemaalid"] = merged["globalid"]
+    def _has_existing_pomp_layer(self):
+        """Check if pomp layer already exists with data."""
+        if not hasattr(self.data, "pomp"):
+            return False
+        return self.data.pomp is not None and not self.data.pomp.empty
 
-    def _add_column_globalid(self):
-        """Add globalid column to the pomp layer."""
-        if "globalid" not in self.data.pomp.columns:
-            # Generate a unique globalid for each pomp
-            self.data.pomp["globalid"] = [str(uuid.uuid4()) for _ in range(len(self.data.pomp))]
-        elif self.data.pomp["globalid"].isnull().any():
-            # If globalid column exists but has null values, fill them with unique globalids
-            self.logger.info("Filling null values in 'globalid' column with unique globalids")
-            self.data.pomp["globalid"] = self.data.pomp["globalid"].apply(
-                lambda x: str(uuid.uuid4()) if pd.isnull(x) else x
+    def _validate_gemaal_columns(self):
+        """Validate required columns exist, warn for missing optional columns."""
+        missing_required = [col for col in REQUIRED_GEMAAL_COLUMNS if col not in self.data.gemaal.columns]
+        if missing_required:
+            raise ValueError(f"Gemaal layer missing required columns: {missing_required}")
+
+        missing_optional = [col for col in OPTIONAL_GEMAAL_COLUMNS if col not in self.data.gemaal.columns]
+        if missing_optional:
+            warnings.warn(
+                f"Gemaal layer missing optional columns: {missing_optional}. Using defaults.",
+                UserWarning,
             )
 
-    # TODO: use gemaal maximalecapaciteit for pomp maximalecapaciteit if aantalpompen = 1
+    def _ensure_globalids(self, gdf, layer_name):
+        """Ensure all records in GeoDataFrame have valid globalid."""
+        if "globalid" not in gdf.columns:
+            gdf["globalid"] = None
 
-    def _adjust_pomp_maximalecapaciteit(self):
-        """
-        If the gemaal has a maximalecapaciteit and the pomp has a maximalecapaciteit, use the gemaal's value.
-        This function is only used if a gemaaal is:
-        - linked to a pomp (i.e. gemaalid is not null)
-        - the gemaal has a maximalecapaciteit value.
-        - the gemaal has only one pomp linked to it (i.e. aantalpompen = 1).
-        """
+        missing_mask = gdf["globalid"].isna() | (gdf["globalid"] == "")
+        num_missing = missing_mask.sum()
 
-        # list gemaalid's which have one pomp linked to it
-        gemaalid_counts = self.data.pomp["gemaalid"].value_counts()
-        gemaalid_one_pomp = gemaalid_counts[gemaalid_counts == 1].index
+        if num_missing > 0:
+            self.logger.info(f"Generating {num_missing} globalid(s) for {layer_name}...")
+            gdf.loc[missing_mask, "globalid"] = [str(uuid.uuid4()) for _ in range(num_missing)]
 
-        for gemaalid in gemaalid_one_pomp:
-            # Get the gemaal with the gemaalid
+    def _create_empty_pomp_layer(self):
+        """Create empty pomp layer with correct schema."""
+        self.logger.info("Creating empty pomp layer...")
+        crs = getattr(self.data.gemaal, "crs", None) if hasattr(self.data, "gemaal") else None
+        # Use GeoDataFrame because pomp has geometry (centroid from gemaal)
+        self.data.pomp = gpd.GeoDataFrame(columns=POMP_COLUMNS, geometry=[], crs=crs)
+
+    def _create_pomp_layer_from_gemaal(self):
+        """Create pomp layer with one pump per gemaal."""
+        self.logger.info(f"Creating {len(self.data.gemaal)} pomp record(s)...")
+
+        pomp_records = [
+            {
+                "globalid": str(uuid.uuid4()),
+                "gemaalid": row.get("globalid"),
+                "code": row.get("code", f"pomp_{idx}"),
+                "geometry": row.geometry.centroid if hasattr(row.geometry, "centroid") else row.geometry,
+                "maximalecapaciteit": row.get("maximalecapaciteit")
+                if self._is_valid_value(row.get("maximalecapaciteit"))
+                else None,
+            }
+            for idx, row in self.data.gemaal.iterrows()
+        ]
+
+        pomp_gdf = gpd.GeoDataFrame(pomp_records, crs=self.data.gemaal.crs)
+
+        # Add missing POMP_COLUMNS
+        for col in POMP_COLUMNS:
+            if col not in pomp_gdf.columns:
+                pomp_gdf[col] = None
+
+        self.data.pomp = pomp_gdf[POMP_COLUMNS + ["geometry"]]
+
+    def _update_existing_pomp_layer(self):
+        """Link existing pompen to gemalen via gemaalid."""
+        if "gemaalid" not in self.data.pomp.columns:
+            self.data.pomp["gemaalid"] = None
+
+        if "codebeheerobject" not in self.data.pomp.columns or "code" not in self.data.gemaal.columns:
+            self.logger.warning("Cannot link pompen: missing 'codebeheerobject' or 'code' column")
+            return
+
+        merged = self.data.pomp.merge(
+            self.data.gemaal[["code", "globalid"]],
+            left_on="codebeheerobject",
+            right_on="code",
+            how="left",
+            suffixes=("", "_gemaal"),
+        )
+        self.data.pomp["gemaalid"] = merged["globalid_gemaal"]
+
+        linked_count = self.data.pomp["gemaalid"].notna().sum()
+        self.logger.info(f"Linked {linked_count}/{len(self.data.pomp)} pomp(en) to gemalen")
+
+    def _create_missing_pompen(self):
+        """Create pompen for gemalen that don't have them yet."""
+        # Get gemalen that already have pompen
+        existing_gemaalids = self.data.pomp["gemaalid"].dropna().unique()
+
+        # Find gemalen without pompen
+        missing_mask = ~self.data.gemaal["globalid"].isin(existing_gemaalids)
+        gemalen_without_pomp = self.data.gemaal[missing_mask]
+
+        if gemalen_without_pomp.empty:
+            self.logger.info("All gemalen already have pompen")
+            return
+
+        self.logger.info(f"Creating {len(gemalen_without_pomp)} missing pomp(en)...")
+
+        # Create new pompen
+        new_pompen = [
+            {
+                "globalid": str(uuid.uuid4()),
+                "gemaalid": row.get("globalid"),
+                "code": row.get("code", f"pomp_{idx}"),
+                "geometry": row.geometry.centroid if hasattr(row.geometry, "centroid") else row.geometry,
+                "maximalecapaciteit": row.get("maximalecapaciteit")
+                if self._is_valid_value(row.get("maximalecapaciteit"))
+                else None,
+            }
+            for idx, row in gemalen_without_pomp.iterrows()
+        ]
+
+        new_gdf = gpd.GeoDataFrame(new_pompen, crs=self.data.gemaal.crs)
+
+        # Add missing columns
+        for col in POMP_COLUMNS:
+            if col not in new_gdf.columns:
+                new_gdf[col] = None
+            if col not in self.data.pomp.columns:
+                self.data.pomp[col] = None
+
+        # Convert both to object dtype for geometry column to ensure consistent dtypes
+        existing_gdf = self.data.pomp[POMP_COLUMNS + ["geometry"]].copy()
+        new_gdf_typed = new_gdf[POMP_COLUMNS + ["geometry"]].copy()
+
+        # Append to existing pompen
+        self.data.pomp = pd.concat(
+            [existing_gdf, new_gdf_typed],
+            ignore_index=True,
+        )
+        # Ensure result is a GeoDataFrame
+        self.data.pomp = gpd.GeoDataFrame(self.data.pomp, geometry="geometry", crs=self.data.gemaal.crs)
+
+        self.logger.info(f"Added {len(new_pompen)} new pomp(en)")
+
+    def _transfer_capacity_for_single_pump_gemalen(self):
+        """Copy maximalecapaciteit from gemaal to pomp for single-pump gemalen."""
+        if "gemaalid" not in self.data.pomp.columns or "maximalecapaciteit" not in self.data.gemaal.columns:
+            return
+
+        single_pump_ids = self.data.pomp["gemaalid"].value_counts()
+        single_pump_ids = single_pump_ids[single_pump_ids == 1].index
+        single_pump_ids = [gid for gid in single_pump_ids if not pd.isna(gid)]
+
+        if not single_pump_ids:
+            return
+
+        self.logger.info(f"Transferring capacity for {len(single_pump_ids)} single-pump gemalen...")
+        transferred = 0
+
+        for gemaalid in single_pump_ids:
             gemaal = self.data.gemaal[self.data.gemaal["globalid"] == gemaalid]
+            if not gemaal.empty:
+                capacity = gemaal["maximalecapaciteit"].iloc[0]
+                if self._is_valid_value(capacity):
+                    self.data.pomp.loc[self.data.pomp["gemaalid"] == gemaalid, "maximalecapaciteit"] = capacity
+                    transferred += 1
 
-            if not gemaal.empty and "maximalecapaciteit" in gemaal.columns:
-                # Check if the gemaal has a maximalecapaciteit value
-                if not pd.isna(gemaal["maximalecapaciteit"].to_numpy()[0]):
-                    # Update the pomp's maximalecapaciteit with the gemaal's value
-                    self.data.pomp.loc[self.data.pomp["gemaalid"] == gemaalid, "maximalecapaciteit"] = gemaal[
-                        "maximalecapaciteit"
-                    ].to_numpy()[0]
-
-                    self.logger.info(
-                        f"Updated 'maximalecapaciteit' for gemaalid {gemaalid} in pomp layer with gemaal's value."
-                    )
-                else:
-                    self.logger.warning(
-                        f"Gemaal with gemaalid {gemaalid} has no 'maximalecapaciteit' value. Skipping update."
-                    )
-            else:
-                self.logger.warning(
-                    f"Gemaal with gemaalid {gemaalid} not found or has no 'maximalecapaciteit' column."
-                )
-                self.logger.warning(f"Skipping update for gemaalid {gemaalid} in pomp layer.")
-
-    def _make_pomp_layer(self):
-        """
-        Create the pomp layer with necessary columns according to the DAMO schema.
-        Fill in data for at least one pomp with coupled gemaal data.
-        This is needed to make the validator work properly.
-
-        If the layer already exists and is not empty, this function is not executed.
-        """
-
-        # read the DAMO_2.3.xml schema in resource folder with function in damo_to_hydamo_converter.py
-        # converter = DAMO_to_HyDAMO_Converter()
-
-        # TODO wietse retrieving the pump columns from schema will only work if we have the damo schema locally
-        # TODO converter without arguments will also only work if we accept None arguments for the init function
-        # TODO for now, we use the hardcoded POMP_COLUMNS list at the top of this file
-        # _, DAMO_schema_objects = converter.retrieve_domain_mapping()
-        # pomp_columns = list(DAMO_schema_objects["pomp"].keys())
-
-        # create a new GeoDataFrame with the pomp columns and geometry column
-        self.data.pomp = gpd.GeoDataFrame(columns=POMP_COLUMNS)
-
-        # add at least one gemaal to the pomp layer
-        if self.data.gemaal is not None and not self.data.gemaal.empty:
-            self.data.pomp["objectid"] = [1]  # Add a dummy objectid
-            self.data.pomp["code"] = [self.data.gemaal["code"].iloc[0]]  # Create a unique code for the pomp
-            self.data.pomp["gemaalid"] = [self.data.gemaal["globalid"].iloc[0]]  # Use the first gemaal's globalid
-            self.data.pomp["codebeheerobject"] = [self.data.gemaal["code"].iloc[0]]  # Use the first gemaal's code
-            self.data.pomp["maximalecapaciteit"] = [self.data.gemaal["maximalecapaciteit"].iloc[0]]
-
-            self.data.pomp = self.data.pomp.set_geometry([self.data.gemaal["geometry"].iloc[0]])
-            self.data.pomp.crs = self.data.gemaal.crs
-
-            self.logger.info(f"Pomp layer created with object based on gemaal {self.data.gemaal['globalid'].iloc[0]}.")
-        else:
-            self.logger.warning("No gemaal data available to add to the pomp layer. Pomp layer will be empty.")
+        if transferred:
+            self.logger.info(f"Transferred capacity for {transferred} pomp(en)")

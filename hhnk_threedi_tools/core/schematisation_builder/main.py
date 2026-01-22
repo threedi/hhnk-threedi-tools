@@ -1,4 +1,3 @@
-import json
 import logging
 import shutil
 from pathlib import Path
@@ -11,9 +10,35 @@ from hhnk_threedi_tools.core.folders import Project
 from hhnk_threedi_tools.core.schematisation_builder.DAMO_HyDAMO_converter import DAMO_to_HyDAMO_Converter
 from hhnk_threedi_tools.core.schematisation_builder.DB_exporter import db_exporter
 from hhnk_threedi_tools.core.schematisation_builder.HyDAMO_validator import validate_hydamo
+from hhnk_threedi_tools.core.schematisation_builder.raw_export_to_DAMO_converter import RawExportToDAMOConverter
+from hhnk_threedi_tools.core.schematisation_builder.raw_export_to_DAMO_converters.aquaduct_converter import (
+    AquaductConverter,
+)
+from hhnk_threedi_tools.core.schematisation_builder.raw_export_to_DAMO_converters.brug_converter import (
+    BrugConverter,
+)
 from hhnk_threedi_tools.core.schematisation_builder.raw_export_to_DAMO_converters.gemaal_converter import (
     GemaalConverter,
 )
+from hhnk_threedi_tools.core.schematisation_builder.raw_export_to_DAMO_converters.peilgebied_converter import (
+    PeilgebiedConverter,
+)
+from hhnk_threedi_tools.core.schematisation_builder.raw_export_to_DAMO_converters.profiel_converter import (
+    ProfielConverter,
+)
+from hhnk_threedi_tools.core.schematisation_builder.raw_export_to_DAMO_converters.stuw_converter import (
+    StuwConverter,
+)
+
+# Define converter classes to run in order
+CONVERTERS = [
+    GemaalConverter,
+    StuwConverter,
+    BrugConverter,
+    AquaductConverter,
+    PeilgebiedConverter,
+    ProfielConverter,
+]
 
 
 class SchematisationBuilder:
@@ -21,7 +46,7 @@ class SchematisationBuilder:
         self,
         project_folder: Path,
         default_polder_polygon_path: Path,
-        table_names: list,
+        table_names: list = None,
         damo_version: str = "2.4.1",
         hydamo_version: str = "2.4",
     ):
@@ -41,19 +66,15 @@ class SchematisationBuilder:
         self.logger.setLevel(logging.INFO)
 
     def make_hydamo_package(self):
-        # Check if polder_polygon.shp exists, copy if not
+        # Check if polder_polygon.shp exists, use from default location if not
         if (
             not self.polder_file_path.exists()
         ):  # TODO remove once implemented in plugin, then polder_polygon.shp is always present
             self.logger.info(
-                f"polder_polygon.shp not found in {self.project_folder}/01_source_data, copying from default location."
+                f"polder_polygon.shp not found in {self.project_folder}/01_source_data, using from default location."
             )
-            shutil.copytree(
-                self.default_polder_polygon_path,
-                self.project_folder / "01_source_data",
-                dirs_exist_ok=True,
-            )
-            self.logger.info(f"polder_polygon.shp copied to {self.project_folder}/01_source_data")
+            self.polder_file_path = self.default_polder_polygon_path
+
         else:
             self.logger.info(
                 f"polder_polygon.shp found in {self.project_folder}/01_source_data, using this file for export."
@@ -65,7 +86,7 @@ class SchematisationBuilder:
             logging_DAMO = db_exporter(
                 model_extent_gdf=gdf_polder,
                 output_file=self.raw_export_file_path,
-                table_names=self.table_names,
+                table_names=self.table_names,  # if None, all tables will be exported
             )
 
             if len(logging_DAMO) > 0:
@@ -77,14 +98,20 @@ class SchematisationBuilder:
 
             gdf_polder.to_file(self.raw_export_file_path, layer="polder", driver="GPKG")
 
-            converter = GemaalConverter(
+            raw_export_converter = RawExportToDAMOConverter(
                 raw_export_file_path=self.raw_export_file_path,
                 output_file_path=self.damo_file_path,
                 logger=self.logger,
             )
-            converter.run()
 
-            converter = DAMO_to_HyDAMO_Converter(
+            # Run all converters
+            for converter_class in CONVERTERS:
+                converter = converter_class(raw_export_converter=raw_export_converter)
+                converter.run()
+
+            raw_export_converter.write_outputs()
+
+            damo_to_hydamo_converter = DAMO_to_HyDAMO_Converter(
                 damo_file_path=self.damo_file_path,
                 damo_version=self.damo_version,
                 hydamo_file_path=self.hydamo_file_path,
@@ -94,14 +121,14 @@ class SchematisationBuilder:
                 convert_domain_values=False,
             )
 
-            converter.run()
+            damo_to_hydamo_converter.run()
             self.logger.info(f"HyDAMO exported for file: {self.polder_file_path}")
 
         else:
             self.logger.error("No polder_polygon.shp available, so no file selected for export.")
             raise SystemExit
 
-    def validate_hydamo_package(self):
+    def validate_hydamo_package(self, coverage_location: Path):
         if self.hydamo_file_path.exists():
             self.logger.info(f"Start validation of HyDAMO file: {self.hydamo_file_path}")
 
@@ -115,20 +142,17 @@ class SchematisationBuilder:
             if not validation_rules_json_path.exists():
                 shutil.copyfile(resources_validationrules_path, validation_rules_json_path)
 
-            coverage_location = validation_directory_path / "dtm"
             if not Path(coverage_location).exists():
-                static_data = json.loads(
-                    hrt.get_pkg_resource_path(schematisation_builder_resources, "static_data_paths.json").read_text()
+                raise FileNotFoundError(
+                    f"Coverage data for validation not found in {coverage_location}. Please provide location with index.shp and tiles to this location."
                 )
-                dtm_path = Path(static_data["dtm_path"])
-                shutil.copytree(dtm_path, coverage_location)
 
             result_summary = validate_hydamo(
                 hydamo_file_path=self.hydamo_file_path,
                 validation_rules_json_path=validation_rules_json_path,
                 validation_directory_path=validation_directory_path,
                 coverages_dict={"AHN": coverage_location},
-                output_types=["geopackage", "csv", "geojson"],
+                output_types=["geopackage"],
             )
 
             self.logger.info(f"Validation of HyDAMO file: {self.hydamo_file_path} is done.")
@@ -147,16 +171,3 @@ class SchematisationBuilder:
     def convert_to_3Di(self):
         self.logger.info("convert_to_3Di not implemented yet.")
         pass
-
-
-if __name__ == "__main__":
-    # ask input from user
-    project_folder = Path("E:/09.modellen_speeltuin/test_main_esther2")
-    default_polder_polygon_path = Path("E:/09.modellen_speeltuin/place_polder_polygon_here_for_schematisationbuilder")
-    TABLE_NAMES = ["HYDROOBJECT", "GEMAAL", "COMBINATIEPEILGEBIED", "DUIKERSIFONHEVEL"]
-
-    builder = SchematisationBuilder(project_folder, default_polder_polygon_path, TABLE_NAMES)
-    builder.make_hydamo_package()
-    builder.validate_hydamo_package()
-    # builder.fix_hydamo_package()
-    # builder.convert_to_3Di()

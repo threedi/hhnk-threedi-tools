@@ -16,6 +16,7 @@ from tests.config import TEMP_DIR, TEST_DIRECTORY
 def test_profiel_flow():
     from hhnk_threedi_tools.core.schematisation_builder.DAMO_HyDAMO_converter import DAMO_to_HyDAMO_Converter
     from hhnk_threedi_tools.core.schematisation_builder.HyDAMO_validator import validate_hydamo
+    from hhnk_threedi_tools.core.schematisation_builder.raw_export_to_DAMO_converter import RawExportToDAMOConverter
     from hhnk_threedi_tools.core.schematisation_builder.raw_export_to_DAMO_converters.profiel_converter import (
         ProfielConverter,
     )
@@ -38,19 +39,22 @@ def test_profiel_flow():
     Path(temp_dir_out).mkdir(parents=True, exist_ok=True)
     output_file_path = temp_dir_out / "damo.gpkg"
 
-    converter = ProfielConverter(
-        raw_export_file_path=raw_export_file_path, output_file_path=output_file_path, logger=logger
+    raw_export_converter = RawExportToDAMOConverter(
+        raw_export_file_path=raw_export_file_path,
+        output_file_path=output_file_path,
+        logger=logger,
     )
 
-    # Load and validate layers
-    converter.load_layers()  # STEP 1 in run method
+    converter = ProfielConverter(
+        raw_export_converter=raw_export_converter,
+    )
 
     # Check if layers are loaded
     assert converter.data.hydroobject is not None
     assert converter.data.peilgebiedpraktijk is not None
 
     # Process line merge
-    converter.process_linemerge()  # STEP 2 in run method
+    converter.process_linemerge()  # STEP 1 in run method
 
     # Check if line merge result is stored
     assert converter.data.hydroobject_linemerged is not None
@@ -89,7 +93,7 @@ def test_profiel_flow():
     assert peilgebied_id_result == peilgebied_id
 
     # Create profielgroep, profiellijn and profielpunt
-    converter.create_profile_tables()  # STEP 3 in run method
+    converter.create_profile_tables()  # STEP 2 in run method
 
     # Tests for profile tables
     profielpunt = converter.data.profielpunt
@@ -134,7 +138,7 @@ def test_profiel_flow():
     assert pl_2 is None, f"pl_2 code column value: {pl_2['code'].iloc[0]}"
 
     # Now connect profiles to hydroobject without profiles
-    converter.connect_profiles_to_hydroobject_without_profiles(max_distance=500)  # STEP 4 in run method
+    converter.connect_profiles_to_hydroobject_without_profiles(max_distance=500)  # STEP 3 in run method
 
     # Check it is connected to a profile now
     pl_2 = converter._find_profiellijn_by_hydroobject_code(hydroobject_code_no_profile_should_connect)
@@ -143,7 +147,7 @@ def test_profiel_flow():
     assert pl_2["code"].iloc[0] == nearest_profiellijn_code_it_should_connect_to
 
     # Compute the deepest point per hydroobject
-    converter.compute_deepest_point_hydroobjects()
+    converter.compute_deepest_point_hydroobjects()  # STEP 4 in run method
     dp = converter.find_deepest_point_by_hydroobject_code(hydroobject_code_no_profile_should_connect)
     assert dp == deepest_point_hydroobject_no_profile
 
@@ -152,7 +156,7 @@ def test_profiel_flow():
     assert pl_3 is None
 
     # Write the result to a new file
-    converter.write_outputs()  # STEP 5 in run method
+    raw_export_converter.write_outputs()
 
     assert output_file_path.exists()
 
