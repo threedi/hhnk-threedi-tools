@@ -15,7 +15,7 @@ temp_dir_out = TEMP_DIR / f"temp_Fixer1_converter_{hrt.current_time(date=True)}"
 # test for creation of summary validation and fix report gpkg
 @pytest.mark.skipif(sys.version_info < (3, 12), reason="Requires Python 3.12 or higher")
 def test_creation_validation_fixes_summary():
-    from hhnk_threedi_tools.core.schematisation_builder.HyDAMO_fixer import HYDAMOFixer
+    from hhnk_threedi_tools.core.schematisation_builder.HyDAMO_fixer import HyDAMOFixer
 
     # define paths
     hydamo_file_path = TEST_DIRECTORY / "schematisation_builder" / "HyDAMO.gpkg"
@@ -30,7 +30,7 @@ def test_creation_validation_fixes_summary():
     validation_results_dst = validation_directory_path / "results" / "results.gpkg"
     shutil.copy(validation_results_src, validation_results_dst)
 
-    fixer = HYDAMOFixer(
+    fixer = HyDAMOFixer(
         hydamo_file_path=hydamo_file_path,
         validation_directory_path=validation_directory_path,
     )

@@ -9,7 +9,7 @@ import hhnk_research_tools as hrt
 import hhnk_threedi_tools.resources.schematisation_builder as schematisation_builder_resources
 
 
-class HYDAMOFixer:
+class HyDAMOFixer:
     """Class to fix HyDAMO validation issues and create summary reports.
     Parameters
     ----------
@@ -104,6 +104,12 @@ class HYDAMOFixer:
             layer_report_gdf["invalid_critical"] = layer_report_gdf["invalid_critical"].replace("", None)
             layer_report_gdf["invalid_non_critical"] = layer_report_gdf["invalid_non_critical"].replace("", None)
             layer_report_gdf = layer_report_gdf.dropna(subset=["invalid_critical", "invalid_non_critical"], how="all")
+
+            if layer_report_gdf.empty:
+                self.logger.info(
+                    f"No invalid features found in layer {layer_name}, fixing is not needed/finished for this layer."
+                )
+                return
 
             self.logger.info(f"Created base report gdf with {len(layer_report_gdf)} objects which need fixes")
 
