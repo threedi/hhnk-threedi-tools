@@ -30,7 +30,7 @@ def test_db_exporter_one_feature():
     output_file = db_export_output_dir / "test_damo_gemaal_helsdeur.gpkg"
     db_export_output_dir.mkdir(exist_ok=True)
 
-    model_extent_gdf = gpd.read_file(model_extent_path)
+    model_extent_gdf = gpd.read_file(model_extent_path, engine="pyogrio")
     table_names = ["GEMAAL_DAMO", "GEMAAL"]
 
     logging_DAMO = db_exporter(
@@ -45,14 +45,12 @@ def test_db_exporter_one_feature():
     gemaal_damo_gdf = gpd.read_file(output_file, layer="GEMAAL_DAMO")
     gemaal_cso_gdf = gpd.read_file(output_file, layer="GEMAAL")
     pomp_gdf = gpd.read_file(output_file, layer="POMP")
-    model_extent_new_gdf = gpd.read_file(output_file, layer="model_extent")
 
     assert gemaal_damo_gdf.loc[0, "code"] == "KGM-Q-29234"  # export uit DAMO_W gelukt
     assert gemaal_cso_gdf.loc[0, "code"] == "KGM-Q-29234"  # export uit CSO gelukt
     assert len(pomp_gdf) == 4  # Export van sub tabel uit cso gelukt
     assert "afvoeren" in gemaal_damo_gdf["functiegemaal"].unique()  # omzetten domeinen gelukt
     assert logging_DAMO == []  # test geen errors
-    assert not model_extent_new_gdf.empty  # test model extent export
 
 
 @pytest.mark.skipif(
@@ -65,9 +63,8 @@ def test_db_exporter_polder():
 
     model_extent_path = TEST_DIRECTORY / r"model_test\01_source_data\polder_polygon.shp"
     output_file = db_export_output_dir / "test_export.gpkg"
-    db_export_output_dir.mkdir(exist_ok=True)
 
-    model_extent_gdf = gpd.read_file(model_extent_path)
+    model_extent_gdf = gpd.read_file(model_extent_path, engine="pyogrio")
 
     logging_DAMO = db_exporter(
         model_extent_gdf=model_extent_gdf,

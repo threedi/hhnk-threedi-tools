@@ -9,26 +9,21 @@ __pycache__
 build
 dist
 Thumbs.db
-
 local_settings.py
 local_settings_htt.py
 notebook_data.json
 static_data_paths.json
 debug.log
 
-tests/tests_git_model_repo/tmp_output*
-hhnk-research-tools
-
 # Pytests
 .coverage
 coverage.xml
-
 hhnk_threedi_tools/breaches/api_ldo_key.txt
+hhnk_threedi_tools/tests/data/new_project/
+tests_local/data/temp
+tests_local/data
 *.log
 project.json
 tests/data/schematisation_builder/test_schematisation_builder
 
 empty.gpkg
-tests/data/model_test/02_schematisation/00_basis/bwn_test.gpkg-shm
-tests/data/model_test/02_schematisation/00_basis/bwn_test.gpkg-wal
-

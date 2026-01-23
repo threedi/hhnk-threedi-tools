@@ -6,6 +6,7 @@ import os
 
 import hhnk_research_tools as hrt
 
+import hhnk_threedi_tools as htt
 import hhnk_threedi_tools.core.api.download_gui_class as download_gui_class
 from hhnk_threedi_tools.external import downloader as dl
 from tests.config import FOLDER_TEST, TEMP_DIR

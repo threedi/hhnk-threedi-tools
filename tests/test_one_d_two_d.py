@@ -6,11 +6,11 @@ import sys
 import geopandas as gpd
 import pytest
 
-from hhnk_threedi_tools.core.checks.one_d_two_d import OneDTwoDCheck
+from hhnk_threedi_tools.core.checks.one_d_two_d import OneDTwoDTest
 from tests.config import FOLDER_TEST
 
 # Globals
-REVISION = "BWN bwn_test #6 1d2d_check"
+REVISION = "BWN bwn_test #6 1d2d_test"
 
 
 class TestOneDTwoD:
@@ -19,7 +19,7 @@ class TestOneDTwoD:
 
     @pytest.fixture(scope="class")
     def check_1d2d(self):
-        check_1d2d = OneDTwoDCheck(folder=FOLDER_TEST, revision=REVISION)
+        check_1d2d = OneDTwoDTest(folder=FOLDER_TEST, revision=REVISION)
         check_1d2d.output_fd.mkdir(parents=True)
         return check_1d2d
 
@@ -31,7 +31,7 @@ class TestOneDTwoD:
 
     @pytest.mark.skipif(sys.version_info < (3, 12), reason="Requires Python 3.12 or higher")
     def test_run_depth_at_timesteps(self, check_1d2d):
-        """Test of de 0d1d check werkt"""
+        """Test of de 0d1d test werkt"""
         # TODO move output to temp folder
         output_fd = check_1d2d.folder.output.one_d_two_d[check_1d2d.revision]
 

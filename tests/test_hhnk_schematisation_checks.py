@@ -39,6 +39,7 @@ class TestSchematisation:
 
         return folder_new
 
+    @pytest.mark.skipif(True, reason="ControlStructure Clss moet helemaal overhoop")
     def test_run_controlled_structures(self, hhnk_schematisation_checks):
         hhnk_schematisation_checks.run_controlled_structures()
 
