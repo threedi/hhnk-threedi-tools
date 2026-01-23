@@ -12,47 +12,6 @@ from hhnk_threedi_tools.core.folders import Folders
 logger = logging.get_logger(name=__name__)
 
 
-def _load_tags_map(database: SpatialDatabase) -> dict[int, str]:
-    """
-    Load tags table and return mapping of id (int) -> description.
-    Tags are a way to add extra properties to various tables in the model database.
-    Available tags are stored in seperate tag table, with id and description.
-    In object-tables tags are stored as comma separated list of tag ids.
-
-    Parameters
-    ----------
-    database : SpatialDatabase
-        Model database to load tags from.
-
-    Returns
-    -------
-    dict
-        Mapping of tag id (int) to description (str).
-    """
-    tags_df = database.load(layer="tags", index_column="id")
-    tags_map = {}
-    for idx, row in tags_df.iterrows():
-        tags_map[int(idx)] = row["description"]
-    return tags_map
-
-
-def _map_tags_array_to_descriptions(tags: list[int], tags_map: dict[int, str]) -> list[str]:
-    """Convert array of tag keys to array of tag descriptions using provided tags_map."""
-    if tags is None:
-        return []
-    desc = []
-    for key in tags:
-        try:
-            key = int(key)
-        except TypeError:
-            logger.error(f"Tag key {key} is not convertible to int, tags should refer to integer ids from tags table")
-        if key in tags_map:
-            desc.append(tags_map[key])
-        else:
-            logger.error(f"Tag key {key} not found in tags table from model database")
-    return desc
-
-
 class ChannelRelations:
     """
     Class that adds properties from the connection nodes and cross section location to the channel
@@ -65,11 +24,6 @@ class ChannelRelations:
     ):
         self.folder = folder
         self.database: SpatialDatabase = folder.model.schema_base.database
-
-    @cached_property
-    def tags_map(self) -> dict[int, str]:
-        tags_map = _load_tags_map(self.database)
-        return tags_map
 
     def get_width_and_depth_from_tabulated_profile(self, channel_gdf_row: pd.Series) -> float:
         """
@@ -97,8 +51,6 @@ class ChannelRelations:
         else:
             logger.warning(f"Channel shape is not tabulated (type 6) for channel index {channel_gdf_row.index}")
 
-            return -9999.0
-
     @cached_property
     def gdf(self) -> gpd.GeoDataFrame:
         """
@@ -111,26 +63,20 @@ class ChannelRelations:
         """
         # Load tables
         channel_gdf = self.database.load(layer="channel", index_column="id")
-        channel_gdf["channel_id"] = channel_gdf.index
         cross_section_gdf = self.database.load(layer="cross_section_location", index_column="id")
         connection_node_gdf = self.database.load(layer="connection_node", index_column="id")
 
-        # Split comma separated tags into arrays
-        channel_gdf["tags"] = channel_gdf["tags"].apply(lambda x: x.split(",") if isinstance(x, str) else [])
-        channel_gdf["tags_description"] = channel_gdf["tags"].apply(
-            lambda t: _map_tags_array_to_descriptions(t, self.tags_map)
+        channel_gdf["channel_id"] = channel_gdf.index
+        channel_gdf["is_primary"] = channel_gdf["tags"].apply(
+            lambda tags: "is_primary" in tags if isinstance(tags, (list, str, np.ndarray)) else False
         )
-        channel_gdf["is_primary"] = channel_gdf["tags_description"].apply(
-            lambda x: True if "is_primary" in x else False
-        )
-
         # Join connection node data to channel table
         channel_gdf = channel_gdf.merge(
             connection_node_gdf[["initial_water_level", "storage_area"]],
             how="left",
             left_on="connection_node_id_start",
             right_index=True,
-        ).rename(columns={"initial_water_level": "initial_water_level_start", "storage_area": "storage_area_start"})
+        ).rename(columns={"initial_water_level": "initial_water_level_start", "storage_area": "storage_areastart"})
         channel_gdf = channel_gdf.merge(
             connection_node_gdf[["initial_water_level", "storage_area"]],
             how="left",
@@ -156,7 +102,7 @@ class ChannelRelations:
             left_index=True,
             right_on="channel_id",
             how="left",
-        ).drop(columns=["channel_id_x"])
+        )
 
         # Calculate depth and width at waterlevel
         channel_gdf["depth"] = channel_gdf["initial_water_level_average"] - channel_gdf["reference_level"]
@@ -189,7 +135,6 @@ class ChannelRelations:
         channel_gdf = channel_gdf.merge(max_depths, how="left", left_on="channel_id", right_index=True).rename(
             columns={"depth": "depth_max"}
         )
-        channel_gdf.reset_index()
 
         return channel_gdf
 
@@ -200,6 +145,7 @@ class StructureRelations:
      - maximum and minimum crest_level from table control
      - minimum and reference_level and bank_level at start and end side from cross_section_locations linked to structure, reference and bank level may originate from different cross_section_locations
 
+     # TODO
     """
 
     def __init__(
@@ -214,11 +160,6 @@ class StructureRelations:
             raise ValueError("Provide structure table weir, culvert, pump or orifice")
         else:
             self.structure_table = structure_table
-
-    @cached_property
-    def tags_map(self) -> dict[int, str]:
-        tags_map = _load_tags_map(self.database)
-        return tags_map
 
     def concat_channel_ids(self) -> gpd.GeoDataFrame:
         """Concatenate channel_id and connection_node_id from channels_gdf for both start and end side.
@@ -654,15 +595,6 @@ class StructureRelations:
         # Load table
         structure_gdf = self.database.load(layer=self.structure_table, index_column="id")
         structure_gdf[f"{self.structure_table}_id"] = structure_gdf.index
-
-        # Split comma separated tags into arrays
-        structure_gdf["tags"] = structure_gdf["tags"].apply(lambda x: x.split(",") if isinstance(x, str) else [])
-        structure_gdf["tags_description"] = structure_gdf["tags"].apply(
-            lambda t: _map_tags_array_to_descriptions(t, self.tags_map)
-        )
-        structure_gdf["is_primary"] = structure_gdf["tags_description"].apply(
-            lambda x: True if "is_primary" in x else False
-        )
 
         for side in ["start", "end"]:
             structure_gdf = self.get_manhole_data_at_connection_node(structure_gdf=structure_gdf, side=side)

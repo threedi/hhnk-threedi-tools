@@ -11,13 +11,12 @@ import hhnk_threedi_tools.resources.qgis_layer_styles.zero_d_one_d
 import hhnk_threedi_tools.resources.schematisation_builder
 
 # checks
-from hhnk_threedi_tools.core.checks.bank_levels import BankLevelCheck
+from hhnk_threedi_tools.core.checks.bank_levels import BankLevelTest
 
 # FIXME TypeError: metaclass conflict: the metaclass of a derived class must be a (non-strict) subclass of the metaclasses of all its bases
-from hhnk_threedi_tools.core.checks.one_d_two_d import OneDTwoDCheck
-from hhnk_threedi_tools.core.checks.zero_d_one_d import ZeroDOneDCheck
+from hhnk_threedi_tools.core.checks.one_d_two_d import OneDTwoDTest
 from hhnk_threedi_tools.core.checks.schematisation.schematisation_checks_main import HhnkSchematisationChecks
-from hhnk_threedi_tools.core.checks.schematisation.structure_control import StructureControl
+from hhnk_threedi_tools.core.checks.zero_d_one_d import ZeroDOneDTest
 from hhnk_threedi_tools.core.folders import Folders
 from hhnk_threedi_tools.core.folders_modelbuilder import FoldersModelbuilder
 
@@ -38,6 +37,9 @@ from hhnk_threedi_tools.core.schematisation.model_backup import (
     select_values_to_update_from_backup,
     update_bank_levels_last_calc,
 )
+
+# backup
+from hhnk_threedi_tools.core.vergelijkingstool import *
 
 #
 from hhnk_threedi_tools.qgis.layer_structure import (

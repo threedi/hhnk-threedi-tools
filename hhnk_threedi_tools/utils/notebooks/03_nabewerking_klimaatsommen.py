@@ -24,8 +24,6 @@ import hhnk_research_tools as hrt
 import ipywidgets as widgets
 import matplotlib.pyplot as plt
 import pandas as pd
-import rasterio as rio
-import rasterio.plot as plot
 
 import hhnk_threedi_tools as htt
 
@@ -85,27 +83,20 @@ dem_path_dropdown = widgets.Select(
 polder_shape = folder.source_data.polder_polygon.load()
 
 precip_zones_raster = hrt.get_pkg_resource_path(package_resource=htt.resources, name="precipitation_zones_hhnk.tif")
-precip_zones_raster = rio.open(precip_zones_raster)
+precip_zones_raster = hrt.Raster(precip_zones_raster)
+neerslag_array = precip_zones_raster._read_array()
 
 
 freqs_xlsx = hrt.get_pkg_resource_path(package_resource=htt.resources, name="precipitation_frequency.xlsx")
 freqs = pd.read_excel(freqs_xlsx, engine="openpyxl")
 
-f, ax = plt.subplots(figsize=(8, 8))
+fig, ax = plt.subplots(figsize=(8, 8))
+ax.imshow(neerslag_array, extent=precip_zones_raster.metadata.bounds)
+polder_shape.plot(ax=ax, color="red")
 
-# plot raster neerslagzones
-plot.show(
-    precip_zones_raster,  #
-    extent=precip_zones_raster.window_bounds,
-    ax=ax,
-)
-# plot shapefiles
-polder_shape.plot(ax=ax, facecolor="y", edgecolor="b")
-
-plt.show()
 
 precipitation_zone_box = widgets.Select(
-    options=["hoog", "referentie"],
+    options=["hevig", "debilt"],
     rows=2,
     disabled=False,
     value=None,
@@ -113,15 +104,15 @@ precipitation_zone_box = widgets.Select(
 )
 
 print("Selecteer map met batch resultaten")
-display(output_folder_box)  # type: ignore  # noqa: F821
+display(output_folder_box)
 
 print("Selecteer neerslagzone")
-display(precipitation_zone_box)  # type: ignore  # noqa: F821
+display(precipitation_zone_box)
 if dem.exists():
     print(f"Geselecteerd DEM bestand: {dem}")
 else:
     print("Selecteer DEM")
-    display(dem_path_dropdown)  # type: ignore  # noqa: F821
+    display(dem_path_dropdown)
 
 # %% [markdown]
 # ## Lokaliseren polder folder

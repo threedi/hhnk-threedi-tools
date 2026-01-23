@@ -10,8 +10,7 @@ requires-python = ">=3.9"
 license = "MIT"
 authors = [
     { name = "Wietse van Gerwen", email = "w.vangerwen@hhnk.nl" },
-    { name = "Laure Ravier" },
-    { name = "Bastiaan Roos" }
+    { name = "Laure Ravier" }
 ]
 maintainers = [
     { name = "Wietse van Gerwen" }
@@ -22,7 +21,7 @@ keywords = []
 repository = "https://github.com/threedi/hhnk-threedi-tools"
 
 [tool.setuptools]
-packages = { find = { where = ["hhnk_threedi_tools"] } }
+packages = { find = { include = ["hhnk_threedi_tools"] } }
 include-package-data = true
 
 # FORMATTING

@@ -6,7 +6,7 @@
       <rule label="2 - 3 cm" symbol="1" filter=" &quot;wlvl_diff_abs_m&quot; >= 0.02 AND  &quot;wlvl_diff_abs_m&quot; &lt; 0.03" key="{6b8510d6-f58f-4aef-8c92-78ead7b36037}"/>
       <rule label="3 -  5 cm" symbol="2" filter=" &quot;wlvl_diff_abs_m&quot; >= 0.03 AND  &quot;wlvl_diff_abs_m&quot; &lt; 0.05" key="{2bfc654b-abee-4e26-ba25-a60f5213eb7e}"/>
       <rule label="5 - 10 cm" symbol="3" filter=" &quot;wlvl_diff_abs_m&quot; >= 0.05 AND  &quot;wlvl_diff_abs_m&quot; &lt; 0.1" key="{14a87122-bbfb-4c4f-bd8f-514c9bb5e5c9}"/>
-      <rule label="> 10 cm" symbol="4" filter=" &quot;wlvl_diff_abs_m&quot; >= 0.1" key="{2c553726-d566-4ee2-afa9-5d89a80cae8a}"/>
+      <rule label="> 10 cm" symbol="4" filter=" &quot;wtrlvl_diff_abs_m&quot; >= 0.1" key="{2c553726-d566-4ee2-afa9-5d89a80cae8a}"/>
     </rules>
     <symbols>
       <symbol clip_to_extent="1" force_rhr="0" name="0" type="line" frame_rate="10" alpha="1" is_animated="0">

@@ -56,11 +56,11 @@ FOLDER_STRUCTURE = """
         │ └── 1d2d_results
         | |__ batch_results
         └── 04_test_results
-            ├── 0d1d_checks
+            ├── 0d1d_tests
             │   ├── *some revision*
             │     ├── Layers
             │     └── Logs
-            ├── 1d2d_checks
+            ├── 1d2d_tests
             │ └── *some revision*
             │     ├── Layers
             │     └── Logs
@@ -185,6 +185,7 @@ class Folders(Folder):
             "dem": self.source_data.rasters.dem.path_if_exists,
             "hydamo": self.source_data.hydamo.path_if_exists,
             "validation_result": self.source_data.hydamo_validation.validation_result.path_if_exists,
+            "vergelijkingstool": self.source_data.vergelijkingstool.path_if_exists,
             "hdb": self.source_data.hdb.path_if_exists,
             "polder_shapefile": self.source_data.polder_polygon.path_if_exists,
             "channels_shapefile": self.source_data.modelbuilder.channel_from_profiles.path_if_exists,
@@ -271,6 +272,7 @@ class SourceDir(Folder):
         # Folders
         self.modelbuilder = self.ModelbuilderPaths(self.base, create=create)
         self.hydamo_validation = self.HydamoValidationPaths(self.base, create=create)
+        self.vergelijkingstool = self.VergelijkingstoolPaths(self.base, create=create)
         self.peilgebieden = self.PeilgebiedenPaths(self.base, create=create)
         self.wsa_output_administratie = self.WsaOutputAdministratie(self.base, create=create)
         self.rasters = self.Rasters(self.base, create=create)
@@ -317,6 +319,7 @@ class SourceDir(Folder):
                {self.space}└── modelbuilder_output
                {self.space}└── hydamo_validation
                {self.space}└── peilgebieden
+               {self.space}└── vergelijkingstool
                {self.space}└── wsa_output_administratie
                
                """
@@ -340,6 +343,20 @@ class SourceDir(Folder):
         def __init__(self, base, create):
             super().__init__(os.path.join(base, "hydamo_validation"), create=create)
             self.add_file("validation_result", "validation_result.gpkg")
+
+    class VergelijkingstoolPaths(Folder):
+        def __init__(self, base, create):
+            super().__init__(os.path.join(base, "vergelijkingstool"), create=create)
+
+            self.input_data_old = self.full_path("input_data_old")
+            self.input_data_old.mkdir(parents=True, exist_ok=True)
+            self.add_file("input_data_old", "DAMO.gpkg")
+            self.add_file("input_data_old", "HDB.gpkg")
+
+            self.output = self.full_path("output")
+            self.output.mkdir(parents=True, exist_ok=True)
+            self.add_file("output", "Threedi_comparison.gpkg")
+            self.add_file("output", "DAMO_comparison.gpkg")
 
     class PeilgebiedenPaths(Folder):
         # TODO deze map moet een andere naam en plek krijgen.
@@ -568,8 +585,8 @@ class OutputDirParent(Folder):
             self.full_path("hhnk_schematisation_checks"), create=create
         )
         self.bank_levels = self.OutputDirBankLevel(self.full_path("bank_levels"), create=create)
-        self.zero_d_one_d = self.OutputDir0d1d(base=self.base, name="0d1d_checks", create=create)
-        self.one_d_two_d = self.OutputDir1d2d(base=self.base, name="1d2d_checks", create=create)
+        self.zero_d_one_d = self.OutputDir0d1d(base=self.base, name="0d1d_tests", create=create)
+        self.one_d_two_d = self.OutputDir1d2d(base=self.base, name="1d2d_tests", create=create)
         self.climate = self.OutputDirClimate(base=self.base, name="climate", create=create)
 
         if create:
@@ -653,7 +670,7 @@ class OutputDirParent(Folder):
             def __init__(self, base, create=False):
                 super().__init__(base, create=create)
 
-                self.add_file("nodes_0d1d_check", "nodes_0d1d_check.gpkg")
+                self.add_file("nodes_0d1d_test", "nodes_0d1d_test.gpkg")
                 self.add_file(
                     "hydraulische_toets_kunstwerken",
                     "hydraulische_toets_kunstwerken.gpkg",
@@ -679,7 +696,7 @@ class OutputDirParent(Folder):
 
                 self.add_file("grid_nodes_2d", "grid_nodes_2d.gpkg")
                 self.add_file("grid_wlvl", "grid_wlvl.gpkg")
-                self.add_file("stroming_1d2d_check", "stroming_1d2d_check.gpkg")
+                self.add_file("stroming_1d2d_test", "stroming_1d2d_test.gpkg")
                 for T in [1, 3, 15]:
                     self.add_file(f"waterstand_T{T}", f"waterstand_T{T}.tif")
                     self.add_file(f"waterdiepte_T{T}", f"waterdiepte_T{T}.tif")

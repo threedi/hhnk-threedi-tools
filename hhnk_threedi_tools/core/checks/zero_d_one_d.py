@@ -59,7 +59,7 @@ from hhnk_threedi_tools.variables.zero_d_one_d import (
 )
 
 
-class ZeroDOneDCheck:
+class ZeroDOneDTest:
     def __init__(self, folder: Folders, revision=0):
         self.fenv = folder
         self.grid_result = folder.threedi_results.zero_d_one_d[revision].grid
@@ -255,9 +255,7 @@ def check_primary(structure, structure_lines, structure_name, primary_nodes):
 
     if structure_name == res_channels:
         # Classify parts of channels as primary if zoom category is 4
-        structure[primary_col] = structure[zoom_cat_col].apply(
-            lambda x: True if x == 4 else False
-        )  # FIXME WvE column is zoom cat no longer exists, needs the use of structure relations
+        structure[primary_col] = structure[zoom_cat_col].apply(lambda x: True if x == 4 else False)
     else:
         # We use nodes qualified as primary by above method for other structure types
         structure[primary_col] = structure.apply(
@@ -287,7 +285,7 @@ def add_slope_info(structure, structure_name, up_waterlevel, down_waterlevel):
     # Bepalen of een structure op een peilgrens ligt, en daardoor is het verhang niet interessant.
     if structure_name in [res_orifices, res_culverts]:
         structure[struct_on_lvl_limit_col] = False
-        # Dit valideren we door te kijken of de bovenstroomse en benedenstrooms INITIELE waterstand gelijk zijn.
+        # Dit testen we door te kijken of de bovenstroomse en benedenstrooms INITIELE waterstand gelijk zijn.
         structure.loc[
             (round(up_waterlevel[waterlevel_t_0_col], 2)) != (round(down_waterlevel[waterlevel_t_0_col], 2)),
             struct_on_lvl_limit_col,

@@ -1,147 +1,120 @@
 # %%
+"""
+Note: the curent tests are only ran to check if the functions work.
+They still must be checked qualitatively
+
+"""
 
 import sys
 
 import pytest
 
-from hhnk_threedi_tools.core.checks.bank_levels import BankLevelCheck
+from hhnk_threedi_tools.core.checks.bank_levels import BankLevelTest
 from tests.config import FOLDER_TEST
 
-
-@pytest.fixture(scope="session")
-def bl_check():
-    """Fixture that provides a BankLevelCheck instance with prepared data.
-
-    Scope is set to 'session' to reuse the same instance across all tests
-    for better performance.
-    """
-    check = BankLevelCheck(FOLDER_TEST)
-    check.prepare_data()
-    return check
+# pd.options.mode.chained_assignment = 'raise' #catch SettingWithCopyWarning
 
 
-@pytest.mark.skipif(sys.version_info < (3, 12), reason="Requires Python 3.12 or higher")
-def test_import_data(bl_check: BankLevelCheck):
-    """Test if the import of data works, if the correct amount is imported"""
-    assert bl_check.fixeddrainage_gdf.count()["peil_id"] == 32
-    assert bl_check.fixeddrainage_boundary_gdf.count()["peil_id"] == 35
-    assert bl_check.lines_1d2d.count()["id"] == 105
-    assert bl_check.channel_gdf.count()["code"] == 49
-    assert bl_check.connection_node_gdf.count()["code"] == 72
-    assert bl_check.cross_section_gdf.count()["code"] == 96
-    assert bl_check.obstacle_gdf.count()["code"] == 54
-    assert bl_check.obstacle_gdf["crest_level"][54] == 0.159
+class TestBankLevel:
+    # @pytest.fixture(scope="class")
+    @pytest.mark.skipif(sys.version_info < (3, 12), reason="# TODO bank level check moet nog bijgewerkt worden.")
+    def bl_test(self):
+        bl = BankLevelTest(FOLDER_TEST)
+        bl.import_data()
+        return bl
 
+    @pytest.mark.skipif(sys.version_info < (3, 12), reason="# TODO bank level check moet nog bijgewerkt worden.")
+    def test_import_information_object(self, bl_test):
+        """Test if the import of information works, if the correct amount is imported"""
 
-@pytest.mark.skipif(sys.version_info < (3, 12), reason="Requires Python 3.12 or higher")
-def test_intersections(bl_check: BankLevelCheck):
-    """Test intersection detection between obstacles and 1d2d lines.
+        # look at counts
+        assert all(bl_test.imports["manholes"].count() == 0)  # no manholes
+        assert bl_test.imports["fixeddrainage"].count()["id"] == 32
+        assert bl_test.imports["fixeddrainage_lines"].count()["id"] == 35
+        assert bl_test.imports["lines_1d2d"].count()["node_id"] == 104
+        assert bl_test.imports["conn_nodes"].count()["conn_node_id"] == 72
+        assert bl_test.imports["channels"].count()["channel_id"] == 49
+        assert bl_test.imports["cross_loc"].count()["cross_loc_id"] == 96
+        assert bl_test.imports["levee_lines"].count()["levee_id"] == 54
 
-    Verifies that:
-    1. Specific intersection (id_1d2d=166) has correct crest level (0.510)
-    2. Total number of intersections is correct (10)
-    3. First intersection is correctly typed as obstacle crossing
-    """
-    result = bl_check.line_intersections()
-    assert result[result["id_1d2d"] == 166]["crest_level"].to_numpy() == 0.510
-    assert result.count()["intersect_type"] == 10
-    assert bl_check.line_intersects["intersect_type"][0] == "1d2d_crosses_obstacle"
+        # look at random info
+        assert bl_test.imports["fixeddrainage"]["peil_id"][0] == "46442"
+        assert bl_test.imports["fixeddrainage_lines"]["streefpeil_bwn2"][1].values[0] == -0.85
+        assert bl_test.imports["lines_1d2d"]["storage_area"][423] == 20.5620565088836
+        assert bl_test.imports["conn_nodes"]["conn_node_id"][15] == 15
+        assert bl_test.imports["channels"]["initial_waterlevel"][487] == -0.55
+        assert bl_test.imports["cross_loc"]["reference_level"][282] == -0.94
+        assert bl_test.imports["levee_lines"]["levee_height"][54] == 0.159
 
+    @pytest.mark.skipif(sys.version_info < (3, 12), reason="# TODO bank level check moet nog bijgewerkt worden.")
+    def test_levee_intersections(self, bl_test):
+        """Test if levee intersections can be done"""
+        bl_test.line_intersections()
+        assert bl_test.line_intersects["levee_id"][425] == 16
 
-@pytest.mark.skipif(sys.version_info < (3, 12), reason="Requires Python 3.12 or higher")
-def test_divergent_waterlevel_nodes(bl_check: BankLevelCheck):
-    """Test detection of nodes with divergent water levels.
+    @pytest.mark.skipif(sys.version_info < (3, 12), reason="# TODO bank level check moet nog bijgewerkt worden.")
+    def test_divergent_waterlevel_nodes(self, bl_test):
+        bl_test.divergent_waterlevel_nodes()
 
-    Checks if nodes that are in incorrect fixed drainage areas are properly
-    identified. These are nodes where the water level doesn't match the
-    expected level for their location.
-    """
-    result = bl_check.divergent_waterlevel_nodes()
-    assert result["type"][0] == "node_in_wrong_fixeddrainage_area"
+        assert bl_test.diverging_wl_nodes["type"][0] == "node_in_wrong_fixeddrainage_area"
 
+    @pytest.mark.skipif(sys.version_info < (3, 12), reason="# TODO bank level check moet nog bijgewerkt worden.")
+    def test_manhole_information(self, bl_test):
+        bl_test.divergent_waterlevel_nodes()
+        bl_test.line_intersections()
+        bl_test.manhole_information()
 
-@pytest.mark.skipif(sys.version_info < (3, 12), reason="Requires Python 3.12 or higher")
-def test_get_new_manholes(bl_check: BankLevelCheck):
-    """Test generation of new manholes at problematic locations.
+        assert bl_test.manholes_info["type"][9] == "node_in_wrong_fixeddrainage_area"
 
-    This test verifies the creation of new manholes where needed, specifically:
-    1. Runs prerequisite checks (divergent nodes and line intersections)
-    2. Generates new manholes where needed
-    3. Verifies correct tagging of manholes (e.g., leak detection)
-    """
-    bl_check.divergent_waterlevel_nodes()
-    bl_check.line_intersections()
-    result = bl_check.get_new_manholes()
-    assert result["tags"][9] == "leak across obstacle from node"
+    @pytest.mark.skipif(sys.version_info < (3, 12), reason="# TODO bank level check moet nog bijgewerkt worden.")
+    def test_flowlines_1d2d(self, bl_test):
+        bl_test.line_intersections()
+        bl_test.flowlines_1d2d()
 
+        assert bl_test.all_1d2d_flowlines["type"][99] == "1d2d_crosses_levee"
 
-@pytest.mark.skipif(sys.version_info < (3, 12), reason="Requires Python 3.12 or higher")
-def test_generate_cross_section_locations(bl_check: BankLevelCheck):
-    """Test generation of cross-section locations with adjusted bank levels.
+    @pytest.mark.skipif(sys.version_info < (3, 12), reason="# TODO bank level check moet nog bijgewerkt worden.")
+    def test_manholes_to_add_to_model(self, bl_test):
+        bl_test.divergent_waterlevel_nodes()
+        bl_test.line_intersections()
+        bl_test.manhole_information()
+        bl_test.manholes_to_add_to_model()
 
-    Verifies that:
-    1. Bank levels are properly reset with appropriate safety margins (+10cm)
-    2. Specific bank level differences are correctly calculated
-    3. Cross-sections are properly tagged with their adjustments
+        assert bl_test.new_manholes_df["connection_node_id"][0] == 44
 
-    Prerequisites:
-    - Line intersections must be calculated first
-    """
-    bl_check.line_intersections()
-    result = bl_check.generate_cross_section_locations()
+    @pytest.mark.skipif(sys.version_info < (3, 12), reason="# TODO bank level check moet nog bijgewerkt worden.")
+    def test_generate_cross_section_locations(self, bl_test):
+        bl_test.line_intersections()
+        bl_test.generate_cross_section_locations()
 
-    assert result["tags"][0] == "bank_level reset to lowest possible + 10 cm"
-    assert result["bank_level_diff"][82] == -1.662
+        assert bl_test.cross_loc_new_filtered["bank_level_source"][0] == "initial+10cm"
+        assert bl_test.cross_loc_new["bank_level_diff"][82] == -1.66
 
+    @pytest.mark.skipif(sys.version_info < (3, 12), reason="# TODO bank level check moet nog bijgewerkt worden.")
+    def test_generate_channels(self, bl_test):
+        bl_test.line_intersections()
+        bl_test.flowlines_1d2d()
+        bl_test.generate_cross_section_locations()
+        bl_test.generate_channels()
 
-@pytest.mark.skipif(sys.version_info < (3, 12), reason="Requires Python 3.12 or higher")
-def test_generate_channels(bl_check: BankLevelCheck):
-    """Test channel generation with updated bank levels.
+        assert bl_test.new_channels["initial_waterlevel"][48] == -0.85
 
-    Tests both channels with and without obstacle crossings:
-    1. Regular channel (id=18):
-        - Verifies water level average
-        - Checks original bank level
-        - Validates new adjusted bank level
+    @pytest.mark.skipif(sys.version_info < (3, 12), reason="# TODO bank level check moet nog bijgewerkt worden.")
+    def test_results(self, bl_test):
+        bl_test.run()
+        results = bl_test.results
 
-    2. Channel with obstacle crossing (id=518):
-        - Confirms proper water level handling
-        - Verifies bank level preservation where needed
-
-    Prerequisites:
-    - Line intersections must be calculated
-    - Cross-section locations must be generated
-    """
-    bl_check.line_intersections()
-    bl_check.generate_cross_section_locations()
-    result = bl_check.generate_channels()
-
-    # Channel without crossing with obstacle
-    assert result["initial_water_level_average"][18] == -0.55
-    assert result["bank_level"][18] == 0.245
-    assert result["new_bank_level"][18] == -0.45
-
-    # Channel with crossing with obstacle
-    row = result[result["channel_id"] == 518]
-    assert row["initial_water_level_average"].iloc[0] == -1.0
-    assert row["bank_level"].iloc[0] == 0.244
-    assert row["new_bank_level"].iloc[0] == 0.244
-
-
-@pytest.mark.skipif(sys.version_info < (3, 12), reason="Requires Python 3.12 or higher")
-def test_results(bl_check: BankLevelCheck):
-    """Test the complete bank level check workflow results.
-
-    Runs the entire bank level check process and verifies the final results,
-    specifically checking:
-    1. Number of line intersections detected
-    2. Completeness of results dictionary
-    3. Integrity of final intersection data
-    """
-    bl_check.run()
-    results = bl_check.results
-
-    assert results["line_intersects"].count()["id_1d2d"] == 10
+        assert results["line_intersects"].count()["node_id"] == 9
 
 
 # %%
+if __name__ == "__main__":
+    import inspect
+
+    selftest = TestBankLevel()
+    bl_test = selftest.bl_test()
+    # Run all testfunctions
+    for i in dir(selftest):
+        if i.startswith("test_") and hasattr(inspect.getattr_static(selftest, i), "__call__"):
+            print(i)
+            getattr(selftest, i)(bl_test)

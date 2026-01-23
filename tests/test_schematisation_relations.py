@@ -39,7 +39,6 @@ def test_channel_relations():
     assert len(channel_gdf) == 49
     assert "width_at_wlvl_mean" in list(channel_gdf.columns)
     assert round(channel_gdf["depth_max"].iloc[0], 1) == 1.0
-    assert sum(channel_gdf["is_primary"]) == 7
 
 
 # %%

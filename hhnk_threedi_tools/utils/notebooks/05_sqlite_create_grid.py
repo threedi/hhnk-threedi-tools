@@ -3,8 +3,6 @@
 # ## Create grid nodes and lines from sqlite
 
 # %%
-from hhnk_threedi_tools import Folders, HhnkSchematisationChecks
-
 # Add qgis plugin deps to syspath and load notebook_data
 try:
     from hhnk_threedi_tools.utils.notebooks.notebook_setup import setup_notebook
@@ -13,6 +11,10 @@ except:
 
 
 notebook_data = setup_notebook()
+
+
+from hhnk_threedi_tools import Folders, HhnkSchematisationChecks
+
 # %%
 folder_dir = notebook_data["polder_folder"]
 
