@@ -154,4 +154,10 @@ DB_LAYER_MAPPING = {
         "schema": "DAMO_W",
         "columns": None,
     },
+    "WATERKERING": {
+        "source": "aquaprd_lezen",
+        "schema": "DAMO_W",
+        "columns": None,
+    },
+    # ingevulde kolommen zijn CODE, NAAM, STATUSOBJECT, CATEGORIE, TYPEWATERKERING, SOORTREFERENTIELIJN, WS_DWK_SOORT, WS_BEHEERCODE
 }

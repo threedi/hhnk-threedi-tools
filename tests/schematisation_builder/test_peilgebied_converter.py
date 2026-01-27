@@ -1,18 +1,16 @@
+import uuid
 from pathlib import Path
 
 import geopandas as gpd
 import hhnk_research_tools as hrt
-import numpy as np
-import rasterio
-from rasterio.transform import from_origin
-from shapely.geometry import LineString, Polygon
+from shapely.geometry import Polygon
 
 from hhnk_threedi_tools.core.schematisation_builder.raw_export_to_DAMO_converter import RawExportToDAMOConverter
 from hhnk_threedi_tools.core.schematisation_builder.raw_export_to_DAMO_converters import peilgebied_converter
 from hhnk_threedi_tools.core.schematisation_builder.raw_export_to_DAMO_converters.peilgebied_converter import (
     DEFAULT_SEGMENT_LENGTH,
     PEILGEBIED_SOURCE_LAYER,
-    WATERKERING_LINE_LAYERS,
+    WATERKERING_ADDITIONAL_LINE_SOURCE_LAYERS,
     PeilgebiedConverter,
 )
 from tests.config import TEMP_DIR, TEST_DIRECTORY
@@ -289,7 +287,7 @@ def test_peilgebied_converter():
     logger.info(f"✓ DEM loaded from {converter_base.data.dem_path}")
 
     source_layers_exist = hasattr(converter_base.data, PEILGEBIED_SOURCE_LAYER.lower()) or any(
-        hasattr(converter_base.data, layer_name.lower()) for layer_name in WATERKERING_LINE_LAYERS
+        hasattr(converter_base.data, layer_name.lower()) for layer_name in WATERKERING_ADDITIONAL_LINE_SOURCE_LAYERS
     )
 
     if not source_layers_exist:
@@ -355,6 +353,9 @@ def test_duplicate_removal_with_synthetic_data():
                 Polygon([(0, 0), (10, 0), (10, 10), (0, 10)]),  # Left polygon
                 Polygon([(10, 0), (20, 0), (20, 10), (10, 10)]),  # Right polygon (shares boundary)
             ],
+            "globalid": [str(uuid.uuid4()) for _ in range(2)],
+            "streefpeil_zomer": [1.0, 1.0],
+            "streefpeil_winter": [0.5, 0.5],
         },
         crs="EPSG:28992",
     )

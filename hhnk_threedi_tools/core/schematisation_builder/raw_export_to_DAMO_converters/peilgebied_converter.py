@@ -1,13 +1,15 @@
+import traceback
 import uuid
 from typing import Optional, TypedDict, Union
 
 import geopandas as gpd
 import numpy as np
+import pandas as pd
 import rasterio
 from rasterio.features import rasterize
 from shapely.geometry import LineString, MultiLineString, Point
 from shapely.geometry.base import BaseGeometry
-from shapely.ops import unary_union
+from shapely.ops import linemerge, unary_union
 
 from hhnk_threedi_tools.core.schematisation_builder.raw_export_to_DAMO_converter import RawExportToDAMOConverter
 
@@ -26,7 +28,7 @@ class PerpendicularSample(TypedDict):
 
 PEILGEBIED_SOURCE_LAYER = "combinatiepeilgebied"
 
-WATERKERING_LINE_LAYERS = [
+WATERKERING_ADDITIONAL_LINE_SOURCE_LAYERS = [
     "levees",
     "verhoogde lijnen",
     "wegen",
@@ -47,6 +49,17 @@ WATERKERING_COLUMNS = [
     "waterstaatswerkWaterkeringID",
 ]
 
+STREEFPEIL_COLUMNS = [
+    "soortStreefpeil",
+    "eenheid",
+    "waterhoogte",
+    "beginPeriode",
+    "eindPeriode",
+    "peilgebiedpraktijkID",
+    "peilafwijkinggebiedID",
+    "peilgebiedvigerendID",
+]
+
 DEFAULT_SEGMENT_LENGTH = 50.0
 DEFAULT_BUFFER_WIDTH = 10.0
 DEFAULT_PERPENDICULAR_SAMPLE_DISTANCE = 5.0
@@ -64,10 +77,11 @@ class PeilgebiedConverter(RawExportToDAMOConverter):
         self.perpendicular_samples: list[PerpendicularSample] = []
 
     def run(self) -> None:
-        """Create peilgebiedpraktijk and waterkering layers."""
+        """Create peilgebiedpraktijk, waterkering, and streefpeil layers."""
         self.logger.info("Running PeilgebiedConverter...")
         self._create_peilgebiedpraktijk_layer()
         self._create_waterkering_layer()
+        self._create_streefpeil_layer()
 
     def _create_peilgebiedpraktijk_layer(self) -> None:
         """Create DAMO-compliant peilgebiedpraktijk layer from combinatiepeilgebied."""
@@ -109,7 +123,7 @@ class PeilgebiedConverter(RawExportToDAMOConverter):
             self.logger.warning("No peilgebiedpraktijk layer available for boundary extraction")
 
         # Add dedicated line layers
-        available_line_layers = self._load_source_layers(WATERKERING_LINE_LAYERS)
+        available_line_layers = self._load_source_layers(WATERKERING_ADDITIONAL_LINE_SOURCE_LAYERS)
         if available_line_layers:
             self.logger.info(f"Loading {len(available_line_layers)} dedicated line layers")
             for layer_name, gdf in available_line_layers.items():
@@ -239,6 +253,59 @@ class PeilgebiedConverter(RawExportToDAMOConverter):
         if EXPORT_PERPENDICULAR_SAMPLES and self.perpendicular_samples:
             self._export_perpendicular_samples()
 
+    def _create_streefpeil_layer(self) -> None:
+        self.logger.info("Creating streefpeil layer...")
+
+        if self.data.peilgebiedpraktijk is None or self.data.peilgebiedpraktijk.empty:
+            self.logger.warning("No peilgebiedpraktijk layer available to create streefpeil")
+            return
+
+        df = self.data.peilgebiedpraktijk.merge(
+            self.data.combinatiepeilgebied[["globalid", "streefpeil_zomer", "streefpeil_winter"]],
+            left_on="GlobalID",
+            right_on="globalid",
+            how="left",
+        )
+
+        zomer = pd.DataFrame(
+            {
+                "GlobalID": [str(uuid.uuid4()) for _ in range(len(df))],
+                "soortStreefpeil": "zomerpeil",
+                "peilgebiedpraktijkID": df["GlobalID"],
+                "beginPeriode": "0104",
+                "eindPeriode": "3109",
+                "waterhoogte": df["streefpeil_zomer"],
+                "eenheid": "mNAP",
+            }
+        )
+
+        winter = pd.DataFrame(
+            {
+                "GlobalID": [str(uuid.uuid4()) for _ in range(len(df))],
+                "soortStreefpeil": "winterpeil",
+                "peilgebiedpraktijkID": df["GlobalID"],
+                "beginPeriode": "1001",
+                "eindPeriode": "3103",
+                "waterhoogte": df["streefpeil_winter"],
+                "eenheid": "mNAP",
+            }
+        )
+
+        streefpeil_df = pd.concat([zomer, winter], ignore_index=True)
+
+        for col in STREEFPEIL_COLUMNS:
+            if col not in streefpeil_df.columns:
+                streefpeil_df[col] = None
+
+        damo_gdf = gpd.GeoDataFrame(
+            streefpeil_df,
+            geometry=[None] * len(streefpeil_df),
+            crs="EPSG:28992",
+        )
+
+        self.data.streefpeil = damo_gdf
+        self.logger.info(f"Created streefpeil layer with {len(damo_gdf)} features (no geometry)")
+
     @staticmethod
     def _snap_coords(geom: Optional[BaseGeometry], tolerance: float = SNAP_TOLERANCE) -> Optional[BaseGeometry]:
         """Snap geometry coordinates to grid for consistent topology."""
@@ -286,8 +353,6 @@ class PeilgebiedConverter(RawExportToDAMOConverter):
         Returns:
             GeoDataFrame with merged linestrings
         """
-        from shapely.ops import linemerge
-
         if gdf.empty:
             return gdf
 
@@ -408,8 +473,13 @@ class PeilgebiedConverter(RawExportToDAMOConverter):
         """
         result = gpd.GeoDataFrame()
 
-        # OBJECTID - will be auto-generated by the database (EsriFieldTypeOID)
-        # Not included in result
+        # GlobalID - GUID for peilgebiedpraktijk
+        if "GlobalID" in gdf.columns:
+            result["GlobalID"] = gdf["GlobalID"]
+        elif "globalid" in gdf.columns:
+            result["GlobalID"] = gdf["globalid"]
+        else:
+            result["GlobalID"] = [str(uuid.uuid4()) for _ in range(len(gdf))]
 
         # statusPeilgebied - PeilgebiedStatus
         result["statusPeilgebied"] = self._get_column_value(
@@ -443,17 +513,28 @@ class PeilgebiedConverter(RawExportToDAMOConverter):
         # Not included in result
 
         # categorie - CategorieWaterkering
-        result["categorie"] = self._get_column_value(gdf, ["categorie"], "categorie")
+        categorie = self._get_column_value(gdf, ["categorie"], "categorie")
+        if categorie is None or categorie.isna().all():
+            result["categorie"] = ["Niet nader gespecificeerde regionale waterkering"] * len(gdf)
+        else:
+            # Fill missing values with default
+            result["categorie"] = categorie.fillna("Niet nader gespecificeerde regionale waterkering")
 
         # typeWaterkering - TypeWaterkering
-        result["typeWaterkering"] = self._get_column_value(
-            gdf, ["typeWaterkering", "type_waterkering"], "typeWaterkering"
-        )
+        type_waterkering = self._get_column_value(gdf, ["typeWaterkering", "type_waterkering"], "typeWaterkering")
+        if type_waterkering is None or type_waterkering.isna().all():
+            result["typeWaterkering"] = ["Hoge grond"] * len(gdf)
+        else:
+            result["typeWaterkering"] = type_waterkering.fillna("Hoge grond")
 
         # soortReferentielijn - TypeReferentielijn
-        result["soortReferentielijn"] = self._get_column_value(
+        soort_referentielijn = self._get_column_value(
             gdf, ["soortReferentielijn", "soort_referentielijn"], "soortReferentielijn"
         )
+        if soort_referentielijn is None or soort_referentielijn.isna().all():
+            result["soortReferentielijn"] = ["Geen eenduidige referentielijn"] * len(gdf)
+        else:
+            result["soortReferentielijn"] = soort_referentielijn.fillna("Geen eenduidige referentielijn")
 
         # waterstaatswerkWaterkeringID - GUID
         waterkering_id = self._get_column_value(
@@ -873,8 +954,6 @@ class PeilgebiedConverter(RawExportToDAMOConverter):
 
         except Exception as e:
             self.logger.error(f"Error in perpendicular sampling: {e}")
-            import traceback
-
             self.logger.debug(traceback.format_exc())
             return None
 
