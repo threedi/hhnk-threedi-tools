@@ -1,28 +1,32 @@
-SQLITE_LAYERS = [
-    "v2_connection_nodes",
-    "v2_cross_section_definition",
-    "v2_obstacle",
-    "v2_channel",
-    "v2_culvert",
-    "v2_cross_section_location",
-    "v2_orifice",
-    "v2_pumpstation",
-    "v2_weir",
+from typing import List
+
+# SQLite layers expected in 3Di schema
+SQLITE_LAYERS: List[str] = [
+    "connection_node",
+    "obstacle",
+    "channel",
+    "culvert",
+    "cross_section_location",
+    "orifice",
+    "pump",
+    "weir",
 ]
 
-SQLITE_LAYER_CROSS_SECTION_DEFINITION = "v2_cross_section_definition"
+# Name of the table containing cross-section definitions
+SQLITE_LAYER_CROSS_SECTION_DEFINITION: str = "v2_cross_section_definition"
 
-DAMO_LAYERS = [
+# DAMO layer names (source dataset)
+DAMO_LAYERS: List[str] = [
     "AfvoergebiedAanvoergebied",
-    "AquaductLijn",  # Niet in beide datasets
-    "Bergingsgebied",  # Niet in beide datasets
+    # "AquaductLijn",  # Niet in beide datasets
+    # "Bergingsgebied",  # Niet in beide datasets
     "Brug",
-    "Doorstroomopening",
+    # "Doorstroomopening", not a gdf
     "DuikerSifonHevel",
     "Gemaal",
-    "GW_PBP",
-    "GW_PRO",
-    "GW_PRW",
+    # "GW_PBP", no gdf
+    # "GW_PRO",
+    # "GW_PRW", no gdf
     "HydroObject",
     #'IWS_GEO_BESCHR_PROFIELPUNTEN',
     "PeilafwijkingGebied",
@@ -33,43 +37,53 @@ DAMO_LAYERS = [
     "VasteDam",
     "Vispassage",
     "Waterdeel",
+    # "Waterdeel", it does not contains code should be done in a different way
 ]
 
-HDB_LAYERS = [
+# HDB layer names (HDB exports)
+HDB_LAYERS: List[str] = [
     "gemalen_op_peilgrens",
     "stuwen_op_peilgrens",
     "hydro_deelgebieden",
     "Levee_overstromingsmodel",
     "polderclusters",
-    "randvoorwaarden",  # geen geom
+    # "randvoorwaarden",  # geen geom
     "Sturing_3Di",
+    "duikers_op_peilgrens",
 ]
 
-THREEDI_STRUCTURE_LAYERS = [
-    "v2_culvert",
-    "v2_pumpstation",
-    "v2_weir",
-    "v2_orifice",
+THREEDI_STRUCTURE_LAYERS: List[str] = [
+    "culvert",
+    "pump",
+    "weir",
+    "orifice",
+    "channel",
 ]
 
-DAMO_HDB_STRUCTURE_LAYERS = [
+DAMO_HDB_STRUCTURE_LAYERS: List[str] = [
     "gemalen_op_peilgrens",
     "stuwen_op_peilgrens",
     "brug",
     "gemaal",
-    "duikersifonhevel",
     "stuw",
+    "vastedam",
+    "duikersifonhevel",
+    "hydroobject",
 ]
 
-STRUCTURE_CODES = [
+STRUCTURE_CODES: List[str] = [
     "KDU",
     "KST",
     "KGM",
-    "KSY",
+    "KVD",
+    "OAF",
     "KBR",
+    # "KSY",
     # @TODO: introduce 'other' category, so we don't miss any that don't have a nice code
 ]
 
-GEOMETRICAL_COMPARISON_LAYERS = ["PeilafwijkingGebied", "PeilgebiedPraktijk", "Waterdeel"]
+# Layers that require geometrical (polygon) comparison logic
+GEOMETRICAL_COMPARISON_LAYERS: List[str] = ["PeilafwijkingGebied", "PeilgebiedPraktijk", "Waterdeel"]
 
-COMPARISON_GENERAL_THRESHOLD = 0.00001
+# Default numeric threshold for numeric comparisons
+COMPARISON_GENERAL_THRESHOLD: float = 0.00001

@@ -1,12 +1,19 @@
+# %%
+
 import json
 import math
 import sqlite3
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import geopandas as gpd
 import pandas as pd
 from shapely.geometry import LineString, Polygon
 
+from hhnk_threedi_tools.core.vergelijkingstool import utils
 from hhnk_threedi_tools.core.vergelijkingstool.config import *
+from hhnk_threedi_tools.core.vergelijkingstool.utils import ModelInfo
+
+# %%
 
 
 class DataSet:
@@ -14,23 +21,24 @@ class DataSet:
     Parent class of DAMO and Threedimodel
     """
 
-    def __init__(self):
-        """
-        Initialisation of a dataset.
-        """
-        # Set priority columns
+    def __init__(self, model_info: ModelInfo) -> None:
+        """Initizialize of a dataset."""
+
+        self.model_name = model_info.model_name
         self.data = None
+        # Set priority columns
         self.priority_columns = {}
 
-    def add_layer_styling(self, fn_export_gpkg, layer_styles):
+    def add_layer_styling(self, fn_export_gpkg: Union[str, "Path"], layer_styles: pd.DataFrame) -> None:
         """
-        Adds and fills a helper table 'layer_styles' to the GeoPackage containing the style per layer.
+        Add and fills a helper table 'layer_styles' to the GeoPackage containing the style per layer.
         When the GeoPackage is loaded into QGIS, the layers are auto-loaded
 
         :param fn_export_gpkg: Filename of the GeoPackage to write to
         :param layer_styles: Dataframe containing the QML styles for the different layers
         :return: None
         """
+        # write layer_styles table into the gpkg sqlite db
         con = sqlite3.connect(fn_export_gpkg)
         cur = con.cursor()
 
@@ -66,9 +74,9 @@ class DataSet:
         cur.close()
         con.close()
 
-    def get_significant_geometry(self, dataset, geometry_A, geometry_B):
+    def get_significant_geometry(self, dataset: str, geometry_A: Any, geometry_B: Any) -> Any:
         """
-        Returns the significant geometry based on the origin of the geometry in the datasets.
+        Return the significant geometry based on the origin of the geometry in the datasets.
         If an asset occurs in dataset A (self) or in A AND B, geometry A is returned.
         If an asset occurs ONLY in dataset B, geometry B is returned.
 
@@ -77,20 +85,22 @@ class DataSet:
         :param geometry_B: Shapely geometry
         :return: Shapely geometry
         """
-        if dataset == "A" or dataset == "AB":
+        # prefer geometry from model/new dataset when present, else use other geometry
+        if dataset == f"{self.model_name} new" or dataset == f"{self.model_name} both":
             return geometry_A
         else:
             return geometry_B
 
-    def create_structure_geometry(self, point_start, point_end):
+    def create_structure_geometry(self, point_start: Any, point_end: Any) -> Any:
         """
-        Creates a LineString from structures that are only defined by a start and end point.
+        Create a LineString from structures that are only defined by a start and end point.
         If only a start point is supplied, the start point is returned
 
         :param point_start: Shapely geometry of the start point
         :param point_end: Shapely geometry of the end point
         :return: Shapely Point or Linestring
         """
+        # return start point when end not provided, else LineString
         if point_end is None:
             output_geometry = point_start
         else:
@@ -98,9 +108,9 @@ class DataSet:
 
         return output_geometry
 
-    def add_geometry_info(self, gdf):
+    def add_geometry_info(self, gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
         """
-        Adds columns regarding the geometry type, length and area as attributes to a GeoDatarame
+        Add columns regarding the geometry type, length and area as attributes to a GeoDatarame
 
         :param gdf: GeoDataframe to be analyzed
         :return: GeoDataframe with added columns
@@ -111,15 +121,16 @@ class DataSet:
             gdf["geom_area"] = gdf.geometry.area
         return gdf
 
-    def drop_unused_geoseries(self, gdf, keep="geometry"):
+    def drop_unused_geoseries(self, gdf: pd.DataFrame, keep: str = "geometry") -> pd.DataFrame:
         """
-        Removes all GeoSeries from a GeoDataframe except the column indicated with the 'keep' parameter.
+        Remove all GeoSeries from a GeoDataframe except the column indicated with the 'keep' parameter.
         Used because for the export to GeoPackage, a GeoDataframe is only allowed to have 1 geometry column
 
         :param gdf: GeoDataframe to be stripped of unused GeoSeries
         :param keep: Name of the geometry column to keep
         :return: GeoDataframe stripped of unused GeoSeries
         """
+        # collect geo-series columns to drop
         drop_columns = []
         for column in gdf.columns:
             if isinstance(gdf[column], gpd.geoseries.GeoSeries) and column != keep:
@@ -127,7 +138,9 @@ class DataSet:
         gdf = gdf.drop(columns=drop_columns)
         return gdf
 
-    def compare_function(self, table, function):
+    def compare_function(
+        self, table: pd.DataFrame, function: Dict[str, Any]
+    ) -> Tuple[Optional[pd.Series], Optional[pd.Series]]:
         """
         Apply a function with arguments on a table.
         Function contains
@@ -138,9 +151,9 @@ class DataSet:
         """
         function_name = list(function.keys())[0]
 
-        def resolve_parameter(table, parameter):
+        def resolve_parameter(table_local: pd.DataFrame, parameter: Any) -> Optional[Any]:
             """
-            Resolves the parameters of a function. If the parameter is a string, the column in the table with that header is returned.
+            Resolve the parameters of a function. If the parameter is a string, the column in the table with that header is returned.
             If the parameter is a dict, a recursive function is applied.
             If the parameter is a number, the value is used
 
@@ -181,10 +194,10 @@ class DataSet:
             else:
                 change_na = None
 
-            # try:
-            #    change_na = (left.isna() & right.notna()) | (left.notna() & right.isna())
-            # except:
-            #    change_na = None
+            try:
+                change_na = (left.isna() & right.notna()) | (left.notna() & right.isna())
+            except:
+                change_na = None
 
             ### DIFFERENCE ###
             if function_name == "difference":
@@ -200,8 +213,8 @@ class DataSet:
                 result = pd.concat([left, right], axis=1).max(axis=1, skipna=skipna)
             elif function_name == "multiply":
                 result = left * right
-
             else:
+                # unknown function -> log and return None
                 self.logger.error(f"Comparison function {function_name} not recognized")
                 result = None
 
@@ -217,16 +230,16 @@ class DataSet:
             )
             return None, None
 
-    def compare_category(self, row, priority):
+    def compare_category(self, row: pd.Series, priority: str) -> Tuple[Optional[str], Optional[str]]:
         """
-        Compares two values in a row on category. Returns a value only if the asset occurs in A and B (or DAMO and Model)
+        Compare two values in a row on category. Returns a value only if the asset occurs in A and B (or DAMO and Model)
         Returns not changed if there is no change in the category
 
         :param row: row containing the left and right column to be compared and the 'in_both' column.
         :return: String containing the change in category, if any.
         """
 
-        if row.in_both == "AB" or row.in_both == "both":
+        if "both" in row.in_both:
             left = row[0]
             right = row[1]
 
@@ -252,7 +265,9 @@ class DataSet:
                     return ("not changed", None)
         return (None, None)
 
-    def compare_attribute(self, df, comparison):
+    def compare_attribute(
+        self, df: Dict[str, gpd.GeoDataFrame], comparison: Dict[str, Any]
+    ) -> Dict[str, gpd.GeoDataFrame]:
         """
         For a comparison, determine the type and resolve the function. Creates a new column with the result of the comparison
 
@@ -260,7 +275,6 @@ class DataSet:
         :param comparison: Dictionary with the comparison rules
         :return:
         """
-
         self.logger.debug(f"Applying comparison with the following data: {comparison}")
 
         name = comparison["name"]
@@ -268,6 +282,9 @@ class DataSet:
         comparison_type = comparison["type"]
         table_name = comparison["table"]
         table = df[table_name]
+
+        # Compare only with the selection that has been made, table_names comes from names of the of the table dictionary
+        # used in the function apply_attribute_comparison
 
         # Try reading the priority, if not set, use "critical"
         try:
@@ -278,7 +295,7 @@ class DataSet:
 
         if comparison_type == "numeric":
             function = comparison["function"]
-            self.logger.debug(f"Comparison type: numeric")
+            self.logger.debug("Comparison type: numeric")
 
             # Try to read the numerical threshold, if not set, use default value
             try:
@@ -301,7 +318,7 @@ class DataSet:
                 except TypeError:
                     self.logger.debug(f"Unable to apply threshold on comparison {name}")
 
-                # store in dataframe
+                # store in dataframe when result is a series
                 if isinstance(compare_result, pd.Series):
                     df[table_name][name] = compare_result
                     df[table_name][column_name_nan_change] = compare_nan_change
@@ -315,14 +332,14 @@ class DataSet:
 
                     self.priority_columns[table_name].append(column_name_priority)
                 else:
+                    # warn when no result returned
                     self.logger.warning(f"Comparison {name} had None as result")
 
             except TypeError:
                 self.logger.error(f"Unable to apply comparation {name}, skipping")
-                # raise
 
         elif comparison_type == "category":
-            self.logger.debug(f"Comparison type: category")
+            self.logger.debug("Comparison type: category")
             left = comparison["left"]
             right = comparison["right"]
 
@@ -332,6 +349,7 @@ class DataSet:
 
             self.priority_columns[table_name].append(column_name_priority)
 
+            # apply compare_category across rows and expand tuple into two columns
             df[table_name][[name, column_name_priority]] = df[table_name][[left, right, "in_both"]].apply(
                 lambda row: self.compare_category(row, priority), axis=1, result_type="expand"
             )
@@ -339,7 +357,7 @@ class DataSet:
             self.logger.debug(f"Comparison type {comparison_type} not implemented")
         return df
 
-    def summarize_attribute_comparison(self, table):
+    def summarize_attribute_comparison(self, table: Dict[str, gpd.GeoDataFrame]) -> Dict[str, gpd.GeoDataFrame]:
         """
         Analyzes the priority columns in the compared table and summarizes per row how many critical, warning, and
         info's ar counted
@@ -347,7 +365,7 @@ class DataSet:
         :return: Dictionary containing all the comparison tables including the summary columns
         """
 
-        # create lambda function
+        # helper to count occurrences in a row
         count_occurrences = lambda row, string: row.tolist().count(string)
         for layer in self.priority_columns.keys():
             # If there is a priority_column
@@ -364,21 +382,30 @@ class DataSet:
                 )
         return table
 
-    def apply_attribute_comparison(self, attribute_comparison, table):
+    def apply_attribute_comparison(
+        self, attribute_comparison: Union[str, "Path"], table: Dict[str, gpd.GeoDataFrame]
+    ) -> Dict[str, gpd.GeoDataFrame]:
         """
-        Loads a attribute comparison json file and applies the comparison rules in the json on the supplied table
+        Load a attribute comparison json file and applies the comparison rules in the json on the supplied table
 
         :param attribute_comparison: Path to file containing comparison rules
         :param table: Table to apply the comparison rules on
         :return:
         """
+        self.logger.debug("Start applying attribute comparison")
 
-        self.logger.debug(f"Start applying attribute comparison")
         try:
             with open(attribute_comparison) as file:
                 att_comp = json.load(file)
                 for comparison in att_comp["comparisons"]:
-                    table = self.compare_attribute(table, comparison)
+                    description = comparison["description"]
+                    table_name = comparison["table"]
+                    self.logger.debug(f"Start applying attribute comparison, table name {table_name}")
+                    if table_name in table.keys():
+                        table = self.compare_attribute(table, comparison)
+                    else:
+                        # table not present in this dataset, skip it
+                        print(f"The table {table_name} is not included in the comparision process")
 
         except json.decoder.JSONDecodeError as err:
             self.logger.error(
@@ -390,9 +417,9 @@ class DataSet:
             )
         return table
 
-    def get_structure_by_code(self, code_start: str, layers):
+    def get_structure_by_code(self, code_start: str, layers: List[str]) -> gpd.GeoDataFrame:
         """
-        Searches in all layers for entries based on code.
+        Search in all layers for entries based on code.
         If a rows 'code' column starts with code_start, it is appended to the return table,
         keeping all columns from different sources.
         Example, when searching for 'KDU' it returns all assets (in this case 'Duikers'),
@@ -401,9 +428,10 @@ class DataSet:
         :param code_start: Start of code to search for
         :return: DataFrame containing all found entries
         """
-        tabel = pd.DataFrame()
+        tabel = gpd.GeoDataFrame()
         for layer in layers:
             codes = []
+            # collect codes that start with requested prefix
             for i in self.data[layer].code.values:
                 if i is not None:
                     i = str(i)
@@ -412,8 +440,16 @@ class DataSet:
             if codes:
                 layer_data = self.data[layer][self.data[layer]["code"].isin(codes)].copy()
                 layer_data["origin"] = layer
-                tabel = pd.concat((tabel, layer_data))
 
+                # ensure geometry column is set
+                if "geometry" in layer_data.columns:
+                    layer_data = layer_data.set_geometry("geometry")
+
+                if layer_data.crs is None:
+                    # assume Amersfoort if missing
+                    layer_data.set_crs("EPSG:28992", inplace=True)
+                tabel = pd.concat((tabel, layer_data))
+                tabel = tabel.set_geometry("geometry")
         return tabel
 
     def export_statistics(self, statistics, filename):
@@ -429,3 +465,21 @@ class DataSet:
         # For export to GeoPackage a geometry column is needed, fill it with None to create attribute only layer
         statistics["geometry"] = None
         gpd.GeoDataFrame(statistics, geometry="geometry").to_file(filename, layer="statistics", driver="GPKG")
+
+    def export_summary_layers(self, table_C: Dict[str, gpd.GeoDataFrame], filename: Union[str, "Path"]) -> None:
+        """
+        Build and export per-layer summary tables to the same GeoPackage.
+
+        Each summary layer is written as: <layer_name>_summary
+        """
+        summary_layers = utils.build_summary_layers(table_C)
+
+        if not summary_layers:
+            self.logger.info("No summary layers to export (no _priority columns found).")
+            return
+
+        # write each summary layer as <layer>_summary
+        for layer_name, summary_gdf in summary_layers.items():
+            layer_out_name = f"{layer_name}_summary"
+            self.logger.debug(f"Exporting summary table {layer_out_name} to {filename}")
+            summary_gdf.to_file(filename, layer=layer_out_name, driver="GPKG")
