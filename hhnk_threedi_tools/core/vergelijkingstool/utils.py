@@ -50,14 +50,14 @@ def get_model_info(path: Union[str, Path]) -> ModelInfo:
     model_name = folder.name
     fn_threedimodel = folder.model.schema_base.content[0]
 
-    input_data_old = source_data / "vergelijkingsTool" / "input_data_old"
+    input_data_old = source_data / "vergelijkingstool" / "input_data_old"
     fn_damo_old = input_data_old / "DAMO.gpkg"
     json_folder = Path(__file__).parent / "json_files"
     fn_hdb_old = input_data_old / "HDB.gpkg"
     fn_damo_new = source_data / "DAMO.gpkg"
     fn_hdb_new = source_data / "HDB.gpkg"
     damo_selection = source_data / "polder_polygon.gpkg"
-    output_folder = source_data / "vergelijkingsTool" / "output"
+    output_folder = source_data / "vergelijkingstool" / "output"
 
     return ModelInfo(
         model_name=model_name,
