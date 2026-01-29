@@ -104,7 +104,8 @@ def download_breach_scenario(base_folder, model_name, metadata_path, new_metadat
     max_breach_width_list = []
 
     # look up tabel
-    metadata_gdf = gpd.read_file(new_metadata_path, driver="GPKG")
+    if new_metadata_path is not None:
+        metadata_gdf = gpd.read_file(new_metadata_path, driver="GPKG")
 
     for x_name in name:
         print(x_name)
@@ -446,24 +447,20 @@ def download_breach_scenario(base_folder, model_name, metadata_path, new_metadat
             metadata_gdf.loc[metadata_gdf["SC_NAAM"] == scenario_name, "SC_DATE"] = simuatlion_started
 
             # Save metadata in the last vesion file.
-            path_gdf = r"E:\03.resultaten\IPO_Overstromingsberekeningen_compartimentering\metadata"
+            path_gdf = r"y:\03.resultaten\IPO_Overstromingsberekeningen_compartimentering\metadata"
             metadata_path = os.path.join(path_gdf, "metadata_shapefile.gpkg")
             metadata_gdf.to_file(metadata_path, driver="GPKG")
 
 
 # %%
 if __name__ == "__main__":
-    base_folder = r"E:\03.resultaten\IPO_Overstromingsberekeningen_compartimentering"
+    base_folder = r"y:\03.resultaten\IPO_Overstromingsberekeningen_compartimentering"
     model_name = "output"
-    metadata_path = r"E:\03.resultaten\IPO_Overstromingsberekeningen_compartimentering\metadata\metadata.gpkg"
-    new_metadata_path = r"E:\03.resultaten\IPO_Overstromingsberekeningen_compartimentering\metadata\metadata.gpkg"
+    metadata_path = r"y:\03.resultaten\IPO_Overstromingsberekeningen_compartimentering\metadata\metadata.gpkg"
+    new_metadata_path = r"y:\03.resultaten\IPO_Overstromingsberekeningen_compartimentering\metadata\metadata.gpkg"
     filter_names = [
-        "IPO_SBLN_CMPTR_24_JA",
-        "IPO_SBLN_CMPTR_5_JA",
-        "IPO_VRNK_W_CMPTR_5_JA",
-        "IPO_SBLZ_CMPTR_25_JA",
-        "IPO_SBLZ_CMPTR_40_JA",
+        "ROR-PRI-test_T100000",
     ]
 
-    download_breach_scenario(base_folder, model_name, metadata_path, new_metadata_path, filter_names)
+    download_breach_scenario(base_folder, model_name, metadata_path, None, filter_names)
 # %%
