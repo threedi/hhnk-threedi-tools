@@ -287,23 +287,23 @@ def start_simulation_breaches(model_folder, organisation_name, scenarios, filter
 if __name__ == "__main__":
     # Use organisation_name 'BWN HHNK' for standard simulation. Use the other one for very specific cases
 
-    organisation_name = "BWN HHNK"
-    # organisation_name = 'Hoogheemraadschap Hollands Noorderkwartier'
+    # organisation_name = "BWN HHNK"
+    organisation_name = 'Hoogheemraadschap Hollands Noorderkwartier'
 
     # Set the model name as it is either in 3di or in the local folder.
-    base_folder = r"E:\02.modellen"
+    base_folder = r"Y:\02.modellen"
     model_name = "ROR PRI - dijktrajecten 12-1, 12-2, 13-6 en 13-7 - Deel 1105"
     model_folder = ModelFolder(rf"{base_folder}\{model_name}")
     model_folder.schema.base
-    # Select the return periods you want to start with. If you want to use all of them keep it.
-    scenarios = [100]
+    # Select the return periods you want to start with. If you want to use all of them keep it empty.
+    scenarios = [100000]
 
     # id_filter corresponds to the column 'id' of the potential breach table of the model we are working with.
     # In case of willing to run all the potential breach, leave the list empty  --> filter_id = []
     filter_id = [100042]
     # location of the metadata file. Important to have at least 2 version: One for uploading and run model and the other one for downloading.
     metadata_path = Path(
-        r"E:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\output\test_waterbalance\metadata_shapefile.gpkg"
+        r"Y:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\output\test_waterbalance\metadata_shapefile.gpkg"
     )
 
     # Time (in seconds) to wait until the script tries again to upload a model. We use it to not overload the API.
