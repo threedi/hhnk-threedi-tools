@@ -103,12 +103,12 @@ def create_input_leggertool(
 if __name__ == "__main__":
     notebook_data = setup_notebook()
 
-    folder_dir = Path(notebook_data["polder_folder"])  # Bestand voor de legger wordt klaargezet in de folder dir
-    # folder_dir = Path(r"E:\02.modellen\VNK_leggertool") # Of een specifieke map
+    # folder_dir = Path(notebook_data["polder_folder"])  # Bestand voor de legger wordt klaargezet in de folder dir
+    folder_dir = Path(r"Y:\02.modellen\Wijdewormer_leggertool")  # Of een specifieke map
 
     # Input
     berekening_naam = (
-        "vnk_leggertool #11 0d1d_test leggertool"  # Deze moet in map 03_3di_resultaten\0d1d_results staan
+        "Wijdewormer_leggertool_#7_0d1d_test_leggertool"  # Deze moet in map 03_3di_resultaten\0d1d_results staan
     )
     folder = Folders(folder_dir)
     output_file = folder.joinpath(f"debiet_{berekening_naam}_{hrt.get_uuid()}.gpkg")
@@ -118,3 +118,5 @@ if __name__ == "__main__":
         berekening_naam=berekening_naam,
         output_file=output_file,
     )
+
+# %%
