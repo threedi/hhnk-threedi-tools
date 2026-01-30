@@ -69,10 +69,6 @@ def _validate_waterkering_layer(output_file: Path, logger):
         logger.warning("Waterkering layer not created")
         return
 
-    if waterkering.empty:
-        logger.warning("Waterkering layer is empty")
-        return
-
     # Test: Layer has data and geometry
     assert not waterkering.empty, "Waterkering layer is empty"
     assert "geometry" in waterkering.columns, "Waterkering missing geometry column"
@@ -80,9 +76,7 @@ def _validate_waterkering_layer(output_file: Path, logger):
 
     # Test: Geometry is linestring
     geom_types = waterkering.geometry.type.unique()
-    assert all(gt in ["LineString", "MultiLineString"] for gt in geom_types), (
-        f"Expected linestring geometries, found: {geom_types}"
-    )
+    assert all(gt == "LineString" for gt in geom_types), f"Expected linestring geometries, found: {geom_types}"
 
     # Test: Required DAMO attributes exist
     required_columns = ["categorie", "typeWaterkering", "soortReferentielijn", "waterstaatswerkWaterkeringID"]
@@ -180,11 +174,7 @@ def _validate_no_duplicates(output_file: Path, logger):
 
 
 def _validate_no_overlapping_segments(output_file: Path, logger):
-    """Validate that line segments in waterkering layer are not overlapping.
-
-    After linemerge, segments should be distinct and not overlap with each other
-    (beyond touching at endpoints).
-    """
+    """Validate that line segments in waterkering layer are not overlapping."""
     try:
         waterkering = gpd.read_file(output_file, layer="waterkering")
     except Exception:
@@ -200,6 +190,7 @@ def _validate_no_overlapping_segments(output_file: Path, logger):
         return
 
     buffer_distance = 0.5
+    max_acceptable_overlap_pct = 0.1
     overlapping_pairs = []
 
     logger.info(f"Checking {len(waterkering)} segments for overlaps (buffer: {buffer_distance}m)...")
@@ -223,22 +214,14 @@ def _validate_no_overlapping_segments(output_file: Path, logger):
 
             if not intersection.is_empty:
                 intersection_length = intersection.length
-                line_j_length = geom_j.length
 
-                overlap_percentage = (intersection_length / line_j_length) * 100
-
-                if overlap_percentage > 20:
-                    source_i = row_i.get("source_layer", "unknown")
-                    source_j = row_j.get("source_layer", "unknown")
+                if intersection_length > buffer_distance + 0.5:  # Allow small tolerance
                     overlapping_pairs.append(
-                        f"Segment {i} (source: {source_i}, length: {geom_i.length:.2f}m) "
-                        f"overlaps {overlap_percentage:.1f}% with segment {j} "
-                        f"(source: {source_j}, length: {geom_j.length:.2f}m)"
+                        f"Segment {i + 1} overlaps {intersection_length - buffer_distance:.2f}m with segment {j + 1} "
                     )
 
     total_possible_pairs = (len(waterkering) * (len(waterkering) - 1)) // 2
     overlap_percentage = (len(overlapping_pairs) / total_possible_pairs * 100) if total_possible_pairs > 0 else 0
-    max_acceptable_overlap_pct = 20.0
 
     if overlapping_pairs:
         if overlap_percentage > max_acceptable_overlap_pct:
@@ -303,14 +286,14 @@ def test_peilgebied_converter():
     logger.info(f"DEBUG: Converter has DEM: {converter.data.dem_dataset is not None}")
 
     # Limit test to 3 polygons for speed (indices 5, 12, 23)
-    source_layer_name = PEILGEBIED_SOURCE_LAYER.lower()
-    if hasattr(converter.data, source_layer_name):
-        source_gdf = getattr(converter.data, source_layer_name)
-        if source_gdf is not None and len(source_gdf) > 3:
-            selected_indices = [5, 12, 23]
-            filtered_gdf = source_gdf.iloc[selected_indices].copy()
-            setattr(converter.data, source_layer_name, filtered_gdf)
-            logger.info(f"Limited test to 3 polygons (indices {selected_indices}) for speed")
+    # source_layer_name = PEILGEBIED_SOURCE_LAYER.lower()
+    # if hasattr(converter.data, source_layer_name):
+    #     source_gdf = getattr(converter.data, source_layer_name)
+    #     if source_gdf is not None and len(source_gdf) > 3:
+    #         selected_indices = [5, 12, 23]
+    #         filtered_gdf = source_gdf.iloc[selected_indices].copy()
+    #         setattr(converter.data, source_layer_name, filtered_gdf)
+    #         logger.info(f"Limited test to 3 polygons (indices {selected_indices}) for speed")
 
     converter.run()
     converter_base.write_outputs()
@@ -333,57 +316,5 @@ def test_peilgebied_converter():
     logger.info("\n✓ All validations passed!")
 
 
-def test_duplicate_removal_with_synthetic_data():
-    """Test duplicate removal logic using synthetic overlapping polygons."""
-    # Setup
-    logger = hrt.logging.get_logger(__name__)
-    raw_export_file = TEST_DIRECTORY / "schematisation_builder" / "raw_export.gpkg"
-    output_dir = TEMP_DIR / f"temp_duplicate_removal_{hrt.current_time(date=True)}"
-    output_dir.mkdir(parents=True, exist_ok=True)
-    output_file = output_dir / "damo.gpkg"
-
-    # Run converter
-    converter_base = RawExportToDAMOConverter(raw_export_file, output_file, logger)
-
-    # Create test data with overlapping polygons (shared boundaries)
-    test_polygons = gpd.GeoDataFrame(
-        {
-            "code": ["A", "B"],
-            "geometry": [
-                Polygon([(0, 0), (10, 0), (10, 10), (0, 10)]),  # Left polygon
-                Polygon([(10, 0), (20, 0), (20, 10), (10, 10)]),  # Right polygon (shares boundary)
-            ],
-            "globalid": [str(uuid.uuid4()) for _ in range(2)],
-            "streefpeil_zomer": [1.0, 1.0],
-            "streefpeil_winter": [0.5, 0.5],
-        },
-        crs="EPSG:28992",
-    )
-
-    # Inject test data into combinatiepeilgebied layer
-    setattr(converter_base.data, PEILGEBIED_SOURCE_LAYER.lower(), test_polygons)
-
-    converter = PeilgebiedConverter(converter_base)
-    converter.run()
-
-    # Get waterkering result
-    waterkering = getattr(converter_base.data, "waterkering", None)
-
-    if waterkering is None or waterkering.empty:
-        logger.warning("Waterkering layer not created (test data may not have been processed)")
-        return
-
-    # The two adjacent polygons should create lines, but the shared boundary should be deduplicated
-    logger.info(f"Created {len(waterkering)} unique linestrings after deduplication")
-
-    # Test: No exact duplicate geometries exist (filter None first)
-    waterkering_valid = waterkering[waterkering.geometry.notna()].copy()
-    wkt_set = set(waterkering_valid.geometry.apply(lambda g: g.wkt))
-    assert len(wkt_set) == len(waterkering_valid), "Duplicate geometries found after deduplication"
-
-    logger.info("✓ Duplicate removal validated with synthetic data")
-
-
 if __name__ == "__main__":
     test_peilgebied_converter()
-    test_duplicate_removal_with_synthetic_data()

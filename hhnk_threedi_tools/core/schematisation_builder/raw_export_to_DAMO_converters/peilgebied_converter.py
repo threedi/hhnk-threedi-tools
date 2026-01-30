@@ -65,7 +65,6 @@ DEFAULT_BUFFER_WIDTH = 10.0
 DEFAULT_PERPENDICULAR_SAMPLE_DISTANCE = 5.0
 CREST_HEIGHT_PERCENTILE = 10.0  # Percentile of max heights of perpendicular samples to use as crest height
 EXPORT_PERPENDICULAR_SAMPLES = False
-SNAP_TOLERANCE = 0.01
 
 
 class PeilgebiedConverter(RawExportToDAMOConverter):
@@ -95,32 +94,57 @@ class PeilgebiedConverter(RawExportToDAMOConverter):
 
         self.logger.info(f"Loaded '{PEILGEBIED_SOURCE_LAYER}' with {len(gdf)} features")
 
+        # Explode MultiPolygons to Polygons
+        polygon_count = len(gdf)
+        gdf = gdf.explode(index_parts=False).reset_index(drop=True)
+
+        # Remove features with null or empty geometry or non-Polygon geometries or area smaller than 0.5 m2
+        initial_count = len(gdf)
+        mask_valid_geom = (
+            gdf.geometry.notna()
+            & ~gdf.geometry.is_empty
+            & (gdf.geometry.geom_type == "Polygon")
+            & (gdf.geometry.area >= 0.5)
+        )
+        valid_geom_count = int(mask_valid_geom.sum()) if len(gdf) > 0 else 0
+        if valid_geom_count < initial_count:
+            removed_invalid = initial_count - valid_geom_count
+            self.logger.info(
+                f"Removed {removed_invalid} features with null, empty, non-Polygon geometry, or area < 0.5 m2"
+            )
+            gdf = gdf[mask_valid_geom].reset_index(drop=True)
+
+        self.logger.info(f"Exploded MultiPolygons to {len(gdf)} polygons (was {polygon_count})")
+
         damo_gdf = self._map_to_damo_peilgebiedpraktijk(gdf)
 
         self.data.peilgebiedpraktijk = damo_gdf
         self.logger.info(f"Created peilgebiedpraktijk layer with {len(damo_gdf)} features")
 
+    def extract_boundaries(self, gdf):
+        if gdf is None or gdf.empty:
+            self.logger.warning("No peilgebiedpraktijk layer available for boundary extraction")
+            return []
+
+        self.logger.info(f"Extracting boundaries from {len(gdf)} polygons")
+
+        boundaries = gdf.geometry.boundary
+        boundaries = boundaries.explode(index_parts=False)
+        boundaries = boundaries[boundaries.geom_type == "LineString"]
+
+        self.logger.info(f"Extracted {len(boundaries)} boundary lines")
+        return list(boundaries.values)
+
     def _create_waterkering_layer(self) -> None:
         """Create waterkering layer from peilgebiedpraktijk boundaries and line layers."""
         self.logger.info("Creating waterkering layer...")
-
-        all_geometries = []
 
         # Extract boundaries from processed peilgebiedpraktijk
         if self.data.peilgebiedpraktijk is not None and not self.data.peilgebiedpraktijk.empty:
             self.logger.info(
                 f"Extracting boundaries from {len(self.data.peilgebiedpraktijk)} peilgebiedpraktijk polygons"
             )
-            for geom in self.data.peilgebiedpraktijk.geometry:
-                if geom is not None and not geom.is_empty:
-                    if geom.geom_type == "Polygon":
-                        all_geometries.append(LineString(geom.exterior.coords))
-                    elif geom.geom_type == "MultiPolygon":
-                        for polygon in geom.geoms:
-                            all_geometries.append(LineString(polygon.exterior.coords))
-            self.logger.info(f"  Extracted {len(all_geometries)} boundary lines")
-        else:
-            self.logger.warning("No peilgebiedpraktijk layer available for boundary extraction")
+            boundary_lines = self.extract_boundaries(self.data.peilgebiedpraktijk)
 
         # Add dedicated line layers
         available_line_layers = self._load_source_layers(WATERKERING_ADDITIONAL_LINE_SOURCE_LAYERS)
@@ -130,126 +154,59 @@ class PeilgebiedConverter(RawExportToDAMOConverter):
                 for geom in gdf.geometry:
                     if geom is not None and not geom.is_empty:
                         if geom.geom_type == "LineString":
-                            all_geometries.append(geom)
+                            boundary_lines.append(geom)
                         elif geom.geom_type == "MultiLineString":
-                            all_geometries.extend(geom.geoms)
+                            boundary_lines.extend(geom.geoms)
                 self.logger.info(f"  Added {len(gdf)} features from '{layer_name}'")
 
-        if not all_geometries:
+        if not boundary_lines:
             self.logger.warning("No line sources found for waterkering")
             return
 
-        self.logger.info(f"Total input: {len(all_geometries)} line geometries")
+        self.logger.info(f"Total input: {len(boundary_lines)} line geometries")
 
-        # Create topologically clean network: snap, union, explode, deduplicate
-        self.logger.info("Creating topologically clean network...")
-
-        snap_tolerance = 0.001
-        snapped_lines = []
-        for geom in all_geometries:
-            if geom.geom_type == "LineString":
-                snapped_coords = [
-                    (round(x / snap_tolerance) * snap_tolerance, round(y / snap_tolerance) * snap_tolerance)
-                    for x, y in geom.coords
-                ]
-                if len(snapped_coords) >= 2:  # LineString needs at least 2 points
-                    snapped_lines.append(LineString(snapped_coords))
-            elif geom.geom_type == "MultiLineString":
-                for line in geom.geoms:
-                    snapped_coords = [
-                        (round(x / snap_tolerance) * snap_tolerance, round(y / snap_tolerance) * snap_tolerance)
-                        for x, y in line.coords
-                    ]
-                    if len(snapped_coords) >= 2:
-                        snapped_lines.append(LineString(snapped_coords))
-
-        self.logger.info(f"Snapped {len(snapped_lines)} lines to {snap_tolerance}m grid")
-
-        network = unary_union(snapped_lines)
-
-        # Explode network into segments
-        raw_segments = []
-        if network.geom_type == "LineString":
-            raw_segments.append(network)
-        elif network.geom_type == "MultiLineString":
-            raw_segments.extend(network.geoms)
-        elif network.geom_type == "GeometryCollection":
-            for geom in network.geoms:
-                if geom.geom_type == "LineString":
-                    raw_segments.append(geom)
-                elif geom.geom_type == "MultiLineString":
-                    raw_segments.extend(geom.geoms)
-
-        self.logger.info(f"Network exploded into {len(raw_segments)} raw segments")
-
-        # Remove duplicate/near-duplicate segments
-        unique_segments = []
-
-        for i, segment in enumerate(raw_segments):
-            is_duplicate = False
-            seg_buffer = segment.buffer(0.05)  # 5cm buffer for near-duplicate detection
-
-            for existing in unique_segments:
-                # Check if segments are nearly identical (>90% overlap in both directions)
-                intersection = seg_buffer.intersection(existing)
-                if not intersection.is_empty:
-                    overlap_with_existing = intersection.length / existing.length
-                    overlap_with_current = intersection.length / segment.length
-
-                    # If both segments overlap >90% with each other, they're duplicates
-                    if overlap_with_existing > 0.90 and overlap_with_current > 0.90:
-                        is_duplicate = True
-                        break
-
-            if not is_duplicate:
-                unique_segments.append(segment)
-
-        duplicates_removed = len(raw_segments) - len(unique_segments)
-        if duplicates_removed > 0:
-            self.logger.info(f"Removed {duplicates_removed} duplicate/near-duplicate segments")
-
-        clean_lines = unique_segments
-
-        if not clean_lines:
-            self.logger.warning("Network creation produced no valid lines")
-            return
-
-        self.logger.info(f"Network contains {len(clean_lines)} unique line segments")
-
-        lines_gdf = gpd.GeoDataFrame(
-            {"geometry": clean_lines, "source_layer": "peilgebiedpraktijk_boundary"},
+        # Create GeoDataFrame
+        boundary_gdf = gpd.GeoDataFrame(
+            {"geometry": boundary_lines},
             crs=self.data.peilgebiedpraktijk.crs if self.data.peilgebiedpraktijk is not None else "EPSG:28992",
         )
 
-        lines_gdf = self._split_lines_into_segments(lines_gdf, max_segment_length=DEFAULT_SEGMENT_LENGTH)
+        # Dissolve lines to remove overlapping boundary lines
+        dissolved = boundary_gdf.dissolve().explode(index_parts=False).reset_index(drop=True)
 
-        self.logger.info(f"Removing overlapping segments (initial: {len(lines_gdf)})...")
-        lines_gdf = self._remove_overlapping_segments_robust(lines_gdf)
-        self.logger.info(f"After deduplication: {len(lines_gdf)} segments")
+        # Split lines into segments
+        lines_gdf = self._split_lines_into_segments(dissolved, max_segment_length=DEFAULT_SEGMENT_LENGTH)
 
+        # Remove features with null or empty geometry first
         initial_count = len(lines_gdf)
+        mask_valid_geom = lines_gdf.geometry.notna() & ~lines_gdf.geometry.is_empty
+        valid_geom_count = int(mask_valid_geom.sum()) if len(lines_gdf) > 0 else 0
+        if valid_geom_count < initial_count:
+            removed_null = initial_count - valid_geom_count
+            self.logger.info(f"Removed {removed_null} features with null or empty geometry")
+        lines_gdf = lines_gdf[mask_valid_geom].copy()
+
+        # Then remove very short segments
+        initial_count2 = len(lines_gdf)
         lines_gdf = lines_gdf[lines_gdf.geometry.length >= 0.1].copy()
-        removed_short = initial_count - len(lines_gdf)
+        removed_short = initial_count2 - len(lines_gdf)
         if removed_short > 0:
             self.logger.info(f"Removed {removed_short} segments shorter than 0.1m")
 
+        # Extract heights from DEM if available
         if self.data.dem_dataset is not None:
             lines_gdf = self._extract_heights_for_segments(lines_gdf, search_distance=DEFAULT_BUFFER_WIDTH)
         else:
             self.logger.warning("DEM not available, skipping height extraction")
             lines_gdf["min_height"] = None
 
+        # Map to DAMO waterkering schema
         damo_gdf = self._map_to_damo_waterkering(lines_gdf)
-
-        initial_count = len(damo_gdf)
-        damo_gdf = damo_gdf[damo_gdf.geometry.notna()].copy()
-        removed_count = initial_count - len(damo_gdf)
-        if removed_count > 0:
-            self.logger.warning(f"Removed {removed_count} features with null geometry")
 
         self.data.waterkering = damo_gdf
         self.logger.info(f"Created waterkering layer with {len(damo_gdf)} features")
 
+        # Export perpendicular samples for debugging if enabled
         if EXPORT_PERPENDICULAR_SAMPLES and self.perpendicular_samples:
             self._export_perpendicular_samples()
 
@@ -306,21 +263,6 @@ class PeilgebiedConverter(RawExportToDAMOConverter):
         self.data.streefpeil = damo_gdf
         self.logger.info(f"Created streefpeil layer with {len(damo_gdf)} features (no geometry)")
 
-    @staticmethod
-    def _snap_coords(geom: Optional[BaseGeometry], tolerance: float = SNAP_TOLERANCE) -> Optional[BaseGeometry]:
-        """Snap geometry coordinates to grid for consistent topology."""
-        if geom is None or geom.is_empty:
-            return None
-
-        def snap_coords_list(coords):
-            return [(round(x / tolerance) * tolerance, round(y / tolerance) * tolerance) for x, y in coords]
-
-        if geom.geom_type == "LineString":
-            return LineString(snap_coords_list(geom.coords))
-        elif geom.geom_type == "MultiLineString":
-            return MultiLineString([LineString(snap_coords_list(line.coords)) for line in geom.geoms])
-        return geom
-
     def _load_source_layers(self, layer_names: list[str]) -> dict[str, gpd.GeoDataFrame]:
         """Load source layers that are available in the data.
 
@@ -340,128 +282,6 @@ class PeilgebiedConverter(RawExportToDAMOConverter):
 
         return available_layers
 
-    def _merge_connected_lines(self, gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
-        """Merge connected linestrings into continuous features.
-
-        Uses shapely's linemerge operation to connect touching lines into
-        longer continuous linestrings. This reduces the number of features
-        and prevents overlapping segments when lines are later split for height extraction.
-
-        Args:
-            gdf: GeoDataFrame with linestring geometries
-
-        Returns:
-            GeoDataFrame with merged linestrings
-        """
-        if gdf.empty:
-            return gdf
-
-        self.logger.info(f"Starting linemerge with {len(gdf)} input lines...")
-
-        # Collect all geometries and snap them
-        all_lines = []
-        for geom in gdf.geometry:
-            if geom is not None and not geom.is_empty:
-                snapped = self._snap_coords(geom)
-                if snapped is not None:
-                    if snapped.geom_type == "MultiLineString":
-                        all_lines.extend(snapped.geoms)
-                    elif snapped.geom_type == "LineString":
-                        all_lines.append(snapped)
-
-        if not all_lines:
-            self.logger.warning("No valid lines after snapping")
-            return gpd.GeoDataFrame(columns=gdf.columns, crs=gdf.crs)
-
-        self.logger.info(f"  Collected {len(all_lines)} line segments (after exploding MultiLineStrings)")
-
-        # Merge connected lines
-        merged = linemerge(all_lines)
-
-        # Handle result (can be LineString, MultiLineString, or GeometryCollection)
-        merged_lines = []
-        if merged.geom_type == "LineString":
-            merged_lines.append(merged)
-        elif merged.geom_type == "MultiLineString":
-            merged_lines.extend(merged.geoms)
-        elif merged.geom_type == "GeometryCollection":
-            for geom in merged.geoms:
-                if geom.geom_type == "LineString":
-                    merged_lines.append(geom)
-                elif geom.geom_type == "MultiLineString":
-                    merged_lines.extend(geom.geoms)
-
-        if not merged_lines:
-            self.logger.warning("Linemerge produced no valid linestrings")
-            return gdf
-
-        self.logger.info(f"  Linemerge produced {len(merged_lines)} continuous lines")
-
-        # Create new GeoDataFrame with merged lines
-        # Note: We lose individual line attributes since lines are merged
-        # Use a generic source_layer if it exists in the original
-        result_rows = []
-        source_layer_value = gdf["source_layer"].iloc[0] if "source_layer" in gdf.columns and not gdf.empty else None
-
-        for line in merged_lines:
-            row_data = {"geometry": line}
-            if source_layer_value is not None:
-                row_data["source_layer"] = source_layer_value
-            result_rows.append(row_data)
-
-        result = gpd.GeoDataFrame(result_rows, crs=gdf.crs)
-
-        return result
-
-    def _remove_duplicate_linestrings(
-        self, gdf: gpd.GeoDataFrame, snap_tolerance: float = SNAP_TOLERANCE
-    ) -> gpd.GeoDataFrame:
-        """Remove duplicate linestrings based on geometry.
-
-        Snaps coordinates to a grid before comparison to handle lines that are
-        nearly identical but not exactly matching due to small coordinate differences.
-        Compares linestrings in both directions to catch reversed duplicates.
-
-        Args:
-            gdf: Input GeoDataFrame with linestring geometries
-            snap_tolerance: Tolerance in meters for snapping coordinates
-
-        Returns:
-            GeoDataFrame with unique linestrings only
-        """
-        if gdf.empty:
-            return gdf
-
-        def get_coord_hash(geom):
-            """Create a hashable representation of coordinates, handling both directions."""
-            if geom is None or geom.is_empty:
-                return None
-            if geom.geom_type == "LineString":
-                coords = tuple(geom.coords)
-                reversed_coords = tuple(reversed(coords))
-                return min(coords, reversed_coords)  # Canonical form
-            elif geom.geom_type == "MultiLineString":
-                return geom.wkb
-            return None
-
-        # Snap geometries to grid
-        gdf = gdf.copy()
-        gdf["_snapped_geom"] = gdf.geometry.apply(lambda g: self._snap_coords(g, snap_tolerance))
-
-        # Create hash from snapped geometry
-        gdf["_coord_hash"] = gdf["_snapped_geom"].apply(get_coord_hash)
-
-        # Remove None values
-        gdf = gdf[gdf["_coord_hash"].notna()].copy()
-
-        # Drop duplicates based on coordinate hash (much faster than iterrows)
-        gdf = gdf.drop_duplicates(subset=["_coord_hash"], keep="first")
-
-        # Remove helper columns
-        gdf = gdf.drop(columns=["_coord_hash", "_snapped_geom"])
-
-        return gdf
-
     def _map_to_damo_peilgebiedpraktijk(self, gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
         """Map attributes to DAMO peilgebiedpraktijk schema.
 
@@ -471,7 +291,8 @@ class PeilgebiedConverter(RawExportToDAMOConverter):
         Returns:
             GeoDataFrame with DAMO schema
         """
-        result = gpd.GeoDataFrame()
+        gdf = gdf.reset_index(drop=True)
+        result = gpd.GeoDataFrame(index=gdf.index)
 
         # GlobalID - GUID for peilgebiedpraktijk
         if "GlobalID" in gdf.columns:
@@ -507,7 +328,8 @@ class PeilgebiedConverter(RawExportToDAMOConverter):
         Returns:
             GeoDataFrame with DAMO schema
         """
-        result = gpd.GeoDataFrame()
+        gdf = gdf.reset_index(drop=True)
+        result = gpd.GeoDataFrame(index=gdf.index)
 
         # OBJECTID - will be auto-generated by the database (esriFieldTypeOID)
         # Not included in result
@@ -718,54 +540,6 @@ class PeilgebiedConverter(RawExportToDAMOConverter):
                     segments.append(LineString([subsegment_points[j], subsegment_points[j + 1]]))
 
         return segments
-
-    def _remove_overlapping_segments_robust(self, gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
-        """Remove segments that heavily overlap with each other.
-
-        Args:
-            gdf: GeoDataFrame with segments
-
-        Returns:
-            GeoDataFrame with overlapping segments removed
-        """
-        if len(gdf) < 2:
-            return gdf
-
-        kept_indices = []
-
-        for i in range(len(gdf)):
-            geom_i = gdf.iloc[i].geometry
-            if geom_i is None or geom_i.is_empty:
-                continue
-
-            is_duplicate = False
-            buffer_i = geom_i.buffer(0.05)  # 5cm buffer
-
-            # Check against all previously kept segments
-            for j in kept_indices:
-                geom_j = gdf.iloc[j].geometry
-                if geom_j is None or geom_j.is_empty:
-                    continue
-
-                # Check if they heavily overlap (>90% in both directions)
-                intersection = buffer_i.intersection(geom_j)
-                if not intersection.is_empty:
-                    overlap_i = intersection.length / geom_i.length if geom_i.length > 0 else 0
-                    overlap_j = intersection.length / geom_j.length if geom_j.length > 0 else 0
-
-                    if overlap_i > 0.90 and overlap_j > 0.90:
-                        is_duplicate = True
-                        break
-
-            if not is_duplicate:
-                kept_indices.append(i)
-
-        result = gdf.iloc[kept_indices].copy().reset_index(drop=True)
-        removed = len(gdf) - len(result)
-        if removed > 0:
-            self.logger.info(f"  Removed {removed} overlapping segments")
-
-        return result
 
     def _sample_crest_height_perpendicular(
         self,
