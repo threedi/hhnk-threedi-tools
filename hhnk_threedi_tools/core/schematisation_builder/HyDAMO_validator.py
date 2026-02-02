@@ -1,14 +1,15 @@
 import os
 import shutil
+from pathlib import Path
+
 import fiona
 import geopandas as gpd
-from pathlib import Path
-from shapely import LineString, Point, Polygon, MultiLineString, MultiPolygon, MultiPoint
-
 import hhnk_research_tools as hrt
 from hydamo_validation import validator
+from shapely import LineString, MultiLineString, MultiPoint, MultiPolygon, Point, Polygon
 
 from .utils.hydamo_validation_styler import HyDAMOValidationStyler
+
 
 def validate_hydamo(
     hydamo_file_path: Path,
@@ -72,9 +73,7 @@ def validate_hydamo(
     datamodel, layer_summary, result_summary = hydamo_validator(directory=validation_directory_path, raise_error=True)
 
     validation_styler = HyDAMOValidationStyler(
-        hydamo_path=hydamo_file_path2,
-        results_path=results_path,
-        template_path=template_file_path
+        hydamo_path=hydamo_file_path2, results_path=results_path, template_path=template_file_path
     )
     validation_styler.save_to_gpkg()
 

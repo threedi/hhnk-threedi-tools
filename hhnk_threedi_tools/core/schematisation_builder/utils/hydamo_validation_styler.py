@@ -1,7 +1,8 @@
 import shutil
+from pathlib import Path
+
 import fiona
 import geopandas as gpd
-from pathlib import Path
 import hhnk_research_tools as hrt
 
 LAYERS_WITH_CATEGORY = [
@@ -18,6 +19,7 @@ LAYERS_WITH_CATEGORY = [
     "kunstwerkopening",
     "doorstroomopening",
 ]
+
 
 class HyDAMOValidationStyler:
     def __init__(self, hydamo_path: Path, results_path: Path, template_path: Path, logger=None):
@@ -59,14 +61,16 @@ class HyDAMOValidationStyler:
                 self.logger.info(layer)
                 gdf_joined_layer = gpd.sjoin_nearest(gdf_result_layer, gdf_hydamo_hydroobject, how="left")
                 if layer in ["hydroobject"]:
-                    gdf_joined_layer = gdf_joined_layer[gdf_joined_layer.geometry.geom_equals(gdf_joined_layer.geometry_right)]
-            
+                    gdf_joined_layer = gdf_joined_layer[
+                        gdf_joined_layer.geometry.geom_equals(gdf_joined_layer.geometry_right)
+                    ]
+
             gdf_result_layer_cat_columns = gdf_result_layer_columns.to_list() + ["categorieoppwaterlichaam"]
-            gdf_result_layer_cat = gdf_joined_layer[gdf_result_layer_cat_columns].copy()     
+            gdf_result_layer_cat = gdf_joined_layer[gdf_result_layer_cat_columns].copy()
 
             results_cat_gpkg[layer] = gdf_result_layer_cat
 
-        self.results_cat_gpkg: dict[str, gpd.GeoDataFrame] = results_cat_gpkg 
+        self.results_cat_gpkg: dict[str, gpd.GeoDataFrame] = results_cat_gpkg
 
     def apply_style(self, path: Path = None):
         if path is None:
@@ -77,9 +81,8 @@ class HyDAMOValidationStyler:
             gdf.to_file(path, layer=layer, mode="w", engine="pyogrio")
 
     def save_to_gpkg(self, path: Path = None) -> None:
-        '''
+        """
         Saves results.gpkg with styling. Export path defaults to results path.
-        '''
+        """
         self.add_hydamo_category()
         self.apply_style(path)
-        

@@ -14,6 +14,7 @@ if __name__ == "__main__":
 
 from tests.config import TEMP_DIR, TEST_DIRECTORY
 
+
 # TODO remove skip when py312 implemented.
 @pytest.mark.skipif(sys.version_info < (3, 12), reason="Requires Python 3.12 or higher")
 def test_HyDAMO_validator():
