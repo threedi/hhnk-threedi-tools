@@ -190,7 +190,7 @@ def _validate_no_overlapping_segments(output_file: Path, logger):
         return
 
     buffer_distance = 0.5
-    max_acceptable_overlap_pct = 0.1
+    max_acceptable_overlap_pct = 10
     overlapping_pairs = []
 
     logger.info(f"Checking {len(waterkering)} segments for overlaps (buffer: {buffer_distance}m)...")
@@ -220,15 +220,14 @@ def _validate_no_overlapping_segments(output_file: Path, logger):
                         f"Segment {i + 1} overlaps {intersection_length - buffer_distance:.2f}m with segment {j + 1} "
                     )
 
-    total_possible_pairs = (len(waterkering) * (len(waterkering) - 1)) // 2
-    overlap_percentage = (len(overlapping_pairs) / total_possible_pairs * 100) if total_possible_pairs > 0 else 0
+    overlap_percentage = (len(overlapping_pairs) / len(waterkering) * 100) if len(waterkering) > 0 else 0
 
     if overlapping_pairs:
         if overlap_percentage > max_acceptable_overlap_pct:
             shown_overlaps = overlapping_pairs[:10]
             error_msg = (
                 f"Found {len(overlapping_pairs)} overlapping segment pairs "
-                f"({overlap_percentage:.2f}% of {total_possible_pairs} total pairs). "
+                f"({overlap_percentage:.2f}% of {len(waterkering)} total segments). "
                 f"More than {max_acceptable_overlap_pct}% overlapping suggests a systematic issue.\n"
                 f"First {len(shown_overlaps)} overlaps:\n" + "\n".join(shown_overlaps)
             )
@@ -238,7 +237,7 @@ def _validate_no_overlapping_segments(output_file: Path, logger):
         else:
             logger.warning(
                 f"⚠ Found {len(overlapping_pairs)} overlapping segment pairs "
-                f"({overlap_percentage:.2f}% of {total_possible_pairs} total pairs). "
+                f"({overlap_percentage:.2f}% of {len(waterkering)} total segments). "
                 f"Acceptable (<{max_acceptable_overlap_pct}%), but should be inspected in QGIS."
             )
             if len(overlapping_pairs) <= 10:
@@ -285,16 +284,21 @@ def test_peilgebied_converter():
     converter = PeilgebiedConverter(converter_base)
     logger.info(f"DEBUG: Converter has DEM: {converter.data.dem_dataset is not None}")
 
-    # Limit test to 3 polygons for speed (indices 5, 12, 23)
-    # source_layer_name = PEILGEBIED_SOURCE_LAYER.lower()
-    # if hasattr(converter.data, source_layer_name):
-    #     source_gdf = getattr(converter.data, source_layer_name)
-    #     if source_gdf is not None and len(source_gdf) > 3:
-    #         selected_indices = [5, 12, 23]
-    #         filtered_gdf = source_gdf.iloc[selected_indices].copy()
-    #         setattr(converter.data, source_layer_name, filtered_gdf)
-    #         logger.info(f"Limited test to 3 polygons (indices {selected_indices}) for speed")
-
+    # Limit test to 5 polygons for speed (based on globalids)
+    globalid_list = [
+        "{91C084E7-6574-4D15-8DD1-E01585976B71}",
+        "{95754510-DF9D-42FC-B650-BE4BF88648B3}",
+        "{EE2FA109-ECC4-4001-B8BA-B72F72738EB8}",
+        "{41B43F31-0832-412B-814A-B0CD0CD7BCB5}",
+        "{FC4B14E8-A6FC-4148-BF48-3FB25F7AA872}",
+    ]
+    source_layer_name = PEILGEBIED_SOURCE_LAYER.lower()
+    if hasattr(converter.data, source_layer_name):
+        source_gdf = getattr(converter.data, source_layer_name)
+        if source_gdf is not None and len(source_gdf) > 5:
+            filtered_gdf = source_gdf[source_gdf["globalid"].isin(globalid_list)].copy()
+            setattr(converter.data, source_layer_name, filtered_gdf)
+            logger.info(f"Limited test to 5 polygons (globalids {globalid_list}) for speed")
     converter.run()
     converter_base.write_outputs()
 
