@@ -72,9 +72,10 @@ def validate_hydamo(
     # Validate the HyDAMO file
     datamodel, layer_summary, result_summary = hydamo_validator(directory=validation_directory_path, raise_error=True)
 
-    validation_styler = HyDAMOValidationStyler(
-        hydamo_path=hydamo_file_path2, results_path=results_path, template_path=template_file_path
-    )
-    validation_styler.save_to_gpkg()
+    if template_file_path.exists():
+        validation_styler = HyDAMOValidationStyler(
+            hydamo_path=hydamo_file_path2, results_path=results_path, template_path=template_file_path
+        )
+        validation_styler.save_to_gpkg()
 
     return result_summary.to_dict()

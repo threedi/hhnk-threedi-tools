@@ -25,7 +25,6 @@ def test_HyDAMO_validator():
     hydamo_file_path = TEST_DIRECTORY / "schematisation_builder" / "HyDAMO.gpkg"
     validation_rules_json_path = hrt.get_pkg_resource_path(schematisation_builder_resources, "validationrules.json")
     template_file_path = TEST_DIRECTORY / "schematisation_builder" / "styling.gpkg"
-
     test_coverage_location = TEST_DIRECTORY / "schematisation_builder" / "dtm"  # should hold index.shp
 
     result_summary = validate_hydamo(
