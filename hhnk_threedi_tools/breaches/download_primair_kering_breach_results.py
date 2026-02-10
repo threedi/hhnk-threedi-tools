@@ -1,6 +1,6 @@
-# %%
 # def collect_ipo_restults(input_base_folder,base_scenario_prefix):
 # SRIPT for downloading results and creating
+#%%
 """
 Downloaden en opslaan 3Di resultaat met één breslocatie.
 Maakt een grafiek met belangrijkste info van de bres voor in de Storymap Overstromingen.
@@ -25,7 +25,7 @@ from threedigrid.admin.gridresultadmin import GridH5AggregateResultAdmin, GridH5
 from hhnk_threedi_tools.breaches.breaches import Breaches
 from hhnk_threedi_tools.breaches.create_breach_graph import create_breach_graph
 from hhnk_threedi_tools.breaches.download_results_from_3di import download_results_from_3di
-
+#%%
 
 def download_breach_scenario(base_folder, model_name, metadata_path, new_metadata_path, filter_names):
     api_keys_path = (
@@ -454,7 +454,7 @@ def download_breach_scenario(base_folder, model_name, metadata_path, new_metadat
 
 # %%
 if __name__ == "__main__":
-    base_folder = r"y:\03.resultaten\IPO_Overstromingsberekeningen_compartimentering"
+    base_folder = r"\\corp.hhnk.nl\data\Hydrologen_data\Data\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\output\test_waterbalance"
     model_name = "output"
     metadata_path = r"y:\03.resultaten\IPO_Overstromingsberekeningen_compartimentering\metadata\metadata.gpkg"
     new_metadata_path = r"y:\03.resultaten\IPO_Overstromingsberekeningen_compartimentering\metadata\metadata.gpkg"
