@@ -118,7 +118,7 @@ def start_simulation_breaches(model_folder, organisation_name, scenarios, filter
 
     # Find the breaches in the model
     potential_breaches = api_client.threedimodels_potentialbreaches_list(my_model_id, limit=9999)
-    model_schema_path = Path( model_folder / 'work in progress' / 'schematisation' / f'{model_folder.name}.gpkg')
+    model_schema_path = Path(model_folder / "work in progress" / "schematisation" / f"{model_folder.name}.gpkg")
     potential_breach_gdf = gpd.read_file(model_schema_path, layer="potential_breach")
 
     display_names = potential_breach_gdf.display_name.values
