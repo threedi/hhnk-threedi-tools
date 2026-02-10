@@ -16,12 +16,13 @@ def test_aquaduct_converter():
     # Setup
     logger = hrt.logging.get_logger(__name__)
     raw_export_file = TEST_DIRECTORY / "schematisation_builder" / "raw_export.gpkg"
+    dem_path = TEST_DIRECTORY / "model_test" / "02_schematisation" / "00_basis" / "rasters" / "dem_hoekje.tif"
     output_dir = TEMP_DIR / f"temp_aquaduct_converter_{hrt.current_time(date=True)}"
     output_dir.mkdir(parents=True, exist_ok=True)
     output_file = output_dir / "damo.gpkg"
 
     # Run converter
-    converter_base = RawExportToDAMOConverter(raw_export_file, output_file, logger)
+    converter_base = RawExportToDAMOConverter(raw_export_file, dem_path, output_file, logger)
 
     # Check if aquaduct layer exists and has data, if not create dummy data
     if (
@@ -145,12 +146,13 @@ def test_aquaduct_converter_no_aquaduct_layer():
     """Test AquaductConverter gracefully handles missing aquaduct layer."""
     logger = hrt.logging.get_logger(__name__)
     raw_export_file = TEST_DIRECTORY / "schematisation_builder" / "raw_export.gpkg"
+    dem_path = TEST_DIRECTORY / "model_test" / "02_schematisation" / "00_basis" / "rasters" / "dem_hoekje.tif"
     output_dir = TEMP_DIR / f"temp_aquaduct_no_data_{hrt.current_time(date=True)}"
     output_dir.mkdir(parents=True, exist_ok=True)
     output_file = output_dir / "damo.gpkg"
 
     # Create converter without aquaduct data
-    converter_base = RawExportToDAMOConverter(raw_export_file, output_file, logger)
+    converter_base = RawExportToDAMOConverter(raw_export_file, dem_path, output_file, logger)
 
     # Remove aquaduct layer if it exists to simulate missing layer
     if hasattr(converter_base.data, "aquaduct"):
