@@ -6,6 +6,7 @@ from typing import Optional
 import geopandas as gpd
 import hhnk_research_tools as hrt
 import rasterio
+import shapely
 from shapely.validation import make_valid
 
 CRS = "EPSG:28992"
@@ -39,7 +40,7 @@ class _Data:
     doorstroomopening: gpd.GeoDataFrame = field(default_factory=gpd.GeoDataFrame)
 
     # DEM data
-    dem_path: Optional[Path] = None
+    dem_path: Path = None
     dem_dataset: Optional[rasterio.DatasetReader] = None
 
     def _ensure_loaded(self, layers: list[str], previous_method: str) -> None:
@@ -51,10 +52,12 @@ class _Data:
     def load_dem(self, dem_path: Path) -> bool:
         """Load DEM raster for height extraction.
 
-        Args:
+        Parameters
+        ----------
             dem_path: Path to the DEM .tif file
 
-        Returns:
+        Returns
+        -------
             True if loaded successfully, False otherwise
         """
         if not dem_path.exists():
@@ -63,9 +66,9 @@ class _Data:
         self.dem_path = dem_path
         try:
             self.dem_dataset = rasterio.open(dem_path)
-            return True
-        except Exception:
-            return False
+            self.logger.info(f"DEM loaded from {dem_path}")
+        except Exception as e:
+            logging.warning(f"Failed to load DEM from {dem_path}: {e}")
 
     def __del__(self):
         """Close DEM dataset on cleanup."""
@@ -77,6 +80,7 @@ class RawExportToDAMOConverter:
     def __init__(
         self,
         raw_export_file_path: Path,
+        dem_path: Path,
         output_file_path: Path,
         logger: Optional[logging.Logger] = None,
     ):
@@ -87,7 +91,7 @@ class RawExportToDAMOConverter:
         self.data = _Data()
 
         self.load_layers()
-        self._try_load_dem()
+        self.data.load_dem(dem_path)
 
     def load_layers(self):
         self.logger.info("Loading all raw export layers...")
@@ -99,14 +103,6 @@ class RawExportToDAMOConverter:
 
             setattr(self.data, layer_name.lower(), gdf)
         self.logger.info("All raw export layers loaded.")
-
-    def _try_load_dem(self):
-        """Try to load ahn.tif from the same folder as raw export."""
-        dem_path = self.raw_export_file_path.parent / "ahn.tif"
-        if self.data.load_dem(dem_path):
-            self.logger.info(f"Loaded DEM from {dem_path}")
-        else:
-            self.logger.warning(f"DEM not found at {dem_path}. Height extraction will not be available.")
 
     def write_outputs(self):
         import pandas as pd
@@ -146,7 +142,7 @@ class RawExportToDAMOConverter:
         return gdf
 
     @staticmethod
-    def _geometrycollection_to_linestring(geometry: "shapely.Geometry") -> "shapely.Geometry":
+    def _geometrycollection_to_linestring(geometry: shapely.Geometry) -> shapely.Geometry:
         if geometry.geom_type == "GeometryCollection":
             fixed_geometry = [geom for geom in geometry.geoms if geom.geom_type in ["LineString", "MultiLineString"]]
             if fixed_geometry:

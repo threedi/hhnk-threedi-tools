@@ -1,9 +1,8 @@
-import uuid
+# %%
 from pathlib import Path
 
 import geopandas as gpd
 import hhnk_research_tools as hrt
-from shapely.geometry import Polygon
 
 from hhnk_threedi_tools.core.schematisation_builder.raw_export_to_DAMO_converter import RawExportToDAMOConverter
 from hhnk_threedi_tools.core.schematisation_builder.raw_export_to_DAMO_converters import peilgebied_converter
@@ -54,7 +53,7 @@ def _validate_peilgebiedpraktijk_layer(output_file: Path, logger):
         f"Expected polygon geometries, found: {geom_types}"
     )
 
-    required_columns = ["statusPeilgebied", "voertAfOp", "bevat"]
+    required_columns = ["statuspeilgebied", "voertafop", "bevat"]
     for col in required_columns:
         assert col in peilgebiedpraktijk.columns, f"Missing required column: {col}"
 
@@ -79,14 +78,14 @@ def _validate_waterkering_layer(output_file: Path, logger):
     assert all(gt == "LineString" for gt in geom_types), f"Expected linestring geometries, found: {geom_types}"
 
     # Test: Required DAMO attributes exist
-    required_columns = ["categorie", "typeWaterkering", "soortReferentielijn", "waterstaatswerkWaterkeringID"]
+    required_columns = ["categorie", "typewaterkering", "soortreferentielijn", "waterstaatswerkwaterkeringid"]
     for col in required_columns:
         assert col in waterkering.columns, f"Missing required column: {col}"
 
-    assert waterkering["waterstaatswerkWaterkeringID"].notna().all(), (
-        "Some features have null waterstaatswerkWaterkeringID"
+    assert waterkering["waterstaatswerkwaterkeringid"].notna().all(), (
+        "Some features have null waterstaatswerkwaterkeringid"
     )
-    assert waterkering["waterstaatswerkWaterkeringID"].is_unique, "Duplicate waterstaatswerkWaterkeringID found"
+    assert waterkering["waterstaatswerkwaterkeringid"].is_unique, "Duplicate waterstaatswerkwaterkeringid found"
 
     assert "min_height" in waterkering.columns, "min_height column missing - DEM height extraction was not performed"
 
@@ -122,7 +121,7 @@ def _validate_waterkering_layer(output_file: Path, logger):
         decimal_places = len(str(height_val).split(".")[-1]) if "." in str(height_val) else 0
         assert decimal_places <= 2, f"min_height {height_val} has more than 2 decimal places"
 
-    logger.info(f"✓ Length and height values properly rounded to 2 decimals")
+    logger.info("✓ Length and height values properly rounded to 2 decimals")
 
     max_segment_lengths = []
     for geom in waterkering.geometry:
@@ -150,7 +149,7 @@ def _validate_waterkering_layer(output_file: Path, logger):
         assert abs(actual_length - stored_length) < 0.01, (
             f"Feature {idx}: stored length_m ({stored_length}) doesn't match geometry length ({actual_length})"
         )
-    logger.info(f"✓ Stored length_m matches geometry lengths")
+    logger.info("✓ Stored length_m matches geometry lengths")
 
     logger.info(f"✓ Waterkering layer validated: {len(waterkering)} features")
 
@@ -255,15 +254,16 @@ def test_peilgebied_converter():
     """Test PeilgebiedConverter with all validations in a single run."""
     logger = hrt.logging.get_logger(__name__)
     raw_export_file = TEST_DIRECTORY / "schematisation_builder" / "raw_export.gpkg"
+    dem_path = TEST_DIRECTORY / "model_test" / "02_schematisation" / "00_basis" / "rasters" / "dem_hoekje.tif"
     output_dir = TEMP_DIR / f"temp_peilgebied_converter_{hrt.current_time(date=True)}"
     output_dir.mkdir(parents=True, exist_ok=True)
     output_file = output_dir / "damo.gpkg"
 
     # Check if source layers exist
-    converter_base = RawExportToDAMOConverter(raw_export_file, output_file, logger)
+    converter_base = RawExportToDAMOConverter(raw_export_file, dem_path, output_file, logger)
 
     assert converter_base.data.dem_dataset is not None, (
-        f"DEM file not found. Expected ahn.tif at {raw_export_file.parent / 'ahn.tif'}. "
+        f"DEM file not found. Expected ahn.tif at {dem_path}. "
         "DEM is required for testing height extraction functionality."
     )
     logger.info(f"✓ DEM loaded from {converter_base.data.dem_path}")
@@ -273,7 +273,7 @@ def test_peilgebied_converter():
     )
 
     if not source_layers_exist:
-        logger.warning(f"No source layers found, skipping test")
+        logger.warning("No source layers found, skipping test")
         return
 
     # Run converter once
@@ -284,21 +284,15 @@ def test_peilgebied_converter():
     converter = PeilgebiedConverter(converter_base)
     logger.info(f"DEBUG: Converter has DEM: {converter.data.dem_dataset is not None}")
 
-    # Limit test to 5 polygons for speed (based on globalids)
-    globalid_list = [
-        "{91C084E7-6574-4D15-8DD1-E01585976B71}",
-        "{95754510-DF9D-42FC-B650-BE4BF88648B3}",
-        "{EE2FA109-ECC4-4001-B8BA-B72F72738EB8}",
-        "{41B43F31-0832-412B-814A-B0CD0CD7BCB5}",
-        "{FC4B14E8-A6FC-4148-BF48-3FB25F7AA872}",
-    ]
+    # Limit test to 2 polygons for speed (based on CODE)
+    code_list = ["2020-6", "2020-8"]
     source_layer_name = PEILGEBIED_SOURCE_LAYER.lower()
     if hasattr(converter.data, source_layer_name):
         source_gdf = getattr(converter.data, source_layer_name)
-        if source_gdf is not None and len(source_gdf) > 5:
-            filtered_gdf = source_gdf[source_gdf["globalid"].isin(globalid_list)].copy()
+        if source_gdf is not None and len(source_gdf) > 2:
+            filtered_gdf = source_gdf[source_gdf["code"].isin(code_list)].copy()
             setattr(converter.data, source_layer_name, filtered_gdf)
-            logger.info(f"Limited test to 5 polygons (globalids {globalid_list}) for speed")
+            logger.info(f"Limited test to 2 polygons (codes {code_list}) for speed")
     converter.run()
     converter_base.write_outputs()
 
@@ -320,5 +314,6 @@ def test_peilgebied_converter():
     logger.info("\n✓ All validations passed!")
 
 
+# %%
 if __name__ == "__main__":
     test_peilgebied_converter()

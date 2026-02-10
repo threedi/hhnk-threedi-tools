@@ -265,10 +265,12 @@ class PeilgebiedConverter(RawExportToDAMOConverter):
     def _load_source_layers(self, layer_names: list[str]) -> dict[str, gpd.GeoDataFrame]:
         """Load source layers that are available in the data.
 
-        Args:
+        Parameters
+        ----------
             layer_names: List of layer names to load
 
-        Returns:
+        Returns
+        -------
             Dictionary with layer name as key and GeoDataFrame as value
         """
         available_layers = {}
@@ -284,10 +286,12 @@ class PeilgebiedConverter(RawExportToDAMOConverter):
     def _map_to_damo_peilgebiedpraktijk(self, gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
         """Map attributes to DAMO peilgebiedpraktijk schema.
 
-        Args:
+        Parameters
+        ----------
             gdf: Input GeoDataFrame
 
-        Returns:
+        Returns
+        -------
             GeoDataFrame with DAMO schema
         """
         gdf = gdf.reset_index(drop=True)
@@ -321,10 +325,12 @@ class PeilgebiedConverter(RawExportToDAMOConverter):
     def _map_to_damo_waterkering(self, gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
         """Map attributes to DAMO waterkering schema.
 
-        Args:
+        Parameters
+        ----------
             gdf: Input GeoDataFrame
 
-        Returns:
+        Returns
+        -------
             GeoDataFrame with DAMO schema
         """
         gdf = gdf.reset_index(drop=True)
@@ -391,12 +397,14 @@ class PeilgebiedConverter(RawExportToDAMOConverter):
     ) -> Optional[gpd.GeoSeries]:
         """Get column value from GeoDataFrame, trying multiple possible column names.
 
-        Args:
+        Parameters
+        ----------
             gdf: Input GeoDataFrame
             column_names: List of possible column names to try
             target_name: Target column name for logging
 
-        Returns:
+        Returns
+        -------
             Series with values or None if no column found
         """
         for col_name in column_names:
@@ -409,11 +417,13 @@ class PeilgebiedConverter(RawExportToDAMOConverter):
     def _split_lines_into_segments(self, gdf: gpd.GeoDataFrame, max_segment_length: float = 50.0) -> gpd.GeoDataFrame:
         """Split lines into segments using vertex-based approach.
 
-        Args:
+        Parameters
+        ----------
             gdf: GeoDataFrame with linestring geometries
             max_segment_length: Maximum segment length in meters
 
-        Returns:
+        Returns
+        -------
             GeoDataFrame with split segments including length_m
         """
         self.logger.info(f"Splitting lines into segments (max_segment: {max_segment_length}m)...")
@@ -448,11 +458,13 @@ class PeilgebiedConverter(RawExportToDAMOConverter):
     def _extract_heights_for_segments(self, gdf: gpd.GeoDataFrame, search_distance: float = 10.0) -> gpd.GeoDataFrame:
         """Extract heights for line segments from DEM.
 
-        Args:
+        Parameters
+        ----------
             gdf: GeoDataFrame with linestring segments
             search_distance: Distance to search perpendicular to line for crest
 
-        Returns:
+        Returns
+        -------
             GeoDataFrame with min_height column added
         """
         self.logger.info(f"Extracting heights for {len(gdf)} segments...")
@@ -490,11 +502,13 @@ class PeilgebiedConverter(RawExportToDAMOConverter):
         Only subdivides individual segments that exceed max_length.
         This preserves the original vertex structure and prevents overlaps.
 
-        Args:
+        Parameters
+        ----------
             geom: LineString or MultiLineString
             max_length: Maximum segment length
 
-        Returns:
+        Returns
+        -------
             List of LineString segments
         """
         all_segments = []
@@ -510,11 +524,13 @@ class PeilgebiedConverter(RawExportToDAMOConverter):
     def _split_linestring_by_vertices(self, line: LineString, max_length: float) -> list[LineString]:
         """Split a single LineString by examining vertex-to-vertex segments.
 
-        Args:
+        Parameters
+        ----------
             line: LineString to split
             max_length: Maximum segment length
 
-        Returns:
+        Returns
+        -------
             List of LineString segments
         """
         coords = list(line.coords)
@@ -556,13 +572,15 @@ class PeilgebiedConverter(RawExportToDAMOConverter):
 
         This is based on the threedi_beta_processing crest level algorithm.
 
-        Args:
+        Parameters
+        ----------
             line: LineString geometry
             dem_dataset: Open rasterio dataset
             search_distance: Distance to search perpendicular to line in meters
             step_distance: Distance between perpendicular sample lines in meters (default: DEFAULT_PERPENDICULAR_SAMPLE_DISTANCE)
 
-        Returns:
+        Returns
+        -------
             Percentile crest height (see CREST_HEIGHT_PERCENTILE) or None if no valid data
         """
         try:
@@ -754,11 +772,13 @@ class PeilgebiedConverter(RawExportToDAMOConverter):
     ) -> Optional[float]:
         """Extract minimum height from DEM for a buffered geometry using windowed reading.
 
-        Args:
+        Parameters
+        ----------
             buffered_geom: Buffered polygon geometry
             dem: Rasterio dataset
 
-        Returns:
+        Returns
+        -------
             Minimum height value or None if no valid data
         """
         # Get bounding box

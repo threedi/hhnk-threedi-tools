@@ -104,6 +104,8 @@ class SchematisationBuilder:
                 logger=self.logger,
             )
 
+            raw_export_converter.data.dem_path = self.project.folders.dem.path
+
             # Run all converters
             for converter_class in CONVERTERS:
                 converter = converter_class(raw_export_converter=raw_export_converter)
