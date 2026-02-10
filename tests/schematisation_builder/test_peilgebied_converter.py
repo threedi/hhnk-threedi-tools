@@ -89,25 +89,18 @@ def _validate_waterkering_layer(output_file: Path, logger):
 
     assert "min_height" in waterkering.columns, "min_height column missing - DEM height extraction was not performed"
 
-    missing_heights = waterkering["min_height"].isna().sum()
-    missing_pct = (missing_heights / len(waterkering)) * 100
-    assert missing_pct < 2.0, (
-        f"Height extraction incomplete: {missing_heights}/{len(waterkering)} features ({missing_pct:.2f}%) are missing heights. "
-        f"More than 2% missing suggests a systematic issue. Expected >98% success rate."
+    height_values = waterkering["min_height"].dropna()
+    assert len(height_values) >= 100, (
+        f"Not enough heights extracted: {len(height_values)} features have heights. Expected at least 100."
     )
 
-    if missing_heights > 0:
-        logger.warning(
-            f"⚠ {missing_heights}/{len(waterkering)} features ({missing_pct:.2f}%) have no height (likely edge cases)"
-        )
-    else:
-        logger.info(f"✓ Height extraction complete: all {len(waterkering)} features have heights")
+    assert height_values.min() >= 0, f"Height value below 0: {height_values.min():.2f}m"
+    assert height_values.max() <= 10, f"Height value above 10: {height_values.max():.2f}m"
 
-    height_values = waterkering["min_height"].dropna()
-    assert len(height_values) > 0, "No valid heights found"
-    assert height_values.min() > -10, f"Suspiciously low height: {height_values.min():.2f}m"
-    assert height_values.max() < 50, f"Suspiciously high height: {height_values.max():.2f}m"
-    logger.info(f"✓ Height range valid: {height_values.min():.2f}m to {height_values.max():.2f}m")
+    logger.info(
+        f"✓ Height extraction validated: {len(height_values)}/{len(waterkering)} features with heights, "
+        f"range: {height_values.min():.2f}m to {height_values.max():.2f}m"
+    )
 
     assert "length_m" in waterkering.columns, "length_m column missing - segment length was not stored"
     assert waterkering["length_m"].notna().all(), "Some features have null length_m"

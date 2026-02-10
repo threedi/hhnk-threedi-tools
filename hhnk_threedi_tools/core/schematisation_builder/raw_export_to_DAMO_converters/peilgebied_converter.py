@@ -35,28 +35,28 @@ WATERKERING_ADDITIONAL_LINE_SOURCE_LAYERS = [
 
 PEILGEBIEDPRAKTIJK_COLUMNS = [
     "objectid",
-    "statusPeilgebied",
-    "voertAfOp",
+    "statuspeilgebied",
+    "voertafop",
     "bevat",
 ]
 
 WATERKERING_COLUMNS = [
     "objectid",
     "categorie",
-    "typeWaterkering",
-    "soortReferentielijn",
-    "waterstaatswerkWaterkeringID",
+    "typewaterkering",
+    "soortreferentielijn",
+    "waterstaatswerkwaterkeringid",
 ]
 
 STREEFPEIL_COLUMNS = [
-    "soortStreefpeil",
+    "soortstreefpeil",
     "eenheid",
     "waterhoogte",
-    "beginPeriode",
-    "eindPeriode",
-    "peilgebiedpraktijkID",
-    "peilafwijkinggebiedID",
-    "peilgebiedvigerendID",
+    "beginperiode",
+    "eindperiode",
+    "peilgebiedpraktijkid",
+    "peilafwijkinggebiedid",
+    "peilgebiedvigerendid",
 ]
 
 DEFAULT_SEGMENT_LENGTH = 50.0
@@ -218,18 +218,18 @@ class PeilgebiedConverter(RawExportToDAMOConverter):
 
         df = self.data.peilgebiedpraktijk.merge(
             self.data.combinatiepeilgebied[["globalid", "streefpeil_zomer", "streefpeil_winter"]],
-            left_on="GlobalID",
+            left_on="globalid",
             right_on="globalid",
             how="left",
         )
 
         zomer = pd.DataFrame(
             {
-                "GlobalID": [str(uuid.uuid4()) for _ in range(len(df))],
-                "soortStreefpeil": "zomerpeil",
-                "peilgebiedpraktijkID": df["GlobalID"],
-                "beginPeriode": "0104",
-                "eindPeriode": "3109",
+                "globalid": [str(uuid.uuid4()) for _ in range(len(df))],
+                "soortstreefpeil": "zomerpeil",
+                "peilgebiedpraktijkid": df["globalid"],
+                "beginperiode": "0104",
+                "eindperiode": "3109",
                 "waterhoogte": df["streefpeil_zomer"],
                 "eenheid": "mNAP",
             }
@@ -237,11 +237,11 @@ class PeilgebiedConverter(RawExportToDAMOConverter):
 
         winter = pd.DataFrame(
             {
-                "GlobalID": [str(uuid.uuid4()) for _ in range(len(df))],
-                "soortStreefpeil": "winterpeil",
-                "peilgebiedpraktijkID": df["GlobalID"],
-                "beginPeriode": "1001",
-                "eindPeriode": "3103",
+                "globalid": [str(uuid.uuid4()) for _ in range(len(df))],
+                "soortstreefpeil": "winterpeil",
+                "peilgebiedpraktijkid": df["globalid"],
+                "beginperiode": "1001",
+                "eindperiode": "3103",
                 "waterhoogte": df["streefpeil_winter"],
                 "eenheid": "mNAP",
             }
@@ -297,23 +297,21 @@ class PeilgebiedConverter(RawExportToDAMOConverter):
         gdf = gdf.reset_index(drop=True)
         result = gpd.GeoDataFrame(index=gdf.index)
 
-        # GlobalID - GUID for peilgebiedpraktijk
-        if "GlobalID" in gdf.columns:
-            result["GlobalID"] = gdf["GlobalID"]
-        elif "globalid" in gdf.columns:
-            result["GlobalID"] = gdf["globalid"]
+        # globalid - GUID for peilgebiedpraktijk
+        if "globalid" in gdf.columns:
+            result["globalid"] = gdf["globalid"]
         else:
-            result["GlobalID"] = [str(uuid.uuid4()) for _ in range(len(gdf))]
+            result["globalid"] = [str(uuid.uuid4()) for _ in range(len(gdf))]
 
-        # statusPeilgebied - PeilgebiedStatus
-        result["statusPeilgebied"] = self._get_column_value(
-            gdf, ["statusPeilgebied", "status_peilgebied", "status"], "statusPeilgebied"
+        # statuspeilgebied - PeilgebiedStatus
+        result["statuspeilgebied"] = self._get_column_value(
+            gdf, ["statuspeilgebied", "status_peilgebied", "status"], "statuspeilgebied"
         )
 
-        # voertAfOp - GUID (GlobalID waar dit peilgebied op afvoert)
-        result["voertAfOp"] = self._get_column_value(gdf, ["voertAfOp", "voert_af_op"], "voertAfOp")
+        # voertafop - GUID (globalid waar dit peilgebied op afvoert)
+        result["voertafop"] = self._get_column_value(gdf, ["voertafop", "voert_af_op"], "voertafop")
 
-        # bevat - GUID (GlobalID dat afvoert op dit peilgebied)
+        # bevat - GUID (globalid dat afvoert op dit peilgebied)
         result["bevat"] = self._get_column_value(gdf, ["bevat"], "bevat")
 
         # Set geometry
@@ -347,32 +345,32 @@ class PeilgebiedConverter(RawExportToDAMOConverter):
             # Fill missing values with default
             result["categorie"] = categorie.fillna("Niet nader gespecificeerde regionale waterkering")
 
-        # typeWaterkering - TypeWaterkering
-        type_waterkering = self._get_column_value(gdf, ["typeWaterkering", "type_waterkering"], "typeWaterkering")
+        # typewaterkering - TypeWaterkering
+        type_waterkering = self._get_column_value(gdf, ["typewaterkering", "type_waterkering"], "typewaterkering")
         if type_waterkering is None or type_waterkering.isna().all():
-            result["typeWaterkering"] = ["Hoge grond"] * len(gdf)
+            result["typewaterkering"] = ["Hoge grond"] * len(gdf)
         else:
-            result["typeWaterkering"] = type_waterkering.fillna("Hoge grond")
+            result["typewaterkering"] = type_waterkering.fillna("Hoge grond")
 
-        # soortReferentielijn - TypeReferentielijn
+        # soortreferentielijn - TypeReferentielijn
         soort_referentielijn = self._get_column_value(
-            gdf, ["soortReferentielijn", "soort_referentielijn"], "soortReferentielijn"
+            gdf, ["soortreferentielijn", "soort_referentielijn"], "soortreferentielijn"
         )
         if soort_referentielijn is None or soort_referentielijn.isna().all():
-            result["soortReferentielijn"] = ["Geen eenduidige referentielijn"] * len(gdf)
+            result["soortreferentielijn"] = ["Geen eenduidige referentielijn"] * len(gdf)
         else:
-            result["soortReferentielijn"] = soort_referentielijn.fillna("Geen eenduidige referentielijn")
+            result["soortreferentielijn"] = soort_referentielijn.fillna("Geen eenduidige referentielijn")
 
-        # waterstaatswerkWaterkeringID - GUID
+        # waterstaatswerkwaterkeringid - GUID
         waterkering_id = self._get_column_value(
-            gdf, ["waterstaatswerkWaterkeringID", "waterstaatswerk_waterkering_id"], "waterstaatswerkWaterkeringID"
+            gdf, ["waterstaatswerkwaterkeringid", "waterstaatswerk_waterkering_id"], "waterstaatswerkwaterkeringid"
         )
         # Generate new GUIDs if not present
         if waterkering_id is None or waterkering_id.isna().all():
-            result["waterstaatswerkWaterkeringID"] = [str(uuid.uuid4()) for _ in range(len(gdf))]
-            self.logger.debug("Generated new GUIDs for waterstaatswerkWaterkeringID")
+            result["waterstaatswerkwaterkeringid"] = [str(uuid.uuid4()) for _ in range(len(gdf))]
+            self.logger.debug("Generated new GUIDs for waterstaatswerkwaterkeringid")
         else:
-            result["waterstaatswerkWaterkeringID"] = waterkering_id
+            result["waterstaatswerkwaterkeringid"] = waterkering_id
 
         # Preserve min_height if it was extracted from DEM
         if "min_height" in gdf.columns:
