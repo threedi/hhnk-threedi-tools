@@ -9,6 +9,7 @@ waterlevel = r"\\corp.hhnk.nl\data\Hydrologen_data\Data\03.resultaten\Overstromi
 velocity = r"\\corp.hhnk.nl\data\Hydrologen_data\Data\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\output\test_waterbalance\ROR-PRI-test_T100000\01_NetCDF\velocity_seg.csv"
 disharge = r"\\corp.hhnk.nl\data\Hydrologen_data\Data\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\output\test_waterbalance\ROR-PRI-test_T100000\01_NetCDF\discharge_seg.csv"
 breach = r"\\corp.hhnk.nl\data\Hydrologen_data\Data\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\output\test_waterbalance\ROR-PRI-test_T100000\breach_data.csv"
+# %%
 # Disable scientific notation for all floats
 pd.set_option("display.float_format", "{:.6f}".format)
 
@@ -28,7 +29,12 @@ breach_width_string = (breach_df["breach_width"]).to_list()
 breach_width_string = breach_df["breach_width"].astype(str).str.strip()
 breach_width_string = breach_width_string.str.replace(",", ".", regex=False)
 breach_width = pd.to_numeric(breach_width_string, errors="coerce")
-
+# depth
+breach_depth_string = (breach_df["breach_depth"]).to_list()
+breach_depth_string = breach_df["breach_depth"].astype(str).str.strip()
+breach_depth_string = breach_depth_string.str.replace(",", ".", regex=False)
+breach_depth = pd.to_numeric(breach_depth_string, errors="coerce")
+max_breach_depth = np.nanmax(breach_depth)
 # waterlevel (ensure numeric floats)
 waterlevel_labels = ["downstream_waterlevel", "upstream_waterlevel", "waterlevel_sea"]
 for label in waterlevel_labels:
@@ -133,7 +139,11 @@ SUPTITLE_FS = 15
 
 # Plot: 4 panels
 fig, axes = plt.subplots(4, 1, sharex=True, figsize=(12, 14))
-fig.suptitle("IJsselmeer-bres simulatie: waterstanden, stroomsnelheden, debieten en bresbreedte", fontsize=SUPTITLE_FS)
+fig.suptitle(
+    f"IJsselmeer-bres simulatie: waterstanden, stroomsnelheden, debieten en bresbreedte\n"
+    f"Max bres diepte: {max_breach_depth:.2f} m",
+    fontsize=SUPTITLE_FS,
+)
 
 # Panel 1: Water levels
 ax = axes[0]
@@ -206,4 +216,48 @@ plt.setp(axes[-1].get_xticklabels(), rotation=0, ha="right")
 plt.tight_layout(rect=[0, 0, 1, 0.96])
 plt.show()
 
+# %%
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+from matplotlib.ticker import MultipleLocator
+
+waterlevel = r"\\corp.hhnk.nl\data\Hydrologen_data\Data\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\output\test_waterbalance\ROR-PRI-test_T100000\01_NetCDF\waterlevel_seg.csv"
+breach = r"\\corp.hhnk.nl\data\Hydrologen_data\Data\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\output\test_waterbalance\ROR-PRI-test_T100000\breach_data.csv"
+
+# Read
+waterlevel_df = pd.read_csv(waterlevel, sep=",", decimal=".")
+breach_df = pd.read_csv(breach, sep=";")
+
+# Time -> hours
+s = breach_df["time_sec"].astype(str).str.strip().str.replace(",", ".", regex=False)
+time_sec = pd.to_numeric(s, errors="coerce")
+time_hr = time_sec.to_numpy() / 3600.0
+
+# Sea waterlevel -> numeric
+s = waterlevel_df["waterlevel_sea"].astype(str).str.strip().str.replace(",", ".", regex=False)
+sea = pd.to_numeric(s, errors="coerce").to_numpy()
+
+# Align lengths
+n = min(len(time_hr), len(sea))
+t = np.asarray(time_hr[:n])
+sea = np.asarray(sea[:n])
+
+# Plot
+fig, ax = plt.subplots(figsize=(12, 4))
+ax.plot(t, sea, linewidth=1.8, label="Waterstand zee")
+ax.set_title("Waterstand zee (waterlevel_sea)")
+ax.set_xlabel("Tijd (uur)")
+ax.set_ylabel("Waterstand (m)")
+ax.grid(True)
+ax.legend()
+
+# Optional: same x formatting as before
+x_end = 120
+ax.set_xlim(0, x_end)
+ax.xaxis.set_major_locator(MultipleLocator(24))
+ax.xaxis.set_minor_locator(MultipleLocator(12))
+
+plt.tight_layout()
+plt.show()
 # %%
