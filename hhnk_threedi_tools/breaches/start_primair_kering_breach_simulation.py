@@ -27,7 +27,7 @@ from threedi_api_client.versions import V3Api
 
 
 def start_simulation_breaches(
-    model_folder, organisation_name, scenarios, filter_id, metadata_path, wait_time, simulation_kering
+    model_folder, organisation_name, scenarios, filter_id, metadata_path, wait_time, simulation_kering, sim_duration
 ):
     api_keys_path = (
         rf"{os.getenv('APPDATA')}\3Di\QGIS3\profiles\default\python\plugins\hhnk_threedi_plugin\api_key.txt"
@@ -49,7 +49,7 @@ def start_simulation_breaches(
     else:
         print(f"Successfully logged in as {user.username}!")
     # modeller_initial = '_JA'
-    sim_duration = 4  # days
+
     start_datetime = datetime.datetime(2000, 1, 1, 0, 0)
     output_timestep = 900  # s
 
@@ -315,6 +315,7 @@ if __name__ == "__main__":
     # id_filter corresponds to the column 'id' of the potential breach table of the model we are working with.
     # In case of willing to run all the potential breach, leave the list empty  --> filter_id = []
     filter_id = [116, 123, 132, 11]
+    sim_duration = 4  # days
 
     # location of the metadata file. Important to have at least 2 version: One for uploading and run model and the other one for downloading.
     metadata_path = Path(
@@ -325,6 +326,13 @@ if __name__ == "__main__":
     wait_time = 3600  # 1  hour
 
     start_simulation_breaches(
-        model_folder, organisation_name, scenarios, filter_id, metadata_path, wait_time, simulation_kering
+        model_folder,
+        organisation_name,
+        scenarios,
+        filter_id,
+        metadata_path,
+        wait_time,
+        simulation_kering,
+        sim_duration,
     )
     # %%
