@@ -27,7 +27,7 @@ from hhnk_threedi_tools.core.result_rasters.netcdf_to_gridgpkg import NetcdfToGP
 from hhnk_threedi_tools.core.schematisation import (
     migrate,  # TODO fix or do we still need it?
     model_backup,
-    model_splitter,
+    model_splitter_py39,
     upload,
 )
 from hhnk_threedi_tools.core.schematisation.migrate import MigrateSchema

@@ -5,7 +5,7 @@ import sys
 import pytest
 
 from hhnk_threedi_tools.core.folders import Folders
-from hhnk_threedi_tools.core.schematisation.model_splitter import ModelSchematisations
+from hhnk_threedi_tools.core.schematisation.model_splitter_py39 import ModelSchematisations
 from tests.config import FOLDER_TEST, PATH_NEW_FOLDER
 
 

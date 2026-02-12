@@ -331,7 +331,7 @@ if __name__ == "__main__":
     self.create_schematisation(name=name)
     # response = self.create_local_sqlite_revision(commit_message=str(" (local split revision)"))
     # self.upload_schematisation(
-    #     organisation_uuid="48dac75bef8a42ebbb52e8f89bbdb9f2",
+    #     organisation_uuid="",
     #     name=name,
     #     commit_message="testtest",
     #     api_key="",
