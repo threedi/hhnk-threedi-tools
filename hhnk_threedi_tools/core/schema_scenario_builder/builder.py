@@ -7,7 +7,6 @@ import hhnk_research_tools as hrt
 import pandas as pd
 from core.folders import Folders
 from core.schematisation import upload
-from git_model_repo.hooks import commit_msg
 
 logger = hrt.get_logger(__name__)
 
@@ -103,7 +102,7 @@ class ScenarioService:
         """Create backup revisions for all scenarios before building new ones."""
 
     def build_scenarios(self, scenario_names: list[str]) -> None:
-        self._create_backup_revisions(commit_msg)
+        self._create_backup_revisions(commit_message="backup before building new scenarios")
         for scenario_name in scenario_names:
             scenario_builder = ScenarioBuilder(scenario_name)
             scenario_builder.build_scenario(scenario_name)
