@@ -26,7 +26,7 @@ from threedi_api_client.versions import V3Api
 #         self.add_file("schema", rf"work in progress/schematisation/{self.name}.gpkg")
 
 
-def start_simulation_breaches(model_folder, organisation_name, scenarios, filter_id, metadata_path, wait_time):
+def start_simulation_breaches(model_folder, organisation_name, scenarios, filter_id, metadata_path, wait_time, simulation_kering):
     api_keys_path = (
         rf"{os.getenv('APPDATA')}\3Di\QGIS3\profiles\default\python\plugins\hhnk_threedi_plugin\api_key.txt"
     )
@@ -47,7 +47,7 @@ def start_simulation_breaches(model_folder, organisation_name, scenarios, filter
     else:
         print(f"Successfully logged in as {user.username}!")
     # modeller_initial = '_JA'
-    sim_duration = 20  # days
+    sim_duration = 4  # days
     start_datetime = datetime.datetime(2000, 1, 1, 0, 0)
     output_timestep = 900  # s
 
@@ -118,16 +118,22 @@ def start_simulation_breaches(model_folder, organisation_name, scenarios, filter
 
     # Find the breaches in the model
     potential_breaches = api_client.threedimodels_potentialbreaches_list(my_model_id, limit=9999)
-    model_schema_path = Path(model_folder / "work in progress" / "schematisation" / f"{model_folder.name}.gpkg")
+    schem_folder = Path(model_folder) / "work in progress" / "schematisation"
+
+    gpkg_files = list(schem_folder.glob("*.gpkg"))
+    model_schema_path = gpkg_files[0]
     potential_breach_gdf = gpd.read_file(model_schema_path, layer="potential_breach")
 
     display_names = potential_breach_gdf.display_name.values
     breach_ids_scenario = []
     for display_name in display_names:
-        for scenario in scenarios:
-            if display_name.split("-")[-1] == str(scenario):
-                active_breach = potential_breach_gdf[potential_breach_gdf["display_name"] == display_name]
-                breach_ids_scenario.append(active_breach.id.values[0])
+        if scenarios == []:
+            continue
+        else:
+            for scenario in scenarios:
+                if display_name.split("-")[-1] == str(scenario):
+                    active_breach = potential_breach_gdf[potential_breach_gdf["display_name"] == display_name]
+                    breach_ids_scenario.append(active_breach.id.values[0])
 
     # Select the breach id from de geopackge to be use later to select the connected_point
     id_filter = []
@@ -157,7 +163,7 @@ def start_simulation_breaches(model_folder, organisation_name, scenarios, filter
     metadata_gdf = gpd.GeoDataFrame(
         columns=metadata_columns,
         geometry="geometry",
-        crs=potential_breach_gdf.crs,  # asumimos que existe
+        crs=potential_breach_gdf.crs, 
     )
 
     for x in breach_selected_idxs:
@@ -177,13 +183,16 @@ def start_simulation_breaches(model_folder, organisation_name, scenarios, filter
         breach_row = potential_breach_gdf[potential_breach_gdf["id"] == breach.connected_pnt_id].iloc[0]
 
         # Set scenario name according to active breach
-        breach_code_split = breach_row.code.split("-")
-        if breach_code_split[0][-2:] == "_1":
-            # All codes have _1 at the end of name. We dont know why this is here, but remove it.
-            scenario_name = f"ROR-PRI-{breach_code_split[0][:-2]}-T{breach_code_split[1]}"
+        if simulation_kering == "primary":
+            breach_code_split = breach_row.code.split("-")
+            if breach_code_split[0][-2:] == "_1":
+                # All codes have _1 at the end of name. We dont know why this is here, but remove it.
+                scenario_name = f"ROR-PRI-{breach_code_split[0][:-2]}-T{breach_code_split[1]}"
+            else:
+                # raise ValueError("A scenario_name may have been used for the wrong breach in the past. Please check this.")
+                scenario_name = "ROR-PRI-test_T100000"
         else:
-            # raise ValueError("A scenario_name may have been used for the wrong breach in the past. Please check this.")
-            scenario_name = "ROR-PRI-test_T100000"
+            scenario_name = f"{breach_row.display_name}"
 
         # Components of the simulation created. IS NOT RUNNING YET. See the status below
         simulation_template = api_client.simulation_templates_list(simulation__threedimodel__id=my_model_id).results[0]
@@ -223,8 +232,8 @@ def start_simulation_breaches(model_folder, organisation_name, scenarios, filter
                 "potential_breach": breach.id,
                 "duration_till_max_depth": 600,
                 "maximum_breach_depth": 100,
-                "initial_width": 50,
-                "offset": 0,
+                "initial_width": 10,
+                "offset": 600,
             },
         )
 
@@ -288,19 +297,23 @@ def start_simulation_breaches(model_folder, organisation_name, scenarios, filter
 if __name__ == "__main__":
     # Use organisation_name 'BWN HHNK' for standard simulation. Use the other one for very specific cases
 
-    organisation_name = "BWN HHNK"
-    # organisation_name = "Hoogheemraadschap Hollands Noorderkwartier"
+    #organisation_name = "BWN HHNK"
+    organisation_name = "Hoogheemraadschap Hollands Noorderkwartier"
 
     # Set the model name as it is either in 3di or in the local folder.
     base_folder = r"Y:\02.modellen"
-    model_name = "ROR PRI - dijktrajecten 12-1, 12-2, 13-6 en 13-7 - Deel 1105"
+    model_name = "RegionalFloodModel - deelmodel Schermer Midden Zuid"
     model_folder = Path(f"{base_folder}/{model_name}")
+    
     # Select the return periods you want to start with. If you want to use all of them keep it empty.
-    scenarios = [100000]
+    scenarios = []
 
+    simulation_kering = 'IPO' # 'IPO' or 'primary'. This is used to set the scenario name. If you want to set the scenario name in a different way, you will need to change the code in the function.
+    
     # id_filter corresponds to the column 'id' of the potential breach table of the model we are working with.
     # In case of willing to run all the potential breach, leave the list empty  --> filter_id = []
-    filter_id = [100042]
+    filter_id = [116, 123, 132, 11]
+    
     # location of the metadata file. Important to have at least 2 version: One for uploading and run model and the other one for downloading.
     metadata_path = Path(
         r"Y:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\output\test_waterbalance\metadata_shapefile.gpkg"
@@ -309,5 +322,5 @@ if __name__ == "__main__":
     # Time (in seconds) to wait until the script tries again to upload a model. We use it to not overload the API.
     wait_time = 3600  # 1  hour
 
-    start_simulation_breaches(model_folder, organisation_name, scenarios, filter_id, metadata_path, wait_time)
+    start_simulation_breaches(model_folder, organisation_name, scenarios, filter_id, metadata_path, wait_time, simulation_kering)
     # %%
