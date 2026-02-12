@@ -59,9 +59,10 @@ from pathlib import Path
 import hhnk_research_tools as hrt
 import pandas as pd
 import requests
-from breaches import Breaches
 
-LDO_API_URL = "https://www.overstromingsinformatie.nl/api/v1/"
+from hhnk_threedi_tools.breaches.breaches import Breaches
+
+LDO_API_URL = "https://ldo.overstromingsinformatie.nl/api/v1/"
 
 # Generate api key on de LDO_API_URL website. And place it in api_ldo_key.txt
 LDO_API_KEY = Path("api_ldo_key.txt").read_text("utf8")
@@ -212,10 +213,16 @@ class LdoUploadFolder(hrt.Folder):
 
     def _find_scenario_folder(self):
         """Get Path to scenario results"""
-        scenario_paths = [j for i in self.scenario_results_path.glob("*/") for j in list(i.glob("*/"))]
-        for scenario_path in scenario_paths:
-            if scenario_path.name == self.name:
-                return scenario_path
+
+        # scenario_paths = [j for i in self.scenario_results_path.glob("*/") for j in list(i.glob("*/*/"))]
+        # for scenario_path in scenario_paths:
+        #     if scenario_path.name == self.name:
+        #         return scenario_path
+
+        scenario_path = self.scenario_results_path / self.name
+        if scenario_path.is_dir():
+            return scenario_path
+
         raise FileNotFoundError(f"{self.name} not found in {self.scenario_results_path}")
 
     def copy_files(self):
@@ -256,7 +263,7 @@ if __name__ == "__main__":
     # Set Paths from the data to be uploaded
 
     # Excel files per scenario.
-    base_path = Path(r"E:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024")
+    base_path = Path(r"Y:\03.resultaten\Normering Regionale Keringen\output\scenarios_output\N&S")
     metadata_folder = base_path.joinpath(r"ldo_structuur\metadata_per_scenario")
 
     # Excel file where the ID and size of the upload is going to be stored
@@ -266,7 +273,7 @@ if __name__ == "__main__":
     ldo_structuur_path = base_path.joinpath("ldo_structuur")
 
     # Folder where scenario results are stored.
-    scenario_results_path = base_path.joinpath("output")
+    scenario_results_path = base_path.joinpath("waterland")
 
     # data frame from the scenarios that are gonig to be uploaded.
     pd_scenarios = pd.read_excel(id_scenarios)
@@ -285,7 +292,7 @@ if __name__ == "__main__":
     for metadata_xlsx in scenarios:
         # Set Scenario Name
         scenario_name = metadata_xlsx.stem
-        # %%
+        print(f"Processing scenario {scenario_name}")
         # If the scenario is done the continue
         if scenario_name in scenarios_done:
             continue
@@ -320,4 +327,4 @@ if __name__ == "__main__":
             logger.info(f"Finished processing {scenario_name}")
             time.sleep(sleeptime)
 
-    # %%
+# %%

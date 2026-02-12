@@ -26,7 +26,9 @@ from threedi_api_client.versions import V3Api
 #         self.add_file("schema", rf"work in progress/schematisation/{self.name}.gpkg")
 
 
-def start_simulation_breaches(model_folder, organisation_name, scenarios, filter_id, metadata_path, wait_time, simulation_kering):
+def start_simulation_breaches(
+    model_folder, organisation_name, scenarios, filter_id, metadata_path, wait_time, simulation_kering
+):
     api_keys_path = (
         rf"{os.getenv('APPDATA')}\3Di\QGIS3\profiles\default\python\plugins\hhnk_threedi_plugin\api_key.txt"
     )
@@ -163,7 +165,7 @@ def start_simulation_breaches(model_folder, organisation_name, scenarios, filter
     metadata_gdf = gpd.GeoDataFrame(
         columns=metadata_columns,
         geometry="geometry",
-        crs=potential_breach_gdf.crs, 
+        crs=potential_breach_gdf.crs,
     )
 
     for x in breach_selected_idxs:
@@ -297,23 +299,23 @@ def start_simulation_breaches(model_folder, organisation_name, scenarios, filter
 if __name__ == "__main__":
     # Use organisation_name 'BWN HHNK' for standard simulation. Use the other one for very specific cases
 
-    #organisation_name = "BWN HHNK"
+    # organisation_name = "BWN HHNK"
     organisation_name = "Hoogheemraadschap Hollands Noorderkwartier"
 
     # Set the model name as it is either in 3di or in the local folder.
     base_folder = r"Y:\02.modellen"
     model_name = "RegionalFloodModel - deelmodel Schermer Midden Zuid"
     model_folder = Path(f"{base_folder}/{model_name}")
-    
+
     # Select the return periods you want to start with. If you want to use all of them keep it empty.
     scenarios = []
 
-    simulation_kering = 'IPO' # 'IPO' or 'primary'. This is used to set the scenario name. If you want to set the scenario name in a different way, you will need to change the code in the function.
-    
+    simulation_kering = "IPO"  # 'IPO' or 'primary'. This is used to set the scenario name. If you want to set the scenario name in a different way, you will need to change the code in the function.
+
     # id_filter corresponds to the column 'id' of the potential breach table of the model we are working with.
     # In case of willing to run all the potential breach, leave the list empty  --> filter_id = []
     filter_id = [116, 123, 132, 11]
-    
+
     # location of the metadata file. Important to have at least 2 version: One for uploading and run model and the other one for downloading.
     metadata_path = Path(
         r"Y:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\output\test_waterbalance\metadata_shapefile.gpkg"
@@ -322,5 +324,7 @@ if __name__ == "__main__":
     # Time (in seconds) to wait until the script tries again to upload a model. We use it to not overload the API.
     wait_time = 3600  # 1  hour
 
-    start_simulation_breaches(model_folder, organisation_name, scenarios, filter_id, metadata_path, wait_time, simulation_kering)
+    start_simulation_breaches(
+        model_folder, organisation_name, scenarios, filter_id, metadata_path, wait_time, simulation_kering
+    )
     # %%
