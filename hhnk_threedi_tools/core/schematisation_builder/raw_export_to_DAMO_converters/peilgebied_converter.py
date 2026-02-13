@@ -1,21 +1,823 @@
+import traceback
+import uuid
+from typing import Optional, TypedDict, Union
+
+import geopandas as gpd
+import numpy as np
+import pandas as pd
+import rasterio
+from rasterio.features import rasterize
+from shapely.geometry import LineString, MultiLineString, Point
+from shapely.geometry.base import BaseGeometry
+
 from hhnk_threedi_tools.core.schematisation_builder.raw_export_to_DAMO_converter import RawExportToDAMOConverter
 
 
+class PerpendicularSample(TypedDict):
+    """Type definition for perpendicular sample data structure."""
+
+    geometry: LineString
+    height_max: float
+    sample_index: int
+    n_samples: int
+    n_total: int
+    center_x: float
+    center_y: float
+
+
+PEILGEBIED_SOURCE_LAYER = "combinatiepeilgebied"
+
+WATERKERING_ADDITIONAL_LINE_SOURCE_LAYERS = [
+    "levees",
+    "verhoogde lijnen",
+    "wegen",
+]
+
+PEILGEBIEDPRAKTIJK_COLUMNS = [
+    "objectid",
+    "statuspeilgebied",
+    "voertafop",
+    "bevat",
+]
+
+WATERKERING_COLUMNS = [
+    "objectid",
+    "categorie",
+    "typewaterkering",
+    "soortreferentielijn",
+    "waterstaatswerkwaterkeringid",
+]
+
+STREEFPEIL_COLUMNS = [
+    "soortstreefpeil",
+    "eenheid",
+    "waterhoogte",
+    "beginperiode",
+    "eindperiode",
+    "peilgebiedpraktijkid",
+    "peilafwijkinggebiedid",
+    "peilgebiedvigerendid",
+]
+
+DEFAULT_SEGMENT_LENGTH = 50.0
+DEFAULT_BUFFER_WIDTH = 10.0
+DEFAULT_PERPENDICULAR_SAMPLE_DISTANCE = 5.0
+CREST_HEIGHT_PERCENTILE = 10.0  # Percentile of max heights of perpendicular samples to use as crest height
+EXPORT_PERPENDICULAR_SAMPLES = False
+
+
 class PeilgebiedConverter(RawExportToDAMOConverter):
-    """Peilgebied-specific converter implementation."""
+    """Convert raw peilgebied exports to DAMO schema (peilgebiedpraktijk and waterkering layers)."""
 
     def __init__(self, raw_export_converter: RawExportToDAMOConverter):
         self.data = raw_export_converter.data
         self.logger = raw_export_converter.logger
+        self.perpendicular_samples: list[PerpendicularSample] = []
 
-    def run(self):
-        """Run the converter to update the peilgebied layer."""
+    def run(self) -> None:
+        """Create peilgebiedpraktijk, waterkering, and streefpeil layers."""
         self.logger.info("Running PeilgebiedConverter...")
-        self.update_peilgebied_layer()
-        self.logger.info("PeilgebiedConverter run completed.")
+        self._create_peilgebiedpraktijk_layer()
+        self._create_waterkering_layer()
+        self._create_streefpeil_layer()
 
-    def update_peilgebied_layer(self):
-        self.logger.info("Updating peilgebied layer...")
-        # self.data._ensure_loaded(["peilgebiedpraktijk"], previous_method="load_layers")
-        self.logger.warning("Update peilgebied layer not implemented yet")
-        # TODO implement logic later
+    def _create_peilgebiedpraktijk_layer(self) -> None:
+        """Create DAMO-compliant peilgebiedpraktijk layer from combinatiepeilgebied."""
+        self.logger.info("Creating peilgebiedpraktijk layer...")
+
+        gdf = getattr(self.data, PEILGEBIED_SOURCE_LAYER.lower(), None)
+
+        if gdf is None or gdf.empty:
+            self.logger.warning(f"Source layer '{PEILGEBIED_SOURCE_LAYER}' not found or empty")
+            return
+
+        self.logger.info(f"Loaded '{PEILGEBIED_SOURCE_LAYER}' with {len(gdf)} features")
+
+        # Explode MultiPolygons to Polygons
+        polygon_count = len(gdf)
+        gdf = gdf.explode(index_parts=False).reset_index(drop=True)
+
+        # Remove features with null or empty geometry or non-Polygon geometries or area smaller than 0.5 m2
+        initial_count = len(gdf)
+        mask_valid_geom = (
+            gdf.geometry.notna()
+            & ~gdf.geometry.is_empty
+            & (gdf.geometry.geom_type == "Polygon")
+            & (gdf.geometry.area >= 0.5)
+        )
+        valid_geom_count = int(mask_valid_geom.sum()) if len(gdf) > 0 else 0
+        if valid_geom_count < initial_count:
+            removed_invalid = initial_count - valid_geom_count
+            self.logger.info(
+                f"Removed {removed_invalid} features with null, empty, non-Polygon geometry, or area < 0.5 m2"
+            )
+            gdf = gdf[mask_valid_geom].reset_index(drop=True)
+
+        self.logger.info(f"Exploded MultiPolygons to {len(gdf)} polygons (was {polygon_count})")
+
+        damo_gdf = self._map_to_damo_peilgebiedpraktijk(gdf)
+
+        self.data.peilgebiedpraktijk = damo_gdf
+        self.logger.info(f"Created peilgebiedpraktijk layer with {len(damo_gdf)} features")
+
+    def extract_boundaries(self, gdf):
+        if gdf is None or gdf.empty:
+            self.logger.warning("No peilgebiedpraktijk layer available for boundary extraction")
+            return []
+
+        self.logger.info(f"Extracting boundaries from {len(gdf)} polygons")
+
+        boundaries = gdf.geometry.boundary
+        boundaries = boundaries.explode(index_parts=False)
+        boundaries = boundaries[boundaries.geom_type == "LineString"]
+
+        self.logger.info(f"Extracted {len(boundaries)} boundary lines")
+        return list(boundaries.values)
+
+    def _create_waterkering_layer(self) -> None:
+        """Create waterkering layer from peilgebiedpraktijk boundaries and line layers."""
+        self.logger.info("Creating waterkering layer...")
+
+        # Extract boundaries from processed peilgebiedpraktijk
+        if self.data.peilgebiedpraktijk is not None and not self.data.peilgebiedpraktijk.empty:
+            self.logger.info(
+                f"Extracting boundaries from {len(self.data.peilgebiedpraktijk)} peilgebiedpraktijk polygons"
+            )
+            boundary_lines = self.extract_boundaries(self.data.peilgebiedpraktijk)
+
+        # Add dedicated line layers
+        available_line_layers = self._load_source_layers(WATERKERING_ADDITIONAL_LINE_SOURCE_LAYERS)
+        if available_line_layers:
+            self.logger.info(f"Loading {len(available_line_layers)} dedicated line layers")
+            for layer_name, gdf in available_line_layers.items():
+                for geom in gdf.geometry:
+                    if geom is not None and not geom.is_empty:
+                        if geom.geom_type == "LineString":
+                            boundary_lines.append(geom)
+                        elif geom.geom_type == "MultiLineString":
+                            boundary_lines.extend(geom.geoms)
+                self.logger.info(f"  Added {len(gdf)} features from '{layer_name}'")
+
+        if not boundary_lines:
+            self.logger.warning("No line sources found for waterkering")
+            return
+
+        self.logger.info(f"Total input: {len(boundary_lines)} line geometries")
+
+        # Create GeoDataFrame
+        boundary_gdf = gpd.GeoDataFrame(
+            {"geometry": boundary_lines},
+            crs=self.data.peilgebiedpraktijk.crs if self.data.peilgebiedpraktijk is not None else "EPSG:28992",
+        )
+
+        # Dissolve lines to remove overlapping boundary lines
+        dissolved = boundary_gdf.dissolve().explode(index_parts=False).reset_index(drop=True)
+
+        # Split lines into segments
+        lines_gdf = self._split_lines_into_segments(dissolved, max_segment_length=DEFAULT_SEGMENT_LENGTH)
+
+        # Remove features with null or empty geometry first
+        initial_count = len(lines_gdf)
+        mask_valid_geom = lines_gdf.geometry.notna() & ~lines_gdf.geometry.is_empty
+        valid_geom_count = int(mask_valid_geom.sum()) if len(lines_gdf) > 0 else 0
+        if valid_geom_count < initial_count:
+            removed_null = initial_count - valid_geom_count
+            self.logger.info(f"Removed {removed_null} features with null or empty geometry")
+        lines_gdf = lines_gdf[mask_valid_geom].copy()
+
+        # Then remove very short segments
+        initial_count2 = len(lines_gdf)
+        lines_gdf = lines_gdf[lines_gdf.geometry.length >= 0.1].copy()
+        removed_short = initial_count2 - len(lines_gdf)
+        if removed_short > 0:
+            self.logger.info(f"Removed {removed_short} segments shorter than 0.1m")
+
+        # Extract heights from DEM if available
+        if self.data.dem_dataset is not None:
+            lines_gdf = self._extract_heights_for_segments(lines_gdf, search_distance=DEFAULT_BUFFER_WIDTH)
+        else:
+            self.logger.warning("DEM not available, skipping height extraction")
+            lines_gdf["min_height"] = None
+
+        # Map to DAMO waterkering schema
+        damo_gdf = self._map_to_damo_waterkering(lines_gdf)
+
+        self.data.waterkering = damo_gdf
+        self.logger.info(f"Created waterkering layer with {len(damo_gdf)} features")
+
+        # Export perpendicular samples for debugging if enabled
+        if EXPORT_PERPENDICULAR_SAMPLES and self.perpendicular_samples:
+            self._export_perpendicular_samples()
+
+    def _create_streefpeil_layer(self) -> None:
+        self.logger.info("Creating streefpeil layer...")
+
+        if self.data.peilgebiedpraktijk is None or self.data.peilgebiedpraktijk.empty:
+            self.logger.warning("No peilgebiedpraktijk layer available to create streefpeil")
+            return
+
+        df = self.data.peilgebiedpraktijk.merge(
+            self.data.combinatiepeilgebied[["globalid", "streefpeil_zomer", "streefpeil_winter"]],
+            left_on="globalid",
+            right_on="globalid",
+            how="left",
+        )
+
+        zomer = pd.DataFrame(
+            {
+                "globalid": [str(uuid.uuid4()) for _ in range(len(df))],
+                "soortstreefpeil": "zomerpeil",
+                "peilgebiedpraktijkid": df["globalid"],
+                "beginperiode": "0104",
+                "eindperiode": "3109",
+                "waterhoogte": df["streefpeil_zomer"],
+                "eenheid": "mNAP",
+            }
+        )
+
+        winter = pd.DataFrame(
+            {
+                "globalid": [str(uuid.uuid4()) for _ in range(len(df))],
+                "soortstreefpeil": "winterpeil",
+                "peilgebiedpraktijkid": df["globalid"],
+                "beginperiode": "1001",
+                "eindperiode": "3103",
+                "waterhoogte": df["streefpeil_winter"],
+                "eenheid": "mNAP",
+            }
+        )
+
+        streefpeil_df = pd.concat([zomer, winter], ignore_index=True)
+
+        for col in STREEFPEIL_COLUMNS:
+            if col not in streefpeil_df.columns:
+                streefpeil_df[col] = None
+
+        damo_gdf = gpd.GeoDataFrame(
+            streefpeil_df,
+            geometry=[None] * len(streefpeil_df),
+            crs="EPSG:28992",
+        )
+
+        self.data.streefpeil = damo_gdf
+        self.logger.info(f"Created streefpeil layer with {len(damo_gdf)} features (no geometry)")
+
+    def _load_source_layers(self, layer_names: list[str]) -> dict[str, gpd.GeoDataFrame]:
+        """Load source layers that are available in the data.
+
+        Parameters
+        ----------
+            layer_names: List of layer names to load
+
+        Returns
+        -------
+            Dictionary with layer name as key and GeoDataFrame as value
+        """
+        available_layers = {}
+
+        for layer_name in layer_names:
+            gdf = getattr(self.data, layer_name.lower(), None)
+            if gdf is not None and not gdf.empty:
+                available_layers[layer_name] = gdf
+                self.logger.info(f"Loaded source layer '{layer_name}' with {len(gdf)} features")
+
+        return available_layers
+
+    def _map_to_damo_peilgebiedpraktijk(self, gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
+        """Map attributes to DAMO peilgebiedpraktijk schema.
+
+        Parameters
+        ----------
+            gdf: Input GeoDataFrame
+
+        Returns
+        -------
+            GeoDataFrame with DAMO schema
+        """
+        gdf = gdf.reset_index(drop=True)
+        result = gpd.GeoDataFrame(index=gdf.index)
+
+        # globalid - GUID for peilgebiedpraktijk
+        if "globalid" in gdf.columns:
+            result["globalid"] = gdf["globalid"]
+        else:
+            result["globalid"] = [str(uuid.uuid4()) for _ in range(len(gdf))]
+
+        # statuspeilgebied - PeilgebiedStatus
+        result["statuspeilgebied"] = self._get_column_value(
+            gdf, ["statuspeilgebied", "status_peilgebied", "status"], "statuspeilgebied"
+        )
+
+        # voertafop - GUID (globalid waar dit peilgebied op afvoert)
+        result["voertafop"] = self._get_column_value(gdf, ["voertafop", "voert_af_op"], "voertafop")
+
+        # bevat - GUID (globalid dat afvoert op dit peilgebied)
+        result["bevat"] = self._get_column_value(gdf, ["bevat"], "bevat")
+
+        # Set geometry
+        result.set_geometry(gdf.geometry, crs=gdf.crs, inplace=True)
+
+        self.logger.info(f"Mapped {len(result)} features to DAMO peilgebiedpraktijk schema")
+        return result
+
+    def _map_to_damo_waterkering(self, gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
+        """Map attributes to DAMO waterkering schema.
+
+        Parameters
+        ----------
+            gdf: Input GeoDataFrame
+
+        Returns
+        -------
+            GeoDataFrame with DAMO schema
+        """
+        gdf = gdf.reset_index(drop=True)
+        result = gpd.GeoDataFrame(index=gdf.index)
+
+        # OBJECTID - will be auto-generated by the database (esriFieldTypeOID)
+        # Not included in result
+
+        # categorie - CategorieWaterkering
+        categorie = self._get_column_value(gdf, ["categorie"], "categorie")
+        if categorie is None or categorie.isna().all():
+            result["categorie"] = ["Niet nader gespecificeerde regionale waterkering"] * len(gdf)
+        else:
+            # Fill missing values with default
+            result["categorie"] = categorie.fillna("Niet nader gespecificeerde regionale waterkering")
+
+        # typewaterkering - TypeWaterkering
+        type_waterkering = self._get_column_value(gdf, ["typewaterkering", "type_waterkering"], "typewaterkering")
+        if type_waterkering is None or type_waterkering.isna().all():
+            result["typewaterkering"] = ["Hoge grond"] * len(gdf)
+        else:
+            result["typewaterkering"] = type_waterkering.fillna("Hoge grond")
+
+        # soortreferentielijn - TypeReferentielijn
+        soort_referentielijn = self._get_column_value(
+            gdf, ["soortreferentielijn", "soort_referentielijn"], "soortreferentielijn"
+        )
+        if soort_referentielijn is None or soort_referentielijn.isna().all():
+            result["soortreferentielijn"] = ["Geen eenduidige referentielijn"] * len(gdf)
+        else:
+            result["soortreferentielijn"] = soort_referentielijn.fillna("Geen eenduidige referentielijn")
+
+        # waterstaatswerkwaterkeringid - GUID
+        waterkering_id = self._get_column_value(
+            gdf, ["waterstaatswerkwaterkeringid", "waterstaatswerk_waterkering_id"], "waterstaatswerkwaterkeringid"
+        )
+        # Generate new GUIDs if not present
+        if waterkering_id is None or waterkering_id.isna().all():
+            result["waterstaatswerkwaterkeringid"] = [str(uuid.uuid4()) for _ in range(len(gdf))]
+            self.logger.debug("Generated new GUIDs for waterstaatswerkwaterkeringid")
+        else:
+            result["waterstaatswerkwaterkeringid"] = waterkering_id
+
+        # Preserve min_height if it was extracted from DEM
+        if "min_height" in gdf.columns:
+            result["min_height"] = gdf["min_height"]
+
+        # Preserve length_m if it was calculated
+        if "length_m" in gdf.columns:
+            result["length_m"] = gdf["length_m"]
+
+        # Preserve source_layer to track origin of data
+        if "source_layer" in gdf.columns:
+            result["source_layer"] = gdf["source_layer"]
+
+        # Set geometry
+        result.set_geometry(gdf.geometry, crs=gdf.crs, inplace=True)
+
+        self.logger.info(f"Mapped {len(result)} features to DAMO waterkering schema")
+        return result
+
+    def _get_column_value(
+        self, gdf: gpd.GeoDataFrame, column_names: list[str], target_name: str
+    ) -> Optional[gpd.GeoSeries]:
+        """Get column value from GeoDataFrame, trying multiple possible column names.
+
+        Parameters
+        ----------
+            gdf: Input GeoDataFrame
+            column_names: List of possible column names to try
+            target_name: Target column name for logging
+
+        Returns
+        -------
+            Series with values or None if no column found
+        """
+        for col_name in column_names:
+            if col_name in gdf.columns:
+                return gdf[col_name]
+
+        self.logger.debug(f"Column '{target_name}' not found in source data")
+        return None
+
+    def _split_lines_into_segments(self, gdf: gpd.GeoDataFrame, max_segment_length: float = 50.0) -> gpd.GeoDataFrame:
+        """Split lines into segments using vertex-based approach.
+
+        Parameters
+        ----------
+            gdf: GeoDataFrame with linestring geometries
+            max_segment_length: Maximum segment length in meters
+
+        Returns
+        -------
+            GeoDataFrame with split segments including length_m
+        """
+        self.logger.info(f"Splitting lines into segments (max_segment: {max_segment_length}m)...")
+
+        segments_data = []
+
+        for idx, row in gdf.iterrows():
+            geom = row.geometry
+
+            if geom is None or geom.is_empty:
+                continue
+
+            segments = self._split_line_by_vertices(geom, max_segment_length)
+
+            for segment_geom in segments:
+                segment_row = row.copy()
+                segment_row["geometry"] = segment_geom
+                segment_row["length_m"] = round(segment_geom.length, 2)
+                segments_data.append(segment_row)
+
+        if not segments_data:
+            self.logger.warning("No segments created")
+            return gpd.GeoDataFrame(columns=gdf.columns.tolist() + ["length_m"], crs=gdf.crs)
+
+        result = gpd.GeoDataFrame(segments_data, crs=gdf.crs).reset_index(drop=True)
+        self.logger.info(
+            f"Created {len(result)} segments from {len(gdf)} lines (avg {len(result) / len(gdf):.1f} per line)"
+        )
+
+        return result
+
+    def _extract_heights_for_segments(self, gdf: gpd.GeoDataFrame, search_distance: float = 10.0) -> gpd.GeoDataFrame:
+        """Extract heights for line segments from DEM.
+
+        Parameters
+        ----------
+            gdf: GeoDataFrame with linestring segments
+            search_distance: Distance to search perpendicular to line for crest
+
+        Returns
+        -------
+            GeoDataFrame with min_height column added
+        """
+        self.logger.info(f"Extracting heights for {len(gdf)} segments...")
+        dem = self.data.dem_dataset
+
+        heights = []
+        total = len(gdf)
+        log_interval = max(100, total // 10)  # Log every 10% or every 100 segments
+
+        for idx, geom in enumerate(gdf.geometry):
+            height = self._sample_crest_height_perpendicular(geom, dem, search_distance)
+            heights.append(round(height, 2) if height is not None else None)
+
+            # Progress logging
+            if (idx + 1) % log_interval == 0 or (idx + 1) == total:
+                progress_pct = ((idx + 1) / total) * 100
+                self.logger.info(f"  Progress: {idx + 1}/{total} segments ({progress_pct:.1f}%)")
+
+        gdf["min_height"] = heights
+
+        valid_heights = gdf["min_height"].dropna()
+        if len(valid_heights) > 0:
+            self.logger.info(
+                f"Extracted heights for {len(valid_heights)}/{len(gdf)} segments "
+                f"(min: {valid_heights.min():.2f}m, max: {valid_heights.max():.2f}m)"
+            )
+        else:
+            self.logger.warning("No valid heights extracted")
+
+        return gdf
+
+    def _split_line_by_vertices(self, geom: Union[LineString, MultiLineString], max_length: float) -> list[LineString]:
+        """Split line by examining segments between consecutive vertices.
+
+        Only subdivides individual segments that exceed max_length.
+        This preserves the original vertex structure and prevents overlaps.
+
+        Parameters
+        ----------
+            geom: LineString or MultiLineString
+            max_length: Maximum segment length
+
+        Returns
+        -------
+            List of LineString segments
+        """
+        all_segments = []
+
+        if geom.geom_type == "LineString":
+            all_segments.extend(self._split_linestring_by_vertices(geom, max_length))
+        elif geom.geom_type == "MultiLineString":
+            for line in geom.geoms:
+                all_segments.extend(self._split_linestring_by_vertices(line, max_length))
+
+        return all_segments
+
+    def _split_linestring_by_vertices(self, line: LineString, max_length: float) -> list[LineString]:
+        """Split a single LineString by examining vertex-to-vertex segments.
+
+        Parameters
+        ----------
+            line: LineString to split
+            max_length: Maximum segment length
+
+        Returns
+        -------
+            List of LineString segments
+        """
+        coords = list(line.coords)
+        segments = []
+
+        for i in range(len(coords) - 1):
+            start = Point(coords[i])
+            end = Point(coords[i + 1])
+            segment_length = start.distance(end)
+
+            if segment_length <= max_length:
+                # Segment is acceptable, keep as-is
+                segments.append(LineString([start, end]))
+            else:
+                # Segment too long, subdivide it
+                num_subsegments = int(np.ceil(segment_length / max_length))
+                x_coords = np.linspace(start.x, end.x, num_subsegments + 1)
+                y_coords = np.linspace(start.y, end.y, num_subsegments + 1)
+
+                subsegment_points = [Point(x, y) for x, y in zip(x_coords, y_coords)]
+                for j in range(len(subsegment_points) - 1):
+                    segments.append(LineString([subsegment_points[j], subsegment_points[j + 1]]))
+
+        return segments
+
+    def _sample_crest_height_perpendicular(
+        self,
+        line: LineString,
+        dem_dataset: rasterio.DatasetReader,
+        search_distance: float,
+        step_distance: float = DEFAULT_PERPENDICULAR_SAMPLE_DISTANCE,
+    ) -> Optional[float]:
+        """Extract crest height using perpendicular sampling.
+
+        Samples the DEM perpendicular to the line at regular intervals,
+        finds the maximum elevation on each side (the crest), and returns
+        a low percentile (configurable via CREST_HEIGHT_PERCENTILE) along the line
+        to capture weak points for flood modeling.
+
+        This is based on the threedi_beta_processing crest level algorithm.
+
+        Parameters
+        ----------
+            line: LineString geometry
+            dem_dataset: Open rasterio dataset
+            search_distance: Distance to search perpendicular to line in meters
+            step_distance: Distance between perpendicular sample lines in meters (default: DEFAULT_PERPENDICULAR_SAMPLE_DISTANCE)
+
+        Returns
+        -------
+            Percentile crest height (see CREST_HEIGHT_PERCENTILE) or None if no valid data
+        """
+        try:
+            # Get DEM pixel size
+            pixel_size = abs(dem_dataset.transform[0])
+
+            # Log DEM info on first call (use a class attribute to track)
+            if not hasattr(self, "_dem_info_logged"):
+                self.logger.info(
+                    f"DEM info: size=({dem_dataset.width}, {dem_dataset.height}), "
+                    f"pixel_size={pixel_size:.3f}m, transform={dem_dataset.transform}, "
+                    f"bounds=({dem_dataset.bounds.left:.1f}, {dem_dataset.bounds.bottom:.1f}, "
+                    f"{dem_dataset.bounds.right:.1f}, {dem_dataset.bounds.top:.1f}), "
+                    f"nodata={dem_dataset.nodata}"
+                )
+                self._dem_info_logged = True
+
+            # Calculate number of points along the line
+            line_length = line.length
+            if line_length < 0.1:  # Too short
+                self.logger.warning(f"Line too short ({line_length:.3f}m) for perpendicular sampling, skipping")
+                return None
+
+            n_samples = max(2, int(line_length / step_distance) + 1)
+
+            # Sample points along the line
+            distances = np.linspace(0, line_length, n_samples)
+            sample_points = [line.interpolate(d) for d in distances]
+
+            # Get perpendicular vectors at each point
+            heights = []
+            failed_samples = 0
+            outside_bounds_count = 0
+            nodata_count = 0
+
+            for i, point in enumerate(sample_points):
+                # Get line direction at this point
+                if i == 0:
+                    # Use direction to next point
+                    next_point = sample_points[i + 1]
+                    dx = next_point.x - point.x
+                    dy = next_point.y - point.y
+                elif i == len(sample_points) - 1:
+                    # Use direction from previous point
+                    prev_point = sample_points[i - 1]
+                    dx = point.x - prev_point.x
+                    dy = point.y - prev_point.y
+                else:
+                    # Use average direction
+                    prev_point = sample_points[i - 1]
+                    next_point = sample_points[i + 1]
+                    dx = next_point.x - prev_point.x
+                    dy = next_point.y - prev_point.y
+
+                # Normalize direction vector
+                length = np.sqrt(dx**2 + dy**2)
+                if length < 0.001:
+                    self.logger.debug(f"Direction vector too small at sample {i}, skipping")
+                    continue
+                dx /= length
+                dy /= length
+
+                # Get perpendicular vector (rotate 90 degrees)
+                perp_dx = -dy
+                perp_dy = dx
+
+                # Sample along perpendicular line
+                n_perp_samples = max(3, int(search_distance / pixel_size) + 1)
+                perp_distances = np.linspace(-search_distance, search_distance, n_perp_samples)
+
+                perp_heights = []
+                samples_outside = 0
+                samples_nodata = 0
+                samples_error = 0
+
+                for d in perp_distances:
+                    sample_x = point.x + perp_dx * d
+                    sample_y = point.y + perp_dy * d
+
+                    # Sample DEM at this point - use rasterio's index method for correct row,col
+                    row, col = dem_dataset.index(sample_x, sample_y)
+
+                    if 0 <= row < dem_dataset.height and 0 <= col < dem_dataset.width:
+                        try:
+                            height = dem_dataset.read(1, window=((row, row + 1), (col, col + 1)))[0, 0]
+                            if not np.isnan(height) and height != dem_dataset.nodata:
+                                perp_heights.append(height)
+                            else:
+                                samples_nodata += 1
+                        except Exception as e:
+                            samples_error += 1
+                            if samples_error == 1:  # Log first error only
+                                self.logger.debug(f"DEM read error at ({sample_x:.1f}, {sample_y:.1f}): {e}")
+                    else:
+                        samples_outside += 1
+
+                if perp_heights:
+                    # Take maximum (crest) from perpendicular samples
+                    crest = np.max(perp_heights)
+                    heights.append(crest)
+
+                    # Log sample statistics for debugging
+                    if i < 3 or i == len(sample_points) - 1:  # Log first 3 and last sample
+                        self.logger.debug(
+                            f"Sample {i} at ({point.x:.1f}, {point.y:.1f}): "
+                            f"{len(perp_heights)}/{n_perp_samples} valid heights, "
+                            f"range: {np.min(perp_heights):.3f} - {np.max(perp_heights):.3f}m, "
+                            f"crest: {crest:.3f}m"
+                        )
+
+                    # Store perpendicular sample line if debug output enabled
+                    if EXPORT_PERPENDICULAR_SAMPLES:
+                        perp_start = Point(point.x - perp_dx * search_distance, point.y - perp_dy * search_distance)
+                        perp_end = Point(point.x + perp_dx * search_distance, point.y + perp_dy * search_distance)
+                        perp_line = LineString([perp_start, perp_end])
+
+                        # Store all sampled coordinates and values for debugging
+                        sample_coords = []
+                        for d in perp_distances:
+                            sample_x = point.x + perp_dx * d
+                            sample_y = point.y + perp_dy * d
+                            sample_coords.append(f"({sample_x:.1f},{sample_y:.1f})")
+
+                        self.perpendicular_samples.append(
+                            {
+                                "geometry": perp_line,
+                                "height_max": round(np.max(perp_heights), 3),
+                                "sample_index": i,
+                                "n_samples": len(perp_heights),
+                                "n_total": n_perp_samples,
+                                "center_x": round(point.x, 1),
+                                "center_y": round(point.y, 1),
+                            }
+                        )
+                else:
+                    failed_samples += 1
+                    if samples_outside > 0:
+                        outside_bounds_count += samples_outside
+                    if samples_nodata > 0:
+                        nodata_count += samples_nodata
+                    self.logger.debug(
+                        f"No valid heights at sample {i} (point: {point.x:.1f}, {point.y:.1f}): "
+                        f"{samples_outside}/{n_perp_samples} outside DEM, {samples_nodata}/{n_perp_samples} nodata, "
+                        f"{samples_error}/{n_perp_samples} errors"
+                    )
+
+            if not heights:
+                self.logger.warning(
+                    f"No heights extracted from perpendicular sampling (line length: {line_length:.2f}m, "
+                    f"samples: {n_samples}, search distance: {search_distance:.2f}m). "
+                    f"Failed: {failed_samples}/{n_samples} sample points. "
+                    f"Total: {outside_bounds_count} samples outside DEM bounds, {nodata_count} samples hit nodata. "
+                    f"Line coords: ({line.coords[0][0]:.1f}, {line.coords[0][1]:.1f}) to ({line.coords[-1][0]:.1f}, {line.coords[-1][1]:.1f})"
+                )
+                return None
+
+            # Return configured percentile to capture low points for flood modeling
+            heights = np.array(heights)
+            percentile = np.percentile(heights, CREST_HEIGHT_PERCENTILE)
+
+            return float(percentile)
+
+        except Exception as e:
+            self.logger.error(f"Error in perpendicular sampling: {e}")
+            self.logger.debug(traceback.format_exc())
+            return None
+
+    def _export_perpendicular_samples(self) -> None:
+        """Export perpendicular sample lines to geopackage for debugging.
+
+        Creates a 'perpendicular_samples' layer in the output with sample lines and their extracted heights.
+        """
+        if not self.perpendicular_samples:
+            self.logger.warning("No perpendicular samples to export")
+            return
+
+        self.logger.info(f"Exporting {len(self.perpendicular_samples)} perpendicular sample lines...")
+
+        perp_gdf = gpd.GeoDataFrame(
+            self.perpendicular_samples,
+            crs=self.data.peilgebiedpraktijk.crs if self.data.peilgebiedpraktijk is not None else "EPSG:28992",
+        )
+
+        self.data.perpendicular_samples = perp_gdf
+        self.logger.info(f"✓ Created perpendicular_samples layer with {len(perp_gdf)} features")
+
+    def _get_min_height_from_buffered_geometry(
+        self, buffered_geom: BaseGeometry, dem: rasterio.DatasetReader
+    ) -> Optional[float]:
+        """Extract minimum height from DEM for a buffered geometry using windowed reading.
+
+        Parameters
+        ----------
+            buffered_geom: Buffered polygon geometry
+            dem: Rasterio dataset
+
+        Returns
+        -------
+            Minimum height value or None if no valid data
+        """
+        # Get bounding box
+        minx, miny, maxx, maxy = buffered_geom.bounds
+
+        # Convert bounds to pixel coordinates
+        try:
+            row_start, col_start = dem.index(minx, maxy)
+            row_stop, col_stop = dem.index(maxx, miny)
+
+            # Ensure valid ranges
+            row_start = max(0, row_start)
+            col_start = max(0, col_start)
+            row_stop = min(dem.height, row_stop + 1)
+            col_stop = min(dem.width, col_stop + 1)
+
+            # Read window
+            window = rasterio.windows.Window(col_start, row_start, col_stop - col_start, row_stop - row_start)
+            data = dem.read(1, window=window, masked=True)
+
+            if data.size == 0:
+                return None
+
+            # Get window transform
+            window_transform = dem.window_transform(window)
+
+            # Create mask for the buffered geometry within the window
+            # This is the fastest approach: rasterize the geometry
+            mask = rasterize(
+                [(buffered_geom, 1)], out_shape=data.shape, transform=window_transform, fill=0, dtype=np.uint8
+            ).astype(bool)
+
+            # Extract values within the geometry
+            masked_data = np.ma.masked_array(data, mask=~mask)
+
+            # Get minimum value (ignoring nodata)
+            if masked_data.count() > 0:
+                return float(np.min(masked_data.compressed()))
+            else:
+                return None
+
+        except Exception as e:
+            self.logger.debug(f"Error extracting height: {e}")
+            return None
