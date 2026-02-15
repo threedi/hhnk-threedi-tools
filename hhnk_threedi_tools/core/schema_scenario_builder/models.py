@@ -1,3 +1,4 @@
+# %%
 """Models for scenario settings."""
 
 from datetime import datetime
@@ -46,3 +47,6 @@ class ScenarioDefaults(BaseModel):
     timestep_plus: float
     use_1d_flow: int
     wind_shielding_file: Optional[str]
+
+
+# %%

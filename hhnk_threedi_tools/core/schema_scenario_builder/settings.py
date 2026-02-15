@@ -1,12 +1,12 @@
 # %%
 
 
+import json
 from pathlib import Path
 from typing import Tuple
 
 import hhnk_research_tools as hrt
 import pandas as pd
-from core.folders import Folders
 from core.schema_scenario_builder.models import ScenarioDefaults
 
 logger = hrt.logging.get_logger(__name__)
@@ -52,33 +52,3 @@ class ScenarioSettings:
         self.validate(settings_df, settings_default_df)
 
         return settings_df.loc[scenario_name]
-
-
-# %%
-if __name__ == "__main__":
-    # settings_file = Path(f"{Path(__file__).parent}/resources/model_settings.xlsx")
-    # settings_default_file = Path(f"{Path(__file__).parent}/resources/model_settings_default.xlsx")
-    settings_file = Path(f"{Path(__file__).parent}/resources/schematisation_settings.csv")
-    settings_default_file = Path(f"{Path(__file__).parent}/resources/schematisation_settings_default.json")
-
-    self = ScenarioSettings(settings_file=settings_file, settings_default_file=settings_default_file)
-
-# %%
-settings_df, settings_default_df = self.read_settings()
-
-# %%
-
-
-# import json
-
-# row_dict = dict(settings_default_df.iloc[0])
-# with open("default.json", "w") as f:
-#     json.dump(row_dict, f, indent=4)
-# %%
-
-import json
-
-with open(settings_default_file) as f:
-    data = json.load(f)
-
-defaults = ScenarioDefaults(**data)
