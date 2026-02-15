@@ -5,21 +5,18 @@ import geopandas as gpd
 from core.schema_scenario_builder.settings import ScenarioSettings
 
 import hhnk_threedi_tools as htt
+from tests.config import FOLDER_NEW, FOLDER_TEST
 
 MODULE_DIR = Path(htt.__file__).parent
 
 if __name__ == "__main__":
     # settings_file = Path(f"{Path(__file__).parent}/resources/model_settings.xlsx")
     # settings_default_file = Path(f"{Path(__file__).parent}/resources/model_settings_default.xlsx")
-    settings_file = Path(f"{MODULE_DIR}/core/schema_scenario_builder/resources/schematisation_settings.csv")
-    settings_default_file = Path(
-        f"{MODULE_DIR}/core/schema_scenario_builder/resources/schematisation_settings_default.json"
-    )
+    settings_file = FOLDER_TEST.model.settings.path
 
     self = ScenarioSettings(settings_file=settings_file, settings_default_file=settings_default_file)
 
 # %%
-settings_df, settings_default_df = self.read_settings()
 
 # %%
 
