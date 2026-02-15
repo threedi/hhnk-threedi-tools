@@ -21,5 +21,11 @@ This module provides a structured system for building these schematisations:
 
 Column changes:
 
-max_infiltration_capacity_file -> max_infiltration_volume_file
-simple_infiltration_settings_id -> use_simple_infiltration [bool]
+See migration guide; https://docs.ranawaterintelligence.com/h_schema_300.html
+
+- max_infiltration_capacity_file -> max_infiltration_volume_file
+- simple_infiltration_settings_id -> use_simple_infiltration [bool]
+- "v2_simple_infiltration.display_name": "glg" -> removed.
+
+- "model_settings.nr_grid_levels": 3, -> staat overal op 3, dus kan default worden?
+- water_level_ini_type -> initial_water_level_aggregation -> alles null, dus weg?
