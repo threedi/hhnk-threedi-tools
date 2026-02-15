@@ -17,3 +17,9 @@ This module provides a structured system for building these schematisations:
 
 ## Overwegingen
 - default settings worden nu overschreven maar is eigenlijk niet handig. Beter zou zijn om de schematisation checker een check op te nemen die een warning geeft als je van de defaults afwijkt.
+
+
+Column changes:
+
+max_infiltration_capacity_file -> max_infiltration_volume_file
+simple_infiltration_settings_id -> use_simple_infiltration [bool]

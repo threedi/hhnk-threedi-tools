@@ -33,9 +33,11 @@ class ScenarioSettings:
         with open(self.settings_default_file) as f:
             data = json.load(f)
 
+        scenarios: List[Scenario]
+
         defaults = ScenarioDefaults(**data)
 
-        return settings_df, defaults
+        return settings_df
 
     def validate(self, settings_df: pd.DataFrame, settings_default: ScenarioDefaults) -> None:
         """Sanity check settings tables"""
@@ -48,7 +50,7 @@ class ScenarioSettings:
 
     def get(self, scenario_name: str) -> pd.DataFrame:
         """Get settings for scenario."""
-        settings_df, settings_default_df = self.read_settings()
+        settings_df = self.read_settings()
         self.validate(settings_df, settings_default_df)
 
         return settings_df.loc[scenario_name]

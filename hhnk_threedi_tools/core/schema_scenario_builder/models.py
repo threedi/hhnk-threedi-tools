@@ -2,9 +2,33 @@
 """Models for scenario settings."""
 
 from datetime import datetime
-from typing import Optional
+from typing import List, Optional
 
 from pydantic import BaseModel
+
+
+class Scenario(BaseModel):
+    id: int
+    schematisation_name: str
+    name: str
+    dem_file: str
+
+    frict_coef_file: Optional[str] = None
+    infiltration_rate_file: Optional[str] = None
+    max_infiltration_capacity_file: Optional[str] = None
+    initial_waterlevel_file: Optional[str] = None
+    water_level_ini_type: Optional[str] = None
+
+    display_name: Optional[str] = None
+    output_time_step: int
+    use_2d_rain: bool
+    kmax: int
+    control_group_id: Optional[int] = None
+    use_2d_flow: bool
+    simple_infiltration_settings_id: Optional[int] = None
+    use_0d_inflow: bool
+    infiltration_rate: Optional[float] = None
+    infiltration_surface_option: Optional[int] = None
 
 
 class ScenarioDefaults(BaseModel):
