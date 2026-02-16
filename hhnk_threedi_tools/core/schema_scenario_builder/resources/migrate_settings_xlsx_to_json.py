@@ -4,18 +4,16 @@ Schematisation settings were originally stored in 02_schematisation/model_settin
 This script migrates those settings to a new JSON format, which is used since 2026.03
 """
 
-import csv
 import json
-from pathlib import Path
+from typing import Optional
 
 import hhnk_research_tools as hrt
+import pandas as pd
 
 from hhnk_threedi_tools.core.folders import Folders
 from tests.config import FOLDER_TEST
 
 logger = hrt.logging.get_logger(__name__)
-INPUT_CSV = Path(r"hhnk_threedi_tools/core/schema_scenario_builder/resources/schematisation_settings.csv")
-OUTPUT_JSON = Path(r"hhnk_threedi_tools/core/schema_scenario_builder/resources/scenarios1.json")
 
 # col renames for model_settings.xlsx to schemation_scenarios.json
 MODEL_SETTINGS_RENAMES = {
@@ -43,12 +41,25 @@ MODEL_SETTINGS_RENAMES = {
 type_conversions = {"control_group_id": bool, "simple_infiltration_settings_id": bool}
 
 
-def convert_value(key: str, value: str):
+def convert_values(key: str, value) -> Optional[object]:
     """Convert CSV string values to proper Python types."""
+    # Handle NaN and None first
+    if pd.isna(value) or value is None or value == "" or str(value).strip() == "":
+        value = None
 
-    logger.info(f"Converting key: {key}, value: {value}")
-    if value == "":
-        return None
+    if key in [
+        "simple_infiltration_settings_id",
+        "control_group_id",
+        "use_2d_rain",
+        "use_2d_flow",
+        "use_0d_inflow",
+    ]:
+        if value is None:
+            return False
+        return bool(value)
+
+    if value is None:
+        return value
 
     if "_file" in key:
         value = value.replace("rasters/", "")
@@ -56,51 +67,63 @@ def convert_value(key: str, value: str):
     if key == "name":
         value = value.replace("_test", "_check")
 
-    # Int
-    if value.isdigit():
+    if str(value).isdigit():
         return int(value)
+
+    try:
+        return float(value)
+    except ValueError:
+        pass
 
     return value
 
 
-def set_nested_dict(d, layer_name, value):
-    """Set a value in a nested dictionary using dot notation path."""
+def set_nested_dict(nested_dict, layer_name, value) -> None:
+    """Set a value in a nested dictionary using dot notation path.
+    Mutates inplace
+    """
     keys = layer_name.split(".")
-    current = d
     for key in keys[:-1]:
-        if key not in current:
-            current[key] = {}
-        current = current[key]
-    current[keys[-1]] = value
+        if key not in nested_dict:
+            nested_dict[key] = {}
+        nested_dict = nested_dict[key]
+    nested_dict[keys[-1]] = value
 
 
 # %%
-def migration_xlsx_to_json(folder: Folders):
+def migration_xlsx_to_json(folder: Folders) -> None:
+    """Convert model settings from xlsx to json format."""
     input_xlsx = folder.model.settings.path
-    output_json = folder.model.joinpath("schematisation_scenarios.json")
+    output_json = folder.model.schematisation_scenarios
     scenarios = {}
 
-    with input_xlsx.open(newline="", encoding="utf-8") as f:
-        reader = csv.DictReader(f, delimiter=";")
+    df = pd.read_excel(input_xlsx)
+    # Iterate through rows
+    for _, row in df.iterrows():
+        clean_row = {}
+        for key, value in row.items():
+            clean_row[key] = convert_values(key, value)
 
-        for row in reader:
-            clean_row = {key: convert_value(key, value.strip()) for key, value in row.items()}
+        # Apply column renames
+        renamed_row = {}
+        for old_key in MODEL_SETTINGS_RENAMES.keys():
+            new_key = MODEL_SETTINGS_RENAMES[old_key]
+            if new_key != "REMOVED":
+                set_nested_dict(renamed_row, new_key, clean_row.get(old_key))
 
-            # Apply column renames
-            renamed_row = {}
-            for old_key in MODEL_SETTINGS_RENAMES.keys():
-                new_key = MODEL_SETTINGS_RENAMES[old_key]
-                if new_key != "REMOVED":
-                    set_nested_dict(renamed_row, new_key, clean_row.get(old_key))
+        scenario_name = renamed_row["simulation_template_settings"]["name"]
+        scenario_name = scenario_name.replace("_test", "_check")
 
-            scenario_name = renamed_row["simulation_template_settings"]["name"]
-            scenario_name = scenario_name.replace("_test", "_check")
-            scenarios[scenario_name] = renamed_row
+        # Remove all null simple_infiltration
+        if renamed_row["model_settings"]["use_simple_infiltration"] is False:
+            renamed_row.pop("simple_infiltration", None)
+
+        scenarios[scenario_name] = renamed_row
 
     with output_json.open("w", encoding="utf-8") as f:
         json.dump(scenarios, f, indent=4)
 
-    print(f"Written {output_json}")
+    logger.info(f"Written {output_json}")
 
 
 if __name__ == "__main__":

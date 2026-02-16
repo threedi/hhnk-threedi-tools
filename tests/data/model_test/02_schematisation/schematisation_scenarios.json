@@ -1,0 +1,187 @@
+{
+    "0d1d_check": {
+        "schematisation_name": "model_test_v2__0d1d_test",
+        "simulation_template_settings": {
+            "name": "0d1d_check",
+            "use_0d_inflow": true,
+            "use_structure_control": false
+        },
+        "initial_conditions": {
+            "initial_waterlevel_file": null,
+            "initial_water_level_aggregation": null
+        },
+        "time_step_settings": {
+            "output_time_step": 900
+        },
+        "model_settings": {
+            "nr_grid_levels": 3,
+            "dem_file": "dem_hoekje.tif",
+            "friction_coefficient_file": null,
+            "use_2d_rain": false,
+            "use_2d_flow": false,
+            "use_simple_infiltration": false
+        }
+    },
+    "1d2d_check": {
+        "schematisation_name": "model_test_v2__1d2d_test",
+        "simulation_template_settings": {
+            "name": "1d2d_check",
+            "use_0d_inflow": false,
+            "use_structure_control": true
+        },
+        "initial_conditions": {
+            "initial_waterlevel_file": null,
+            "initial_water_level_aggregation": null
+        },
+        "time_step_settings": {
+            "output_time_step": 300
+        },
+        "model_settings": {
+            "nr_grid_levels": 3,
+            "dem_file": "dem_hoekje.tif",
+            "friction_coefficient_file": "friction_hoekje.tif",
+            "use_2d_rain": true,
+            "use_2d_flow": true,
+            "use_simple_infiltration": false
+        }
+    },
+    "1d2d_glg": {
+        "schematisation_name": "model_test_v2__1d2d_glg",
+        "simulation_template_settings": {
+            "name": "1d2d_glg",
+            "use_0d_inflow": false,
+            "use_structure_control": true
+        },
+        "initial_conditions": {
+            "initial_waterlevel_file": "initial_wlvl_2d_hoekje.tif",
+            "initial_water_level_aggregation": 1.0
+        },
+        "time_step_settings": {
+            "output_time_step": 300
+        },
+        "model_settings": {
+            "nr_grid_levels": 3,
+            "dem_file": "dem_hoekje.tif",
+            "friction_coefficient_file": "friction_hoekje.tif",
+            "use_2d_rain": true,
+            "use_2d_flow": true,
+            "use_simple_infiltration": true
+        },
+        "simple_infiltration": {
+            "infiltration_rate": 0.0,
+            "infiltration_rate_file": "infiltration_hoekje.tif",
+            "infiltration_surface_option": 0.0,
+            "max_infiltration_volume_file": "storage_glg_hoekje.tif"
+        }
+    },
+    "1d2d_ggg": {
+        "schematisation_name": "model_test_v2__1d2d_ggg",
+        "simulation_template_settings": {
+            "name": "1d2d_ggg",
+            "use_0d_inflow": false,
+            "use_structure_control": true
+        },
+        "initial_conditions": {
+            "initial_waterlevel_file": "initial_wlvl_2d_hoekje.tif",
+            "initial_water_level_aggregation": 1.0
+        },
+        "time_step_settings": {
+            "output_time_step": 300
+        },
+        "model_settings": {
+            "nr_grid_levels": 3,
+            "dem_file": "dem_hoekje.tif",
+            "friction_coefficient_file": "friction_hoekje.tif",
+            "use_2d_rain": true,
+            "use_2d_flow": true,
+            "use_simple_infiltration": true
+        },
+        "simple_infiltration": {
+            "infiltration_rate": 0.0,
+            "infiltration_rate_file": "infiltration_hoekje.tif",
+            "infiltration_surface_option": 0.0,
+            "max_infiltration_volume_file": "storage_ggg_hoekje.tif"
+        }
+    },
+    "1d2d_ghg": {
+        "schematisation_name": "model_test_v2__1d2d_ghg",
+        "simulation_template_settings": {
+            "name": "1d2d_ghg",
+            "use_0d_inflow": false,
+            "use_structure_control": true
+        },
+        "initial_conditions": {
+            "initial_waterlevel_file": "initial_wlvl_2d_hoekje.tif",
+            "initial_water_level_aggregation": 1.0
+        },
+        "time_step_settings": {
+            "output_time_step": 300
+        },
+        "model_settings": {
+            "nr_grid_levels": 3,
+            "dem_file": "dem_hoekje.tif",
+            "friction_coefficient_file": "friction_hoekje.tif",
+            "use_2d_rain": true,
+            "use_2d_flow": true,
+            "use_simple_infiltration": true
+        },
+        "simple_infiltration": {
+            "infiltration_rate": 0.0,
+            "infiltration_rate_file": "infiltration_hoekje.tif",
+            "infiltration_surface_option": 0.0,
+            "max_infiltration_volume_file": "storage_ghg_hoekje.tif"
+        }
+    },
+    "1d2d_bgs": {
+        "schematisation_name": "model_test_v2__1d2d_bgs",
+        "simulation_template_settings": {
+            "name": "1d2d_bgs",
+            "use_0d_inflow": false,
+            "use_structure_control": true
+        },
+        "initial_conditions": {
+            "initial_waterlevel_file": "initial_wlvl_2d_hoekje.tif",
+            "initial_water_level_aggregation": 1.0
+        },
+        "time_step_settings": {
+            "output_time_step": 300
+        },
+        "model_settings": {
+            "nr_grid_levels": 3,
+            "dem_file": "dem_hoekje.tif",
+            "friction_coefficient_file": "friction_hoekje.tif",
+            "use_2d_rain": true,
+            "use_2d_flow": true,
+            "use_simple_infiltration": true
+        },
+        "simple_infiltration": {
+            "infiltration_rate": 0.0,
+            "infiltration_rate_file": "infiltration_hoekje.tif",
+            "infiltration_surface_option": 0.0,
+            "max_infiltration_volume_file": "storage_bgs_hoekje.tif"
+        }
+    },
+    "basis_errors": {
+        "schematisation_name": "model_test_v2__basis_errors",
+        "simulation_template_settings": {
+            "name": "basis_errors",
+            "use_0d_inflow": false,
+            "use_structure_control": true
+        },
+        "initial_conditions": {
+            "initial_waterlevel_file": null,
+            "initial_water_level_aggregation": null
+        },
+        "time_step_settings": {
+            "output_time_step": 300
+        },
+        "model_settings": {
+            "nr_grid_levels": 3,
+            "dem_file": "dem_hoekje.tif",
+            "friction_coefficient_file": "friction_hoekje.tif",
+            "use_2d_rain": true,
+            "use_2d_flow": true,
+            "use_simple_infiltration": false
+        }
+    }
+}

@@ -8,10 +8,10 @@ import pandas as pd
 from core.folders import Folders
 from core.schematisation import upload
 
-logger = hrt.get_logger(__name__)
+logger = hrt.logging.get_logger(__name__)
 
 
-class RanaSchematisationService:
+class RanaSchematisationApiService:
     """Service for uploading schematisations to 3Di and requesting information on revisions."""
 
     def __init__(self, api_key: str):
@@ -48,15 +48,6 @@ class ScenarioSettings:
 
         return settings_df, settings_default_df
 
-    def validate(self, settings_df: pd.DataFrame, settings_default_df: pd.DataFrame) -> None:
-        """Sanity check settings tables"""
-        intersect = settings_df.keys().intersection(settings_default_df.keys())
-        if len(intersect) > 0:
-            logger.warning(
-                f"""Er staan kolommen zowel in de defaut als in de andere modelsettings.
-        Dat lijkt me een slecht plan. Kolommen: {intersect.values}"""
-            )
-
     def get(self, scenario_name: str) -> pd.DataFrame:
         """Get settings for scenario."""
         settings_df, settings_default_df = self.read_settings()
@@ -87,7 +78,7 @@ class ScenarioBuilder:
 
 class ScenarioService:
     def __init__(self, folder: Folders):
-        self.rana_service = RanaSchematisationService(api_key=os.environ["THREEDI_API_KEY"])
+        self.rana_service = RanaSchematisationApiService(api_key=os.environ["THREEDI_API_KEY"])
         self.settings = ScenarioSettings(folder=folder)
 
     def run(self, scenario_name, commit_message):

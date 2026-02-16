@@ -376,6 +376,7 @@ class SchemaDirParent(Folder):
 
         self.add_file("settings", "model_settings.xlsx")
         self.add_file("settings_default", "model_settings_default.xlsx")
+        self.schematisation_scenarios = self.joinpath("schematisation_scenarios.json")
 
         # Load settings excel
         self.settings_loaded = False

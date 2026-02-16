@@ -2,14 +2,17 @@
 from pathlib import Path
 
 import geopandas as gpd
-from core.schema_scenario_builder.settings import ScenarioSettings
 
+# from core.schema_scenario_builder.settings import ScenarioSettings
 import hhnk_threedi_tools as htt
 from tests.config import FOLDER_NEW, FOLDER_TEST
 
 MODULE_DIR = Path(htt.__file__).parent
+folder = FOLDER_TEST
 
+# %%
 if __name__ == "__main__":
+    folder = FOLDER_TEST
     # settings_file = Path(f"{Path(__file__).parent}/resources/model_settings.xlsx")
     # settings_default_file = Path(f"{Path(__file__).parent}/resources/model_settings_default.xlsx")
     settings_file = FOLDER_TEST.model.settings.path
