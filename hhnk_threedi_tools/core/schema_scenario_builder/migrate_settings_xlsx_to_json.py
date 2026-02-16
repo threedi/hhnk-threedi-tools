@@ -24,7 +24,6 @@ MODEL_SETTINGS_RENAMES = {
     "initial_waterlevel_file": "layers.initial_conditions.initial_water_level_file",
     "water_level_ini_type": "layers.initial_conditions.initial_water_level_aggregation",
     "output_time_step": "layers.time_step_settings.output_time_step",
-    "kmax": "layers.model_settings.nr_grid_levels",
     "dem_file": "layers.model_settings.dem_file",
     "frict_coef_file": "layers.model_settings.friction_coefficient_file",
     "use_2d_rain": "layers.model_settings.use_2d_rain",
@@ -34,6 +33,7 @@ MODEL_SETTINGS_RENAMES = {
     "infiltration_rate_file": "layers.simple_infiltration.infiltration_rate_file",
     "infiltration_surface_option": "layers.simple_infiltration.infiltration_surface_option",
     "max_infiltration_capacity_file": "layers.simple_infiltration.max_infiltration_volume_file",
+    "kmax": "REMOVED",
     "\ufeffid": "REMOVED",
     "display_name": "REMOVED",
 }
@@ -123,6 +123,10 @@ def migrate_scenario_xlsx_to_json(folder: Folders) -> None:
     logger.info(f"Written {output_json}")
 
 
+# TODO sqlite instellingen beiden op True zetten;
+# "use_0d_inflow": True
+# "use_structure_control": True
+# Dan migreren.
 # %%
 if __name__ == "__main__":
     from tests.config import FOLDER_NEW, FOLDER_TEST
