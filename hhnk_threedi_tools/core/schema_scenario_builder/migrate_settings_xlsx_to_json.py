@@ -88,8 +88,8 @@ def _set_nested_dict(nested_dict, layer_name, value) -> None:
     nested_dict[keys[-1]] = value
 
 
-def migration_xlsx_to_json(folder: Folders) -> None:
-    """Convert model settings from xlsx to json format."""
+def migrate_scenario_xlsx_to_json(folder: Folders) -> None:
+    """Convert model_settings.xlsx to schematisation_scenarios.json format."""
     input_xlsx = folder.model.settings.path
     output_json = folder.model.schematisation_scenarios
     scenarios = {}
@@ -128,6 +128,6 @@ if __name__ == "__main__":
     from tests.config import FOLDER_NEW, FOLDER_TEST
 
     folder = FOLDER_TEST
-    migration_xlsx_to_json(folder)
+    migrate_scenario_xlsx_to_json(folder)
 
 # %%

@@ -44,7 +44,9 @@ class ScenarioBuilder:
         return scenarios
 
     def build_scenario(self, scenario_name: str) -> Path:
-        """Build schematisation of scenario.
+        """Entrypoint that runs everything for the ScenarioBuilder.
+
+        Build schematisation of scenario.
 
         Steps:
         1. Copy required files from the default scenario, including the base schematisation.
@@ -57,7 +59,7 @@ class ScenarioBuilder:
         self.update_scenario_from_json(scenario_name=scenario_name, gpkg_path=gpkg_path)
 
         if scenario_name == "0d1d_check":
-            self.update_weir_width(gpkg_path)
+            self.update_weir_width_for_hydraulic_check(gpkg_path)
 
         return gpkg_path
 
@@ -133,7 +135,7 @@ class ScenarioBuilder:
             model.write_to_gpkg(gpkg_path)
 
     @staticmethod
-    def update_weir_width(gpkg_path: Path):
+    def update_weir_width_for_hydraulic_check(gpkg_path: Path):
         """For the 0d1d_check scenario we disable structure control and increase the weir width"""
         NEW_WIDTH_MULTIPLIER = 10
 
@@ -183,3 +185,6 @@ class ScenarioService:
         # validatie met 3di of model goed is
         for scenario_name in scenario_names:
             self.rana_service.upload(scenario_name=scenario_name, commit_message=commit_message)
+
+
+# %%

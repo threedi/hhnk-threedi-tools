@@ -34,7 +34,7 @@ if __name__ == "__main__":
         builder.update_scenario_from_json(scenario_name=scenario_name, gpkg_path=gpkg_path)
 
         if scenario_name == "0d1d_check":
-            builder.update_weir_width(gpkg_path)
+            builder.update_weir_width_for_hydraulic_check(gpkg_path)
 
         weir_gdf = hrt.SpatialDatabase(gpkg_path).load("weir", index_column="id")
         if scenario_name == "0d1d_check":
