@@ -1,6 +1,0 @@
-﻿id;schematisation_name;name;dem_file;frict_coef_file;infiltration_rate_file;max_infiltration_capacity_file;initial_waterlevel_file;water_level_ini_type;display_name;output_time_step;use_2d_rain;kmax;control_group_id;use_2d_flow;simple_infiltration_settings_id;use_0d_inflow;infiltration_rate;infiltration_surface_option
-1;bwn_callantsoog_0d1d_test;0d1d_test;rasters/dem_callantsoog.tif;;;;;;;900;0;3;;0;;1;;
-2;bwn_callantsoog_1d2d_test;1d2d_test;rasters/dem_callantsoog.tif;rasters/friction_callantsoog.tif;;;;;;300;1;3;1;1;;0;;
-3;bwn_callantsoog_1d2d_glg;1d2d_glg;rasters/dem_callantsoog.tif;rasters/friction_callantsoog.tif;rasters/infiltration_callantsoog.tif;rasters/storage_glg_callantsoog.tif;;;glg;300;1;3;1;1;1;0;0;0
-4;bwn_callantsoog_1d2d_ggg;1d2d_ggg;rasters/dem_callantsoog.tif;rasters/friction_callantsoog.tif;rasters/infiltration_callantsoog.tif;rasters/storage_ggg_callantsoog.tif;;;ggg;300;1;3;1;1;2;0;0;0
-5;bwn_callantsoog_1d2d_ghg;1d2d_ghg;rasters/dem_callantsoog.tif;rasters/friction_callantsoog.tif;rasters/infiltration_callantsoog.tif;rasters/storage_ghg_callantsoog.tif;;;ghg;300;1;3;1;1;3;0;0;0

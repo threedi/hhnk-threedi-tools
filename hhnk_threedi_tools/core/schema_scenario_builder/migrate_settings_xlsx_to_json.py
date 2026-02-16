@@ -38,10 +38,8 @@ MODEL_SETTINGS_RENAMES = {
     "display_name": "REMOVED",
 }
 
-type_conversions = {"control_group_id": bool, "simple_infiltration_settings_id": bool}
 
-
-def convert_values(key: str, value) -> Optional[object]:
+def _convert_values(key: str, value) -> Optional[object]:
     """Convert CSV string values to proper Python types."""
     # Handle NaN and None first
     if pd.isna(value) or value is None or value == "" or str(value).strip() == "":
@@ -78,7 +76,7 @@ def convert_values(key: str, value) -> Optional[object]:
     return value
 
 
-def set_nested_dict(nested_dict, layer_name, value) -> None:
+def _set_nested_dict(nested_dict, layer_name, value) -> None:
     """Set a value in a nested dictionary using dot notation path.
     Mutates inplace
     """
@@ -90,7 +88,6 @@ def set_nested_dict(nested_dict, layer_name, value) -> None:
     nested_dict[keys[-1]] = value
 
 
-# %%
 def migration_xlsx_to_json(folder: Folders) -> None:
     """Convert model settings from xlsx to json format."""
     input_xlsx = folder.model.settings.path
@@ -102,14 +99,14 @@ def migration_xlsx_to_json(folder: Folders) -> None:
     for _, row in df.iterrows():
         clean_row = {}
         for key, value in row.items():
-            clean_row[key] = convert_values(key, value)
+            clean_row[key] = _convert_values(key, value)
 
         # Apply column renames
         renamed_row = {}
         for old_key in MODEL_SETTINGS_RENAMES.keys():
             new_key = MODEL_SETTINGS_RENAMES[old_key]
             if new_key != "REMOVED":
-                set_nested_dict(renamed_row, new_key, clean_row.get(old_key))
+                _set_nested_dict(renamed_row, new_key, clean_row.get(old_key))
 
         scenario_name = renamed_row["simulation_template_settings"]["name"]
         scenario_name = scenario_name.replace("_test", "_check")
@@ -126,6 +123,7 @@ def migration_xlsx_to_json(folder: Folders) -> None:
     logger.info(f"Written {output_json}")
 
 
+# %%
 if __name__ == "__main__":
     from tests.config import FOLDER_NEW, FOLDER_TEST
 

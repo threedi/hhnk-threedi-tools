@@ -35,16 +35,16 @@ class BaseSchematisationLayer(BaseModel):
         row = {k: None if isinstance(v, float) and pd.isna(v) else v for k, v in gdf.iloc[0].to_dict().items()}
         return cls(**row)
 
-    def write_to_gpkg(self, gpkg_path: Path, layer: str = "model_settings", idx: int = 0) -> None:
-        gdf = gpd.read_file(gpkg_path, layer=layer)
+    def write_to_gpkg(self, gpkg_path: Path, idx: int = 0) -> None:
+        gdf = gpd.read_file(gpkg_path, layer=self.layer_name)
         if gdf.empty:
-            raise ValueError(f"No rows found in layer '{layer}' of {gpkg_path}")
+            raise ValueError(f"No rows found in layer '{self.layer_name}' of {gpkg_path}")
 
         data = self.model_dump()  # Convert pydantic model to dict
         for key, value in data.items():
             if key in gdf.columns:
-                gdf.at[idx, key] = value
-        gdf.to_file(gpkg_path, layer=layer, driver="GPKG")
+                gdf.loc[idx, key] = value
+        gdf.to_file(gpkg_path, layer=self.layer_name, driver="GPKG")
 
 
 class InitialConditions(BaseSchematisationLayer):
@@ -136,7 +136,7 @@ class TimeStepSettings(BaseSchematisationLayer):
     use_time_step_stretch: Optional[bool] = None
 
 
-LAYER_MAP = {
+LAYER_MAP: dict[str, type[BaseSchematisationLayer]] = {
     "initial_conditions": InitialConditions,
     "model_settings": ModelSettings,
     "simple_infiltration": SimpleInfiltration,
@@ -160,18 +160,20 @@ if __name__ == "__main__":
     scenario = scenarios[scenario_name]
 
     for layer_name, values in scenario.items():
+        # This cls variable is used to determine which pydantic model to use for loading and updating the layer
         cls = LAYER_MAP.get(layer_name)
         if not cls:
             continue
 
-        model = cls.load(gpkg_path)  # load current values from gpkg
+        # Load current values from gpkg
+        model = cls.load(gpkg_path)
+        current = model.model_dump()
 
-        # update only fields present in the JSON
-        current = model.model_dump()  # pydantic v2
+        # Update the fields present in the JSON, validating the values using pydantic
         for k, v in values.items():
             if k in current:
                 logger.info(f"Updating {layer_name}.{k} from {current[k]} to {v}")
-                setattr(model, k, v)  # validate on assignment (model_config.validate_assignment=True)
+                setattr(model, k, v)
         # model.write_to_gpkg(gpkg_path, layer=layer_name) # write back to gpkg
 
     # model_settings.write_to_gpkg(Path("example.gpkg"), layer="model_settings")
