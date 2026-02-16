@@ -16,6 +16,19 @@ from core.schematisation.threedi_schematisation import ThreediSchematisation
 logger = hrt.logging.get_logger(__name__)
 
 
+class ScenarioSettings:
+    def __init__(self, path: Path):
+        self.path = path
+
+    @classmethod
+    def from_folder(cls, folder: Folders) -> "ScenarioSettings":
+        return cls(path=folder.model.schematisation_scenarios)
+
+    def load_json(self) -> dict:
+        with self.path.open(encoding="utf-8") as f:
+            return json.load(f)
+
+
 class ScenarioBuilder:
     def __init__(self, folder: Folders):
         self.folder = folder
@@ -23,9 +36,7 @@ class ScenarioBuilder:
 
     @cached_property
     def scenarios(self) -> dict:
-        with self.folder.model.schematisation_scenarios.open(encoding="utf-8") as f:
-            scenarios = json.load(f)
-        return scenarios
+        return ScenarioSettings.from_folder(self.folder).load_json()
 
     def build_scenario(self, scenario_name: str) -> Path:
         """Entrypoint that runs everything for the ScenarioBuilder.
