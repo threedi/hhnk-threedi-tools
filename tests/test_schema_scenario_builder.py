@@ -2,9 +2,9 @@
 import json
 import shutil
 import warnings
-from pathlib import Path
 
 import geopandas as gpd
+import pandas as pd
 
 from hhnk_threedi_tools.core.schema_scenario_builder.builder import ScenarioBuilder
 from tests.config import FOLDER_NEW, FOLDER_TEST
@@ -34,10 +34,14 @@ if __name__ == "__main__":
 
         builder.update_scenario_from_json(scenario_name=scenario_name, gpkg_path=gpkg_path)
 
-        for layer_name, values in scenario.items():
-            gdf = gpd.read_file(gpkg_path, layer="model_settings")
+        for layer_name, values in scenario["layers"].items():
+            gdf = gpd.read_file(gpkg_path, layer=layer_name)
             for k, v in values.items():
-                assert gdf[k] == v
+                cell_value = gdf[k].to_numpy()[0]
+                # treat NaN and None as equivalent (don't raise when both are missing)
+                if pd.isna(cell_value) and v is None:
+                    continue
+                assert cell_value == v
 
 
 # %%

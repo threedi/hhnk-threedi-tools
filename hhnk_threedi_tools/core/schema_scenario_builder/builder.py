@@ -73,7 +73,7 @@ class ScenarioBuilder:
 
         def _iter_raster_files(settings: dict):
             """Yield (key, filename) for every nested '*_file' entry with a non-empty value."""
-            for layer_vals in settings.values():
+            for layer_vals in settings["layers"].values():
                 if not isinstance(layer_vals, dict):
                     continue
                 for k, v in layer_vals.items():
@@ -99,7 +99,7 @@ class ScenarioBuilder:
         """Update the layers in the schematisation GPKG based on the scenario settings defined in the JSON file."""
         scenario_settings: dict = self.scenarios[scenario_name]
 
-        for layer_name, values in scenario_settings.items():
+        for layer_name, values in scenario_settings["layers"].items():
             # This cls variable is used to determine which pydantic model to use for loading and updating the layer
             cls = LAYER_MAP.get(layer_name)
             if not cls:
@@ -115,6 +115,10 @@ class ScenarioBuilder:
                     if current[k] != v:
                         logger.info(f"{scenario_name}: Updating {layer_name}.{k} from {current[k]} to {v}")
                         setattr(model, k, v)
+                else:
+                    raise KeyError(
+                        f"{scenario_name}: Attempting to update {layer_name}.{k} which is not a valid field in the layer according to the pydantic model. Fix the schematisation_scenarios.json"
+                    )
 
             model.write_to_gpkg(gpkg_path)  # write back to gpkg
 

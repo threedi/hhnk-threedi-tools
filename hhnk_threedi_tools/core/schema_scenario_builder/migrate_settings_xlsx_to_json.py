@@ -18,22 +18,22 @@ logger = hrt.logging.get_logger(__name__)
 # col renames for model_settings.xlsx to schemation_scenarios.json
 MODEL_SETTINGS_RENAMES = {
     "schematisation_name": "schematisation_name",
-    "name": "simulation_template_settings.name",
-    "use_0d_inflow": "simulation_template_settings.use_0d_inflow",
-    "control_group_id": "simulation_template_settings.use_structure_control",
-    "initial_waterlevel_file": "initial_conditions.initial_waterlevel_file",
-    "water_level_ini_type": "initial_conditions.initial_water_level_aggregation",
-    "output_time_step": "time_step_settings.output_time_step",
-    "kmax": "model_settings.nr_grid_levels",
-    "dem_file": "model_settings.dem_file",
-    "frict_coef_file": "model_settings.friction_coefficient_file",
-    "use_2d_rain": "model_settings.use_2d_rain",
-    "use_2d_flow": "model_settings.use_2d_flow",
-    "simple_infiltration_settings_id": "model_settings.use_simple_infiltration",
-    "infiltration_rate": "simple_infiltration.infiltration_rate",
-    "infiltration_rate_file": "simple_infiltration.infiltration_rate_file",
-    "infiltration_surface_option": "simple_infiltration.infiltration_surface_option",
-    "max_infiltration_capacity_file": "simple_infiltration.max_infiltration_volume_file",
+    "name": "layers.simulation_template_settings.name",
+    "use_0d_inflow": "layers.simulation_template_settings.use_0d_inflow",
+    "control_group_id": "layers.simulation_template_settings.use_structure_control",
+    "initial_waterlevel_file": "layers.initial_conditions.initial_water_level_file",
+    "water_level_ini_type": "layers.initial_conditions.initial_water_level_aggregation",
+    "output_time_step": "layers.time_step_settings.output_time_step",
+    "kmax": "layers.model_settings.nr_grid_levels",
+    "dem_file": "layers.model_settings.dem_file",
+    "frict_coef_file": "layers.model_settings.friction_coefficient_file",
+    "use_2d_rain": "layers.model_settings.use_2d_rain",
+    "use_2d_flow": "layers.model_settings.use_2d_flow",
+    "simple_infiltration_settings_id": "layers.model_settings.use_simple_infiltration",
+    "infiltration_rate": "layers.simple_infiltration.infiltration_rate",
+    "infiltration_rate_file": "layers.simple_infiltration.infiltration_rate_file",
+    "infiltration_surface_option": "layers.simple_infiltration.infiltration_surface_option",
+    "max_infiltration_capacity_file": "layers.simple_infiltration.max_infiltration_volume_file",
     "\ufeffid": "REMOVED",
     "display_name": "REMOVED",
 }
@@ -108,12 +108,12 @@ def migration_xlsx_to_json(folder: Folders) -> None:
             if new_key != "REMOVED":
                 _set_nested_dict(renamed_row, new_key, clean_row.get(old_key))
 
-        scenario_name = renamed_row["simulation_template_settings"]["name"]
+        scenario_name = renamed_row["layers"]["simulation_template_settings"]["name"]
         scenario_name = scenario_name.replace("_test", "_check")
 
         # Remove all null simple_infiltration
-        if renamed_row["model_settings"]["use_simple_infiltration"] is False:
-            renamed_row.pop("simple_infiltration", None)
+        if renamed_row["layers"]["model_settings"]["use_simple_infiltration"] is False:
+            renamed_row["layers"].pop("simple_infiltration", None)
 
         scenarios[scenario_name] = renamed_row
 
