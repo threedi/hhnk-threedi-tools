@@ -416,7 +416,7 @@ class SchemaDirParent(Folder):
                     f"schema_{scenario_name}",
                     ThreediSchematisation(base=self.base, name=scenario_name, create=False),
                 )
-            self.schema_list.append(f"schema_{scenario_name}")
+                self.schema_list.append(f"schema_{scenario_name}")
             self.settings_loaded = True
 
     def create_readme(self):

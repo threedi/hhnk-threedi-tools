@@ -158,7 +158,7 @@
             "infiltration_rate": 0.0,
             "infiltration_rate_file": "infiltration_hoekje.tif",
             "infiltration_surface_option": 0.0,
-            "max_infiltration_volume_file": "storage_bgs_hoekje.tif"
+            "max_infiltration_volume_file": "storage_glg_hoekje.tif"
         }
     },
     "basis_errors": {

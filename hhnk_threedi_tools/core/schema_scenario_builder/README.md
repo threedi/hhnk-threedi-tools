@@ -29,3 +29,13 @@ See migration guide; https://docs.ranawaterintelligence.com/h_schema_300.html
 
 - "model_settings.nr_grid_levels": 3, -> staat overal op 3, dus kan default worden?
 - water_level_ini_type -> initial_water_level_aggregation -> alles null, dus weg?
+
+
+dtype mismatches; https://docs.ranawaterintelligence.com/d_settings_objects.html 
+
+simulation_template_settings.name -- dtype=int -- typo?
+simulation_template_settings.use_0d_inflow --dtype=bool -- In model lijkt het een int. -> overzetten naar bool?
+
+time_step_settings.min_time_step -- dtype=int? we hebben na migratie hier een float staan met 0.01. Draaien van schematisation check geeft geen warning. Is dit de bedoeling dat het een int wordt of float?
+
+model_settings.use_2d_rain -- dtype=bool? in https://docs.ranawaterintelligence.com/_downloads/84ae42a0608fb89dbd6d9ba1eefce34f/3Di%20database%20schema%20219%20to%20schema%20300.xlsx staat deze op int. In de database lijkt het ook nog int.

@@ -1,5 +1,7 @@
 # %%
+import json
 import shutil
+import warnings
 from pathlib import Path
 
 import geopandas as gpd
@@ -7,6 +9,7 @@ import geopandas as gpd
 from hhnk_threedi_tools.core.schema_scenario_builder.builder import ScenarioBuilder
 from tests.config import FOLDER_NEW, FOLDER_TEST
 
+warnings.filterwarnings("error", category=FutureWarning)
 shutil.copytree(FOLDER_TEST.model.schema_base.base, FOLDER_NEW.model.schema_base.base, dirs_exist_ok=True)
 shutil.copy(FOLDER_TEST.model.schematisation_scenarios, FOLDER_NEW.model.schematisation_scenarios)
 
@@ -17,21 +20,31 @@ if __name__ == "__main__":
     scenario_name = "0d1d_check"
 
     self = builder = ScenarioBuilder(folder=folder)
-    builder.copy_base_schematisation(scenario_name=scenario_name)
 
-    gpkg_path = folder.model.schema_0d1d_check.database
-    assert gpkg_path.exists()
+    with folder.model.schematisation_scenarios.open(encoding="utf-8") as f:
+        scenarios = json.load(f)
 
-    builder.update_scenario_from_json(scenario_name=scenario_name, gpkg_path=gpkg_path)
+    for scenario_name in scenarios:
+        scenario = scenarios[scenario_name]
+
+        builder.copy_base_schematisation(scenario_name=scenario_name)
+
+        gpkg_path = folder.model.schema_0d1d_check.database.path
+        assert gpkg_path.exists()
+
+        builder.update_scenario_from_json(scenario_name=scenario_name, gpkg_path=gpkg_path)
+
+        for layer_name, values in scenario.items():
+            gdf = gpd.read_file(gpkg_path, layer="model_settings")
+            for k, v in values.items():
+                assert gdf[k] == v
 
 
 # %%
 
 # %%
 
-m = Path(r"E:\02.modellen\23_Katvoed\02_schematisation\00_basis\bwn_katvoed.gpkg")
 
-df = gpd.read_file(m, layer="global_settings").T
 # import json
 
 # row_dict = dict(settings_default_df.iloc[0])
