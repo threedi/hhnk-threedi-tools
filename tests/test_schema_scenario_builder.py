@@ -1,20 +1,28 @@
 # %%
+import shutil
 from pathlib import Path
 
 import geopandas as gpd
 
-import hhnk_threedi_tools as htt
+from hhnk_threedi_tools.core.schema_scenario_builder.builder import ScenarioBuilder
 from tests.config import FOLDER_NEW, FOLDER_TEST
 
-MODULE_DIR = Path(htt.__file__).parent
-folder = FOLDER_TEST
+shutil.copytree(FOLDER_TEST.model.schema_base.base, FOLDER_NEW.model.schema_base.base, dirs_exist_ok=True)
+shutil.copy(FOLDER_TEST.model.schematisation_scenarios, FOLDER_NEW.model.schematisation_scenarios)
+
 
 # %%
 if __name__ == "__main__":
-    folder = FOLDER_TEST
-    # settings_file = Path(f"{Path(__file__).parent}/resources/model_settings.xlsx")
-    # settings_default_file = Path(f"{Path(__file__).parent}/resources/model_settings_default.xlsx")
-    settings_file = FOLDER_TEST.model.settings.path
+    folder = FOLDER_NEW
+    scenario_name = "0d1d_check"
+
+    self = builder = ScenarioBuilder(folder=folder)
+    builder.copy_base_schematisation(scenario_name=scenario_name)
+
+    gpkg_path = folder.model.schema_0d1d_check.database
+    assert gpkg_path.exists()
+
+    builder.update_scenario_from_json(scenario_name=scenario_name, gpkg_path=gpkg_path)
 
 
 # %%

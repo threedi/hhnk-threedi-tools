@@ -102,8 +102,6 @@ class ModelSchematisations:
         only the globalsettings"""
         row = self.settings_df.loc[name].copy()
 
-        # schema_name = self.folder.model._add_modelpath(name)
-
         # Copy the files that are in the global settings.
         # This menas rasters that are not defined are not added to the schematisation.
         schema_base = self.folder.model.schema_base

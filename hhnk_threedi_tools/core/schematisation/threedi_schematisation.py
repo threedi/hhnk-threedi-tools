@@ -1,5 +1,6 @@
 # %%
 import os
+from functools import cached_property
 
 import geopandas as gpd
 import hhnk_research_tools as hrt
@@ -39,7 +40,7 @@ class ThreediSchematisation(Folder):
         elif len(database) == 0:
             logger.warning(f"No gpkg found in {self.path}.")
 
-    @property
+    @cached_property
     def rasters(self):
         return self.ThreediRasters(base=self.base, caller=self)
 

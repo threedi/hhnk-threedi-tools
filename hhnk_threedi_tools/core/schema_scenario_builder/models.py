@@ -43,6 +43,7 @@ class BaseSchematisationLayer(BaseModel):
         data = self.model_dump()  # Convert pydantic model to dict
         for key, value in data.items():
             if key in gdf.columns:
+                logger.debug(f"Updating {self.layer_name} layer: setting {key} to {value}")
                 gdf.loc[idx, key] = value
         gdf.to_file(gpkg_path, layer=self.layer_name, driver="GPKG")
 
@@ -87,7 +88,7 @@ class ModelSettings(BaseSchematisationLayer):
     table_step_size_1d: Optional[float] = None
     use_1d_flow: Optional[bool] = None
     use_2d_flow: Optional[bool] = None
-    use_2d_rain: Optional[int] = None
+    use_2d_rain: Optional[bool] = None
     use_groundwater_flow: Optional[bool] = None
     use_groundwater_storage: Optional[bool] = None
     use_interception: Optional[bool] = None

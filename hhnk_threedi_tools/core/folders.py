@@ -382,17 +382,10 @@ class SchemaDirParent(Folder):
         self.settings_loaded = False
         self.settings_df = None
 
-    def _add_modelpath(self, name):
-        setattr(
-            self,
-            f"schema_{name}",
-            ThreediSchematisation(base=self.base, name=name, create=False),
-        )
-        self.schema_list.append(f"schema_{name}")
-        return f"schema_{name}"
-
     def set_modelsplitter_paths(self):
-        """Call this to set the individual schematisations for the splitter."""
+        """Call this to set the individual schematisations for the splitter.
+        TODO deprated once we move to py312, replaced by add_scenarios_from_json
+        """
         if self.settings.exists():
             if not self.settings_loaded:  # only read once. #FIXME test this, might cause issues.
                 self.settings_df = pd.read_excel(self.settings.base, engine="openpyxl")
@@ -402,9 +395,29 @@ class SchemaDirParent(Folder):
 
                 for item_name, row in self.settings_df.iterrows():
                     if not pd.isna(row["name"]):
-                        self._add_modelpath(name=item_name)
+                        setattr(
+                            self,
+                            f"schema_{item_name}",
+                            ThreediSchematisation(base=self.base, name=item_name, create=False),
+                        )
+                        self.schema_list.append(f"schema_{item_name}")
         else:
             print(f"Tried to load {self.settings.base}, but it doesnt exist.")
+
+    def add_scenarios_from_json(self) -> None:
+        """Load scenarios from json and set them as attributes on the model."""
+        if not self.settings_loaded:
+            with self.schematisation_scenarios.open(encoding="utf-8") as f:
+                scenarios = json.load(f)
+
+            for scenario_name in scenarios.keys():
+                setattr(
+                    self,
+                    f"schema_{scenario_name}",
+                    ThreediSchematisation(base=self.base, name=scenario_name, create=False),
+                )
+            self.schema_list.append(f"schema_{scenario_name}")
+            self.settings_loaded = True
 
     def create_readme(self):
         readme_txt = (

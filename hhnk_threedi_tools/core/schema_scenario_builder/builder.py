@@ -33,9 +33,9 @@ class RanaSchematisationApiService:
 
 
 class ScenarioBuilder:
-    def __init__(self, folder: Folders, scenario_name: str):
+    def __init__(self, folder: Folders):
         self.folder = folder
-        self.scenario_name = scenario_name
+        self.folder.model.add_scenarios_from_json()  # loads scenarios and adds them as attributes to folder.model
 
     @cached_property
     def scenarios(self) -> dict:
@@ -64,32 +64,36 @@ class ScenarioBuilder:
         schema_new.rasters.mkdir()
 
         # Copy schematisation
+
         dst = schema_new.full_path(schema_base.database.name)
         shutil.copyfile(src=schema_base.database.base, dst=dst.base)
 
         # Copy rasters that are defined in the settings JSON
         scenario_settings: dict = self.scenarios[scenario_name]
 
-        for raster_file in [
-            "dem_file",
-            "frict_coef_file",
-            "infiltration_rate_file",
-            "max_infiltration_volume_file",
-            "initial_waterlevel_file",
-        ]:
-            if raster_file in scenario_settings:
-                if scenario_settings[raster_file] is not None:
-                    src = schema_base.rasters.full_path(scenario_settings[raster_file])
+        def _iter_raster_files(settings: dict):
+            """Yield (key, filename) for every nested '*_file' entry with a non-empty value."""
+            for layer_vals in settings.values():
+                if not isinstance(layer_vals, dict):
+                    continue
+                for k, v in layer_vals.items():
+                    if k.endswith("_file") and v:
+                        if v.endswith(".tif") or v.endswith(".tiff"):
+                            yield k, v
 
-                    if src.exists():
-                        dst = schema_new.rasters.full_path(scenario_settings[raster_file])
-                        logger.info(f"Copying '{src.name}' to scenario folder for '{scenario_name}'")
-                        shutil.copyfile(src=src.base, dst=dst.base)
-                    else:
-                        raise FileNotFoundError(
-                            f"The '{raster_file}' used in run-name '{scenario_name}' is missing in the base-schematization. "
-                            f"It is expected at {src}. Please provide the file or change your schematisation-settings file."
-                        )
+        for _key, raster_name in _iter_raster_files(scenario_settings):
+            if raster_name is not None:
+                src = schema_base.rasters.full_path(raster_name)
+
+                if src.exists():
+                    dst = schema_new.rasters.full_path(raster_name)
+                    logger.info(f"{scenario_name}: Copying '{src.name}' to scenario folder for '{scenario_name}'")
+                    shutil.copyfile(src=src.base, dst=dst.base)
+                else:
+                    raise FileNotFoundError(
+                        f"The '{raster_name}' used in run-name '{scenario_name}' is missing in the base-schematization. "
+                        f"It is expected at {src}. Please provide the file or change your schematisation-settings file."
+                    )
 
     def update_scenario_from_json(self, scenario_name: str, gpkg_path: Path) -> None:
         """Update the layers in the schematisation GPKG based on the scenario settings defined in the JSON file."""
@@ -108,14 +112,16 @@ class ScenarioBuilder:
             # Update the fields present in the JSON, validating the values using pydantic
             for k, v in values.items():
                 if k in current:
-                    logger.info(f"Updating {layer_name}.{k} from {current[k]} to {v}")
-                    setattr(model, k, v)
+                    if current[k] != v:
+                        logger.info(f"{scenario_name}: Updating {layer_name}.{k} from {current[k]} to {v}")
+                        setattr(model, k, v)
 
             model.write_to_gpkg(gpkg_path)  # write back to gpkg
 
 
 class ScenarioService:
     def __init__(self, folder: Folders):
+        self.folder = folder
         self.rana_service = RanaSchematisationApiService(api_key=os.environ["THREEDI_API_KEY"])
 
     def run(self, scenario_name, commit_message):
@@ -131,8 +137,8 @@ class ScenarioService:
 
     def build_scenarios(self, scenario_names: list[str]) -> None:
         self._create_backup_revisions(commit_message="backup before building new scenarios")
+        scenario_builder = ScenarioBuilder(folder=self.folder)
         for scenario_name in scenario_names:
-            scenario_builder = ScenarioBuilder(scenario_name)
             scenario_builder.build_scenario(scenario_name)
 
     def upload_scenarios(self, scenario_names: list[str], commit_message: str) -> None:
