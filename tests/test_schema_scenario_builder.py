@@ -4,6 +4,7 @@ import shutil
 import warnings
 
 import geopandas as gpd
+import hhnk_research_tools as hrt
 import pandas as pd
 
 from hhnk_threedi_tools.core.schema_scenario_builder.builder import ScenarioBuilder
@@ -17,7 +18,6 @@ shutil.copy(FOLDER_TEST.model.schematisation_scenarios, FOLDER_NEW.model.schemat
 # %%
 if __name__ == "__main__":
     folder = FOLDER_NEW
-    scenario_name = "0d1d_check"
 
     self = builder = ScenarioBuilder(folder=folder)
 
@@ -27,12 +27,20 @@ if __name__ == "__main__":
     for scenario_name in scenarios:
         scenario = scenarios[scenario_name]
 
-        builder.copy_base_schematisation(scenario_name=scenario_name)
+        gpkg_path = builder.copy_base_schematisation(scenario_name=scenario_name)
 
-        gpkg_path = folder.model.schema_0d1d_check.database.path
         assert gpkg_path.exists()
 
         builder.update_scenario_from_json(scenario_name=scenario_name, gpkg_path=gpkg_path)
+
+        if scenario_name == "0d1d_check":
+            builder.update_weir_width(gpkg_path)
+
+        weir_gdf = hrt.SpatialDatabase(gpkg_path).load("weir", index_column="id")
+        if scenario_name == "0d1d_check":
+            assert weir_gdf.loc[10105, "cross_section_width"] == 80
+        else:
+            assert weir_gdf.loc[10105, "cross_section_width"] == 8
 
         for layer_name, values in scenario["layers"].items():
             gdf = gpd.read_file(gpkg_path, layer=layer_name)

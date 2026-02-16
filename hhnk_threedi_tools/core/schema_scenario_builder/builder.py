@@ -4,8 +4,8 @@ import os
 import shutil
 from functools import cached_property
 from pathlib import Path
-from typing import Tuple
 
+import geopandas as gpd
 import hhnk_research_tools as hrt
 import pandas as pd
 from core.folders import Folders
@@ -53,11 +53,18 @@ class ScenarioBuilder:
         4. Apply sql changes as defined in folder.model.model_sql
         """
 
-        scenario_folder = Path(f"./{scenario_name}")
-        return scenario_folder
+        gpkg_path = self.copy_base_schematisation(scenario_name=scenario_name)
+        self.update_scenario_from_json(scenario_name=scenario_name, gpkg_path=gpkg_path)
 
-    def copy_base_schematisation(self, scenario_name: str) -> None:
-        """Copy the base schematisation to a new folder for the scenario."""
+        if scenario_name == "0d1d_check":
+            self.update_weir_width(gpkg_path)
+
+        return gpkg_path
+
+    def copy_base_schematisation(self, scenario_name: str) -> Path:
+        """Copy the base schematisation to a new folder for the scenario.
+        Returns the path to the new schematisation GPKG file.
+        """
         schema_base = self.folder.model.schema_base
         schema_new: ThreediSchematisation = getattr(self.folder.model, f"schema_{scenario_name}")
         schema_new.mkdir()
@@ -94,6 +101,7 @@ class ScenarioBuilder:
                         f"The '{raster_name}' used in run-name '{scenario_name}' is missing in the base-schematization. "
                         f"It is expected at {src}. Please provide the file or change your schematisation-settings file."
                     )
+        return schema_new.database.path
 
     def update_scenario_from_json(self, scenario_name: str, gpkg_path: Path) -> None:
         """Update the layers in the schematisation GPKG based on the scenario settings defined in the JSON file."""
@@ -103,7 +111,9 @@ class ScenarioBuilder:
             # This cls variable is used to determine which pydantic model to use for loading and updating the layer
             cls = LAYER_MAP.get(layer_name)
             if not cls:
-                continue
+                raise KeyError(
+                    f"{scenario_name}: Layer '{layer_name}' in schematisation_scenarios.json does not have a corresponding pydantic model defined. Fix the schematisation_scenarios.json or add a pydantic model for this layer."
+                )
 
             # Load current values from gpkg
             model = cls.load(gpkg_path)
@@ -120,7 +130,31 @@ class ScenarioBuilder:
                         f"{scenario_name}: Attempting to update {layer_name}.{k} which is not a valid field in the layer according to the pydantic model. Fix the schematisation_scenarios.json"
                     )
 
-            model.write_to_gpkg(gpkg_path)  # write back to gpkg
+            model.write_to_gpkg(gpkg_path)
+
+    @staticmethod
+    def update_weir_width(gpkg_path: Path):
+        """For the 0d1d_check scenario we disable structure control and increase the weir width"""
+        NEW_WIDTH_MULTIPLIER = 10
+
+        if "0d1d_check" not in str(gpkg_path):
+            raise ValueError("This function is only intended to be used for the 0d1d_check scenario")
+
+        # Load
+        weir_gdf = hrt.SpatialDatabase(gpkg_path).load("weir", index_column="id")
+        control_df = hrt.SpatialDatabase(gpkg_path).load("table_control", index_column="id")
+
+        # Update weir width for controlled weirs
+        controlled_weir_ids = control_df[control_df["target_type"] == "weir"]["target_id"].to_list()
+        weir_gdf.loc[controlled_weir_ids, "cross_section_width"] = (
+            weir_gdf.loc[controlled_weir_ids, "cross_section_width"].astype(float) * NEW_WIDTH_MULTIPLIER
+        )
+        logger.info(
+            f"Updated cross_section_width for weirs with ids {controlled_weir_ids} by multiplying with {NEW_WIDTH_MULTIPLIER}."
+        )
+
+        # Write
+        weir_gdf.to_file(gpkg_path, layer="weir", driver="GPKG")
 
 
 class ScenarioService:
@@ -143,7 +177,7 @@ class ScenarioService:
         self._create_backup_revisions(commit_message="backup before building new scenarios")
         scenario_builder = ScenarioBuilder(folder=self.folder)
         for scenario_name in scenario_names:
-            scenario_builder.build_scenario(scenario_name)
+            gpkg_path = scenario_builder.build_scenario(scenario_name)
 
     def upload_scenarios(self, scenario_names: list[str], commit_message: str) -> None:
         # validatie met 3di of model goed is
