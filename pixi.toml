@@ -5,6 +5,10 @@ platforms = ["win-64"]
 repository = "https://github.com/threedi/hhnk-threedi-tools"
 
 
+[activation.env]
+PYTHONPATH = "./"
+
+
 [target.win-64.tasks]
 hrt-install = "bin/pixi/install_hrt.cmd"
 hydamo_validation-install = "bin/pixi/install_hydamo_validation.cmd"
@@ -12,7 +16,7 @@ hydamo_validation-install = "bin/pixi/install_hydamo_validation.cmd"
 
 [tasks]
 #Starting vs code using vs-code.cmd (pixi run code)
-lab = "jupyter lab"
+lab = "jupyter lab --no-browser"
 code = "code"
 code_insiders = "code-insiders"
 
@@ -29,7 +33,6 @@ upload_pypi = "twine upload --repository hhnk-threedi-tools  dist/*"
 sort_imports = "ruff check  ./**/*.py --select I --fix --force-exclude"
 fmt = "ruff format ./**/*.py --force-exclude"
 style = {depends-on = ["sort_imports", "fmt"]} # `pixi run style`
-
 
 [feature.dev.tasks]
 build_wheels = "rm -rf dist/ && python -m build" # build wheels
@@ -77,7 +80,7 @@ gitpython = ">=3.1.45,<4"
 # NenS deps
 threedi-api-client = "==4.1.12"
 threedi-modelchecker = "==2.18.3"
-threedi-schema = "==0.300.26"
+threedi-schema = "==0.300.29"
 threedi-scenario-downloader = "*"
 threedi_mi_utils = "==0.1.10"
 threedigrid = "==2.3.5"

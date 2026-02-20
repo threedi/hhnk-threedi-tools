@@ -5,6 +5,8 @@ environments:
     - url: https://conda.anaconda.org/conda-forge/
     indexes:
     - https://pypi.org/simple
+    options:
+      pypi-prerelease-mode: if-necessary-or-explicit
     packages:
       win-64:
       - conda: https://conda.anaconda.org/conda-forge/win-64/_openmp_mutex-4.5-2_gnu.conda
@@ -418,7 +420,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/7e/0f/854f248065894b806338d633d419bf1b108a4846e1b52bfb87164b5795f6/threedi_api_client-4.1.12-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/ad/af/9c01ccd6a898247b99666fdb1961108f882987db06649ed3f711d4e255a7/threedi_mi_utils-0.1.10-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/c8/7b/412b9735f6fd0b31a8c3700e3984b3a2383dbf518b76c371f3ee2aac9cae/threedi_modelchecker-2.18.3-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/45/00/dd004936e2aab10283bcc78f17b01b0f210bfbb75c5cc33ced07c84bb5f3/threedi_schema-0.300.26-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/3a/9a/12a26ec061feae0084b1bb31277b1ada1de9a4d08eded1e8901b0b1824cc/threedi_schema-0.300.29-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/af/db/70bdf58fba21f1043db3bfada43c2c15c7246c7077859429e36abc43b171/threedidepth-0.6.3-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/a4/84/aca4601652247838c82e0eac3d04d15d25337312feb0311d731d598a4b3c/threedigrid-2.3.5-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/b1/cb/31cbff1630d202139b437bdb8f2811a146a09940800d7fd69adc8bad11af/threedigrid_builder-1.24.6-cp312-cp312-win_amd64.whl
@@ -428,6 +430,8 @@ environments:
     - url: https://conda.anaconda.org/conda-forge/
     indexes:
     - https://pypi.org/simple
+    options:
+      pypi-prerelease-mode: if-necessary-or-explicit
     packages:
       win-64:
       - conda: https://conda.anaconda.org/conda-forge/noarch/affine-2.4.0-pyhd8ed1ab_1.conda
@@ -3427,7 +3431,6 @@ packages:
   version: '2025.1'
   sha256: 2707c449b1c06a9145917fbe4006999040d127a63bb9910653ad9969a8f4e0b7
   requires_python: '>=3.9'
-  editable: true
 - conda: https://conda.anaconda.org/conda-forge/noarch/hpack-4.1.0-pyhd8ed1ab_0.conda
   sha256: 6ad78a180576c706aabeb5b4c8ceb97c0cb25f1e112d76495bff23e3779948ba
   md5: 0a802cb9888dd14eeefc611f05c40b6e
@@ -9221,10 +9224,10 @@ packages:
   - pytest ; extra == 'test'
   - pytest-cov ; extra == 'test'
   requires_python: '>=3.7'
-- pypi: https://files.pythonhosted.org/packages/45/00/dd004936e2aab10283bcc78f17b01b0f210bfbb75c5cc33ced07c84bb5f3/threedi_schema-0.300.26-py3-none-any.whl
+- pypi: https://files.pythonhosted.org/packages/3a/9a/12a26ec061feae0084b1bb31277b1ada1de9a4d08eded1e8901b0b1824cc/threedi_schema-0.300.29-py3-none-any.whl
   name: threedi-schema
-  version: 0.300.26
-  sha256: 8c06b475d4bf61cb34d38432ca27637d9e850889e7ad1bfcce977e98266b6df7
+  version: 0.300.29
+  sha256: a84f6b076e21f27b24e71f584c133ca0b6801caae427800920cec9cad6248ae7
   requires_dist:
   - geoalchemy2>=0.9,!=0.11.*
   - sqlalchemy>=1.4

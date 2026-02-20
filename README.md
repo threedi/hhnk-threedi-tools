@@ -66,3 +66,46 @@ initialize git LFS (Large File Storage), create or append to the .gitattributes 
 ```
 
 
+
+# Jupyter setup
+The interactive window in vs-code can be very unreliable when starting up a session.
+Often leading to long waiting times or no connection to the kernel at all.
+
+This can be circumvented by hosting a jupyter lab server and connecting the interactive window to this server instead.
+
+## Initial Setup
+1. Add to pixi.toml;
+```
+[activation.env]
+PYTHONPATH = "./"
+[tasks]
+lab = "jupyter lab --no-browser"
+```
+
+2.  Generate a config file with;\
+`pixi run jupyter lab --generate-config`
+
+3. Navigate to `%USERPROFILE%\.jupyter` (copy paste this in windows explorer)
+Open the `jupyter_lab_config.py` file and add these lines, changing the port and token;
+
+```
+c.ServerApp.port = <INSERT_YOUR_PORT_HERE> # bezette poorten (aanvullen) = [8901]
+c.IdentityProvider.token = "<INSERT_RANDOM_TOKEN_HERE>"
+```
+
+4. In terminal run the command:\
+`pixi run lab`
+
+5. In interactive window top right, select a different python kernel\
+-> Click: Select Another Kernel...
+-> Click: Existing Jupyter Server...
+-> Fill url: http://127.0.0.1:8901/lab !! use the port from jupyter_lab_config
+-> Fill password: <<>> enter password from jupyter_lab_config.py
+-> 127.0.0.1:<<8901>> # Add port to the name for easier selection
+-> Click on the python3 (ipykernel)
+
+
+## Setup (every time)
+The jupyter server needs te be running, do this with;
+1. In terminal run the command:\
+`pixi run lab`
