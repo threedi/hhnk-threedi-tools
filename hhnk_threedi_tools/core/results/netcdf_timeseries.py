@@ -1,4 +1,5 @@
 # %%
+import warnings
 from dataclasses import dataclass
 
 import hhnk_research_tools as hrt
@@ -39,7 +40,7 @@ class NetcdfTimeSeries:
         self.ts = None
 
         # Check if result is aggregate # TODO Add test with aggregate
-        self.aggregate: bool = self.typecheck_aggregate
+        self.aggregate: bool = self.aggregate_typecheck
 
         # Check if result has breaches
         self.breaches: bool = self.grid.has_breaches
@@ -61,14 +62,34 @@ class NetcdfTimeSeries:
         return self.threedi_result.aggregate_grid
 
     @property
-    def timestamps(self):
+    def timestamps(self):  # TODO timestamps aggregate
         """Retrieve timestamps for timeseries"""
-        return self.grid.nodes.timestamps
+        if self.use_aggregate:
+            # Combine to dicts
+            timestamps = self.grid.nodes.timestamps | self.grid.lines.timestamps
+            # Check if timestamps are equal for all variables
+            vars = list(timestamps.keys())
+            ta = timestamps[vars[0]]
+            for var in vars:
+                if list(ta) == list(timestamps[var]):
+                    continue
+                else:
+                    logger.error("Different timestamps for aggregate variables not supported.")
+                    return None
+            return ta
+        else:
+            return self.grid.nodes.timestamps
 
     @property
-    def typecheck_aggregate(self) -> bool:
-        """Check if we have a normal or aggregated netcdf"""
-        return str(type(self.grid)) == "<class 'threedigrid.admin.gridresultadmin.GridH5AggregateResultAdmin'>"
+    def aggregate_typecheck(self) -> bool:
+        """Check if we have a normal or aggregate NetCDF"""
+        return "AggregateResult" in str(type(self.grid))
+
+    @property
+    def aggregate_variables(self) -> bool:
+        """List variables in aggregate NetCDF"""
+        if self.aggregate:
+            return tuple(self.grid.nodes.timestamps.keys() | self.grid.lines.timestamps.keys())
 
     def get_ts(self, attribute: str, element: str, subset: str) -> np.ndarray:
         """
@@ -136,37 +157,40 @@ class NetcdfTimeSeries:
         """
 
         if method in AVAILABLE_METHODS:
-            # handle method for timeseries
-            if method == "max":
-                output = np.nanmax(ts, axis=1)
-            if method == "max_abs":
-                output = np.nanmax(abs(ts), axis=1)
-            elif method == "min":
-                output = np.nanmin(ts, axis=1)
-            elif method == "mean":
-                output = np.nanmean(abs(ts), axis=1)
-            elif method == "median":
-                output = np.nanmedian(abs(ts), axis=1)
+            with warnings.catch_warnings():
+                warnings.filterwarnings("ignore", r"All-NaN (slice|axis) encountered")
 
-            if "sum" in method:
-                # find timestep size in seconds, add 0 at start to keep same length
-                timesteps_result = np.diff(np.insert(self.timestamps, 0, 0))
-                ts_summed = ts * timesteps_result  # multiply each column with its timestep size
+                # handle method for timeseries
+                if method == "max":
+                    output = np.nanmax(ts, axis=1)
+                if method == "max_abs":
+                    output = np.nanmax(abs(ts), axis=1)
+                elif method == "min":
+                    output = np.nanmin(ts, axis=1)
+                elif method == "mean":
+                    output = np.nanmean(abs(ts), axis=1)
+                elif method == "median":
+                    output = np.nanmedian(abs(ts), axis=1)
 
-                if method == "sum":
-                    output = np.nansum(abs(ts_summed), axis=1)
-                elif method == "sum_pos":
-                    # filter negative values
-                    ts_sum_pos = ts_summed.copy()
-                    ts_sum_pos[ts_sum_pos < 0] = np.nan
-                    output = np.nansum(ts_sum_pos, axis=1)
+                if "sum" in method:
+                    # find timestep size in seconds, add 0 at start to keep same length
+                    timesteps_result = np.diff(np.insert(self.timestamps, 0, 0))
+                    ts_summed = ts * timesteps_result  # multiply each column with its timestep size
 
-                elif method == "sum_neg":
-                    # filter positive values
-                    ts_sum_neg = ts_summed.copy()
-                    ts_sum_neg[ts_sum_neg > 0] = np.nan
-                    output = np.nansum(ts_sum_neg, axis=1)
-            return output
+                    if method == "sum":
+                        output = np.nansum(abs(ts_summed), axis=1)
+                    elif method == "sum_pos":
+                        # filter negative values
+                        ts_sum_pos = ts_summed.copy()
+                        ts_sum_pos[ts_sum_pos < 0] = np.nan
+                        output = np.nansum(ts_sum_pos, axis=1)
+
+                    elif method == "sum_neg":
+                        # filter positive values
+                        ts_sum_neg = ts_summed.copy()
+                        ts_sum_neg[ts_sum_neg > 0] = np.nan
+                        output = np.nansum(ts_sum_neg, axis=1)
+                return output
 
         else:
             logger.error(f"Key {method} not recognized, should be int or any of {AVAILABLE_METHODS}.")
@@ -179,10 +203,16 @@ if __name__ == "__main__":
     folder_path = r"tests\data\model_test"
     folder = Folders(folder_path)
 
+    threedi_result = folder.threedi_results.one_d_two_d[0]
     user_defined_timesteps = ["max", 3600, 5400]
 
+    use_aggregate = False
+    use_aggregate = True
+
     self = NetcdfTimeSeries.from_folder(
-        folder=folder, threedi_result=folder.threedi_results.batch["batch_test"].downloads.piek_glg_T10.netcdf
+        folder=folder,
+        threedi_result=threedi_result,
+        use_aggregate=use_aggregate,
     )
 
     assert self.get_ts_index(time_seconds=3600) == 12

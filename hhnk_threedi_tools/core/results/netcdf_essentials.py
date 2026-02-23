@@ -15,12 +15,10 @@ The code below relies on netcdfTimeseries Class for extraction of relevant data 
 netcdf_essentials.csv (config) file. This file is used to define the relevant data and can be extended
 to include other data that is needed for the various checks and statistics.
 
-The code  includes the correction of waterlevels based on the waterdeel and panden layers. These l
-ayers are used to determine which cells need to be corrected. This is done by checking the percentage
+The code  includes the correction of waterlevels based on the waterdeel and panden layers. These
+layers are used to determine which cells need to be corrected. This is done by checking the percentage
 of the cell that is covered by water or panden.
 
-
-@author: Wietse van Gerwen / Wouter van Esse
 @organization: Hoogheemraadschap Hollands Noorderkwartier
 
 """
@@ -162,8 +160,6 @@ class NetcdfEssentials:
         Load default ness settings as DataFrame.
     _calculate_layer_area_per_cell(...)
         Calculate area and percentage of a layer per grid cell.
-    _attronly_schema(df)
-        Helper for saving attributes without geometry.
     """
 
     threedi_result: hrt.ThreediResult
@@ -255,11 +251,11 @@ class NetcdfEssentials:
 
     def _calculate_layer_area_per_cell(  # TODO move to correct waterlevels?
         self,
-        grid_gdf: gpd.GeoDataFrame,
-        layer_path: Union[Path, hrt.File],
+        grid_gdf: gpd.GeoDataFrame = None,
+        layer_path: Union[Path, hrt.File] = None,
         layer_name: str = None,
     ) -> gpd.GeoDataFrame:
-        """Calculate for each gridcel the area and percentage of total area of the
+        """Calculate for each grid cell the area and percentage of total area of the
         input layer. Returns the area and percentage columns.
 
         ----------
@@ -272,10 +268,12 @@ class NetcdfEssentials:
         """
         gdf = None
         # Load layer as gdf
-        if (layer_path is not None) and (layer_path.exists()):
-            gdf = gpd.read_file(str(layer_path), layer=layer_name)
+        if grid_gdf is not None and layer_path is not None:
+            logger.warning("Both grid_gdf and layer_path provided, using grid_gdf")
+        elif layer_path is not None and layer_path.exists():
+            grid_gdf = gpd.read_file(str(layer_path), layer=layer_name)
         else:
-            print(f"Couldn't load {layer_path.name}. Ignoring it in correction.")
+            logger.warning(f"Couldn't load {layer_path}. Ignoring it in correction.")
 
         if gdf is not None:
             area_col = "area"  # area in m2
@@ -300,7 +298,7 @@ class NetcdfEssentials:
             return grid_gdf_merged[[area_col, perc_col]]
         return np.nan
 
-    def _set_active_attributes(self, ness) -> pd.DataFrame:
+    def _set_active_attributes(self, ness: pd.DataFrame) -> pd.DataFrame:
         """
         Take attributes from provided ness settings and check wether
         grid/result has these attributes available and if so for either
@@ -329,30 +327,7 @@ class NetcdfEssentials:
         logger.info(f"Active attributes: {active_attributes.tolist()}")
         return ness
 
-    def _attronly_schema(self, df) -> dict:
-        """
-        Needed to save attributes without geometry
-        see: https://gis.stackexchange.com/questions/396752
-        """
-
-        def remap(dtype):
-            correction = {
-                "int64": "int",
-                "int32": "int",
-                "float32": "float",
-                "float64": "float",
-                "object": "str",
-            }
-            return correction[dtype] if dtype in correction else dtype
-
-        return {
-            "geometry": "None",
-            "properties": {
-                column: remap(str(dtype)) for column, dtype in zip(df.columns, df.dtypes) if column != "geometry"
-            },
-        }
-
-    def process_ness(self, ness) -> pd.DataFrame:
+    def process_ness(self, ness: pd.DataFrame) -> pd.DataFrame:
         """
         Process ness dataframe to set active attributes and retrieve data.
 
@@ -363,15 +338,22 @@ class NetcdfEssentials:
             Should contain columns: 'attribute', 'subset', 'element', 'attribute_name'.
         """
         ness = self._set_active_attributes(ness)
+        # filter ness
+        ness = ness[ness["active"]].copy()
 
-        # initialise data column
+
+        # initialise data columns
         ness["amount"] = None
         ness["data"] = None
         # Retrieve timeseries for each row in ness
         for i, row in ness.iterrows():
-            if row["active"]:
+            # Try to use the aggregation data
+            if  self.use_aggregate and :
+                att_name = "aggregation_attribute"
+            else:
+                att_name = "attribute"
                 data = self.nc_ts.get_ts(
-                    attribute=row["attribute"],
+                    attribute=row[att_name],
                     element=row["element"],
                     subset=row["subset"],
                 )
@@ -498,7 +480,7 @@ class NetcdfEssentials:
             line_gdf["end_node"] = self.grid.lines.subset("1D_All").line[1]
             line_gdf["zoom_category"] = self.grid.lines.subset("1D_All").zoom_category
 
-            logger.info(f"Created {len(node_gdf)} lines.")
+            logger.info(f"Created {len(line_gdf)} lines.")
 
         # =========================
         # METADATA
@@ -517,10 +499,7 @@ class NetcdfEssentials:
             "threedicore_result_version": str(self.grid.threedicore_result_version),
             "epsg_code": self.grid.nodes.epsg_code,
         }
-        meta_gdf = gpd.GeoDataFrame(meta_dict, index=[0])  # zodat ik hem weg kan schrijven naar geopackage
-        meta_gdf["geometry"] = None
-        meta_gdf.set_geometry("geometry")
-        meta_gdf.set_geometry("geometry", inplace=True)
+        meta_gdf = gpd.GeoDataFrame(meta_dict, index=[0])  # gdf for writing GoePackage
 
         logger.info(f"Created metadata for result from model {self.grid.model_name} # {self.grid.revision_nr}")
 
@@ -552,7 +531,7 @@ class NetcdfEssentials:
         gpd.GeoDataFrame
             extened grid_gdf with correction parameters columns.
         """
-        grid_gdf["dem_minimal_m"] = self.grid.cells.subset("2D_open_water").z_coordinate
+        grid_gdf["dem_minimal_m"] = self.grid.cells.subset("2D_open_water").z_coordinate  # FIXME bottom level?
         # Percentage of dem in a calculation cell
         # so we can make a selection of cells on model edge that need to be ignored
         grid_gdf["dem_area"] = self.grid.cells.subset("2D_open_water").sumax
@@ -717,8 +696,8 @@ class NetcdfEssentials:
 
     def run(
         self,
-        ness_fp=None,
-        output_file=None,
+        ness_fp: Path = None,
+        output_file: Path = None,
         user_defined_timesteps: list[int] = None,
         simulation_type: str = None,
         replace_dem_below_perc: float = 50,
@@ -801,71 +780,70 @@ class NetcdfEssentials:
             line_gdf.to_file(output_file.path, layer="line_1d", engine="pyogrio", overwrite=overwrite)
             meta_gdf.to_file(
                 output_file.path,
-                engine="fiona",
                 layer="metadata",
                 driver="GPKG",
-                schema=self._attronly_schema(meta_gdf),  # not supported by pyogrio
                 overwrite=overwrite,
-                crs=f"EPSG:{self.grid.epsg_code}",
             )
             logger.info(f"Saved NetCDF essentials to {output_file.path}")
         else:
             logger.warning(f"Output file {output_file.path} already exists. Set overwrite to True to overwrite.")
 
 
-# TODO remove below
-# %% Working code example small model
-if __name__ == "__main__":
-    from hhnk_threedi_tools import Folders
+# # TODO remove below
+# # %% Working code example small model
+# if __name__ == "__main__":
+#     from hhnk_threedi_tools import Folders
 
-    folder_path = r"tests\data\model_test"
-    folder = Folders(folder_path)
+#     folder_path = r"tests\data\model_test"
+#     folder = Folders(folder_path)
 
-    user_defined_timesteps = ["max", 3600, 5400]
-    output_file = None
-    ness_fp = None
-    wlvl_correction = True
-    overwrite = True
-    self = NetcdfEssentials.from_folder(
-        folder=folder, threedi_result=folder.threedi_results.batch["batch_test"].downloads.piek_glg_T10.netcdf
-    )
+#     user_defined_timesteps = ["max", 3600, 5400]
+#     output_file = None
+#     ness_fp = None
+#     wlvl_correction = True
+#     overwrite = True
+#     self = NetcdfEssentials.from_folder(
+#         folder=folder, threedi_result=folder.threedi_results.batch["batch_test"].downloads.piek_glg_T10.netcdf
+#     )
 
-    self.run(
-        output_file=output_file,
-        user_defined_timesteps=user_defined_timesteps,
-        wlvl_correction=wlvl_correction,
-        overwrite=overwrite,
-    )
+#     self.run(
+#         output_file=output_file,
+#         user_defined_timesteps=user_defined_timesteps,
+#         wlvl_correction=wlvl_correction,
+#         overwrite=overwrite,
+#     )
 
-# %% Performance test (large model including sewerage)
-if __name__ == "__main__":
-    from hhnk_threedi_tools import Folders
+# # %% Performance test (large model including sewerage)
+# if __name__ == "__main__":
+#     from hhnk_threedi_tools import Folders
 
-    folder_path = r"E:\02.modellen\BWN_Castricum_Integraal_10m"
-    folder = Folders(folder_path)
-    threedi_result = folder.threedi_results.batch["rev1"].downloads.piek_ghg_T1000
+#     folder_path = r"E:\02.modellen\BWN_Castricum_Integraal_10m"
+#     folder = Folders(folder_path)
+#     threedi_result = folder.threedi_results.batch["rev1"].downloads.piek_ghg_T1000
 
-    user_defined_timesteps = [3600, 5400]
-    output_file = r"E:\02.modellen\BWN_Castricum_Integraal_10m\test_netcdfessentials_piek_ghg_T1000.gpkg"
-    wlvl_correction = False
-    overwrite = True
-    self = NetcdfEssentials(threedi_result=threedi_result.netcdf, use_aggregate=False)
-    self.run(
-        output_file=output_file,
-        user_defined_timesteps=user_defined_timesteps,
-        wlvl_correction=wlvl_correction,
-        overwrite=overwrite,
-    )
-# NOTE op volle server geeft dit al memory issues, duurt nu 1m 40 s
+#     user_defined_timesteps = [3600, 5400]
+#     output_file = r"E:\02.modellen\BWN_Castricum_Integraal_10m\test_netcdfessentials_piek_ghg_T1000.gpkg"
+#     wlvl_correction = False
+#     overwrite = True
+#     self = NetcdfEssentials(threedi_result=threedi_result.netcdf, use_aggregate=False)
+#     self.run(
+#         output_file=output_file,
+#         user_defined_timesteps=user_defined_timesteps,
+#         wlvl_correction=wlvl_correction,
+#         overwrite=overwrite,
+#     )
+# # NOTE op volle server geeft dit al memory issues, duurt nu 1m 40 s
 
 # %% Working code example with aggregate result # TODO aggregate
 if __name__ == "__main__":
     from hhnk_threedi_tools import Folders
 
-    folder_path = r"E:\02.modellen\HKC23010_Eijerland_WP"
+    folder_path = r"Y:\03.resultaten\OverstromingsberekeningenprimairedoorbrakenZeespiegelstijging"
     folder = Folders(folder_path)
 
-    threedi_result = folder.threedi_results.batch["bwn_gxg"].downloads.piek_ghg_T10
+    # TODO AttributeError: 'File' object has no attribute 'full_path', graag wilik een losse file kunnen gebruiken zonder de verplichte structuur
+    # folder.add_file("result", r"Y:\03.resultaten\OverstromingsberekeningenprimairedoorbrakenZeespiegelstijging\Bres Egmond T10k+3m\results_3di.nc")
+    threedi_result = folder.threedi_results.one_d_two_d[0]
 
     # # get and correct waterlevels
     #  timesteps_seconds = ["max", 3600, 5400]
@@ -875,9 +853,27 @@ if __name__ == "__main__":
     output_file = None
     wlvl_correction = False
     overwrite = True
-    self = NetcdfEssentials(threedi_result=threedi_result.netcdf, use_aggregate=True)
-    timesteps_seconds = ["max"]
-    self.run(wlvl_correction=wlvl_correction)
+    use_aggregate = True
+    simulation_type = None
+    ness_fp = None
+    self = NetcdfEssentials(threedi_result=threedi_result, use_aggregate=use_aggregate)
+    user_defined_timesteps = [
+        3600,
+        7200,
+        10800,
+        21600,
+        43200,
+        86400,
+        172800,
+        259200,
+        518400,
+        1036800,
+        1555200,
+        1728000,
+        "max",
+    ]
+    user_defined_timesteps = ["3600"]
+    self.run(wlvl_correction=wlvl_correction, user_defined_timesteps=user_defined_timesteps, overwrite=overwrite)
 # %% TODO test model zonder maaiveld
 
 # %% TODO test model met bressen
