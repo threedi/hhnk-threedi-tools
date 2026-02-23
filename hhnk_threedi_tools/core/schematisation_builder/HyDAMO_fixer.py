@@ -1,5 +1,6 @@
 import json
 import logging
+import re
 from pathlib import Path
 from typing import Optional
 
@@ -7,6 +8,29 @@ import geopandas as gpd
 import hhnk_research_tools as hrt
 
 import hhnk_threedi_tools.resources.schematisation_builder as schematisation_builder_resources
+from hhnk_threedi_tools.core.schematisation_builder.utils import logical_fix
+
+
+class FixConfig:
+    def __init__(self):
+        resources_fixconfig_path = hrt.get_pkg_resource_path(schematisation_builder_resources, "FixConfig.json")
+        with open(resources_fixconfig_path, "r") as f:
+            fix_config = json.load(f)
+
+        self.schema = fix_config["schema"]
+        self.hydamo_version = fix_config["hydamo_version"]
+        self.objects = fix_config["objects"]
+
+        class Objects:
+            def __init__(self, objects):
+                for obj in objects:
+                    setattr(self, obj["object"])
+
+
+class FIX_MAPPING:
+    skip = 1
+    edit = 2
+    multi_edit = 3
 
 
 class HyDAMOFixer:
@@ -67,9 +91,11 @@ class HyDAMOFixer:
         with open(resources_fixconfig_path, "r") as f:
             self.fix_config = json.load(f)
 
+        self.fix_overview = {}
+
     def create_validation_fix_reports(self):
         """
-        Create validation and fix summary report
+        Create validation and fix overview report
         Inputs:
             1. HyDAMO.gpkg
             2. validation results gpkg (results.gpkg in validation directory)
@@ -226,6 +252,8 @@ class HyDAMOFixer:
             layer_report_gdf.to_file(self.report_gpkg_path, layer=layer_name, driver="GPKG")
             self.logger.info(f"Finshed and saved report gdf for layer {layer_name} to {self.report_gpkg_path}")
 
+            self.fix_overview[layer_name] = layer_report_gdf
+
     def _select_validation_rules_layer(self, layer_name: str):
         """
         Select validation rules for a specific layer from the validation_rules.json
@@ -238,3 +266,109 @@ class HyDAMOFixer:
             if rules_layer["object"] == layer_name:
                 return rules_layer["validation_rules"]
         return []  # Return empty list if layer not found
+
+    ## remove: woord dekt niet de lading, even over nadenken
+    ## validation ids: gaat er meer om dat een attribuut een fix moet krijgen als ie om wat voor reden dan ook niet valide is
+    ## create our own version of logical_validation.execute() to use the general, logical and topological functions of the hydamo validator
+    ## maybe call is logical_fix.execute()
+    ## while running a fix, keep track of the inputs. If an import
+
+    def execute(
+        ## read validation fix report
+        ## apply fix actions to hydamo gpkg
+        ## update validation fix report with history
+        self,
+    ):
+        """Execute the logical fixes."""
+
+        object_dict: dict[str, gpd.GeoDataFrame] = self.fix_overview
+        execution_dict = {}
+        for (
+            layer_name,
+            object_gdf,
+        ) in (
+            object_dict.items()
+        ):  ## for now use this, but in the end we need to figure out an order to do certain layers before the other.
+            fix_config_object = next(obj for obj in self.fix_config["objects"] if obj["object"] == layer_name)
+            fix_config_fixes = fix_config_object["fixes"]  ## list with all the fixes for every attribute possible
+            # fix_type = fix_config_fixes["fix_type"]
+            # fix_action = fix_config_fixes["fix_action"]
+
+            fix_cols = [c for c in object_gdf.columns if c.startswith("fixes_")]
+            manual_cols = [c for c in object_gdf.columns if c.startswith("manual_overwrite_")]
+            results = []
+            for idx, row in object_gdf.iterrows():
+                feature_dict = {
+                    "id": idx,
+                    "code": object_gdf["code"],
+                    "fixes": {col.replace("fixes_", ""): row[col] for col in fix_cols},
+                    "manual_inputs": {col.replace("manual_overwrite_", ""): row[col] for col in manual_cols},
+                }
+                results.append(feature_dict)
+
+            ## execution_dict: {
+            #   "fix_id": ...
+            #   "fix": ...
+            # }
+            execution_dict[layer_name] = {}
+            list_features_to_remove = []  ## codes
+            highest_prios = []
+            for result in results:
+                fixes: dict = result["fixes"]
+                fix_suggestions = fixes.values()
+                fix_ids = [int(re.search(r"^[A-Za-z]{2}(\d+):", fix).group(1)) for fix in fix_suggestions]
+                highest_prio_fix = min(fix_ids)
+                highest_prios.append(highest_prio_fix)
+                if highest_prio_fix == 1:
+                    list_features_to_remove.append(result["code"])
+                    execution_dict[layer_name]["fix_id"] = min(highest_prios)
+                    execution_dict[layer_name]["inputs"] = list_features_to_remove
+
+        for layer, execution in execution_dict.items():
+            if execution["fix_id"] == FIX_MAPPING.skip:
+                logical_fix.skip_features(
+                    gdf_HyDAMO=self.hydamo_file_path, layer=layer, list_features=execution["inputs"]
+                )
+            if execution["fix_id"] == FIX_MAPPING.edit:
+                pass
+                ## do the edit logic
+            if execution["fix_id"] == FIX_MAPPING.multi_edit:
+                pass
+
+            ## check fixes
+            ## for each fix suggested per feature, execute the fix
+            ## compile a dict of fixes per feature
+            ## use typing to rank the used fix
+            ## maybe use levels in fixconfig to denote importance
+
+            # if fix_type == "automatic":
+            #     ## use the rules
+            #     pass
+            # elif fix_type == "manual":
+            #     ## use the value that is filled in the manual column
+            #     pass
+
+            # if fix_action == "Remove":
+            #     pass
+
+            # elif rule["type"] == "logic":
+            #     object_gdf.loc[indices, (result_variable)] = (
+            #         _process_logic_function(
+            #             object_gdf.loc[indices], function, input_variables
+            #         )
+            #     )
+            # elif (rule["type"] == "topologic") and (
+            #     hasattr(datamodel, "hydroobject")
+            # ):
+            #     result_series = _process_topologic_function(
+            #         # getattr(
+            #         #     datamodel, object_layer
+            #         # ),  # FIXME: commented as we need to apply filter in topologic functions as well. Remove after tests pass
+            #         object_gdf,
+            #         datamodel,
+            #         function,
+            #         input_variables,
+            #     )
+            #     object_gdf.loc[indices, (result_variable)] = result_series.loc[
+            #         indices
+            #     ]

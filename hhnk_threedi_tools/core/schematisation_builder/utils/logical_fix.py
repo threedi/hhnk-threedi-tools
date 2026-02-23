@@ -41,3 +41,48 @@ def skip_features(gdf_HyDAMO: "gpd.GeoDataFrame", layer: str, list_features: lis
 # change attributes based on info from other layers
 # change attributes based on given assumption(s)
 # change attributes based on DEM?
+# %%
+import numpy as np
+from hydamo_validation import general_functions, logic_functions, topologic_functions
+from hydamo_validation.logical_validation import (
+    _process_general_function,
+    _process_logic_function,
+    _process_topologic_function,
+)
+from shapely.geometry import LineString, Point, Polygon
+
+GEOTYPE_MAPPING = {LineString: "LineString", Point: "Point", Polygon: "Polygon"}
+SUMMARY_COLUMNS = [
+    "valid",
+    "invalid",
+    "invalid_critical",
+    "invalid_non_critical",
+    "invalid_auto_fixable",
+    "invalid_manual_fixable",
+    "ignored",
+    "summary",
+    "tags_assigned",
+    "tags_invalid",
+]
+LIST_SEPARATOR = ";"
+NOTNA_COL_IGNORE = ["related_parameter"]
+EXCEPTION_COL = "nen3610id"
+
+
+def _process_omission_fix():
+    pass
+
+
+def _process_single_layer_fix():
+    pass
+
+
+def _process_multi_layer_fix():
+    pass
+
+
+## use own categories
+
+
+def execute():
+    pass
