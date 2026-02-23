@@ -1,9 +1,13 @@
 import geopandas as gpd
+import hhnk_research_tools as hrt
+from hhnk_research_tools.logging import logging
 
 
 # Example function
 # TODO: list_features could also be summary validation/fix dataframe with codes to remove.
-def skip_features(gdf_HyDAMO: "gpd.GeoDataFrame", layer: str, list_features: list, logger) -> "gpd.GeoDataFrame":
+def skip_features(
+    gdf_HyDAMO: gpd.GeoDataFrame, layer: str, list_features: list, logger: logging.Logger
+) -> "gpd.GeoDataFrame":
     """Remove features from the HyDAMO geodataframe.
 
     Args:
@@ -14,19 +18,21 @@ def skip_features(gdf_HyDAMO: "gpd.GeoDataFrame", layer: str, list_features: lis
     Returns:
         gpd.GeoDataFrame: HyDAMO geodataframe with extra column 'is_usable' indicating features which arenot usable.
     """
-    features_layer = gdf_HyDAMO[gdf_HyDAMO["layer"] == layer]
+    features_layer = gdf_HyDAMO
     if not features_layer.empty:
         try:
+            if "is_usable" not in features_layer.columns:
+                features_layer["is_usable"] = None
             # features_layer_adjusted = features_layer[~features_layer["code"].isin(list_features)]
 
             # add column 'is_usable' to indicate features and set true for features in list_features
             features_layer_adjusted = features_layer.copy()
             features_layer_adjusted["is_usable"] = (
-                False  ## FIXME: meer het idee om bij te houden welke features wel of niet gebruikt worden. is_usable is beter
+                True  ## FIXME: meer het idee om bij te houden welke features wel of niet gebruikt worden. is_usable is beter
             )
-            features_layer_adjusted.loc[features_layer_adjusted["code"].isin(list_features), "is_usable"] = True
+            features_layer_adjusted.loc[features_layer_adjusted["code"].isin(list_features), "is_usable"] = False
 
-            gdf_HyDAMO.update(features_layer_adjusted)
+            features_layer.update(features_layer_adjusted)
             logger.info(f"Indicated {len(list_features)} features as not usable in layer {layer}.")
         except Exception as e:
             logger.error(f"Error indicating features as not usable in layer {layer}: {e}")
@@ -34,7 +40,7 @@ def skip_features(gdf_HyDAMO: "gpd.GeoDataFrame", layer: str, list_features: lis
     else:
         logger.warning(f"No features found in layer {layer} which are not usable.")
 
-    return gdf_HyDAMO
+    return features_layer
 
 
 # functions to add

@@ -1,6 +1,7 @@
 import json
 import logging
 import re
+import shutil
 from pathlib import Path
 from typing import Optional
 
@@ -47,7 +48,7 @@ class HyDAMOFixer:
     -------
     intermediate results are saved in the fix_phase folder in the validation_directory_path
     intermediate results are (until now):
-    - summary_val_fix.gpkg : geopackage with per layer a summary of validation and fix suggestions
+    - validaton_fix_overview.gpkg : geopackage with per layer a summary of validation and fix suggestions
 
     """
 
@@ -65,7 +66,8 @@ class HyDAMOFixer:
         self.hydamo_file_path = hydamo_file_path / "HyDAMO.gpkg"
         self.validation_directory_path = validation_directory_path
         self.validation_results_gpkg_path = validation_directory_path / "results" / "results.gpkg"
-        self.report_gpkg_path = self.validation_directory_path / "fix_phase" / "summary_val_fix.gpkg"
+        self.report_gpkg_path = self.validation_directory_path / "fix_phase" / "validaton_fix_overview.gpkg"
+        self.hydamo_fixed_file_path = self.validation_directory_path / "results" / "HyDAMO_fix.gpkg"
 
         # check if hydamo gpkg exists
         if not self.hydamo_file_path.exists():
@@ -92,6 +94,9 @@ class HyDAMOFixer:
             self.fix_config = json.load(f)
 
         self.fix_overview = {}
+
+        if not self.hydamo_fixed_file_path.exists():
+            shutil.copy(self.hydamo_file_path, self.hydamo_fixed_file_path)
 
     def create_validation_fix_reports(self):
         """
@@ -297,19 +302,17 @@ class HyDAMOFixer:
             fix_cols = [c for c in object_gdf.columns if c.startswith("fixes_")]
             manual_cols = [c for c in object_gdf.columns if c.startswith("manual_overwrite_")]
             results = []
+            ## Store the fixes for each feature and each attribute in a feature_dict and save the highest priority fix method
+            ## Question: how can a report table look? Multiple attributes? Just one fix per attribute right? But multiple fixes per feature?
             for idx, row in object_gdf.iterrows():
                 feature_dict = {
                     "id": idx,
-                    "code": object_gdf["code"],
+                    "code": row["code"],
                     "fixes": {col.replace("fixes_", ""): row[col] for col in fix_cols},
                     "manual_inputs": {col.replace("manual_overwrite_", ""): row[col] for col in manual_cols},
                 }
                 results.append(feature_dict)
 
-            ## execution_dict: {
-            #   "fix_id": ...
-            #   "fix": ...
-            # }
             execution_dict[layer_name] = {}
             list_features_to_remove = []  ## codes
             highest_prios = []
@@ -324,11 +327,19 @@ class HyDAMOFixer:
                     execution_dict[layer_name]["fix_id"] = min(highest_prios)
                     execution_dict[layer_name]["inputs"] = list_features_to_remove
 
-        for layer, execution in execution_dict.items():
+        ## Make an execution dict that executes fixes based on an order that prevents conflicts
+        for layer_name, execution in execution_dict.items():
+            hydamo_layer_gdf = gpd.read_file(self.hydamo_file_path, layer=layer_name)
             if execution["fix_id"] == FIX_MAPPING.skip:
-                logical_fix.skip_features(
-                    gdf_HyDAMO=self.hydamo_file_path, layer=layer, list_features=execution["inputs"]
+                gdf_hydamo_fixed = logical_fix.skip_features(
+                    gdf_HyDAMO=hydamo_layer_gdf,
+                    layer=layer_name,
+                    list_features=execution["inputs"],
+                    logger=self.logger,
                 )
+                # save layer report gdf to report gpkg
+                gdf_hydamo_fixed.to_file(self.hydamo_fixed_file_path, layer=layer_name, driver="GPKG")
+                self.logger.info(f"Finshed and saved report gdf for layer {layer_name} to {self.report_gpkg_path}")
             if execution["fix_id"] == FIX_MAPPING.edit:
                 pass
                 ## do the edit logic
