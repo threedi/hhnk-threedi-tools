@@ -1,4 +1,11 @@
 # %%
+try:
+    from hhnk_threedi_tools.utils.notebooks.notebook_setup import setup_notebook
+except:
+    from notebook_setup import setup_notebook  # in case hhnk-threedi-tools is not part of python installation
+
+notebook_data = setup_notebook()
+
 
 import shutil
 from pathlib import Path
@@ -13,7 +20,11 @@ from hhnk_threedi_tools.core.folders import Folders
 
 
 # %%
-def create_input_leggertool(folder: Folders, berekening_naam: str, output_file: Path):
+def create_input_leggertool(
+    folder: Folders,
+    berekening_naam: str,
+    output_file: Path,
+) -> pd.DataFrame:
     """Prepare legger input gpkg. Also adds a style file.
 
     Parameters
@@ -88,17 +99,12 @@ def create_input_leggertool(folder: Folders, berekening_naam: str, output_file: 
     return structure_all
 
 
-# %%
+# %% test regels
 if __name__ == "__main__":
-    # %% Op een specifieke map
-    folder_dir = Path(r"E:\02.modellen\VNK_leggertool")
-
-    # %% of in de local folder
-    from notebook_setup import setup_notebook
-
     notebook_data = setup_notebook()
-    folder_dir = Path(notebook_data["polder_folder"])
-    # %%
+
+    folder_dir = Path(notebook_data["polder_folder"])  # Bestand voor de legger wordt klaargezet in de folder dir
+    # folder_dir = Path(r"E:\02.modellen\VNK_leggertool") # Of een specifieke map
 
     # Input
     berekening_naam = (

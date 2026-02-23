@@ -11,6 +11,8 @@ from shapely.geometry import box
 
 from hhnk_threedi_tools.core.folders import Folders
 
+logger = hrt.logging.get_logger(__name__, level="INFO")
+
 
 class ThreediGrid:
     """TODO Deprecated, remove in later release."""
@@ -287,6 +289,7 @@ class NetcdfToGPKG:
 
     def create_base_gdf(self):
         """Create base grid from netcdf"""
+        logger.debug("Creating base grid gdf from netcdf.")
         grid_gdf = gpd.GeoDataFrame()
 
         # * inputs every element from row as a new function argument, creating a (square) box.
@@ -311,6 +314,7 @@ class NetcdfToGPKG:
         gpd.GeoDataFrame
             extened grid_gdf with correction parameters columns.
         """
+        logger.debug("Adding correction parameters to grid gdf.")
         grid_gdf["dem_minimal_m"] = self.grid.cells.subset("2D_open_water").z_coordinate
         # Percentage of dem in a calculation cell
         # so we can make a selection of cells on model edge that need to be ignored
@@ -349,6 +353,7 @@ class NetcdfToGPKG:
     def get_waterlevels(self, grid_gdf, timesteps_seconds: list):
         """Retrieve waterlevels volume and storage at given timesteps"""
 
+        logger.debug("Retrieving waterlevels, volume and storage at given timesteps.")
         col_idx = ColumnIdx(gdf=grid_gdf)
 
         for timestep in timesteps_seconds:
@@ -382,6 +387,7 @@ class NetcdfToGPKG:
         """Correct the waterlevel for the given timesteps. Results are only corrected
         for cells where the 'replace_all' value is not False.
         """
+        logger.debug("Correcting waterlevels for given timesteps.")
         # Create copy and set_index the id field so we can use the neighbours_ids column easily
         grid_gdf_local = grid_gdf.copy()
         grid_gdf_local.set_index("id", inplace=True)
@@ -469,7 +475,9 @@ class NetcdfToGPKG:
 
             if wlvl_correction:
                 grid_gdf = self.correct_waterlevels(grid_gdf=grid_gdf, timesteps_seconds=timesteps_seconds)
+
             # Save to file
+            logger.debug(f"Saving grid gdf to {output_file.path}.")
             grid_gdf.to_file(output_file.path, engine="pyogrio")
 
 

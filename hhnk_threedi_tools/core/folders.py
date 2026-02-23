@@ -21,6 +21,7 @@ from hhnk_research_tools.variables import (
 
 # Local imports
 from hhnk_threedi_tools.core.folder_helpers import ClimateResult
+from hhnk_threedi_tools.core.schematisation.threedi_schematisation import ThreediSchematisation
 
 # Globals
 DAMO = f"DAMO{file_types_dict[GDB]}"
@@ -49,17 +50,17 @@ FOLDER_STRUCTURE = """
         │     └── validation_result.gpkg       
         ├── 02_schematisation
         │ ├── rasters (include DEM)
-        │ └── * model(.sqlite) *
+        │ └── * model(.gpkg) *
         ├── 03_3di_results
         │ ├── 0d1d_results
         │ └── 1d2d_results
         | |__ batch_results
         └── 04_test_results
-            ├── 0d1d_tests
+            ├── 0d1d_checks
             │   ├── *some revision*
             │     ├── Layers
             │     └── Logs
-            ├── 1d2d_tests
+            ├── 1d2d_checks
             │ └── *some revision*
             │     ├── Layers
             │     └── Logs
@@ -67,7 +68,7 @@ FOLDER_STRUCTURE = """
             │ └── bank_levels
             │     ├── Layers
             │     └── Logs
-            └── Sqlite_checks
+            └── HhnkSchematisationChecks
                 ├── Layers
                 └── Log
 
@@ -189,14 +190,14 @@ class Folders(Folder):
             "channels_shapefile": self.source_data.modelbuilder.channel_from_profiles.path_if_exists,
             # model folder
             "model": self.model.schema_base.database.path_if_exists,
-            "dem": self.model.schema_base.rasters.dem.path_if_exists,
+            "dem": self.model.schema_base.rasters.dem.path_if_exists,  # FIXME DEM path hier?
             # Threedi
             "0d1d_results_dir": self.threedi_results.zero_d_one_d.path_if_exists,
             "1d2d_results_dir": self.threedi_results.one_d_two_d.path_if_exists,
             "climate_results_dir": self.threedi_results.climate_results.path_if_exists,
             # Default output folders
             "base_output": self.output.path_if_exists,
-            "sqlite_tests_output": self.output.sqlite_tests.path_if_exists,
+            "HhnkSchemmatisationChecks_output": self.output.hhnk_schematisation_checks.path_if_exists,
             "0d1d_output": self.output.zero_d_one_d.path_if_exists,
             "bank_levels_output": self.output.bank_levels.path_if_exists,
             "1d2d_output": self.output.one_d_two_d.path_if_exists,
@@ -289,7 +290,7 @@ class SourceDir(Folder):
         self.hdb.add_layer("sturing_kunstwerken")
 
         self.add_file("datachecker", "datachecker_output.gpkg")
-        self.datachecker.add_layers(["fixeddrainagelevelarea", "culvert"])
+        self.datachecker.add_layers(["fixeddrainagelevelarea", "culvert", "bridge"])
 
         self.add_file("polder_polygon", POLDER_POLY)
         self.add_file("panden", "panden.gpkg")
@@ -365,7 +366,7 @@ class SchemaDirParent(Folder):
         super().__init__(os.path.join(base, "02_schematisation"), create)
 
         self.revisions = self.ModelRevisionsParent(base=self.base, create=create)
-        self.schema_base = hrt.ThreediSchematisation(base=self.base, name="00_basis", create=create)
+        self.schema_base = ThreediSchematisation(base=self.base, name="00_basis", create=create)
         self.calculation_rasters = self.CalculationRasters(base=self.base, create=create)
         self.schema_list = ["schema_base"]
         self.add_file("model_sql", "model_sql.json")
@@ -384,7 +385,7 @@ class SchemaDirParent(Folder):
         setattr(
             self,
             f"schema_{name}",
-            hrt.ThreediSchematisation(base=self.base, name=name, create=False),
+            ThreediSchematisation(base=self.base, name=name, create=False),
         )
         self.schema_list.append(f"schema_{name}")
         return f"schema_{name}"
@@ -407,7 +408,7 @@ class SchemaDirParent(Folder):
     def create_readme(self):
         readme_txt = (
             "Expected files are:\n\n"
-            "Sqlite database (model): *.sqlite\n"
+            "Gpkg database (model): *.gpkg\n"
             "Folder named 'rasters' containing DEM raster (*.tif) and other rasters\n"
         )
         with open(os.path.join(self.base, "read_me.txt"), mode="w") as f:
@@ -563,10 +564,12 @@ class OutputDirParent(Folder):
     def __init__(self, base, create):
         super().__init__(os.path.join(base, "04_test_results"), create)
 
-        self.sqlite_tests = self.OutputDirSqlite(self.full_path("sqlite_tests"), create=create)
+        self.hhnk_schematisation_checks = self.OutputDirHhnkSchematisationChecks(
+            self.full_path("hhnk_schematisation_checks"), create=create
+        )
         self.bank_levels = self.OutputDirBankLevel(self.full_path("bank_levels"), create=create)
-        self.zero_d_one_d = self.OutputDir0d1d(base=self.base, name="0d1d_tests", create=create)
-        self.one_d_two_d = self.OutputDir1d2d(base=self.base, name="1d2d_tests", create=create)
+        self.zero_d_one_d = self.OutputDir0d1d(base=self.base, name="0d1d_checks", create=create)
+        self.one_d_two_d = self.OutputDir1d2d(base=self.base, name="1d2d_checks", create=create)
         self.climate = self.OutputDirClimate(base=self.base, name="climate", create=create)
 
         if create:
@@ -581,8 +584,8 @@ class OutputDirParent(Folder):
             return self.climate
         elif name == "bank_levels":
             return self.bank_levels
-        elif name == "sqlite_tests":
-            return self.sqlite_tests
+        elif name == "hhnk_schematisation_checks":
+            return self.hhnk_schematisation_checks
 
     def create_readme(self):
         readme_txt = (
@@ -597,14 +600,14 @@ class OutputDirParent(Folder):
     def structure(self):
         return f"""  
                {self.space}output
-               {self.space}├── sqlite_tests
+               {self.space}├── hhnk_schematisation_checks
                {self.space}├── bank_levels
                {self.space}├── zero_d_one_d
                {self.space}├── one_d_two_d
                {self.space}└── climate
                """
 
-    class OutputDirSqlite(Folder):
+    class OutputDirHhnkSchematisationChecks(Folder):
         def __init__(self, base, create):
             super().__init__(base, create=create)
 
@@ -615,7 +618,7 @@ class OutputDirParent(Folder):
             self.add_file("gestuurde_kunstwerken", "gestuurde_kunstwerken.gpkg")
             self.add_file("drooglegging", "drooglegging.tif")
             self.add_file("geometry_check", "geometry_check.csv")
-            self.add_file("general_sqlite_checks", "general_sqlite_checks.csv")
+            self.add_file("general_hhnk_schematisation_checks", "general_hhnk_schematisation_checks.csv")
             self.add_file("cross_section_duplicates", "cross_section_duplicates.gpkg")
             self.add_file("cross_section_no_vertex", "cross_section_no_vertex.gpkg")
             self.add_file("wateroppervlak", "wateroppervlak.gpkg")
@@ -650,7 +653,7 @@ class OutputDirParent(Folder):
             def __init__(self, base, create=False):
                 super().__init__(base, create=create)
 
-                self.add_file("nodes_0d1d_test", "nodes_0d1d_test.gpkg")
+                self.add_file("nodes_0d1d_check", "nodes_0d1d_check.gpkg")
                 self.add_file(
                     "hydraulische_toets_kunstwerken",
                     "hydraulische_toets_kunstwerken.gpkg",
@@ -676,7 +679,7 @@ class OutputDirParent(Folder):
 
                 self.add_file("grid_nodes_2d", "grid_nodes_2d.gpkg")
                 self.add_file("grid_wlvl", "grid_wlvl.gpkg")
-                self.add_file("stroming_1d2d_test", "stroming_1d2d_test.gpkg")
+                self.add_file("stroming_1d2d_check", "stroming_1d2d_check.gpkg")
                 for T in [1, 3, 15]:
                     self.add_file(f"waterstand_T{T}", f"waterstand_T{T}.tif")
                     self.add_file(f"waterdiepte_T{T}", f"waterdiepte_T{T}.tif")
@@ -741,4 +744,11 @@ class Project:
             self.__dict__.update(data)
 
 
+# %%
+if __name__ == "__main__":
+    from hhnk_threedi_tools.core.folders import Folders
+    from tests.config import FOLDER_TEST
+
+    folder = Folders(FOLDER_TEST)
+    folder.model.schema_base.rasters.dem.path
 # %%

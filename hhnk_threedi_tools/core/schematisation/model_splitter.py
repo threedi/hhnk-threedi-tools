@@ -14,7 +14,7 @@ INFILTRATION_COLS = [
     "infiltration_rate",
     "infiltration_rate_file",
     "infiltration_surface_option",
-    "max_infiltration_capacity_file",
+    "max_infiltration_volume_file",
     "display_name",
 ]
 
@@ -22,7 +22,7 @@ RASTER_FILES = [
     "dem_file",
     "frict_coef_file",
     "infiltration_rate_file",
-    "max_infiltration_capacity_file",
+    "max_infiltration_volume_file",
     "initial_waterlevel_file",
 ]
 
@@ -256,7 +256,7 @@ or do not use this run in the modelsplitter.
         initial_groundwater_level_file, initial_waterlevel_file, groundwater_hydro_connectivity_file,
         groundwater_impervious_layer_level_file, infiltration_decay_period_file, initial_infiltration_rate_file,
         leakage_file, phreatic_storage_capacity_file, hydraulic_conductivity_file, porosity_file, infiltration_rate_file,
-        max_infiltration_capacity_file, interception_file ]
+        max_infiltration_volume_file, interception_file ]
         """
 
         schema_new = getattr(self.folder.model, f"schema_{name}")
@@ -268,7 +268,7 @@ or do not use this run in the modelsplitter.
             "dem_file": schema_new.rasters.dem.path_if_exists,
             "frict_coef_file": schema_new.rasters.friction.path_if_exists,
             "infiltration_rate_file": schema_new.rasters.infiltration.path_if_exists,
-            "max_infiltration_capacity_file": schema_new.rasters.storage.path_if_exists,
+            "max_infiltration_volume_file": schema_new.rasters.storage.path_if_exists,
             "initial_waterlevel_file": schema_new.rasters.initial_wlvl_2d.path_if_exists,
         }
 

@@ -6,7 +6,7 @@ Created on Mon Aug 16 12:04:33 2021
 
 All sqlite queries are stored within this script. Queries are listed per table.
 
-
+# TODO de meeste select queries kunnen straks weg omdat we een load doen vanuit geopackage ipv select uit sqlite
 """
 
 # Third-part imports
@@ -35,7 +35,8 @@ from hhnk_threedi_tools.variables.model_state import (
     one_d_two_d_state,
     weirs_new_width_col,
 )
-from hhnk_threedi_tools.variables.weirs import new_ref_lvl
+
+# from hhnk_threedi_tools.variables.weirs import new_ref_lvl
 
 # Strings
 # Global settings

@@ -80,7 +80,7 @@ from hhnk_threedi_tools.variables.model_state import (
 
 def detect_model_states(model_path):
     """
-    Detects the current state of the model by checking:
+    Detect the current state of the model by checking:
     It a backup of v2_global settings exists (if not, we assume an undefined state (possibly
     state right after modelbuilder)
 
@@ -145,7 +145,7 @@ def get_all_update_queries(
     channels_excluded=[],
 ):
     """
-    Function collects all queries that together make up the model state conversion and combines them. We have to
+    Collect all queries that together make up the model state conversion and combines them. We have to
     execute them all at once because of an issue with sqlite3: its 'execute_script' function issues a commit before
     execution. Therefore, if the third script fails, we can't roll back the changes made by the first two executions.
     """
@@ -372,7 +372,7 @@ def get_proposed_adjustments_channels(model_path, from_state, to_state):
 
 def get_rows_to_add(model_path, to_state, rows_in_model_df, id_column):
     """
-    Gets all rows that should be in the new model state from the backup, checks
+    Get all rows that should be in the new model state from the backup, checks
     which ones are already in the model, returns list of the ones that are not
     """
     try:
@@ -387,7 +387,7 @@ def get_rows_to_add(model_path, to_state, rows_in_model_df, id_column):
 
 def get_rows_to_delete(rows_in_model_df, to_state, selection_col, id_column):
     """
-    Selects ids that are currently in the model and selects which ones
+    Select ids that are currently in the model and selects which ones
     should be deleted based on the new model state
     """
     delete_ids = []
@@ -409,7 +409,7 @@ def get_global_settings_model(model_path):
 
 def get_proposed_adjustments_global_settings(model_path, to_state):
     """
-    Creates widget to display proposed changes to global settings
+    Create widget to display proposed changes to global settings
     If current state is modelbuilder -> delete rows and turn model control on or off based on state to convert to
     If current state is hydraulic test, delete all rows, add rows from backup, make sure model control is on
     If current state is 1d2d test, delete all rows, add rows from backup, make sure model control is off

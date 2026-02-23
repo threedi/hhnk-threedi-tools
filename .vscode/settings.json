@@ -33,4 +33,6 @@
     },
     "jupyter.interactiveWindow.textEditor.executeSelection": true,
     "jupyter.notebookFileRoot": "${workspaceFolder}",
+    "python-envs.defaultEnvManager": "ms-python.python:system",
+    "python-envs.pythonProjects": [],
 }

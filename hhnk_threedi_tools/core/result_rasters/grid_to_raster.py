@@ -166,7 +166,7 @@ def get_delaunay_grid(grid_gdf: gpd.GeoDataFrame, wlvl_column: str, no_data_valu
         GeoDataFrame met alle grid-punten waarmee delaunay triangulatie mee gemaakt wordt
     """
     # we maken een buffer rond de gridcellen met data; dit begrenst de interpolatie
-    poly = grid_gdf[grid_gdf[wlvl_column] != no_data_value].unary_union
+    poly = grid_gdf[grid_gdf[wlvl_column] != no_data_value].union_all()
     boundary = poly.boundary
 
     # we voegen alle relevante punten samen tot 1 grid
@@ -177,13 +177,13 @@ def get_delaunay_grid(grid_gdf: gpd.GeoDataFrame, wlvl_column: str, no_data_valu
         ]
     )
 
-    return gdf
+    return gdf[[wlvl_column, "geometry"]]
 
 
-def get_interpolator(
+def get_interpolator_input(
     grid_gdf: gpd.GeoDataFrame, wlvl_column: str, no_data_value: float, reorder=True
-) -> LinearNDInterpolator:
-    """LinearNDInterpolator op basis van Delauny triangulatie.
+) -> Delaunay:
+    """Get the interpolation input as an input to prepare for Delauney interpolation.
 
     https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.LinearNDInterpolator.html
 
@@ -200,8 +200,8 @@ def get_interpolator(
 
     Returns
     -------
-    LinearNDInterpolator
-        LinearNDInterpolator
+    Delaunay
+        Interpolation input voor Delaunay interpolatie
     """
 
     # aanmaken delaunay grid
@@ -217,7 +217,7 @@ def get_interpolator(
     if reorder:
         points_grid, wlvl = morton.reorder(points_grid, wlvl)
 
-    return LinearNDInterpolator(Delaunay(points_grid), wlvl)
+    return Delaunay(points_grid), wlvl
 
 
 """Calculate interpolated rasters from a grid. The grid_gdf is
@@ -245,17 +245,9 @@ class GridToWaterLevel:
         self.grid_gdf = grid_gdf
         self.wlvl_column = wlvl_column
         self.wlvl_raster = None
-        self._interpolator = None
+        self.points_grid = None
+        self.wlvl = None
         self._delaunay_grid_gdf = None
-
-    @property
-    def interpolator(self):
-        """2D Delaunay interpolator"""
-        if self._interpolator is None:
-            self._interpolator = get_interpolator(
-                grid_gdf=self.grid_gdf, wlvl_column=self.wlvl_column, no_data_value=NO_DATA_VALUE
-            )
-        return self._interpolator
 
     @property
     def delaunay_grid_gdf(self):
@@ -266,38 +258,54 @@ class GridToWaterLevel:
             )
         return self._delaunay_grid_gdf
 
+    def prepare_interpolator_input(self):
+        """2D Delaunay interpolator input. We cannot create the interpolator here because
+        it doesnt work well with dasks multiprocessing. For each compute block we initialize a
+        new interpolator.
+        """
+        if self.points_grid is None:
+            self.points_grid, self.wlvl = get_interpolator_input(
+                grid_gdf=self.grid_gdf, wlvl_column=self.wlvl_column, no_data_value=NO_DATA_VALUE
+            )
+
     def run(self, output_file, chunksize: Union[int, None] = None, overwrite: bool = False):
         # level block_calculator
-        def calc_level(_, dem_da, interpolator):
+        def calc_level(_, dem_chunk: xr.DataArray):
             # get x and y coordinates from dem_da
             x, y = np.meshgrid(
-                dem_da.x.data,
-                dem_da.y.data,
+                dem_chunk.x.data,
+                dem_chunk.y.data,
             )
 
             # interpolate levels to x and y coordinates
+            interpolator = LinearNDInterpolator(points=self.points_grid, values=self.wlvl)
             level = interpolator(x, y)
             level = np.expand_dims(level, axis=0)
 
             # Return as xarray DataArray, using dem_da's coordinates
-            level_da = xr.full_like(dem_da, dem_da.rio.nodata)
-            level_da.values = level
+            wlvl_da = xr.full_like(dem_chunk, dem_chunk.rio.nodata)
+            wlvl_da.values = level
 
-            return level_da
-
-        # get dem as xarray
-        dem = self.dem_raster.open_rxr(chunksize)
+            return wlvl_da
 
         # init result raster
         create = hrt.check_create_new_file(output_file=output_file, overwrite=overwrite)
 
         if create:
+            # get dem as xarray
+            dem = self.dem_raster.open_rxr(chunksize=chunksize)
+            self.prepare_interpolator_input()
+
             # create empty result array
-            result = xr.full_like(dem, dem.rio.nodata)
+            result_template = xr.full_like(dem, dem.rio.nodata)
 
-            result = xr.map_blocks(calc_level, obj=result, args=[dem, self.interpolator], template=result)
+            wlvl_da = dem.map_blocks(calc_level, args=[dem], template=result_template)
 
-            self.wlvl_raster = hrt.Raster.write(output_file, result=result, nodata=dem.rio.nodata, chunksize=chunksize)
+            self.wlvl_raster = hrt.Raster.write(
+                output_file, result=wlvl_da, nodata=dem.rio.nodata, chunksize=chunksize
+            )
+        else:
+            self.wlvl_raster = hrt.Raster(output_file)
 
         return self.wlvl_raster
 
@@ -340,8 +348,8 @@ class GridToWaterDepth:
         create = hrt.check_create_new_file(output_file=self.depth_raster.path, overwrite=overwrite)
 
         if create:
-            dem = self.dem_raster.open_rxr(chunksize)
-            level = self.wlvl_raster.open_rxr(chunksize)
+            dem = self.dem_raster.open_rxr(chunksize=chunksize)
+            level = self.wlvl_raster.open_rxr(chunksize=chunksize)
 
             # create empty result array
             result = level - dem
@@ -368,10 +376,12 @@ if __name__ == "__main__":
 
     folder_path = r"E:\02.modellen\23_Katvoed"
     folder = Folders(folder_path)
-    threedi_result = folder.threedi_results.one_d_two_d["ghg_blok_t1000"]
+    output_fd = folder.output.one_d_two_d[0]
+    threedi_result = folder.threedi_results.one_d_two_d[0]
 
     # grid_gdf = gpd.read_file(threedi_result.path/"grid_raw.gpkg", driver="GPKG")
-    grid_gdf = threedi_result.full_path("grid_corr.gpkg").load()
+    # grid_gdf = threedi_result.full_path("grid_corr.gpkg").load()
+    grid_gdf = gpd.read_file(output_fd.grid_nodes_2d.path)
 
     calculator_kwargs = {
         "dem_path": folder.model.schema_base.rasters.dem.base,
@@ -383,3 +393,5 @@ if __name__ == "__main__":
     with GridToWaterLevel(**calculator_kwargs) as self:
         self.run(output_file=threedi_result.full_path("wdepth_orig.tif"), overwrite=OVERWRITE)
         print("Done.")
+
+# %%

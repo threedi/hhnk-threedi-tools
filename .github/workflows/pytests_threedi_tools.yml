@@ -20,21 +20,25 @@ jobs:
     strategy:
       matrix:
         os: ["windows-latest", ]
-        python-version: [ "py39", ]
+        python-version: [ "py39", "default"]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       
       - name: Setup pixi
-        uses: prefix-dev/setup-pixi@v0.8.8
+        uses: prefix-dev/setup-pixi@v0.9.0
         with:
           pixi-version: "latest"
           cache: true
           # cache-write: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
           environments: ${{ matrix.python-version }}
-          
+      
+      
       - name: Run ruff
-        run: pixi run -e py39 style-check
+        shell: bash
+        run: |
+          pixi run -e py39 ruff check --select I --force-exclude && \
+          pixi run -e py39 ruff format --check --force-exclude
 
       - name: Run Tests
         run: pixi run -e py39 tests tests/

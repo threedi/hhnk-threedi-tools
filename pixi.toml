@@ -1,4 +1,4 @@
-[project]
+[workspace]
 channels = ["conda-forge"]
 name = "hhnk-threedi-tools"
 platforms = ["win-64"]
@@ -20,6 +20,7 @@ pre-commit-install = "pre-commit install --install-hooks -t=pre-push" #-t=pre-co
 postinstall = { depends-on = ["hrt-install", "hydamo_validation-install", "pre-commit-install"] }
 
 pre-commit-run = "pre-commit run --all-files"
+tests = "pytest --cov-report term-missing --cov=hhnk_threedi_tools --cov-report=xml"
 
 # Upload to PyPi to make it available with pip
 upload_pypi = "twine upload --repository hhnk-threedi-tools  dist/*"
@@ -35,15 +36,8 @@ build_wheels = "rm -rf dist/ && python -m build" # build wheels
 twine_check = "twine check dist/*"
 build = { depends-on = ["build_wheels", "twine_check"] }
 
-
-# FIXME set env to 'test' here once we switch to py312. Run tests with; pixi run -e py39 tests
-# FIXME change env in pytests_threedi_tools.yml as well
 [feature.py39.tasks]
 tests = "pytest --cov-report term-missing --cov=hhnk_threedi_tools --cov-report=xml"
-sort_imports-check = "ruff check  ./**/*.py --select I --force-exclude"
-fmt-check = "ruff format ./**/*.py --check --force-exclude"
-style-check = {depends-on = ["sort_imports-check", "fmt-check"]} # raises errors instead of fixing
-
 
 [dependencies]
 python = "3.12.*"
@@ -73,8 +67,11 @@ pytest = "*"
 pytest-cov = "*"
 tqdm = "*"
 xarray = "*"
+cftime = "*"
 
 pip = "*"
+git = ">=2.51.1,<3"
+gitpython = ">=3.1.45,<4"
 
 [pypi-dependencies]
 # NenS deps
@@ -86,6 +83,10 @@ threedi_mi_utils = "==0.1.10"
 threedigrid = "==2.3.5"
 threedigrid-builder = ">=1.24.3"
 threedidepth = "==0.6.3"
+# hhnk-research-tools = { git = "https://github.com/hhnk/hhnk-research-tools.git", rev = "main" }
+
+# modellen repo deps
+gitpython = "*"
 
 # HHNK deps
 hhnk-threedi-tools = { path = ".", editable = true }
@@ -111,14 +112,8 @@ django = "<4"  # datachecker (<4 wegens compatibility met 3Di modules)
 [feature.dev.pypi-dependencies]
 # Editable installs, not installed on test. #FIXME doesnt work on Github Actions.
 # https://github.com/prefix-dev/pixi/issues/2763
-# FIXME disabled. should run pixi run postinstall
-# hhnk-research-tools = { path = "../hhnk-research-tools", editable = true }
 build = "*"
-
-# Unused currently
-# [feature.test.pypi-dependencies]
-# hhnk-research-tools = { git = "https://github.com/hhnk/hhnk-research-tools.git", rev = "main" }
-# hydamo_validation = { git = "https://github.com/hhnk/HyDAMOValidatieModule.git", rev = "main" }
+hydamo_validation = { git = "https://github.com/hhnk/HyDAMOValidatieModule.git", rev = "main" }
 
 
 # Temporary old py39 env to have working tests
@@ -156,6 +151,7 @@ seaborn = "*"
 pip = "*"
 urllib3= "1.*"
 ruff = "*"
+gitpython = "*"
 
 [feature.py39.pypi-dependencies]
 lazy_loader= "*"
@@ -166,14 +162,12 @@ threedi-api-client = "==4.1.7" # 3Di Models and Simulations 3.11.0
 threedigrid_builder = "==1.14.4" # threedi_results_analysis 3.9.2
 threedigrid = "==2.3.3" # threedi_results_analysis 3.12.0
 threedidepth = "==0.6.3" # threedi_results_analysis 3.9.0
-hhnk-research-tools = { git = "https://github.com/hhnk/hhnk-research-tools.git", rev = "main" }
-# hydamo_validation = { git = "https://github.com/hhnk/HyDAMOValidatieModule.git", rev = "main" }
 dotenv = "*"
 
 #Editable installs
-hhnk_threedi_tools = { path = ".", editable = true }
+hhnk-research-tools = { git = "https://github.com/hhnk/hhnk-research-tools.git", rev = "main" }
+# hhnk_threedi_tools = { path = ".", editable = true } #TODO kan dit weg
 
 [environments]
 default = ["dev"]
-# test = ["test"]
-py39 = { features=["py39"], no-default-feature = true } #required for some tests
+py39 = { features=["py39"], no-default-feature = true }
