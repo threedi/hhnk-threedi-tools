@@ -65,4 +65,4 @@ def validate_hydamo(
     # Validate the HyDAMO file
     datamodel, layer_summary, result_summary = hydamo_validator(directory=validation_directory_path, raise_error=True)
 
-    return result_summary.to_dict()
+    return datamodel, result_summary.to_dict()

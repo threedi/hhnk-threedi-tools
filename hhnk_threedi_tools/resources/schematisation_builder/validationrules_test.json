@@ -614,9 +614,7 @@
 					},
 					"auto_fixable": false
 				}
-			]
-		},
-		{
+			],
 			"fix_rules": [
 				{
                     "attribute_name": "breedteopening",
@@ -625,8 +623,8 @@
                     "fix_action": "Derived assumption",
                     "fix_type": "automatic",
                     "fix_method": {
-                        "custom_hydamo": {
-							"custom_function_name": "equal_to_attribute"
+                        "equal": {
+							"to": "hoogteopening"
 						}
                     },
                     "fix_description": "DA:breedteopening equal to hoogteopening"
