@@ -1,24 +1,37 @@
 import shutil
 import sys
-
+from pathlib import Path
 import fiona
 import geopandas as gpd
 import hhnk_research_tools as hrt
 import pytest
+import hhnk_threedi_tools.resources.schematisation_builder as schematisation_builder_resources
 
 from tests.config import TEMP_DIR, TEST_DIRECTORY
 
 LAYERS = ["duikersifonhevel"]
 
-
 # test for creation of summary validation and fix report gpkg
 @pytest.mark.skipif(sys.version_info < (3, 12), reason="Requires Python 3.12 or higher")
-def test_apply_validation_fixes():
+def test_hydamo_fixer():
     from hhnk_threedi_tools.core.schematisation_builder.HyDAMO_fixer import HyDAMOFixer
 
     # define paths
     hydamo_file_path = TEST_DIRECTORY / "schematisation_builder" / "HyDAMO.gpkg"
-    validation_directory_path = TEMP_DIR / f"temp_hydamo_fixer_apply_fixes_{hrt.current_time(date=True)}"
+    validation_directory_path = TEMP_DIR / f"temp_hydamo_fixer_{hrt.current_time(date=True)}"
+    hydamo_file_path2 = validation_directory_path.joinpath("datasets", hydamo_file_path.name)
+    hydamo_file_path2.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(hydamo_file_path, hydamo_file_path2)
+
+    validation_rules_json_path = hrt.get_pkg_resource_path(schematisation_builder_resources, "validationrules.json")
+    validation_rules_json_path2 = validation_directory_path.joinpath("validationrules.json")
+    if not validation_rules_json_path2.exists():
+        shutil.copy2(validation_rules_json_path, validation_rules_json_path2)
+
+    fix_rules_json_path = hrt.get_pkg_resource_path(schematisation_builder_resources, "FixConfig.json")
+    fix_rules_json_path2 = validation_directory_path.joinpath("FixConfig.json")
+    if not fix_rules_json_path2.exists():
+        shutil.copy2(fix_rules_json_path, fix_rules_json_path2)
 
     # create folder results and fix_phase
     (validation_directory_path / "results").mkdir(parents=True, exist_ok=True)
@@ -29,12 +42,20 @@ def test_apply_validation_fixes():
     validation_results_dst = validation_directory_path / "results" / "results.gpkg"
     shutil.copy(validation_results_src, validation_results_dst)
 
+    test_coverage_location = TEST_DIRECTORY / "schematisation_builder" / "dtm"  # should hold index.shp
+    coverages_dict = {"AHN": test_coverage_location}
+
     fixer = HyDAMOFixer(
         hydamo_file_path=hydamo_file_path,
         validation_directory_path=validation_directory_path,
     )
-    fixer.create_validation_fix_reports()
-    fixer.execute()
+    hydamo_fixer = fixer.fixer(
+        coverages=coverages_dict, 
+        output_types=["geopackage"]
+    )
+
+    datamodel, layer_summary, result_summary = hydamo_fixer(directory=validation_directory_path, raise_error=True)
+    stop
 
     # assert
     hydamo_fixed_gpkg_path = validation_directory_path / "results" / "HyDAMO_fix.gpkg"
@@ -52,4 +73,4 @@ def test_apply_validation_fixes():
 
 # %%
 if __name__ == "__main__":
-    test_apply_validation_fixes()
+    test_hydamo_fixer()
