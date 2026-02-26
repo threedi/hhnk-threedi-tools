@@ -113,7 +113,8 @@ django = "<4"  # datachecker (<4 wegens compatibility met 3Di modules)
 # Editable installs, not installed on test. #FIXME doesnt work on Github Actions.
 # https://github.com/prefix-dev/pixi/issues/2763
 build = "*"
-hydamo_validation = { git = "https://github.com/hhnk/HyDAMOValidatieModule.git", rev = "main" }
+hydamo_validation = { path = "../HyDAMOValidatieModule", editable = true }
+# hydamo_validation = { git = "https://github.com/hhnk/HyDAMOValidatieModule.git", rev = "main" }
 
 
 # Temporary old py39 env to have working tests

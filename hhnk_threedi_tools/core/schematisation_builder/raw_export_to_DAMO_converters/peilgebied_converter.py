@@ -28,9 +28,11 @@ class PerpendicularSample(TypedDict):
 PEILGEBIED_SOURCE_LAYER = "combinatiepeilgebied"
 
 WATERKERING_ADDITIONAL_LINE_SOURCE_LAYERS = [
-    "levees",
-    "verhoogde lijnen",
-    "wegen",
+    "keringen_hoge_lijnelementen",
+]
+
+PEILGEBIED_ADDITIONAL_POLYGON_SOURCE_LAYERS = [
+    "Hydro_deelgebieden",
 ]
 
 PEILGEBIEDPRAKTIJK_COLUMNS = [
@@ -82,7 +84,7 @@ class PeilgebiedConverter(RawExportToDAMOConverter):
         self._create_streefpeil_layer()
 
     def _create_peilgebiedpraktijk_layer(self) -> None:
-        """Create DAMO-compliant peilgebiedpraktijk layer from combinatiepeilgebied."""
+        """Create DAMO-compliant peilgebiedpraktijk layer from combinatiepeilgebied and additional polygon sources."""
         self.logger.info("Creating peilgebiedpraktijk layer...")
 
         gdf = getattr(self.data, PEILGEBIED_SOURCE_LAYER.lower(), None)
@@ -92,6 +94,21 @@ class PeilgebiedConverter(RawExportToDAMOConverter):
             return
 
         self.logger.info(f"Loaded '{PEILGEBIED_SOURCE_LAYER}' with {len(gdf)} features")
+
+        # Load and merge additional polygon layers from HDB
+        additional_polygon_layers = self._load_source_layers(PEILGEBIED_ADDITIONAL_POLYGON_SOURCE_LAYERS)
+        if additional_polygon_layers:
+            self.logger.info(
+                f"Merging {len(additional_polygon_layers)} additional polygon layers into peilgebiedpraktijk"
+            )
+            gdfs_to_merge = [gdf]
+            for layer_name, additional_gdf in additional_polygon_layers.items():
+                self.logger.info(f"  Adding {len(additional_gdf)} polygons from '{layer_name}'")
+                gdfs_to_merge.append(additional_gdf)
+
+            # Concatenate all GeoDataFrames
+            gdf = gpd.GeoDataFrame(pd.concat(gdfs_to_merge, ignore_index=True), crs=gdf.crs)
+            self.logger.info(f"Combined total: {len(gdf)} polygons from all sources")
 
         # Explode MultiPolygons to Polygons
         polygon_count = len(gdf)
@@ -263,11 +280,11 @@ class PeilgebiedConverter(RawExportToDAMOConverter):
         self.logger.info(f"Created streefpeil layer with {len(damo_gdf)} features (no geometry)")
 
     def _load_source_layers(self, layer_names: list[str]) -> dict[str, gpd.GeoDataFrame]:
-        """Load source layers that are available in the data.
+        """Load source layers from hdb.gpkg file.
 
         Parameters
         ----------
-            layer_names: List of layer names to load
+            layer_names: List of layer names to load from hdb.gpkg
 
         Returns
         -------
@@ -275,11 +292,22 @@ class PeilgebiedConverter(RawExportToDAMOConverter):
         """
         available_layers = {}
 
+        # Check if hdb_file_path is available
+        if self.data.hdb_file_path is None or not self.data.hdb_file_path.exists():
+            self.logger.warning(f"HDB file not found or not provided. Cannot load additional layers: {layer_names}")
+            return available_layers
+
         for layer_name in layer_names:
-            gdf = getattr(self.data, layer_name.lower(), None)
-            if gdf is not None and not gdf.empty:
-                available_layers[layer_name] = gdf
-                self.logger.info(f"Loaded source layer '{layer_name}' with {len(gdf)} features")
+            try:
+                # Try to load layer from hdb.gpkg
+                gdf = gpd.read_file(self.data.hdb_file_path, layer=layer_name)
+                if gdf is not None and not gdf.empty:
+                    available_layers[layer_name] = gdf
+                    self.logger.info(f"Loaded source layer '{layer_name}' from HDB with {len(gdf)} features")
+                else:
+                    self.logger.debug(f"Layer '{layer_name}' is empty in HDB file")
+            except Exception as e:
+                self.logger.debug(f"Could not load layer '{layer_name}' from HDB file: {e}")
 
         return available_layers
 

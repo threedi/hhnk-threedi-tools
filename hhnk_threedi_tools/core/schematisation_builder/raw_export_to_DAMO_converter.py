@@ -43,6 +43,9 @@ class _Data:
     dem_path: Path = None
     dem_dataset: Optional[rasterio.DatasetReader] = None
 
+    # HDB data
+    hdb_file_path: Path = None
+
     def _ensure_loaded(self, layers: list[str], previous_method: str) -> None:
         for layer in layers:
             gdf = getattr(self, layer, None)
@@ -66,7 +69,7 @@ class _Data:
         self.dem_path = dem_path
         try:
             self.dem_dataset = rasterio.open(dem_path)
-            self.logger.info(f"DEM loaded from {dem_path}")
+            logging.info(f"DEM loaded from {dem_path}")
         except Exception as e:
             logging.warning(f"Failed to load DEM from {dem_path}: {e}")
 
@@ -83,6 +86,7 @@ class RawExportToDAMOConverter:
         dem_path: Path,
         output_file_path: Path,
         logger: Optional[logging.Logger] = None,
+        hdb_file_path: Optional[Path] = None,
     ):
         self.raw_export_file_path = Path(raw_export_file_path)
         self.hrt_raw_export_file_path = hrt.SpatialDatabase(raw_export_file_path)
@@ -92,6 +96,10 @@ class RawExportToDAMOConverter:
 
         self.load_layers()
         self.data.load_dem(dem_path)
+
+        # Store hdb_file_path if provided
+        if hdb_file_path is not None:
+            self.data.hdb_file_path = Path(hdb_file_path)
 
     def load_layers(self):
         self.logger.info("Loading all raw export layers...")
