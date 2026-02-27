@@ -44,7 +44,7 @@ def test_netcdf_essentials():
 
     # Load timeseries data from netcdf into ness dataframe
     ness = netcdf_gpkg.load_ness()
-    ness = netcdf_gpkg.process_ness(ness=ness)
+    ness = netcdf_gpkg.process_nc_from_ness(ness=ness)
 
     # Check data is loaded correctly
     assert ness is not None
@@ -63,11 +63,11 @@ def test_netcdf_essentials():
 
     # Test that error is raised when trying to get waterlevels with invalid timesteps
     with pytest.raises(ValueError):
-        grid_gdf = netcdf_gpkg.append_data(ness=ness, gdf=grid_gdf, timesteps_seconds_output=[7250])
+        grid_gdf = netcdf_gpkg.append_nc_data(ness=ness, gdf=grid_gdf, timesteps_seconds_output=[7250])
 
     # get and correct waterlevels
     timesteps_seconds_output = netcdf_gpkg.get_output_timesteps(user_defined_timesteps)
-    grid_gdf = netcdf_gpkg.append_data(ness=ness, gdf=grid_gdf, timesteps_seconds_output=user_defined_timesteps)
+    grid_gdf = netcdf_gpkg.append_nc_data(ness=ness, gdf=grid_gdf, timesteps_seconds_output=user_defined_timesteps)
 
     grid_gdf = netcdf_gpkg.add_correction_parameters(
         grid_gdf=grid_gdf,

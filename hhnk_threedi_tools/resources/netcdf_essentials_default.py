@@ -15,7 +15,6 @@ DEFAULT_NESS = [
         "attribute": "s1",
         "subset": "1D_All",
         "methods": ["min", "max"],
-        "aggregation_attribute": "s1_max",
     },
     {
         "name": "volume_1d",
@@ -25,7 +24,6 @@ DEFAULT_NESS = [
         "attribute": "vol",
         "subset": "1D_All",
         "methods": ["min", "max"],
-        "aggregation_attribute": "vol_max",
     },
     {
         "name": "waterlevel_2d",
@@ -35,7 +33,6 @@ DEFAULT_NESS = [
         "attribute": "s1",
         "subset": "2D_OPEN_WATER",
         "methods": ["min", "max"],
-        "aggregation_attribute": "s1_max",
     },
     {
         "name": "volume_2d",
@@ -45,7 +42,6 @@ DEFAULT_NESS = [
         "attribute": "vol",
         "subset": "2D_OPEN_WATER",
         "methods": ["min", "max"],
-        "aggregation_attribute": "vol_max",
     },
     {
         "name": "infiltration",
@@ -55,7 +51,6 @@ DEFAULT_NESS = [
         "attribute": "infiltration_rate_simple",
         "subset": "2D_OPEN_WATER",
         "methods": ["sum"],
-        "aggregation_attribute": "infiltration_rate_simple_avg",
     },
     {
         "name": "interception",
@@ -65,7 +60,6 @@ DEFAULT_NESS = [
         "attribute": "intercepted_volume",
         "subset": "2D_OPEN_WATER",
         "methods": ["sum"],
-        "aggregation_attribute": "intercepted_volume_current",
     },
     {
         "name": "rain",
@@ -75,7 +69,6 @@ DEFAULT_NESS = [
         "attribute": "rain",
         "subset": "2D_OPEN_WATER",
         "methods": ["sum"],
-        "aggregation_attribute": "rain_avg",
     },
     {
         "name": "discharge_1d",
@@ -85,7 +78,6 @@ DEFAULT_NESS = [
         "attribute": "q",
         "subset": "1D_All",
         "methods": ["min", "max", "max_abs", "sum", "sum_pos", "sum_neg"],
-        "aggregation_attribute": "q_avg",
     },
     {
         "name": "velocity_1d",
@@ -95,6 +87,14 @@ DEFAULT_NESS = [
         "attribute": "u1",
         "subset": "1D_All",
         "methods": ["min", "max", "max_abs"],
-        "aggregation_attribute": "u1_max",
+    },
+    {
+        "name": "discharge_2d",
+        "geom_type": "LineString",
+        "element": "lines",
+        "attribute_name": "q",
+        "attribute": "q",
+        "subset": "2D_OPEN_WATER",
+        "methods": ["min", "max", "max_abs", "sum", "sum_pos", "sum_neg"],
     },
 ]

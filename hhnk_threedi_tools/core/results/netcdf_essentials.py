@@ -27,7 +27,6 @@ import json
 import logging
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Union
 
 import geopandas as gpd
 import hhnk_research_tools as hrt
@@ -36,82 +35,12 @@ import pandas as pd
 from shapely.geometry import LineString, Point, box
 
 from hhnk_threedi_tools.core.folders import Folders
-from hhnk_threedi_tools.core.results import netcdf_timeseries
+from hhnk_threedi_tools.core.results import column_index, netcdf_timeseries
 from hhnk_threedi_tools.resources.netcdf_essentials_default import DEFAULT_NESS
 
 AVAILABLE_SIMULATION_TYPES = ["0d1d_test", "1d2d_test", "klimaattoets", "breach"]
 
 logger = hrt.logging.get_logger(__name__)
-
-
-@dataclass
-class ColumnIdx:
-    """
-    Utility class to find the index of columns in a GeoDataFrame for inserting new columns at logical positions.
-    This helps group related column types together, e.g.:
-    wlvl_1h wlvl_3h wlvl_1h_corr wlvl_3h_corr diff_1h diff_15h
-
-    Attributes
-    ----------
-    gdf : gpd.GeoDataFrame
-        The GeoDataFrame whose columns are being indexed.
-
-    Methods
-    -------
-    _get_idx(search_str)
-        Returns the index for inserting a column matching the search pattern.
-    Properties for common column types:
-        wlvl, wlvl_corr, diff, vol, infilt, incept, rain, q, u1, storage
-    """
-
-    gdf: gpd.GeoDataFrame
-
-    def _get_idx(self, search_str) -> int:
-        """Get idx based on search pattern, if not found return last index"""
-        idxs = self.gdf.columns.get_indexer(
-            self.gdf.columns[self.gdf.columns.str.contains(search_str, na=False)]
-        ).tolist()
-        return (idxs or [len(self.gdf.columns) - 1])[-1] + 1
-
-    @property
-    def wlvl(self):
-        return self._get_idx(search_str="^wlvl_(?!.*corr).*")
-
-    @property
-    def wlvl_corr(self):
-        return self._get_idx(search_str="^wlvl_corr_.*")
-
-    @property
-    def diff(self):
-        return self._get_idx(search_str="^diff_.*")
-
-    @property
-    def vol(self):
-        return self._get_idx(search_str="^vol_.*")
-
-    @property
-    def infilt(self):
-        return self._get_idx(search_str="^infilt_.*")
-
-    @property
-    def incept(self):
-        return self._get_idx(search_str="^incept_.*")
-
-    @property
-    def rain(self):
-        return self._get_idx(search_str="^rain_.*")
-
-    @property
-    def q(self):
-        return self._get_idx(search_str="^discharge_.*")
-
-    @property
-    def u1(self):
-        return self._get_idx(search_str="^vel_.*")
-
-    @property
-    def storage(self):
-        return self._get_idx(search_str="^storage_mm_.*")
 
 
 @dataclass
@@ -125,21 +54,18 @@ class NetcdfEssentials:
         Calculation type to specify retrieval of which results,
         options are 0d1d_test, 1d2d_test, klimaattoets, breach.
         Pass None to retrieve default set specified in resources/netcdf_essentials
-        and user specified timesteps.
-    waterdeel_path : str, optional
-        Path to waterdeel layer. If None, not used for cell selection.
-    waterdeel_layer : str, optional
-        Layer name for waterdeel if part of a GeoPackage.
-    panden_path : str, optional
-        Path to panden layer. If None, not used for cell selection.
-    panden_layer : str, optional
-        Layer name for panden if part of a GeoPackage.
+        and user specified time steps.
     user_defined_timesteps : list[int], optional
-        List of output timesteps (seconds or "max").
-    ness_fp : str, optional
-        Path to json file with relevant attributes.
-    use_aggregate : bool, default False
-        If True, use aggregate NetCDF results.
+        List of output time steps (seconds or "max").
+    ness : pd.DataFrame, optional
+        DataFrame with relevant attributes.
+        Should contain columns: 'attribute', 'subset', 'element', 'attribute_name'.
+    ness_fp : Path, optional
+        Path to a JSON file with relevant attributes.
+        If None, the default file will be used.
+        default is: hhnk_threedi_tools.resources.netcdf_essentials_default
+    use_aggregate : bool, True
+        Will process aggregate netcdf if available. All aggregate variables are stored in GeoPackage
 
     Methods
     -------
@@ -148,96 +74,90 @@ class NetcdfEssentials:
     run(...)
         Main method to process NetCDF and export to GeoPackage.
     create_base_gdf()
-        Create base GeoDataFrames for grid, nodes, lines, and metadata.
-    add_correction_parameters(...)
-        Add columns to grid_gdf for waterlevel correction logic.
-    correct_waterlevels(...)
-        Apply waterlevel correction for selected cells.
     append_data(...)
         Insert timeseries data into GeoDataFrames.
     process_ness(ness)
     load_default_ness(ness_fp)
         Load default ness settings as DataFrame.
-    _calculate_layer_area_per_cell(...)
-        Calculate area and percentage of a layer per grid cell.
     """
 
     threedi_result: hrt.ThreediResult
     simulation_type: str = None
-    waterdeel_path: str = None
-    waterdeel_layer: str = None
-    panden_path: str = None
-    panden_layer: str = None
     user_defined_timesteps: list[int] = None
-    ness_fp: str = None
-    use_aggregate: bool = False  # NOTE dus ik moet als gebruiker aangeven of ik aggregate result gebruik? Liever gebruiken als geschikbaar.
+    ness: pd.DataFrame = None
+    ness_fp: Path = None
+    use_aggregate: bool = True
+    output_fp: Path = None
 
-    # def __post_init__(self):
-    # # TODO wat moet hier?
+    def __post_init__(self):
+        # Default outputs if no paths are specified.
+        if self.output_fp is None:
+            self.output_fp = self.threedi_result.full_path("threedi_result.gpkg")  # TODO include via Folders key
+        else:
+            hrt.SpatialDatabase(self.output_fp)
 
-    @classmethod  # # TODO deels dubbel met timeseries, kan dat slimmer?
-    def from_folder(cls, folder: Folders, threedi_result: hrt.ThreediResult, use_aggregate: bool = False, **kwargs):
+    @classmethod
+    def from_folder(cls, folder: Folders, threedi_result: hrt.ThreediResult, use_aggregate: bool = True):
         """Initialize from folder structure."""
-        waterdeel_path = folder.source_data.damo
-        waterdeel_layer = "Waterdeel"
-
-        panden_path = folder.source_data.panden
-        panden_layer = "panden"
 
         return cls(
             threedi_result=threedi_result,
-            waterdeel_path=waterdeel_path,
-            waterdeel_layer=waterdeel_layer,
-            panden_path=panden_path,
-            panden_layer=panden_layer,
             use_aggregate=use_aggregate,
         )
 
     @property
+    def aggregate(self):
+        # Check if aggregate netcdf exists
+        if self.use_aggregate and self.threedi_result.aggregate_grid_path.exists():
+            return True
+        elif self.use_aggregate and not self.threedi_result.aggregate_grid_path.exists():
+            logger.warning("No aggregate netcdf was found, skipping")
+            return False
+        else:
+            return False
+
+    @property
     def nc_ts(self):
-        nc_ts = netcdf_timeseries.NetcdfTimeSeries(
-            threedi_result=self.threedi_result, use_aggregate=self.use_aggregate
-        )
+        nc_ts = netcdf_timeseries.NetcdfTimeSeries(threedi_result=self.threedi_result)
         return nc_ts
 
     @property
-    def grid(self):  # NOTE dubbel met timeseries, kan dat slimmer?
-        """Instance of threedigrid.admin.gridresultadmin.GridH5ResultAdmin or GridH5AggregateResultAdmin"""
-        if self.use_aggregate is False:
-            return self.threedi_result.grid
+    def agg_nc_ts(self):
+        nc_agg_ts = netcdf_timeseries.AggregateNetcdfTimeSeries(threedi_result=self.threedi_result)
+        return nc_agg_ts
+
+    @property
+    def grid(self):
+        """Instance of threedigrid.admin.gridresultadmin.GridH5ResultAdmin"""
+        return self.threedi_result.grid
+
+    @property
+    def grid_agg(self):
+        """Instance of threedigrid.admin.gridresultadmin.AggregateGridH5ResultAdmin"""
         return self.threedi_result.aggregate_grid
 
     @property
-    def ness(self):
-        """Relevant data for HHNK models"""
-        return self.ness
-
-    @property
-    def output_default(self):
-        """Default output if no path is specified."""
-        return self.threedi_result.full_path("threedi_results.gpkg")
-
-    def load_ness(self, ness_fp=None) -> pd.DataFrame:
+    def get_ness(self):
         """Load relevant data for HHNK models"""
-
-        if ness_fp is None:
-            # Convert Ness json to pandas dataframe
+        if self.ness is None and self.ness_fp is None:
             ness = pd.DataFrame(DEFAULT_NESS)
             logger.info("Loading default ness from resources.")
-        else:
-            with open(ness_fp, "r", encoding="utf-8") as f:
+        elif self.ness is None and self.ness_fp is not None:
+            with open(self.ness_fp, "r", encoding="utf-8") as f:
                 data = json.load(f)
             ness = pd.DataFrame(data)
-            logger.info(f"Loading ness from {ness_fp}")
+            logger.info(f"Loading ness from {self.ness_fp}")
+        else:
+            ness = self.ness
 
         return ness
 
-    def _create_column_base(self, time_seconds) -> str:
+    def _create_column_base(self, time_seconds: str | int) -> str:
         """Create a base column name with hours and minutes based time_seconds."""
         # Check if time_seconds is a string or int
         if isinstance(time_seconds, str):
             col_base = time_seconds
-        else:
+        elif isinstance(time_seconds, (int, float)):
             timestep_h = time_seconds / 3600
             # Round to nearest hour or minute
             if timestep_h % 1 == 0:  # round hours
@@ -248,55 +168,6 @@ class NetcdfEssentials:
                 else:
                     col_base = f"{int(np.floor(timestep_h))}h{int((timestep_h % 1) * 60)}min"
         return col_base
-
-    def _calculate_layer_area_per_cell(  # TODO move to correct waterlevels?
-        self,
-        grid_gdf: gpd.GeoDataFrame = None,
-        layer_path: Union[Path, hrt.File] = None,
-        layer_name: str = None,
-    ) -> gpd.GeoDataFrame:
-        """Calculate for each grid cell the area and percentage of total area of the
-        input layer. Returns the area and percentage columns.
-
-        ----------
-        grid_gdf : gpd.GeoDataFrame
-            gdf with grid cells. Created inside main class
-        layer_path : Path or hrt.File
-            Path to layer to calculate area and percentage from
-        layer_name : str, optional, by default None
-            Name of layer if the layer is part of a gpkg
-        """
-        gdf = None
-        # Load layer as gdf
-        if grid_gdf is not None and layer_path is not None:
-            logger.warning("Both grid_gdf and layer_path provided, using grid_gdf")
-        elif layer_path is not None and layer_path.exists():
-            grid_gdf = gpd.read_file(str(layer_path), layer=layer_name)
-        else:
-            logger.warning(f"Couldn't load {layer_path}. Ignoring it in correction.")
-
-        if gdf is not None:
-            area_col = "area"  # area in m2
-            perc_col = "perc"  # percentage of total area
-
-            if area_col in grid_gdf:
-                raise ValueError(f"Column {area_col} was already found in grid_gdf.")
-
-            gdf["value"] = 1
-            # Overlay grid with input shape.
-            overlay_df = gpd.overlay(grid_gdf[["id", "geometry"]], gdf[["value", "geometry"]], how="intersection")
-
-            # Calculate sum of area per cell
-            overlay_df[area_col] = overlay_df.area
-
-            # Group by ids so we get the total area per cell
-            overlay_df_grouped = overlay_df.groupby("id")[[area_col]].agg("sum")
-
-            # Put in area in grid gdf and calculate percentage.
-            grid_gdf_merged = grid_gdf.merge(overlay_df_grouped[area_col], left_on="id", right_on="id", how="left")
-            grid_gdf_merged[perc_col] = grid_gdf_merged[area_col] / grid_gdf_merged.area * 100
-            return grid_gdf_merged[[area_col, perc_col]]
-        return np.nan
 
     def _set_active_attributes(self, ness: pd.DataFrame) -> pd.DataFrame:
         """
@@ -327,9 +198,11 @@ class NetcdfEssentials:
         logger.info(f"Active attributes: {active_attributes.tolist()}")
         return ness
 
-    def process_ness(self, ness: pd.DataFrame) -> pd.DataFrame:
+    def process_nc_from_ness(
+        self,
+    ) -> pd.DataFrame:
         """
-        Process ness dataframe to set active attributes and retrieve data.
+        Process ness dataframe to set active attributes and retrieve data from result NetCDF.
 
         Parameters
         ----------
@@ -337,39 +210,70 @@ class NetcdfEssentials:
             DataFrame with attributes and subsets to check against the grid.
             Should contain columns: 'attribute', 'subset', 'element', 'attribute_name'.
         """
-        ness = self._set_active_attributes(ness)
+        ness = self._set_active_attributes(self.ness)
         # filter ness
         ness = ness[ness["active"]].copy()
-
 
         # initialise data columns
         ness["amount"] = None
         ness["data"] = None
         # Retrieve timeseries for each row in ness
         for i, row in ness.iterrows():
-            # Try to use the aggregation data
-            if  self.use_aggregate and :
-                att_name = "aggregation_attribute"
-            else:
-                att_name = "attribute"
-                data = self.nc_ts.get_ts(
-                    attribute=row[att_name],
-                    element=row["element"],
-                    subset=row["subset"],
-                )
-                getattr(
-                    getattr(self.grid, row["element"])
-                    .subset(row["subset"])
-                    .timeseries(indexes=slice(0, len(self.nc_ts.timestamps))),
-                    row["attribute"],
-                ).T
-                # add data as nested array to dataframe
-                ness.at[i, "data"] = data  # noqa: PD008 .loc werkt niet met nested array
-                ness.loc[i, "amount"] = data.shape[0]
+            data = self.nc_ts.get_ts(
+                attribute=row["attribute"],
+                element=row["element"],
+                subset=row["subset"],
+            )
+            getattr(
+                getattr(self.grid, row["element"])
+                .subset(row["subset"])
+                .timeseries(indexes=slice(0, len(self.nc_ts.timestamps))),
+                row["attribute"],
+            ).T
+            # add data as nested array to dataframe
+            ness.at[i, "data"] = data  # noqa: PD008 must use .at for nested array
+            ness.loc[i, "amount"] = data.shape[0]
 
         return ness
 
-    def create_base_gdf(self) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame, gpd.GeoDataFrame, gpd.GeoDataFrame]:
+    def _load_lines(self, subset_str: str) -> gpd.GeoDataFrame:
+        line_gdf = gpd.GeoDataFrame()
+
+        # Voeg geometry toe aan line gdf
+        xys = self.grid.lines.subset(subset_str).line_geometries  # format [x1, x2, ..., y1, y2, ...]
+
+        # Shapely requires [[x1,y1],[x2,y2],...]
+        lines = []
+        for xxyy in xys:
+            n = int(len(xxyy) / 2)
+            xy = []
+            for i in range(0, n):
+                xy.append([xxyy[i], xxyy[i + n]])
+            lines.append(LineString(xy))
+
+        # Add line geometry to gdf
+        line_gdf.set_geometry(
+            lines,
+            crs=f"EPSG:{self.grid.epsg_code}",
+            inplace=True,
+        )
+
+        # Add relevant metadata
+        line_gdf["id"] = self.grid.lines.subset(subset_str).id
+        line_gdf["content_pk"] = self.grid.lines.subset(subset_str).content_pk
+        line_gdf["exchange_level"] = self.grid.lines.subset(subset_str).dpumax
+        line_gdf["line_type_kcu"] = self.grid.lines.subset(subset_str).kcu
+        line_gdf["start_node"] = self.grid.lines.subset(subset_str).line[0]
+        line_gdf["end_node"] = self.grid.lines.subset(subset_str).line[1]
+        line_gdf["zoom_category"] = self.grid.lines.subset(subset_str).zoom_category
+
+        logger.info(f"Created {len(line_gdf)} lines.")
+
+        return line_gdf
+
+    def create_base_gdf(
+        self,
+    ) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame, gpd.GeoDataFrame, gpd.GeoDataFrame, gpd.GeoDataFrame]:
         """
         Create empty GeoDataFrames for grid, nodes, and lines.
         Populates them with geometries and relevant metadata from the grid.
@@ -391,7 +295,6 @@ class NetcdfEssentials:
         # Create empty GeoDataFrames for grid, node and line
         grid_gdf = gpd.GeoDataFrame()
         node_gdf = gpd.GeoDataFrame()
-        line_gdf = gpd.GeoDataFrame()
 
         # =========================
         # GRID
@@ -416,6 +319,11 @@ class NetcdfEssentials:
             grid_gdf["dem_area"] = self.grid.cells.subset("2D_OPEN_WATER").sumax
 
             logger.info(f"Created grid with {len(grid_gdf)} cells.")
+
+            # =========================
+            # LINES 2D_OPEN_WATER
+            # =========================
+            line_2d_gdf = self._load_lines(subset_str="2D_OPEN_WATER")
 
         if self.grid.has_1d:
             # =========================
@@ -451,36 +359,7 @@ class NetcdfEssentials:
             # =========================
             # LINES 1D_All
             # =========================
-
-            # Voeg geometry toe aan line gdf
-            xys = self.grid.lines.subset("1D_All").line_geometries  # format [x1, x2, ..., y1, y2, ...]
-
-            # Shapely requires [[x1,y1],[x2,y2],...]
-            lines = []
-            for xxyy in xys:
-                n = int(len(xxyy) / 2)
-                xy = []
-                for i in range(0, n):
-                    xy.append([xxyy[i], xxyy[i + n]])
-                lines.append(LineString(xy))
-
-            # Add line geometry to gdf
-            line_gdf.set_geometry(
-                lines,
-                crs=f"EPSG:{self.grid.epsg_code}",
-                inplace=True,
-            )
-
-            # Add relevant metadata
-            line_gdf["id"] = self.grid.lines.subset("1D_All").id
-            line_gdf["channel_id"] = self.grid.lines.subset("1D_All").content_pk
-            line_gdf["exchange_level"] = self.grid.lines.subset("1D_All").dpumax
-            line_gdf["line_type_kcu"] = self.grid.lines.subset("1D_All").kcu
-            line_gdf["start_node"] = self.grid.lines.subset("1D_All").line[0]
-            line_gdf["end_node"] = self.grid.lines.subset("1D_All").line[1]
-            line_gdf["zoom_category"] = self.grid.lines.subset("1D_All").zoom_category
-
-            logger.info(f"Created {len(line_gdf)} lines.")
+            line_1d_gdf = self._load_lines(subset_str="1D_ALL")
 
         # =========================
         # METADATA
@@ -503,107 +382,57 @@ class NetcdfEssentials:
 
         logger.info(f"Created metadata for result from model {self.grid.model_name} # {self.grid.revision_nr}")
 
-        # TODO breaches
-        return grid_gdf, node_gdf, line_gdf, meta_gdf
-
-    def add_correction_parameters(
-        self,
-        grid_gdf: gpd.GeoDataFrame,
-        replace_dem_below_perc: float = 50,
-        replace_water_above_perc: float = 95,
-        replace_pand_above_perc: float = 99,
-    ) -> gpd.GeoDataFrame:  # TODO move to correct waterlevels?
-        """Determine which cells should have their waterlevel replaced by their neighbours.
-
-        Parameters
-        ----------
-        grid_gdf : gpd.GeoDataFrame
-            GeoDataFrame with grid cells.
-        replace_dem_below_perc : float, optional
-            Percentage of minimal DEM area in waterlevel, if less replaced, by default 50.
-        replace_water_above_perc : float, optional
-            Percentage of water area above which the waterlevel should be replaced, by default 95.
-        replace_pand_above_perc : float, optional
-            Percentage of panden area above which the waterlevel should be replaced, by default 99.
-
-        Returns
-        -------
-        gpd.GeoDataFrame
-            extened grid_gdf with correction parameters columns.
-        """
-        grid_gdf["dem_minimal_m"] = self.grid.cells.subset("2D_open_water").z_coordinate  # FIXME bottom level?
-        # Percentage of dem in a calculation cell
-        # so we can make a selection of cells on model edge that need to be ignored
-        grid_gdf["dem_area"] = self.grid.cells.subset("2D_open_water").sumax
-        # Percentage dem in calculation cell
-        grid_gdf["dem_perc"] = grid_gdf["dem_area"] / grid_gdf.area * 100
-
-        grid_gdf[["water_area", "water_perc"]] = self._calculate_layer_area_per_cell(
-            grid_gdf=grid_gdf, layer_path=self.waterdeel_path, layer_name=self.waterdeel_layer
-        )
-        grid_gdf[["pand_area", "pand_perc"]] = self._calculate_layer_area_per_cell(
-            grid_gdf=grid_gdf, layer_path=self.panden_path, layer_name=self.panden_layer
-        )
-
-        # Select cells that need replacing of wlvl
-        grid_gdf["replace_dem"] = grid_gdf["dem_perc"] < replace_dem_below_perc
-        grid_gdf["replace_water"] = grid_gdf["water_perc"] > replace_water_above_perc
-        grid_gdf["replace_pand"] = grid_gdf["pand_perc"] > replace_pand_above_perc
-
-        # Write reason of replacing
-        grid_gdf["replace_all"] = False
-        grid_gdf.loc[grid_gdf["replace_dem"], "replace_all"] = "Dem percentage below threshold"
-        grid_gdf.loc[grid_gdf["replace_water"], "replace_all"] = "Water percentage above threshold"
-        grid_gdf.loc[grid_gdf["replace_pand"], "replace_all"] = "Pand percentage above threshold"
-
-        # Find neighbour cells and add their id's to a new column
-        neighbours = []
-        for row in grid_gdf.itertuples():
-            # find all indices that touch the cell
-            neighbours_ids = grid_gdf[grid_gdf.geometry.touches(row.geometry)].id.tolist()
-            # find the id of those indices
-            neighbours.append(str(neighbours_ids))
-        grid_gdf["neighbour_ids"] = neighbours
-
-        return grid_gdf
+        # TODO breaches ACTIVE_BREACH add output with only active breaches, if there are active breaches
+        # TODO 1d2d 1D2D
+        return grid_gdf, node_gdf, line_1d_gdf, line_2d_gdf, meta_gdf
 
     def get_output_timesteps(
         self,
         simulation_type: str = None,
-        user_defined_timesteps: list[int] = None,
+        user_defined_timesteps: list[int | str] = None,
     ) -> list[int]:
         """
-        Set required output for different simulation types
+        Set required output for different simulation types depending on the simulation type.
 
-
-        In ieder geval:
-        * Opgegeven timesteps door gebruiker, incl. max
-        * Timesteps nodig voor tests 0d1d en 1d2d
-        * Misschien gewoon alle? Maar dan wel iets uniforms?
-
-        TODO WE ik ben nog zoekende of ik dit wil. Omdat ik de hele tijdserie ophaal kan ik ook
-        de index van het max bepalen en de data ophalen voor die index.
-        NOTE hoe kom ik aan output timestep uit de settings?
-        NOTE misschien optie maken voor alle tijstappen?
-        NOTE de ness als input?
+        Parameters
+        ----------
+        simulation_type: str = None
+            Options for simulation types are None, 0d1d_test, 1d2d_test, klimaattoets, breach.
+        user_defined_timesteps: list[int | str] = None
+            List of user defined time steps in seconds or method e.g. "max" for maximum value over time series.
         """
         if simulation_type is None:
             if user_defined_timesteps is None:
-                logger.info(
-                    "No simulation type or user defined timesteps provided, using only user defined timesteps."
-                )
-
-        if user_defined_timesteps is None:
-            # Add only maximum
-            timesteps_seconds_output = ["max"]
-            logger.info("No output timesteps provided, using only max")
+                logger.info("No simulation type or user defined timesteps provided, using only max")
+                timesteps_seconds_output = ["max"]
+        elif simulation_type in AVAILABLE_SIMULATION_TYPES:
+            logger.info(f"Using simulation type {simulation_type} to set output timesteps.")
+            if simulation_type == "0d1d_test":
+                timesteps_seconds_output = ["max"]  # TODO get from rain times etc, also how to correctly label columns
+            elif simulation_type == "1d2d_test":
+                timesteps_seconds_output = ["max"]  # TODO find out what is needed for this one
+            elif simulation_type == "klimaattoets":
+                timesteps_seconds_output = ["max"]  # only maximum is needed for klimaattoets
+            elif simulation_type == "breach":
+                timesteps_seconds_output = [3600 * i for i in range(1, 25)] + ["max"]  # TODO where to define?
         else:
-            timesteps_seconds_output = user_defined_timesteps  # TODO dichtsbijzijnde zoeken ofzo?
-        logger.info(f"Using user defined timesteps: {timesteps_seconds_output}")
+            logger.warning(f"Simulation type {simulation_type} not recognized, using only max")
+            timesteps_seconds_output = ["max"]
+
+        if user_defined_timesteps is not None:
+            # Add user defined time steps to output, if not already included via simulation type
+            timesteps_seconds_output = timesteps_seconds_output + user_defined_timesteps
 
         return timesteps_seconds_output
 
-    def append_data(self, ness, gdf, timesteps_seconds_output: list) -> gpd.GeoDataFrame:
+    def append_nc_data(
+        self,
+        nc_ts: netcdf_timeseries.NetcdfTimeSeries | netcdf_timeseries.AggregateNetcdfTimeSeries,
+        ness: pd.DataFrame,
+        gdf: gpd.GeoDataFrame,
+        subset_str: str,
+        timesteps_seconds_output: list = None,
+    ) -> gpd.GeoDataFrame:
         """
         Insert data at given timesteps to geodataframe.
 
@@ -619,201 +448,266 @@ class NetcdfEssentials:
             Can contain int values or "max" for maximum value over the time series.
         """
 
-        col_idx = ColumnIdx(gdf=gdf)
+        col_idx = column_index.ColumnIdx(gdf=gdf)
         for i, row in ness.iterrows():
-            if row["active"] and row["geom_type"] == gdf.geometry.geom_type.unique()[0]:
+            data_timestep = np.array([])
+            data_method = np.array([])
+            if (
+                row["active"]
+                and row["subset"] == subset_str
+                and row["geom_type"] == gdf.geometry.geom_type.unique()[0]
+            ):
                 if timesteps_seconds_output is not None:
                     # processing user specified timesteps
                     for key in timesteps_seconds_output:
                         if isinstance(key, int):
-                            # Make pretty column names
+                            # Check that key is in timestamps, if not log warning and skip
+                            ts_idx = nc_ts.get_ts_index(timestamps=nc_ts.timestamps, time_seconds=key)
+                            if ts_idx is None:
+                                logger.warning(f"Time step {key} not found in netcdf timestamps.")
+                                continue
+
+                            # Make pretty column name
                             col_sub = self._create_column_base(time_seconds=key)
-                            # Find index of timestep
-                            data_timestep = row["data"][:, self.nc_ts.get_ts_index(time_seconds=key)]
+                            # Get timeseries data
+                            data_timestep = row["data"][:, ts_idx]
                         elif isinstance(key, str):
                             logger.debug(f"Adding user specified method: {key} for {row['attribute_name']}")
-                            data_timestep = self.nc_ts.get_ts_methods(method=key, ts=row["data"])
+                            data_timestep = nc_ts.get_ts_methods(method=key, ts=row["data"])
                             col_sub = key
 
-                        # insert value in gdf
-                        gdf.insert(
-                            getattr(col_idx, row["attribute_name"]),
-                            f"{row['attribute_name']}_{col_sub}",
-                            data_timestep,
-                        )
-                # processing default methods from ness
-                for method in row["methods"]:
-                    if method in timesteps_seconds_output:
-                        continue  # already processed
-                    else:
-                        logger.debug(f"Adding default method: {method} for {row['attribute_name']}")
-                        data_method = self.nc_ts.get_ts_methods(method=method, ts=row["data"])
-
-                    gdf.insert(
-                        getattr(col_idx, row["attribute_name"]),
-                        f"{row['attribute_name']}_{method}",
-                        data_method,
-                    )
+                        # Insert value in gdf
+                        if data_timestep is not None or not (
+                            isinstance(data_timestep, np.ndarray) and data_timestep.size == 0
+                        ):  # Check that there is data
+                            gdf.insert(
+                                getattr(col_idx, row["attribute_name"]),
+                                f"{row['attribute_name']}_{col_sub}",
+                                data_timestep,
+                            )
+                # processing methods from ness # TODO make separate function?
+                if not row["methods"]:
+                    for method in row["methods"]:
+                        data_method = np.array([])
+                        if method in timesteps_seconds_output:
+                            continue  # already processed
+                        if not method:  # check that method list is not empty
+                            logger.debug(f"Adding default method: {method} for {row['attribute_name']}")
+                            data_method = nc_ts.get_ts_methods(method=method, ts=row["data"])
+                        if data_timestep is not None or not (
+                            isinstance(data_timestep, np.ndarray) and data_timestep.size == 0
+                        ):  # Check that there is data
+                            # Insert method data
+                            gdf.insert(
+                                getattr(col_idx, row["attribute_name"]),
+                                f"{row['attribute_name']}_{method}",
+                                data_method,
+                            )
 
         return gdf
 
-    def correct_waterlevels(self, grid_gdf, timesteps_seconds_output: list):  # TODO move to correct waterlevels?
-        """Correct the waterlevel for the given timesteps. Results are only corrected
-        for cells where the 'replace_all' value is not False.
-        """
-        # Create copy and set_index the id field so we can use the neighbours_ids column easily
-        grid_gdf_local = grid_gdf.copy()
-        grid_gdf_local.set_index("id", inplace=True)
+    def append_agg_nc_data(
+        self,
+        agg_nc_ts: netcdf_timeseries.AggregateNetcdfTimeSeries,
+        gdf: gpd.GeoDataFrame,
+        subset_str: str,
+        timesteps_seconds_output: list = None,
+    ) -> gpd.GeoDataFrame:
+        if self.aggregate:
+            # Construct ness from aggregate netcdf variables
+            ness_agg = pd.DataFrame()
+            for element, attribute in agg_nc_ts.variables.items():
+                geom_type = None
+                if subset_str == "2D_OPEN_WATER" and element == "nodes":
+                    geom_type = "Polygon"
+                elif subset_str == "2D_OPEN_WATER" and element == "lines":
+                    geom_type = "LineString"
+                elif subset_str == "1D_All" and element == "nodes":
+                    geom_type = "Point"
+                elif subset_str == "1D_All" and element == "lines":
+                    geom_type = "LineString"
 
-        for timestep in timesteps_seconds_output:
-            base_col = self._create_column_base(time_seconds=timestep)
-            wlvl_col = f"wlvl_{base_col}"
-            wlvl_corr_col = f"wlvl_corr_{base_col}"
-            diff_col = f"diff_{base_col}"
-            col_idx = ColumnIdx(gdf=grid_gdf_local)
+                # replace s1 with wlvl if in string attribute
+                attribute_name = attribute
+                if "s1" in attribute:
+                    attribute_name = attribute.replace("s1", "wlvl")
+                # only keep part before underscore
+                attribute_name = attribute_name.split("_")[0]
+                # TODO check for other aggregate variables
 
-            # Make copy of original wlvls and set to None when they need to be replaced
-            grid_gdf_local.insert(col_idx.wlvl_corr, wlvl_corr_col, grid_gdf_local[wlvl_col])
-            replace_idx = grid_gdf_local["replace_all"] != False  # noqa: E712
-            grid_gdf_local.loc[replace_idx, wlvl_corr_col] = None
-
-            # Loop cells that need replacing.
-            for row in grid_gdf_local.loc[replace_idx].itertuples():
-                # Dont replace nan values
-                if pd.isna(grid_gdf_local.loc[row.Index, wlvl_col]):
-                    continue
-
-                # Calculate avg wlvl of neighbours and update in table
-                neighbour_ids = [int(i) for i in row.neighbour_ids[1:-1].split(",")]  # str list to list
-                neighbour_avg_wlvl = np.round(grid_gdf_local.loc[neighbour_ids][wlvl_corr_col].mean(), 5)
-                grid_gdf_local.loc[row.Index, wlvl_corr_col] = neighbour_avg_wlvl
-
-            # Add diff col between corrected and original wlvl
-            grid_gdf_local.insert(
-                col_idx.diff, diff_col, np.round(grid_gdf_local[wlvl_corr_col] - grid_gdf_local[wlvl_col], 5)
+                ness_agg = pd.concat(
+                    [
+                        ness_agg,
+                        pd.DataFrame(
+                            {
+                                "name": f"{attribute}_agg",
+                                "geom_type": geom_type,
+                                "attribute": attribute,
+                                "subset": subset_str,
+                                "element": element,
+                                "attribute_name": f"{attribute_name}",
+                                "methods": [["min", "max"]],
+                                "active": True,
+                                "data": [
+                                    agg_nc_ts.get_ts(
+                                        attribute=attribute,
+                                        element=element,
+                                        subset=subset_str,
+                                    )
+                                ],
+                            }
+                        ),
+                    ],
+                    ignore_index=True,
+                )
+            gdf = self.append_nc_data(
+                nc_ts=agg_nc_ts,
+                ness=ness_agg,
+                gdf=gdf,
+                subset_str=subset_str,
+                timesteps_seconds_output=timesteps_seconds_output,
             )
-        return grid_gdf_local
+        else:
+            logger.info("No aggregate netcdf to process.")
+        return gdf
 
     def run(
         self,
-        ness_fp: Path = None,
-        output_file: Path = None,
+        ness: pd.DataFrame = None,
         user_defined_timesteps: list[int] = None,
         simulation_type: str = None,
-        replace_dem_below_perc: float = 50,
-        replace_water_above_perc: float = 95,
-        replace_pand_above_perc: float = 99,
-        wlvl_correction: bool = True,
         overwrite: bool = False,
     ):
         """Transform netcdf into a grid gpkg.
 
         Parameters
         ----------
-        ness_fp : str, optional
-            Path to netcdf_essentials.csv file with relevant attributes.
-            If None, the default file will be used.
-            default is: hhnk_threedi_tools.data.netcdf_essentials.csv
-        output_file : str or hrt.File, optional
-            Path to output file where the grid will be saved as a GeoPackage.
-            When None is passed the output will be placed in the same directory as the netcdf.
-            default name is: grid_wlvl.gpkg
         user_defined_timesteps : list[int], optional
-            List of output timesteps in seconds or "max" to include maximum waterlevel over calculation.
+            List of output timesteps in seconds or "max" to include maximum water level over calculation.
             If None, only uses max.
+        simulation_type: bool = True
+            Process aggregate result if available. Creates extra layers with aggregate results.
         simulation_type : str, optional
             Calculation type to specify retrieval of which results,
             options are 0d1d_test, 1d2d_test, klimaattoets, breach.
             Pass None to retrieve default set specified in resources/netcdf_essentials
             and user specified timesteps.
-        replace_dem_below_perc : float, optional, by default 50
-            if cell area has no dem (isna) above this value waterlevels will be replaced
-        replace_water_above_perc : float, optional, by default 95
-            if cell has water surface area above this value waterlevels will be replaced
-        replace_pand_above_perc : float, optional, by default 99
-            if cell has pand surface area above this value waterlevels will be replaced
-        wlvl_correction : bool, optional, by default True
-            applies waterlevel correction when true.
         overwrite : bool, optional, by default False
             overwrite output if it exists
         """
-
-        if output_file is None:
-            output_file = self.output_default
-        output_file = hrt.SpatialDatabase(output_file)
-
         # initialize logger
         logger = hrt.logging.get_logger(
-            __name__, filepath=Path(output_file.path).parent.absolute() / "NetCDFEssentials.log"
+            __name__, filepath=Path(self.output_fp.path).parent.absolute() / "NetCDFEssentials.log"
         )
         logger.setLevel(logging.INFO)
         logger.info(f"Starting NetcdfEssentials with result: {self.threedi_result}")
 
-        create = hrt.check_create_new_file(output_file=output_file, overwrite=overwrite)
+        create = hrt.check_create_new_file(output_file=self.output_fp, overwrite=overwrite)
         if create:
-            timesteps_seconds_output = self.get_output_timesteps(simulation_type, user_defined_timesteps)
+            ts_out = self.get_output_timesteps(simulation_type, user_defined_timesteps)
+            ness = self.get_ness()
+            ness = self.process_nc_from_ness(ness=ness)
 
-            ness = self.load_ness(ness_fp=ness_fp)
-            ness = self.process_ness(ness=ness)
-
-            grid_gdf, node_gdf, line_gdf, meta_gdf = self.create_base_gdf()
-
-            grid_gdf = self.append_data(ness=ness, gdf=grid_gdf, timesteps_seconds_output=timesteps_seconds_output)
-            node_gdf = self.append_data(ness=ness, gdf=node_gdf, timesteps_seconds_output=timesteps_seconds_output)
-            line_gdf = self.append_data(ness=ness, gdf=line_gdf, timesteps_seconds_output=timesteps_seconds_output)
-
-            if wlvl_correction:
-                logger.info("Correcting 2D waterlevels")
-                grid_gdf = self.add_correction_parameters(
-                    grid_gdf=grid_gdf,
-                    replace_dem_below_perc=replace_dem_below_perc,
-                    replace_water_above_perc=replace_water_above_perc,
-                    replace_pand_above_perc=replace_pand_above_perc,
-                )
-                grid_gdf = self.correct_waterlevels(
-                    grid_gdf=grid_gdf, timesteps_seconds_output=timesteps_seconds_output
-                )
+            grid_gdf, node_gdf, line_1d_gdf, line_2d_gdf, meta_gdf = self.create_base_gdf()
+            grid_nc_gdf = self.append_nc_data(
+                nc_ts=self.nc_ts,
+                ness=ness,
+                gdf=grid_gdf.copy(),
+                subset_str="2D_OPEN_WATER",
+                timesteps_seconds_output=ts_out,
+            )
+            node_nc_gdf = self.append_nc_data(
+                nc_ts=self.nc_ts, ness=ness, gdf=node_gdf.copy(), subset_str="1D_All", timesteps_seconds_output=ts_out
+            )
+            line_nc_1d_gdf = self.append_nc_data(
+                nc_ts=self.nc_ts,
+                ness=ness,
+                gdf=line_1d_gdf.copy(),
+                subset_str="1D_All",
+                timesteps_seconds_output=ts_out,
+            )
+            line_nc_2d_gdf = self.append_nc_data(
+                nc_ts=self.nc_ts,
+                ness=ness,
+                gdf=line_2d_gdf.copy(),
+                subset_str="2D_OPEN_WATER",
+                timesteps_seconds_output=ts_out,
+            )
 
             # Save to file
-            grid_gdf.to_file(output_file.path, layer="grid_2d", engine="pyogrio", overwrite=overwrite)
-            node_gdf.to_file(output_file.path, layer="node_1d", engine="pyogrio", overwrite=overwrite)
-            line_gdf.to_file(output_file.path, layer="line_1d", engine="pyogrio", overwrite=overwrite)
+            grid_nc_gdf.to_file(self.output_fp.path, layer="grid_2d", overwrite=overwrite)
+            node_nc_gdf.to_file(self.output_fp.path, layer="node_1d", overwrite=overwrite)
+            line_nc_1d_gdf.to_file(self.output_fp.path, layer="line_1d", overwrite=overwrite)
+            line_nc_2d_gdf.to_file(self.output_fp.path, layer="line_2d", overwrite=overwrite)
+            logger.info(f"Saved NetCDF essentials to {self.output_fp.path}")
+
+            # process aggregate NetCDF
+            if self.aggregate:
+                meta_gdf["agg_variables"] = self.agg_nc_ts.variables
+                grid_agg_nc_gdf = self.append_agg_nc_data(
+                    agg_nc_ts=self.agg_nc_ts,
+                    gdf=grid_gdf.copy(),
+                    subset_str="2D_OPEN_WATER",
+                    timesteps_seconds_output=ts_out,
+                )
+                node_agg_nc_gdf = self.append_agg_nc_data(
+                    agg_nc_ts=self.agg_nc_ts, gdf=node_gdf.copy(), subset_str="1D_All", timesteps_seconds_output=ts_out
+                )
+                line_1d_agg_nc_gdf = self.append_agg_nc_data(
+                    agg_nc_ts=self.agg_nc_ts,
+                    gdf=line_1d_gdf.copy(),
+                    subset_str="1D_All",
+                    timesteps_seconds_output=ts_out,
+                )
+                line_2d_agg_nc_gdf = self.append_agg_nc_data(
+                    agg_nc_ts=self.agg_nc_ts,
+                    gdf=line_2d_gdf.copy(),
+                    subset_str="2D_OPEN_WATER",
+                    timesteps_seconds_output=ts_out,
+                )
+                # Save to file
+                grid_agg_nc_gdf.to_file(self.output_fp.path, layer="grid_2d_agg", overwrite=overwrite)
+                node_agg_nc_gdf.to_file(self.output_fp.path, layer="node_1d_agg", overwrite=overwrite)
+                line_1d_agg_nc_gdf.to_file(self.output_fp.path, layer="line_1d_agg", overwrite=overwrite)
+                line_2d_agg_nc_gdf.to_file(self.output_fp.path, layer="line_2d_agg", overwrite=overwrite)
+
+                logger.info(f"Saved AggregateNetCDF to {self.output_fp.path}")
+
             meta_gdf.to_file(
-                output_file.path,
+                self.output_fp.path,
                 layer="metadata",
                 driver="GPKG",
                 overwrite=overwrite,
             )
-            logger.info(f"Saved NetCDF essentials to {output_file.path}")
+
         else:
-            logger.warning(f"Output file {output_file.path} already exists. Set overwrite to True to overwrite.")
+            logger.warning(f"Output file {self.output_fp.path} already exists. Set overwrite to True to overwrite.")
 
 
-# # TODO remove below
-# # %% Working code example small model
-# if __name__ == "__main__":
-#     from hhnk_threedi_tools import Folders
+# TODO remove below
+# %% Working code example small model
+if __name__ == "__main__":
+    from hhnk_threedi_tools import Folders
 
-#     folder_path = r"tests\data\model_test"
-#     folder = Folders(folder_path)
+    folder_path = r"tests\data\model_test"
+    folder = Folders(folder_path)
 
-#     user_defined_timesteps = ["max", 3600, 5400]
-#     output_file = None
-#     ness_fp = None
-#     wlvl_correction = True
-#     overwrite = True
-#     self = NetcdfEssentials.from_folder(
-#         folder=folder, threedi_result=folder.threedi_results.batch["batch_test"].downloads.piek_glg_T10.netcdf
-#     )
+    user_defined_timesteps = ["max", 3600, 5400]
+    output_file = None
+    ness_fp = None
+    overwrite = True
+    self = NetcdfEssentials.from_folder(
+        folder=folder,
+        threedi_result=folder.threedi_results.batch["batch_test"].downloads.piek_glg_T10.netcdf,
+        use_aggregate=False,
+    )
 
-#     self.run(
-#         output_file=output_file,
-#         user_defined_timesteps=user_defined_timesteps,
-#         wlvl_correction=wlvl_correction,
-#         overwrite=overwrite,
-#     )
+    self.run(
+        user_defined_timesteps=user_defined_timesteps,
+        overwrite=overwrite,
+    )
 
-# # %% Performance test (large model including sewerage)
+# %% Performance test (large model including sewerage)
 # if __name__ == "__main__":
 #     from hhnk_threedi_tools import Folders
 
@@ -829,10 +723,9 @@ class NetcdfEssentials:
 #     self.run(
 #         output_file=output_file,
 #         user_defined_timesteps=user_defined_timesteps,
-#         wlvl_correction=wlvl_correction,
 #         overwrite=overwrite,
 #     )
-# # NOTE op volle server geeft dit al memory issues, duurt nu 1m 40 s
+# NOTE op volle server geeft dit al memory issues, duurt nu 1m 40 s
 
 # %% Working code example with aggregate result # TODO aggregate
 if __name__ == "__main__":
@@ -843,7 +736,7 @@ if __name__ == "__main__":
 
     # TODO AttributeError: 'File' object has no attribute 'full_path', graag wilik een losse file kunnen gebruiken zonder de verplichte structuur
     # folder.add_file("result", r"Y:\03.resultaten\OverstromingsberekeningenprimairedoorbrakenZeespiegelstijging\Bres Egmond T10k+3m\results_3di.nc")
-    threedi_result = folder.threedi_results.one_d_two_d[0]
+    threedi_result = folder.threedi_results.one_d_two_d[2]
 
     # # get and correct waterlevels
     #  timesteps_seconds = ["max", 3600, 5400]
@@ -872,8 +765,13 @@ if __name__ == "__main__":
         1728000,
         "max",
     ]
-    user_defined_timesteps = ["3600"]
-    self.run(wlvl_correction=wlvl_correction, user_defined_timesteps=user_defined_timesteps, overwrite=overwrite)
+    # user_defined_timesteps = [
+    #     172800,
+    #     "max",
+    # ]
+    self.run(user_defined_timesteps=user_defined_timesteps, overwrite=overwrite)
 # %% TODO test model zonder maaiveld
 
 # %% TODO test model met bressen
+
+# TODO ness input run zodat je eigen op kunt geven

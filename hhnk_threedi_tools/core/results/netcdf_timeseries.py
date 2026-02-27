@@ -39,57 +39,29 @@ class NetcdfTimeSeries:
     def __post_init__(self):
         self.ts = None
 
-        # Check if result is aggregate # TODO Add test with aggregate
-        self.aggregate: bool = self.aggregate_typecheck
-
         # Check if result has breaches
-        self.breaches: bool = self.grid.has_breaches
+        self.breaches: bool = self.grid.has_breaches  # TODO
 
     @classmethod
-    def from_folder(cls, folder: Folders, threedi_result: hrt.ThreediResult, use_aggregate: bool = False, **kwargs):
+    def from_folder(cls, folder: Folders, threedi_result: hrt.ThreediResult, use_aggregate: bool = False):
         """Initialize from folder structure."""
 
-        return cls(
-            threedi_result=threedi_result,
-            use_aggregate=use_aggregate,
-        )
+        return cls(threedi_result=threedi_result, use_aggregate=use_aggregate)
 
     @property
     def grid(self):
         """Instance of threedigrid.admin.gridresultadmin.GridH5ResultAdmin or GridH5AggregateResultAdmin"""
-        if self.use_aggregate is False:
-            return self.threedi_result.grid
-        return self.threedi_result.aggregate_grid
+        return self.threedi_result.grid
 
     @property
-    def timestamps(self):  # TODO timestamps aggregate
+    def timestamps(self):
         """Retrieve timestamps for timeseries"""
-        if self.use_aggregate:
-            # Combine to dicts
-            timestamps = self.grid.nodes.timestamps | self.grid.lines.timestamps
-            # Check if timestamps are equal for all variables
-            vars = list(timestamps.keys())
-            ta = timestamps[vars[0]]
-            for var in vars:
-                if list(ta) == list(timestamps[var]):
-                    continue
-                else:
-                    logger.error("Different timestamps for aggregate variables not supported.")
-                    return None
-            return ta
-        else:
-            return self.grid.nodes.timestamps
+        return self.grid.nodes.timestamps
 
     @property
-    def aggregate_typecheck(self) -> bool:
-        """Check if we have a normal or aggregate NetCDF"""
-        return "AggregateResult" in str(type(self.grid))
-
-    @property
-    def aggregate_variables(self) -> bool:
-        """List variables in aggregate NetCDF"""
-        if self.aggregate:
-            return tuple(self.grid.nodes.timestamps.keys() | self.grid.lines.timestamps.keys())
+    def typecheck(self) -> bool:
+        """Check if we have a normal NetCDF"""
+        return "gridresultadmin.GridH5ResultAdmin" in str(type(self.grid))
 
     def get_ts(self, attribute: str, element: str, subset: str) -> np.ndarray:
         """
@@ -122,26 +94,29 @@ class NetcdfTimeSeries:
 
         return ts
 
-    def get_ts_index(self, time_seconds: int) -> int:
+    def get_ts_index(self, timestamps: np.ndarray, time_seconds: int) -> int:
         """
         Retrieve indices of requested output time_seconds
 
         Parameters
         ----------
+        timestamps : np.ndarray
+            A 1D numpy array containing the timestamps in seconds for the timeseries data.
+            Can be from normal of aggregate netCDF.
         time_seconds : int
             The time in seconds for which to retrieve the index.
         """
-        abs_diff = np.abs(self.timestamps - time_seconds)
+        abs_diff = np.abs(timestamps - time_seconds)
         # geeft 1 index voor de gevraagde timestep gelijk voor alle elementen
-        ts_indx = np.argmin(abs_diff)
-        if np.min(abs_diff) > 30:  # seconds diff. # TODO gebruik hier de helft van de opgegeven output time_seconds?
-            raise ValueError(  # TODO toevoegen aan logging? Maar hoe omgaan met raise?
-                f"""Provided time_seconds {time_seconds} not found in netcdf timeseries.
-                    Closest timestep is {self.timestamps[ts_indx]} seconds at index {ts_indx}. \
-                    Debug by checking available timeseries through the (.timestamps) timeseries attributes"""
+        ts_idx = np.argmin(abs_diff)
+        if np.min(abs_diff) > 30:  # seconds diff.
+            logger.warning(f"Provided time_seconds {time_seconds} not found in netcdf timeseries.")
+            logger.debug(
+                f"Closest time step is {timestamps[ts_idx]} seconds at index {ts_idx}. Debug by checking available timeseries through the (.timestamps) timeseries attributes"
             )
+            ts_idx = None
 
-        return ts_indx
+        return ts_idx
 
     def get_ts_methods(self, method: str, ts: np.ndarray) -> np.ndarray:
         """
@@ -196,7 +171,55 @@ class NetcdfTimeSeries:
             logger.error(f"Key {method} not recognized, should be int or any of {AVAILABLE_METHODS}.")
 
 
-# %%
+@dataclass
+class AggregateNetcdfTimeSeries(NetcdfTimeSeries):
+    """Timeseries contained in an aggregate netcdf"""
+
+    @classmethod
+    def from_folder(cls, folder: Folders, threedi_result: hrt.ThreediResult, use_aggregate=True):
+        """Initialize from folder structure."""
+
+        return cls(threedi_result=threedi_result, use_aggregate=use_aggregate)
+
+    @property
+    def grid(self):
+        """Instance of threedigrid.admin.gridresultadmin.GridH5AggregateResultAdmin"""
+        return self.threedi_result.aggregate_grid
+
+    @property
+    def typecheck(self) -> bool:
+        """Check if we have an aggregate NetCDF"""
+        return "AggregateResult" in str(type(self.grid))
+
+    @property
+    def variables(self) -> dict:
+        """List variables in aggregate NetCDF"""
+        vars = {}
+        for k in self.grid.nodes.timestamps.keys():
+            vars["nodes"] = k
+        for k in self.grid.lines.timestamps.keys():
+            vars["lines"] = k
+
+        return vars
+
+    @property
+    def timestamps(self):
+        """Retrieve timestamps for timeseries"""
+        # Combine to dicts
+        timestamps = self.grid.nodes.timestamps | self.grid.lines.timestamps
+        # Check if timestamps are equal for all variables
+        vars = list(timestamps.keys())
+        ta = timestamps[vars[0]]
+        for var in vars:
+            if list(ta) == list(timestamps[var]):
+                continue
+            else:
+                logger.error("Different timestamps for aggregate variables not supported.")
+                return None
+        return ta
+
+
+# %% TODO remove
 if __name__ == "__main__":
     from hhnk_threedi_tools import Folders
 
@@ -206,21 +229,31 @@ if __name__ == "__main__":
     threedi_result = folder.threedi_results.one_d_two_d[0]
     user_defined_timesteps = ["max", 3600, 5400]
 
-    use_aggregate = False
-    use_aggregate = True
-
     self = NetcdfTimeSeries.from_folder(
         folder=folder,
         threedi_result=threedi_result,
-        use_aggregate=use_aggregate,
     )
+    assert self.typecheck
 
-    assert self.get_ts_index(time_seconds=3600) == 12
+    self_agg = AggregateNetcdfTimeSeries.from_folder(
+        folder=folder,
+        threedi_result=threedi_result,
+    )
+    assert self_agg.typecheck
+
+    assert self.get_ts_index(time_seconds=3600) == 4
+    assert self_agg.get_ts_index(time_seconds=3600) == 12
 
     attribute = "s1"
     element = "nodes"
     subset = "2D_OPEN_WATER"
     ts = self.get_ts(attribute=attribute, element=element, subset=subset)
 
-    assert ts.shape == (422, 577)
-# %%
+    assert ts.shape == (422, 61)
+
+    attribute = "vol_current"
+    assert attribute in self_agg.variables
+
+    ts_agg = self_agg.get_ts(attribute=attribute, element=element, subset=subset)
+
+    assert ts_agg.shape == (422, 181)
