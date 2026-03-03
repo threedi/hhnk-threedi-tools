@@ -1,6 +1,7 @@
 # %%
 from pathlib import Path
 
+import fiona
 import geopandas as gpd
 import hhnk_research_tools as hrt
 import numpy as np
@@ -18,6 +19,7 @@ class StructureControl:
     Parameters
     ----------
     model: hrt.SpatialDatabase
+
         SpatialDatabase object that is your model (gpkg), i.e. folder.model.schema_base.database
     hdb_control_layer: hrt.SpatialDatabaseLayer
         SpatialDatabase object that referes to the control table overview in the HDB, i.e. folder.source_data.hdb.layers.sturing_kunstwerken
@@ -31,11 +33,15 @@ class StructureControl:
     #### TODO there is no check on the control logic in this class...
     """
 
-    def __init__(self, model: hrt.SpatialDatabase, hdb_control_layer: hrt.SpatialDatabaseLayer, output_file: str):
+    def __init__(
+        self,
+        model: hrt.SpatialDatabase,
+        hdb_control_layer: hrt.SpatialDatabaseLayer,
+        output_file: str,
+    ):
         self.model = model
         self.hdb_control_layer = hdb_control_layer
         self.output_file = Path(output_file)
-
         self.layers = self.Layers()
 
     class Layers:
@@ -206,6 +212,32 @@ class StructureControl:
         self.control_gdf = gpd.GeoDataFrame(self.control_gdf)
         self.control_gdf.to_file(self.output_file)
 
+    def export_gestuurde_duiker(
+        self,
+    ) -> gpd.GeoDataFrame:
+        """
+        Export culvert to self.output_file.Uses the same geometry as self.control_gdf.
+        If there are none, writes an empty layer and logs info.
+        """
+        if self.output_file is None:
+            logger.debug("No output_file configured; skipping culvert export.")
+            return gpd.GeoDataFrame()
+
+        out = self.output_file
+        layer_name = "gestuurde_duiker"
+        gdf_gestuurde_culvert = self.control_gdf.loc[self.control_gdf["target_type"] == "culvert"].copy()
+
+        sturing_kunstwerken = hrt.SpatialDatabase(out)
+        available_layers = sturing_kunstwerken.available_layers()
+
+        if layer_name in available_layers:
+            logger.info(f"Overwriting existing layer '{layer_name}' in {out}.")
+        else:
+            logger.info(f"Creating new layer '{layer_name}' in {out}.")
+            gdf_gestuurde_culvert.to_file(out, driver="GPKG", layer=layer_name)
+
+        return gdf_gestuurde_culvert
+
     def run(self, overwrite: bool = False) -> gpd.GeoDataFrame:
         # Check overwrite
         create = hrt.check_create_new_file(output_file=self.output_file, overwrite=overwrite)
@@ -226,6 +258,8 @@ class StructureControl:
             self.control_gdf = self.append_hdb_layer()
 
             self.save()
+
+            self.export_gestuurde_duiker()
             return self.control_gdf
 
 

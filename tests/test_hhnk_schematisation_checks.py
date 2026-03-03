@@ -144,5 +144,4 @@ if __name__ == "__main__":
     # self.test_run_cross_section_duplicates(folder_new=folder_new)
     # self.test_run_cross_section_no_vertex(folder_new=folder_new)
     self.test_run_geometry()
-
 # %%
