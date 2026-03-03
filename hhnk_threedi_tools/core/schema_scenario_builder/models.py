@@ -11,6 +11,7 @@ import geopandas as gpd
 import hhnk_research_tools as hrt
 import pandas as pd
 from flask import json
+from flask.cli import F
 from pydantic import BaseModel, ConfigDict, Field
 
 logger = hrt.logging.get_logger(__name__)
@@ -44,7 +45,14 @@ class BaseSchematisationLayer(BaseModel):
         for key, value in data.items():
             if key in gdf.columns:
                 logger.debug(f"Updating {self.layer_name} layer: setting {key} to {value}")
-                gdf.loc[idx, key] = value
+                try:
+                    gdf.loc[idx, key] = value
+                except FutureWarning as e:
+                    raise FutureWarning(
+                        f"Attempting to set value for {self.layer_name}.{key} at index {idx} to {value} caused a FutureWarning. "
+                        f"This is likely due to a type mismatch between the value and the existing column dtype in the GPKG. "
+                        f"Original warning message: {str(e)}"
+                    )
         gdf.to_file(gpkg_path, layer=self.layer_name, driver="GPKG")
 
 
@@ -83,7 +91,7 @@ class ModelSettings(BaseSchematisationLayer):
     friction_coefficient_file: Optional[str] = None
     use_1d_flow: Optional[bool] = None
     use_2d_flow: Optional[bool] = None
-    use_2d_rain: Optional[int] = None  # TODO: type mismatch? ask NenS support
+    use_2d_rain: Optional[bool] = None  # TODO: type mismatch? ask NenS support
     use_groundwater_flow: Optional[bool] = None
     use_groundwater_storage: Optional[bool] = None
     use_interception: Optional[bool] = None

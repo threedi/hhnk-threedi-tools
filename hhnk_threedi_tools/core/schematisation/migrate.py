@@ -89,7 +89,7 @@ class MigrateSchema:
             old_version = self.schema.get_version()
             try:
                 retry_count = 0
-                self.schema.upgrade(backup=False, upgrade_spatialite_version=True)
+                self.schema.upgrade(backup=False, upgrade_spatialite_version=True, keep_spatialite=True)
             except NotADirectoryError as e:
                 """FIXME for some reason it works if you try it twice...
                 othwise there is some filelock on a temporary file or it doesnt exist.."""

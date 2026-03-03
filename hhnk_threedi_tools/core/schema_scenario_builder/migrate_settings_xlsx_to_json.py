@@ -9,6 +9,8 @@ from typing import Optional
 
 import hhnk_research_tools as hrt
 import pandas as pd
+import threedi_schema
+from threedi_schema import ModelSchema, ThreediDatabase
 
 from hhnk_threedi_tools.core.folders import Folders
 from tests.config import FOLDER_TEST
@@ -92,10 +94,11 @@ def migrate_scenario_xlsx_to_json(folder: Folders) -> None:
     """Convert model_settings.xlsx to schematisation_scenarios.json format."""
     input_xlsx = folder.model.settings.path
     output_json = folder.model.schematisation_scenarios
-    scenarios = {}
+    scenarios: dict[str, dict] = {}
 
     df = pd.read_excel(input_xlsx)
-    # Iterate through rows
+
+    # Iterate through sceenario rows
     for _, row in df.iterrows():
         clean_row = {}
         for key, value in row.items():
@@ -123,10 +126,19 @@ def migrate_scenario_xlsx_to_json(folder: Folders) -> None:
     logger.info(f"Written {output_json}")
 
 
-# TODO sqlite instellingen beiden op True zetten;
-# "use_0d_inflow": True
-# "use_structure_control": True
-# Dan migreren.
+def migrate_schematisation_to_latest_version(folder: Folders) -> None:
+    """Migrate the GPKG schematisation to the latest version, including upgrading the SpatiaLite version if needed.
+    Will transform the sqlite into gpkg, without deleting the sqlite.
+    """
+
+    gpkg_path = folder.model.schema_base.database.path
+
+    logger.info(f"Migrating {gpkg_path} to latest version ({threedi_schema.__version__})...")
+    threedi_db: ThreediDatabase = ThreediDatabase(path=gpkg_path)
+    model_schema: ModelSchema = threedi_db.schema
+    model_schema.upgrade(upgrade_spatialite_version=True, keep_spatialite=True)
+
+
 # %%
 if __name__ == "__main__":
     from tests.config import FOLDER_NEW, FOLDER_TEST
