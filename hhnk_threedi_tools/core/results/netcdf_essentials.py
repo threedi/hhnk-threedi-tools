@@ -401,10 +401,10 @@ class NetcdfEssentials:
         user_defined_timesteps: list[int | str] = None
             List of user defined time steps in seconds or method e.g. "max" for maximum value over time series.
         """
+        timesteps_seconds_output = ["max"]
         if simulation_type is None:
             if user_defined_timesteps is None:
                 logger.info("No simulation type or user defined timesteps provided, using only max")
-                timesteps_seconds_output = ["max"]
         elif simulation_type in AVAILABLE_SIMULATION_TYPES:
             logger.info(f"Using simulation type {simulation_type} to set output timesteps.")
             if simulation_type == "0d1d_test":
@@ -412,16 +412,15 @@ class NetcdfEssentials:
             elif simulation_type == "1d2d_test":
                 timesteps_seconds_output = ["max"]  # TODO find out what is needed for this one
             elif simulation_type == "klimaattoets":
-                timesteps_seconds_output = ["max"]  # only maximum is needed for klimaattoets
+                timesteps_seconds_output = ["max"]  # only maximum is needed for klimaattoets?
             elif simulation_type == "breach":
                 timesteps_seconds_output = [3600 * i for i in range(1, 25)] + ["max"]  # TODO where to define?
         else:
             logger.warning(f"Simulation type {simulation_type} not recognized, using only max")
-            timesteps_seconds_output = ["max"]
 
         if user_defined_timesteps is not None:
             # Add user defined time steps to output, if not already included via simulation type
-            timesteps_seconds_output = timesteps_seconds_output + user_defined_timesteps
+            timesteps_seconds_output = list(set(timesteps_seconds_output + user_defined_timesteps))
 
         return timesteps_seconds_output
 
