@@ -8,6 +8,8 @@ import hhnk_research_tools as hrt
 import pytest
 
 import hhnk_threedi_tools.resources.schematisation_builder as schematisation_builder_resources
+from hhnk_threedi_tools.core.schematisation_builder.utils.hydamo_fixes import ExtendedHyDAMO
+
 from tests.config import TEMP_DIR, TEST_DIRECTORY
 
 LAYERS = ["duikersifonhevel"]
@@ -24,7 +26,7 @@ def test_hydamo_fixer():
     # hydamo_file_path = TEST_DIRECTORY / "schematisation_builder" / "HyDAMO.gpkg"
     # validation_rules_json_path = hrt.get_pkg_resource_path(schematisation_builder_resources, "validationrules.json")
 
-    # test_coverage_location = validation_rules_json_path / "datasets" / "dtm"  # should hold index.shp
+    # test_coverage_location = TEST_DIRECTORY / "schematisation_builder" / "dtm"  # should hold index.shp
 
     # datamodel, result_summary = validate_hydamo(
     #     hydamo_file_path=hydamo_file_path,
@@ -34,7 +36,7 @@ def test_hydamo_fixer():
     #     output_types=["geopackage", "csv", "geojson"],
     # )
     # datamodel: HyDAMO
-    # datamodel.to_geopackage(TEST_DIRECTORY / "schematisation_builder" / "HyDAMO_validated.gpkg")
+    # datamodel.to_geopackage(validation_directory_path / "HyDAMO_validated.gpkg")
 
     from hhnk_threedi_tools.core.schematisation_builder.HyDAMO_fixer import HyDAMOFixer
 
@@ -63,12 +65,11 @@ def test_hydamo_fixer():
 
     # create folder results and fix_phase
     (validation_directory_path / "results").mkdir(parents=True, exist_ok=True)
-    (validation_directory_path / "fix_phase").mkdir(parents=True, exist_ok=True)
 
     # copy validation results gpkg to results folder
     validation_results_src = TEST_DIRECTORY / "schematisation_builder" / "results.gpkg"
-    validation_results_dst = validation_directory_path / "results" / "results.gpkg"
-    shutil.copy(validation_results_src, validation_results_dst)
+    validation_results_dst = validation_directory_path / "results.gpkg"
+    shutil.copy2(validation_results_src, validation_results_dst)
 
     test_coverage_location = TEST_DIRECTORY / "schematisation_builder" / "dtm"  # should hold index.shp
     coverages_dict = {"AHN": test_coverage_location}
@@ -81,8 +82,8 @@ def test_hydamo_fixer():
     datamodel, layer_summary, result_summary = hydamo_fixer(directory=validation_directory_path, raise_error=True)
 
     # assert
-    hydamo_fix_preparation_path = validation_directory_path / "prepare" / "fix_overview.gpkg"
-    assert hydamo_fix_preparation_path.exists()
+    hydamo_fix_review_path = validation_directory_path / "review" / "fix_overview.gpkg"
+    assert hydamo_fix_review_path.exists()
 
     hydamo_fix_log_path = validation_directory_path / "results" / "fixer.log"
     assert hydamo_fix_log_path.exists()
@@ -91,7 +92,7 @@ def test_hydamo_fixer():
     assert hydamo_fix_results_path.exists()
 
     # check if expected layers are in report gpkg
-    fix_layers = fiona.listlayers(hydamo_fix_preparation_path)
+    fix_layers = fiona.listlayers(hydamo_fix_review_path)
     expected_layers = LAYERS
     for layer in expected_layers:
         assert layer in fix_layers

@@ -6,7 +6,7 @@ import time
 from functools import partial
 from json import JSONDecodeError
 from pathlib import Path
-from typing import Callable, List, Literal, Optional, Union
+from typing import Callable, List, Literal, Optional, Union, Tuple
 
 import geopandas as gpd
 import hhnk_research_tools as hrt
@@ -32,7 +32,7 @@ from hydamo_validation.validator import read_validation_rules
 from jsonschema import ValidationError, validate
 
 import hhnk_threedi_tools.resources.schematisation_builder as schematisation_builder_resources
-from hhnk_threedi_tools.core.schematisation_builder.utils.summaries import FixLayersSummary, FixResultSummary
+from hhnk_threedi_tools.core.schematisation_builder.utils.summaries import ExtendedLayersSummary, ExtendedResultSummary
 
 SCHEMAS_PATH = hrt.get_pkg_resource_path(schematisation_builder_resources, "schemas")
 HYDAMO_SCHEMAS_PATH = hrt.get_pkg_resource_path(hydamo_validation_schemas, "hydamo")
@@ -101,40 +101,40 @@ class HyDAMOFixer:
         self.logger = logger
 
         # define paths
-        self.hydamo_file_path = hydamo_file_path
-        self.validation_directory_path = validation_directory_path
-        self.validation_results_gpkg_path = validation_directory_path / "results" / "results.gpkg"
-        self.report_gpkg_path = self.validation_directory_path / "fix_phase" / "validaton_fix_overview.gpkg"
-        self.hydamo_fixed_file_path = self.validation_directory_path / "results" / "HyDAMO_fix.gpkg"
+        # self.hydamo_file_path = hydamo_file_path
+        # self.validation_directory_path = validation_directory_path
+        # self.validation_results_gpkg_path = validation_directory_path / "results" / "results.gpkg"
+        # self.report_gpkg_path = self.validation_directory_path / "fix_phase" / "validaton_fix_overview.gpkg"
+        # self.hydamo_fixed_file_path = self.validation_directory_path / "results" / "HyDAMO_fix.gpkg"
 
-        # check if hydamo gpkg exists
-        if not self.hydamo_file_path.exists():
-            raise FileNotFoundError(f"HyDAMO gpkg not found at {self.hydamo_file_path}")
+        # # check if hydamo gpkg exists
+        # if not self.hydamo_file_path.exists():
+        #     raise FileNotFoundError(f"HyDAMO gpkg not found at {self.hydamo_file_path}")
 
-        # check if validation results gpkg exists
-        if not self.validation_results_gpkg_path.exists():
-            raise FileNotFoundError(f"Validation results gpkg not found at {self.validation_results_gpkg_path}")
+        # # check if validation results gpkg exists
+        # if not self.validation_results_gpkg_path.exists():
+        #     raise FileNotFoundError(f"Validation results gpkg not found at {self.validation_results_gpkg_path}")
 
-        # create fix phase directory if not exists
-        if not self.report_gpkg_path.parent.exists():
-            self.logger.info(f"Creating fix phase directory at {self.report_gpkg_path.parent}")
-            self.report_gpkg_path.parent.mkdir(parents=True, exist_ok=True)
+        # # create fix phase directory if not exists
+        # if not self.report_gpkg_path.parent.exists():
+        #     self.logger.info(f"Creating fix phase directory at {self.report_gpkg_path.parent}")
+        #     self.report_gpkg_path.parent.mkdir(parents=True, exist_ok=True)
 
-        # open validation rules and fix config
-        resources_validationrules_path = hrt.get_pkg_resource_path(
-            schematisation_builder_resources, "validationrules.json"
-        )
-        with open(resources_validationrules_path, "r") as f:
-            self.validation_rules = json.load(f)
+        # # open validation rules and fix config
+        # resources_validationrules_path = hrt.get_pkg_resource_path(
+        #     schematisation_builder_resources, "validationrules.json"
+        # )
+        # with open(resources_validationrules_path, "r") as f:
+        #     self.validation_rules = json.load(f)
 
-        resources_fixconfig_path = hrt.get_pkg_resource_path(schematisation_builder_resources, "FixConfig.json")
-        with open(resources_fixconfig_path, "r") as f:
-            self.fix_config = json.load(f)
+        # resources_fixconfig_path = hrt.get_pkg_resource_path(schematisation_builder_resources, "FixConfig.json")
+        # with open(resources_fixconfig_path, "r") as f:
+        #     self.fix_config = json.load(f)
 
-        self.fix_overview = {}
+        # self.fix_overview = {}
 
-        if not self.hydamo_fixed_file_path.exists():
-            shutil.copy(self.hydamo_file_path, self.hydamo_fixed_file_path)
+        # if not self.hydamo_fixed_file_path.exists():
+        #     shutil.copy(self.hydamo_file_path, self.hydamo_fixed_file_path)
 
     def _load_attribute_data(self):
         pass
@@ -147,7 +147,6 @@ class HyDAMOFixer:
             1. HyDAMO.gpkg
             2. validation results gpkg (results.gpkg in validation directory)
             3. validation_rules.json
-            4. FixConfig.json
         Report includes per layer:
           - current attribute values (from hydamo.gpkg)
           - colomn for manual adjustments (see manual_overwrite_* columns)
@@ -277,8 +276,8 @@ class HyDAMOFixer:
                             # fill in attribute value if present in hydamo layer
                             if attribute_name in hydamo_layer_gdf.columns and attribute_name != "geometry":
                                 code = row["code"]
-                                if fix_id == 2 and "equal_to" in list(fix_method.keys()):
-                                    hydamo_value = [fix_method["equal_to"]]
+                                if fix_id == 2 and "equal" in list(fix_method.keys()):
+                                    hydamo_value = hydamo_layer_gdf[fix_method["equal"]["to"]].values
                                 else:
                                     hydamo_value = hydamo_layer_gdf.loc[
                                         hydamo_layer_gdf["code"] == code, attribute_name
@@ -331,10 +330,6 @@ class HyDAMOFixer:
     ## maybe call is logical_fix.execute()
     ## while running a fix, keep track of the inputs. If an import
 
-    def prepare_fixes(self, gdf, schema, validation_schema, keep_columns):
-        ## create a dictionary for applying/executing fixes
-        return gdf, gdf
-
     def _check_fix_history():
         pass
 
@@ -383,7 +378,7 @@ class HyDAMOFixer:
             h.close()
             logger.removeHandler(h)
 
-    def _log_to_results(self, log_file: Path, result_summary: FixResultSummary):
+    def _log_to_results(self, log_file: Path, result_summary: ExtendedResultSummary):
         result_summary.log = log_file.read_text().split("\n")
 
     def _fixer(
@@ -409,8 +404,8 @@ class HyDAMOFixer:
         ## Write some logic that if there is no fixes.gpkg, this is created.
         ## If it exists, fill FixSummary from the gpkg.
         ## Implement a version of the create_report function
-        layers_summary = FixLayersSummary(date_check=date_check)  # saved as fix_overview.gpkg
-        result_summary = FixResultSummary(date_check=date_check)  # saved as fix_result.json
+        fix_summary = ExtendedLayersSummary(date_check=date_check)  # saved as fix_overview.gpkg
+        result_summary = ExtendedResultSummary(date_check=date_check)  # saved as fix_result.json
         # layers_summary = LayersSummary(date_check=date_check) # saved as results.gpkg
         ## Find a way to link HyDAMO to FixSummary
         ## ----------------
@@ -426,15 +421,15 @@ class HyDAMOFixer:
 
         # check if all files are present
         # create a results_path
-        results_permission_error = preparation_permission_error = False
+        results_permission_error = review_permission_error = False
         if dir_path.exists():
-            preparation_path = dir_path.joinpath("prepare")
-            if preparation_path.exists():
+            review_path = dir_path.joinpath("review")
+            if review_path.exists():
                 try:
-                    shutil.rmtree(preparation_path)
+                    shutil.rmtree(review_path)
                 except PermissionError:
-                    preparation_permission_error = True
-            preparation_path.mkdir(parents=True, exist_ok=True)
+                    review_permission_error = True
+            review_path.mkdir(parents=True, exist_ok=True)
             results_path = dir_path.joinpath("results")
             if results_path.exists():
                 try:
@@ -448,14 +443,16 @@ class HyDAMOFixer:
         log_file = results_path.joinpath("fixer.log")
         logger = self._add_log_file(logger, log_file=log_file)
         logger.info("start hydamo fixer")
-        if preparation_permission_error:
-            logger.warning(f"Kan pad {preparation_path} niet verwijderen. Dit kan later tot problemen leiden!")
+        if review_permission_error:
+            logger.warning(f"Kan pad {review_path} niet verwijderen. Dit kan later tot problemen leiden!")
         if results_permission_error:
             logger.warning(f"Kan pad {results_path} niet verwijderen. Dit kan later tot problemen leiden!")
         dataset_path = dir_path.joinpath("datasets")
+        hydamo_gpkg = dataset_path / "HyDAMO_validated.gpkg"
         validation_rules_json = dir_path.joinpath("validationrules.json")
+        validation_results_gpkg = dir_path / "results.gpkg"
         missing_paths = []
-        for path in [dataset_path, validation_rules_json]:
+        for path in [dataset_path, hydamo_gpkg, validation_rules_json, validation_results_gpkg]:
             if not path.exists():
                 missing_paths += [str(path)]
         if missing_paths:
@@ -463,6 +460,7 @@ class HyDAMOFixer:
             raise FileNotFoundError(f"missing_paths: {','.join(missing_paths)}")
         else:
             validation_rules_sets = read_validation_rules(validation_rules_json, result_summary)
+            validation_rules_objects = validation_rules_sets["objects"]
             # fix_rules_sets = self.read_fix_rules(
             #     fix_rules_json=hrt.get_pkg_resource_path(schematisation_builder_resources, "FixConfig.json"),
             #     result_summary=result_summary
@@ -494,7 +492,9 @@ class HyDAMOFixer:
             ).layers
             schema_layers_not_in_dataset = [i for i in hydamo_schema_layers if i not in datasets.layers]
             datamodel = ExtendedHyDAMO.from_geopackage(
-                file_path=dataset_path / "HyDAMO_validated.gpkg",
+                hydamo_path=hydamo_gpkg,                
+                results_path=validation_results_gpkg,
+                rules_objects=validation_rules_objects,
                 version=hydamo_version,
                 ignored_layers=schema_layers_not_in_dataset,
             )
@@ -521,13 +521,21 @@ class HyDAMOFixer:
             status_object = validation_rules_sets["status_object"]
             ## allows us to filter the invalid rows. Only need to add status_object to gdf based on validation result. Should be valid or invalid
 
+        # fix_gdf = hydamo_fixes.prepare(
+        #     datamodel,
+        #     layers_summary,
+        #     valid_layers,
+        #     keep_columns,
+        #     logger,
+        #     raise_error
+        # )
         for layer in valid_layers:
             ## This step reads data from dataset, sets it to an empty or filled in datamodel and then does a syntax check. Also layerssummary is updated.
             ## If a datamodel already is in place, use this for loop to create the fix_overview in layerssummary but dont have to change the datamodel
             logger.info(f"{layer}: inlezen")
 
             # read layer
-            gdf, schema = datamodel.read_layer(layer, result_summary=result_summary, status_object=status_object)
+            gdf, schema = datamodel.read_layer(layer, result_summary=result_summary, status_object=status_object) ## could maybe be done with _get_schema()
 
             if gdf.empty:  # pass if gdf is empty. Most likely due to mall-formed or ill-specifiec status_object
                 logger.warning(
@@ -541,13 +549,24 @@ class HyDAMOFixer:
                     gdf[col] = None
                     schema["properties"][col] = "str"
 
+            # if layer == "duikersifonhevel":
+            #     print(schema)
+            #     stop
+
             logger.info(f"{layer}: fix-voorbereiding")
-            hydamo_gdf, fix_gdf = self.prepare_fixes(
+            fix_gdf = hydamo_fixes.prepare(
                 gdf,
+                layer=layer,
                 schema=schema,  ## schema is most likely needed to account for ignored validation rules
                 validation_schema=datamodel.validation_schemas[layer],
-                keep_columns=INCLUDE_COLUMNS,
-            )  ## shoud this function be updated to validate gdf based on fix schema?
+                validation_result=datamodel.validation_results[layer],
+                validation_rules=datamodel.validation_rules[layer],
+                keep_columns=["code", "geometry", "valid", "invalid_critical", "invalid_non_critical", "ignored"],
+                logger=logger,
+                raise_error=raise_error,
+            )  
+            
+            ## shoud this function be updated to validate gdf based on fix schema?
             ## it does do something to hydamo data and then is set to datamodel
             ## probably needed for logical_validation.execute()
             ## maybe keep and then just remove the syntax_columns
@@ -555,7 +574,7 @@ class HyDAMOFixer:
             ## Data is then stored in layers_summary and later exported as fix_overview.gpkg
 
             # Add the syntax-validation result to the results_summary
-            layers_summary.set_data(fix_gdf, layer, schema["geometry"])
+            fix_summary.set_data(fix_gdf, layer, schema["geometry"])
             # Add the corrected datasets_layer data to the datamodel.
             # if gdf.empty:
             #     logger.warning(
@@ -567,7 +586,7 @@ class HyDAMOFixer:
 
         ## -------------------
         ## Do an export here of fix_overview to and request user input to continue
-        result_layers = layers_summary.export(results_path=preparation_path, output_types=["geopackage"])
+        fix_layers = fix_summary.export(results_path=review_path, gpkg_name="fix_overview.gpkg", output_types=["geopackage"])
         ## ----------------
         print("\n" + "=" * 60)
         print(" PAUSE: User review required ")
@@ -578,8 +597,7 @@ class HyDAMOFixer:
         # if not self._continue("Do you want to apply your fixes to HyDAMO? (y/n): "):
         #     print("Hydamo fixer stopped at user request.")
         #     print("Fixes not applied.")
-        #     return None, layers_summary, result_summary
-        layers_summary = FixLayersSummary.from_geopackage(file_path=preparation_path / "fix_overview.gpkg")
+        fix_summary = ExtendedLayersSummary.from_geopackage(file_path=review_path / "fix_overview.gpkg")
         ## -------------------
 
         # do logical validation: append result to layers_summary
@@ -590,23 +608,24 @@ class HyDAMOFixer:
         ## now we're entering logical_fix.execute() territory
         ## add a try expect method maybe to see wether fixes are applicable
         ## ---------------------
-        datamodel, layers_summary, result_summary = hydamo_fixes.execute(
+        datamodel, fix_summary, result_summary = hydamo_fixes.execute(
             datamodel,
-            validation_rules_sets,  ## think about whether validation_rules_sets is needed as input as well
-            layers_summary,  ## needs to filled such that all data can be read for logical fix
-            result_summary,  ## is basically a form of logging at this point
+            validation_rules_sets,
+            fix_summary,
+            result_summary,
             logger,
             raise_error,
         )
+        datamodel.to_geopackage(results_path / "HyDAMO_fixed.gpkg")
 
         # finish validation and export results
         logger.info("exporteren resultaten")
         result_summary.status = "export results"
-        result_summary.result_layers = result_layers
-        result_summary.error_layers = [i for i in datasets.layers if i.lower() not in result_layers]
+        result_summary.fix_layers = fix_layers
+        result_summary.error_layers = [i for i in datasets.layers if i.lower() not in fix_layers]
         result_summary.prep_result = fix_preparation_result
         result_summary.fix_result = [
-            i["object"] for i in validation_rules_sets["objects"] if i["object"] in result_layers
+            i["object"] for i in validation_rules_sets["objects"] if i["object"] in fix_layers
         ]
         result_summary.success = True
         result_summary.status = "finished"
@@ -614,14 +633,14 @@ class HyDAMOFixer:
         logger.info(f"klaar in {result_summary.duration:.2f} seconden")
 
         self._log_to_results(log_file, result_summary)
-        result_summary.to_json(results_path)
+        result_summary.to_json(results_path, "fix_result.json")
 
         self._close_log_file(logger)
 
         ## Make sure that this function works but just returns the unfixed gdf. Then we can implement the fixes using hydamo_validation method
         ## For the sprint review, set these tasks in github as proposed targets for next sprint
 
-        return datamodel, layers_summary, result_summary
+        return datamodel, fix_summary, result_summary
 
     def fixer(
         self,

@@ -11,17 +11,144 @@ from hydamo_validation.utils import normalize_fiona_schema
 
 OUTPUT_TYPES = ["geopackage", "geojson", "csv"]
 
+class ExtendedResultSummary(ResultSummary):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.prep_result = []
+        self.fix_result = []
+        self.fix_layers = []
+
+    def to_json(self, results_path, file_name):
+        """
+        Write result to json
+
+        Parameters
+        ----------
+        results_path : str or Path
+            Directory where results are to be written to
+
+        Returns
+        -------
+        None.
+
+        """
+
+        result_json = Path(results_path).joinpath(file_name)
+
+        result_dict = {k: v for k, v in self.__dict__.items() if v is not None}
+        with open(result_json, "w", encoding="utf-8", newline="\n") as dst:
+            json.dump(result_dict, dst, indent=4)
+
 
 class ExtendedLayersSummary(LayersSummary):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+    def export(self, results_path, gpkg_name, output_types=OUTPUT_TYPES):
+        """
+        Export the content of class to results_path
+
+        Parameters
+        ----------
+        results_path : str or Path
+            Directory where results are to be written to
+        output_types : List[str], optional
+            The types of output files that will be written. Options are
+            ["geojson", "csv", "geopackage"]. By default all will be written
+        Returns
+        -------
+        layers : List(str)
+            A list of HyDAMO layers that are successfully written
+
+        """
+
+        gdf_dict = {
+            k: v for k, v in self.__dict__.items() if isinstance(v, gpd.GeoDataFrame)
+        }
+        layers = []
+        # make directories for output_types
+        results_path = Path(results_path)
+        for output_type in ["geojson", "csv"]:
+            if output_type in output_types:
+                result_dir = results_path.joinpath(output_type)
+                result_dir.mkdir(parents=True, exist_ok=True)
+
+        # export results to files
+        for object_layer, gdf in gdf_dict.items():
+            if "rating" not in gdf.columns:
+                gdf["rating"] = 10
+
+            if not gdf.empty:
+                schema = {
+                    "properties": self._get_properties(gdf),
+                    "geometry": self.geo_types[object_layer],
+                }
+
+                # add date_check
+                gdf["date_check"] = self.date_check
+                schema["properties"]["date_check"] = "str"
+
+                for output_type in output_types:
+                    # set gdf to WGS84 for export to geojson
+                    if output_type == "geojson":
+                        file_path = results_path.joinpath(
+                            output_type, f"{object_layer}.geojson"
+                        )
+                        gdf_out = gdf.copy()
+                        if gdf_out.crs:
+                            gdf_out.to_crs("epsg:4326", inplace=True)
+                        gdf_out.to_file(file_path, driver="GeoJSON", engine="pyogrio")
+
+                    # drop geometry for writing to csv
+                    elif output_type == "csv":
+                        file_path = results_path.joinpath(
+                            output_type, f"{object_layer}.csv"
+                        )
+                        df = gdf.drop("geometry", axis=1)
+                        df.to_csv(file_path, index=False)
+
+                    # write to geopackage as is
+                    elif output_type == "geopackage":
+                        file_path = results_path.joinpath(gpkg_name)
+
+                        gdf.to_file(
+                            file_path,
+                            layer=object_layer,
+                            driver="GPKG",
+                            engine="pyogrio",
+                            layer_options={"OVERWRITE": "YES"},
+                        )
+                layers += [object_layer]
+            else:
+                self.logger.warning(f"{object_layer} is empty (!)")
+        return layers
+
     def to_geopackage(self):
         pass
 
     @classmethod
-    def from_geopackage(self, file_path):
-        pass
+    def from_geopackage(cls, file_path):
+        """
+        Initialize FixLayerSummary class from GeoPackage
+
+        Parameters
+        ----------
+        file_path : path-string
+            Path-string to the hydamo GeoPackage
+
+        Returns
+        -------
+        layers_summary : FixLayerSummary
+            FixLayerSummary object initialized with content of GeoPackage
+
+        """
+        layers_summary = cls()
+        for layer in fiona.listlayers(file_path):
+            with fiona.open(file_path, layer=layer) as src:
+                schema = normalize_fiona_schema(src.schema)
+            gdf = gpd.read_file(file_path, layer=layer)
+            layers_summary.set_data(gdf, layer, schema["geometry"])
+        return layers_summary
 
 
 class FixLayersSummary:

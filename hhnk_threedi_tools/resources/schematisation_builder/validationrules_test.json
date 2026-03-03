@@ -617,6 +617,15 @@
 			],
 			"fix_rules": [
 				{
+					"attribute_name": "hoogtebinnenonderkantbov",
+                    "validation_ids": [0],
+                    "fix_id": 1,
+                    "fix_action": "Omit",
+                    "fix_type": "automatic",
+                    "fix_method": {},
+                    "fix_description": "DA:breedteopening equal to hoogteopening"
+				},
+				{
                     "attribute_name": "breedteopening",
                     "validation_ids": [5],
                     "fix_id": 2,
@@ -628,6 +637,19 @@
 						}
                     },
                     "fix_description": "DA:breedteopening equal to hoogteopening"
+				},
+				{
+                    "attribute_name": "hoogtebinnenonderkantbov",
+                    "validation_ids": [7],
+                    "fix_id": 2,
+                    "fix_action": "Derived assumption",
+                    "fix_type": "automatic",
+                    "fix_method": {
+                        "equal": {
+							"to": "hoogtebinnenonderkantbene"
+						}
+                    },
+                    "fix_description": "DA:hoogtebinnenonderkantbov equal to hoogtebinnenonderkantbene"
 				}
 			]
 		},
