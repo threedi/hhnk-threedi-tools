@@ -9,7 +9,6 @@ from hhnk_threedi_tools.core.schematisation_builder.raw_export_to_DAMO_converter
 from hhnk_threedi_tools.core.schematisation_builder.raw_export_to_DAMO_converters.peilgebied_converter import (
     DEFAULT_SEGMENT_LENGTH,
     PEILGEBIED_SOURCE_LAYER,
-    WATERKERING_ADDITIONAL_LINE_SOURCE_LAYERS,
     PeilgebiedConverter,
 )
 from tests.config import TEMP_DIR, TEST_DIRECTORY
@@ -247,27 +246,27 @@ def test_peilgebied_converter():
     """Test PeilgebiedConverter with all validations in a single run."""
     logger = hrt.logging.get_logger(__name__)
     raw_export_file = TEST_DIRECTORY / "schematisation_builder" / "raw_export.gpkg"
+    hdb_file = TEST_DIRECTORY / "schematisation_builder" / "hdb.gpkg"
     dem_path = TEST_DIRECTORY / "model_test" / "02_schematisation" / "00_basis" / "rasters" / "dem_hoekje.tif"
     output_dir = TEMP_DIR / f"temp_peilgebied_converter_{hrt.current_time(date=True)}"
     output_dir.mkdir(parents=True, exist_ok=True)
     output_file = output_dir / "damo.gpkg"
 
-    # Check if source layers exist
-    converter_base = RawExportToDAMOConverter(raw_export_file, dem_path, output_file, logger)
+    # Check if HDB file exists
+    hdb_file_path = hdb_file if hdb_file.exists() else None
+    if hdb_file_path:
+        logger.info(f"Using HDB file: {hdb_file_path}")
+    else:
+        logger.warning("HDB file not found, proceeding without additional polygon sources")
+
+    converter_base = RawExportToDAMOConverter(
+        raw_export_file, dem_path, output_file, logger, hdb_file_path=hdb_file_path
+    )
 
     assert converter_base.data.dem_dataset is not None, (
-        f"DEM file not found. Expected ahn.tif at {dem_path}. "
-        "DEM is required for testing height extraction functionality."
+        f"DEM file not found. Expected at {dem_path}. DEM is required for testing height extraction functionality."
     )
     logger.info(f"✓ DEM loaded from {converter_base.data.dem_path}")
-
-    source_layers_exist = hasattr(converter_base.data, PEILGEBIED_SOURCE_LAYER.lower()) or any(
-        hasattr(converter_base.data, layer_name.lower()) for layer_name in WATERKERING_ADDITIONAL_LINE_SOURCE_LAYERS
-    )
-
-    if not source_layers_exist:
-        logger.warning("No source layers found, skipping test")
-        return
 
     # Run converter once
     logger.info("Running peilgebied converter...")

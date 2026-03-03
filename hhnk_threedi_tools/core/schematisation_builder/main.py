@@ -102,9 +102,10 @@ class SchematisationBuilder:
                 raw_export_file_path=self.raw_export_file_path,
                 output_file_path=self.damo_file_path,
                 logger=self.logger,
+                hdb_file_path=self.project.folders.source_data.hdb.path,
             )
 
-            raw_export_converter.data.dem_path = self.project.folders.dem.path
+            raw_export_converter.data.dem_path = self.project.folders.source_data.dem.path
 
             # Run all converters
             for converter_class in CONVERTERS:
