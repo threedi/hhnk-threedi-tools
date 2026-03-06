@@ -1,28 +1,4 @@
 # %%
-"""
-Code below is used to transform netcdf files into geopackage files.
-It retrieves essential data from the netcdf files and stores it in a geopackage.
-
-The idea is, to extent the functionality to include other derived data, such as
-those needed for het Leggertool, the various checks and 'klimaattoets' statistics.
-These functionalities can be added to other scripts, but it would be nice to keep all
-data in the same geopackage.
-
-The geopackage can then be used for all relevant data annd replace the netCDF, saving considarable
-disk space and making it easier and faster to work with the results.
-
-The code below relies on netcdfTimeseries Class for extraction of relevant data that is listed in the
-netcdf_essentials.csv (config) file. This file is used to define the relevant data and can be extended
-to include other data that is needed for the various checks and statistics.
-
-The code  includes the correction of waterlevels based on the waterdeel and panden layers. These
-layers are used to determine which cells need to be corrected. This is done by checking the percentage
-of the cell that is covered by water or panden.
-
-@organization: Hoogheemraadschap Hollands Noorderkwartier
-
-"""
-
 import json
 import logging
 from dataclasses import dataclass
@@ -46,6 +22,8 @@ logger = hrt.logging.get_logger(__name__)
 @dataclass
 class NetcdfEssentials:
     """
+    Class to extract essential information from a Rana/threedi netCDF result and save it in a GeoPackage.
+
     Parameters
     ----------
     threedi_result : hrt.ThreediResult
@@ -66,19 +44,8 @@ class NetcdfEssentials:
         default is: hhnk_threedi_tools.resources.netcdf_essentials_default
     use_aggregate : bool, True
         Will process aggregate netcdf if available. All aggregate variables are stored in GeoPackage
-
-    Methods
-    -------
-    from_folder(folder, threedi_result, use_aggregate, **kwargs)
-        Initialize from a Folders structure.
-    run(...)
-        Main method to process NetCDF and export to GeoPackage.
-    create_base_gdf()
-    append_data(...)
-        Insert timeseries data into GeoDataFrames.
-    process_ness(ness)
-    load_default_ness(ness_fp)
-        Load default ness settings as DataFrame.
+    output_fp: Path = None
+        Path to output GeoPackage file. If None, it will be saved in the same folder as the netCDF file with name 'threedi_result.gpkg'.
     """
 
     threedi_result: hrt.ThreediResult
@@ -152,7 +119,7 @@ class NetcdfEssentials:
 
         return ness
 
-    def _create_column_base(self, time_seconds: str | int) -> str:
+    def _create_column_base(self, time_seconds: str | int) -> str:  # TODO move to column index or utils?
         """Create a base column name with hours and minutes based time_seconds."""
         # Check if time_seconds is a string or int
         if isinstance(time_seconds, str):
@@ -200,6 +167,7 @@ class NetcdfEssentials:
 
     def process_nc_from_ness(
         self,
+        ness: pd.DataFrame = None,
     ) -> pd.DataFrame:
         """
         Process ness dataframe to set active attributes and retrieve data from result NetCDF.
@@ -210,7 +178,9 @@ class NetcdfEssentials:
             DataFrame with attributes and subsets to check against the grid.
             Should contain columns: 'attribute', 'subset', 'element', 'attribute_name'.
         """
-        ness = self._set_active_attributes(self.ness)
+        if ness is None:
+            ness = self.get_ness
+        ness = self._set_active_attributes(ness)
         # filter ness
         ness = ness[ness["active"]].copy()
 
@@ -276,29 +246,26 @@ class NetcdfEssentials:
     ) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame, gpd.GeoDataFrame, gpd.GeoDataFrame, gpd.GeoDataFrame]:
         """
         Create empty GeoDataFrames for grid, nodes, and lines.
-        Populates them with geometries and relevant metadata from the grid.
-        If the grid has 2D cells, it creates polygons for each cell.
-        If the grid has 1D nodes, it creates points for each node.
-        If the grid has 1D lines, it creates lines for each line segment.
+        Populates them with available geometries and relevant metadata from the grid.
 
         Returns
         -------
-        grid_gdf : gpd.GeoDataFrame
-            GeoDataFrame with grid cells.
-        node_gdf : gpd.GeoDataFrame
-            GeoDataFrame with 1D nodes.
-        line_gdf : gpd.GeoDataFrame
-            GeoDataFrame with 1D lines.
         metadata : dict
             Dictionary with metadata about the model and grid.
+        grid_gdf : gpd.GeoDataFrame
+            GeoDataFrame with 2D grid cells.
+        line_2d_gdf : gpd.GeoDataFrame
+            GeoDataFrame with 2D lines.
+        node_gdf : gpd.GeoDataFrame
+            GeoDataFrame with 1D nodes.
+        line_1d_gdf : gpd.GeoDataFrame
+            GeoDataFrame with 1D and 1D2D lines.
         """
-        # Create empty GeoDataFrames for grid, node and line
+        # Create empty GeoDataFrames for grid and node
         grid_gdf = gpd.GeoDataFrame()
         node_gdf = gpd.GeoDataFrame()
 
-        # =========================
         # GRID
-        # =========================
         if self.grid.has_2d:
             # * inputs every element from row as a new function argument, creating a (square) box.
             grid_gdf.set_geometry(
@@ -311,24 +278,15 @@ class NetcdfEssentials:
             grid_gdf["id"] = self.grid.cells.subset("2D_OPEN_WATER").id
             grid_gdf["calculation_type"] = self.grid.cells.subset("2D_OPEN_WATER").calculation_type
             grid_gdf["dmax_bottom_level"] = self.grid.cells.subset("2D_OPEN_WATER").dmax
-
-            grid_gdf["dem_minimal_m"] = self.grid.cells.subset(
-                "2D_OPEN_WATER"
-            ).z_coordinate  # FIXME in de testdata is dit alleen nan, misschien dmax? Dit zou bottom level zijn?
-
             grid_gdf["dem_area"] = self.grid.cells.subset("2D_OPEN_WATER").sumax
 
             logger.info(f"Created grid with {len(grid_gdf)} cells.")
 
-            # =========================
             # LINES 2D_OPEN_WATER
-            # =========================
             line_2d_gdf = self._load_lines(subset_str="2D_OPEN_WATER")
 
+        # NODES
         if self.grid.has_1d:
-            # =========================
-            # NODES
-            # =========================
             # Read 1d node coordinates
             coords_1d = self.grid.nodes.subset("1D_All").coordinates
 
@@ -356,14 +314,10 @@ class NetcdfEssentials:
 
             logger.info(f"Created {len(node_gdf)} nodes.")
 
-            # =========================
             # LINES 1D_All
-            # =========================
             line_1d_gdf = self._load_lines(subset_str="1D_ALL")
 
-        # =========================
         # METADATA
-        # =========================
         meta_dict = {
             "model_slug": self.grid.model_slug,
             "model_name": self.grid.model_name,
@@ -384,7 +338,7 @@ class NetcdfEssentials:
 
         # TODO breaches ACTIVE_BREACH add output with only active breaches, if there are active breaches
         # TODO 1d2d 1D2D
-        return grid_gdf, node_gdf, line_1d_gdf, line_2d_gdf, meta_gdf
+        return (meta_gdf, grid_gdf, line_2d_gdf, node_gdf, line_1d_gdf)
 
     def get_output_timesteps(
         self,
@@ -399,25 +353,26 @@ class NetcdfEssentials:
         simulation_type: str = None
             Options for simulation types are None, 0d1d_test, 1d2d_test, klimaattoets, breach.
         user_defined_timesteps: list[int | str] = None
-            List of user defined time steps in seconds or method e.g. "max" for maximum value over time series.
+            List of user defined time steps in seconds or method e.g. "max_abs" for maximum value over time series.
         """
-        timesteps_seconds_output = ["max"]
+        timesteps_seconds_output = ["max_abs"]
         if simulation_type is None:
             if user_defined_timesteps is None:
                 logger.info("No simulation type or user defined timesteps provided, using only max")
         elif simulation_type in AVAILABLE_SIMULATION_TYPES:
             logger.info(f"Using simulation type {simulation_type} to set output timesteps.")
             if simulation_type == "0d1d_test":
-                timesteps_seconds_output = ["max"]  # TODO get from rain times etc, also how to correctly label columns
+                timesteps_seconds_output = [
+                    "max_abs"
+                ]  # TODO get from rain times etc, also how to correctly label columns
             elif simulation_type == "1d2d_test":
-                timesteps_seconds_output = ["max"]  # TODO find out what is needed for this one
+                timesteps_seconds_output = ["max_abs"]  # TODO find out what is needed for this one
             elif simulation_type == "klimaattoets":
-                timesteps_seconds_output = ["max"]  # only maximum is needed for klimaattoets?
+                timesteps_seconds_output = ["max_abs"]  # only maximum is needed for klimaattoets?
             elif simulation_type == "breach":
-                timesteps_seconds_output = [3600 * i for i in range(1, 25)] + ["max"]  # TODO where to define?
+                timesteps_seconds_output = [3600 * i for i in range(1, 25)] + ["max_abs"]  # TODO where to define?
         else:
-            logger.warning(f"Simulation type {simulation_type} not recognized, using only max")
-
+            logger.warning(f"Simulation type {simulation_type} not recognized, using only max_abs")
         if user_defined_timesteps is not None:
             # Add user defined time steps to output, if not already included via simulation type
             timesteps_seconds_output = list(set(timesteps_seconds_output + user_defined_timesteps))
@@ -446,62 +401,59 @@ class NetcdfEssentials:
             List of timesteps in seconds for which to append data.
             Can contain int values or "max" for maximum value over the time series.
         """
+        # Select relevant ness
+        ness = ness[
+            (ness["active"])
+            & (ness["subset"] == subset_str)
+            & (ness["geom_type"] == gdf.geometry.geom_type.unique()[0])
+        ].copy()
 
         col_idx = column_index.ColumnIdx(gdf=gdf)
         for i, row in ness.iterrows():
             data_timestep = np.array([])
             data_method = np.array([])
-            if (
-                row["active"]
-                and row["subset"] == subset_str
-                and row["geom_type"] == gdf.geometry.geom_type.unique()[0]
-            ):
-                if timesteps_seconds_output is not None:
-                    # processing user specified timesteps
-                    for key in timesteps_seconds_output:
-                        if isinstance(key, int):
-                            # Check that key is in timestamps, if not log warning and skip
-                            ts_idx = nc_ts.get_ts_index(timestamps=nc_ts.timestamps, time_seconds=key)
-                            if ts_idx is None:
-                                logger.warning(f"Time step {key} not found in netcdf timestamps.")
-                                continue
+            if timesteps_seconds_output is not None:
+                # processing user specified timesteps
+                for key in timesteps_seconds_output:
+                    if isinstance(key, int):
+                        # Check that key is in timestamps, if not log warning and skip
+                        ts_idx = nc_ts.get_ts_index(timestamps=nc_ts.timestamps, time_seconds=key)
+                        if ts_idx is None:
+                            continue
 
-                            # Make pretty column name
-                            col_sub = self._create_column_base(time_seconds=key)
-                            # Get timeseries data
-                            data_timestep = row["data"][:, ts_idx]
-                        elif isinstance(key, str):
-                            logger.debug(f"Adding user specified method: {key} for {row['attribute_name']}")
-                            data_timestep = nc_ts.get_ts_methods(method=key, ts=row["data"])
-                            col_sub = key
+                        # Make pretty column name
+                        col_sub = self._create_column_base(time_seconds=key)
+                        # Get timeseries data
+                        data_timestep = row["data"][:, ts_idx]
+                    elif isinstance(key, str):
+                        logger.debug(f"Adding user specified method: {key} for {row['attribute_name']}")
+                        data_timestep = nc_ts.get_ts_methods(method=key, ts=row["data"])
+                        col_sub = key
 
+                    # Check that there is data
+                    if data_timestep is not None and not (
+                        isinstance(data_timestep, np.ndarray) and data_timestep.size == 0
+                    ):
                         # Insert value in gdf
-                        if data_timestep is not None or not (
-                            isinstance(data_timestep, np.ndarray) and data_timestep.size == 0
-                        ):  # Check that there is data
-                            gdf.insert(
-                                getattr(col_idx, row["attribute_name"]),
-                                f"{row['attribute_name']}_{col_sub}",
-                                data_timestep,
-                            )
-                # processing methods from ness # TODO make separate function?
-                if not row["methods"]:
-                    for method in row["methods"]:
-                        data_method = np.array([])
-                        if method in timesteps_seconds_output:
-                            continue  # already processed
-                        if not method:  # check that method list is not empty
-                            logger.debug(f"Adding default method: {method} for {row['attribute_name']}")
-                            data_method = nc_ts.get_ts_methods(method=method, ts=row["data"])
-                        if data_timestep is not None or not (
-                            isinstance(data_timestep, np.ndarray) and data_timestep.size == 0
-                        ):  # Check that there is data
-                            # Insert method data
-                            gdf.insert(
-                                getattr(col_idx, row["attribute_name"]),
-                                f"{row['attribute_name']}_{method}",
-                                data_method,
-                            )
+                        gdf.insert(
+                            getattr(col_idx, row["attribute_name"]),
+                            f"{row['attribute_name']}_{col_sub}",
+                            data_timestep,
+                        )
+            # processing methods from ness
+            for method in row["methods"]:
+                if method in timesteps_seconds_output:
+                    continue  # already processed
+                data_method = np.array([])
+                data_method = nc_ts.get_ts_methods(method=method, ts=row["data"])
+                # Check that there is data
+                if data_method is not None and not (isinstance(data_method, np.ndarray) and data_method.size == 0):
+                    # Insert method data
+                    gdf.insert(
+                        getattr(col_idx, row["attribute_name"]),
+                        f"{row['attribute_name']}_{method}",
+                        data_method,
+                    )
 
         return gdf
 
@@ -603,11 +555,14 @@ class NetcdfEssentials:
 
         create = hrt.check_create_new_file(output_file=self.output_fp, overwrite=overwrite)
         if create:
+            logger.info(f"Start processing normal NetCDF to {self.output_fp.path}")
+
             ts_out = self.get_output_timesteps(simulation_type, user_defined_timesteps)
-            ness = self.get_ness()
+            if ness is None:
+                ness = self.get_ness
             ness = self.process_nc_from_ness(ness=ness)
 
-            grid_gdf, node_gdf, line_1d_gdf, line_2d_gdf, meta_gdf = self.create_base_gdf()
+            meta_gdf, grid_gdf, line_2d_gdf, node_gdf, line_1d_gdf = self.create_base_gdf()
             grid_nc_gdf = self.append_nc_data(
                 nc_ts=self.nc_ts,
                 ness=ness,
@@ -634,6 +589,12 @@ class NetcdfEssentials:
             )
 
             # Save to file
+            meta_gdf.to_file(
+                self.output_fp.path,
+                layer="metadata",
+                driver="GPKG",
+                overwrite=overwrite,
+            )
             grid_nc_gdf.to_file(self.output_fp.path, layer="grid_2d", overwrite=overwrite)
             node_nc_gdf.to_file(self.output_fp.path, layer="node_1d", overwrite=overwrite)
             line_nc_1d_gdf.to_file(self.output_fp.path, layer="line_1d", overwrite=overwrite)
@@ -642,6 +603,7 @@ class NetcdfEssentials:
 
             # process aggregate NetCDF
             if self.aggregate:
+                logger.info(f"Start processing AggregateNetCDF to {self.output_fp.path}")
                 meta_gdf["agg_variables"] = self.agg_nc_ts.variables
                 grid_agg_nc_gdf = self.append_agg_nc_data(
                     agg_nc_ts=self.agg_nc_ts,
@@ -672,13 +634,6 @@ class NetcdfEssentials:
 
                 logger.info(f"Saved AggregateNetCDF to {self.output_fp.path}")
 
-            meta_gdf.to_file(
-                self.output_fp.path,
-                layer="metadata",
-                driver="GPKG",
-                overwrite=overwrite,
-            )
-
         else:
             logger.warning(f"Output file {self.output_fp.path} already exists. Set overwrite to True to overwrite.")
 
@@ -694,6 +649,8 @@ if __name__ == "__main__":
     user_defined_timesteps = ["max", 3600, 5400]
     output_file = None
     ness_fp = None
+    ness = None
+    simulation_type = None
     overwrite = True
     self = NetcdfEssentials.from_folder(
         folder=folder,
@@ -735,7 +692,7 @@ if __name__ == "__main__":
 
     # TODO AttributeError: 'File' object has no attribute 'full_path', graag wilik een losse file kunnen gebruiken zonder de verplichte structuur
     # folder.add_file("result", r"Y:\03.resultaten\OverstromingsberekeningenprimairedoorbrakenZeespiegelstijging\Bres Egmond T10k+3m\results_3di.nc")
-    threedi_result = folder.threedi_results.one_d_two_d[2]
+    threedi_result = folder.threedi_results.one_d_two_d[0]
 
     # # get and correct waterlevels
     #  timesteps_seconds = ["max", 3600, 5400]
