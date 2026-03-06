@@ -26,14 +26,8 @@ class ExtendedHyDAMO(HyDAMO):
 
         validation_results = ExtendedLayersSummary.from_geopackage(self.results_path)
         for hydamo_layer in self.layers:
-            self.validation_results[hydamo_layer] = getattr(
-                validation_results, 
-                hydamo_layer
-            )
-            self.validation_rules[hydamo_layer] = next(
-                (obj for obj in objects if obj["object"] == hydamo_layer), 
-                {}
-            )
+            self.validation_results[hydamo_layer] = getattr(validation_results, hydamo_layer)
+            self.validation_rules[hydamo_layer] = next((obj for obj in objects if obj["object"] == hydamo_layer), {})
 
         self._set_properties()
 
@@ -115,14 +109,14 @@ class ExtendedHyDAMO(HyDAMO):
 
     @classmethod
     def from_geopackage(
-        cls, 
-        hydamo_path=None, 
-        results_path=None, 
-        rules_objects=None, 
-        version="2.4", 
-        ignored_layers=[], 
+        cls,
+        hydamo_path=None,
+        results_path=None,
+        rules_objects=None,
+        version="2.4",
+        ignored_layers=[],
         check_columns=True,
-        check_geotype=True
+        check_geotype=True,
     ):
         """
         Initialize ExtendedHyDAMO class from GeoPackage
@@ -147,11 +141,11 @@ class ExtendedHyDAMO(HyDAMO):
             raise ValueError(f"No geopackage path is provided.")
 
         hydamo = cls(
-            hydamo_path=hydamo_path, 
+            hydamo_path=hydamo_path,
             results_path=results_path,
-            rules_objects=rules_objects,  
-            version=version, 
-            ignored_layers=ignored_layers
+            rules_objects=rules_objects,
+            version=version,
+            ignored_layers=ignored_layers,
         )
         for layer in fiona.listlayers(hydamo_path):
             if layer in hydamo.layers:
@@ -302,27 +296,362 @@ def _iterator():
 def _checker():
     pass
 
+
+def _check_attributes(func: dict, validation_rules: dict, attributes: str):
+    all_attributes = []
+    if func:
+        func_name = list(func.keys())[0]
+        func_contents: dict = func[func_name]
+        for key, item in func_contents.items():
+            if item in attributes:
+                all_attributes.append(item)
+            elif item in _general_rule_variables(validation_rules):
+                pass
+
+
+def _general_rule_variables(validation_rules: dict):
+    general_rules = validation_rules.get("general_rules", [])
+    variables = [general_rule["attribute_name"] for general_rule in general_rules]
+    return variables
+
+
+def _get_related_attributes(input_dict):
+    pass
+
+
 def _read_validation_rules(gdf: gpd.GeoDataFrame, validation_rules: list[dict], attribute: str):
     columns = gdf.columns
     related_attributes = []
+    general_rule_variables = _general_rule_variables(validation_rules)
     for rule in validation_rules:
         func = rule["function"]
-        attributes = _check_atributes(func, attribute)
+        func_name = list(func.keys())[0]
+        func_contents: dict = func[func_name]
+        func_inputs = func_contents.values()
+        func_attribute_inputs = [func_input for func_input in func_inputs if func_input in columns]
+        func_general_inputs = [func_input for func_input in func_inputs if func_input in general_rule_variables]
+
+        general_rule_inputs = _check_general_rule_attributes(func_inputs)
+        attributes = []
         related_attributes.extend(attributes)
     return related_attributes
 
 
-def prepare(
-        gdf: gpd.GeoDataFrame, 
-        layer: str,
-        schema, 
-        validation_schema, 
-        validation_result: gpd.GeoDataFrame,
-        validation_rules: dict,
-        keep_columns,   
-        logger: logging.Logger,
-        raise_error
-    ):
+from typing import Any, Dict, List, Set, Tuple
+
+# Treat these as "topologic" and handle them specially
+TOPOLOGIC_FUNCS: Set[str] = {
+    "compare_longitudinal",
+    "compare_crossings",
+    "nearest_compare",
+    "compare_topologic",
+}
+
+
+def _build_general_rules_lookup_table(validation_rules: Dict[str, Any]) -> Dict[str, Dict[str, Dict[str, Any]]]:
+    """
+    Returns:
+        {
+          layer_name: {
+              result_variable_name: { <function dict> }
+          }
+        }
+    """
+    lookup: Dict[str, Dict[str, Dict[str, Any]]] = {}
+    for layer, ruleset in validation_rules.items():
+        general_rules = ruleset.get("general_rules", [])
+        layer_lookup: Dict[str, Dict[str, Any]] = {}
+        for gr in general_rules:
+            # NOTE: your JSON uses "result_variable" for name
+            rv = gr.get("result_variable")
+            if rv and "function" in gr:
+                layer_lookup[rv] = gr["function"]
+        lookup[layer] = layer_lookup
+    return lookup
+
+
+def _extract_inputs_from_function(
+    func: Dict[str, Any],
+    current_layer: str,
+    layers: Set[str],
+    columns_by_layer: Dict[str, Set[str]],
+    general_lookup_by_layer: Dict[str, Dict[str, Dict[str, Any]]],
+    seen_general: Set[Tuple[str, str]] | None = None,
+) -> List[Dict[str, Any]]:
+    """
+    Fully generic mapping logic based only on the user's three rules.
+    """
+
+    if seen_general is None:
+        seen_general = set()
+
+    fname = next(iter(func))
+    params = func[fname]
+    inputs: List[Dict[str, Any]] = []
+    prefix = ""
+
+    # -------------------------------------------------------------
+    # STEP 1 — Detect object references via "*object*" in key
+    # -------------------------------------------------------------
+    referenced_objects: Dict[str, str] = {}  # {object: prefix}
+    for key, val in params.items():
+        if "object" in key.lower() and isinstance(val, str) and val in layers:
+            prefix = key.lower().split("object")[0].rstrip("_")
+            referenced_objects[val] = prefix
+
+    # -------------------------------------------------------------
+    # STEP 2 — Process each parameter
+    # -------------------------------------------------------------
+    for key, val in params.items():
+        # ----------------------------
+        # CASE A — numeric → ignore
+        # ----------------------------
+        if isinstance(val, (int, float, bool)) or val is None:
+            continue
+
+        # ----------------------------
+        # CASE B — nested function
+        # ----------------------------
+        if isinstance(val, dict) and len(val) == 1:
+            nested = _extract_inputs_from_function(
+                val,
+                current_layer,
+                layers,
+                columns_by_layer,
+                general_lookup_by_layer,
+                seen_general,
+            )
+            inputs.extend(nested)
+            continue
+
+        # ----------------------------
+        # CASE C — string only
+        # ----------------------------
+        if isinstance(val, str):
+            # RULE: If val is a derived variable on current layer → expand recursively
+            if val in general_lookup_by_layer.get(current_layer, {}) and (current_layer, val) not in seen_general:
+                seen_general.add((current_layer, val))
+                derived = general_lookup_by_layer[current_layer][val]
+                sub = _extract_inputs_from_function(
+                    derived,
+                    current_layer,
+                    layers,
+                    columns_by_layer,
+                    general_lookup_by_layer,
+                    seen_general,
+                )
+                inputs.extend(sub)
+                continue
+
+            # RULE: If val is a column of current object and key does not start with a prefix → bind to current layer
+            if val in columns_by_layer[current_layer] or val.startswith("geometry."):
+                if referenced_objects:
+                    if not any([key.lower().startswith(prefix) for prefix in list(referenced_objects.values())]):
+                        inputs.append({"object": current_layer, "attribute": val})
+                        continue
+                else:
+                    inputs.append({"object": current_layer, "attribute": val})
+                    continue
+
+            # RULE: If val is a column of *another* object BUT only if key respects object-prefix rule
+            for obj, prefix in referenced_objects.items():
+                if key.lower().startswith(prefix):
+                    # RULE: val may be a derived variable on *referenced* object
+                    if val in general_lookup_by_layer.get(obj, {}) and (obj, val) not in seen_general:
+                        seen_general.add((obj, val))
+                        derived = general_lookup_by_layer[obj][val]
+                        sub = _extract_inputs_from_function(
+                            derived, obj, layers, columns_by_layer, general_lookup_by_layer, seen_general
+                        )
+                        inputs.extend(sub)
+                        break
+                    # Raw column on referenced object
+                    if val in columns_by_layer.get(obj, set()) or val.startswith("geometry."):
+                        inputs.append({"object": obj, "attribute": val})
+                        break
+
+    # -------------------------------------------------------------
+    # STEP 3 — Whole-object inference
+    # Only add {object: <obj>, attribute: None} if there is NO key
+    # in 'params' that starts with the object's prefix (besides the
+    # "<prefix>_object" key itself).
+    # -------------------------------------------------------------
+    for obj, prefix in referenced_objects.items():
+        has_prefixed_key = any(k.lower().startswith(prefix) and k.lower() != f"{prefix}_object" for k in params.keys())
+        # RULE: no attribute keys matching prefix → whole-object reference
+        if not has_prefixed_key:
+            inputs.append({"object": obj, "attribute": None})
+
+    # -------------------------------------------------------------
+    # STEP 4 — Deduplicate
+    # -------------------------------------------------------------
+    final = []
+    seen = set()
+    for inp in inputs:
+        k = (inp["object"], inp["attribute"])
+        if k not in seen:
+            seen.add(k)
+            final.append(inp)
+
+    return final
+
+
+def map_validation_rule_inputs(
+    datamodel,
+    layers: List[str],
+    include_topologic: bool = True,
+    omit_topologic_as_none: bool = False,
+) -> Dict[str, Dict[int, List[Dict[str, Any]]]]:
+    """
+    Build a mapping from each layer to each validation rule id,
+    listing the concrete inputs (object + attribute) needed.
+
+    Args:
+        datamodel: your ExtendedHyDAMO-like object that exposes:
+            - datamodel.<layer>: GeoDataFrame with .columns
+            - datamodel.validation_rules: Dict[layer, {general_rules:[], validation_rules:[]}]
+        layers: list of layer names (strings) to process.
+        include_topologic: if False, topologic functions are omitted from mapping (set to [] by default).
+        omit_topologic_as_none: if True and include_topologic=False, emit [{object: layer, attribute: None}]
+                                so you can track "omitted" explicitly.
+
+    Returns:
+        {
+          <layer_name>: {
+              <validation_rule_id>: [
+                  {"object": <layer>, "attribute": <attribute>},
+                  ...
+              ],
+              ...
+          },
+          ...
+        }
+    """
+    # Cache columns per layer
+    columns_by_layer: Dict[str, Set[str]] = {}
+    for layer in layers:
+        gdf = getattr(datamodel, layer)
+        columns_by_layer[layer] = set(getattr(gdf, "columns", []))
+
+    # Prebuild derived-variable lookups per layer
+    validation_rules = getattr(datamodel, "validation_rules")
+    general_lookup_by_layer = _build_general_rules_lookup_table(validation_rules)
+
+    mapping: Dict[str, Dict[int, List[Dict[str, Any]]]] = {}
+
+    for layer in layers:
+        mapping[layer] = {}
+        ruleset = validation_rules.get(layer, {})
+        vrules = ruleset.get("validation_rules", [])
+
+        for rule in vrules:
+            rid = rule.get("id", None)
+            func = rule.get("function", {})
+            is_topologic = rule.get("type", "") == "topologic"
+
+            if rid is None:
+                # Skip invalid rule entries
+                continue
+
+            inputs = _extract_inputs_from_function(
+                func=func,
+                current_layer=layer,
+                layers=set(layers),
+                columns_by_layer=columns_by_layer,
+                general_lookup_by_layer=general_lookup_by_layer,
+            )
+
+            if is_topologic and not include_topologic:
+                # Omit or emit a recognizable placeholder
+                mapping[layer][rid] = [{"object": layer, "attribute": None}] if omit_topologic_as_none else []
+            else:
+                mapping[layer][rid] = inputs
+
+    return mapping
+
+
+# def map_validation_rule_inputs(datamodel: ExtendedHyDAMO, layers: list[str]):
+#     '''
+#     Expected output:
+#     {
+#         profiellijn: {},
+#         duikersifonhevel: {
+#             0: [{object: duikersifonhevel, object: hoogtebinnenonderkantbov]},
+#             1: [{object: duikersifonhevel, object: hoogtebinnenonderkantbene]},
+#             2: [{object: duikersifonhevel, object: hoogtebinnenonderkantbov]},
+#             3: [{object: duikersifonhevel, object: hoogtebinnenonderkantbene]},
+#             4: [{object: duikersifonhevel, object: lengte]},
+#             5: [{object: duikersifonhevel, object: breedteopening}, {object: duikersifonhevel, object: hoogteopening}],
+#             6: [maybe should be {object: duikersifonhevel, object: None}], # topological function -> set to omit
+#             7: [{object: duikersifonhevel, attribute: hoogtebinnenonderkantbov}, {object: duikersifonhevel, attribute: hoogtebinnenonderkantbene}, {object: duikersifonhevel, attribute: lengte}]
+#             8: [{object: duikersifonhevel, attribute: hoogtebinnenonderkantbov}, {object: duikersifonhevel, attribute: hoogtebinnenonderkantbene}]
+#             9: [], # topological function -> set to omit
+#             10: [{object: duikersifonhevel, attribute: hoogtebinnenonderkantbov}, {object: profiellijn, attribute: bodemhoogte}],
+#             11: [{object: duikersifonhevel, attribute: hoogtebinnenonderkantbene}, {object: profiellijn, attribute: bodemhoogte}]
+#             fake: [{object: profielpunt, attribute: None}]
+#         },
+#     )
+#     Maybe add keys: topologic: True of False and features: multi, single or smth
+#     '''
+#     mapping = {}
+#     for layer in layers:
+#         mapping[layer] = {}
+#         gdf: gpd.GeoDataFrame = getattr(datamodel, layer)
+#         columns = gdf.columns
+
+#         validation_rules_set = datamodel.validation_rules[layer]
+#         general_rules = validation_rules_set.get("general_rules", [])
+#         general_rule_variables = [general_rule["attribute_name"] for general_rule in general_rules]
+
+#         validation_rules = validation_rules_set.get("validation_rules", [])
+#         for rule in validation_rules:
+#             validation_id: int = rule["id"]
+#             validation_function: dict = rule["function"]
+#             validation_function_name = list(validation_function.keys())[0]
+#             validation_function_params: dict = validation_function[validation_function_name]
+#             validation_function_param_attributes = []
+#             for param, variable in validation_function_params.items():
+#                 if variable in general_rule_variables:
+#                     general_function = next(
+#                         (
+#                             general_rule["function"] for general_rule in general_rules
+#                             if general_function["result_variable"] == variable
+#                         ),
+#                         {}
+#                     )
+#                     general_function_name = list(general_function.keys())[0]
+#                     general_function_params: dict = general_function[general_function_name]
+#                     general_function_param_objects = [gen_variable for gen_variable in list(general_function_params.values()) if gen_variable in layers]
+#                     general_function_param_attributes = []
+#                     for gparam, gvariable in general_function_params.items():
+#                         obj = layer
+#                         if gvariable in layers:
+#                             obj = gvariable
+#                             obj_key = gparam
+#                             obj_key_start = obj_key.split("_")[0]
+#                             ## ...
+
+#                         if gvariable in general_rule_variables:
+#                             ...
+#                         elif gvariable in columns:
+#                             mapping[validation_id].append({"layer": obj, "attribute": gvariable})
+
+
+#             # param for param in validation_function_params if param in columns and not param == layer]
+#             # func_general_inputs = [param for param in validation_function_params if param in _general_rule_variables(rule)]
+
+
+def prepare(  # maybe rename to check() !!! When redoing a fix_overview creation, keep the original manual overwrite columns, but replace the rest of the columns based on new rules.
+    gdf: gpd.GeoDataFrame,
+    layer: str,
+    schema,
+    validation_schema,
+    validation_result: gpd.GeoDataFrame,
+    validation_rules: dict,
+    keep_columns,
+    logger: logging.Logger,
+    raise_error,
+):
     """
     Create validation and fix overview report
     Inputs:
@@ -362,7 +691,7 @@ def prepare(
     if not validation_rules or not fix_rules:
         logger.info(f"Quitting. Validation rules or fix rules for layer {layer_name} unknown.")
         return layer_report_gdf
-        
+
     # remove rows where invalid columns are empty strings
     layer_report_gdf["invalid_critical"] = (
         layer_report_gdf["invalid_critical"].fillna("").astype(str)
@@ -373,28 +702,94 @@ def prepare(
     layer_report_gdf["invalid_non_critical"] = layer_report_gdf["invalid_non_critical"].replace("", None)
 
     if layer_report_gdf.empty:
-        logger.info(
-            f"No invalid features found in layer {layer_name}, fixing is not needed/finished for this layer."
-        )
+        logger.info(f"No invalid features found in layer {layer_name}, fixing is not needed/finished for this layer.")
         return layer_report_gdf
 
     logger.info(f"Created base report gdf with {len(layer_report_gdf)} objects which need fixes")
 
     # add layer specific columns based on fix config
     add_specific_columns = []
+
+    attributes_to_fix = [fix_rule["attribute_name"] for fix_rule in fix_rules]
+    attributes_to_validate = validation_attribute_mapping[layer_name]
+    ## layerssummary.attribute_mapping
+    attributes_to_validate = ...
+    """
+    {
+        profiellijn: {},
+        duikersifonhevel: {
+            0: [{layer: duikersifonhevel, attribute: hoogtebinnenonderkantbov]},
+            1: [{layer: duikersifonhevel, attribute: hoogtebinnenonderkantbene]},
+            2: [{layer: duikersifonhevel, attribute: hoogtebinnenonderkantbov]},
+            3: [{layer: duikersifonhevel, attribute: hoogtebinnenonderkantbene]},
+            4: [{layer: duikersifonhevel, attribute: lengte]},
+            5: [{layer: duikersifonhevel, attribute: breedteopening}, {layer: duikersifonhevel, attribute: hoogteopening}],
+            6: [], # topological function -> set to omit
+            7: [{layer: duikersifonhevel, attribute: hoogtebinnenonderkantbov}, {layer: duikersifonhevel, attribute: hoogtebinnenonderkantbene}, {layer: duikersifonhevel, attribute: lengte}]
+            8: [{layer: duikersifonhevel, attribute: hoogtebinnenonderkantbov}, {layer: duikersifonhevel, attribute: hoogtebinnenonderkantbene}]
+            9: [], # topological function -> set to omit
+            10: [{layer: duikersifonhevel, attribute: hoogtebinnenonderkantbov}, {layer: profiellijn, attribute: bodemhoogte}],
+            11: [{layer: duikersifonhevel, attribute: hoogtebinnenonderkantbene}, {layer: profiellijn, attribute: bodemhoogte}]
+        },
+    }
+
+
+    attribute + validation rule order:
+    [hoogtebinnenonderkantbov, fix, 0_fix_description, 2_fix_description, 7_fix_description, 8_fix_description, 10_fix_description, fix_rating, hoogtebinnenonderkantbene, 1, 3, 7, 8, 11, lengte, 4, 7, vormkoker, 5, breedteopening, 5]
+    [hoogtebinnenonderkantbov, val_sum_hoogtebinnenonderkantbov                                  , fix_hoogtebinnenonderkantbov, fix_check_hoogtebinnenonderkantbov, fix_history_boogtebinnenonderkantbov                                                                 ]
+    [None                    , C0:bok_boven niet plausibel;C2bok_boven > maaiveld;W7:verhang niet tussen 2 tot 5 cm/m;W8:verval niet kleiner dan 50cm;C10:bok bovenstrooms beneden bodem, 
+        AA:hoogtebinnenonderkantbov - 0,2, 0:Invalid;2:Invalid;7:Valid; ]
+        - Styling: Als waarde hoogtebinnenonderkantbov and {string statement} = True --> groen, else --> rood
+    fix_rating: indicate which fixes are fixed when applying the eventual fix
+        - Use chosen/filled in value of attribute to check validity of every rule associated using code from validator
+    fix_hierarchy: check for a fix whether an input is another attribute/layer. Fixes without a relation will be done last
+    What to do with nr_of_profielpunten: how does this get into the fix_overview
+        - If a validation_id has no column names as input, then add the general column name and show why it is not valid. You cannot fix it, so then omit the feature
+
+    """
+    attributes_in_validation = ...
+    """ {
+        0: [hoogtebinnenonderkantbov],
+        1: [hoogtebinnenonderkantbene],
+        2: [hoogtebinnenonderkantbov],
+        3: [hoogtebinnenonderkantbene],
+        4: [lengte],
+        5: [vormkoker, breedteopening, {layer: duikersifonhevel, attribute: hoogteopening}],
+        6: [], # empty, when the function is topological
+        7: [hoogtebinnenonderkantbov, hoogtebinnenonderkantbene, lengte]
+        8: [hoogtebinnenonderkantbov, hoogtebinnenonderkantbene]
+        9: [], # topological function
+        10: [hoogtebinnenonderkantbov,]
+
+
+    }
+    """
+    ## column names: {layer}__{attribute}?
+    ## use an _is_valid() to check whether parameters have been validated or are valid (?)
+    ## IDEA: make layers for every attribute that need fixing:
+    ##      fix_overview__duikersifonhevel__hoogtebinnenonderkantbov
+    ##      fix_overview__duikersifonhevel__hoogtebinnenonderkantbene
+    ##      etc
+    # _check_necessary_fixes() --> check if a fix exists for all validation ids for at least one parameter
+
+    ## prepare fixes and create fix_overview
+    ## create temp hydamo and execute fixes
+    ## run validation and save results.gpkg
+    ## read results.gpkg and style the contents of fix_overview according to which fixes worked (?)
+
     for fix in fix_rules:
         attribute_name = fix["attribute_name"]
+        attribute_names = []  ## attribute and attributes it is related to
         # other_attributes = _read_validation_rules(validation_rules, attribute_name)
 
-        # attribute_name_test = read_attributes() ## for an object, read the 
-        ## think about if we can read the attribute name and deduce the validation ids from it. 
-        ## every validation_rule_id should be in the 
+        # attribute_name_test = read_attributes() ## for an object, read the
+        ## think about if we can read the attribute name and deduce the validation ids from it.
+        ## every validation_rule_id should be in the
         ## so, for instance a rule is dependent on slope. slope is depenedent on delta_h and lengte
         ## lengte is an attribute, delta_h is a general_rule variable dependent on hoogtebinnenonderkantbov and hoogtebinnenonderkantbene.
         ## So: the slope fix should be based on lengte, hoogtebinnenonderkantbov and hoogtebinnenonderkantbene
         ## another rule, verval is also dependent on hoogtebinnenonderkantbov and hoogtebinnenonderkantbene
         ## so: lengte, hoogtebinnenonderkantbov and hoogtebinnenonderkantbene should be next to each other, and next to them should be the fix overview of the slope and verval fix rules
-        
 
         if attribute_name not in add_specific_columns:
             add_specific_columns.append(attribute_name)
@@ -422,8 +817,12 @@ def prepare(
                 invalid_ids += [int(x) for x in row["invalid_non_critical"].split(";")]
 
             for attribute_fix in fix_rules:
+                ## related_validation_rules --> rules where the input is one of the attributes
+                ## related_ids --> corresponding ids
+
                 validation_ids = attribute_fix["validation_ids"]
                 attribute_name = attribute_fix["attribute_name"]
+                ## validation_ids = get_ids_related_to_attribute()
                 fix_method = attribute_fix["fix_method"]
                 fix_id = attribute_fix["fix_id"]
                 fix_description = attribute_fix["fix_description"]
@@ -446,13 +845,9 @@ def prepare(
                                         text_val_sum = f"W{validation_id}:{rule['error_message']}"
 
                                     # fill in the validation sum column
-                                    current_val_sum = layer_report_gdf.at[
-                                        index, f"validation_sum_{attribute_name}"
-                                    ]
+                                    current_val_sum = layer_report_gdf.at[index, f"validation_sum_{attribute_name}"]
                                     if current_val_sum is None:
-                                        layer_report_gdf.at[index, f"validation_sum_{attribute_name}"] = (
-                                            text_val_sum
-                                        )
+                                        layer_report_gdf.at[index, f"validation_sum_{attribute_name}"] = text_val_sum
                                     else:
                                         layer_report_gdf.at[index, f"validation_sum_{attribute_name}"] = (
                                             f"{current_val_sum};{text_val_sum}"
@@ -469,9 +864,7 @@ def prepare(
                     if current_fix is None:
                         layer_report_gdf.at[index, f"fixes_{attribute_name}"] = text_fix_suggestion
                     else:
-                        layer_report_gdf.at[index, f"fixes_{attribute_name}"] = (
-                            f"{current_fix};{text_fix_suggestion}"
-                        )
+                        layer_report_gdf.at[index, f"fixes_{attribute_name}"] = f"{current_fix};{text_fix_suggestion}"
 
                     # fill in attribute value if present in hydamo layer
                     if attribute_name in gdf.columns and attribute_name != "geometry":
@@ -479,9 +872,7 @@ def prepare(
                         if fix_id == 2 and "equal_to" in list(fix_method.keys()):
                             hydamo_value = [fix_method["equal_to"]]
                         else:
-                            hydamo_value = gdf.loc[
-                                gdf["code"] == code, attribute_name
-                            ].values
+                            hydamo_value = gdf.loc[gdf["code"] == code, attribute_name].values
                         if len(hydamo_value) > 0:
                             layer_report_gdf.loc[index, attribute_name] = hydamo_value[0]
                         else:
@@ -520,14 +911,8 @@ def execute(
 
     return datamodel, layers_summary, result_summary
 
-    object_rules_sets = [
-        i
-        for i in validation_rules_sets["objects"]
-        if i["object"] in datamodel.data_layers
-    ]
-    logger.info(
-        rf"lagen met valide objecten en regels: {[i['object'] for i in object_rules_sets]}"
-    )
+    object_rules_sets = [i for i in validation_rules_sets["objects"] if i["object"] in datamodel.data_layers]
+    logger.info(rf"lagen met valide objecten en regels: {[i['object'] for i in object_rules_sets]}")
     for object_rules in object_rules_sets:
         col_translation: dict = {}
 
@@ -552,14 +937,10 @@ def execute(
             general_rules = object_rules["general_rules"]
             general_rules_sorted = sorted(general_rules, key=lambda k: k["id"])
             for rule in general_rules_sorted:
-                logger.info(
-                    f"{object_layer}: uitvoeren general-rule met id {rule['id']}"
-                )
+                logger.info(f"{object_layer}: uitvoeren general-rule met id {rule['id']}")
                 try:
                     result_variable = rule["result_variable"]
-                    result_variable_name = (
-                        f"general_{rule['id']:03d}_{rule['result_variable']}"
-                    )
+                    result_variable_name = f"general_{rule['id']:03d}_{rule['result_variable']}"
 
                     # get function
                     function = next(iter(rule["function"]))
@@ -567,17 +948,11 @@ def execute(
 
                     # remove all nan indices
                     indices = _notna_indices(object_gdf, input_variables)
-                    dropped_indices = [
-                        i
-                        for i in object_gdf.index[object_gdf.index.notna()]
-                        if i not in indices
-                    ]
+                    dropped_indices = [i for i in object_gdf.index[object_gdf.index.notna()] if i not in indices]
 
                     # add object_relation
                     if "related_object" in input_variables.keys():
-                        input_variables = _add_related_gdf(
-                            input_variables, datamodel, object_layer
-                        )
+                        input_variables = _add_related_gdf(input_variables, datamodel, object_layer)
                     elif "custom_function_name" in input_variables.keys():
                         input_variables["hydamo"] = datamodel
                     elif "join_object" in input_variables.keys():
@@ -595,23 +970,17 @@ def execute(
                     if object_gdf.loc[indices].empty:
                         object_gdf[result_variable] = np.nan
                     else:
-                        result = _process_general_function(
-                            object_gdf.loc[indices], function, input_variables
-                        )
+                        result = _process_general_function(object_gdf.loc[indices], function, input_variables)
                         object_gdf.loc[indices, result_variable] = result
 
-                        getattr(datamodel, object_layer).loc[
-                            indices, result_variable
-                        ] = result
+                        getattr(datamodel, object_layer).loc[indices, result_variable] = result
 
                     col_translation = {
                         **col_translation,
                         result_variable: result_variable_name,
                     }
                 except Exception as e:
-                    logger.error(
-                        f"{object_layer}: general_rule {rule['id']} crashed width Exception {e}"
-                    )
+                    logger.error(f"{object_layer}: general_rule {rule['id']} crashed width Exception {e}")
                     result_summary.append_error(
                         (
                             "general_rule niet uitgevoerd. Inspecteer de invoer voor deze regel: "
@@ -625,29 +994,21 @@ def execute(
                         pass
 
         validation_rules = object_rules["validation_rules"]
-        validation_rules = [
-            i for i in validation_rules if ("active" not in i.keys()) | i["active"]
-        ]
+        validation_rules = [i for i in validation_rules if ("active" not in i.keys()) | i["active"]]
         validation_rules_sorted = sorted(validation_rules, key=lambda k: k["id"])
         # validation rules section
         for rule in validation_rules_sorted:
             try:
                 rule_id = rule["id"]
-                logger.info(
-                    f"{object_layer}: uitvoeren validatieregel met id {rule_id} ({rule['name']})"
-                )
+                logger.info(f"{object_layer}: uitvoeren validatieregel met id {rule_id} ({rule['name']})")
                 result_variable = rule["result_variable"]
                 if "exceptions" in rule.keys():
                     exceptions = rule["exceptions"]
-                    indices = object_gdf.loc[
-                        ~object_gdf[EXCEPTION_COL].isin(exceptions)
-                    ].index
+                    indices = object_gdf.loc[~object_gdf[EXCEPTION_COL].isin(exceptions)].index
                 else:
                     indices = object_gdf.index
                     exceptions = []
-                result_variable_name = (
-                    f"validate_{rule_id:03d}_{rule['result_variable']}"
-                )
+                result_variable_name = f"validate_{rule_id:03d}_{rule['result_variable']}"
 
                 # get function
                 function = next(iter(rule["function"]))
@@ -665,9 +1026,7 @@ def execute(
                 if "filter" in rule.keys():
                     filter_function = next(iter(rule["filter"]))
                     filter_input_variables = rule["filter"][filter_function]
-                    series = _process_logic_function(
-                        object_gdf, filter_function, filter_input_variables
-                    )
+                    series = _process_logic_function(object_gdf, filter_function, filter_input_variables)
                     series = series[series.index.notna()]
                     filter_indices = series.loc[series].index.to_list()
                     indices = [i for i in filter_indices if i in indices]
@@ -677,14 +1036,10 @@ def execute(
                 if object_gdf.loc[indices].empty:
                     object_gdf[result_variable] = None
                 elif rule["type"] == "logic":
-                    object_gdf.loc[indices, (result_variable)] = (
-                        _process_logic_function(
-                            object_gdf.loc[indices], function, input_variables
-                        )
+                    object_gdf.loc[indices, (result_variable)] = _process_logic_function(
+                        object_gdf.loc[indices], function, input_variables
                     )
-                elif (rule["type"] == "topologic") and (
-                    hasattr(datamodel, "hydroobject")
-                ):
+                elif (rule["type"] == "topologic") and (hasattr(datamodel, "hydroobject")):
                     result_series = _process_topologic_function(
                         # getattr(
                         #     datamodel, object_layer
@@ -694,9 +1049,7 @@ def execute(
                         function,
                         input_variables,
                     )
-                    object_gdf.loc[indices, (result_variable)] = result_series.loc[
-                        indices
-                    ]
+                    object_gdf.loc[indices, (result_variable)] = result_series.loc[indices]
 
                 col_translation = {
                     **col_translation,
@@ -738,9 +1091,7 @@ def execute(
                 )
 
             except Exception as e:
-                logger.error(
-                    f"{object_layer}: validation_rule {rule['id']} width Exception {e}"
-                )
+                logger.error(f"{object_layer}: validation_rule {rule['id']} width Exception {e}")
                 result_summary.append_error(
                     (
                         "validation_rule niet uitgevoerd. Inspecteer de invoer voor deze regel: "
@@ -757,10 +1108,7 @@ def execute(
         drop_columns = [
             i
             for i in object_gdf.columns
-            if i
-            not in list(col_translation.keys())
-            + ["nen3610id", "geometry", "rating"]
-            + SUMMARY_COLUMNS
+            if i not in list(col_translation.keys()) + ["nen3610id", "geometry", "rating"] + SUMMARY_COLUMNS
         ]
         object_gdf.drop(columns=drop_columns, inplace=True)
         # re_order columns
@@ -779,9 +1127,7 @@ def execute(
             object_gdf.loc[:, "rating"] = np.maximum(1, object_gdf["rating"])
         for i in ["tags_assigned", "tags_invalid"]:
             if i in object_gdf.columns:
-                object_gdf.loc[:, i] = object_gdf[i].map(
-                    lambda x: ";".join(list(set(str(x).split(LIST_SEPARATOR))))
-                )
+                object_gdf.loc[:, i] = object_gdf[i].map(lambda x: ";".join(list(set(str(x).split(LIST_SEPARATOR)))))
 
         # rename columns
         object_gdf.rename(columns=col_translation, inplace=True)
@@ -805,5 +1151,6 @@ class FixOveriew:
 
 class ResultsOverview:
     pass
+
 
 # %%

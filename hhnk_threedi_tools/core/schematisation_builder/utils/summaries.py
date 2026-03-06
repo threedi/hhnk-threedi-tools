@@ -11,6 +11,7 @@ from hydamo_validation.utils import normalize_fiona_schema
 
 OUTPUT_TYPES = ["geopackage", "geojson", "csv"]
 
+
 class ExtendedResultSummary(ResultSummary):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -62,9 +63,7 @@ class ExtendedLayersSummary(LayersSummary):
 
         """
 
-        gdf_dict = {
-            k: v for k, v in self.__dict__.items() if isinstance(v, gpd.GeoDataFrame)
-        }
+        gdf_dict = {k: v for k, v in self.__dict__.items() if isinstance(v, gpd.GeoDataFrame)}
         layers = []
         # make directories for output_types
         results_path = Path(results_path)
@@ -91,9 +90,7 @@ class ExtendedLayersSummary(LayersSummary):
                 for output_type in output_types:
                     # set gdf to WGS84 for export to geojson
                     if output_type == "geojson":
-                        file_path = results_path.joinpath(
-                            output_type, f"{object_layer}.geojson"
-                        )
+                        file_path = results_path.joinpath(output_type, f"{object_layer}.geojson")
                         gdf_out = gdf.copy()
                         if gdf_out.crs:
                             gdf_out.to_crs("epsg:4326", inplace=True)
@@ -101,9 +98,7 @@ class ExtendedLayersSummary(LayersSummary):
 
                     # drop geometry for writing to csv
                     elif output_type == "csv":
-                        file_path = results_path.joinpath(
-                            output_type, f"{object_layer}.csv"
-                        )
+                        file_path = results_path.joinpath(output_type, f"{object_layer}.csv")
                         df = gdf.drop("geometry", axis=1)
                         df.to_csv(file_path, index=False)
 

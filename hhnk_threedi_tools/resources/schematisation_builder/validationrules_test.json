@@ -529,7 +529,7 @@
 					"validation_rule_set": "basic",
 					"error_type": "non-critical",
 					"result_variable": "verhang_between_2cmpm_en_5cm",
-					"error_message": "verhang_onjuist",
+					"error_message": "verhang niet tussen 2 tot 5 cm/m",
 					"active": true,
 					"function": {
 						"BE": {
@@ -548,7 +548,7 @@
 					"validation_rule_set": "basic",
 					"error_type": "non-critical",
 					"result_variable": "verval_lt_50cm",
-					"error_message": "verval_te_groot",
+					"error_message": "verval niet kleiner dan 50cm",
 					"active": true,
 					"function": {
 						"LT": {
@@ -617,14 +617,19 @@
 			],
 			"fix_rules": [
 				{
-					"attribute_name": "hoogtebinnenonderkantbov",
-                    "validation_ids": [0],
+                    "attribute_name": "hoogtebinnenonderkantbov",
+                    "validation_ids": [0, 2, 10],
                     "fix_id": 1,
-                    "fix_action": "Omit",
+                    "fix_action": "Derived assumption",
                     "fix_type": "automatic",
-                    "fix_method": {},
-                    "fix_description": "DA:breedteopening equal to hoogteopening"
-				},
+                    "fix_method": {
+                        "difference": {
+							"left": "hoogtebinnenonderkantbov",
+							"right": 0.2
+						}
+                    },
+                    "fix_description": "hoogtebinnenonderkantbov - 0,2"
+                },
 				{
                     "attribute_name": "breedteopening",
                     "validation_ids": [5],

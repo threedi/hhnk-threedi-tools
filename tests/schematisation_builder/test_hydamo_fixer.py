@@ -9,7 +9,6 @@ import pytest
 
 import hhnk_threedi_tools.resources.schematisation_builder as schematisation_builder_resources
 from hhnk_threedi_tools.core.schematisation_builder.utils.hydamo_fixes import ExtendedHyDAMO
-
 from tests.config import TEMP_DIR, TEST_DIRECTORY
 
 LAYERS = ["duikersifonhevel"]

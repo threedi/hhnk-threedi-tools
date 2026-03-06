@@ -6,7 +6,7 @@ import time
 from functools import partial
 from json import JSONDecodeError
 from pathlib import Path
-from typing import Callable, List, Literal, Optional, Union, Tuple
+from typing import Callable, List, Literal, Optional, Tuple, Union
 
 import geopandas as gpd
 import hhnk_research_tools as hrt
@@ -492,7 +492,7 @@ class HyDAMOFixer:
             ).layers
             schema_layers_not_in_dataset = [i for i in hydamo_schema_layers if i not in datasets.layers]
             datamodel = ExtendedHyDAMO.from_geopackage(
-                hydamo_path=hydamo_gpkg,                
+                hydamo_path=hydamo_gpkg,
                 results_path=validation_results_gpkg,
                 rules_objects=validation_rules_objects,
                 version=hydamo_version,
@@ -529,13 +529,27 @@ class HyDAMOFixer:
         #     logger,
         #     raise_error
         # )
+
+        general_rules_lookup_table = hydamo_fixes._build_general_rules_lookup_table(datamodel.validation_rules)
+        test_mapping = hydamo_fixes.map_validation_rule_inputs(
+            datamodel,
+            valid_layers,
+            True,
+            False,
+        )
+        print(general_rules_lookup_table["profiellijn"])
+        print(test_mapping["duikersifonhevel"])
+        stop
+
         for layer in valid_layers:
             ## This step reads data from dataset, sets it to an empty or filled in datamodel and then does a syntax check. Also layerssummary is updated.
             ## If a datamodel already is in place, use this for loop to create the fix_overview in layerssummary but dont have to change the datamodel
             logger.info(f"{layer}: inlezen")
 
             # read layer
-            gdf, schema = datamodel.read_layer(layer, result_summary=result_summary, status_object=status_object) ## could maybe be done with _get_schema()
+            gdf, schema = datamodel.read_layer(
+                layer, result_summary=result_summary, status_object=status_object
+            )  ## could maybe be done with _get_schema()
 
             if gdf.empty:  # pass if gdf is empty. Most likely due to mall-formed or ill-specifiec status_object
                 logger.warning(
@@ -561,11 +575,12 @@ class HyDAMOFixer:
                 validation_schema=datamodel.validation_schemas[layer],
                 validation_result=datamodel.validation_results[layer],
                 validation_rules=datamodel.validation_rules[layer],
+                attribute_mapping=datamodel.attribute_mapping[layer],
                 keep_columns=["code", "geometry", "valid", "invalid_critical", "invalid_non_critical", "ignored"],
                 logger=logger,
                 raise_error=raise_error,
-            )  
-            
+            )
+
             ## shoud this function be updated to validate gdf based on fix schema?
             ## it does do something to hydamo data and then is set to datamodel
             ## probably needed for logical_validation.execute()
@@ -586,7 +601,9 @@ class HyDAMOFixer:
 
         ## -------------------
         ## Do an export here of fix_overview to and request user input to continue
-        fix_layers = fix_summary.export(results_path=review_path, gpkg_name="fix_overview.gpkg", output_types=["geopackage"])
+        fix_layers = fix_summary.export(
+            results_path=review_path, gpkg_name="fix_overview.gpkg", output_types=["geopackage"]
+        )
         ## ----------------
         print("\n" + "=" * 60)
         print(" PAUSE: User review required ")
