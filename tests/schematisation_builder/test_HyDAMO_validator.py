@@ -27,7 +27,7 @@ def test_HyDAMO_validator():
 
     test_coverage_location = TEST_DIRECTORY / "schematisation_builder" / "dtm"  # should hold index.shp
 
-    result_summary = validate_hydamo(
+    datamodel, result_summary = validate_hydamo(
         hydamo_file_path=hydamo_file_path,
         validation_rules_json_path=validation_rules_json_path,
         validation_directory_path=validation_directory_path,
