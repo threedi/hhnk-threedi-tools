@@ -521,24 +521,41 @@ class HyDAMOFixer:
             status_object = validation_rules_sets["status_object"]
             ## allows us to filter the invalid rows. Only need to add status_object to gdf based on validation result. Should be valid or invalid
 
-        # fix_gdf = hydamo_fixes.prepare(
-        #     datamodel,
-        #     layers_summary,
-        #     valid_layers,
-        #     keep_columns,
-        #     logger,
-        #     raise_error
-        # )
+        datamodel_check, fix_summary, result_summary = hydamo_fixes.run(
+            datamodel,
+            fix_summary,
+            result_summary,
+            logger,
+            raise_error,
+            keep_general=False,
+        )
+        datamodel_check.to_geopackage(results_path / "HyDAMO_fixed.gpkg")
+
+        fix_summary, result_summary = hydamo_fixes.review(
+            datamodel_check,
+            fix_summary,
+            result_summary,
+            # valid_layers,
+            # ["code", "geometry", "valid", "invalid_critical", "invalid_non_critical", "ignored"],
+            logger,
+            raise_error,
+        )
+        fix_summary.export(results_path=review_path, gpkg_name="fix_overview_test.gpkg", output_types=["geopackage"])
+        stop
 
         general_rules_lookup_table = hydamo_fixes._build_general_rules_lookup_table(datamodel.validation_rules)
-        test_mapping = hydamo_fixes.map_validation_rule_inputs(
+        general_mapping = hydamo_fixes.map_general_rule_inputs(
             datamodel,
             valid_layers,
-            True,
-            False,
         )
-        print(general_rules_lookup_table["profiellijn"])
-        print(test_mapping["duikersifonhevel"])
+        # print(general_rules_lookup_table["profiellijn"])
+        # print(validation_mapping["duikersifonhevel"])
+        # with open(Path.home() / "general_rule_lookup_table.json", "w", encoding="utf-8", newline="\n") as dst:
+        #     json.dump(general_rules_lookup_table, dst, indent=4)
+
+        with open(Path.home() / "test_general_mapping.json", "w", encoding="utf-8", newline="\n") as dst:
+            json.dump(general_mapping, dst, indent=4)
+
         stop
 
         for layer in valid_layers:

@@ -3,7 +3,7 @@ import shutil
 from pathlib import Path
 
 import hhnk_research_tools as hrt
-from hydamo_validation import validator
+from hydamo_validation import datamodel, validator
 
 
 def validate_hydamo(
@@ -13,7 +13,7 @@ def validate_hydamo(
     coverages_dict: dict,
     output_types: list[str] = ["geopackage", "csv", "geojson"],
     logger=None,
-) -> dict:
+) -> tuple[datamodel.HyDAMO, dict]:
     r"""
     Validate the HyDAMO file
 

@@ -34,8 +34,8 @@ def test_hydamo_fixer():
     #     coverages_dict={"AHN": test_coverage_location},
     #     output_types=["geopackage", "csv", "geojson"],
     # )
-    # datamodel: HyDAMO
-    # datamodel.to_geopackage(validation_directory_path / "HyDAMO_validated.gpkg")
+    # datamodel.to_geopackage(validation_directory_path / "HyDAMO_validated.gpkg", use_schema=False)
+    # stop
 
     from hhnk_threedi_tools.core.schematisation_builder.HyDAMO_fixer import HyDAMOFixer
 

@@ -45,6 +45,16 @@ class ExtendedLayersSummary(LayersSummary):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+    @property
+    def empty(self) -> bool:
+        """
+        Return True if the instance has *no* GeoDataFrame attributes.
+        """
+        for value in self.__dict__.values():
+            if isinstance(value, gpd.GeoDataFrame):
+                return False
+        return True
+
     def export(self, results_path, gpkg_name, output_types=OUTPUT_TYPES):
         """
         Export the content of class to results_path
@@ -119,6 +129,9 @@ class ExtendedLayersSummary(LayersSummary):
         return layers
 
     def to_geopackage(self):
+        pass
+
+    def to_json(self):
         pass
 
     @classmethod
