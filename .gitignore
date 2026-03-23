@@ -26,3 +26,4 @@ project.json
 tests/data/schematisation_builder/test_schematisation_builder
 
 empty.gpkg
+api_ldo_key.txt

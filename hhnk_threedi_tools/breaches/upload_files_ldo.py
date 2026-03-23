@@ -65,26 +65,39 @@ from hhnk_threedi_tools.breaches.breaches import Breaches
 LDO_API_URL = "https://ldo.overstromingsinformatie.nl/api/v1/"
 
 # Generate api key on de LDO_API_URL website. And place it in api_ldo_key.txt
-LDO_API_KEY = Path("api_ldo_key.txt").read_text("utf8")
+
+raw = Path("api_ldo_key.txt").read_text("utf8")
+LDO_API_KEY = json.loads(raw)
 
 logger = hrt.logging.get_logger(__name__)
 
 # %%
 # FOR ADMINISTRATION PERMISSION USE THE FOLLOWING. Otherwise you will get a permission feedback
 # at the moment you will try to upload the excel file.
-# You will need to copy your own data in the webiste *https://www.overstromingsinformatie.nl/auth/)
+# You will need to copy your own data in the webiste *https://ldo.overstromingsinformatie.nl/api/)
 # 1. Open the website
 # 2. Provide credential to log in
-# 3. On the website in the box auth/v1/personalapikeys/ copy your own information as below (line 78 to 83)
-# 4. Store the API KEY
+# 3. On the website in the box auth/v1/personalapikeys/ copy your own information as below (line 91 to 96)
+# 4. In the same website in the box auth/v1/token/ use the tenant 4 to get the access token and refresh token.
+# 5. Place the information in the api_ldo_key.txt file as below:
 
-# This one I leave it to copy and paste the information in the website
+# Note: the following information is not real, it is just an example of how the information should be
+# placed in the api_ldo_key.txt file (structure).
+
+# You need to copy your own information from the website.
+# {
+#     "key": "olkHtC3EOu1zaDg",
+#     "refresh": "eDOuz1fxdMyYN2eyLjqUWd9c_FuDyWebaIg",
+#     "access": "eyJ5uxCRCpFq6hA"
+# }
+
+# The following information I leave it to copy and paste the information in the website
 
 parameters = {
     "scope": "admin",
-    "name": "Juan_Test_12",
-    "expiry_date": "2025-01-18T10:22:48.008Z",
-    "revoked": False,
+    "name": "Juan_Test_12",  # Change the name to your own name
+    "expiry_date": "2025-01-18T10:22:48.008Z",  # Change the expiry date to a future date, otherwise you will not be able to use the API key
+    "revoked": False,  # lowercase, otherwise you will not be able to use the API key
 }
 
 
@@ -92,19 +105,19 @@ parameters = {
 class LDO_API:
     def __init__(self, api_key=LDO_API_KEY, tenant=4, url=LDO_API_URL):
         self.url = url
-        self.api_key = api_key
+        self.api_key = LDO_API_KEY["key"]
         self.tenant = tenant  # organisation, 4=hhnk.
 
         # Authorisation goes through the auth endpoint
         self.url_auth = self.url.replace("/api/", "/auth/")
 
-        self._refresh_token = None  # set on calling self.access_token
-        self._access_token = None  # Property
+        self._refresh_token = LDO_API_KEY["refresh"]  # set on calling self.access_token
+        self._access_token = LDO_API_KEY["access"]  # Property
 
         # TODO FROM LDO_API_UPLOAD
         self.headers_excel = {
             "accept": "application/json",
-            "authorization": f"Bearer {self.access_token}",
+            "authorization": f"Bearer {self._access_token}",
         }
 
     @property
@@ -119,7 +132,8 @@ class LDO_API:
             ).json()
             self._refresh_token = r["refresh"]
             self._access_token = r["access"]
-        return self._access_token
+        else:
+            return self._access_token
 
     def get_tenants(self):
         """Tenant / organisation which has an id and name.
@@ -182,6 +196,42 @@ class LDO_API:
         logger.info(f"status code: {r.status_code}")
         logger.info(f"reason: {r.reason}")
         logger.info(f"Finished uploading {zip_path.name}")
+
+    def get_external_processings(self, scenario_id):
+        """Retrieve external processing information for a scenario."""
+        url = self.url + f"scenarios/{scenario_id}/external-processings"
+        response = requests.get(url=url, headers=self.headers_excel, timeout=30)
+        response.raise_for_status()
+        data = response.json()
+        logger.info(f"Retrieved external processings for scenario_id={scenario_id}")
+        return data
+
+    def get_latest_external_processing(self, scenario_id):
+        """Return latest external processing item, if any."""
+        data = self.get_external_processings(scenario_id)
+        items = data.get("items", [])
+
+        if not items:
+            logger.info(f"No external processings found for scenario_id={scenario_id}")
+            return None, data
+
+        items_sorted = sorted(items, key=lambda x: x.get("updated_at", ""))
+        latest_item = items_sorted[-1]
+        return latest_item, data
+
+    def save_external_processings_json(self, scenario_id, output_folder):
+        """Save external processing response as JSON."""
+        output_folder = Path(output_folder)
+        output_folder.mkdir(parents=True, exist_ok=True)
+
+        data = self.get_external_processings(scenario_id)
+        json_path = output_folder / f"external_processings_{scenario_id}.json"
+
+        with open(json_path, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2, ensure_ascii=False)
+
+        logger.info(f"Saved external processing JSON to {json_path}")
+        return json_path, data
 
 
 # %%
@@ -256,9 +306,6 @@ class LdoUploadFolder(hrt.Folder):
 
 
 # %%
-
-
-# %%
 if __name__ == "__main__":
     # Set Paths from the data to be uploaded
 
@@ -273,7 +320,7 @@ if __name__ == "__main__":
     ldo_structuur_path = base_path.joinpath("ldo_structuur")
 
     # Folder where scenario results are stored.
-    scenario_results_path = base_path.joinpath("waterland")
+    scenario_results_path = base_path.joinpath("sbmz")
 
     # data frame from the scenarios that are gonig to be uploaded.
     pd_scenarios = pd.read_excel(id_scenarios)
@@ -282,7 +329,7 @@ if __name__ == "__main__":
     scenarios_done = pd_scenarios.loc[pd_scenarios["ID_SCENARIO"] > 0, "Naam van het scenario"].to_list()
 
     # Sleep time to not burn out the API
-    sleeptime = 420  # FIXME 7 minutes seems alot?
+    sleeptime = 300  # FIXME 7 minutes seems alot?
 
     # Set API key
     ldo_api = LDO_API(api_key=LDO_API_KEY)
