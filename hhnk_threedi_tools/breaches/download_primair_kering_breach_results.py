@@ -227,7 +227,7 @@ def download_breach_scenario(base_folder, model_name, metadata_path, new_metadat
             )
             vol_max = q_cuml[-1]
 
-            model_name = gr.model_slug
+            # model_name = gr.model_slug
             model_revision = gr.revision_nr
 
             # get breach waterlevels upstream and downastream
@@ -386,83 +386,32 @@ def download_breach_scenario(base_folder, model_name, metadata_path, new_metadat
             # save to csv file
             df_simulation_data.to_csv(csv_result_simulation_data, sep=";", decimal=",")
 
-            # Add information to metadata file
-            scenario_name = x_name
-            # scenario_name = simulation_name
-            print(f"Adding metada for scearnio {scenario_name}")
-            # scenario_name = scenario1['name']
-
-            simulation_started_raw = simulation.started
-            simuatlion_started = simulation_started_raw.strftime("%d-%m-%y")
-
-            simulation_start_raw = simulation.simulation.start_datetime
-            simulation_start = simulation_start_raw.strftime("%d-%m-%y %H:%M %S")
-
-            mod_date_raw = simulation.started
-            mod_date = mod_date_raw.strftime("%d-%m-%y %H:%M %S")
-
-            simulation_end_raw = simulation.simulation.end_datetime  #'simulation_end': '2000-01-21T00:00:00Z'
-            simulation_end = simulation_end_raw.strftime("%d-%m-%y %H:%M %S")
-
-            simulation_duur = simulation_end_raw - simulation_start_raw
-            sim_duur = f"{simulation_duur.days} 00:00:00"
-
-            # Max Flow
-            breach_qmax = max(df_simulation_data["Maximum Breach Discharge"])
-            # Max With
-            breach_width_max = max_breach_width
-            # Simulation Status
-            log_status = simulation.status
-            # Day when the simulation started (human datum)
-            log_start_datum = simulation.started.strftime("%d-%m-%Y %H:%M:%S")
-            log_total_time_raw = timedelta(seconds=int((simulation.total_time)))
-            log_total_time_format = datetime(1, 1, 1) + log_total_time_raw
-            log_total_time = "0 " + log_total_time_format.strftime("%H:%M:%S")
-            log_end_datum = simulation.finished.strftime("%d-%m-%Y %H:%M:%S")
-            if "DBR_INI_CR" not in metadata_gdf.columns:
-                metadata_gdf["DBR_INI_CR"] = 0
-
-            metadata_gdf["DBR_INI_CR"] = low_crest_level = (
-                metadata_gdf.loc[metadata_gdf["SC_NAAM"] == scenario_name, "DBR_INI_CR"].values[0] - max_breach_depth
-            )
-            simulation_id = simulation.simulation.id
-
             # relative_path = (os.path.relpath(resultnc))[3:]
-
-            # Add metadata info following the scenario name.
-            metadata_gdf.loc[metadata_gdf["SC_NAAM"] == scenario_name, "DBR_BR_MAX"] = breach_width_max
-            metadata_gdf.loc[metadata_gdf["SC_NAAM"] == scenario_name, "DBR_BRESDI"] = max_breach_depth
-            metadata_gdf.loc[metadata_gdf["SC_NAAM"] == scenario_name, "DBR_QMAX"] = breach_qmax
-            metadata_gdf.loc[metadata_gdf["SC_NAAM"] == scenario_name, "MOD_DATE"] = mod_date
-            metadata_gdf.loc[metadata_gdf["SC_NAAM"] == scenario_name, "MOD_START"] = log_start_datum
-            metadata_gdf.loc[metadata_gdf["SC_NAAM"] == scenario_name, "MOD_EIND"] = log_end_datum
-            metadata_gdf.loc[metadata_gdf["SC_NAAM"] == scenario_name, "MOD_REKEND"] = log_total_time
-            metadata_gdf.loc[metadata_gdf["SC_NAAM"] == scenario_name, "MOD_SIM_ST"] = simulation_start
-            metadata_gdf.loc[metadata_gdf["SC_NAAM"] == scenario_name, "MOD_SIM_EI"] = simulation_end
-            metadata_gdf.loc[metadata_gdf["SC_NAAM"] == scenario_name, "MOD_SIM_DU"] = sim_duur
-            metadata_gdf.loc[metadata_gdf["SC_NAAM"] == scenario_name, "DBR_LOW_CR"] = low_crest_level
-            metadata_gdf.loc[metadata_gdf["SC_NAAM"] == scenario_name, "BUW_HMAX"] = max_breach_wlev_upstream_list[0]
-            # metadata_gdf.loc[metadata_gdf["SC_NAAM"] == scenario_name, "BES_3Di_RE"] = relative_path
-            metadata_gdf.loc[metadata_gdf["SC_NAAM"] == scenario_name, "DBR_VTOT"] = vol_max
-            metadata_gdf.loc[metadata_gdf["SC_NAAM"] == scenario_name, "SC_IDENT"] = simulation_id
-            metadata_gdf.loc[metadata_gdf["SC_NAAM"] == scenario_name, "BREACH_ID"] = breach_id
-            metadata_gdf.loc[metadata_gdf["SC_NAAM"] == scenario_name, "SC_DATE"] = simuatlion_started
-
-            # Save metadata in the last vesion file.
-            path_gdf = r"y:\03.resultaten\IPO_Overstromingsberekeningen_compartimentering\metadata"
-            metadata_path = os.path.join(path_gdf, "metadata_shapefile.gpkg")
-            metadata_gdf.to_file(metadata_path, driver="GPKG")
 
 
 # %%
 if __name__ == "__main__":
-    base_folder = r"\\corp.hhnk.nl\data\Hydrologen_data\Data\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\output\test_waterbalance"
-    model_name = "output"
+    base_folder = r"\\corp.hhnk.nl\data\Hydrologen_data\Data\03.resultaten\Normering Regionale Keringen\output\scenarios_output\N&S"
+    model_name = "skb_v2"
     metadata_path = r"y:\03.resultaten\IPO_Overstromingsberekeningen_compartimentering\metadata\metadata.gpkg"
-    new_metadata_path = r"y:\03.resultaten\IPO_Overstromingsberekeningen_compartimentering\metadata\metadata.gpkg"
-    filter_names = [
-        "ROR-PRI-test_T100000",
-    ]
+    # new_metadata_path = r"y:\03.resultaten\IPO_Overstromingsberekeningen_compartimentering\metadata\metadata.gpkg"
+    # filter_id_path = r"Y:\03.resultaten\Normering Regionale Keringen\output\scenarios_output\N&S\breach_SBMN_redo.gpkg"
+    # filter_id_gdf = gpd.read_file(filter_id_path)
+    # filter_names = filter_id_gdf["display_name"].tolist()
+  
+    
+    filter_names =[
+    "IPO_SKB_EQ_67",
+    "IPO_SKB_EQ_6632",
+    "IPO_SKB_TP05_EQ_291",
+    "IPO_SKB_TP05_EQ_292",
+    "IPO_SKB_EQ_3937",
+    "IPO_SKB_EQ_3828",
+    "IPO_SKB_EQ_3734",
+    "IPO_SKB_EQ_686",
+    "IPO_SKB_EQ_655",
+    "IPO_SKB_EQ_476",
+]
 
     download_breach_scenario(base_folder, model_name, metadata_path, None, filter_names)
 # %%
