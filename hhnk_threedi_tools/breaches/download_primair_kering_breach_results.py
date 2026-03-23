@@ -398,20 +398,19 @@ if __name__ == "__main__":
     # filter_id_path = r"Y:\03.resultaten\Normering Regionale Keringen\output\scenarios_output\N&S\breach_SBMN_redo.gpkg"
     # filter_id_gdf = gpd.read_file(filter_id_path)
     # filter_names = filter_id_gdf["display_name"].tolist()
-  
-    
-    filter_names =[
-    "IPO_SKB_EQ_67",
-    "IPO_SKB_EQ_6632",
-    "IPO_SKB_TP05_EQ_291",
-    "IPO_SKB_TP05_EQ_292",
-    "IPO_SKB_EQ_3937",
-    "IPO_SKB_EQ_3828",
-    "IPO_SKB_EQ_3734",
-    "IPO_SKB_EQ_686",
-    "IPO_SKB_EQ_655",
-    "IPO_SKB_EQ_476",
-]
+
+    filter_names = [
+        "IPO_SKB_EQ_67",
+        "IPO_SKB_EQ_6632",
+        "IPO_SKB_TP05_EQ_291",
+        "IPO_SKB_TP05_EQ_292",
+        "IPO_SKB_EQ_3937",
+        "IPO_SKB_EQ_3828",
+        "IPO_SKB_EQ_3734",
+        "IPO_SKB_EQ_686",
+        "IPO_SKB_EQ_655",
+        "IPO_SKB_EQ_476",
+    ]
 
     download_breach_scenario(base_folder, model_name, metadata_path, None, filter_names)
 # %%
