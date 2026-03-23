@@ -1,6 +1,6 @@
 """
-Python script to run multiple breaches separeted. It requieres a metadata shapefile/geopackge to save the
-simulations key values in it. if it requiere to set the scenario_name diferently you will need to change it
+Python script to run multiple breaches separeted.
+If it requiere to set the scenario_name diferently you will need to change it
 within the function.
 """
 # %%
@@ -16,18 +16,9 @@ from threedi_api_client.api import ThreediApi
 from threedi_api_client.openapi import ApiException
 from threedi_api_client.versions import V3Api
 
-# from hhnk_threedi_tools.core.api.calculation import Simulation
-
-
-# class ModelFolder(hrt.Folder):
-#     def __init__(self, base):
-#         super().__init__(base)
-
-#         self.add_file("schema", rf"work in progress/schematisation/{self.name}.gpkg")
-
 
 def start_simulation_breaches(
-    model_folder, organisation_name, scenarios, filter_id, metadata_path, wait_time, simulation_kering, sim_duration
+    model_folder, organisation_name, scenarios, filter_id, wait_time, simulation_kering, sim_duration
 ):
     api_keys_path = (
         rf"{os.getenv('APPDATA')}\3Di\QGIS3\profiles\default\python\plugins\hhnk_threedi_plugin\api_key.txt"
@@ -157,16 +148,6 @@ def start_simulation_breaches(
     sleeptime = 2
     breach = {}
     # Start simulations in a loop
-    # set up metadata
-    # metadata_gdf = gpd.read_file(metadata_path, driver="Shapefile")
-
-    metadata_columns = ["SC_NAAM", "SC_IDENT", "ID", "SC_DATE", "MOD_VERSIE", "geometry"]
-
-    metadata_gdf = gpd.GeoDataFrame(
-        columns=metadata_columns,
-        geometry="geometry",
-        crs=potential_breach_gdf.crs,
-    )
 
     for x in breach_selected_idxs:
         # if x >= 32: # DEBUGGING
@@ -174,9 +155,6 @@ def start_simulation_breaches(
         # print (x)
         print(breach.connected_pnt_id)
         # set simulation time and fix format.
-
-        # FIXME dit is de nieuwe standaard. Voor implementeren, eerste alle data uit metadata.SC_DATE goed zetten.
-        # Volgen LDO we moeten de format van de datum al d-m-y blijven anders gaan we en bericht fouten krijgen
 
         datum_str = datetime.datetime.now().date().strftime("%d-%m-%y")
         # datum_str = datetime.datetime.now().date().strftime("%y-%m-%d")
@@ -202,7 +180,7 @@ def start_simulation_breaches(
             data={
                 "template": simulation_template.id,
                 "name": scenario_name,
-                "tags": ["ROR"],
+                "tags": tag,
                 "threedimodel": my_model_id,
                 "organisation": org_uuid,
                 "start_datetime": start_datetime,
@@ -241,45 +219,11 @@ def start_simulation_breaches(
 
         time.sleep(sleeptime)
 
-        # ADD postprocessing
-        # basic_processing_data = {
-        #             "scenario_name": scenario_name ,
-        #             "process_basic_results": True,
-        #         }
-
-        # api_client.simulations_results_post_processing_lizard_basic_create(
-        #                     simulation.id, data=basic_processing_data)
-        # time.sleep(sleeptime)
-
-        # api_client.simulations_results_post_processing_lizard_arrival_create(
-        #                     simulation_pk=simulation.id, data={})
-        # time.sleep(sleeptime)
-
-        # update metadata
-        # metadata_gdf.loc[metadata_gdf["SC_NAAM"] == scenario_name, "SC_IDENT"] = simulation.id
-        # metadata_gdf.loc[metadata_gdf["SC_NAAM"] == scenario_name, "ID"] = breach.line_id
-        # metadata_gdf.loc[metadata_gdf["SC_NAAM"] == scenario_name, "SC_DATE"] = datum_str
-        # metadata_gdf.loc[metadata_gdf["SC_NAAM"] == scenario_name, "MOD_VERSIE"] = model_versie
-
-        # create new road
-        new_row = {
-            "SC_NAAM": scenario_name,
-            "SC_IDENT": simulation.id,
-            "ID": breach.line_id,
-            "SC_DATE": datum_str,
-            "MOD_VERSIE": model_versie,
-            # si quieres guardar la geometría del potential_breach:
-            "geometry": breach_row.geometry,
-        }
-
-        metadata_gdf.loc[len(metadata_gdf)] = new_row
-
         # Start simulation
         queue_jam_bwn = True
 
         while queue_jam_bwn:
             queue_length_bwn = api_client.statuses_list(
-                # TODO org_uuid hier gebruiken. want daar zet je de berekening op
                 name__startswith="queued",
                 simulation__organisation__unique_id=org_uuid,
             ).count
@@ -291,20 +235,18 @@ def start_simulation_breaches(
                 print("wait", wait_time, "s")
                 time.sleep(wait_time)
 
-    # save metadata
-    metadata_gdf.to_file(metadata_path, driver="GPKG")
-
 
 # %%
 if __name__ == "__main__":
     # Use organisation_name 'BWN HHNK' for standard simulation. Use the other one for very specific cases
 
-    # organisation_name = "BWN HHNK"
-    organisation_name = "Hoogheemraadschap Hollands Noorderkwartier"
+    organisation_name = "BWN HHNK"
+    # organisation_name = "Hoogheemraadschap Hollands Noorderkwartier"
 
     # Set the model name as it is either in 3di or in the local folder.
     base_folder = r"Y:\02.modellen"
-    model_name = "RegionalFloodModel - deelmodel Schermer Midden Zuid"
+    model_name = "RegionalFloodModel - deelmodel Schermer  Hoog Zuid -Oostzaan"
+
     model_folder = Path(f"{base_folder}/{model_name}")
 
     # Select the return periods you want to start with. If you want to use all of them keep it empty.
@@ -312,15 +254,19 @@ if __name__ == "__main__":
 
     simulation_kering = "IPO"  # 'IPO' or 'primary'. This is used to set the scenario name. If you want to set the scenario name in a different way, you will need to change the code in the function.
 
+    # This is used to tag the simulations in the API. It can be used later to filter the simulations in the API
+    # or in the metadata. If you want to set the tag in a different way, you will need to change the code in the function.
+    tag = ["IPO"]
+
     # id_filter corresponds to the column 'id' of the potential breach table of the model we are working with.
     # In case of willing to run all the potential breach, leave the list empty  --> filter_id = []
-    filter_id = [116, 123, 132, 11]
-    sim_duration = 4  # days
 
-    # location of the metadata file. Important to have at least 2 version: One for uploading and run model and the other one for downloading.
-    metadata_path = Path(
-        r"Y:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\output\test_waterbalance\metadata_shapefile.gpkg"
-    )
+    # filter_id_path = r"Y:\03.resultaten\Normering Regionale Keringen\output\scenarios_output\N&S\breach_SBLN_v2_redo.gpkg"
+    # filter_id_gdf = gpd.read_file(filter_id_path)
+    # filter_id = filter_id_gdf['id'].tolist()
+    filter_id = [3, 4]  # TP04
+
+    sim_duration = 5  # days
 
     # Time (in seconds) to wait until the script tries again to upload a model. We use it to not overload the API.
     wait_time = 3600  # 1  hour
@@ -330,9 +276,9 @@ if __name__ == "__main__":
         organisation_name,
         scenarios,
         filter_id,
-        metadata_path,
         wait_time,
         simulation_kering,
         sim_duration,
     )
-    # %%
+# %%
+api_client.simulations_actions_create(377862, data={"name": "shutdown"})
