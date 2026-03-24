@@ -24,13 +24,14 @@ def test_HyDAMO_validator():
     validation_directory_path = TEMP_DIR / f"temp_HyDAMO_validator_{hrt.current_time(date=True)}"
     hydamo_file_path = TEST_DIRECTORY / "schematisation_builder" / "HyDAMO.gpkg"
     validation_rules_json_path = hrt.get_pkg_resource_path(schematisation_builder_resources, "validationrules.json")
-
+    template_file_path = TEST_DIRECTORY / "schematisation_builder" / "styling.gpkg"
     test_coverage_location = TEST_DIRECTORY / "schematisation_builder" / "dtm"  # should hold index.shp
 
     datamodel, result_summary = validate_hydamo(
         hydamo_file_path=hydamo_file_path,
         validation_rules_json_path=validation_rules_json_path,
         validation_directory_path=validation_directory_path,
+        template_file_path=template_file_path,
         coverages_dict={"AHN": test_coverage_location},
         output_types=["geopackage", "csv", "geojson"],
     )
