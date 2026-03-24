@@ -618,13 +618,16 @@
 			"fix_rules": [
 				{
                     "attribute_name": "hoogtebinnenonderkantbov",
-                    "validation_ids": [0, 2, 10],
                     "fix_id": 1,
                     "fix_action": "Derived assumption",
                     "fix_type": "automatic",
                     "fix_method": {
-                        "equal": {
-							"to": -991
+                        "fix_relative_to_level": {
+							"parameter": "hoogteopening",
+							"compare_object": "peilgebiedpraktijk",
+							"compare_parameter": "laagste_streefpeil",
+							"operator": "-" 
+
 						}
                     },
                     "fix_description": "Set to -991"
@@ -656,18 +659,19 @@
                     },
                     "fix_description": "Set to -993"
                 },
-                {
+				{
                     "attribute_name": "breedteopening",
 					"validation_ids": [5],
-                    "fix_id": 4,
+                    "fix_id": 5,
                     "fix_action": "Derived assumption",
                     "fix_type": "automatic",
                     "fix_method": {
-                        "equal": {
-							"to": "hoogteopening"
+                        "fix_equal_or_logic": {
+							"if_cat_1": 0.5,
+							"if_cat_else": 0.3
 						}
                     },
-                    "fix_description": "breedteopening=hoogteopening",
+                    "fix_description": "aanname ahv categorie 1=0.5 of 0.3",
 					"filter": {
 						"ISIN": {
 							"parameter": "vormkoker",
