@@ -206,19 +206,6 @@ class LDO_API:
         logger.info(f"Retrieved external processings for scenario_id={scenario_id}")
         return data
 
-    def get_latest_external_processing(self, scenario_id):
-        """Return latest external processing item, if any."""
-        data = self.get_external_processings(scenario_id)
-        items = data.get("items", [])
-
-        if not items:
-            logger.info(f"No external processings found for scenario_id={scenario_id}")
-            return None, data
-
-        items_sorted = sorted(items, key=lambda x: x.get("updated_at", ""))
-        latest_item = items_sorted[-1]
-        return latest_item, data
-
     def save_external_processings_json(self, scenario_id, output_folder):
         """Save external processing response as JSON."""
         output_folder = Path(output_folder)
@@ -373,5 +360,40 @@ if __name__ == "__main__":
             pd_scenarios.to_excel(id_scenarios, index=False, engine="openpyxl")
             logger.info(f"Finished processing {scenario_name}")
             time.sleep(sleeptime)
+
+# %%
+excel_path = r"Y:\03.resultaten\Normering Regionale Keringen\output\scenarios_output\N&S\check_list_control_table.xlsx"
+check_excel = pd.read_excel(excel_path, sheet_name="Blad2")
+scenario_id = check_excel["Scenario ID"].values
+ldo_api = LDO_API(api_key=LDO_API_KEY)
+sleeptime = 10
+for scenario in scenario_id:
+    try:
+        scenario
+        data_schade = ldo_api.get_external_processings(scenario)
+        items = data_schade.get("items", [])
+        if not items:
+            print(f"No external processing found for scenario {scenario}")
+            continue
+        else:
+            Totaal_getroffenen = data_schade["items"][0]["meta_data"]["Totaal getroffenen"]
+            Totaalschade = data_schade["items"][0]["meta_data"]["Totaalschade"]
+            Totaal_slachtoffers = data_schade["items"][0]["meta_data"]["Totaal slachtoffers"]
+            processing_type = data_schade["items"][0]["type"]
+
+            check_excel.loc[check_excel["Scenario ID"] == scenario, "Totaal getroffenen"] = Totaal_getroffenen
+            check_excel.loc[check_excel["Scenario ID"] == scenario, "Totaalschade"] = Totaalschade
+            check_excel.loc[check_excel["Scenario ID"] == scenario, "Totaal slachtoffers"] = Totaal_slachtoffers
+            check_excel.loc[check_excel["Scenario ID"] == scenario, "Type"] = processing_type
+            print(f"Processed scenario {scenario}")
+
+    except Exception as e:
+        logger.error(f"Error processing scenario {scenario}: {e}")
+    time.sleep(sleeptime)
+
+# Save once at the end
+with pd.ExcelWriter(excel_path, engine="openpyxl", mode="w") as writer:
+    check_excel.to_excel(writer, index=False, sheet_name="Blad2")
+
 
 # %%
