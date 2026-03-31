@@ -1362,7 +1362,7 @@
         </config>
       </editWidget>
     </field>
-    <field name="bodemhoogte_nap_New" configurationFlags="NoFlag">
+    <field name="bodemhoogtenap_New" configurationFlags="NoFlag">
       <editWidget type="TextEdit">
         <config>
           <Option type="Map">
@@ -1542,7 +1542,7 @@
         </config>
       </editWidget>
     </field>
-    <field name="bodemhoogte_nap_Old" configurationFlags="NoFlag">
+    <field name="bodemhoogtenap_Old" configurationFlags="NoFlag">
       <editWidget type="TextEdit">
         <config>
           <Option type="Map">
@@ -2025,7 +2025,7 @@
     <alias field="ws_talud_links_New" index="10" name=""/>
     <alias field="ws_talud_rechts_New" index="11" name=""/>
     <alias field="ws_in_peilgebied_New" index="12" name=""/>
-    <alias field="bodemhoogte_nap_New" index="13" name=""/>
+    <alias field="bodemhoogtenap_New" index="13" name=""/>
     <alias field="breedte_getabuleerd_New" index="14" name=""/>
     <alias field="hoogte_getabuleerd_New" index="15" name=""/>
     <alias field="keuze_profiel_New" index="16" name=""/>
@@ -2044,7 +2044,7 @@
     <alias field="ws_talud_links_Old" index="29" name=""/>
     <alias field="ws_talud_rechts_Old" index="30" name=""/>
     <alias field="ws_in_peilgebied_Old" index="31" name=""/>
-    <alias field="bodemhoogte_nap_Old" index="32" name=""/>
+    <alias field="bodemhoogtenap_Old" index="32" name=""/>
     <alias field="breedte_getabuleerd_Old" index="33" name=""/>
     <alias field="hoogte_getabuleerd_Old" index="34" name=""/>
     <alias field="keuze_profiel_Old" index="35" name=""/>
@@ -2107,7 +2107,7 @@
     <policy field="ws_talud_links_New" policy="Duplicate"/>
     <policy field="ws_talud_rechts_New" policy="Duplicate"/>
     <policy field="ws_in_peilgebied_New" policy="Duplicate"/>
-    <policy field="bodemhoogte_nap_New" policy="Duplicate"/>
+    <policy field="bodemhoogtenap_New" policy="Duplicate"/>
     <policy field="breedte_getabuleerd_New" policy="Duplicate"/>
     <policy field="hoogte_getabuleerd_New" policy="Duplicate"/>
     <policy field="keuze_profiel_New" policy="Duplicate"/>
@@ -2126,7 +2126,7 @@
     <policy field="ws_talud_links_Old" policy="Duplicate"/>
     <policy field="ws_talud_rechts_Old" policy="Duplicate"/>
     <policy field="ws_in_peilgebied_Old" policy="Duplicate"/>
-    <policy field="bodemhoogte_nap_Old" policy="Duplicate"/>
+    <policy field="bodemhoogtenap_Old" policy="Duplicate"/>
     <policy field="breedte_getabuleerd_Old" policy="Duplicate"/>
     <policy field="hoogte_getabuleerd_Old" policy="Duplicate"/>
     <policy field="keuze_profiel_Old" policy="Duplicate"/>
@@ -2189,7 +2189,7 @@
     <default field="ws_talud_links_New" expression="" applyOnUpdate="0"/>
     <default field="ws_talud_rechts_New" expression="" applyOnUpdate="0"/>
     <default field="ws_in_peilgebied_New" expression="" applyOnUpdate="0"/>
-    <default field="bodemhoogte_nap_New" expression="" applyOnUpdate="0"/>
+    <default field="bodemhoogtenap_New" expression="" applyOnUpdate="0"/>
     <default field="breedte_getabuleerd_New" expression="" applyOnUpdate="0"/>
     <default field="hoogte_getabuleerd_New" expression="" applyOnUpdate="0"/>
     <default field="keuze_profiel_New" expression="" applyOnUpdate="0"/>
@@ -2208,7 +2208,7 @@
     <default field="ws_talud_links_Old" expression="" applyOnUpdate="0"/>
     <default field="ws_talud_rechts_Old" expression="" applyOnUpdate="0"/>
     <default field="ws_in_peilgebied_Old" expression="" applyOnUpdate="0"/>
-    <default field="bodemhoogte_nap_Old" expression="" applyOnUpdate="0"/>
+    <default field="bodemhoogtenap_Old" expression="" applyOnUpdate="0"/>
     <default field="breedte_getabuleerd_Old" expression="" applyOnUpdate="0"/>
     <default field="hoogte_getabuleerd_Old" expression="" applyOnUpdate="0"/>
     <default field="keuze_profiel_Old" expression="" applyOnUpdate="0"/>
@@ -2271,7 +2271,7 @@
     <constraint field="ws_talud_links_New" notnull_strength="0" unique_strength="0" exp_strength="0" constraints="0"/>
     <constraint field="ws_talud_rechts_New" notnull_strength="0" unique_strength="0" exp_strength="0" constraints="0"/>
     <constraint field="ws_in_peilgebied_New" notnull_strength="0" unique_strength="0" exp_strength="0" constraints="0"/>
-    <constraint field="bodemhoogte_nap_New" notnull_strength="0" unique_strength="0" exp_strength="0" constraints="0"/>
+    <constraint field="bodemhoogtenap_New" notnull_strength="0" unique_strength="0" exp_strength="0" constraints="0"/>
     <constraint field="breedte_getabuleerd_New" notnull_strength="0" unique_strength="0" exp_strength="0" constraints="0"/>
     <constraint field="hoogte_getabuleerd_New" notnull_strength="0" unique_strength="0" exp_strength="0" constraints="0"/>
     <constraint field="keuze_profiel_New" notnull_strength="0" unique_strength="0" exp_strength="0" constraints="0"/>
@@ -2290,7 +2290,7 @@
     <constraint field="ws_talud_links_Old" notnull_strength="0" unique_strength="0" exp_strength="0" constraints="0"/>
     <constraint field="ws_talud_rechts_Old" notnull_strength="0" unique_strength="0" exp_strength="0" constraints="0"/>
     <constraint field="ws_in_peilgebied_Old" notnull_strength="0" unique_strength="0" exp_strength="0" constraints="0"/>
-    <constraint field="bodemhoogte_nap_Old" notnull_strength="0" unique_strength="0" exp_strength="0" constraints="0"/>
+    <constraint field="bodemhoogtenap_Old" notnull_strength="0" unique_strength="0" exp_strength="0" constraints="0"/>
     <constraint field="breedte_getabuleerd_Old" notnull_strength="0" unique_strength="0" exp_strength="0" constraints="0"/>
     <constraint field="hoogte_getabuleerd_Old" notnull_strength="0" unique_strength="0" exp_strength="0" constraints="0"/>
     <constraint field="keuze_profiel_Old" notnull_strength="0" unique_strength="0" exp_strength="0" constraints="0"/>
@@ -2353,7 +2353,7 @@
     <constraint field="ws_talud_links_New" exp="" desc=""/>
     <constraint field="ws_talud_rechts_New" exp="" desc=""/>
     <constraint field="ws_in_peilgebied_New" exp="" desc=""/>
-    <constraint field="bodemhoogte_nap_New" exp="" desc=""/>
+    <constraint field="bodemhoogtenap_New" exp="" desc=""/>
     <constraint field="breedte_getabuleerd_New" exp="" desc=""/>
     <constraint field="hoogte_getabuleerd_New" exp="" desc=""/>
     <constraint field="keuze_profiel_New" exp="" desc=""/>
@@ -2372,7 +2372,7 @@
     <constraint field="ws_talud_links_Old" exp="" desc=""/>
     <constraint field="ws_talud_rechts_Old" exp="" desc=""/>
     <constraint field="ws_in_peilgebied_Old" exp="" desc=""/>
-    <constraint field="bodemhoogte_nap_Old" exp="" desc=""/>
+    <constraint field="bodemhoogtenap_Old" exp="" desc=""/>
     <constraint field="breedte_getabuleerd_Old" exp="" desc=""/>
     <constraint field="hoogte_getabuleerd_Old" exp="" desc=""/>
     <constraint field="keuze_profiel_Old" exp="" desc=""/>
@@ -2440,7 +2440,7 @@
       <column name="ws_talud_links_New" type="field" hidden="0" width="-1"/>
       <column name="ws_talud_rechts_New" type="field" hidden="0" width="-1"/>
       <column name="ws_in_peilgebied_New" type="field" hidden="0" width="-1"/>
-      <column name="bodemhoogte_nap_New" type="field" hidden="0" width="-1"/>
+      <column name="bodemhoogtenap_New" type="field" hidden="0" width="-1"/>
       <column name="breedte_getabuleerd_New" type="field" hidden="0" width="-1"/>
       <column name="hoogte_getabuleerd_New" type="field" hidden="0" width="-1"/>
       <column name="keuze_profiel_New" type="field" hidden="0" width="-1"/>
@@ -2459,7 +2459,7 @@
       <column name="ws_talud_links_Old" type="field" hidden="0" width="-1"/>
       <column name="ws_talud_rechts_Old" type="field" hidden="0" width="-1"/>
       <column name="ws_in_peilgebied_Old" type="field" hidden="0" width="-1"/>
-      <column name="bodemhoogte_nap_Old" type="field" hidden="0" width="-1"/>
+      <column name="bodemhoogtenap_Old" type="field" hidden="0" width="-1"/>
       <column name="breedte_getabuleerd_Old" type="field" hidden="0" width="-1"/>
       <column name="hoogte_getabuleerd_Old" type="field" hidden="0" width="-1"/>
       <column name="keuze_profiel_Old" type="field" hidden="0" width="-1"/>
@@ -2898,12 +2898,12 @@ def highlight_priority_tabs(dialog, layer, feature):
         <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
           <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
         </labelStyle>
-        <attributeEditorField horizontalStretch="0" index="32" name="bodemhoogte_nap_Old" verticalStretch="0" showLabel="1">
+        <attributeEditorField horizontalStretch="0" index="32" name="bodemhoogtenap_Old" verticalStretch="0" showLabel="1">
           <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
             <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
           </labelStyle>
         </attributeEditorField>
-        <attributeEditorField horizontalStretch="0" index="13" name="bodemhoogte_nap_New" verticalStretch="0" showLabel="1">
+        <attributeEditorField horizontalStretch="0" index="13" name="bodemhoogtenap_New" verticalStretch="0" showLabel="1">
           <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
             <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
           </labelStyle>
@@ -3124,8 +3124,8 @@ def highlight_priority_tabs(dialog, layer, feature):
     <field name="Summary_Warnings" editable="1"/>
     <field name="bodemhoogte_nap_A" editable="1"/>
     <field name="bodemhoogte_nap_B" editable="1"/>
-    <field name="bodemhoogte_nap_New" editable="1"/>
-    <field name="bodemhoogte_nap_Old" editable="1"/>
+    <field name="bodemhoogtenap_New" editable="1"/>
+    <field name="bodemhoogtenap_Old" editable="1"/>
     <field name="breedte_getabuleerd_A" editable="1"/>
     <field name="breedte_getabuleerd_B" editable="1"/>
     <field name="breedte_getabuleerd_New" editable="1"/>
@@ -3355,8 +3355,8 @@ def highlight_priority_tabs(dialog, layer, feature):
     <field name="Summary_Warnings" labelOnTop="0"/>
     <field name="bodemhoogte_nap_A" labelOnTop="0"/>
     <field name="bodemhoogte_nap_B" labelOnTop="0"/>
-    <field name="bodemhoogte_nap_New" labelOnTop="0"/>
-    <field name="bodemhoogte_nap_Old" labelOnTop="0"/>
+    <field name="bodemhoogtenap_New" labelOnTop="0"/>
+    <field name="bodemhoogtenap_Old" labelOnTop="0"/>
     <field name="breedte_getabuleerd_A" labelOnTop="0"/>
     <field name="breedte_getabuleerd_B" labelOnTop="0"/>
     <field name="breedte_getabuleerd_New" labelOnTop="0"/>
@@ -3586,8 +3586,8 @@ def highlight_priority_tabs(dialog, layer, feature):
     <field name="Summary_Warnings" reuseLastValue="0"/>
     <field name="bodemhoogte_nap_A" reuseLastValue="0"/>
     <field name="bodemhoogte_nap_B" reuseLastValue="0"/>
-    <field name="bodemhoogte_nap_New" reuseLastValue="0"/>
-    <field name="bodemhoogte_nap_Old" reuseLastValue="0"/>
+    <field name="bodemhoogtenap_New" reuseLastValue="0"/>
+    <field name="bodemhoogtenap_Old" reuseLastValue="0"/>
     <field name="breedte_getabuleerd_A" reuseLastValue="0"/>
     <field name="breedte_getabuleerd_B" reuseLastValue="0"/>
     <field name="breedte_getabuleerd_New" reuseLastValue="0"/>

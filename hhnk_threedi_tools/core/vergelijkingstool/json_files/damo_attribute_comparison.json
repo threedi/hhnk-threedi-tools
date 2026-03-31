@@ -569,8 +569,8 @@
 			"type": "category",
 			"description": "Verschil in bodemhoogte_nap",
 			"priority": "critical",
-			"left": "bodemhoogte_nap_Old",
-			"right": "bodemhoogte_nap_New"
+			"left": "bodemhoogtenap_Old",
+			"right": "bodemhoogtenap_New"
 		},
 		{
 			"name": "cmp_hoogte_getabuleerd",

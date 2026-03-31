@@ -179,7 +179,7 @@ def main(
 
 if __name__ == "__main__":
     # name
-    path = r"E:\02.modellen\castricum"
+    path = r"G:\02_Werkplaatsen\06_HYD\Projecten\HKC26009 Maatregelen Afdelingen Zijpe\zijpe_west"
     model_info = get_model_info(path)
     source_data = model_info.source_data
 
@@ -211,7 +211,8 @@ if __name__ == "__main__":
     # Layers To Compare DAMO_DAMO
     layer_selection = False
     layers_input_damo_selection = ["AfvoergebiedAanvoergebied", "PeilafwijkingGebied", "PeilgebiedPraktijk"]
-    layers_input_hdb_selection = ["Levee_overstromingsmodel", "Sturing_3Di"]
+    layers_input_damo_selection = ["HydroObject"]    
+    layers_input_hdb_selection = []
     fn_threedi_comparison_export = out_put_files / "Threedi_comparison_76.gpkg"
     compare_with = "Damo Export vs Damo Updated"
     # compare_with = "Damo Updated vs 3Di model"
