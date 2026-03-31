@@ -211,7 +211,7 @@ if __name__ == "__main__":
     # Layers To Compare DAMO_DAMO
     layer_selection = False
     layers_input_damo_selection = ["AfvoergebiedAanvoergebied", "PeilafwijkingGebied", "PeilgebiedPraktijk"]
-    layers_input_damo_selection = ["HydroObject"]    
+    layers_input_damo_selection = ["HydroObject"]
     layers_input_hdb_selection = []
     fn_threedi_comparison_export = out_put_files / "Threedi_comparison_76.gpkg"
     compare_with = "Damo Export vs Damo Updated"
