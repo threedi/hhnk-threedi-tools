@@ -11,6 +11,12 @@ from hhnk_threedi_tools.core.schematisation_builder.DAMO_HyDAMO_converter import
 from hhnk_threedi_tools.core.schematisation_builder.DB_exporter import db_exporter
 from hhnk_threedi_tools.core.schematisation_builder.HyDAMO_validator import validate_hydamo
 from hhnk_threedi_tools.core.schematisation_builder.raw_export_to_DAMO_converter import RawExportToDAMOConverter
+from hhnk_threedi_tools.core.schematisation_builder.raw_export_to_DAMO_converters.aquaduct_converter import (
+    AquaductConverter,
+)
+from hhnk_threedi_tools.core.schematisation_builder.raw_export_to_DAMO_converters.brug_converter import (
+    BrugConverter,
+)
 from hhnk_threedi_tools.core.schematisation_builder.raw_export_to_DAMO_converters.gemaal_converter import (
     GemaalConverter,
 )
@@ -20,6 +26,19 @@ from hhnk_threedi_tools.core.schematisation_builder.raw_export_to_DAMO_converter
 from hhnk_threedi_tools.core.schematisation_builder.raw_export_to_DAMO_converters.profiel_converter import (
     ProfielConverter,
 )
+from hhnk_threedi_tools.core.schematisation_builder.raw_export_to_DAMO_converters.stuw_converter import (
+    StuwConverter,
+)
+
+# Define converter classes to run in order
+CONVERTERS = [
+    GemaalConverter,
+    StuwConverter,
+    BrugConverter,
+    AquaductConverter,
+    PeilgebiedConverter,
+    ProfielConverter,
+]
 
 
 class SchematisationBuilder:
@@ -47,7 +66,7 @@ class SchematisationBuilder:
         self.logger.setLevel(logging.INFO)
 
     def make_hydamo_package(self):
-        # Check if polder_polygon.shp exists, copy if not
+        # Check if polder_polygon.shp exists, use from default location if not
         if (
             not self.polder_file_path.exists()
         ):  # TODO remove once implemented in plugin, then polder_polygon.shp is always present
@@ -83,22 +102,15 @@ class SchematisationBuilder:
                 raw_export_file_path=self.raw_export_file_path,
                 output_file_path=self.damo_file_path,
                 logger=self.logger,
+                hdb_file_path=self.project.folders.source_data.hdb.path,
             )
 
-            gemaal_converter = GemaalConverter(
-                raw_export_converter=raw_export_converter,
-            )
-            gemaal_converter.run()
+            raw_export_converter.data.dem_path = self.project.folders.source_data.dem.path
 
-            peilgebied_converter = PeilgebiedConverter(
-                raw_export_converter=raw_export_converter,
-            )
-            peilgebied_converter.run()
-
-            profiel_converter = ProfielConverter(
-                raw_export_converter=raw_export_converter,
-            )
-            profiel_converter.run()
+            # Run all converters
+            for converter_class in CONVERTERS:
+                converter = converter_class(raw_export_converter=raw_export_converter)
+                converter.run()
 
             raw_export_converter.write_outputs()
 
@@ -133,6 +145,10 @@ class SchematisationBuilder:
             if not validation_rules_json_path.exists():
                 shutil.copyfile(resources_validationrules_path, validation_rules_json_path)
 
+            validation_styling_path = resources_validationrules_path = hrt.get_pkg_resource_path(
+                schematisation_builder_resources, "styling.gpkg"
+            )
+
             if not Path(coverage_location).exists():
                 raise FileNotFoundError(
                     f"Coverage data for validation not found in {coverage_location}. Please provide location with index.shp and tiles to this location."
@@ -142,6 +158,7 @@ class SchematisationBuilder:
                 hydamo_file_path=self.hydamo_file_path,
                 validation_rules_json_path=validation_rules_json_path,
                 validation_directory_path=validation_directory_path,
+                template_file_path=validation_styling_path,
                 coverages_dict={"AHN": coverage_location},
                 output_types=["geopackage"],
             )
