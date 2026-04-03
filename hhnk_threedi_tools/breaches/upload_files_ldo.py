@@ -55,6 +55,7 @@ import shutil
 import time
 import zipfile
 from pathlib import Path
+import warnings
 
 import hhnk_research_tools as hrt
 import pandas as pd
@@ -260,11 +261,17 @@ class LdoUploadFolder(hrt.Folder):
         if scenario_path.is_dir():
             return scenario_path
 
-        raise FileNotFoundError(f"{self.name} not found in {self.scenario_results_path}")
+        warnings.warn(
+            f"Scenario folder '{self.name}' not found in '{self.scenario_results_path}'. Skipping."
+        )
+        return None
 
     def copy_files(self):
         """Copy NetCDF and DEM to the upload folder"""
         scenario_folder = self._find_scenario_folder()
+        if scenario_folder is None:
+            return
+        
         breach = Breaches(scenario_folder)
         raster_compress_path = breach.wss.path.joinpath("dem_clip.tif")
         netcdf_path = breach.netcdf.path.joinpath("results_3di.nc")
@@ -307,7 +314,7 @@ if __name__ == "__main__":
     ldo_structuur_path = base_path.joinpath("ldo_structuur")
 
     # Folder where scenario results are stored.
-    scenario_results_path = base_path.joinpath("sbmz")
+    scenario_results_path = base_path.joinpath("sbln")
 
     # data frame from the scenarios that are gonig to be uploaded.
     pd_scenarios = pd.read_excel(id_scenarios)
@@ -323,6 +330,7 @@ if __name__ == "__main__":
 
     # Loop over al the scenarios
     scenarios = list(metadata_folder.glob("*.xlsx"))
+    # %%
     for metadata_xlsx in scenarios:
         # Set Scenario Name
         scenario_name = metadata_xlsx.stem
@@ -336,7 +344,11 @@ if __name__ == "__main__":
 
             # Create folder with data to upload.
             ldo_structuur = LdoUploadFolder(scenario_path, scenario_results_path=scenario_results_path)
-            ldo_structuur.copy_files()
+           
+            copied = ldo_structuur.copy_files()
+            # if not copied:
+            #     continue
+
             zip_path = ldo_structuur.zip_files()
 
             # Upload excel file from the scenario, and retrieve json infomration

@@ -5,6 +5,8 @@ environments:
     - url: https://conda.anaconda.org/conda-forge/
     indexes:
     - https://pypi.org/simple
+    options:
+      pypi-prerelease-mode: if-necessary-or-explicit
     packages:
       linux-64:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/_libgcc_mutex-0.1-conda_forge.tar.bz2
@@ -473,6 +475,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/af/db/70bdf58fba21f1043db3bfada43c2c15c7246c7077859429e36abc43b171/threedidepth-0.6.3-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/a4/84/aca4601652247838c82e0eac3d04d15d25337312feb0311d731d598a4b3c/threedigrid-2.3.5-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/0f/e1/76ccf4ad2365cab209d1e7a3a134fc34f2928311c22ce72a8d49d7282e99/threedigrid_builder-1.24.5-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+      - pypi: https://files.pythonhosted.org/packages/ad/1f/c196d21c2df061923154aecf24cab049a114394956e90c9bfbfdd398e27a/utils-1.0.2.tar.gz
       - pypi: ./
       win-64:
       - conda: https://conda.anaconda.org/conda-forge/win-64/_openmp_mutex-4.5-2_gnu.conda
@@ -882,12 +885,15 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/af/db/70bdf58fba21f1043db3bfada43c2c15c7246c7077859429e36abc43b171/threedidepth-0.6.3-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/a4/84/aca4601652247838c82e0eac3d04d15d25337312feb0311d731d598a4b3c/threedigrid-2.3.5-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/89/17/fb589c76d149c6e6c519f73db9b03c4dffd01ebcde68feec374ea62558bd/threedigrid_builder-1.24.5-cp312-cp312-win_amd64.whl
+      - pypi: https://files.pythonhosted.org/packages/ad/1f/c196d21c2df061923154aecf24cab049a114394956e90c9bfbfdd398e27a/utils-1.0.2.tar.gz
       - pypi: ./
   py39:
     channels:
     - url: https://conda.anaconda.org/conda-forge/
     indexes:
     - https://pypi.org/simple
+    options:
+      pypi-prerelease-mode: if-necessary-or-explicit
     packages:
       linux-64:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/_libgcc_mutex-0.1-conda_forge.tar.bz2
@@ -5673,6 +5679,11 @@ packages:
 - pypi: git+https://github.com/hhnk/hhnk-research-tools.git?rev=main#0fa340b17c71a478b9f2e9cdc5af13d3f42ec82a
   name: hhnk-research-tools
   version: 2025.1.0
+  requires_python: '>=3.9'
+- pypi: ./
+  name: hhnk-threedi-tools
+  version: '2025.1'
+  sha256: b080af4bc77268203ec64ed1478376df1c170f543f03447bc0355d21d0c0ec09
   requires_python: '>=3.9'
 - pypi: ./
   name: hhnk-threedi-tools
@@ -15629,6 +15640,11 @@ packages:
   - pkg:pypi/urllib3?source=hash-mapping
   size: 101735
   timestamp: 1750271478254
+- pypi: https://files.pythonhosted.org/packages/ad/1f/c196d21c2df061923154aecf24cab049a114394956e90c9bfbfdd398e27a/utils-1.0.2.tar.gz
+  name: utils
+  version: 1.0.2
+  sha256: f4d5157e27e9d434006b5b52a1ec951a34e53e7ecaa145d43a153ec452eb5d9e
+  requires_python: '>=3.6'
 - conda: https://conda.anaconda.org/conda-forge/noarch/uvicorn-0.35.0-pyh31011fe_0.conda
   sha256: bf304f72c513bead1a670326e02971c1cfe8320cf756447a45b74a2571884ad3
   md5: c7f6c7ffba6257580291ce55fb1097aa

@@ -2,7 +2,7 @@
 import os
 from datetime import datetime, timedelta
 from pathlib import Path
-
+import traceback
 import geopandas as gpd
 import hhnk_research_tools as hrt
 import numpy as np
@@ -23,7 +23,7 @@ def _get_api_client() -> V3Api:
     api_key = hrt.read_api_file(api_keys_path)
     config = {
         "THREEDI_API_HOST": "https://api.3di.live",
-        "THREEDI_API_PERSONAL_API_TOKEN": api_key,
+        "THREEDI_API_PERSONAL_API_TOKEN": api_key["threedi"],
     }
     api_client: V3Api = ThreediApi(config=config, version="v3-beta")
 
@@ -373,8 +373,8 @@ def generate_ldo_metadata_per_scenario(
             netcdf_folder = region_path / "01_NetCDF"
             resultnc = netcdf_folder / "results_3di.nc"
             resulth5 = netcdf_folder / "gridadmin.h5"
-            GridH5ResultAdmin(resulth5, resultnc)
-
+            GridH5ResultAdmin(str(resulth5), resultnc)
+            
             metadata_temp = _fill_metadata_row(
                 metadata_temp=metadata_temp,
                 simulation_name=simulation_name,
@@ -397,6 +397,7 @@ def generate_ldo_metadata_per_scenario(
 
         except Exception as exc:
             print(f"Failed for {simulation_name}: {exc}")
+            traceback.print_exc()
             failed.append(simulation_name)
 
     return {
@@ -413,9 +414,11 @@ result = generate_ldo_metadata_per_scenario(
     bresen_path=r"Y:\03.resultaten\Normering Regionale Keringen\ipo_ldo_sctructuur\bressen.shp",
     metadata_template_path=r"Y:\03.resultaten\Normering Regionale Keringen\ipo_ldo_sctructuur\import_scenarios.xlsx",
     metadata_nzk_path=r"Y:\03.resultaten\Normering Regionale Keringen\output\scenarios_output\N&S\20260217_Scenarios_in_LDO.xlsx",
-    base_folder=r"\\corp.hhnk.nl\data\Hydrologen_data\Data\03.resultaten\Normering Regionale Keringen\output\scenarios_output\N&S\skb_v2",
+    base_folder=r"\\corp.hhnk.nl\data\Hydrologen_data\Data\03.resultaten\Normering Regionale Keringen\output\scenarios_output\N&S\sbln",
     metadata_per_scenario_folder=r"Y:\03.resultaten\Normering Regionale Keringen\output\scenarios_output\N&S\ldo_structuur\metadata_per_scenario",
     scenario_id_path=r"Y:\03.resultaten\Normering Regionale Keringen\output\scenarios_output\N&S\ldo_structuur\scenarios_ids.xlsx",
     skip_scenarios=["IPO_SBMN_EQ_1632", "IPO_AB_EQ_1125"],
 )
 print(result)
+
+# %%

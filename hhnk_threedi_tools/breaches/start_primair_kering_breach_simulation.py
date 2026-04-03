@@ -245,7 +245,7 @@ if __name__ == "__main__":
 
     # Set the model name as it is either in 3di or in the local folder.
     base_folder = r"Y:\02.modellen"
-    model_name = "RegionalFloodModel - deelmodel Schermer  Hoog Zuid -Oostzaan"
+    model_name = "RegionalFloodModel - deelmodel Schermer Laag Noord"
 
     model_folder = Path(f"{base_folder}/{model_name}")
 
@@ -264,7 +264,7 @@ if __name__ == "__main__":
     # filter_id_path = r"Y:\03.resultaten\Normering Regionale Keringen\output\scenarios_output\N&S\breach_SBLN_v2_redo.gpkg"
     # filter_id_gdf = gpd.read_file(filter_id_path)
     # filter_id = filter_id_gdf['id'].tolist()
-    filter_id = [3, 4]  # TP04
+    filter_id = [53, 68, 77]  # TP04
 
     sim_duration = 5  # days
 

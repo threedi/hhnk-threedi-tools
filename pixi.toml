@@ -95,6 +95,7 @@ threedidepth = "==0.6.3"
 hhnk-threedi-tools = { path = ".", editable = true }
 lazy_loader= "*"
 dotenv = "*"
+utils = ">=1.0.2, <2"
 
 [feature.dev.dependencies]
 jupyterlab = "*"
