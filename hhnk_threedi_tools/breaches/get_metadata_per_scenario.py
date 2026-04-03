@@ -1,8 +1,9 @@
 # %%
 import os
+import traceback
 from datetime import datetime, timedelta
 from pathlib import Path
-import traceback
+
 import geopandas as gpd
 import hhnk_research_tools as hrt
 import numpy as np
@@ -374,7 +375,7 @@ def generate_ldo_metadata_per_scenario(
             resultnc = netcdf_folder / "results_3di.nc"
             resulth5 = netcdf_folder / "gridadmin.h5"
             GridH5ResultAdmin(str(resulth5), resultnc)
-            
+
             metadata_temp = _fill_metadata_row(
                 metadata_temp=metadata_temp,
                 simulation_name=simulation_name,
