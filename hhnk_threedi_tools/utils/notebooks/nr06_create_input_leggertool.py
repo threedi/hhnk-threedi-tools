@@ -1,7 +1,22 @@
 # %%
+## Invoer:
+jupyter_from_qgis = True
+berekening_naam = (
+        "49_Waarland_#2_0d1d_test_leggertool"  # Deze moet in map 03_3di_resultaten\0d1d_results staan
+    )
+
+
+# %%
 
 import shutil
 from pathlib import Path
+
+jupyter_from_qgis = True
+if jupyter_from_qgis:
+    from notebook_setup import setup_notebook
+
+    notebook_data = setup_notebook()
+    folder_dir = Path(notebook_data["polder_folder"])
 
 import hhnk_research_tools as hrt
 import numpy as np
@@ -10,7 +25,6 @@ import pandas as pd
 import hhnk_threedi_tools as htt
 import hhnk_threedi_tools.core.checks.grid_result_metadata as grid_result_metadata
 from hhnk_threedi_tools.core.folders import Folders
-
 
 # %%
 def create_input_leggertool(folder: Folders, berekening_naam: str, output_file: Path):
@@ -86,24 +100,24 @@ def create_input_leggertool(folder: Folders, berekening_naam: str, output_file: 
         )
 
     return structure_all
-
-
 # %%
-if __name__ == "__main__":
-    # %% Op een specifieke map
-    folder_dir = Path(r"E:\02.modellen\VNK_leggertool")
-
-    # %% of in de local folder
-    from notebook_setup import setup_notebook
-
-    notebook_data = setup_notebook()
-    folder_dir = Path(notebook_data["polder_folder"])
-    # %%
-
-    # Input
-    berekening_naam = (
-        "vnk_leggertool #11 0d1d_test leggertool"  # Deze moet in map 03_3di_resultaten\0d1d_results staan
+## Draaien vanuit qgis op modellen folder
+if jupyter_from_qgis:
+    folder = Folders(folder_dir)
+    output_file = folder.joinpath(f"debiet_{berekening_naam}_{hrt.get_uuid()}.gpkg")
+    
+    create_input_leggertool(
+        folder=folder,
+        berekening_naam=berekening_naam,
+        output_file=output_file,
     )
+# %%
+## Draaien in eigen folder
+folder_dir = Path(r"Y:\02.modellen\5_Koegras_leggertool")
+berekening_naam = (
+        "5_Koegras_leggertool_#8_0d1d_test_leggertool"  # Deze moet in map 03_3di_resultaten\0d1d_results staan
+    )
+if not jupyter_from_qgis:
     folder = Folders(folder_dir)
     output_file = folder.joinpath(f"debiet_{berekening_naam}_{hrt.get_uuid()}.gpkg")
 
