@@ -44,8 +44,8 @@ class HhnkSchematisationChecks:
 
         self.results = results
 
-    def run_controlled_structures(self, overwrite: bool = False):
-        """Create leayer with structure control in schematisation"""
+    def run_controlled_structures(self, overwrite: bool = False):  # TODO WVE
+        """Create layer with structure control in schematisation"""
         self.structure_control = StructureControl(
             model=self.database,
             hdb_control_layer=self.folder.source_data.hdb.layers.sturing_kunstwerken,
