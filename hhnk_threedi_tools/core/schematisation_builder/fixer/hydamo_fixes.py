@@ -1,3 +1,4 @@
+from copy import deepcopy
 from dataclasses import dataclass
 from typing import Any, Dict, List, Set, Tuple
 
@@ -62,6 +63,16 @@ class FixColumns:
     @property
     def manual_overwrite(self):
         return f"manual_overwrite_{self.attribute_name}"
+
+
+def _add_custom_kwargs(input_variables: dict, datamodel):
+    input_variables["hydamo"] = datamodel
+    kwargs = {k: v for k, v in input_variables.items() if k not in ["custom_function_name", "hydamo", "kwargs"]}
+    for kwarg in list(kwargs.keys()):
+        input_variables.pop(kwarg, None)
+    input_variables["kwargs"] = kwargs
+
+    return input_variables
 
 
 def _build_general_rules_lookup_table(validation_rules: Dict[str, Any]) -> Dict[str, Dict[str, Dict[str, Any]]]:
@@ -447,13 +458,52 @@ def _invalid_indices(gdf: gpd.GeoDataFrame, validation_result: gpd.GeoDataFrame,
     return [i for i in invalid_indices if i in gdf.index]
 
 
+def _manual_indices(gdf: gpd.GeoDataFrame, review_gdf: gpd.GeoDataFrame, attribute: str, manual_column: str):
+    """
+    Identify all row indices of the hydamo gdf where a value has been filled in the manual_overwrite column of the layer.
+
+    Parameters
+    ----------
+    layers_summary : ExtendedLayersSummary
+        A container object holding reviewer layers, accessible as attributes.
+        Must contain `layer` as an attribute storing a GeoDataFrame.
+    gdf : GeoDataFrame
+        The main object-layer GeoDataFrame containing a 'code' column.
+    layer : str
+        Name of the reviewer layer inside `layers_summary` to read from.
+
+    Returns
+    -------
+    list[int]
+        A list of integer indices from `gdf` corresponding to features whose
+        'code' is listed in the specified manual review column.
+    """
+
+    # Validate required columns
+    if manual_column not in review_gdf.columns or "code" not in review_gdf.columns:
+        return []
+    if "code" not in gdf.columns:
+        return []
+
+    # Extract manual codes present in the reviewer layer
+    manual_gdf = review_gdf[["code", manual_column]].dropna(subset=[manual_column])
+    manual_codes = manual_gdf["code"]
+
+    # Match codes back to the original gdf
+    gdf_indices = gdf[gdf["code"].isin(manual_codes)].index.to_list()
+    review_indices = [i for i in manual_gdf.index.to_list() if i in gdf.index]
+
+    # Sanity-filter to ensure indices belong to gdf
+    return gdf_indices, review_indices
+
+
 def review(
     datamodel: ExtendedHyDAMO,
     layers_summary: ExtendedLayersSummary,
     result_summary: ExtendedResultSummary,
     logger: logging.Logger,
     raise_error: bool,
-):
+) -> Tuple[ExtendedLayersSummary, ExtendedResultSummary]:
     """
     Populate a review DataFrame for each layer, including:
     - validation summaries
@@ -498,8 +548,8 @@ def review(
     new_datamodel = datamodel
 
     ## create an updated datamodel based on datamodel post processing information
-    object_rules_sets = new_datamodel.validation_rules
-    validation_results = new_datamodel.validation_results
+    object_rules_sets = deepcopy(new_datamodel.validation_rules)
+    validation_results = deepcopy(new_datamodel.validation_results)
     logger.info(
         rf"lagen met valide objecten en regels: {[i for i in list(object_rules_sets.keys())]}"
     )  ## add check to tell which objects have fixes
@@ -584,7 +634,8 @@ def review(
                     if "related_object" in input_variables.keys():
                         input_variables = _add_related_gdf(input_variables, new_datamodel, object_layer)
                     elif "custom_function_name" in input_variables.keys():
-                        input_variables["hydamo"] = new_datamodel
+                        input_variables = _add_custom_kwargs(input_variables, new_datamodel)
+                        print(input_variables)
                     elif "join_object" in input_variables.keys():
                         input_variables = _add_join_gdf(input_variables, new_datamodel)
 
@@ -686,7 +737,7 @@ def execute(
     logger: logging.Logger,
     raise_error: bool,
     keep_general: bool = False,
-):
+) -> Tuple[ExtendedHyDAMO, ExtendedLayersSummary, ExtendedResultSummary]:
     """
     Apply fix-rules and optionally general-rules to the datamodel.
 
@@ -728,8 +779,8 @@ def execute(
 
     new_datamodel = datamodel
     ## create an updated datamodel based on datamodel post processing information
-    object_rules_sets = new_datamodel.validation_rules
-    validation_results = new_datamodel.validation_results
+    object_rules_sets = deepcopy(new_datamodel.validation_rules)
+    validation_results = deepcopy(new_datamodel.validation_results)
     logger.info(
         rf"lagen met valide objecten en regels: {[i for i in list(object_rules_sets.keys())]}"
     )  ## add check to tell which objects have fixes
@@ -765,7 +816,8 @@ def execute(
                     if "related_object" in input_variables.keys():
                         input_variables = _add_related_gdf(input_variables, datamodel, object_layer)
                     elif "custom_function_name" in input_variables.keys():
-                        input_variables["hydamo"] = datamodel
+                        input_variables = _add_custom_kwargs(input_variables, datamodel)
+                        print(input_variables)
                     elif "join_object" in input_variables.keys():
                         input_variables = _add_join_gdf(input_variables, datamodel)
 
@@ -814,6 +866,7 @@ def execute(
                     # get function
                     function = next(iter(rule["fix_method"]))
                     input_variables = rule["fix_method"][function]
+                    logger.info(input_variables)
                     validation_ids = rule["validation_ids"]
 
                     # find all invalid indices
@@ -832,15 +885,39 @@ def execute(
                     if "related_object" in input_variables.keys():
                         input_variables = _add_related_gdf(input_variables, new_datamodel, object_layer)
                     elif "custom_function_name" in input_variables.keys():
-                        input_variables["hydamo"] = new_datamodel
+                        input_variables = _add_custom_kwargs(input_variables, new_datamodel)
+                        print(input_variables)
+                        print(rule["fix_method"][function])
                     elif "join_object" in input_variables.keys():
                         input_variables = _add_join_gdf(input_variables, new_datamodel)
 
                     if object_gdf.loc[indices].empty:
-                        object_gdf[attribute_name] = np.nan
+                        object_gdf.loc[indices, attribute_name] = np.nan
                     else:
+                        logger.info(input_variables)
                         result = _process_general_function(object_gdf.loc[indices], function, input_variables)
                         object_gdf.loc[indices, attribute_name] = result
+
+                    # apply manual overwrites
+                    if object_layer in layers_summary.data_layers:
+                        review_gdf: gpd.GeoDataFrame = getattr(layers_summary, object_layer)
+                        manual_column = FixColumns(attribute_name).manual_overwrite
+                        object_indices, review_indices = _manual_indices(
+                            object_gdf, review_gdf, attribute_name, manual_column
+                        )
+                        if len(object_indices) != len(review_indices):
+                            logger.warning("Length of object_indices not equal to length of review_indices")
+                        manual_gdf = review_gdf.loc[review_indices, manual_column]
+                        manual_dtype = object_gdf.loc[object_indices, attribute_name].dtypes
+                        if manual_dtype == "float64":
+                            manual_gdf = manual_gdf.astype(float)
+                        elif manual_dtype == "int64":
+                            manual_gdf = manual_gdf.astype(int)
+                        elif manual_dtype == "bool":
+                            manual_gdf = manual_gdf.astype(bool)
+                        elif manual_dtype == "object":
+                            manual_gdf = manual_gdf.astype(str)
+                        object_gdf.loc[object_indices, attribute_name] = manual_gdf
 
                 except Exception as e:
                     logger.error(f"{object_layer}: fix_rule {rule['fix_id']} crashed width Exception {e}")

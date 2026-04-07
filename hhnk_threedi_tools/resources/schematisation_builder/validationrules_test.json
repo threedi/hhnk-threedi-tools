@@ -387,6 +387,15 @@
 							"right": "lengte"
 						}
 					}
+				},
+				{
+					"id": 4,
+					"result_variable": "peilgebiedpraktijk_laagste_streefpeil",
+					"function": {
+						"equal": {
+							"to": 0.0
+						}
+					}
 				}
 			],
 			"validation_rules": [
@@ -618,19 +627,19 @@
 			"fix_rules": [
 				{
                     "attribute_name": "hoogtebinnenonderkantbov",
+					"validation_ids": [0, 2, 10],
                     "fix_id": 1,
                     "fix_action": "Derived assumption",
                     "fix_type": "automatic",
                     "fix_method": {
-                        "fix_relative_to_level": {
+                        "custom_hydamo": {
+							"custom_function_name": "fix_relative_to_level",
 							"parameter": "hoogteopening",
-							"compare_object": "peilgebiedpraktijk",
-							"compare_parameter": "laagste_streefpeil",
+							"compare_parameter": "peilgebiedpraktijk_laagste_streefpeil",
 							"operator": "-" 
-
 						}
                     },
-                    "fix_description": "Set to -991"
+                    "fix_description": "Fix relative to laagste streefpeil"
                 },
                 {
                     "attribute_name": "hoogtebinnenonderkantbene",
@@ -666,7 +675,8 @@
                     "fix_action": "Derived assumption",
                     "fix_type": "automatic",
                     "fix_method": {
-                        "fix_equal_or_logic": {
+                        "custom_hydamo": {
+							"custom_function_name": "fix_equal_or_logic",
 							"if_cat_1": 0.5,
 							"if_cat_else": 0.3
 						}
@@ -882,6 +892,165 @@
 						"LE": {
 							"left": "maximalehoogtebovenkant",
 							"right": "kunstwerkopening_hoogstedoorstroomhoogte"
+						}
+					},
+					"auto_fixable": false
+				}
+			]
+		},
+		{
+			"object": "kunstwerkopening",
+			"general_rules": [
+				{
+					"id": 0,
+					"result_variable": "regelmiddel_minimalehoogtebovenkant",
+					"function": {
+						"object_relation": {
+							"statistic": "min",
+							"related_object": "regelmiddel",
+							"related_parameter": "minimalehoogtebovenkant"
+						}
+					}
+				},
+				{
+					"id": 1,
+					"result_variable": "regelmiddel_soortregelmiddel",
+					"function": {
+						"object_relation": {
+							"statistic": "majority",
+							"related_object": "regelmiddel",
+							"related_parameter": "soortregelmiddel"
+						}
+					}
+				},
+				{
+					"id": 2,
+					"result_variable": "regelmiddel_maximalehoogtebovenkant",
+					"function": {
+						"object_relation": {
+							"statistic": "max",
+							"related_object": "regelmiddel",
+							"related_parameter": "maximalehoogtebovenkant"
+						}
+					}
+				},
+				{
+					"id": 3,
+					"result_variable": "regelmiddel_aantal_regelmiddelen",
+					"function": {
+						"object_relation": {
+							"statistic": "count",
+							"related_object": "regelmiddel",
+							"fill_value": 0
+						}
+					}
+				}
+			],
+			"validation_rules": [
+				{
+					"id": 0,
+					"name": "hoogstedoorstroomhoogte plausibel (-8m - 325m)",
+					"type": "logic",
+					"validation_rule_set": "basic",
+					"error_type": "critical",
+					"result_variable": "hoogstedoorstroomhoogte_plausibel",
+					"error_message": "hoogstedoorstroomhoogte niet plausibel",
+					"active": true,
+					"function": {
+						"BE": {
+							"parameter": "hoogstedoorstroomhoogte",
+							"min": -8,
+							"max": 325,
+							"inclusive": false
+						}
+					},
+					"auto_fixable": false
+				},
+				{
+					"id": 1,
+					"name": "laagstedoorstroomhoogte plausibel (-8m - 325m)",
+					"type": "logic",
+					"validation_rule_set": "basic",
+					"error_type": "critical",
+					"result_variable": "laagstedoorstroomhoogte_plausibel",
+					"error_message": "laagstedoorstroomhoogte niet plausibel",
+					"active": true,
+					"function": {
+						"BE": {
+							"parameter": "laagstedoorstroomhoogte",
+							"min": -8,
+							"max": 325,
+							"inclusive": false
+						}
+					},
+					"auto_fixable": false
+				},
+				{
+					"id": 2,
+					"name": "De laagste doorstroombreedte moet kleiner zijn dan de hoogste doorstroombreedte, bij een driehoekige of trapeziumvormige opening",
+					"type": "logic",
+					"validation_rule_set": "basic",
+					"error_type": "critical",
+					"result_variable": "laagstedrstrmbreedte_lt_hoogstedrstrmbreedte",
+					"error_message": "laagstedrstrmbreedte > hoogstedrstrmbreedte",
+					"active": true,
+					"filter": {
+						"ISIN": {
+							"parameter": "vormopening",
+							"array": [
+								"Driehoekig",
+								"Trapeziumvormig"
+							]
+						}
+					},
+					"function": {
+						"LT": {
+							"left": "laagstedoorstroombreedte",
+							"right": "hoogstedoorstroombreedte"
+						}
+					},
+					"auto_fixable": false
+				},
+				{
+					"id": 3,
+					"name": "De laagste doorstroomhoogte moet kleiner zijn dan de hoogste doorstroomhoogte",
+					"type": "logic",
+					"validation_rule_set": "basic",
+					"error_type": "critical",
+					"result_variable": "laagstedrstrmhoogte_lt_hoogstedrstrmhoogte",
+					"error_message": "laagstedrstrmhoogte > hoogstedrstrmhoogte",
+					"active": true,
+					"function": {
+						"LT": {
+							"left": "laagstedoorstroomhoogte",
+							"right": "hoogstedoorstroomhoogte"
+						}
+					},
+					"auto_fixable": false
+				},
+				{
+					"id": 4,
+					"name": "Is de vorm opening niet driehoekig, trapezium- of heulvormig, dan moeten de laagste en hoogste doorstroombreedtes gelijk zijn aan elkaar",
+					"type": "logic",
+					"validation_rule_set": "basic",
+					"error_type": "critical",
+					"result_variable": "laagstedrstrmbreedte_eq_hoogstedrstrmbreedte",
+					"error_message": "laagstedrstrmbreedte != hoogstedrstrmbreedte",
+					"active": true,
+					"filter": {
+						"NOTIN": {
+							"parameter": "vormopening",
+							"array": [
+								"Driehoekig",
+								"Heulprofiel",
+								"Trapeziumvormig"
+							]
+						}
+					},
+					"function": {
+						"EQ": {
+							"left": "laagstedoorstroomhoogte",
+							"right": "hoogstedoorstroomhoogte"
 						}
 					},
 					"auto_fixable": false

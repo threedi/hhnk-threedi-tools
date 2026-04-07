@@ -289,7 +289,7 @@ def _fixer(
         #     print("Fixes not applied.")
         result_summary.status = "load fix summary"
         logger.info("start inladen van fix summary")
-        fix_summary = ExtendedLayersSummary.from_geopackage(file_path=review_path / "fix_summary.gpkg")
+        fix_summary = ExtendedLayersSummary.from_geopackage(file_path=dir_path / "fix_summary_manual.gpkg")
         fix_preparation_result = fix_summary.data_layers
         ## -------------------
 
@@ -303,6 +303,16 @@ def _fixer(
             logger,
             raise_error,
             keep_general=False,
+        )
+        test_fix_summary, test_result_summary = hydamo_fixes.review(
+            datamodel,
+            fix_summary,
+            result_summary,
+            logger,
+            raise_error,
+        )
+        test_fix_layers = fix_summary.export(
+            results_path=review_path, gpkg_name="test_fix_summary.gpkg", output_types=OUTPUT_TYPES
         )
 
         # finish validation and export results
