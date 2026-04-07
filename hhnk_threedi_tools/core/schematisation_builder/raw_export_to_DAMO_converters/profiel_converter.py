@@ -335,7 +335,7 @@ class ProfielConverter(RawExportToDAMOConverter):
                 overlap = intersection.length
                 if overlap > max_length:
                     max_length = overlap
-                    best_peilgebied_id = peil_row["objectid"]
+                    best_peilgebied_id = peil_row["globalid"]
             if best_peilgebied_id is not None:
                 hydroobject_to_peilgebied[idx] = best_peilgebied_id
 
