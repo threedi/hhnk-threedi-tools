@@ -217,50 +217,56 @@ def update_channel_codes(
       (accepts "CODE" or "code"), and creates a mapping from channel_id -> nearest hydroobject.code using a
       spatial nearest-join between `cross_section_location` (expects a "channel_id" column) and the DAMO data.
       The join uses max_distance=5 (units of the CRS).
-    - Maps the found codes onto the channels by matching the channel "id" to the derived mapping and writes the
-      updated channel layer back to `model_path` (layer "channel", driver "GPKG").
+    - Maps the found codes onto the channels via a second nearest-join between channels and cross sections,
+      deduplicating to one match per channel, and writes the updated channel layer back to `model_path`
+      (layer "channel", driver "GPKG").
     - Removes the temporary "id" column from the original `channel` if it existed.
     """
 
     # if all channel codes already start with OAF return unchanged
     if "code" in channel.columns:
-        codes = channel["code"].astype(str).str.strip()  # delete spaces
+        codes = channel["code"].astype(str).str.strip()
         starts_with_oaf = codes.str.startswith("OAF", na=False)
-    if starts_with_oaf.all():
-        print("all the codes are updated")
-        return channel
+        if starts_with_oaf.all():
+            print("all the codes are updated")
+            return channel
 
     # read feature ids from model file to preserve ordering
     with fiona.open(model_path, layer="channel") as src:
         ids = [feat["id"] for feat in src]
 
     channel["id"] = ids
-    gdf_cross_section = cross_section_location
-
     gdf_channel = channel.copy()
-    damo_gdf = gpd.read_file(damo, layer="hydroobject")
 
-    cross = gdf_cross_section[["channel_id", "geometry"]].copy()
+    # load and normalize DAMO hydroobjects
+    damo_gdf = gpd.read_file(damo, layer="hydroobject")
     if "CODE" in damo_gdf.columns:
         damo_gdf.rename(columns={"CODE": "code"}, inplace=True)
-
     damo_gdf = damo_gdf[["code", "geometry"]].copy()
 
-    # nearest join to find matching hydroobject code per channel location
+    # nearest join: cross section locations -> DAMO hydroobjects
+    cross = cross_section_location[["channel_id", "geometry"]].copy()
     joined = gpd.sjoin_nearest(cross, damo_gdf, how="left", max_distance=5)
 
-    code_map = joined.groupby("channel_id")["code"].first()
+    # build code map: channel_id -> code
+    code_map = joined.groupby("channel_id")["code"].first().reset_index()
+    code_map.columns = ["channel_id", "code"]
 
-    gdf_channel["id"] = gdf_channel["id"].astype(str)
-    code_map.index = code_map.index.astype(str)
+    # attach codes to cross sections and keep only those with a match
+    gdf_cross_with_code = cross_section_location.merge(code_map, on="channel_id", how="left")
+    gdf_cross_with_code = (
+        gdf_cross_with_code[["code_y", "geometry"]].dropna(subset=["code_y"]).rename(columns={"code_y": "code"})
+    )
 
-    gdf_channel["code"] = gdf_channel["id"].map(code_map)
+    # nearest join: channels -> cross sections with code, one match per channel
+    joined_channel = gpd.sjoin_nearest(gdf_channel[["id", "geometry"]], gdf_cross_with_code, how="left")
+    joined_channel = joined_channel[~joined_channel.index.duplicated(keep="first")]
+    gdf_channel["code"] = joined_channel["code"].values
 
-    gdf_channel = gdf_channel.copy()
-
-    # remove temporary id column from original if it existed
+    # remove temporary id column from original
     if "id" in channel.columns:
         channel.drop(columns=["id"], inplace=True)
+
     gdf_channel.to_file(model_path, layer="channel", driver="GPKG")
 
     return gdf_channel
