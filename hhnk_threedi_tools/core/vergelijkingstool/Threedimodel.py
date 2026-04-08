@@ -86,7 +86,7 @@ class Threedimodel(DataSet):
                     shape = row.cross_section_shape
                     cross_section_table = row.cross_section_table
                     # handle shape 2 directly from width/height columns
-                    if shape == 2:
+                    if shape == 2 or shape == 1:
                         cross_section_max_width = row.cross_section_width
                         cross_section_max_height = row.cross_section_height
                     # parse tabulated string into numeric array and take maxima
@@ -346,7 +346,8 @@ class Threedimodel(DataSet):
 
         # Apply attribute comparison
         if attribute_comparison is not None:
-            print(f"applying attribute comparison, {self.json_files_path}")
+            # print(f"applying attribute comparison, {self.json_files_path}")
+            # table_C["KDU"].columns
             table_C = self.apply_attribute_comparison(attribute_comparison, table_C)
             table_C = self.summarize_attribute_comparison(table_C)
             table_C = utils.add_priority_summaries(table_C)

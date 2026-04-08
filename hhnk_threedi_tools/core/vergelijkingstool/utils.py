@@ -150,6 +150,7 @@ def load_file_and_translate(
     else:
         layers_damo = fiona.listlayers(damo_filename) if damo_filename else []
         layers_hdb = fiona.listlayers(hdb_filename) if hdb_filename else []
+
         layers_3di = fiona.listlayers(threedi_filename) if threedi_filename else []
 
     # Load DAMO + HDB datasets
@@ -196,10 +197,9 @@ def load_file_and_translate(
             except Exception as e:
                 logger.error(f"Error loading 3Di layer {layer}: {e}")
 
-        if translation_HDB is not None:
+        if translation_3Di is not None:
             # logger.debug("Start mapping layer and column names of 3di layers")
             data = translate(data, translation_3Di)
-
     return data
 
 

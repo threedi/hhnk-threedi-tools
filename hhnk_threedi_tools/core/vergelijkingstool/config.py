@@ -12,12 +12,12 @@ SQLITE_LAYERS: List[str] = [
     "weir",
 ]
 
-# Name of the table containing cross-section definitions
-SQLITE_LAYER_CROSS_SECTION_DEFINITION: str = "v2_cross_section_definition"
+# # Name of the table containing cross-section definitions
+# SQLITE_LAYER_CROSS_SECTION_DEFINITION: str = "v2_cross_section_definition"
 
 # DAMO layer names (source dataset)
 DAMO_LAYERS: List[str] = [
-    "AfvoergebiedAanvoergebied",
+    "afvoergebiedAanvoergebied",
     # "AquaductLijn",  # Niet in beide datasets
     # "Bergingsgebied",  # Niet in beide datasets
     "Brug",
@@ -35,26 +35,26 @@ DAMO_LAYERS: List[str] = [
     "Sluis",
     "Stuw",
     "VasteDam",
-    "Vispassage",
+    # "Vispassage",
     "Waterdeel",
     # "Waterdeel", it does not contains code should be done in a different way
 ]
 
 # HDB layer names (HDB exports)
 HDB_LAYERS: List[str] = [
-    "gemalen_op_peilgrens",
-    "stuwen_op_peilgrens",
-    "hydro_deelgebieden",
-    "Levee_overstromingsmodel",
+    "Gemalen",
+    "Stuwen",
+    "Hydro_deelgebieden",
+    # "Keringen_hoge_lijnelementen",
     "polderclusters",
     # "randvoorwaarden",  # geen geom
-    "Sturing_3Di",
-    "duikers_op_peilgrens",
+    "Sturing_kunstwerken",
+    "duikersifonhevel",
 ]
 
 THREEDI_STRUCTURE_LAYERS: List[str] = [
     "culvert",
-    "pump",
+    "pumpstation",
     "weir",
     "orifice",
     "channel",
@@ -63,8 +63,8 @@ THREEDI_STRUCTURE_LAYERS: List[str] = [
 DAMO_HDB_STRUCTURE_LAYERS: List[str] = [
     "gemalen_op_peilgrens",
     "stuwen_op_peilgrens",
-    "brug",
     "gemaal",
+    "brug",
     "stuw",
     "vastedam",
     "duikersifonhevel",
@@ -78,7 +78,9 @@ STRUCTURE_CODES: List[str] = [
     "KVD",
     "OAF",
     "KBR",
+    # "KSL",
     # "KSY",
+    # "KBV",
     # @TODO: introduce 'other' category, so we don't miss any that don't have a nice code
 ]
 

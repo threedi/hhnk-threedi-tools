@@ -1,14 +1,31 @@
 {
-	"DuikerSifonHevel": {
-		"name": "DuikerSifonHevel",
+	"duikersifonhevel": {
+		"name": "duikersifonhevel",
+		"columns": {
+			"CODE": "code"
+			
+		}
+	},
+	"stuw": {
+		"name": "stuw",
 		"columns": {
 			"CODE": "code"
 		}
 	},
-	"Stuw": {
-		"name": "Stuw",
+	"gemaal": {
+		"name": "gemaal",
 		"columns": {
 			"CODE": "code"
 		}
-	}
+	},
+	"hydroobject": {
+    "name": "hydroobject",
+    "columns": {
+      "Bodemhoogte_NAP": "bodemhoogteNAP",
+      "WS_TALUD_LINKS": "WS_TALUD_LINKS",
+      "WS_TALUD_RECHTS": "WS_TALUD_RECHTS",
+      "WS_BODEMBREEDTE": "WS_BODEMBREEDTE",
+      "WS_IN_PEILGEBIED": "ws_in_peilgebied"
+    }
+  }
 }

@@ -179,7 +179,7 @@ def main(
 
 if __name__ == "__main__":
     # name
-    path = r"E:\02.modellen\castricum"
+    path = r"D:\01.modelrepos\jkaptein\bwn_7_HUB"
     model_info = get_model_info(path)
     source_data = model_info.source_data
 
@@ -212,9 +212,9 @@ if __name__ == "__main__":
     layer_selection = False
     layers_input_damo_selection = ["AfvoergebiedAanvoergebied", "PeilafwijkingGebied", "PeilgebiedPraktijk"]
     layers_input_hdb_selection = ["Levee_overstromingsmodel", "Sturing_3Di"]
-    fn_threedi_comparison_export = out_put_files / "Threedi_comparison_76.gpkg"
-    compare_with = "Damo Export vs Damo Updated"
-    # compare_with = "Damo Updated vs 3Di model"
+    fn_threedi_comparison_export = out_put_files / "test_jelle.gpkg"
+    # compare_with = "Damo Export vs Damo Updated"
+    compare_with = "Damo Updated vs 3Di model"
     # config.UPDATE_SYMBOLOGY = True
 
     # Layers to Compare DAMO_3di

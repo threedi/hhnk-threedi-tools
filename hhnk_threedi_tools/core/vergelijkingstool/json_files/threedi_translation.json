@@ -10,5 +10,12 @@
         "columns": {
             "cul_code": "code"
         }
+    },
+    "culvert": {
+        "name": "culvert",
+        "columns": {
+            "invert_level_start_point": "invert_level_start",
+            "invert_level_end_point": "invert_level_end"
+        }
     }
 }
