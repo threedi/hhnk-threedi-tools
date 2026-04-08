@@ -344,10 +344,12 @@ class Threedimodel(DataSet):
                 self.drop_unused_geoseries(table_merged, keep="geometry"), geometry="geometry"
             )
 
-        # Apply attribute comparison
+        # check if the attribute comparison JSON file exists and apply attribute comparison if it does, otherwise skip this step
         if attribute_comparison is not None:
             # print(f"applying attribute comparison, {self.json_files_path}")
             # table_C["KDU"].columns
+
+            # Apply attribute comparison
             table_C = self.apply_attribute_comparison(attribute_comparison, table_C)
             table_C = self.summarize_attribute_comparison(table_C)
             table_C = utils.add_priority_summaries(table_C)

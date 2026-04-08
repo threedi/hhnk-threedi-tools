@@ -343,6 +343,12 @@ class DataSet:
             left = comparison["left"]
             right = comparison["right"]
 
+            required_cols = [left, right, "in_both"]
+            missing = [c for c in required_cols if c not in df[table_name].columns]
+            if missing:
+                self.logger.warning(f"Skipping comparison {name}: columns {missing} not found in {table_name}")
+                return df
+
             column_name_priority = name + "_priority"
             if table_name not in self.priority_columns.keys():
                 self.priority_columns[table_name] = []
@@ -402,6 +408,7 @@ class DataSet:
                     table_name = comparison["table"]
                     self.logger.debug(f"Start applying attribute comparison, table name {table_name}")
                     if table_name in table.keys():
+                        print(table_name)
                         table = self.compare_attribute(table, comparison)
                     else:
                         # table not present in this dataset, skip it

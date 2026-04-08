@@ -21,7 +21,7 @@
 	"hydroobject": {
     "name": "hydroobject",
     "columns": {
-      "Bodemhoogte_NAP": "bodemhoogteNAP",
+      "bodemhoogteNAP": "bodemhoogte_nap",
       "WS_TALUD_LINKS": "WS_TALUD_LINKS",
       "WS_TALUD_RECHTS": "WS_TALUD_RECHTS",
       "WS_BODEMBREEDTE": "WS_BODEMBREEDTE",

@@ -49,7 +49,7 @@ HDB_LAYERS: List[str] = [
     "polderclusters",
     # "randvoorwaarden",  # geen geom
     "Sturing_kunstwerken",
-    "duikersifonhevel",
+    "Duikers",
 ]
 
 THREEDI_STRUCTURE_LAYERS: List[str] = [

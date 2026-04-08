@@ -347,6 +347,9 @@ class DAMO(DataSet):
 
         # apply attribute comparisons if configuration present
         if attribute_comparison is not None:
+            # remove empty layers from table_C
+            table_C = {k: v for k, v in table_C.items() if len(v) > 0}
+
             table_C = self.apply_attribute_comparison(attribute_comparison, table_C)
             table_C = self.summarize_attribute_comparison(table_C)
             table_C = utils.add_priority_summaries(table_C)
