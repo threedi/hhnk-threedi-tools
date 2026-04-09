@@ -367,6 +367,8 @@ class DAMO(DataSet):
                 "Area New",
                 "Area Old",
                 "Area difference",
+                "Number of Critical",
+                "Number of Warning",
             ]
         )
         for i, layer_name in enumerate(table_C):
@@ -419,6 +421,17 @@ class DAMO(DataSet):
                 ]
                 .geom_area_Old
             )
+
+            if "number_of_critical" in table_C[layer_name].columns:
+                number_of_critical = table_C[layer_name]["number_of_critical"].sum()
+            else:
+                number_of_critical = 0
+
+            if "number_of_warning" in table_C[layer_name].columns:
+                number_of_warning = table_C[layer_name]["number_of_warning"].sum()
+            else:
+                number_of_warning = 0
+
             area_diff = area_B - area_A
             statistics.loc[layer_name, :] = [
                 count_A,
@@ -430,6 +443,8 @@ class DAMO(DataSet):
                 area_A,
                 area_B,
                 area_diff,
+                number_of_critical,
+                number_of_warning,
             ]
         statistics = statistics.fillna(0).astype("int64")
 
