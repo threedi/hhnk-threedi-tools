@@ -125,6 +125,8 @@ class Threedimodel(DataSet):
                 "Area DAMO",
                 "Area 3Di",
                 "Area difference",
+                "Number of Critical",
+                "Number of Warning",
             ]
         )
 
@@ -181,6 +183,16 @@ class Threedimodel(DataSet):
                 ]
                 .geom_area_damo
             )
+
+            if "number_of_critical" in table_C[layer_name].columns:
+                number_of_critical = table_C[layer_name]["number_of_critical"].sum()
+            else:
+                number_of_critical = 0
+
+            if "number_of_warning" in table_C[layer_name].columns:
+                number_of_warning = table_C[layer_name]["number_of_warning"].sum()
+            else:
+                number_of_warning = 0
             area_diff = area_model - area_DAMO
             statistics.loc[layer_name, :] = [
                 count_DAMO,
@@ -192,6 +204,8 @@ class Threedimodel(DataSet):
                 area_DAMO,
                 area_model,
                 area_diff,
+                number_of_critical,
+                number_of_warning,
             ]
         statistics = statistics.fillna(0).astype(int)
         return statistics
