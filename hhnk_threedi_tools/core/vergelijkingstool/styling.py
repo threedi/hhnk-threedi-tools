@@ -34,6 +34,8 @@ def prepare_layers_for_export(
 ) -> Dict[str, gpd.GeoDataFrame]:
     """
     Prepare layers for export by exploding geometries and handling representative points.
+    Layers with mixed point+other geometry types are normalized to Point.
+    Layers with only lines, polygons or mixed lines/polygons are left as-is.
 
     :param table_C: Dictionary of GeoDataFrames
     :param filename: Output file path
@@ -55,11 +57,40 @@ def prepare_layers_for_export(
 
     # convert mixed-geometry layers to representative points to avoid mixed-type write errors
     for layer_name in list(table_C):
-        if len(table_C[layer_name].geometry.type.unique()) > 1:
-            logger.debug(
-                f"Layer {layer_name} has multiple geometry types: {table_C[layer_name].geometry.type.unique()}. Using representative point."
-            )
-            table_C[layer_name].geometry = table_C[layer_name].geometry.representative_point()
+        gdf = table_C[layer_name].copy()
+        # Check geometry types in layer
+        unique_types = set(gdf.geometry.geom_type.unique())
+        # expected geometry
+        point_types = {"Point", "MultiPoint"}
+        # Check if geometries are mixed point + other types
+        has_points = bool(unique_types & point_types)
+        # Check if all geometries are points
+        only_points = unique_types.issubset(point_types)
+
+        # Skip if no points involved, or if already all points
+        if not has_points or only_points:
+            table_C[layer_name] = gdf
+            continue
+
+        # Mixed point + other geometry types: normalize all to Point
+        logger.debug(
+            f"Layer {layer_name} has mixed point+other geometry types: {unique_types}. Normalizing all to Point."
+        )
+
+        def to_point(geom):
+            if geom is None:
+                return None
+            geometry_type = geom.geom_type
+            if geometry_type in ("Point", "MultiPoint"):
+                return geom
+            elif "Line" in geometry_type:
+                return geom.interpolate(0.5, normalized=True)
+            else:
+                return geom.centroid
+
+        gdf["geometry"] = gdf["geometry"].apply(to_point)
+        gdf = gdf.set_geometry("geometry")
+        table_C[layer_name] = gdf
 
     return table_C
 
