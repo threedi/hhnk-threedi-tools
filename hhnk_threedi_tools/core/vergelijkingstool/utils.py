@@ -8,6 +8,7 @@ from typing import Any, Dict, List, Optional, Union
 
 import fiona
 import geopandas as gpd
+import pandas as pd
 
 from hhnk_threedi_tools.core.folders import Folders
 from hhnk_threedi_tools.core.vergelijkingstool import config
@@ -363,3 +364,60 @@ def build_summary_layers(table_dict: Dict[str, gpd.GeoDataFrame]) -> Dict[str, g
         result[layer_name] = summary_gdf
 
     return result
+
+
+def get_waterway_category(
+    table_C: Dict[str, gpd.GeoDataFrame],
+    damo_filename: Union[str, Path],
+    category_col: str = "CATEGORIEOPPWATERLICHAAM",
+    both_col: str = "in_both",
+) -> Dict[str, gpd.GeoDataFrame]:
+    """
+    Enrich features not found in DAMO with category attribute via spatial join
+    with DAMO hydroobjects (lines), using nearest neighbour.
+
+    :param table_C: Dictionary of GeoDataFrames
+    :param damo_filename: Path to DAMO geopackage
+    :param category_col: Column name for category attribute in hydroobjects
+    :param both_col: Column name indicating presence in DAMO/model
+    :return: Modified table_C
+    """
+
+    hydroobjects = gpd.read_file(damo_filename, layer="hydroobject")
+
+    for layer_name in table_C.keys():
+        gdf = table_C[layer_name].copy()
+
+        if both_col not in gdf.columns:
+            logger.debug(f"Layer {layer_name} has no '{both_col}' column, skipping enrichment.")
+            continue
+
+        mask_missing = gdf[both_col].str.contains(r"\ssqlite$", na=False)
+        missing = gdf[mask_missing].copy()
+        present = gdf[~mask_missing].copy()
+
+        if missing.empty:
+            logger.debug(f"Layer {layer_name} has no missing features, skipping enrichment.")
+            continue
+
+        logger.debug(f"Layer {layer_name}: enriching {len(missing)} features not in DAMO.")
+
+        get_category = gpd.sjoin_nearest(
+            missing,
+            hydroobjects[[category_col, "geometry"]].to_crs(missing.crs),
+            how="left",
+            distance_col="_join_distance",
+        )
+
+        get_category["ws_categorie_damo"] = get_category[category_col]
+
+        get_category = get_category.drop(columns=[category_col, "index_right", "_join_distance"], errors="ignore")
+        get_category = get_category[~get_category.index.duplicated(keep="first")]
+
+        table_C[layer_name] = gpd.GeoDataFrame(
+            pd.concat([present, get_category], ignore_index=True),
+            geometry="geometry",
+            crs=gdf.crs,
+        )
+
+    return table_C
