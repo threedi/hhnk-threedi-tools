@@ -676,9 +676,23 @@
                     "fix_type": "automatic",
                     "fix_method": {
                         "custom_hydamo": {
-							"custom_function_name": "fix_equal_or_logic",
-							"if_cat_1": 0.5,
-							"if_cat_else": 0.3
+							"custom_function_name": "if_else",
+							"logic": {
+								"GT": {
+									"left": "hoogteopening",
+									"right": "breedteopening"
+								}
+							},
+							"true": {
+								"equal": {
+									"to": "hoogteopening"
+								}
+							},
+							"false": {
+								"equal": {
+									"to": "breedteopening"
+								}
+							}
 						}
                     },
                     "fix_description": "aanname ahv categorie 1=0.5 of 0.3",
@@ -718,7 +732,7 @@
 							}
 						}
                     },
-                    "fix_description": "aanname ahv categorie 1=0.5 of 0.3",
+                    "fix_description": "aanname ahv categorie 1=0.5 of 0.3"
 				}
 			]
 		},

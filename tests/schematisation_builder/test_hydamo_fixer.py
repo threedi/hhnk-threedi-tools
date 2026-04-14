@@ -1,3 +1,4 @@
+# %%
 import shutil
 import sys
 
@@ -11,7 +12,7 @@ from hhnk_threedi_tools.core.schematisation_builder.HyDAMO_validator import vali
 from tests.config import TEMP_DIR, TEST_DIRECTORY
 
 LAYERS = ["duikersifonhevel"]
-
+# %%
 
 @pytest.mark.skipif(sys.version_info < (3, 12), reason="Requires Python 3.12 or higher")
 def test_hydamo_fixer(run_validation=False):
@@ -80,3 +81,4 @@ def test_hydamo_fixer(run_validation=False):
 
 if __name__ == "__main__":
     test_hydamo_fixer(run_validation=False)
+# %%
