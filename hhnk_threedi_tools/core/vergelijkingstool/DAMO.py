@@ -65,8 +65,10 @@ class DAMO(DataSet):
         # Clip data
         if clip_shape is not None:
             if isinstance(clip_shape, (str, Path)):
-                clip_shape = gpd.read_file(clip_shape).geometry.union_all()
-        self.data = self.clip_data(self.data, clip_shape)
+                gdf_clip = gpd.read_file(clip_shape)
+                gdf_clip["geometry"] = gdf_clip.geometry.buffer(300)
+                clip_shape = gdf_clip.geometry.union_all()
+            self.data = self.clip_data(self.data, clip_shape)
 
         # Add mapped layer names as DAMO attributes
         for key in self.data.keys():

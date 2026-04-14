@@ -75,6 +75,7 @@ def main(
     warnings.filterwarnings("ignore", "GeoSeries.notna", UserWarning)
 
     gdf_selection = gpd.read_file(fn_DAMO_selection, engine="pyogrio")
+    gdf_selection["geometry"] = gdf_selection.geometry.buffer(300)
     selection_shape = gdf_selection.union_all()
 
     # Create two damo_objects, supply with DAMO-file, HDB-file and optionally a translation_DAMO, translation_HDB or a
@@ -179,12 +180,10 @@ def main(
 
 if __name__ == "__main__":
     # name
-    path = r"D:\01.modelrepos\jkaptein\bwn_7_HUB"
+    path = r"G:\02_Werkplaatsen\06_HYD\Projecten\HKC26009 Maatregelen Afdelingen Zijpe\zijpe_west"
     model_info = get_model_info(path)
     source_data = model_info.source_data
 
-    # polder polygon. It should be a geopackge file
-    selection_shape = fn_DAMO_selection = model_info.damo_selection
     fn_threedimodel = model_info.fn_threedimodel
     # Base folder initial files.
     input_data_old = model_info.input_data_old
@@ -206,13 +205,13 @@ if __name__ == "__main__":
     fn_hdb_new = model_info.fn_hdb_new
 
     # Define outputs
-    fn_DAMO_comparison_export = out_put_files / "DAMO_comparison_159.gpkg"
+    fn_DAMO_comparison_export = out_put_files / "DAMO_test_v2.gpkg"
 
     # Layers To Compare DAMO_DAMO
     layer_selection = False
     layers_input_damo_selection = ["AfvoergebiedAanvoergebied", "PeilafwijkingGebied", "PeilgebiedPraktijk"]
     layers_input_hdb_selection = ["Levee_overstromingsmodel", "Sturing_3Di"]
-    fn_threedi_comparison_export = out_put_files / "test_jelle.gpkg"
+    fn_threedi_comparison_export = out_put_files / "3DI_v3.gpkg"
     # compare_with = "Damo Export vs Damo Updated"
     compare_with = "Damo Updated vs 3Di model"
     # config.UPDATE_SYMBOLOGY = True
