@@ -75,6 +75,20 @@ def _add_custom_kwargs(input_variables: dict, datamodel):
     return input_variables
 
 
+def _run_logic(gdf: gpd.GeoDataFrame, input_variables: dict):
+    logic = input_variables["kwargs"]["logic"]
+    function = next(iter(logic))
+    inputs = logic[function]
+    result = _process_logic_function(gdf, logic, inputs)
+    input_variables["kwargs"]["logic"] = result
+    return input_variables
+
+
+def _run_true_false():
+    _process_general_function()
+    return input_variables
+
+
 def _build_general_rules_lookup_table(validation_rules: Dict[str, Any]) -> Dict[str, Dict[str, Dict[str, Any]]]:
     """
     Build a lookup table for derived variables originating from 'general_rules'.
@@ -635,7 +649,9 @@ def review(
                         input_variables = _add_related_gdf(input_variables, new_datamodel, object_layer)
                     elif "custom_function_name" in input_variables.keys():
                         input_variables = _add_custom_kwargs(input_variables, new_datamodel)
-                        print(input_variables)
+                        if input_variables["custom_function_name"] == "if_else":
+                            input_variables = _run_logic(object_gdf, input_variables)
+                            input_variables = _run_true_false()
                     elif "join_object" in input_variables.keys():
                         input_variables = _add_join_gdf(input_variables, new_datamodel)
 
@@ -885,9 +901,12 @@ def execute(
                     if "related_object" in input_variables.keys():
                         input_variables = _add_related_gdf(input_variables, new_datamodel, object_layer)
                     elif "custom_function_name" in input_variables.keys():
-                        input_variables = _add_custom_kwargs(input_variables, new_datamodel)
-                        print(input_variables)
-                        print(rule["fix_method"][function])
+                        inputs = input_variables
+                        while "custom_function_name" in inputs.keys():
+                            input_variables = _add_custom_kwargs(inputs, new_datamodel)
+                            inputs = input_variables["kwargs"]
+                            print(input_variables)
+                            print(rule["fix_method"][function])
                     elif "join_object" in input_variables.keys():
                         input_variables = _add_join_gdf(input_variables, new_datamodel)
 
