@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 from scipy.interpolate import LinearNDInterpolator
-from scipy.spatial import Delaunay
+from scipy.spatial import Delaunay, cKDTree
 from shapely.geometry import LineString, Polygon
 from threedidepth import morton
 from threedigrid.admin.constants import NO_DATA_VALUE
@@ -180,44 +180,76 @@ def get_delaunay_grid(grid_gdf: gpd.GeoDataFrame, wlvl_column: str, no_data_valu
     return gdf
 
 
-def get_interpolator(
-    grid_gdf: gpd.GeoDataFrame, wlvl_column: str, no_data_value: float, reorder=True
-) -> LinearNDInterpolator:
-    """LinearNDInterpolator op basis van Delauny triangulatie.
+# def get_interpolator(
+#     grid_gdf: gpd.GeoDataFrame, wlvl_column: str, no_data_value: float, reorder=True
+# ) -> LinearNDInterpolator:
+#     """LinearNDInterpolator op basis van Delauny triangulatie.
 
-    https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.LinearNDInterpolator.html
+#     https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.LinearNDInterpolator.html
 
-    Parameters
-    ----------
-    grid_gdf : gpd.GeoDataFrame
-        3Di grid in GeoDataFrame
-    wlvl_column : str
-        kolom in GeoDataFrame met waterstanden
-    no_data_value : float
-        no_data_value in 3Di grid
-    reorder : bool, optional
-        optie om threedidepth.morton.reorder uit te voeren, staat default op True
+#     Parameters
+#     ----------
+#     grid_gdf : gpd.GeoDataFrame
+#         3Di grid in GeoDataFrame
+#     wlvl_column : str
+#         kolom in GeoDataFrame met waterstanden
+#     no_data_value : float
+#         no_data_value in 3Di grid
+#     reorder : bool, optional
+#         optie om threedidepth.morton.reorder uit te voeren, staat default op True
 
-    Returns
-    -------
-    LinearNDInterpolator
-        LinearNDInterpolator
+#     Returns
+#     -------
+#     LinearNDInterpolator
+#         LinearNDInterpolator
+#     """
+
+#     # aanmaken delaunay grid
+#     gdf = get_delaunay_grid(grid_gdf, wlvl_column, no_data_value)
+
+#     # converteren naar numpy-array met punt_grid
+#     points_grid = gdf.get_coordinates().to_numpy()
+
+#     # inlezen waterstanden als numpy-array
+#     wlvl = gdf[wlvl_column].to_numpy()
+
+#     # herordenen volgens threedidepth (geen idee wat het doet)
+#     if reorder:
+#         points_grid, wlvl = morton.reorder(points_grid, wlvl)
+
+#     return LinearNDInterpolator(Delaunay(points_grid), wlvl)
+
+
+def get_interpolator(grid_gdf: gpd.GeoDataFrame, wlvl_column: str, no_data_value: float, reorder=True, k_neighbors=6):
+    """KDTree + IDW interpolator. Replaces LinearNDInterpolator to avoid
+    MemoryError during calculation. The reorder parameter is kept for
+    caunting but it is not used anymore.
     """
+    gdf = grid_gdf[grid_gdf[wlvl_column] != no_data_value]
 
-    # aanmaken delaunay grid
-    gdf = get_delaunay_grid(grid_gdf, wlvl_column, no_data_value)
+    points = np.column_stack([gdf.centroid.x, gdf.centroid.y])
 
-    # converteren naar numpy-array met punt_grid
-    points_grid = gdf.get_coordinates().to_numpy()
-
-    # inlezen waterstanden als numpy-array
     wlvl = gdf[wlvl_column].to_numpy()
 
-    # herordenen volgens threedidepth (geen idee wat het doet)
-    if reorder:
-        points_grid, wlvl = morton.reorder(points_grid, wlvl)
+    tree = cKDTree(points)
 
-    return LinearNDInterpolator(Delaunay(points_grid), wlvl)
+    def interpolator(x, y):
+        original_shape = x.shape
+        points = np.column_stack([x.ravel(), y.ravel()])
+
+        distances, indices = tree.query(points, k=k_neighbors, workers=-1)
+
+        # avoid division by zero by replacing zero distances with a very small number
+        distances = np.where(distances == 0, 1e-10, distances)
+
+        # IDW: peso = 1 / distancia^2
+        weights = 1.0 / distances**2
+        weights /= weights.sum(axis=1, keepdims=True)
+
+        result = (weights * wlvl[indices]).sum(axis=1)
+        return result.reshape(original_shape)
+
+    return interpolator
 
 
 """Calculate interpolated rasters from a grid. The grid_gdf is

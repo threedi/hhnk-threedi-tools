@@ -1,4 +1,5 @@
 # %%
+import glob
 import os
 import sys
 from pathlib import Path
@@ -16,7 +17,7 @@ from hhnk_threedi_tools.core.result_rasters.grid_to_raster import (
 )
 from hhnk_threedi_tools.core.result_rasters.netcdf_to_gridgpkg import NetcdfToGPKG
 
-schadeschatter_path = Path(r"E:\01.basisgegevens\hhnk_schadeschatter")
+schadeschatter_path = Path(r"Y:\01.basisgegevens\hhnk_schadeschatter")
 if str(schadeschatter_path) not in sys.path:
     sys.path.append(str(schadeschatter_path))
 import faulthandler
@@ -54,7 +55,7 @@ def grid_selection(grid_gdf, output_scenario_wss):
     else:
         vol_max = "vol_max"
 
-    active_cells = grid_gdf[grid_gdf[f"{vol_max}"] > 1.5]
+    active_cells = grid_gdf[grid_gdf[f"{vol_max}"] > 1]
     if active_cells.empty:
         print(f"There is no inundation for de polder {output_scenario_wss.parent.name}")
         return None
@@ -137,7 +138,7 @@ def calculate_depth_raster(region_paths, dem_path, OVERWRITE, EPSG, spatialResol
         # Define names of the outputfiles
         output_file = os.path.join(output_scenario_wss, "grid_raw.gpkg")
         mask_flood = os.path.join(output_scenario_wss, "mask_flood.gpkg")
-        dem_clip_output = os.path.join(output_scenario_wss, "dem_clip.vrt")
+        dem_clip_output = os.path.join(output_scenario_wss, "dem_clip.tif")
         output_file_depth = Path(os.path.join(output_scenario_wss, "max_wdepth_orig.tif"))
         print(output_file_depth)
         output_waterlevel_raster = Path(os.path.join(output_scenario_wss, "max_waterlevel_orig.tif"))
@@ -182,30 +183,50 @@ def calculate_depth_raster(region_paths, dem_path, OVERWRITE, EPSG, spatialResol
             new_grid_gdf = gpd.read_file(
                 os.path.join(output_scenario_wss, "new_grid.gpkg"), driver="GPKG", engine="pyogrio"
             )
-
+            new_grid_gdf = new_grid_gdf.loc[new_grid_gdf[vol_max] > 0]
             print(f"Calculating max level raster for scenario {netcdf_folder.parent.name} has started")
             # Set the parameters for the calculator
-            calculator_kwargs = {
-                "dem_path": dem_clip_output,
-                "grid_gdf": new_grid_gdf,
-                "wlvl_column": "wlvl_max",
-                # "wlvl_column": "wlvl_max_orig"
-            }
+
+            with GridToWaterLevel(
+                dem_path=dem_clip_output,
+                grid_gdf=new_grid_gdf,
+                wlvl_column="wlvl_max",
+            ) as raster_calc:
+                level_raster = raster_calc.run(
+                    output_file=output_waterlevel_raster,
+                    chunksize=512,
+                    overwrite=True,
+                )
+            with GridToWaterDepth(
+                dem_path=dem_clip_output,
+                wlvl_path=output_waterlevel_raster,
+            ) as raster_calc:
+                _ = raster_calc.run(
+                    output_file=output_file_depth,
+                    overwrite=True,
+                )
+
+            # calculator_kwargs = {
+            #     "dem_path": dem_clip_output,
+            #     "grid_gdf": new_grid_gdf,
+            #     "wlvl_column": "wlvl_max_replaced",
+            #     # "wlvl_column": "wlvl_max_orig"
+            # }
 
             # Initialize the GridToWaterLevel class and run the calculation
 
-            faulthandler.enable()
-            with GridToWaterLevel(**calculator_kwargs) as self:
-                self.run(output_file=output_waterlevel_raster, overwrite=True)
+            # faulthandler.enable()
+            # with GridToWaterLevel(**calculator_kwargs) as self:
+            #     self.run(output_file=output_waterlevel_raster, chunksize=32, overwrite=True)
 
-            calculator_kwargs = {
-                "dem_path": dem_clip_output,
-                "wlvl_path": output_waterlevel_raster,
-            }
-            # Initialize the GridToWaterDepth class and run the calculation
-            with GridToWaterDepth(**calculator_kwargs) as self:
-                print(f"Calculating max water depth raster for scenario {netcdf_folder.parent.name} has started")
-                self.run(output_file=output_file_depth, overwrite=True)
+            # calculator_kwargs = {
+            #     "dem_path": dem_clip_output,
+            #     "wlvl_path": output_waterlevel_raster,
+            # }
+            # # Initialize the GridToWaterDepth class and run the calculation
+            # with GridToWaterDepth(**calculator_kwargs) as self:
+            #     print(f"Calculating max water depth raster for scenario {netcdf_folder.parent.name} has started")
+            #     self.run(output_file=output_file_depth, overwrite=True)
 
         else:
             print(f"the {output_file_depth.stem} already exists, check in case to need replacement")
@@ -257,8 +278,14 @@ def calculate_damage_raster(region_paths, landuse_file, cfg_file, EPSG="EPSG:289
         output_scenario_wss = breach.wss.path
         mask_flood = os.path.join(output_scenario_wss, "mask_flood.gpkg")
         out_landuse = os.path.join(output_scenario_wss, "landuse_2021_clip.tif")
-        depth_file = os.path.join(output_scenario_wss, "max_wdepth_orig.tif")
-        depth_file_out = os.path.join(output_scenario_wss, "max_wdepth_orig_bounds_fix.tif")
+        pattern_water_depth_file = os.path.join(output_scenario_wss, "*_max_depth*.tif")
+        depth_file_out = os.path.join(output_scenario_wss, "wdepth_orig_bounds_fix.tif")
+
+        matches = glob.glob(pattern_water_depth_file)
+        if not matches:
+            raise FileNotFoundError("no water depth file found")
+
+        depth_file = matches[0]
 
         open_depth_raster = gdal.Open(depth_file)
         spatialResolution = open_depth_raster.GetGeoTransform()[1]
@@ -427,14 +454,12 @@ def create_pgn_dagame(region_paths):
 # %%
 if __name__ == "__main__":
     # Set the paths for the DEM, landuse file, base folder and configuration file
-    dem_path = r"E:\02.modellen\RegionalFloodModel\work in progress\schematisation\rasters\dem_1_met_amstelmeer.tif"
-    landuse_file = r"E:\01.basisgegevens\rasters\landgebruik\landuse2021_tiles\combined_rasters.vrt"
-    base_folder = r"E:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\output"
+    dem_path = r"Y:\02.modellen\RegionalFloodModel\work in progress\schematisation\rasters\dem_1_met_amstelmeer.tif"
+    landuse_file = r"Y:\01.basisgegevens\rasters\landgebruik\landuse2021_tiles\combined_rasters.vrt"
+    base_folder = r"Y:\03.resultaten\Normering Regionale Keringen\output"
     cfg_file = schadeschatter_path / "01_data/cfg/cfg_lizard.cfg"
     # ipo_paths_path = r"E:\03.resultaten\Normering Regionale Keringen\output\ipo_scenarios_paths.csv"
-    region_paths = [
-        r"E:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\output\ROR_PRI-dijktrajecten_12-1_12-2_13-6_13-7_Deel_Zuid\ROR-PRI-OOSTERDIJK_VAN_DRECHTERLAND_0.5-T1000",
-    ]
+    region_paths = [r"Y:\03.resultaten\Normering Regionale Keringen\output\IPO_SBLN_JA_WIP_DONE\IPO_SBLN_968_JA"]
     # Set the parameters for the calculation
     OVERWRITE = False
     EPSG = "EPSG:28992"
@@ -456,7 +481,7 @@ if __name__ == "__main__":
     specefic_scenario = False
     # region_paths = get_paths(base_folder, scenario_name=None, specific_scenario=specefic_scenario, skip=skip)
 
-    # calculate_depth_raster(region_paths, dem_path, OVERWRITE, EPSG, spatialResolution)
+    calculate_depth_raster(region_paths, dem_path, OVERWRITE, EPSG, spatialResolution)
     calculate_damage_raster(region_paths, landuse_file, cfg_file, EPSG)
     save_damage_csv(region_paths)
     create_pgn_dagame(region_paths)
