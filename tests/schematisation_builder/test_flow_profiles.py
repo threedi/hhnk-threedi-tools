@@ -35,12 +35,14 @@ def test_profiel_flow():
     logger = hrt.logging.get_logger(__name__)
 
     raw_export_file_path = TEST_DIRECTORY / "schematisation_builder" / "raw_export.gpkg"
+    dem_path = TEST_DIRECTORY / "model_test" / "02_schematisation" / "00_basis" / "rasters" / "dem_hoekje.tif"
     temp_dir_out = TEMP_DIR / f"temp_profiel_flow_{hrt.current_time(date=True)}"
     Path(temp_dir_out).mkdir(parents=True, exist_ok=True)
     output_file_path = temp_dir_out / "damo.gpkg"
 
     raw_export_converter = RawExportToDAMOConverter(
         raw_export_file_path=raw_export_file_path,
+        dem_path=dem_path,
         output_file_path=output_file_path,
         logger=logger,
     )

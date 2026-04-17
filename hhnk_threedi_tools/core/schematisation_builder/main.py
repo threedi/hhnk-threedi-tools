@@ -102,7 +102,10 @@ class SchematisationBuilder:
                 raw_export_file_path=self.raw_export_file_path,
                 output_file_path=self.damo_file_path,
                 logger=self.logger,
+                hdb_file_path=self.project.folders.source_data.hdb.path,
             )
+
+            raw_export_converter.data.dem_path = self.project.folders.source_data.dem.path
 
             # Run all converters
             for converter_class in CONVERTERS:
@@ -142,6 +145,10 @@ class SchematisationBuilder:
             if not validation_rules_json_path.exists():
                 shutil.copyfile(resources_validationrules_path, validation_rules_json_path)
 
+            validation_styling_path = resources_validationrules_path = hrt.get_pkg_resource_path(
+                schematisation_builder_resources, "styling.gpkg"
+            )
+
             if not Path(coverage_location).exists():
                 raise FileNotFoundError(
                     f"Coverage data for validation not found in {coverage_location}. Please provide location with index.shp and tiles to this location."
@@ -151,6 +158,7 @@ class SchematisationBuilder:
                 hydamo_file_path=self.hydamo_file_path,
                 validation_rules_json_path=validation_rules_json_path,
                 validation_directory_path=validation_directory_path,
+                template_file_path=validation_styling_path,
                 coverages_dict={"AHN": coverage_location},
                 output_types=["geopackage"],
             )
