@@ -46,7 +46,8 @@ def prepare_layers_for_export(
     # Ensure output file handling and normalize geometries for export.
     if Path(filename).exists():
         if overwrite:
-            Path.unlink(filename)
+            # Path.unlink(filename) python 3.9+
+            Path(filename).unlink()  # python 3.9-
         else:
             raise FileExistsError(
                 f'The file "{filename}" already exists. If you want to overwrite the existing file, add overwrite=True to the function.'

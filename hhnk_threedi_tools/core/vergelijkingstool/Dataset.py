@@ -408,11 +408,10 @@ class DataSet:
                     table_name = comparison["table"]
                     self.logger.debug(f"Start applying attribute comparison, table name {table_name}")
                     if table_name in table.keys():
-                        print(table_name)
                         table = self.compare_attribute(table, comparison)
                     else:
                         # table not present in this dataset, skip it
-                        print(f"The table {table_name} is not included in the comparision process")
+                        self.logger.debug(f"The table {table_name} is not included in the comparision process")
 
         except json.decoder.JSONDecodeError as err:
             self.logger.error(
@@ -489,4 +488,5 @@ class DataSet:
         for layer_name, summary_gdf in summary_layers.items():
             layer_out_name = f"{layer_name}_summary"
             self.logger.debug(f"Exporting summary table {layer_out_name} to {filename}")
-            summary_gdf.to_file(filename, layer=layer_out_name, driver="GPKG")
+            # summary_gdf.to_file(filename, layer=layer_out_name, driver="GPKG") #python 3.9+ only
+            summary_gdf.to_file(filename, layer=layer_out_name, driver="GPKG", engine="pyogrio")  # python 3.9-
