@@ -1,0 +1,385 @@
+# %%
+# importing external dependencies
+import logging
+import os
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple, Union
+
+import geopandas as gpd
+import numpy as np
+import pandas as pd
+
+import hhnk_threedi_tools.core.vergelijkingstool.config as config
+from hhnk_threedi_tools.core.vergelijkingstool import styling, utils
+from hhnk_threedi_tools.core.vergelijkingstool.config import *
+from hhnk_threedi_tools.core.vergelijkingstool.Dataset import DataSet
+from hhnk_threedi_tools.core.vergelijkingstool.qml_styling_files import Threedi as Threedi_styling_path
+from hhnk_threedi_tools.core.vergelijkingstool.styling import *
+from hhnk_threedi_tools.core.vergelijkingstool.utils import ModelInfo
+
+
+class Threedimodel(DataSet):
+    def __init__(self, filename: Union[str, Path], model_info: ModelInfo, translation: Optional[dict] = None) -> None:
+        """
+        Create a Threedimodel object and reads the data from the 3Di schematisation sqlite.
+        If translation dictionaries are supplied, layer and column names are mapped.
+
+        :param filename: Path of the .sqlite file to be loaded
+        :param translation: Path of the translation dictionary to be used
+        """
+        super().__init__(model_info)
+
+        self.json_files_path = model_info.json_folder
+        self.styling_path = Path(Threedi_styling_path.__file__).resolve().parent
+
+        self.model_info = model_info
+        self.model_name = model_info.model_name
+        self.sourcedata = model_info.source_data
+        self.damo_new = model_info.fn_damo_new
+        self.model_path = model_info.fn_threedimodel
+        self.logger = logging.getLogger("Threedimodel")
+        self.logger.debug("Created Threedimodel object")
+        self.THREEDI_STRUCTURE_LAYERS = config.THREEDI_STRUCTURE_LAYERS
+        self.DAMO_HDB_STRUCTURE_LAYERS = config.DAMO_HDB_STRUCTURE_LAYERS
+        self.data = utils.load_file_and_translate(
+            damo_filename=None,
+            hdb_filename=None,
+            threedi_filename=filename,
+            translation_3Di=self.json_files_path / "threedi_translation.json",
+            layer_selection=None,
+            layers_input_threedi_selection=None,
+            mode="threedi",
+        )
+
+        try:
+            if self.damo_new.exists():
+                self.data["channel"] = utils.update_channel_codes(
+                    self.data["channel"], self.data["cross_section_location"], self.damo_new, self.model_path
+                )
+
+        except Exception as e:
+            self.logger.warning("model couln not be updated")
+
+        self.max_value_from_tabulated()
+
+        # Set priority columns
+        self.priority_columns = {}
+
+        for key in self.data.keys():
+            self.__setattr__(key, self.data[key])
+
+    def max_value_from_tabulated(self) -> None:
+        """
+        Determine the maximum value in a tabultated string
+        :param self:
+        :return: Maximum value for each gdf
+        """
+        for layer in self.data:
+            # layer = 'cross_section_location'
+            # If this layer contains cross section tabulated data, compute max values.
+            if "cross_section_table" in (self.data[layer].keys()):
+                gdf = self.data[layer]
+
+                max_widths = []
+                max_heights = []
+                for index, row in gdf.iterrows():
+                    shape = row.cross_section_shape
+                    cross_section_table = row.cross_section_table
+                    # handle shape 2 directly from width/height columns
+                    if shape == 2 or shape == 1:
+                        cross_section_max_width = row.cross_section_width
+                        cross_section_max_height = row.cross_section_height
+                    # parse tabulated string into numeric array and take maxima
+                    elif cross_section_table is not None:
+                        data = [list(map(float, line.split(","))) for line in cross_section_table.strip().split("\n")]
+                        array = np.array(data)
+                        cross_section_max_width = np.max(array[:, 1])
+                        cross_section_max_height = np.max(array[:, 0])
+                    # shape 5 fallback uses width and crest_level
+                    elif shape == 5 and cross_section_table is None:
+                        cross_section_max_width = row.cross_section_width
+                        cross_section_max_height = row.crest_level
+                    max_widths.append(cross_section_max_width)
+                    max_heights.append(cross_section_max_height)
+
+                gdf["cross_section_max_width"] = max_widths
+                gdf["cross_section_max_height"] = max_heights
+
+    def determine_statistics(self, table_C: Dict[str, gpd.GeoDataFrame]) -> pd.DataFrame:
+        """
+        Per layer aggregate statistics like amount of entries, total length or total area for a layer,
+        and compare these model statistics with DAMO statistics.
+
+        :param table_C: Dict with GeoDataFrames containing the compared data
+        :return: DataFrame containing statistics
+        """
+        # prepare empty statistics dataframe with expected columns
+        statistics = pd.DataFrame(
+            columns=[
+                "Count DAMO",
+                "Count 3Di",
+                "Count difference",
+                "Length DAMO",
+                "Length 3Di",
+                "Length difference",
+                "Area DAMO",
+                "Area 3Di",
+                "Area difference",
+                "Number of Critical",
+                "Number of Warning",
+            ]
+        )
+
+        model_name = self.model_name
+        for i, layer_name in enumerate(table_C):
+            # count features for model and DAMO per layer using 'in_both' marker
+            count_model = len(
+                table_C[layer_name].loc[
+                    (table_C[layer_name]["in_both"] == f"{model_name} sqlite")
+                    | (table_C[layer_name]["in_both"] == f"{model_name} both")
+                ]
+            )
+            count_DAMO = len(
+                table_C[layer_name].loc[
+                    (table_C[layer_name]["in_both"] == f"{model_name} damo")
+                    | (table_C[layer_name]["in_both"] == f"{model_name} both")
+                ]
+            )
+            count_diff = count_model - count_DAMO
+
+            # sum geometry-based metrics (length/area) per dataset
+            length_model = sum(
+                table_C[layer_name]
+                .loc[
+                    (table_C[layer_name]["in_both"] == f"{model_name} sqlite")
+                    | (table_C[layer_name]["in_both"] == f"{model_name} both")
+                ]
+                .geom_length_model
+            )
+
+            length_DAMO = sum(
+                table_C[layer_name]
+                .loc[
+                    (table_C[layer_name]["in_both"] == f"{model_name} damo")
+                    | (table_C[layer_name]["in_both"] == f"{model_name} both")
+                ]
+                .geom_length_damo
+            )
+            length_diff = length_model - length_DAMO
+
+            area_model = sum(
+                table_C[layer_name]
+                .loc[
+                    (table_C[layer_name]["in_both"] == f"{model_name} sqlite")
+                    | (table_C[layer_name]["in_both"] == f"{model_name} both")
+                ]
+                .geom_area_model
+            )
+            area_DAMO = sum(
+                table_C[layer_name]
+                .loc[
+                    (table_C[layer_name]["in_both"] == f"{model_name} damo")
+                    | (table_C[layer_name]["in_both"] == f"{model_name} both")
+                ]
+                .geom_area_damo
+            )
+
+            if "number_of_critical" in table_C[layer_name].columns:
+                number_of_critical = table_C[layer_name]["number_of_critical"].sum()
+            else:
+                number_of_critical = 0
+
+            if "number_of_warning" in table_C[layer_name].columns:
+                number_of_warning = table_C[layer_name]["number_of_warning"].sum()
+            else:
+                number_of_warning = 0
+            area_diff = area_model - area_DAMO
+            statistics.loc[layer_name, :] = [
+                count_DAMO,
+                count_model,
+                count_diff,
+                length_DAMO,
+                length_model,
+                length_diff,
+                area_DAMO,
+                area_model,
+                area_diff,
+                number_of_critical,
+                number_of_warning,
+            ]
+        statistics = statistics.fillna(0).astype(int)
+        return statistics
+
+    def export_comparison_3di(
+        self,
+        table_C: Dict[str, gpd.GeoDataFrame],
+        statistics: pd.DataFrame,
+        filename: Union[str, Path],
+        overwrite: bool = False,
+        crs: Optional[Any] = None,
+    ) -> None:
+        """
+        Export all compared layers and statistics to a GeoPackage.
+
+        :param table_C: Dictionary containing a GeoDataframe per layer
+        :param statistics: Dataframe containing the statistics
+        :param filename: Filename of the GeoPackage to export to
+        :param overwrite: If true it will delete the old GeoPackage
+        :param styling_path: Path to folder containing .qml files. For each layer in table_C it will lookup a .qml file
+        with the exact same name as the layer
+        :return:
+        """
+
+        styling_path = self.styling_path
+
+        # add styling to layers and write gpkg
+        layer_styles = styling.export_comparison_3di(
+            table_C,
+            statistics,
+            filename,
+            model_info=self.model_info,
+            overwrite=overwrite,
+            styling_path=styling_path,
+            crs=self.crs,
+        )
+        # attach QML styling to the exported layers
+        self.add_layer_styling(fn_export_gpkg=filename, layer_styles=layer_styles)
+
+        # Export statistics table and summary layers
+        self.export_statistics(statistics, filename)
+        self.logger.info(f"Finished exporting to {filename}")
+
+        # summary per shape
+        self.export_summary_layers(table_C, filename)
+
+        self.logger.info(f"Finished exporting to {filename}")
+
+    def compare_with_DAMO(
+        self,
+        DAMO: Any,
+        filename: Optional[Union[str, Path]] = None,
+        overwrite: bool = False,
+        threedi_layer_selector: bool = False,
+        structure_codes: Optional[List[str]] = None,
+    ) -> Tuple[Dict[str, gpd.GeoDataFrame], pd.DataFrame]:
+        """
+        Compare the Threedi object with a DAMO object.
+        Looks in all layers containing structures (defined in the config.py) for the 'code' column. Creates a joined
+        GeoDataFrame for each structure code ('KDU','KBR', etc., also defined in config.py)
+
+        :param DAMO: DAMO object
+        :param attribute_comparison: Path to JSON file containing attribute comparison
+        :param filename: Path to GeoPackage file to export the comparison to
+        :param overwrite: Boolean indicating if the export file can be overwritten if it already exists
+        :param styling_path: Path to folder containing .qml files for styling the layers
+        :return: Dictionary containing GeoDataframes with compared data and a Dataframe with statistics
+        """
+        attribute_comparison = self.json_files_path / "model_attribute_comparison.json"
+
+        # sort model and damo data by structure code instead of model and damo layers
+        model_name = self.model_name
+        table_struc_model: Dict[str, gpd.GeoDataFrame] = {}
+        table_struc_DAMO: Dict[str, gpd.GeoDataFrame] = {}
+
+        if threedi_layer_selector is True:
+            STRUCTURE_CODES = structure_codes
+        else:
+            STRUCTURE_CODES = config.STRUCTURE_CODES
+            print("threedi layer selection is OFF")
+
+        for struc in STRUCTURE_CODES:
+            # collect per-structure GeoDataFrames from model and DAMO
+            table_struc_model[struc] = self.get_structure_by_code(struc, THREEDI_STRUCTURE_LAYERS)
+            table_struc_DAMO[struc] = DAMO.get_structure_by_code(struc, DAMO_HDB_STRUCTURE_LAYERS)
+
+        table_C: Dict[str, gpd.GeoDataFrame] = {}
+        for layer in table_struc_model.keys():
+            # check and align CRS between model and DAMO
+            self.logger.debug(f"the crs for {layer}")
+            if table_struc_model[layer].empty:
+                self.logger.debug(f"One of the datasets for {layer} is empty, skipping comparison")
+                continue
+            else:
+                if table_struc_DAMO[layer].crs == table_struc_model[layer].crs:
+                    self.logger.debug(f"CRS of DAMO and model data {layer} is equal")
+                else:
+                    self.logger.debug(f"CRS of DAMO and model data {layer} is not equal")
+
+                    table_struc_model[layer] = (
+                        table_struc_model[layer].set_crs(epsg=4326).to_crs(crs=table_struc_DAMO[layer].crs)
+                    )
+            self.crs = table_struc_DAMO[layer].crs
+
+            # Add geometry information (length/area) to dataframe
+            table_struc_model[layer] = self.add_geometry_info(table_struc_model[layer])
+            table_struc_DAMO[layer] = self.add_geometry_info(table_struc_DAMO[layer])
+
+            # mark presence in dataset for later 'in_both' column
+            table_struc_model[layer]["dataset"] = True
+            table_struc_DAMO[layer]["dataset"] = True
+
+            # outer merge on the two tables with suffixes
+            table_struc_model[layer] = (
+                table_struc_model[layer].add_suffix("_model").rename(columns={"code_model": "code"})
+            )
+            table_struc_DAMO[layer] = table_struc_DAMO[layer].add_suffix("_damo").rename(columns={"code_damo": "code"})
+
+            table_merged = table_struc_model[layer].merge(table_struc_DAMO[layer], how="outer", on="code")
+            table_merged["geometry"] = None
+            table_merged = gpd.GeoDataFrame(table_merged, geometry="geometry")
+            # fillna values of the two columns by False
+            table_merged[["dataset_model", "dataset_damo"]] = table_merged[["dataset_model", "dataset_damo"]].fillna(
+                value=False
+            )
+
+            # add column with values model, damo or both, depending on code
+            inboth = []
+
+            for i in range(len(table_merged)):
+                if table_merged["dataset_model"][i] & table_merged["dataset_damo"][i]:
+                    inboth.append(f"{model_name} both")
+                elif table_merged["dataset_model"][i] and not table_merged["dataset_damo"][i]:
+                    inboth.append(f"{model_name} sqlite")
+                else:
+                    inboth.append(f"{model_name} damo")
+            table_merged["in_both"] = inboth
+
+            # use geometry of model when feature exists in model or in both model and damo. Use geometry of damo when feature only exists in damo
+            mask_geom_model = table_merged.loc[
+                (table_merged["in_both"] == f"{model_name} sqlite") | (table_merged["in_both"] == f"{model_name} both")
+            ]
+            mask_geom_DAMO = table_merged.loc[table_merged["in_both"] == (f"{model_name} damo")]
+            geom = pd.concat([mask_geom_model["geometry_model"], mask_geom_DAMO["geometry_damo"]])
+            table_merged["geometry"] = geom
+            table_merged = self.drop_unused_geoseries(table_merged, keep="geometry")
+            if table_merged.columns.__contains__("the_geom_model"):
+                table_merged.drop(columns=["the_geom_model"], inplace=True)
+            table_C[layer] = gpd.GeoDataFrame(
+                self.drop_unused_geoseries(table_merged, keep="geometry"), geometry="geometry"
+            )
+
+        # check if the attribute comparison JSON file exists and apply attribute comparison if it does, otherwise skip this step
+        if attribute_comparison is not None:
+            # print(f"applying attribute comparison, {self.json_files_path}")
+            # table_C["KDU"].columns
+
+            # Apply attribute comparison
+            table_C = self.apply_attribute_comparison(attribute_comparison, table_C)
+            table_C = self.summarize_attribute_comparison(table_C)
+            table_C = utils.add_priority_summaries(table_C)
+            table_C = utils.get_waterway_category(table_C, self.damo_new, "CATEGORIEOPPWATERLICHAAM", "in_both")
+
+        # determine statistics: count amount of shapes per layer for model and damo
+        statistics = self.determine_statistics(table_C)
+
+        # export to filename
+        if filename is not None:
+            self.export_comparison_3di(table_C, statistics, filename, overwrite=overwrite, crs=self.crs)
+
+        # statistics.to_csv(r"E:\02.modellen\castricum\01_source_data\vergelijkingsTool\output\statistics_threedi.csv", sep = ';')
+        # table_C[layer].to_csv(r"E:\02.modellen\castricum\01_source_data\vergelijkingsTool\output\TableC_threedi.csv", sep = ';')
+
+        return table_C, statistics
+
+
+# %%
