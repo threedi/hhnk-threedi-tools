@@ -19,11 +19,3 @@ if exist "%EXPLICIT_ROOT%\pixi.toml" (
 )
 
 pixi run python %*
-set "rc=%ERRORLEVEL%"
-
-if %rc% neq 0 (
-    echo Error: Python script failed (exit %rc%)
-)
-
-popd
-exit /b %rc%

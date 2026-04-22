@@ -1,5 +1,4 @@
 import logging
-import os
 from pathlib import Path
 from typing import List
 
@@ -33,14 +32,18 @@ def run(repo_root: Path):
         changed_files: List[Path] = dump_files_in_directory(repo_root)
 
     if len(changed_files) > 0:
+        changed_files_list = "\n".join([f"- {f.relative_to(repo_root)}" for f in changed_files])
+        message = f"Er zijn extra bestanden omgezet, ga terug naar Github Desktop\n\nVolgende bestanden nog aangepast/toegevoegd:\n{changed_files_list}"
+
         # some hacky way to force GitHub Desktop to regain focus and refresh the changed file list
-        show_message_mbox("Nieuwe omzetting", "Er zijn extra bestanden omgezet, ga terug naar Github Desktop")
+        show_message_mbox("Nieuwe omzetting", message)
 
         # add logging, so it will be displayed in GitHub Desktop
         stderr = "Volgende bestanden nog aangepast/ toegevoegd:\n%s" % "".join(
             [f"- {f.relative_to(repo_root)}\n" for f in changed_files]
         )
         logger.info(stderr)
+
         # write to stderr to show the user what files are changed
         print(stderr)
         exit(1)
