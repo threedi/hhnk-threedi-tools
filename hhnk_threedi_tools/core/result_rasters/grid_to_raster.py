@@ -225,27 +225,33 @@ def get_interpolator(grid_gdf: gpd.GeoDataFrame, wlvl_column: str, no_data_value
     MemoryError during calculation. The reorder parameter is kept for
     caunting but it is not used anymore.
     """
-    gdf = grid_gdf[grid_gdf[wlvl_column] != no_data_value]
+    gdf = grid_gdf[grid_gdf["vol_max"] > 1]
 
+    # convert to numpy array using the centroid of the grid cells, as this is what we want to interpolate to
     points = np.column_stack([gdf.centroid.x, gdf.centroid.y])
 
     wlvl = gdf[wlvl_column].to_numpy()
 
+    # this object return data from the nearest neighbors, so we can do IDW interpolation and method to query.
     tree = cKDTree(points)
 
     def interpolator(x, y):
         original_shape = x.shape
+
+        # taxe de 2d pixels from the dem and reshape to a list of points to query the tree with
         points = np.column_stack([x.ravel(), y.ravel()])
 
+        # query the tree for the k nearest neighbors of each point and get the distances and indices of those neighbors
         distances, indices = tree.query(points, k=k_neighbors, workers=-1)
 
         # avoid division by zero by replacing zero distances with a very small number
         distances = np.where(distances == 0, 1e-10, distances)
 
-        # IDW: peso = 1 / distancia^2
+        # IDW: weights = 1 / distances^2
         weights = 1.0 / distances**2
+        # normalize weights so that they sum to 1 for each point
         weights /= weights.sum(axis=1, keepdims=True)
-
+        # calculate the interpolated value as the weighted average of the neighbors' values
         result = (weights * wlvl[indices]).sum(axis=1)
         return result.reshape(original_shape)
 
