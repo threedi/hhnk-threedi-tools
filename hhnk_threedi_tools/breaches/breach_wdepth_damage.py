@@ -26,7 +26,7 @@ faulthandler.enable()
 
 
 # %%
-# This function clips a DEM raster to a shapefile and saves it in VRT.
+# This function clips a DEM raster to a shapefile and saves it in VRT  or GTIF.
 def clip_DEM(inputraster, outputraster, projection, shapefile, resolution, raster_format):
     if not os.path.exists(outputraster):
         options = gdal.WarpOptions(
@@ -50,43 +50,23 @@ def grid_selection(grid_gdf, output_scenario_wss):
     # active_cells = grid_gdf[grid_gdf["vol_max"] > 1.5]
 
     # IPO due to different versions
-    if "vol_netcdf_m3" in grid_gdf.columns:
-        vol_max = "vol_netcdf_m3"
-    else:
-        vol_max = "vol_max"
+    vol_max = "vol_netcdf_m3" if "vol_netcdf_m3" in grid_gdf.columns else "vol_max"
 
-    active_cells = grid_gdf[grid_gdf[f"{vol_max}"] > 1]
-    if active_cells.empty:
+    grid_gdf_new = grid_gdf[grid_gdf[vol_max] > 1]
+
+    if grid_gdf_new.empty:
         print(f"There is no inundation for de polder {output_scenario_wss.parent.name}")
         return None
     else:
-        # buffer active cells
-        active_cells_buffer = gpd.GeoDataFrame.buffer(active_cells, 1)
-        # add geomtery to active cells.
-        cells_buffer_gdf = gpd.GeoDataFrame(geometry=active_cells_buffer)
-
-        # Add a column to disolve grids and create a single shape  explode the shape file in case there are many.
-        cells_buffer_gdf["disolve"] = 1
-        cells_disolve = cells_buffer_gdf.dissolve(by="disolve").explode()
-
-        # clip grid_gdf witht  the previous shapefile to select the grid to be used for rasterized
-        grid_selection = grid_gdf.clip(cells_disolve)
-
-        # Selct the id from selection from clipped grid
-        filter_id = grid_selection["id"]
-        grid_gdf_new = grid_gdf[grid_gdf["id"].isin(filter_id)]
-
-        # Save the new grid to a file
         new_grid_output = os.path.join(output_scenario_wss, "new_grid.gpkg")
         grid_gdf_new.to_file(new_grid_output, driver="GPKG", engine="pyogrio")
 
-        # disolve grid selection
         grid_gdf_new["disolve"] = 1
         mask = grid_gdf_new.dissolve(by="disolve")
 
-        # save file
         mask_path = os.path.join(output_scenario_wss, "mask_flood.gpkg")
         mask.to_file(mask_path, driver="GPKG")
+
         return grid_gdf
 
 
@@ -138,9 +118,8 @@ def calculate_depth_raster(region_paths, dem_path, OVERWRITE, EPSG, spatialResol
         # Define names of the outputfiles
         output_file = os.path.join(output_scenario_wss, "grid_raw.gpkg")
         mask_flood = os.path.join(output_scenario_wss, "mask_flood.gpkg")
-        dem_clip_output = os.path.join(output_scenario_wss, "dem_clip.tif")
+        dem_clip_output = os.path.join(output_scenario_wss, "dem_clip.vrt")
         output_file_depth = Path(os.path.join(output_scenario_wss, "max_wdepth_orig.tif"))
-        print(output_file_depth)
         output_waterlevel_raster = Path(os.path.join(output_scenario_wss, "max_waterlevel_orig.tif"))
 
         # start the convertion from netcdf to gpkg
@@ -170,7 +149,7 @@ def calculate_depth_raster(region_paths, dem_path, OVERWRITE, EPSG, spatialResol
             else:
                 vol_max = "vol_max"
 
-            if grid_gdf[grid_gdf[f"{vol_max}"] > 1.5].empty:
+            if grid_gdf[grid_gdf[f"{vol_max}"] > 1].empty:
                 continue
             print(f"The grid for scenario {breach.name} already exists")
 
@@ -178,12 +157,12 @@ def calculate_depth_raster(region_paths, dem_path, OVERWRITE, EPSG, spatialResol
         if not os.path.exists(output_file_depth):
             print(os.path.exists(output_file_depth))
             # clip the DEM to be used to calculate the depth raster
-            clip_DEM(DEM_location, dem_clip_output, EPSG, mask_flood, spatialResolution, raster_format="GTiff")
+            clip_DEM(DEM_location, dem_clip_output, EPSG, mask_flood, spatialResolution, raster_format="VRT")
 
             new_grid_gdf = gpd.read_file(
                 os.path.join(output_scenario_wss, "new_grid.gpkg"), driver="GPKG", engine="pyogrio"
             )
-            new_grid_gdf = new_grid_gdf.loc[new_grid_gdf[vol_max] > 0]
+            new_grid_gdf = new_grid_gdf.loc[new_grid_gdf["vol_max"] > 1]
             print(f"Calculating max level raster for scenario {netcdf_folder.parent.name} has started")
             # Set the parameters for the calculator
 
@@ -192,16 +171,15 @@ def calculate_depth_raster(region_paths, dem_path, OVERWRITE, EPSG, spatialResol
                 grid_gdf=new_grid_gdf,
                 wlvl_column="wlvl_max",
             ) as raster_calc:
-                level_raster = raster_calc.run(
+                wlvl_raster = raster_calc.run(
                     output_file=output_waterlevel_raster,
-                    chunksize=512,
                     overwrite=True,
                 )
             with GridToWaterDepth(
                 dem_path=dem_clip_output,
                 wlvl_path=output_waterlevel_raster,
             ) as raster_calc:
-                _ = raster_calc.run(
+                wdepth_raster = raster_calc.run(
                     output_file=output_file_depth,
                     overwrite=True,
                 )
@@ -277,24 +255,24 @@ def calculate_damage_raster(region_paths, landuse_file, cfg_file, EPSG="EPSG:289
         breach = Breaches(region_path)
         output_scenario_wss = breach.wss.path
         mask_flood = os.path.join(output_scenario_wss, "mask_flood.gpkg")
-        out_landuse = os.path.join(output_scenario_wss, "landuse_2021_clip.tif")
-        pattern_water_depth_file = os.path.join(output_scenario_wss, "*_max_depth*.tif")
-        depth_file_out = os.path.join(output_scenario_wss, "wdepth_orig_bounds_fix.tif")
+        out_landuse = os.path.join(output_scenario_wss, "landuse_2021_clip.vrt")
+        pattern_water_depth_file = os.path.join(output_scenario_wss, "*max_wdepth_orig*.tif")
+        # depth_file_out = os.path.join(output_scenario_wss, "wdepth_orig_bounds_fix.tif")
 
         matches = glob.glob(pattern_water_depth_file)
         if not matches:
             raise FileNotFoundError("no water depth file found")
 
-        depth_file = matches[0]
+        depth_file_out = matches[0]
 
-        open_depth_raster = gdal.Open(depth_file)
+        open_depth_raster = gdal.Open(depth_file_out)
         spatialResolution = open_depth_raster.GetGeoTransform()[1]
         open_depth_raster = None
 
         # clip landuse
-        clip_DEM(landuse_file, out_landuse, EPSG, mask_flood, spatialResolution, raster_format="GTiff")
+        clip_DEM(landuse_file, out_landuse, EPSG, mask_flood, spatialResolution, raster_format="VRT")
         # clip depth
-        clip_DEM(depth_file, depth_file_out, EPSG, mask_flood, spatialResolution, raster_format="GTiff")
+        # clip_DEM(depth_file, depth_file_out, EPSG, mask_flood, spatialResolution, raster_format="GTiff")
 
         # set the file to run damage raster calculation
         self_wss = hrt.Waterschadeschatter(
