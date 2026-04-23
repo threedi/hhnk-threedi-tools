@@ -151,6 +151,34 @@
 						}
 					},
 					"description": "berekent de breedte van het profiel op basis van de profielpunten"
+				},
+				{
+					"id": 110, 
+					"result_variable": "taludlinks",
+					"function": {
+						"custom_hydamo": {
+							"custom_function_name": "on_profiellijn_compute_talud_links"
+						}
+					}
+				},
+				{
+					"id": 111, 
+					"result_variable": "taludrechts",
+					"function": {
+						"custom_hydamo": {
+							"custom_function_name": "on_profiellijn_compute_talud_rechts"
+						}
+					}
+				},
+				{
+					"id": 112, 
+					"result_variable": "waterdiepte_tov_streefpeil",
+					"function": {
+						"difference": {
+							"left": "dieptenatprofiel",
+							"right": "streefpeil"
+						}
+					}
 				}
 			],
 			"validation_rules": [
@@ -334,6 +362,66 @@
 						"EQ": {
 							"left": "isascending",
 							"right": 1
+						}
+					},
+					"auto_fixable": false
+				},
+				{
+					"id": 109,
+					"name": "talud links plausibel",
+					"description": "Het linker talud van het profiel moet plausibel zijn",
+					"type": "logic",
+					"validation_rule_set": "hhnk",
+					"error_type": "critical",
+					"result_variable": "profiel_talud_links_plausibel",
+					"error_message": "profiel talud links niet plausibel",
+					"active": true,
+					"function": {
+						"BE": {
+							"parameter": "talud_links",
+							"min": 0.1,
+							"max": 30,
+							"inclusive": true
+						}
+					},
+					"auto_fixable": false
+				},
+				{
+					"id": 110,
+					"name": "talud rechts plausibel",
+					"description": "Het rechter talud van het profiel moet plausibel zijn",
+					"type": "logic",
+					"validation_rule_set": "hhnk",
+					"error_type": "critical",
+					"result_variable": "profiel_talud_rechts_plausibel",
+					"error_message": "profiel talud rechts niet plausibel",
+					"active": true,
+					"function": {
+						"BE": {
+							"parameter": "talud_rechts",
+							"min": 0.1,
+							"max": 30,
+							"inclusive": true
+						}
+					},
+					"auto_fixable": false
+				},
+				{
+					"id": 111,
+					"name": "waterdiepte ten opzichte van streefpeil plausibel",
+					"description": "De waterdiepte ten opzichte van het streefpeil moet plausibel zijn",
+					"type": "logic",
+					"validation_rule_set": "hhnk",
+					"error_type": "critical",
+					"result_variable": "waterdiepte_tov_streefpeil_plausibel",
+					"error_message": "waterdiepte ten opzichte van streefpeil niet plausibel",
+					"active": true,
+					"function": {
+						"BE": {
+							"parameter": "waterdiepte_tov_streefpeil",
+							"min": 0.1,
+							"max": 30,
+							"inclusive": true
 						}
 					},
 					"auto_fixable": false
@@ -700,25 +788,12 @@
                     "fix_method": {
                         "custom_hydamo": {
 							"custom_function_name": "if_else",
-							"logic": {
-								"GT": {
-									"left": "hoogteopening",
-									"right": "breedteopening"
-								}
-							},
-							"true": {
-								"equal": {
-									"to": "hoogteopening"
-								}
-							},
-							"false": {
-								"equal": {
-									"to": "breedteopening"
-								}
+							"logic": -9999,
+							"true": 1,
+							"false": 0
 							}
-						}
-                    },
-                    "fix_description": "aanname ahv categorie 1=0.5 of 0.3",
+						},
+                    "fix_description": "aanname ahv categorie 1=0.5 of 0.3"
 				}
 			]
 		},

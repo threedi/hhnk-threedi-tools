@@ -5,6 +5,12 @@ import fiona
 import geopandas as gpd
 import numpy as np
 import pandas as pd
+from core.schematisation_builder.fixer.mapping import (
+    _fix_iterations,
+    _validation_ids,
+    _validation_iterations,
+    _validation_mapping,
+)
 from hydamo_validation import __version__
 from hydamo_validation.datamodel import HyDAMO
 from hydamo_validation.summaries import LayersSummary, ResultSummary
@@ -191,6 +197,13 @@ class ExtendedHyDAMO(HyDAMO):
         for hydamo_layer in self.layers:
             self.validation_results[hydamo_layer] = getattr(validation_results, hydamo_layer)
             self.validation_rules[hydamo_layer] = next((obj for obj in objects if obj["object"] == hydamo_layer), {})
+
+        self.validation_mapping = _validation_mapping(
+            datamodel=self, layers=self.layers, include_topologic=True, omit_topologic_as_none=False
+        )
+        self.validation_ids = _validation_ids(self.validation_mapping)
+        self.validation_iterations = _validation_iterations(self.validation_mapping)
+        self.fix_iterations = _fix_iterations(self.validation_rules, self.validation_mapping, self.validation_ids)
 
         self._set_properties()
 

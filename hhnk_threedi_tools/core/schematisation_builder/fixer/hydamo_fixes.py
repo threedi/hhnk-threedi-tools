@@ -5,6 +5,7 @@ from typing import Any, Dict, List, Set, Tuple
 import geopandas as gpd
 import numpy as np
 import pandas as pd
+from core.schematisation_builder.fixer.mapping import _get_validation_ids_for_attribute
 from core.schematisation_builder.fixer.summaries import ExtendedHyDAMO, ExtendedLayersSummary, ExtendedResultSummary
 from hhnk_research_tools.logging import logging
 from hydamo_validation import logical_validation
@@ -89,354 +90,51 @@ def _run_true_false():
     return input_variables
 
 
-def _build_general_rules_lookup_table(validation_rules: Dict[str, Any]) -> Dict[str, Dict[str, Dict[str, Any]]]:
+def _iterate_by_rounds(data: dict, execution_dict: dict[str, int]):
     """
-    Build a lookup table for derived variables originating from 'general_rules'.
-
-    This transforms the validation rules structure into a quick‑access mapping:
-        {
-            layer_name: {
-                result_variable_name: <function-definition-dict>
-            }
-        }
-
-    Parameters
-    ----------
-    validation_rules : dict
-        Raw validation‑rules dictionary read from validationrules.json. Expected
-        structure:
-            validation_rules[layer]["general_rules"] → list of rules
-
-    Returns
-    -------
-    dict
-        Nested mapping enabling efficient recursive evaluation of general rule
-        dependencies when resolving input variables.
-
-        {
-          layer_name: {
-              result_variable_name: { <function dict> }
-          }
-        }
+    Yields (round_num, key, value) from `data` in execution round order.
     """
-    lookup: Dict[str, Dict[str, Dict[str, Any]]] = {}
-    for layer, ruleset in validation_rules.items():
-        general_rules = ruleset.get("general_rules", [])
-        layer_lookup: Dict[str, Dict[str, Any]] = {}
-        for gr in general_rules:
-            # NOTE: your JSON uses "result_variable" for name
-            rv = gr.get("result_variable")
-            if rv and "function" in gr:
-                layer_lookup[rv] = gr["function"]
-        lookup[layer] = layer_lookup
-    return lookup
+    rounds = sorted(set(execution_dict.values()))
+
+    for round_num in rounds:
+        keys_in_round = [k for k, r in execution_dict.items() if r == round_num]
+        for key in keys_in_round:
+            yield round_num, key, data[key]
 
 
-def _extract_inputs_from_function(
-    func: Dict[str, Any],
-    current_layer: str,
-    layers: Set[str],
-    columns_by_layer: Dict[str, Set[str]],
-    general_lookup_by_layer: Dict[str, Dict[str, Dict[str, Any]]],
-    seen_general: Set[Tuple[str, str]] | None = None,
-) -> List[Dict[str, Any]]:
+def _iterate_by_steps(fix_rules: list[dict], fix_iterations: dict[str, dict[int, list[int]]]):
     """
-    Recursively extract all concrete input references required by a function
-    definition used in logical/general/topologic rules.
+    Yields (step, rule) from `fix_rules` ordered by fix_iterations.
 
-    This handles:
-    - nested function definitions
-    - derived variables (recursively expanding them)
-    - object‑prefixed references pointing to other layers
-    - geometry.* references
-    - whole‑object references when no attribute is explicitly provided
+    Iterates iteration keys in ascending order. Within each key, fix_ids are
+    yielded in ascending order. The step label is the iteration key if the
+    group contains one item, or '{iteration_num}.{pos}' (1-based) if multiple.
 
-    Parameters
-    ----------
-    func : dict
-        Single‑function dictionary where the key is the function name and the
-        value is its parameter mapping.
-    current_layer : str
-        Layer for which the function is being evaluated.
-    layers : set[str]
-        Set of all available layer names in the datamodel.
-    columns_by_layer : dict[str, set[str]]
-        Mapping of available columns for each layer.
-    general_lookup_by_layer : dict
-        Lookup table for derived variables constructed by
-        `_build_general_rules_lookup_table`.
-    seen_general : set of (layer, variable), optional
-        Used to prevent infinite recursion when derived variables depend on
-        each other.
-
-    Returns
-    -------
-    list of dict
-        List of resolved input references, each item of the form:
-            {"object": <layer>, "attribute": <column-or-None>}
+    Args:
+        fix_rules: List of fix rule dicts, each containing at least 'fix_id'.
+        fix_iterations: Full nested dict mapping layer -> {iteration_num: [fix_ids]}.
+            e.g. {'duikersifonhevel': {1: [], 2: [10], 3: [11, 12]}}
     """
+    fix_id_to_rule: dict[int, dict] = {rule["fix_id"]: rule for rule in fix_rules}
+    fix_ids_in_rules: set[int] = set(fix_id_to_rule.keys())
 
-    if seen_general is None:
-        seen_general = set()
+    # Find the layer sub-dict whose fix_ids overlap with the provided fix_rules
+    layer_iterations: dict[int, list[int]] = {}
+    for layer_dict in fix_iterations.values():
+        all_fids = {fid for fids in layer_dict.values() for fid in fids}
+        if fix_ids_in_rules & all_fids:
+            layer_iterations = layer_dict
+            break
 
-    fname = next(iter(func))
-    params = func[fname]
-    inputs: List[Dict[str, Any]] = []
-    prefix = ""
-
-    # -------------------------------------------------------------
-    # STEP 1 — Detect object references via "*object*" in key
-    # -------------------------------------------------------------
-    referenced_objects: Dict[str, str] = {}  # {object: prefix}
-    for key, val in params.items():
-        if "object" in key.lower() and isinstance(val, str) and val in layers:
-            prefix = key.lower().split("object")[0].rstrip("_")
-            referenced_objects[val] = prefix
-
-    # -------------------------------------------------------------
-    # STEP 2 — Process each parameter
-    # -------------------------------------------------------------
-    for key, val in params.items():
-        # ----------------------------
-        # CASE A — numeric → ignore
-        # ----------------------------
-        if isinstance(val, (int, float, bool)) or val is None:
-            continue
-
-        # ----------------------------
-        # CASE B — nested function
-        # ----------------------------
-        if isinstance(val, dict) and len(val) == 1:
-            nested = _extract_inputs_from_function(
-                val,
-                current_layer,
-                layers,
-                columns_by_layer,
-                general_lookup_by_layer,
-                seen_general,
-            )
-            inputs.extend(nested)
-            continue
-
-        # ----------------------------
-        # CASE C — string only
-        # ----------------------------
-        if isinstance(val, str):
-            # RULE: If val is a derived variable on current layer → expand recursively
-            if val in general_lookup_by_layer.get(current_layer, {}) and (current_layer, val) not in seen_general:
-                seen_general.add((current_layer, val))
-                derived = general_lookup_by_layer[current_layer][val]
-                sub = _extract_inputs_from_function(
-                    derived,
-                    current_layer,
-                    layers,
-                    columns_by_layer,
-                    general_lookup_by_layer,
-                    seen_general,
-                )
-                inputs.extend(sub)
+    for iteration_num in sorted(layer_iterations.keys()):
+        fix_ids = layer_iterations[iteration_num]
+        multiple = len(fix_ids) > 1
+        for pos, fix_id in enumerate(fix_ids, start=1):
+            rule = fix_id_to_rule.get(fix_id)
+            if rule is None:
                 continue
-
-            # RULE: If val is a column of current object and key does not start with a prefix → bind to current layer
-            if val in columns_by_layer[current_layer] or val.startswith("geometry."):
-                if referenced_objects:
-                    if not any([key.lower().startswith(prefix) for prefix in list(referenced_objects.values())]):
-                        inputs.append({"object": current_layer, "attribute": val})
-                        continue
-                else:
-                    inputs.append({"object": current_layer, "attribute": val})
-                    continue
-
-            # RULE: If val is a column of *another* object BUT only if key respects object-prefix rule
-            for obj, prefix in referenced_objects.items():
-                if key.lower().startswith(prefix):
-                    # RULE: val may be a derived variable on *referenced* object
-                    if val in general_lookup_by_layer.get(obj, {}) and (obj, val) not in seen_general:
-                        seen_general.add((obj, val))
-                        derived = general_lookup_by_layer[obj][val]
-                        sub = _extract_inputs_from_function(
-                            derived, obj, layers, columns_by_layer, general_lookup_by_layer, seen_general
-                        )
-                        inputs.extend(sub)
-                        break
-                    # Raw column on referenced object
-                    if val in columns_by_layer.get(obj, set()) or val.startswith("geometry."):
-                        inputs.append({"object": obj, "attribute": val})
-                        break
-
-    # -------------------------------------------------------------
-    # STEP 3 — Whole-object inference
-    # Only add {object: <obj>, attribute: None} if there is NO key
-    # in 'params' that starts with the object's prefix (besides the
-    # "<prefix>_object" key itself).
-    # -------------------------------------------------------------
-    for obj, prefix in referenced_objects.items():
-        has_prefixed_key = any(k.lower().startswith(prefix) and k.lower() != f"{prefix}_object" for k in params.keys())
-        # RULE: no attribute keys matching prefix → whole-object reference
-        if not has_prefixed_key:
-            inputs.append({"object": obj, "attribute": None})
-
-    # -------------------------------------------------------------
-    # STEP 4 — Deduplicate
-    # -------------------------------------------------------------
-    final = []
-    seen = set()
-    for inp in inputs:
-        k = (inp["object"], inp["attribute"])
-        if k not in seen:
-            seen.add(k)
-            final.append(inp)
-
-    return final
-
-
-def map_general_rule_inputs(
-    datamodel,
-    layers: List[str],
-) -> Dict[str, Dict[int, List[Dict[str, Any]]]]:
-    """
-    Build a mapping of general-rule input dependencies for each layer.
-
-    This extracts, for each general rule:
-    - all referenced layers
-    - all referenced attributes
-    - recursively included derived variables
-
-    Parameters
-    ----------
-    datamodel : ExtendedHyDAMO
-        HyDAMO datamodel containing layers, validation rules, and metadata.
-    layers : list[str]
-        List of layer names to analyze.
-
-    Returns
-    -------
-    dict
-        {
-          layer_name: {
-            general_rule_id: [
-                {"object": <layer>, "attribute": <attribute or None>},
-                ...
-            ]
-          }
-        }
-    """
-
-    # Cache columns per layer
-    columns_by_layer: Dict[str, Set[str]] = {
-        layer: set(getattr(getattr(datamodel, layer), "columns", [])) for layer in layers
-    }
-
-    validation_rules = datamodel.validation_rules
-    general_lookup_by_layer = _build_general_rules_lookup_table(validation_rules)
-
-    mapping: Dict[str, Dict[int, List[Dict[str, Any]]]] = {}
-
-    for layer in layers:
-        mapping[layer] = {}
-
-        general_rules = validation_rules[layer].get("general_rules", [])
-        for gr in general_rules:
-            gid = gr["id"]
-            func = gr["function"]
-
-            inputs = _extract_inputs_from_function(
-                func=func,
-                current_layer=layer,
-                layers=set(layers),
-                columns_by_layer=columns_by_layer,
-                general_lookup_by_layer=general_lookup_by_layer,
-            )
-
-            mapping[layer][gid] = inputs
-
-    return mapping
-
-
-def map_validation_rule_inputs(
-    datamodel,
-    layers: List[str],
-    include_topologic: bool = True,
-    omit_topologic_as_none: bool = False,
-) -> Dict[str, Dict[int, List[Dict[str, Any]]]]:
-    """
-    Build a mapping of validation-rule input dependencies for each layer.
-
-    This captures the exact (object, attribute) pairs required to evaluate
-    each validation rule, including:
-    - logic rules
-    - general rules
-    - optional topologic rules (depending on settings)
-
-    Parameters
-    ----------
-    datamodel : ExtendedHyDAMO
-        Datamodel containing layer GeoDataFrames and validation rules.
-    layers : list[str]
-        List of layers to process.
-    include_topologic : bool, default True
-        If False, topologic rules are excluded from the mapping.
-    omit_topologic_as_none : bool, default False
-        If True and topologic rules are excluded, insert a dummy record of the form:
-            {"object": <layer>, "attribute": None}
-
-    Returns
-    -------
-    dict
-        Nested mapping from layer → rule-id → resolved input references.
-
-    {
-        <layer_name>: {
-            <validation_rule_id>: [
-                {"object": <layer>, "attribute": <attribute>},
-                ...
-            ],
-            ...
-        },
-        ...
-    }
-    """
-    # Cache columns per layer
-    columns_by_layer: Dict[str, Set[str]] = {}
-    for layer in layers:
-        gdf = getattr(datamodel, layer)
-        columns_by_layer[layer] = set(getattr(gdf, "columns", []))
-
-    # Prebuild derived-variable lookups per layer
-    validation_rules = getattr(datamodel, "validation_rules")
-    general_lookup_by_layer = _build_general_rules_lookup_table(validation_rules)
-
-    mapping: Dict[str, Dict[int, List[Dict[str, Any]]]] = {}
-
-    for layer in layers:
-        mapping[layer] = {}
-        ruleset = validation_rules.get(layer, {})
-        vrules = ruleset.get("validation_rules", [])
-
-        for rule in vrules:
-            rid = rule.get("id", None)
-            func = rule.get("function", {})
-            is_topologic = rule.get("type", "") == "topologic"
-
-            if rid is None:
-                # Skip invalid rule entries
-                continue
-
-            inputs = _extract_inputs_from_function(
-                func=func,
-                current_layer=layer,
-                layers=set(layers),
-                columns_by_layer=columns_by_layer,
-                general_lookup_by_layer=general_lookup_by_layer,
-            )
-
-            if is_topologic and not include_topologic:
-                # Omit or emit a recognizable placeholder
-                mapping[layer][rid] = [{"object": layer, "attribute": None}] if omit_topologic_as_none else []
-            else:
-                mapping[layer][rid] = inputs
-
-    return mapping
+            step = f"{iteration_num}.{pos}" if multiple else str(iteration_num)
+            yield step, rule
 
 
 def _invalid_indices(gdf: gpd.GeoDataFrame, validation_result: gpd.GeoDataFrame, validation_ids: list[int]):
@@ -564,6 +262,8 @@ def review(
     ## create an updated datamodel based on datamodel post processing information
     object_rules_sets = deepcopy(new_datamodel.validation_rules)
     validation_results = deepcopy(new_datamodel.validation_results)
+    validation_mapping = deepcopy(new_datamodel.validation_mapping)
+
     logger.info(
         rf"lagen met valide objecten en regels: {[i for i in list(object_rules_sets.keys())]}"
     )  ## add check to tell which objects have fixes
@@ -649,9 +349,9 @@ def review(
                         input_variables = _add_related_gdf(input_variables, new_datamodel, object_layer)
                     elif "custom_function_name" in input_variables.keys():
                         input_variables = _add_custom_kwargs(input_variables, new_datamodel)
-                        if input_variables["custom_function_name"] == "if_else":
-                            input_variables = _run_logic(object_gdf, input_variables)
-                            input_variables = _run_true_false()
+                        # if input_variables["custom_function_name"] == "if_else":
+                        #     input_variables = _run_logic(object_gdf, input_variables)
+                        #     input_variables = _run_true_false()
                     elif "join_object" in input_variables.keys():
                         input_variables = _add_join_gdf(input_variables, new_datamodel)
 
@@ -797,11 +497,15 @@ def execute(
     ## create an updated datamodel based on datamodel post processing information
     object_rules_sets = deepcopy(new_datamodel.validation_rules)
     validation_results = deepcopy(new_datamodel.validation_results)
+    validation_mapping = deepcopy(new_datamodel.validation_mapping)
+    validation_iterations = deepcopy(new_datamodel.validation_iterations)
+    fix_iterations = deepcopy(new_datamodel.fix_iterations)
+
     logger.info(
         rf"lagen met valide objecten en regels: {[i for i in list(object_rules_sets.keys())]}"
     )  ## add check to tell which objects have fixes
-    for object_layer, object_rules in object_rules_sets.items():
-        logger.info(f"{object_layer}: start")
+    for round, object_layer, object_rules in _iterate_by_rounds(object_rules_sets, validation_iterations):
+        logger.info(f"Round {round}: start fix for {object_layer}")
         object_gdf: gpd.GeoDataFrame = getattr(
             new_datamodel, object_layer
         ).copy()  ## check if the copy is redundant for our purpose
@@ -810,71 +514,11 @@ def execute(
         for col in SUMMARY_COLUMNS:
             object_gdf[col] = ""
 
-        # general rule section
-        if keep_general and "general_rules" in object_rules.keys():
-            general_rules = object_rules["general_rules"]
-            general_rules_sorted = sorted(general_rules, key=lambda k: k["id"])
-            for rule in general_rules_sorted:
-                logger.info(f"{object_layer}: uitvoeren general-rule met id {rule['id']}")
-                try:
-                    result_variable = rule["result_variable"]
-                    result_variable_name = f"general_{rule['id']:03d}_{rule['result_variable']}"
-
-                    # get function
-                    function = next(iter(rule["function"]))
-                    input_variables = rule["function"][function]
-
-                    # remove all nan indices
-                    indices = logical_validation._notna_indices(object_gdf, input_variables)
-                    dropped_indices = [i for i in object_gdf.index[object_gdf.index.notna()] if i not in indices]
-
-                    # add object_relation
-                    if "related_object" in input_variables.keys():
-                        input_variables = _add_related_gdf(input_variables, datamodel, object_layer)
-                    elif "custom_function_name" in input_variables.keys():
-                        input_variables = _add_custom_kwargs(input_variables, datamodel)
-                        print(input_variables)
-                    elif "join_object" in input_variables.keys():
-                        input_variables = _add_join_gdf(input_variables, datamodel)
-
-                    if dropped_indices:
-                        result_summary.append_warning(
-                            logical_validation._nan_message(
-                                len(dropped_indices),
-                                object_layer,
-                                rule["id"],
-                                "general_rule",
-                            )
-                        )
-                    if object_gdf.loc[indices].empty:
-                        object_gdf[result_variable] = np.nan
-                    else:
-                        result = _process_general_function(object_gdf.loc[indices], function, input_variables)
-                        object_gdf.loc[indices, result_variable] = result
-
-                except Exception as e:
-                    logger.error(f"{object_layer}: general_rule {rule['id']} crashed width Exception {e}")
-                    result_summary.append_error(
-                        (
-                            "general_rule niet uitgevoerd. Inspecteer de invoer voor deze regel: "
-                            f"(object: '{object_layer}', id: '{rule['id']}', function: '{function}', "
-                            f"input_variables: {input_variables}, Reason (Exception): {e})"
-                        )
-                    )
-                    if raise_error:
-                        raise e
-                    else:
-                        pass
-
         # fix rule section
         if "fix_rules" in object_rules.keys():
             fix_rules = object_rules["fix_rules"]
-            fix_rules_sorted = sorted(
-                fix_rules, key=lambda k: k["fix_id"]
-            )  ## deze sorting moet eigenlijk op basis van een execution algoritme
-            ## voor nu fixen we gewoon even alle fixes op basis van een oplopende fix_id volgorde
-            for rule in fix_rules_sorted:
-                logger.info(f"{object_layer}: uitvoeren fix-rule met id {rule['fix_id']}")
+            for step, rule in _iterate_by_steps(fix_rules, fix_iterations):
+                logger.info(f"{object_layer}: uitvoeren fix-rule stap {step} (id {rule['fix_id']})")
                 try:
                     attribute_name = rule["attribute_name"]
                     fix_attribute_name = f"fix_{rule['fix_id']:03d}_{rule['attribute_name']}"
@@ -883,7 +527,10 @@ def execute(
                     function = next(iter(rule["fix_method"]))
                     input_variables = rule["fix_method"][function]
                     logger.info(input_variables)
-                    validation_ids = rule["validation_ids"]
+                    validation_ids = _get_validation_ids_for_attribute(
+                        validation_mapping, object_layer, attribute_name
+                    )
+                    # validation_ids = rule["validation_ids"]
 
                     # find all invalid indices
                     indices = _invalid_indices(object_gdf, object_validation_result, validation_ids)
@@ -902,11 +549,12 @@ def execute(
                         input_variables = _add_related_gdf(input_variables, new_datamodel, object_layer)
                     elif "custom_function_name" in input_variables.keys():
                         inputs = input_variables
-                        while "custom_function_name" in inputs.keys():
-                            input_variables = _add_custom_kwargs(inputs, new_datamodel)
-                            inputs = input_variables["kwargs"]
-                            print(input_variables)
-                            print(rule["fix_method"][function])
+                        input_variables = _add_custom_kwargs(inputs, new_datamodel)
+                        # while "custom_function_name" in inputs.keys():
+                        #     input_variables = _add_custom_kwargs(inputs, new_datamodel)
+                        #     inputs = input_variables["kwargs"]
+                        #     print(input_variables)
+                        #     print(rule["fix_method"][function])
                     elif "join_object" in input_variables.keys():
                         input_variables = _add_join_gdf(input_variables, new_datamodel)
 
