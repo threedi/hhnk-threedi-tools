@@ -14,6 +14,7 @@ LAYERS = ["duikersifonhevel"]
 
 RUN_VALIDATION = False
 
+
 @pytest.mark.skipif(sys.version_info < (3, 12), reason="Requires Python 3.12 or higher")
 def test_hydamo_fixer():
     hydamo_file_path = TEST_DIRECTORY / "schematisation_builder" / "HyDAMO_validated.gpkg"
