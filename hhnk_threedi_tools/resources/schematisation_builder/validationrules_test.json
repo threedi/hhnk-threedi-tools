@@ -156,8 +156,8 @@
 					"id": 110, 
 					"result_variable": "taludlinks",
 					"function": {
-						"custom_hydamo": {
-							"custom_function_name": "on_profiellijn_compute_talud_links"
+						"equal": {
+							"to": -1
 						}
 					}
 				},
@@ -165,8 +165,8 @@
 					"id": 111, 
 					"result_variable": "taludrechts",
 					"function": {
-						"custom_hydamo": {
-							"custom_function_name": "on_profiellijn_compute_talud_rechts"
+						"equal": {
+							"to": 1
 						}
 					}
 				},
@@ -176,7 +176,7 @@
 					"function": {
 						"difference": {
 							"left": "dieptenatprofiel",
-							"right": "streefpeil"
+							"right": 0
 						}
 					}
 				}
@@ -378,7 +378,7 @@
 					"active": true,
 					"function": {
 						"BE": {
-							"parameter": "talud_links",
+							"parameter": "taludlinks",
 							"min": 0.1,
 							"max": 30,
 							"inclusive": true
@@ -398,7 +398,7 @@
 					"active": true,
 					"function": {
 						"BE": {
-							"parameter": "talud_rechts",
+							"parameter": "taludrechts",
 							"min": 0.1,
 							"max": 30,
 							"inclusive": true
@@ -763,10 +763,8 @@
                     "fix_action": "Derived assumption",
                     "fix_type": "automatic",
                     "fix_method": {
-                        "custom_hydamo": {
-							"custom_function_name": "fix_equal_or_logic",
-							"if_cat_1": 0.5,
-							"if_cat_else": 0.3
+                        "equal": {
+							"to": 0.5
 						}
                     },
                     "fix_description": "aanname ahv categorie 1=0.5 of 0.3",
@@ -786,14 +784,19 @@
                     "fix_action": "Derived assumption",
                     "fix_type": "automatic",
                     "fix_method": {
-                        "custom_hydamo": {
-							"custom_function_name": "if_else",
-							"logic": -9999,
-							"true": 1,
-							"false": 0
-							}
-						},
-                    "fix_description": "aanname ahv categorie 1=0.5 of 0.3"
+                        "equal": {
+							"to": 0.5
+						}
+                    },
+                    "fix_description": "aanname ahv categorie 1=0.5 of 0.3",
+					"filter": {
+						"ISIN": {
+							"parameter": "vormkoker",
+							"array": [
+								"Rond"
+							]
+						}
+					}
 				}
 			]
 		},
