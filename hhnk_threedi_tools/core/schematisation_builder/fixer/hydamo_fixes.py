@@ -139,7 +139,9 @@ def _iterate_by_steps(fix_rules: list[dict], fix_iterations: dict[str, dict[int,
             yield step, rule
 
 
-def _invalid_indices(gdf: gpd.GeoDataFrame, validation_result: gpd.GeoDataFrame, validation_ids: list[int]):
+def _invalid_indices(
+    gdf: gpd.GeoDataFrame, validation_result: gpd.GeoDataFrame, validation_ids: list[int]
+) -> list[int]:
     """
     Identify all row indices where any of the given validation rule IDs appear
     in one of the invalid columns ("invalid_critical", "invalid_non_critical",
@@ -172,7 +174,7 @@ def _invalid_indices(gdf: gpd.GeoDataFrame, validation_result: gpd.GeoDataFrame,
     return [i for i in invalid_indices if i in gdf.index]
 
 
-def _manual_indices(gdf: gpd.GeoDataFrame, review_gdf: gpd.GeoDataFrame, attribute: str, manual_column: str):
+def _manual_indices(gdf: gpd.GeoDataFrame, review_gdf: gpd.GeoDataFrame, manual_column: str):
     """
     Identify all row indices of the hydamo gdf where a value has been filled in the manual_overwrite column of the layer.
 
@@ -247,7 +249,7 @@ def _apply_manual_overwrites(
 
     review_gdf: gpd.GeoDataFrame = getattr(layers_summary, object_layer)
     manual_column = FixColumns(attribute_name).manual_overwrite
-    object_indices, review_indices = _manual_indices(object_gdf, review_gdf, attribute_name, manual_column)
+    object_indices, review_indices = _manual_indices(object_gdf, review_gdf, manual_column)
     if len(object_indices) != len(review_indices):
         logger.warning("Length of object_indices not equal to length of review_indices")
     if not object_indices:
@@ -495,6 +497,13 @@ def review(
                         f"{object_layer}: invullen fix kolommen voor {attribute_name} met validatie regels {attribute_validation_ids})"
                     )
                     review_gdf.loc[indices, fix_columns.fix_suggestion] = description
+
+                    # apply manual overwrites
+                    if object_layer in layers_summary.data_layers:
+                        review_gdf[fix_columns.manual_overwrite] = getattr(layers_summary, object_layer)[
+                            fix_columns.manual_overwrite
+                        ]
+
                     for _rule in validation_rules:
                         _rule_id: int = _rule["id"]
                         _error_type: str = _rule["error_type"]
@@ -688,11 +697,6 @@ def execute(
                     elif "custom_function_name" in input_variables.keys():
                         inputs = input_variables
                         input_variables = _add_custom_kwargs(inputs, new_datamodel)
-                        # while "custom_function_name" in inputs.keys():
-                        #     input_variables = _add_custom_kwargs(inputs, new_datamodel)
-                        #     inputs = input_variables["kwargs"]
-                        #     print(input_variables)
-                        #     print(rule["fix_method"][function])
                     elif "join_object" in input_variables.keys():
                         input_variables = _add_join_gdf(input_variables, new_datamodel)
 

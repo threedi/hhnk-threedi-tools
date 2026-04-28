@@ -42,6 +42,23 @@ def _continue(message="Would you like to proceed? (y/n): "):
             print("Please answer with 'y' or 'n'.")
 
 
+def pause_for_review(file_path: Path, logger: logging.Logger, result_summary: ExtendedResultSummary) -> bool:
+    """
+    Log a review pause, prompt the user to continue, and record the outcome.
+
+    Returns True if the user chooses to proceed, False otherwise.
+    """
+    logger.info("User review")
+    logger.info(f"Review: You can inspect or edit the review geopackage here: \n{file_path}")
+    logger.info("Review: Edit staged fixes manually by filling in values in the manual_overwrite columns.")
+    time.sleep(0.1)
+    if not _continue("Do you wish to proceed? Answering no will terminate the process. (y/n): "):
+        logger.info("Review: User does not want to proceed.")
+        result_summary.append_warning("Review: User has terminated the process during the review stage.")
+        result_summary.status = "terminated by user during review"
+        raise SystemExit("Process terminated by user during review.")
+
+
 def _read_schema(version: str, schemas_path: Path):
     schema_json = schemas_path.joinpath(rf"fixes_{version}.json").resolve()
     with open(schema_json) as src:
@@ -261,7 +278,6 @@ def _fixer(
             raise_error,
             keep_general=False,
         )
-
         # do fix review: append result to fix_summary
         result_summary.status = "fix-preparation (reviewing)"
         fix_preparation_result = []
@@ -277,21 +293,15 @@ def _fixer(
         )
         fix_preparation_result = fix_layers
 
-        ## ----------------
-        logger.info("\n" + "=" * 60)
-        logger.info(" PAUSE: User review required ")
-        logger.info("=" * 60)
-        logger.info(f"You can inspect or edit the file in: {results_path}")
-        logger.info("Please inspect/edit the files as needed.")
-        time.sleep(0.1)
-        # if not self._continue("Do you want to apply your fixes to HyDAMO? (y/n): "):
-        #     print("Hydamo fixer stopped at user request.")
-        #     print("Fixes not applied.")
+        # user review: pause the process and allow the user to review fixes
+        result_summary.status = "fix-review (pause for review)"
+        pause_for_review(review_path / "fix_summary.gpkg", logger, result_summary)
+
+        # read fix review: review and prepare for fix execution
         result_summary.status = "load fix summary"
         logger.info("start inladen van fix summary")
-        fix_summary = ExtendedLayersSummary.from_geopackage(file_path=dir_path / "fix_summary_manual.gpkg")
+        fix_summary = ExtendedLayersSummary.from_geopackage(file_path=review_path / "fix_summary.gpkg")
         fix_preparation_result = fix_summary.data_layers
-        ## -------------------
 
         # do fix execution: apply fixes and export results
         result_summary.status = "fix execution"
@@ -304,15 +314,17 @@ def _fixer(
             raise_error,
             keep_general=False,
         )
-        test_fix_summary, test_result_summary = hydamo_fixes.review(
+        result_summary.status = "fix review (manual overwrites)"
+        logger.info("start fix review van object-lagen met handmatige aanpassingen")
+        fix_summary, result_summary = hydamo_fixes.review(
             datamodel,
             fix_summary,
             result_summary,
             logger,
             raise_error,
         )
-        test_fix_layers = fix_summary.export(
-            results_path=review_path, gpkg_name="test_fix_summary.gpkg", output_types=OUTPUT_TYPES
+        fix_layers = fix_summary.export(
+            results_path=review_path, gpkg_name="fix_summary.gpkg", output_types=OUTPUT_TYPES
         )
 
         # finish validation and export results
