@@ -221,6 +221,16 @@ class LDO_API:
         logger.info(f"Saved external processing JSON to {json_path}")
         return json_path, data
 
+    def delete_scenario(self, scenario_id):
+        """Delete a scenario from LDO."""
+        
+        delete_url = self.url + f"scenarios/{scenario_id}"
+        response = requests.delete(delete_url, headers=self.headers_excel, timeout=30)
+        response.raise_for_status()
+        logger.info(f"Scenario_id={scenario_id} deleted successfully.")
+        data = response.json()
+        return data
+    
 
 # %%
 
