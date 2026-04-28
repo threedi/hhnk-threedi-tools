@@ -76,7 +76,11 @@ def main(
 
     gdf_selection = gpd.read_file(fn_DAMO_selection, engine="pyogrio")
     gdf_selection["geometry"] = gdf_selection.geometry.buffer(300)
-    selection_shape = gdf_selection.union_all() if hasattr(gdf_selection, "union_all") else gdf_selection.unary_union
+    selection_shape = (
+        gdf_selection.union_all()
+        if hasattr(gdf_selection, "union_all")
+        else gdf_selection.unary_union
+    )
 
     # Create two damo_objects, supply with DAMO-file, HDB-file and optionally a translation_DAMO, translation_HDB or a
     # clip_shape
@@ -195,6 +199,9 @@ if __name__ == "__main__":
     # Old DAMO (DCMB/FME export) location .
     fn_damo_old = model_info.fn_damo_old
 
+    # get polder polygon
+    fn_DAMO_selection = model_info.damo_selection
+
     # the last version
     fn_damo_new = model_info.fn_damo_new
 
@@ -209,7 +216,11 @@ if __name__ == "__main__":
 
     # Layers To Compare DAMO_DAMO
     layer_selection = False
-    layers_input_damo_selection = ["AfvoergebiedAanvoergebied", "PeilafwijkingGebied", "PeilgebiedPraktijk"]
+    layers_input_damo_selection = [
+        "AfvoergebiedAanvoergebied",
+        "PeilafwijkingGebied",
+        "PeilgebiedPraktijk",
+    ]
     layers_input_hdb_selection = ["Levee_overstromingsmodel", "Sturing_3Di"]
     fn_threedi_comparison_export = out_put_files / "3DI_v3.gpkg"
     # compare_with = "Damo Export vs Damo Updated"

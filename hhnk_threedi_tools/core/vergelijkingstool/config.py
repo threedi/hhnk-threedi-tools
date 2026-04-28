@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Dict
 
 # SQLite layers expected in 3Di schema
 SQLITE_LAYERS: List[str] = [
@@ -41,16 +41,14 @@ DAMO_LAYERS: List[str] = [
 ]
 
 # HDB layer names (HDB exports)
-HDB_LAYERS: List[str] = [
-    "Gemalen",
-    "Stuwen",
-    "Hydro_deelgebieden",
-    # "Keringen_hoge_lijnelementen",
-    "polderclusters",
-    # "randvoorwaarden",  # geen geom
-    "Sturing_kunstwerken",
-    "Duikers",
-]
+HDB_LAYERS: Dict[str, List[str]] = {
+    "Gemalen": ["Gemalen", "gemalen_op_peilgrens"],
+    "Stuwen": ["Stuwen", "stuwen_op_peilgrens"],
+    "Hydro_deelgebieden": ["Hydro_deelgebieden", "hydro_deelgebieden"],
+    "polderclusters": ["polderclusters"],
+    "Sturing_kunstwerken": ["sturing_kunstwerken", "Sturing_3Di"],
+    "Duikers": ["Duikers", "duikers_op_peilgrens"],
+}
 
 THREEDI_STRUCTURE_LAYERS: List[str] = [
     "culvert",

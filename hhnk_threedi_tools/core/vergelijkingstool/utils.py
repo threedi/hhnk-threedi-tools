@@ -117,6 +117,12 @@ def translate(data: Dict[str, gpd.GeoDataFrame], translation_file: Union[str, Pa
 
     return data
 
+def get_hdb_name(layer: str, layer_map: Dict[str, List[str]]) -> Optional[str]:
+    """Returns the canonical name for a layer, or None if not found."""
+    for hdb_name, version_name in layer_map.items():
+        if layer in version_name:
+            return hdb_name
+    return None
 
 def load_file_and_translate(
     damo_filename: Optional[Union[str, Path]] = None,
@@ -168,7 +174,8 @@ def load_file_and_translate(
                     logger.error(f"Error loading DAMO layer {layer}: {e}")
 
         for layer in layers_hdb:
-            if layer in config.HDB_LAYERS:
+            get_name = get_hdb_name(layer, config.HDB_LAYERS)
+            if get_name is not None:
                 # logger.debug(f"Reading HDB layer {layer}")
                 try:
                     gdf = gpd.read_file(hdb_filename, layer=layer)
