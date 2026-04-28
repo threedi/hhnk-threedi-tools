@@ -180,7 +180,7 @@ def main(
 
 if __name__ == "__main__":
     # name
-    path = r"G:\02_Werkplaatsen\06_HYD\Projecten\HKC26009 Maatregelen Afdelingen Zijpe\zijpe_west"
+    path = r"D:\01.modelrepos\jkaptein\bwn_7_HUB"
     model_info = get_model_info(path)
     source_data = model_info.source_data
 
@@ -203,6 +203,9 @@ if __name__ == "__main__":
 
     # the last version
     fn_hdb_new = model_info.fn_hdb_new
+
+    # get polder polygon
+    fn_DAMO_selection = model_info.damo_selection
 
     # Define outputs
     fn_DAMO_comparison_export = out_put_files / "DAMO_test_v2.gpkg"
