@@ -176,8 +176,8 @@ def load_file_and_translate(
                     logger.error(f"Error loading DAMO layer {layer}: {e}")
 
         for layer in layers_hdb:
-            canonical = get_hdb_name(layer, config.HDB_LAYERS)
-            if canonical is not None:
+            get_name = get_hdb_name(layer, config.HDB_LAYERS)
+            if get_name is not None:
                 # logger.debug(f"Reading HDB layer {layer}")
                 try:
                     gdf = gpd.read_file(hdb_filename, layer=layer)
