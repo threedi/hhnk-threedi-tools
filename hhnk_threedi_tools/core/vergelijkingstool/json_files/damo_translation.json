@@ -1,20 +1,31 @@
 {
-	"GW_PRO": {
-		"name": "GW_PRO",
+	"duikersifonhevel": {
+		"name": "duikersifonhevel",
 		"columns": {
-			"PROIDENT": "code"
+			"CODE": "code"
+			
 		}
 	},
-	"Waterdeel": {
-		"name": "Waterdeel",
+	"stuw": {
+		"name": "stuw",
 		"columns": {
-			"identificatie": "code"
+			"CODE": "code"
 		}
 	},
-	"GW_PRW": {
-		"name": "GW_PRW",
+	"gemaal": {
+		"name": "gemaal",
 		"columns": {
-			"PRW_ID": "code"
+			"CODE": "code"
 		}
-	}
+	},
+	"hydroobject": {
+    "name": "hydroobject",
+    "columns": {
+      "bodemhoogteNAP": "bodemhoogte_nap",
+      "WS_TALUD_LINKS": "WS_TALUD_LINKS",
+      "WS_TALUD_RECHTS": "WS_TALUD_RECHTS",
+      "WS_BODEMBREEDTE": "WS_BODEMBREEDTE",
+      "WS_IN_PEILGEBIED": "ws_in_peilgebied"
+    }
+  }
 }

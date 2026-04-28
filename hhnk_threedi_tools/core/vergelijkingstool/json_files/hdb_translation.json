@@ -1,17 +1,32 @@
 {
-	"gemalen_op_peilgrens": {
+	"gemalen": {
 		"name": "gemalen_op_peilgrens",
 		"columns": {
 			"CODE": "code",
-			"WS_CATEGORIE": "ws_categorie",
+			"modelleren_als": "modelleren_als",
 			"geometry": "geometry"
 		}
 	},
-    "stuwen_op_peilgrens": {
+	"duikers": {
+		"name": "duikers_op_peilgrens",
+		"columns": {
+			"CODE": "code",
+			"modelleren_als": "modelleren_als",
+			"geometry": "geometry"
+		}
+	},
+	"stuwen": {
 		"name": "stuwen_op_peilgrens",
 		"columns": {
 			"CODE": "code",
-			"kruinhoogte_hdb": "kruinhoogte",
+			"ws_categorie": "ws_categorie",
+			"geometry": "geometry"
+		}
+	},
+	"hydro_deelgebieden": {
+		"name": "hydro_deelgebieden",
+		"columns": {
+			"CODE": "code",
 			"geometry": "geometry"
 		}
 	}
