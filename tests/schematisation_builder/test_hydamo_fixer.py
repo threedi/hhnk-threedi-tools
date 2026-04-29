@@ -24,7 +24,7 @@ def test_hydamo_fixer():
         hydamo_file_path = TEST_DIRECTORY / "schematisation_builder" / "HyDAMO.gpkg"
         template_file_path = TEST_DIRECTORY / "schematisation_builder" / "style.gpkg"
         validation_rules_json_path = hrt.get_pkg_resource_path(
-            schematisation_builder_resources, "validationrules_test.json"
+            schematisation_builder_resources, "validationrules.json"
         )
         test_coverage_location = TEST_DIRECTORY / "schematisation_builder" / "dtm"  # should hold index.shp
 
@@ -40,15 +40,9 @@ def test_hydamo_fixer():
         shutil.copy2(validation_directory_path / "HyDAMO_validated.gpkg", hydamo_file_path)
 
     hydamo_file_path = TEST_DIRECTORY / "schematisation_builder" / "HyDAMO_validated.gpkg"
-    validation_rules_json_path = hrt.get_pkg_resource_path(
-        schematisation_builder_resources, "validationrules_test.json"
-    )
+    validation_rules_json_path = hrt.get_pkg_resource_path(schematisation_builder_resources, "validationrules.json")
     results_gpkg_path = TEST_DIRECTORY / "schematisation_builder" / "results.gpkg"
     fix_directory_path = TEMP_DIR / f"temp_hydamo_fixer_{hrt.current_time(date=True)}"
-
-    fix_directory_path.mkdir(parents=True, exist_ok=True)
-    fix_summary_manual_test_path = TEST_DIRECTORY / "schematisation_builder" / "fix_summary_manual.gpkg"
-    shutil.copy2(fix_summary_manual_test_path, fix_directory_path / "fix_summary_manual.gpkg")
 
     test_coverage_location = TEST_DIRECTORY / "schematisation_builder" / "dtm"  # should hold index.shp
     coverages_dict = {"AHN": test_coverage_location}

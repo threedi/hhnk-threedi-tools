@@ -409,7 +409,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/e9/08/b0814846b79399e585f974bbeebf5580fbe59e258ea7be64d9dfb253c84f/greenlet-3.2.4-cp312-cp312-win_amd64.whl
       - pypi: https://files.pythonhosted.org/packages/1b/6f/b9f2dbdded31b56ed5fcd03b9f0e468a0e9d582afbf961f3371bd6449a14/h5netcdf-1.7.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/cf/51/329e7436bf87ca6b0fe06dd0a3795c34bebe4ed8d6c44450a20565d57832/h5py-3.15.1-cp312-cp312-win_amd64.whl
-      - pypi: git+https://github.com/hhnk/HyDAMOValidatieModule.git?rev=main#2828bb233dacee47b43b516594de65a8ee525529
+      - pypi: git+https://github.com/hhnk/HyDAMOValidatieModule.git?rev=jz-hydamo-fixer#1f2ea8a28cf0227e974e226cd5f4c153772485c6
       - pypi: https://files.pythonhosted.org/packages/83/60/d497a310bde3f01cb805196ac61b7ad6dc5dcf8dce66634dc34364b20b4f/lazy_loader-0.4-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/87/fb/99f81ac72ae23375f22b7afdb7642aba97c00a713c217124420147681a2f/mako-1.3.10-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bd/24/12818598c362d7f300f18e74db45963dbcb85150324092410c8b49405e42/pyproject_hooks-1.2.0-py3-none-any.whl
@@ -3486,7 +3486,7 @@ packages:
   - pkg:pypi/httpx?source=hash-mapping
   size: 63082
   timestamp: 1733663449209
-- pypi: git+https://github.com/hhnk/HyDAMOValidatieModule.git?rev=main#2828bb233dacee47b43b516594de65a8ee525529
+- pypi: git+https://github.com/hhnk/HyDAMOValidatieModule.git?rev=jz-hydamo-fixer#1f2ea8a28cf0227e974e226cd5f4c153772485c6
   name: hydamo-validation
   version: 1.4.0
   requires_dist:
