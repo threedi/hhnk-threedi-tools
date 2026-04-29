@@ -593,7 +593,6 @@ def execute(
     result_summary: ExtendedResultSummary,
     logger: logging.Logger,
     raise_error: bool,
-    keep_general: bool = True,
 ) -> Tuple[ExtendedHyDAMO, ExtendedLayersSummary, ExtendedResultSummary]:
     """
     Apply fix-rules and optionally general-rules to the datamodel.
@@ -602,7 +601,7 @@ def execute(
     corrected attribute values back into the GeoDataFrames.
 
     Two main sections are executed:
-    1. General rules (optional, controlled by keep_general)
+    1. General rules (optional, but typically executed after fix rules to ensure all derivations are up to date)
     2. Fix rules (always executed if available)
 
     Fix-rule execution steps:
@@ -625,8 +624,6 @@ def execute(
     raise_error : bool
         If True, exceptions halt execution; otherwise, errors are logged and
         processing continues.
-    keep_general : bool, default False
-        If True, also apply general-rules (derivations) to the datamodel.
 
     Returns
     -------
@@ -660,7 +657,7 @@ def execute(
             gdf=object_gdf,
             layer=object_layer,
             rules=object_rules,
-            overwrite=keep_general,
+            overwrite=False,
             datamodel=new_datamodel,
             logger=logger,
             result_summary=result_summary,

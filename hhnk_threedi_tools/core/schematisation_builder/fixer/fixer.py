@@ -276,7 +276,6 @@ def _fixer(
             result_summary,
             logger,
             raise_error,
-            keep_general=False,
         )
         # do fix review: append result to fix_summary
         result_summary.status = "fix-preparation (reviewing)"
@@ -312,7 +311,6 @@ def _fixer(
             result_summary,
             logger,
             raise_error,
-            keep_general=False,
         )
         result_summary.status = "fix review (manual overwrites)"
         logger.info("start fix review van object-lagen met handmatige aanpassingen")
