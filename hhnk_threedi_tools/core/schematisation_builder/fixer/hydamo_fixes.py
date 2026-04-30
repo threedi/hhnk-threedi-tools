@@ -77,6 +77,7 @@ def _add_custom_kwargs(input_variables: dict, datamodel):
 
     return input_variables
 
+
 def pre_run_logic(gdf: gpd.GeoDataFrame, input_variables: dict):
     logic = input_variables["kwargs"]["logic"]
     function = next(iter(logic))
@@ -702,7 +703,7 @@ def execute(
                     if "related_object" in input_variables.keys():
                         input_variables = _add_related_gdf(input_variables, new_datamodel, object_layer)
                     elif "custom_function_name" in input_variables.keys():
-                        #inputs = input_variables
+                        # inputs = input_variables
                         input_variables = _add_custom_kwargs(input_variables, new_datamodel)
                         if input_variables["custom_function_name"] == "if_else":
                             logger.info("begin execute - logical test if-else")
