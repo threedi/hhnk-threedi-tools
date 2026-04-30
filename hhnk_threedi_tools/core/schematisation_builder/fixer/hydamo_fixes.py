@@ -75,7 +75,7 @@ def _add_custom_kwargs(input_variables: dict, datamodel):
     return input_variables
 
 
-def _run_logic(gdf: gpd.GeoDataFrame, input_variables: dict):
+def pre_run_logic(gdf: gpd.GeoDataFrame, input_variables: dict):
     logic = input_variables["kwargs"]["logic"]
     function = next(iter(logic))
     inputs = logic[function]
@@ -506,9 +506,9 @@ def _manual_indices(gdf: gpd.GeoDataFrame, review_gdf: gpd.GeoDataFrame, attribu
 
     # Validate required columns
     if manual_column not in review_gdf.columns or "code" not in review_gdf.columns:
-        return []
+        return [], []
     if "code" not in gdf.columns:
-        return []
+        return [], []
 
     # Extract manual codes present in the reviewer layer
     manual_gdf = review_gdf[["code", manual_column]].dropna(subset=[manual_column])
@@ -662,7 +662,7 @@ def review(
                         input_variables = _add_custom_kwargs(input_variables, new_datamodel)
                         # input_variables veranderen naar resultaat op basis van logic test en gerelateerde general/custum function
                         if input_variables["custom_function_name"] == "if_else":
-                            input_variables = _run_logic(object_gdf, input_variables)
+                            input_variables = pre_run_logic(object_gdf, input_variables)
                             input_variables = _run_true_false(object_gdf, input_variables)
                             # TODO: waar wordt nu general process nu aangeroepen hier?
                             print("review - logical test if-else")
@@ -916,11 +916,13 @@ def execute(
                         input_variables = _add_related_gdf(input_variables, new_datamodel, object_layer)
                     elif "custom_function_name" in input_variables.keys():
                         input_variables = _add_custom_kwargs(input_variables, new_datamodel)
+                        logger.info("begin execute - logical test if-else")
                         if input_variables["custom_function_name"] == "if_else":
                             # TODO: er gaat nog iets mis met indices heb ik het gevoel.
-                            input_variables = _run_logic(object_gdf.loc[indices], input_variables)
+                            logger.info("begin execute - logical test if-else")
+                            input_variables = pre_run_logic(object_gdf.loc[indices], input_variables)
                             input_variables = _run_true_false(object_gdf.loc[indices], input_variables)
-                            # print(f"excute - logical test if-else {input_variables}")
+                            logger.info("excute - logical test if-else")
 
                         # while "custom_function_name" in inputs.keys():
                         #     input_variables = _add_custom_kwargs(inputs, new_datamodel)
@@ -937,18 +939,26 @@ def execute(
                         logger.info(input_variables)
                         result = _process_general_function(object_gdf.loc[indices], function, input_variables)
                         object_gdf.loc[indices, attribute_name] = result
+                        
 
                     # apply manual overwrites
                     if object_layer in layers_summary.data_layers:
+                        logger.info(f'{layers_summary.duikersifonhevel.columns}')
                         review_gdf: gpd.GeoDataFrame = getattr(layers_summary, object_layer)
+                        logger.info('doei')
                         manual_column = FixColumns(attribute_name).manual_overwrite
+                        logger.info('hoi2')
                         object_indices, review_indices = _manual_indices(
                             object_gdf, review_gdf, attribute_name, manual_column
                         )
+                        logger.info('hoi3')
                         if len(object_indices) != len(review_indices):
                             logger.warning("Length of object_indices not equal to length of review_indices")
+                        logger.info('hoi4')
                         manual_gdf = review_gdf.loc[review_indices, manual_column]
+                        logger.info('hoi5')
                         manual_dtype = object_gdf.loc[object_indices, attribute_name].dtypes
+                        logger.info('hoi6')
                         if manual_dtype == "float64":
                             manual_gdf = manual_gdf.astype(float)
                         elif manual_dtype == "int64":
@@ -957,7 +967,9 @@ def execute(
                             manual_gdf = manual_gdf.astype(bool)
                         elif manual_dtype == "object":
                             manual_gdf = manual_gdf.astype(str)
+                        logger.info('hoi7')
                         object_gdf.loc[object_indices, attribute_name] = manual_gdf
+                        logger.info('hoi8')
 
                 except Exception as e:
                     logger.error(f"{object_layer}: fix_rule {rule['fix_id']} crashed width Exception {e}")

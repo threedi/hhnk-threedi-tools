@@ -261,6 +261,7 @@ def _fixer(
             raise_error,
             keep_general=False,
         )
+        
 
         # do fix review: append result to fix_summary
         result_summary.status = "fix-preparation (reviewing)"

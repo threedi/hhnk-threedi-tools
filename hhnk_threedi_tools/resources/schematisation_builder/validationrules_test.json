@@ -675,7 +675,7 @@
                     "fix_action": "Derived assumption",
                     "fix_type": "automatic",
                     "fix_method": {
-                        "custom_hydamo": {
+                   		"custom_hydamo": {
 							"custom_function_name": "if_else",
 							"logic": {
 								"GT": {
@@ -693,8 +693,8 @@
 									"to": "breedteopening"
 								}
 							}
-						}
-                    },
+                    	}
+					},
                     "fix_description": "aanname ahv categorie 1=0.5 of 0.3",
 					"filter": {
 						"ISIN": {
