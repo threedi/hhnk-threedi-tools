@@ -5,12 +5,15 @@ from typing import Any, Dict, List, Set, Tuple
 import geopandas as gpd
 import numpy as np
 import pandas as pd
+from core.schematisation_builder.fixer.mapping import _get_validation_ids_for_attribute
 from core.schematisation_builder.fixer.summaries import ExtendedHyDAMO, ExtendedLayersSummary, ExtendedResultSummary
 from hhnk_research_tools.logging import logging
 from hydamo_validation import logical_validation
 from hydamo_validation.logical_validation import (
     _add_join_gdf,
     _add_related_gdf,
+    _nan_message,
+    _notna_indices,
     _process_general_function,
     _process_logic_function,
     _process_topologic_function,
@@ -75,382 +78,70 @@ def _add_custom_kwargs(input_variables: dict, datamodel):
     return input_variables
 
 
-def pre_run_logic(gdf: gpd.GeoDataFrame, input_variables: dict):
+def _run_logic(gdf: gpd.GeoDataFrame, input_variables: dict):
     logic = input_variables["kwargs"]["logic"]
     function = next(iter(logic))
     inputs = logic[function]
-    result = _process_logic_function(gdf, function, inputs)
+    result = _process_logic_function(gdf, logic, inputs)
     input_variables["kwargs"]["logic"] = result
     return input_variables
 
 
-def _run_true_false(gdf: gpd.GeoDataFrame, input_variables: dict):
-    true = input_variables["kwargs"]["true"]
-    function_true = next(iter(true))
-    inputs_true = true[function_true]
-    result_true = _process_general_function(gdf, function_true, inputs_true)
-    input_variables["kwargs"]["true"] = result_true
-
-    false = input_variables["kwargs"]["false"]
-    function_false = next(iter(false))
-    inputs_false = false[function_false]
-    result_false = _process_general_function(gdf, function_false, inputs_false)
-    input_variables["kwargs"]["false"] = result_false
-
+def _run_true_false():
+    _process_general_function()
     return input_variables
 
 
-def _build_general_rules_lookup_table(validation_rules: Dict[str, Any]) -> Dict[str, Dict[str, Dict[str, Any]]]:
+def _iterate_by_rounds(data: dict, execution_dict: dict[str, int]):
     """
-    Build a lookup table for derived variables originating from 'general_rules'.
-
-    This transforms the validation rules structure into a quick‑access mapping:
-        {
-            layer_name: {
-                result_variable_name: <function-definition-dict>
-            }
-        }
-
-    Parameters
-    ----------
-    validation_rules : dict
-        Raw validation‑rules dictionary read from validationrules.json. Expected
-        structure:
-            validation_rules[layer]["general_rules"] → list of rules
-
-    Returns
-    -------
-    dict
-        Nested mapping enabling efficient recursive evaluation of general rule
-        dependencies when resolving input variables.
-
-        {
-          layer_name: {
-              result_variable_name: { <function dict> }
-          }
-        }
+    Yields (round_num, key, value) from `data` in execution round order.
     """
-    lookup: Dict[str, Dict[str, Dict[str, Any]]] = {}
-    for layer, ruleset in validation_rules.items():
-        general_rules = ruleset.get("general_rules", [])
-        layer_lookup: Dict[str, Dict[str, Any]] = {}
-        for gr in general_rules:
-            # NOTE: your JSON uses "result_variable" for name
-            rv = gr.get("result_variable")
-            if rv and "function" in gr:
-                layer_lookup[rv] = gr["function"]
-        lookup[layer] = layer_lookup
-    return lookup
+    rounds = sorted(set(execution_dict.values()))
+
+    for round_num in rounds:
+        keys_in_round = [k for k, r in execution_dict.items() if r == round_num]
+        for key in keys_in_round:
+            yield round_num, key, data[key]
 
 
-def _extract_inputs_from_function(
-    func: Dict[str, Any],
-    current_layer: str,
-    layers: Set[str],
-    columns_by_layer: Dict[str, Set[str]],
-    general_lookup_by_layer: Dict[str, Dict[str, Dict[str, Any]]],
-    seen_general: Set[Tuple[str, str]] | None = None,
-) -> List[Dict[str, Any]]:
+def _iterate_by_steps(fix_rules: list[dict], fix_iterations: dict[str, dict[int, list[int]]]):
     """
-    Recursively extract all concrete input references required by a function
-    definition used in logical/general/topologic rules.
+    Yields (step, rule) from `fix_rules` ordered by fix_iterations.
 
-    This handles:
-    - nested function definitions
-    - derived variables (recursively expanding them)
-    - object‑prefixed references pointing to other layers
-    - geometry.* references
-    - whole‑object references when no attribute is explicitly provided
+    Iterates iteration keys in ascending order. Within each key, fix_ids are
+    yielded in ascending order. The step label is the iteration key if the
+    group contains one item, or '{iteration_num}.{pos}' (1-based) if multiple.
 
-    Parameters
-    ----------
-    func : dict
-        Single‑function dictionary where the key is the function name and the
-        value is its parameter mapping.
-    current_layer : str
-        Layer for which the function is being evaluated.
-    layers : set[str]
-        Set of all available layer names in the datamodel.
-    columns_by_layer : dict[str, set[str]]
-        Mapping of available columns for each layer.
-    general_lookup_by_layer : dict
-        Lookup table for derived variables constructed by
-        `_build_general_rules_lookup_table`.
-    seen_general : set of (layer, variable), optional
-        Used to prevent infinite recursion when derived variables depend on
-        each other.
-
-    Returns
-    -------
-    list of dict
-        List of resolved input references, each item of the form:
-            {"object": <layer>, "attribute": <column-or-None>}
+    Args:
+        fix_rules: List of fix rule dicts, each containing at least 'fix_id'.
+        fix_iterations: Full nested dict mapping layer -> {iteration_num: [fix_ids]}.
+            e.g. {'duikersifonhevel': {1: [], 2: [10], 3: [11, 12]}}
     """
+    fix_id_to_rule: dict[int, dict] = {rule["fix_id"]: rule for rule in fix_rules}
+    fix_ids_in_rules: set[int] = set(fix_id_to_rule.keys())
 
-    if seen_general is None:
-        seen_general = set()
+    # Find the layer sub-dict whose fix_ids overlap with the provided fix_rules
+    layer_iterations: dict[int, list[int]] = {}
+    for layer_dict in fix_iterations.values():
+        all_fids = {fid for fids in layer_dict.values() for fid in fids}
+        if fix_ids_in_rules & all_fids:
+            layer_iterations = layer_dict
+            break
 
-    fname = next(iter(func))
-    params = func[fname]
-    inputs: List[Dict[str, Any]] = []
-    prefix = ""
-
-    # -------------------------------------------------------------
-    # STEP 1 — Detect object references via "*object*" in key
-    # -------------------------------------------------------------
-    referenced_objects: Dict[str, str] = {}  # {object: prefix}
-    for key, val in params.items():
-        if "object" in key.lower() and isinstance(val, str) and val in layers:
-            prefix = key.lower().split("object")[0].rstrip("_")
-            referenced_objects[val] = prefix
-
-    # -------------------------------------------------------------
-    # STEP 2 — Process each parameter
-    # -------------------------------------------------------------
-    for key, val in params.items():
-        # ----------------------------
-        # CASE A — numeric → ignore
-        # ----------------------------
-        if isinstance(val, (int, float, bool)) or val is None:
-            continue
-
-        # ----------------------------
-        # CASE B — nested function
-        # ----------------------------
-        if isinstance(val, dict) and len(val) == 1:
-            nested = _extract_inputs_from_function(
-                val,
-                current_layer,
-                layers,
-                columns_by_layer,
-                general_lookup_by_layer,
-                seen_general,
-            )
-            inputs.extend(nested)
-            continue
-
-        # ----------------------------
-        # CASE C — string only
-        # ----------------------------
-        if isinstance(val, str):
-            # RULE: If val is a derived variable on current layer → expand recursively
-            if val in general_lookup_by_layer.get(current_layer, {}) and (current_layer, val) not in seen_general:
-                seen_general.add((current_layer, val))
-                derived = general_lookup_by_layer[current_layer][val]
-                sub = _extract_inputs_from_function(
-                    derived,
-                    current_layer,
-                    layers,
-                    columns_by_layer,
-                    general_lookup_by_layer,
-                    seen_general,
-                )
-                inputs.extend(sub)
+    for iteration_num in sorted(layer_iterations.keys()):
+        fix_ids = layer_iterations[iteration_num]
+        multiple = len(fix_ids) > 1
+        for pos, fix_id in enumerate(fix_ids, start=1):
+            rule = fix_id_to_rule.get(fix_id)
+            if rule is None:
                 continue
-
-            # RULE: If val is a column of current object and key does not start with a prefix → bind to current layer
-            if val in columns_by_layer[current_layer] or val.startswith("geometry."):
-                if referenced_objects:
-                    if not any([key.lower().startswith(prefix) for prefix in list(referenced_objects.values())]):
-                        inputs.append({"object": current_layer, "attribute": val})
-                        continue
-                else:
-                    inputs.append({"object": current_layer, "attribute": val})
-                    continue
-
-            # RULE: If val is a column of *another* object BUT only if key respects object-prefix rule
-            for obj, prefix in referenced_objects.items():
-                if key.lower().startswith(prefix):
-                    # RULE: val may be a derived variable on *referenced* object
-                    if val in general_lookup_by_layer.get(obj, {}) and (obj, val) not in seen_general:
-                        seen_general.add((obj, val))
-                        derived = general_lookup_by_layer[obj][val]
-                        sub = _extract_inputs_from_function(
-                            derived, obj, layers, columns_by_layer, general_lookup_by_layer, seen_general
-                        )
-                        inputs.extend(sub)
-                        break
-                    # Raw column on referenced object
-                    if val in columns_by_layer.get(obj, set()) or val.startswith("geometry."):
-                        inputs.append({"object": obj, "attribute": val})
-                        break
-
-    # -------------------------------------------------------------
-    # STEP 3 — Whole-object inference
-    # Only add {object: <obj>, attribute: None} if there is NO key
-    # in 'params' that starts with the object's prefix (besides the
-    # "<prefix>_object" key itself).
-    # -------------------------------------------------------------
-    for obj, prefix in referenced_objects.items():
-        has_prefixed_key = any(k.lower().startswith(prefix) and k.lower() != f"{prefix}_object" for k in params.keys())
-        # RULE: no attribute keys matching prefix → whole-object reference
-        if not has_prefixed_key:
-            inputs.append({"object": obj, "attribute": None})
-
-    # -------------------------------------------------------------
-    # STEP 4 — Deduplicate
-    # -------------------------------------------------------------
-    final = []
-    seen = set()
-    for inp in inputs:
-        k = (inp["object"], inp["attribute"])
-        if k not in seen:
-            seen.add(k)
-            final.append(inp)
-
-    return final
+            step = f"{iteration_num}.{pos}" if multiple else str(iteration_num)
+            yield step, rule
 
 
-def map_general_rule_inputs(
-    datamodel,
-    layers: List[str],
-) -> Dict[str, Dict[int, List[Dict[str, Any]]]]:
-    """
-    Build a mapping of general-rule input dependencies for each layer.
-
-    This extracts, for each general rule:
-    - all referenced layers
-    - all referenced attributes
-    - recursively included derived variables
-
-    Parameters
-    ----------
-    datamodel : ExtendedHyDAMO
-        HyDAMO datamodel containing layers, validation rules, and metadata.
-    layers : list[str]
-        List of layer names to analyze.
-
-    Returns
-    -------
-    dict
-        {
-          layer_name: {
-            general_rule_id: [
-                {"object": <layer>, "attribute": <attribute or None>},
-                ...
-            ]
-          }
-        }
-    """
-
-    # Cache columns per layer
-    columns_by_layer: Dict[str, Set[str]] = {
-        layer: set(getattr(getattr(datamodel, layer), "columns", [])) for layer in layers
-    }
-
-    validation_rules = datamodel.validation_rules
-    general_lookup_by_layer = _build_general_rules_lookup_table(validation_rules)
-
-    mapping: Dict[str, Dict[int, List[Dict[str, Any]]]] = {}
-
-    for layer in layers:
-        mapping[layer] = {}
-
-        general_rules = validation_rules[layer].get("general_rules", [])
-        for gr in general_rules:
-            gid = gr["id"]
-            func = gr["function"]
-
-            inputs = _extract_inputs_from_function(
-                func=func,
-                current_layer=layer,
-                layers=set(layers),
-                columns_by_layer=columns_by_layer,
-                general_lookup_by_layer=general_lookup_by_layer,
-            )
-
-            mapping[layer][gid] = inputs
-
-    return mapping
-
-
-def map_validation_rule_inputs(
-    datamodel,
-    layers: List[str],
-    include_topologic: bool = True,
-    omit_topologic_as_none: bool = False,
-) -> Dict[str, Dict[int, List[Dict[str, Any]]]]:
-    """
-    Build a mapping of validation-rule input dependencies for each layer.
-
-    This captures the exact (object, attribute) pairs required to evaluate
-    each validation rule, including:
-    - logic rules
-    - general rules
-    - optional topologic rules (depending on settings)
-
-    Parameters
-    ----------
-    datamodel : ExtendedHyDAMO
-        Datamodel containing layer GeoDataFrames and validation rules.
-    layers : list[str]
-        List of layers to process.
-    include_topologic : bool, default True
-        If False, topologic rules are excluded from the mapping.
-    omit_topologic_as_none : bool, default False
-        If True and topologic rules are excluded, insert a dummy record of the form:
-            {"object": <layer>, "attribute": None}
-
-    Returns
-    -------
-    dict
-        Nested mapping from layer → rule-id → resolved input references.
-
-    {
-        <layer_name>: {
-            <validation_rule_id>: [
-                {"object": <layer>, "attribute": <attribute>},
-                ...
-            ],
-            ...
-        },
-        ...
-    }
-    """
-    # Cache columns per layer
-    columns_by_layer: Dict[str, Set[str]] = {}
-    for layer in layers:
-        gdf = getattr(datamodel, layer)
-        columns_by_layer[layer] = set(getattr(gdf, "columns", []))
-
-    # Prebuild derived-variable lookups per layer
-    validation_rules = getattr(datamodel, "validation_rules")
-    general_lookup_by_layer = _build_general_rules_lookup_table(validation_rules)
-
-    mapping: Dict[str, Dict[int, List[Dict[str, Any]]]] = {}
-
-    for layer in layers:
-        mapping[layer] = {}
-        ruleset = validation_rules.get(layer, {})
-        vrules = ruleset.get("validation_rules", [])
-
-        for rule in vrules:
-            rid = rule.get("id", None)
-            func = rule.get("function", {})
-            is_topologic = rule.get("type", "") == "topologic"
-
-            if rid is None:
-                # Skip invalid rule entries
-                continue
-
-            inputs = _extract_inputs_from_function(
-                func=func,
-                current_layer=layer,
-                layers=set(layers),
-                columns_by_layer=columns_by_layer,
-                general_lookup_by_layer=general_lookup_by_layer,
-            )
-
-            if is_topologic and not include_topologic:
-                # Omit or emit a recognizable placeholder
-                mapping[layer][rid] = [{"object": layer, "attribute": None}] if omit_topologic_as_none else []
-            else:
-                mapping[layer][rid] = inputs
-
-    return mapping
-
-
-def _invalid_indices(gdf: gpd.GeoDataFrame, validation_result: gpd.GeoDataFrame, validation_ids: list[int]):
+def _invalid_indices(
+    gdf: gpd.GeoDataFrame, validation_result: gpd.GeoDataFrame, validation_ids: list[int]
+) -> list[int]:
     """
     Identify all row indices where any of the given validation rule IDs appear
     in one of the invalid columns ("invalid_critical", "invalid_non_critical",
@@ -483,7 +174,7 @@ def _invalid_indices(gdf: gpd.GeoDataFrame, validation_result: gpd.GeoDataFrame,
     return [i for i in invalid_indices if i in gdf.index]
 
 
-def _manual_indices(gdf: gpd.GeoDataFrame, review_gdf: gpd.GeoDataFrame, attribute: str, manual_column: str):
+def _manual_indices(gdf: gpd.GeoDataFrame, review_gdf: gpd.GeoDataFrame, manual_column: str):
     """
     Identify all row indices of the hydamo gdf where a value has been filled in the manual_overwrite column of the layer.
 
@@ -506,9 +197,9 @@ def _manual_indices(gdf: gpd.GeoDataFrame, review_gdf: gpd.GeoDataFrame, attribu
 
     # Validate required columns
     if manual_column not in review_gdf.columns or "code" not in review_gdf.columns:
-        return [], []
+        return []
     if "code" not in gdf.columns:
-        return [], []
+        return []
 
     # Extract manual codes present in the reviewer layer
     manual_gdf = review_gdf[["code", manual_column]].dropna(subset=[manual_column])
@@ -520,6 +211,137 @@ def _manual_indices(gdf: gpd.GeoDataFrame, review_gdf: gpd.GeoDataFrame, attribu
 
     # Sanity-filter to ensure indices belong to gdf
     return gdf_indices, review_indices
+
+
+def _apply_manual_overwrites(
+    object_gdf: gpd.GeoDataFrame,
+    layers_summary: ExtendedLayersSummary,
+    object_layer: str,
+    attribute_name: str,
+    logger: logging.Logger,
+) -> gpd.GeoDataFrame:
+    """
+    Apply manual overwrite values from the review layer onto `object_gdf`.
+
+    If the layer is not present in `layers_summary`, or no manual values are
+    found, `object_gdf` is returned unchanged.
+
+    Parameters
+    ----------
+    object_gdf : GeoDataFrame
+        The layer GeoDataFrame to update in-place.
+    layers_summary : ExtendedLayersSummary
+        Summary container holding review GeoDataFrames.
+    object_layer : str
+        Name of the layer to look up in `layers_summary`.
+    attribute_name : str
+        Attribute column to overwrite.
+    logger : logging.Logger
+        Logger instance.
+
+    Returns
+    -------
+    GeoDataFrame
+        `object_gdf` with manual overwrite values applied.
+    """
+    if object_layer not in layers_summary.data_layers:
+        return object_gdf
+
+    review_gdf: gpd.GeoDataFrame = getattr(layers_summary, object_layer)
+    manual_column = FixColumns(attribute_name).manual_overwrite
+    object_indices, review_indices = _manual_indices(object_gdf, review_gdf, manual_column)
+    if len(object_indices) != len(review_indices):
+        logger.warning("Length of object_indices not equal to length of review_indices")
+    if not object_indices:
+        return object_gdf
+
+    manual_gdf = review_gdf.loc[review_indices, manual_column]
+    manual_dtype = object_gdf.loc[object_indices, attribute_name].dtypes
+    if manual_dtype == "float64":
+        manual_gdf = manual_gdf.astype(float)
+    elif manual_dtype == "int64":
+        manual_gdf = manual_gdf.astype(int)
+    elif manual_dtype == "bool":
+        manual_gdf = manual_gdf.astype(bool)
+    elif manual_dtype == "object":
+        manual_gdf = manual_gdf.astype(str)
+    object_gdf.loc[object_indices, attribute_name] = manual_gdf
+    return object_gdf
+
+
+def _apply_general_rules(
+    gdf: gpd.GeoDataFrame,
+    layer: str,
+    rules: dict,
+    overwrite: bool,
+    datamodel: ExtendedHyDAMO,
+    logger: logging.Logger,
+    result_summary: ExtendedResultSummary,
+    raise_error: bool,
+):
+    """
+    Apply general rules (derivations) from `rules` to `gdf` in-place.
+
+    If `overwrite` is False, rules whose result_variable already exists as a
+    column of `gdf` are skipped. If `overwrite` is True, the existing column
+    is dropped before the rule is applied so it is fully recomputed.
+    """
+    if "general_rules" not in rules:
+        return gdf
+
+    general_rules_sorted = sorted(rules["general_rules"], key=lambda k: k["id"])
+    for rule in general_rules_sorted:
+        logger.info(f"{layer}: uitvoeren general-rule met id {rule['id']}")
+        try:
+            result_variable = rule["result_variable"]
+
+            if result_variable in gdf.columns:
+                if not overwrite:
+                    logger.info(
+                        f"{layer}: skipping general-rule {rule['id']} "
+                        f"('{result_variable}' already exists, overwrite=False)"
+                    )
+                    continue
+                # overwrite=True: drop the column so it is cleanly recomputed
+                gdf.drop(columns=[result_variable], inplace=True)
+
+            # get function
+            function = next(iter(rule["function"]))
+            input_variables = rule["function"][function]
+
+            # remove all nan indices
+            indices = _notna_indices(gdf, input_variables)
+            dropped_indices = [i for i in gdf.index[gdf.index.notna()] if i not in indices]
+
+            # add object_relation
+            if "related_object" in input_variables:
+                input_variables = _add_related_gdf(input_variables, datamodel, layer)
+            elif "custom_function_name" in input_variables:
+                input_variables = _add_custom_kwargs(input_variables, datamodel)
+            elif "join_object" in input_variables:
+                input_variables = _add_join_gdf(input_variables, datamodel)
+
+            if dropped_indices:
+                result_summary.append_warning(_nan_message(len(dropped_indices), layer, rule["id"], "general_rule"))
+
+            if gdf.loc[indices].empty:
+                gdf[result_variable] = np.nan
+            else:
+                result = _process_general_function(gdf.loc[indices], function, input_variables)
+                gdf.loc[indices, result_variable] = result
+                getattr(datamodel, layer).loc[indices, result_variable] = result
+
+        except Exception as e:
+            logger.error(f"{layer}: general_rule {rule['id']} crashed with Exception {e}")
+            result_summary.append_error(
+                "general_rule niet uitgevoerd. Inspecteer de invoer voor deze regel: "
+                f"(object: '{layer}', id: '{rule['id']}', function: '{function}', "
+                f"input_variables: {input_variables}, Reason (Exception): {e})"
+            )
+            if raise_error:
+                raise e
+
+    return gdf
 
 
 def review(
@@ -575,11 +397,15 @@ def review(
     ## create an updated datamodel based on datamodel post processing information
     object_rules_sets = deepcopy(new_datamodel.validation_rules)
     validation_results = deepcopy(new_datamodel.validation_results)
+    validation_ids = deepcopy(new_datamodel.validation_ids)
+    validation_iterations = deepcopy(new_datamodel.validation_iterations)
+    fix_iterations = deepcopy(new_datamodel.fix_iterations)
+
     logger.info(
         rf"lagen met valide objecten en regels: {[i for i in list(object_rules_sets.keys())]}"
     )  ## add check to tell which objects have fixes
-    for object_layer, object_rules in object_rules_sets.items():
-        logger.info(f"{object_layer}: start")
+    for round, object_layer, object_rules in _iterate_by_rounds(object_rules_sets, validation_iterations):
+        logger.info(f"Round {round}: review fix for {object_layer}")
         object_gdf, object_schema = new_datamodel.read_layer(
             object_layer, result_summary
         )  ## maybe use is_usable to deselect rows that are not getting fixed?
@@ -625,24 +451,24 @@ def review(
         # fix rule section
         if "fix_rules" in object_rules.keys():
             fix_rules = object_rules["fix_rules"]
-            fix_rules_sorted = sorted(
-                fix_rules, key=lambda k: k["fix_id"]
-            )  ## deze sorting moet eigenlijk op basis van een execution algoritme
-
-            ## voor nu fixen we gewoon even alle fixes op basis van een oplopende fix_id volgorde
-            for rule in fix_rules_sorted:
-                logger.info(f"{object_layer}: uitvoeren fix-rule met id {rule['fix_id']}")
+            for step, rule in _iterate_by_steps(fix_rules, fix_iterations):
+                logger.info(f"Step {step}: uitvoeren van fix-rule {rule['fix_id']} ({object_layer})")
                 try:
                     attribute_name = rule["attribute_name"]
-                    description = rule["fix_description"]
+                    attribute_validation_ids = validation_ids[object_layer][attribute_name]
                     function = next(iter(rule["fix_method"]))
+                    description = rule["fix_description"]
                     input_variables = rule["fix_method"][function]
-                    validation_ids = rule["validation_ids"]
-                    indices = _invalid_indices(object_gdf, review_gdf, validation_ids)
+                    logger.info(input_variables)
+
+                    indices = _invalid_indices(object_gdf, review_gdf, attribute_validation_ids)
                     fix_columns = FixColumns(attribute_name)
-                    validation_rules = object_rules["validation_rules"]
-                    validation_rules = [i for i in validation_rules if i["id"] in validation_ids]
-                    validation_rules_sorted = sorted(validation_rules, key=lambda k: k["id"])
+                    validation_rules = [
+                        vrule
+                        for i in attribute_validation_ids
+                        for vrule in object_rules["validation_rules"]
+                        if vrule["id"] == i
+                    ]
 
                     # apply filter on indices
                     if "filter" in rule.keys():
@@ -660,29 +486,30 @@ def review(
                         input_variables = _add_related_gdf(input_variables, new_datamodel, object_layer)
                     elif "custom_function_name" in input_variables.keys():
                         input_variables = _add_custom_kwargs(input_variables, new_datamodel)
-                        # input_variables veranderen naar resultaat op basis van logic test en gerelateerde general/custum function
-                        if input_variables["custom_function_name"] == "if_else":
-                            input_variables = pre_run_logic(object_gdf, input_variables)
-                            input_variables = _run_true_false(object_gdf, input_variables)
-                            # TODO: waar wordt nu general process nu aangeroepen hier?
-                            print("review - logical test if-else")
+                        # if input_variables["custom_function_name"] == "if_else":
+                        #     input_variables = _run_logic(object_gdf, input_variables)
+                        #     input_variables = _run_true_false()
                     elif "join_object" in input_variables.keys():
                         input_variables = _add_join_gdf(input_variables, new_datamodel)
 
                     # fill fix columns
                     logger.info(
-                        f"{object_layer}: invullen fix kolommen voor {attribute_name} met validatie regels {validation_ids})"
+                        f"{object_layer}: invullen fix kolommen voor {attribute_name} met validatie regels {attribute_validation_ids})"
                     )
                     review_gdf.loc[indices, fix_columns.fix_suggestion] = description
-                    for _rule in validation_rules_sorted:
+
+                    # apply manual overwrites
+                    if object_layer in layers_summary.data_layers:
+                        review_gdf[fix_columns.manual_overwrite] = getattr(layers_summary, object_layer)[
+                            fix_columns.manual_overwrite
+                        ]
+
+                    for _rule in validation_rules:
                         _rule_id: int = _rule["id"]
                         _error_type: str = _rule["error_type"]
                         _error_message: str = _rule["error_message"]
                         _error_prefix = "C" if _error_type == "critical" else "W"
                         _indices = _invalid_indices(object_gdf, review_gdf, [_rule_id])
-                        result_variable = _rule["result_variable"]
-
-                        # get function
                         _function = next(iter(_rule["function"]))
                         _input_variables = _rule["function"][_function]
 
@@ -766,7 +593,6 @@ def execute(
     result_summary: ExtendedResultSummary,
     logger: logging.Logger,
     raise_error: bool,
-    keep_general: bool = False,
 ) -> Tuple[ExtendedHyDAMO, ExtendedLayersSummary, ExtendedResultSummary]:
     """
     Apply fix-rules and optionally general-rules to the datamodel.
@@ -775,7 +601,7 @@ def execute(
     corrected attribute values back into the GeoDataFrames.
 
     Two main sections are executed:
-    1. General rules (optional, controlled by keep_general)
+    1. General rules (optional, but typically executed after fix rules to ensure all derivations are up to date)
     2. Fix rules (always executed if available)
 
     Fix-rule execution steps:
@@ -798,8 +624,6 @@ def execute(
     raise_error : bool
         If True, exceptions halt execution; otherwise, errors are logged and
         processing continues.
-    keep_general : bool, default False
-        If True, also apply general-rules (derivations) to the datamodel.
 
     Returns
     -------
@@ -811,11 +635,15 @@ def execute(
     ## create an updated datamodel based on datamodel post processing information
     object_rules_sets = deepcopy(new_datamodel.validation_rules)
     validation_results = deepcopy(new_datamodel.validation_results)
+    validation_ids = deepcopy(new_datamodel.validation_ids)
+    validation_iterations = deepcopy(new_datamodel.validation_iterations)
+    fix_iterations = deepcopy(new_datamodel.fix_iterations)
+
     logger.info(
         rf"lagen met valide objecten en regels: {[i for i in list(object_rules_sets.keys())]}"
     )  ## add check to tell which objects have fixes
-    for object_layer, object_rules in object_rules_sets.items():
-        logger.info(f"{object_layer}: start")
+    for round, object_layer, object_rules in _iterate_by_rounds(object_rules_sets, validation_iterations):
+        logger.info(f"Round {round}: start fix for {object_layer}")
         object_gdf: gpd.GeoDataFrame = getattr(
             new_datamodel, object_layer
         ).copy()  ## check if the copy is redundant for our purpose
@@ -825,82 +653,31 @@ def execute(
             object_gdf[col] = ""
 
         # general rule section
-        if keep_general and "general_rules" in object_rules.keys():
-            general_rules = object_rules["general_rules"]
-            general_rules_sorted = sorted(general_rules, key=lambda k: k["id"])
-            for rule in general_rules_sorted:
-                logger.info(f"{object_layer}: uitvoeren general-rule met id {rule['id']}")
-                try:
-                    result_variable = rule["result_variable"]
-                    result_variable_name = f"general_{rule['id']:03d}_{rule['result_variable']}"
-
-                    # get function
-                    function = next(iter(rule["function"]))
-                    input_variables = rule["function"][function]
-
-                    # remove all nan indices
-                    indices = logical_validation._notna_indices(object_gdf, input_variables)
-                    dropped_indices = [i for i in object_gdf.index[object_gdf.index.notna()] if i not in indices]
-
-                    # add object_relation
-                    if "related_object" in input_variables.keys():
-                        input_variables = _add_related_gdf(input_variables, datamodel, object_layer)
-                    elif "custom_function_name" in input_variables.keys():
-                        input_variables = _add_custom_kwargs(input_variables, datamodel)
-                        print(input_variables)
-                    elif "join_object" in input_variables.keys():
-                        input_variables = _add_join_gdf(input_variables, datamodel)
-
-                    if dropped_indices:
-                        result_summary.append_warning(
-                            logical_validation._nan_message(
-                                len(dropped_indices),
-                                object_layer,
-                                rule["id"],
-                                "general_rule",
-                            )
-                        )
-                    if object_gdf.loc[indices].empty:
-                        object_gdf[result_variable] = np.nan
-                    else:
-                        result = _process_general_function(object_gdf.loc[indices], function, input_variables)
-                        object_gdf.loc[indices, result_variable] = result
-
-                except Exception as e:
-                    logger.error(f"{object_layer}: general_rule {rule['id']} crashed width Exception {e}")
-                    result_summary.append_error(
-                        (
-                            "general_rule niet uitgevoerd. Inspecteer de invoer voor deze regel: "
-                            f"(object: '{object_layer}', id: '{rule['id']}', function: '{function}', "
-                            f"input_variables: {input_variables}, Reason (Exception): {e})"
-                        )
-                    )
-                    if raise_error:
-                        raise e
-                    else:
-                        pass
+        object_gdf = _apply_general_rules(
+            gdf=object_gdf,
+            layer=object_layer,
+            rules=object_rules,
+            overwrite=False,
+            datamodel=new_datamodel,
+            logger=logger,
+            result_summary=result_summary,
+            raise_error=raise_error,
+        )
 
         # fix rule section
         if "fix_rules" in object_rules.keys():
             fix_rules = object_rules["fix_rules"]
-            fix_rules_sorted = sorted(
-                fix_rules, key=lambda k: k["fix_id"]
-            )  ## deze sorting moet eigenlijk op basis van een execution algoritme
-            ## voor nu fixen we gewoon even alle fixes op basis van een oplopende fix_id volgorde
-            for rule in fix_rules_sorted:
-                logger.info(f"{object_layer}: uitvoeren fix-rule met id {rule['fix_id']}")
+            for step, rule in _iterate_by_steps(fix_rules, fix_iterations):
+                logger.info(
+                    f"Step {step}: uitvoeren van fix-rule {rule['fix_id']} ({object_layer}, {rule['attribute_name']})"
+                )
                 try:
                     attribute_name = rule["attribute_name"]
-                    fix_attribute_name = f"fix_{rule['fix_id']:03d}_{rule['attribute_name']}"
-
-                    # get function
+                    attribute_validation_ids = validation_ids[object_layer][attribute_name]
                     function = next(iter(rule["fix_method"]))
                     input_variables = rule["fix_method"][function]
-                    logger.info(input_variables)
-                    validation_ids = rule["validation_ids"]
-
                     # find all invalid indices
-                    indices = _invalid_indices(object_gdf, object_validation_result, validation_ids)
+                    indices = _invalid_indices(object_gdf, object_validation_result, attribute_validation_ids)
                     # apply filter on indices
                     if "filter" in rule.keys():
                         filter_function = next(iter(rule["filter"]))
@@ -915,50 +692,33 @@ def execute(
                     if "related_object" in input_variables.keys():
                         input_variables = _add_related_gdf(input_variables, new_datamodel, object_layer)
                     elif "custom_function_name" in input_variables.keys():
-                        input_variables = _add_custom_kwargs(input_variables, new_datamodel)
-                        if input_variables["custom_function_name"] == "if_else":
-                            # TODO: er gaat nog iets mis met indices heb ik het gevoel.
-                            logger.info("begin execute - logical test if-else")
-                            input_variables = pre_run_logic(object_gdf.loc[indices], input_variables)
-                            input_variables = _run_true_false(object_gdf.loc[indices], input_variables)
-                            logger.info("excute - logical test if-else")
-
-                        # while "custom_function_name" in inputs.keys():
-                        #     input_variables = _add_custom_kwargs(inputs, new_datamodel)
-                        #     inputs = input_variables["kwargs"]
-                        #     print(input_variables)
-                        #     print(rule["fix_method"][function])
-
+                        inputs = input_variables
+                        input_variables = _add_custom_kwargs(inputs, new_datamodel)
                     elif "join_object" in input_variables.keys():
                         input_variables = _add_join_gdf(input_variables, new_datamodel)
 
                     if object_gdf.loc[indices].empty:
                         object_gdf.loc[indices, attribute_name] = np.nan
                     else:
-                        logger.info(input_variables)
                         result = _process_general_function(object_gdf.loc[indices], function, input_variables)
                         object_gdf.loc[indices, attribute_name] = result
 
                     # apply manual overwrites
-                    if object_layer in layers_summary.data_layers:
-                        review_gdf: gpd.GeoDataFrame = getattr(layers_summary, object_layer)
-                        manual_column = FixColumns(attribute_name).manual_overwrite
-                        object_indices, review_indices = _manual_indices(
-                            object_gdf, review_gdf, attribute_name, manual_column
-                        )
-                        if len(object_indices) != len(review_indices):
-                            logger.warning("Length of object_indices not equal to length of review_indices")
-                        manual_gdf = review_gdf.loc[review_indices, manual_column]
-                        manual_dtype = object_gdf.loc[object_indices, attribute_name].dtypes
-                        if manual_dtype == "float64":
-                            manual_gdf = manual_gdf.astype(float)
-                        elif manual_dtype == "int64":
-                            manual_gdf = manual_gdf.astype(int)
-                        elif manual_dtype == "bool":
-                            manual_gdf = manual_gdf.astype(bool)
-                        elif manual_dtype == "object":
-                            manual_gdf = manual_gdf.astype(str)
-                        object_gdf.loc[object_indices, attribute_name] = manual_gdf
+                    object_gdf = _apply_manual_overwrites(
+                        object_gdf, layers_summary, object_layer, attribute_name, logger
+                    )
+
+                    # recompute the general rules after fix application to make sure all derivations are up to date for the next fix rules
+                    object_gdf = _apply_general_rules(
+                        gdf=object_gdf,
+                        layer=object_layer,
+                        rules=object_rules,
+                        overwrite=True,
+                        datamodel=new_datamodel,
+                        logger=logger,
+                        result_summary=result_summary,
+                        raise_error=raise_error,
+                    )
 
                 except Exception as e:
                     logger.error(f"{object_layer}: fix_rule {rule['fix_id']} crashed width Exception {e}")

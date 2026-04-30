@@ -1,0 +1,6 @@
+,bron,laag,id,type_functie,naam,beschrijving
+0,hhnk,duikersifonhevel,1,fix rules,hoogtebinnenonderkantbov,Fix relative to laagste streefpeil
+1,hhnk,duikersifonhevel,2,fix rules,hoogtebinnenonderkantbene,hoogtebinnenonderkantbov - 50
+2,hhnk,duikersifonhevel,3,fix rules,lengte,Set to -993
+3,hhnk,duikersifonhevel,5,fix rules,breedteopening,aanname ahv categorie 1=0.5 of 0.3
+4,hhnk,duikersifonhevel,6,fix rules,hoogteopening,aanname ahv categorie 1=0.5 of 0.3
