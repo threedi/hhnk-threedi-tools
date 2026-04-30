@@ -916,7 +916,6 @@ def execute(
                         input_variables = _add_related_gdf(input_variables, new_datamodel, object_layer)
                     elif "custom_function_name" in input_variables.keys():
                         input_variables = _add_custom_kwargs(input_variables, new_datamodel)
-                        logger.info("begin execute - logical test if-else")
                         if input_variables["custom_function_name"] == "if_else":
                             # TODO: er gaat nog iets mis met indices heb ik het gevoel.
                             logger.info("begin execute - logical test if-else")
@@ -939,26 +938,18 @@ def execute(
                         logger.info(input_variables)
                         result = _process_general_function(object_gdf.loc[indices], function, input_variables)
                         object_gdf.loc[indices, attribute_name] = result
-                        
 
                     # apply manual overwrites
                     if object_layer in layers_summary.data_layers:
-                        logger.info(f'{layers_summary.duikersifonhevel.columns}')
                         review_gdf: gpd.GeoDataFrame = getattr(layers_summary, object_layer)
-                        logger.info('doei')
                         manual_column = FixColumns(attribute_name).manual_overwrite
-                        logger.info('hoi2')
                         object_indices, review_indices = _manual_indices(
                             object_gdf, review_gdf, attribute_name, manual_column
                         )
-                        logger.info('hoi3')
                         if len(object_indices) != len(review_indices):
                             logger.warning("Length of object_indices not equal to length of review_indices")
-                        logger.info('hoi4')
                         manual_gdf = review_gdf.loc[review_indices, manual_column]
-                        logger.info('hoi5')
                         manual_dtype = object_gdf.loc[object_indices, attribute_name].dtypes
-                        logger.info('hoi6')
                         if manual_dtype == "float64":
                             manual_gdf = manual_gdf.astype(float)
                         elif manual_dtype == "int64":
@@ -967,9 +958,7 @@ def execute(
                             manual_gdf = manual_gdf.astype(bool)
                         elif manual_dtype == "object":
                             manual_gdf = manual_gdf.astype(str)
-                        logger.info('hoi7')
                         object_gdf.loc[object_indices, attribute_name] = manual_gdf
-                        logger.info('hoi8')
 
                 except Exception as e:
                     logger.error(f"{object_layer}: fix_rule {rule['fix_id']} crashed width Exception {e}")
