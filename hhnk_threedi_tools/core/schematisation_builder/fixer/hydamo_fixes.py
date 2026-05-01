@@ -706,10 +706,9 @@ def execute(
                         # inputs = input_variables
                         input_variables = _add_custom_kwargs(input_variables, new_datamodel)
                         if input_variables["custom_function_name"] == "if_else":
-                            logger.info("begin execute - logical test if-else")
                             input_variables = pre_run_logic(object_gdf.loc[indices], input_variables)
                             input_variables = _run_true_false(object_gdf.loc[indices], input_variables)
-                            logger.info("excute - logical test if-else")
+                            input_variables["kwargs"]["attribute"] = attribute_name
                     elif "join_object" in input_variables.keys():
                         input_variables = _add_join_gdf(input_variables, new_datamodel)
 

@@ -71,7 +71,17 @@ def test_hydamo_fixer():
     expected_layers = LAYERS
     for layer in expected_layers:
         assert layer in fix_layers
-    # check if expected columns are in one of the layers
+
+    #TODO: make specific tests based on validation_rules.json
+    # 1 check if expected columns are in one of the layers (for example 'breedteopening)
+    # 2 check if fix message is copied to correct column and row
+    # 3 check if expected fix is excuted 
+    
+    #TODO: make code which can check a manual fix, but add some documentation where the manual fix have to be applied then
+
+    #TODO: Check is_usable results
+    # 1 Check if column is added
+    # 2 Check if one feature of which you are sure which is usable or unusable has correct value in column (true/false)
 
     # fix_gdf = gpd.read_file(hydamo_fixed_gpkg_path, layer="duikersifonhevel")
     # assert "is_usable" in fix_gdf.columns

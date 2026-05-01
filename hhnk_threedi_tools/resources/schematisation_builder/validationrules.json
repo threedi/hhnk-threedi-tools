@@ -741,24 +741,24 @@
                    		"custom_hydamo":{
 							"custom_function_name": "if_else",
 							"logic": {
-								"GT": {
-									"left": "hoogteopening",
-									"right": "breedteopening"
+								"EQ": {
+									"left": "categorieinwatersysteem",
+									"right": 2
 								}
 							},
 							"true": {
 								"equal": {
-									"to": "hoogteopening"
+									"to": 0.8
 								}
 							},
 							"false": {
 								"equal": {
-									"to": "breedteopening"
+									"to": 0.5
 								}
 							}
                     	}
 					},
-                    "fix_description": "breedteopening wordt gelijk gezet aan hoogteopening",
+                    "fix_description": "breedteopening krijgt bepaalde waarde",
 					"filter": {
 						"ISIN": {
 							"parameter": "vormkoker",
@@ -767,35 +767,6 @@
 							]
 						}
 					}
-				},
-				{
-                    "attribute_name": "hoogteopening",
-					"validation_ids": [5],
-                    "fix_id": 6,
-                    "fix_action": "Derived assumption",
-                    "fix_type": "automatic",
-                    "fix_method": {
-                        "custom_hydamo": {
-							"custom_function_name": "if_else",
-							"logic": {
-								"GT": {
-									"left": "hoogteopening",
-									"right": "breedteopening"
-								}
-							},
-							"true": {
-								"equal": {
-									"to": "hoogteopening"
-								}
-							},
-							"false": {
-								"equal": {
-									"to": "breedteopening"
-								}
-							}
-						}
-                    },
-                    "fix_description": "hoogteopening wordt gelijk gezet aan breedteopening"
 				}
 			]
 		},
