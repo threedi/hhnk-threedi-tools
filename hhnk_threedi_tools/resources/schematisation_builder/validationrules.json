@@ -741,9 +741,11 @@
                    		"custom_hydamo":{
 							"custom_function_name": "if_else",
 							"logic": {
-								"EQ": {
-									"left": "categorieinwatersysteem",
-									"right": 2
+								"ISIN": {
+									"parameter": "categorieinwatersysteem",
+									"array": [
+										"primair"
+									]
 								}
 							},
 							"true": {
