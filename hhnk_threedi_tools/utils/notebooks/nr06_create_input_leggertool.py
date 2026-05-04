@@ -1,9 +1,7 @@
 # %%
 ## Invoer:
 jupyter_from_qgis = True
-berekening_naam = (
-        "49_Waarland_#2_0d1d_test_leggertool"  # Deze moet in map 03_3di_resultaten\0d1d_results staan
-    )
+berekening_naam = "49_Waarland_#2_0d1d_test_leggertool"  # Deze moet in map 03_3di_resultaten\0d1d_results staan
 
 
 # %%
@@ -25,6 +23,7 @@ import pandas as pd
 import hhnk_threedi_tools as htt
 import hhnk_threedi_tools.core.checks.grid_result_metadata as grid_result_metadata
 from hhnk_threedi_tools.core.folders import Folders
+
 
 # %%
 def create_input_leggertool(
@@ -104,12 +103,14 @@ def create_input_leggertool(
         )
 
     return structure_all
+
+
 # %%
 ## Draaien vanuit qgis op modellen folder
 if jupyter_from_qgis:
     folder = Folders(folder_dir)
     output_file = folder.joinpath(f"debiet_{berekening_naam}_{hrt.get_uuid()}.gpkg")
-    
+
     create_input_leggertool(
         folder=folder,
         berekening_naam=berekening_naam,
@@ -119,8 +120,8 @@ if jupyter_from_qgis:
 ## Draaien in eigen folder
 folder_dir = Path(r"Y:\02.modellen\5_Koegras_leggertool")
 berekening_naam = (
-        "5_Koegras_leggertool_#8_0d1d_test_leggertool"  # Deze moet in map 03_3di_resultaten\0d1d_results staan
-    )
+    "5_Koegras_leggertool_#8_0d1d_test_leggertool"  # Deze moet in map 03_3di_resultaten\0d1d_results staan
+)
 if not jupyter_from_qgis:
     folder = Folders(folder_dir)
     output_file = folder.joinpath(f"debiet_{berekening_naam}_{hrt.get_uuid()}.gpkg")
