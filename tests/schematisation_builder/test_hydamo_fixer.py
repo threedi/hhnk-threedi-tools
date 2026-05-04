@@ -2,6 +2,7 @@ import shutil
 import sys
 
 import fiona
+import geopandas as gpd
 import hhnk_research_tools as hrt
 import pytest
 
@@ -13,6 +14,7 @@ from tests.config import TEMP_DIR, TEST_DIRECTORY
 LAYERS = ["duikersifonhevel"]
 
 RUN_VALIDATION = False
+MANUAL_FIX = False
 
 
 @pytest.mark.skipif(sys.version_info < (3, 12), reason="Requires Python 3.12 or higher")
@@ -72,19 +74,32 @@ def test_hydamo_fixer():
     for layer in expected_layers:
         assert layer in fix_layers
 
-    # TODO: make specific tests based on validation_rules.json
-    # 1 check if expected columns are in one of the layers (for example 'breedteopening)
-    # 2 check if fix message is copied to correct column and row
-    # 3 check if expected fix is excuted
+    # check if validation rule 5 of duikersifonhevel is fixed correctly
+    # open hydamo_fixed_gpkg_path and check if column breedteopening is added and if value of breedteopening is correct based on fix message in review gpkg
+    gdf_review_duikersifonhevel = gpd.read_file(hydamo_fix_review_path, layer="duikersifonhevel")
 
-    # TODO: make code which can check a manual fix, but add some documentation where the manual fix have to be applied then
+    assert "breedteopening" in gdf_review_duikersifonhevel.columns
+    assert "fixes_breedteopening" in gdf_review_duikersifonhevel.columns
 
-    # TODO: Check is_usable results
-    # 1 Check if column is added
-    # 2 Check if one feature of which you are sure which is usable or unusable has correct value in column (true/false)
+    # specific check for feature with id 14 which should have fix applied based on validation rule 5
+    assert (
+        "if duikersifonhevel in primair watersysteem: breedteopening = 0.8m, anders breedteopening = 0.5m"
+        in gdf_review_duikersifonhevel["fixes_breedteopening"][13]
+    )
+    assert gdf_review_duikersifonhevel["breedteopening"][13] == 0.8
 
-    # fix_gdf = gpd.read_file(hydamo_fixed_gpkg_path, layer="duikersifonhevel")
-    # assert "is_usable" in fix_gdf.columns
+    # TODO: make check for hoogteopening and check if this fis is also applied correctly
+
+    # Check if manual fix is applied correctly. Set variable MANUAL_FIX to True to apply this check
+    assert "manual_overwrite_breedteopening" in gdf_review_duikersifonhevel.columns
+    if MANUAL_FIX:
+        # NOTE: If command prompt ask you for input, fill in 0.6 for feature with id 2 in column manual_overwrite_breedteopening
+        # check if manual overwrite value is applied correctly for feature with id 2
+        assert gdf_review_duikersifonhevel["breedteopening"][1] == 0.6
+
+    # Check if is_usable column is added
+    assert "is_usable" in gdf_review_duikersifonhevel.columns
+    # NOTE: if code includes function to set features to unusable if topological fix is required, check if value in is_usable column is correct for one of the features of which you are sure that it is unusable or usable
 
 
 if __name__ == "__main__":

@@ -760,7 +760,7 @@
 							}
                     	}
 					},
-                    "fix_description": "breedteopening krijgt bepaalde waarde",
+                    "fix_description": "if duikersifonhevel in primair watersysteem: breedteopening = 0.8m, anders breedteopening = 0.5m",
 					"filter": {
 						"ISIN": {
 							"parameter": "vormkoker",
