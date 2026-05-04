@@ -1,4 +1,4 @@
-from typing import List, Dict
+from typing import Dict, List
 
 # SQLite layers expected in 3Di schema
 SQLITE_LAYERS: List[str] = [

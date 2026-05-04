@@ -117,12 +117,14 @@ def translate(data: Dict[str, gpd.GeoDataFrame], translation_file: Union[str, Pa
 
     return data
 
+
 def get_hdb_name(layer: str, layer_map: Dict[str, List[str]]) -> Optional[str]:
     """Returns the canonical name for a layer, or None if not found."""
     for hdb_name, version_name in layer_map.items():
         if layer in version_name:
             return hdb_name
     return None
+
 
 def load_file_and_translate(
     damo_filename: Optional[Union[str, Path]] = None,
