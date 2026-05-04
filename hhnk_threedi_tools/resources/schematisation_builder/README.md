@@ -1,6 +1,6 @@
-# validationrules.json — Reference Guide
+# validationrules.json - Reference Guide
 
-This document describes the structure and usage of `validationrules.json`, the central
+This document describes the structure and usage of [`validationrules.json`](validationrules.json), the central
 configuration file that drives all validation and fix behaviour in the HyDAMO fixer pipeline.
 
 ---
@@ -16,7 +16,7 @@ configuration file that drives all validation and fix behaviour in the HyDAMO fi
 7. [Filters](#7-filters)
 8. [Function reference](#8-function-reference)
 9. [How inputs are interpreted](#9-how-inputs-are-interpreted)
-10. [custom_hydamo — calling custom functions](#10-custom_hydamo--calling-custom-functions)
+10. [custom_hydamo - calling custom functions](#10-custom_hydamo--calling-custom-functions)
 11. [CSV overviews](#11-csv-overviews)
 
 ---
@@ -25,14 +25,14 @@ configuration file that drives all validation and fix behaviour in the HyDAMO fi
 
 | Item | Path |
 |---|---|
-| Configuration file | `hhnk_threedi_tools/resources/schematisation_builder/validationrules.json` |
-| Schema (installed package) | `hydamo_validation/schemas/rules/rules_1.5_fixes.json` |
+| Configuration file | [`hhnk_threedi_tools/resources/schematisation_builder/validationrules.json`](validationrules.json) |
+| Schema (installed package) | [`hydamo_validation/schemas/rules/rules_1.5_fixes.json`](../../../.pixi/envs/default/Lib/site-packages/hydamo_validation/schemas/rules/rules_1.5_fixes.json) |
 
 The file is validated against `rules_1.5_fixes.json` at runtime (loaded from the installed
 `hydamo_validation` package). The current schema version is `"1.5_fixes"`. Breaking this
 schema causes the fixer pipeline to reject the file on load.
 
-Note: the `hhnk_threedi_tools/resources/schematisation_builder/schemas/` folder contains
+Note: the [`hhnk_threedi_tools/resources/schematisation_builder/schemas/`](schemas/) folder contains
 local copies of older schema files that are **not used at runtime** and can be ignored.
 
 ---
@@ -75,6 +75,9 @@ Each element of `objects` has the following shape:
 |---|---|---|
 | `object` | yes | Name of the HyDAMO layer. Must be one of the allowed values listed below. |
 | `general_rules` | no | Pre-processing rules that derive helper columns used by validation rules. |
+| `general_rules_temp_excluded` | no | Same format as `general_rules`; rules here are silently skipped. Used to disable rules temporarily without deleting them. |
+| `validation_rules` | yes | Rules that evaluate correctness of data and flag invalid rows. |
+| `fix_rules` | no | Rules that describe how to correct rows flagged as invalid. |
 
 ### Allowed values for `object`
 
@@ -90,9 +93,6 @@ The following HyDAMO object names are accepted (defined in the schema enum):
 `peilgebiedpraktijk`, `peilgebiedvigerend`, `pomp`, `profielgroep`, `profiellijn`,
 `profielpunt`, `regelmiddel`, `reglementgrenswaterschap`, `streefpeil`, `sturing`, `stuw`,
 `vispassage`, `vispassagevlak`, `vuilvang`, `waterbeheergebied`, `zandvang`
-| `general_rules_temp_excluded` | no | Same format as `general_rules`; rules here are silently skipped. Used to disable rules temporarily without deleting them. |
-| `validation_rules` | yes | Rules that evaluate correctness of data and flag invalid rows. |
-| `fix_rules` | no | Rules that describe how to correct rows flagged as invalid. |
 
 ---
 
@@ -133,9 +133,9 @@ categorical Series that validation rules can reference.
 }
 ```
 
-**Source:** General rules are executed by `_process_general_function` in
-`hydamo_validation.logical_validation`. The functions themselves live in
-`hydamo_validation.functions.general`.
+**Source:** General rules are executed by [`_process_general_function`](../../../.pixi/envs/default/Lib/site-packages/hydamo_validation/logical_validation.py#L25) in
+[`hydamo_validation.logical_validation`](../../../.pixi/envs/default/Lib/site-packages/hydamo_validation/logical_validation.py). The functions themselves live in
+[`hydamo_validation.functions.general`](../../../.pixi/envs/default/Lib/site-packages/hydamo_validation/functions/general.py).
 
 ---
 
@@ -191,10 +191,10 @@ Each rule produces a boolean Series stored in the layer's validation result.
 }
 ```
 
-**Source:** Logic functions are dispatched by `_process_logic_function` and topologic functions
-by `_process_topologic_function`, both in `hydamo_validation.logical_validation`.
-The logic functions themselves live in `hydamo_validation.functions.logic` and the topologic
-functions live in `hydamo_validation.functions.topologic`.
+**Source:** Logic functions are dispatched by [`_process_logic_function`](../../../.pixi/envs/default/Lib/site-packages/hydamo_validation/logical_validation.py#L29) and topologic functions
+by [`_process_topologic_function`](../../../.pixi/envs/default/Lib/site-packages/hydamo_validation/logical_validation.py#L33), both in [`hydamo_validation.logical_validation`](../../../.pixi/envs/default/Lib/site-packages/hydamo_validation/logical_validation.py).
+The logic functions themselves live in [`hydamo_validation.functions.logic`](../../../.pixi/envs/default/Lib/site-packages/hydamo_validation/functions/logic.py) and the topologic
+functions live in [`hydamo_validation.functions.topologic`](../../../.pixi/envs/default/Lib/site-packages/hydamo_validation/functions/topologic.py).
 
 ---
 
@@ -202,7 +202,7 @@ functions live in `hydamo_validation.functions.topologic`.
 
 Fix rules describe how to correct rows that have been flagged as invalid by one or more
 validation rules. The fixer executes fix rules in an order determined by their dependency
-structure (see the fixer `README.md`).
+structure (see the [fixer `README.md`](../../core/schematisation_builder/fixer/README.md)).
 
 ### Required fields
 
@@ -270,8 +270,8 @@ Fix rules with a `filter` only apply to the subset of rows matching the filter:
 }
 ```
 
-**Source:** Fix rule functions use the same `hydamo_validation.functions.general` module as
-general rules. Custom fix functions are implemented in `hydamo_validation.functions.custom`.
+**Source:** Fix rule functions use the same [`hydamo_validation.functions.general`](../../../.pixi/envs/default/Lib/site-packages/hydamo_validation/functions/general.py) module as
+general rules. Custom fix functions are implemented in [`hydamo_validation.functions.custom`](../../../.pixi/envs/default/Lib/site-packages/hydamo_validation/functions/custom.py).
 
 ---
 
@@ -279,7 +279,7 @@ general rules. Custom fix functions are implemented in `hydamo_validation.functi
 
 ### Functions available in general_rules and fix_rules (fix_method)
 
-Source: `hydamo_validation.functions.general`
+Source: [`hydamo_validation.functions.general`](../../../.pixi/envs/default/Lib/site-packages/hydamo_validation/functions/general.py)
 
 | Function key | Parameters | Description |
 |---|---|---|
@@ -295,7 +295,7 @@ Source: `hydamo_validation.functions.general`
 
 ### Functions available in validation_rules (function)
 
-**Logic functions** — Source: `hydamo_validation.functions.logic`
+**Logic functions** - Source: [`hydamo_validation.functions.logic`](../../../.pixi/envs/default/Lib/site-packages/hydamo_validation/functions/logic.py)
 
 | Function key | Parameters | Description |
 |---|---|---|
@@ -311,7 +311,7 @@ Source: `hydamo_validation.functions.general`
 | `join_object_exists` | `join_object` (str) | True if the referenced foreign key exists in the related layer's `globalid` column. |
 | `consistent_period` | `max_gap` (int, optional), `groupers` (list, optional), `start_date` (str, optional), `end_date` (str, optional) | True if periodic entries (e.g. pump schedules) have no overlaps or excessive gaps. |
 
-**Topologic functions** — Source: `hydamo_validation.functions.topologic`
+**Topologic functions** - Source: [`hydamo_validation.functions.topologic`](../../../.pixi/envs/default/Lib/site-packages/hydamo_validation/functions/topologic.py)
 
 | Function key | Description |
 |---|---|
@@ -334,7 +334,7 @@ Filters narrow the set of rows a validation rule or fix rule operates on. A row 
 *not* satisfy the filter is treated as if it automatically passes the validation check, or is
 skipped by the fix.
 
-A filter is expressed using the same logic functions from `hydamo_validation.functions.logic`
+A filter is expressed using the same logic functions from [`hydamo_validation.functions.logic`](../../../.pixi/envs/default/Lib/site-packages/hydamo_validation/functions/logic.py)
 that are available to validation rules. Only the comparison subset is permitted in a filter:
 
 | Function key | Parameters | Description |
@@ -370,22 +370,22 @@ functions. For example:
 { "difference": { "left": "hoogtebinnenonderkantbov", "right": 5 } }
 ```
 
-Here `"hoogtebinnenonderkantbov"` is a column name and `5` is a literal — the result is
+Here `"hoogtebinnenonderkantbov"` is a column name and `5` is a literal - the result is
 `column_values - 5` for every row.
 
 ```json
 { "difference": { "left": "hoogtebinnenonderkantbov", "right": "bodemhoogte" } }
 ```
 
-Here both are column references — the result is `column_a - column_b` per row.
+Here both are column references - the result is `column_a - column_b` per row.
 
 ---
 
-## 10. custom_hydamo — calling custom functions
+## 10. custom_hydamo - calling custom functions
 
 The `custom_hydamo` function type provides an escape hatch for logic that cannot be expressed
 with the built-in functions. It calls a named Python function from
-`hydamo_validation.functions.custom` at runtime.
+[`hydamo_validation.functions.custom`](../../../.pixi/envs/default/Lib/site-packages/hydamo_validation/functions/custom.py) at runtime.
 
 ### JSON structure
 
@@ -413,10 +413,10 @@ def my_function(gdf: GeoDataFrame, hydamo: HyDAMO, param_a, param_b, ...) -> pd.
 (everything except `custom_function_name`) as keyword arguments. For example, a JSON key
 `"parameter"` must appear as `parameter` in the function signature.
 
-`gdf` and `hydamo` are injected automatically by the fixer at runtime — they do not need to
+`gdf` and `hydamo` are injected automatically by the fixer at runtime - they do not need to
 be (and cannot be) specified in the JSON.
 
-### Example — fix_relative_to_level
+### Example - fix_relative_to_level
 
 The JSON:
 
@@ -443,7 +443,7 @@ fix_relative_to_level(
 )
 ```
 
-### Example — if_else (conditional assignment)
+### Example - if_else (conditional assignment)
 
 ```json
 {
@@ -461,28 +461,28 @@ otherwise.
 
 ### Available functions in custom.py
 
-Source: `hydamo_validation.functions.custom`
+Source: [`hydamo_validation.functions.custom`](../../../.pixi/envs/default/Lib/site-packages/hydamo_validation/functions/custom.py)
 
 Functions prefixed with `on_<object>_` are intended as general rules for that object (they
 derive a computed column). Functions prefixed with `_` are helpers.
 
 | Function name | Parameters (beyond `gdf`, `hydamo`) | Description |
 |---|---|---|
-| `on_profiellijn_compute_wet_profile_distance` | — | Computes `afstandNatProfiel` from `profielpunt.afstand` for wet-profile points (`typeprofielpunt == 22`). |
-| `on_profiellijn_compute_wet_profile_depth` | — | Computes `dieptenatprofiel` as the height range within the wet profile points of each `profiellijn`. |
-| `on_profiellijn_compute_max_cross_product` | — | Computes the maximum cross-product of successive segments; used to check whether a `profiellijn` geometry is straight. |
-| `on_profiellijn_compute_jaarinwinning` | — | Extracts the year from `datuminwinning` into a `jaarinwinning` column. |
-| `on_profiellijn_add_breedte_value_from_hydroobject` | — | Joins the `breedte` value from the related `hydroobject` (via `profielgroep`) to each `profiellijn`. |
-| `on_profiellijn_compute_if_ascending` | — | Returns `1` if the cross-section profile is V-shaped (descending to a minimum then ascending by `afstand`); `0` otherwise. |
-| `fix_relative_to_level` | `parameter` (str), `compare_parameter` (str), `operator` (str) | Computes `parameter - compare_parameter` (or other operator). Both inputs resolve to column values if the name exists as a column, otherwise treated as literals. |
-| `if_else` | `logic` (dict), `true` (value), `false` (value), `attribute` (str) | Sets `attribute` to `true` for rows where `logic` evaluates to True, and to `false` otherwise. |
+| [`on_profiellijn_compute_wet_profile_distance`](../../../.pixi/envs/default/Lib/site-packages/hydamo_validation/functions/custom.py#L8) | - | Computes `afstandNatProfiel` from `profielpunt.afstand` for wet-profile points (`typeprofielpunt == 22`). |
+| [`on_profiellijn_compute_wet_profile_depth`](../../../.pixi/envs/default/Lib/site-packages/hydamo_validation/functions/custom.py#L51) | - | Computes `dieptenatprofiel` as the height range within the wet profile points of each `profiellijn`. |
+| [`on_profiellijn_compute_max_cross_product`](../../../.pixi/envs/default/Lib/site-packages/hydamo_validation/functions/custom.py#L113) | - | Computes the maximum cross-product of successive segments; used to check whether a `profiellijn` geometry is straight. |
+| [`on_profiellijn_compute_jaarinwinning`](../../../.pixi/envs/default/Lib/site-packages/hydamo_validation/functions/custom.py#L134) | - | Extracts the year from `datuminwinning` into a `jaarinwinning` column. |
+| [`on_profiellijn_add_breedte_value_from_hydroobject`](../../../.pixi/envs/default/Lib/site-packages/hydamo_validation/functions/custom.py#L154) | - | Joins the `breedte` value from the related `hydroobject` (via `profielgroep`) to each `profiellijn`. |
+| [`on_profiellijn_compute_if_ascending`](../../../.pixi/envs/default/Lib/site-packages/hydamo_validation/functions/custom.py#L190) | - | Returns `1` if the cross-section profile is V-shaped (descending to a minimum then ascending by `afstand`); `0` otherwise. |
+| [`fix_relative_to_level`](../../../.pixi/envs/default/Lib/site-packages/hydamo_validation/functions/custom.py#L300) | `parameter` (str), `compare_parameter` (str), `operator` (str) | Computes `parameter - compare_parameter` (or other operator). Both inputs resolve to column values if the name exists as a column, otherwise treated as literals. |
+| [`if_else`](../../../.pixi/envs/default/Lib/site-packages/hydamo_validation/functions/custom.py#L334) | `logic` (dict), `true` (value), `false` (value), `attribute` (str) | Sets `attribute` to `true` for rows where `logic` evaluates to True, and to `false` otherwise. |
 
 ### Adding a new custom function
 
-1. Open `hydamo_validation/functions/custom.py`.
+1. Open [`hydamo_validation/functions/custom.py`](../../../.pixi/envs/default/Lib/site-packages/hydamo_validation/functions/custom.py).
 2. Add a new function with the signature `def my_function(gdf, hydamo, param_a, ...)`.
-3. Reference it by name in `validationrules.json` under `custom_function_name`.
-4. Any parameters it needs can be passed as extra keys in the `custom_hydamo` object — or can
+3. Reference it by name in [`validationrules.json`](validationrules.json) under `custom_function_name`.
+4. Any parameters it needs can be passed as extra keys in the `custom_hydamo` object - or can
    be hardcoded inside the function itself.
 
 **Tradeoff:** Passing parameters as JSON kwargs makes the function reusable and its
@@ -494,14 +494,14 @@ the rules file less transparent.
 
 ## 11. CSV overviews
 
-Three CSV files in this folder are automatically generated from `validationrules.json`
+Three CSV files in this folder are automatically generated from [`validationrules.json`](validationrules.json)
 whenever `main` is updated:
 
 | File | Contents |
 |---|---|
-| `validation_rules.csv` | All active (`active: true`) validation rules across all objects. |
-| `general_rules.csv` | All general rules across all objects. |
-| `fix_rules.csv` | All fix rules across all objects. |
+| [`validation_rules.csv`](validation_rules.csv) | All active (`active: true`) validation rules across all objects. |
+| [`general_rules.csv`](general_rules.csv) | All general rules across all objects. |
+| [`fix_rules.csv`](fix_rules.csv) | All fix rules across all objects. |
 
 ### Columns in each CSV
 
@@ -517,7 +517,7 @@ whenever `main` is updated:
 ### How to regenerate
 
 **Automatically:** On every push or pull request to `main`, the GitHub Actions workflow
-`.github/workflows/update_validation_rules_csv.yml` runs the export script and commits the
+[`.github/workflows/update_validation_rules_csv.yml`](../../../.github/workflows/update_validation_rules_csv.yml) runs the export script and commits the
 updated CSVs back to the branch.
 
 **Manually (local):**
@@ -527,7 +527,7 @@ pixi run python -m hhnk_threedi_tools.core.schematisation_builder.utils.export_v
 ```
 
 The script is located at:
-`hhnk_threedi_tools/core/schematisation_builder/utils/export_validation_rules_overview.py`
+[`hhnk_threedi_tools/core/schematisation_builder/utils/export_validation_rules_overview.py`](../../core/schematisation_builder/utils/export_validation_rules_overview.py)
 
 The workflow includes a bot-commit guard: if the last commit was made by `github-actions[bot]`
 the workflow exits early, preventing infinite loops caused by the auto-commit step.
