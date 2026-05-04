@@ -1,14 +1,11 @@
 from copy import deepcopy
 from dataclasses import dataclass
-from typing import Any, Dict, List, Set, Tuple
 
 import geopandas as gpd
 import numpy as np
 import pandas as pd
-from core.schematisation_builder.fixer.mapping import _get_validation_ids_for_attribute
-from core.schematisation_builder.fixer.summaries import ExtendedHyDAMO, ExtendedLayersSummary, ExtendedResultSummary
+from core.schematisation_builder.fixer.data import ExtendedHyDAMO, ExtendedLayersSummary, ExtendedResultSummary
 from hhnk_research_tools.logging import logging
-from hydamo_validation import logical_validation
 from hydamo_validation.logical_validation import (
     _add_join_gdf,
     _add_related_gdf,
@@ -68,7 +65,27 @@ class FixColumns:
         return f"manual_overwrite_{self.attribute_name}"
 
 
-def _add_custom_kwargs(input_variables: dict, datamodel):
+def _add_custom_kwargs(input_variables: dict, datamodel: "ExtendedHyDAMO") -> dict:
+    """
+    Inject the datamodel into ``input_variables`` as the ``hydamo`` key and
+    move remaining keys into a nested ``kwargs`` dict.
+
+    This prepares ``input_variables`` for dispatch to a custom fix function
+    that receives the full datamodel alongside its own keyword arguments.
+
+    Parameters
+    ----------
+    input_variables : dict
+        Raw rule input variables dict from the fix JSON.
+    datamodel : ExtendedHyDAMO
+        The datamodel to inject.
+
+    Returns
+    -------
+    dict
+        Updated ``input_variables`` with ``hydamo`` set and all non-reserved
+        keys moved under ``kwargs``.
+    """
     input_variables["hydamo"] = datamodel
     kwargs = {k: v for k, v in input_variables.items() if k not in ["custom_function_name", "hydamo", "kwargs"]}
     for kwarg in list(kwargs.keys()):
@@ -78,7 +95,26 @@ def _add_custom_kwargs(input_variables: dict, datamodel):
     return input_variables
 
 
-def pre_run_logic(gdf: gpd.GeoDataFrame, input_variables: dict):
+def pre_run_logic(gdf: gpd.GeoDataFrame, input_variables: dict) -> dict:
+    """
+    Pre-evaluate the ``logic`` entry in ``input_variables`` against ``gdf``.
+
+    Resolves the logic function to a boolean Series and stores the result
+    back into ``input_variables["kwargs"]["logic"]`` so it can be consumed
+    by a subsequent ``if_else`` custom function.
+
+    Parameters
+    ----------
+    gdf : GeoDataFrame
+        The layer GeoDataFrame to evaluate the logic against.
+    input_variables : dict
+        Rule input variables dict containing ``kwargs.logic``.
+
+    Returns
+    -------
+    dict
+        Updated ``input_variables`` with the logic result pre-computed.
+    """
     logic = input_variables["kwargs"]["logic"]
     function = next(iter(logic))
     inputs = logic[function]
@@ -87,7 +123,26 @@ def pre_run_logic(gdf: gpd.GeoDataFrame, input_variables: dict):
     return input_variables
 
 
-def _run_true_false(gdf: gpd.GeoDataFrame, input_variables: dict):
+def _run_true_false(gdf: gpd.GeoDataFrame, input_variables: dict) -> dict:
+    """
+    Pre-evaluate the ``true`` and ``false`` branches in ``input_variables``.
+
+    Resolves each branch to a concrete Series or scalar and stores the results
+    back into ``input_variables["kwargs"]``. Used to prepare the two outcome
+    values for an ``if_else`` custom function before it is dispatched.
+
+    Parameters
+    ----------
+    gdf : GeoDataFrame
+        The layer GeoDataFrame to evaluate the branches against.
+    input_variables : dict
+        Rule input variables dict containing ``kwargs.true`` and ``kwargs.false``.
+
+    Returns
+    -------
+    dict
+        Updated ``input_variables`` with both branches pre-computed.
+    """
     true = input_variables["kwargs"]["true"]
     function_true = next(iter(true))
     inputs_true = true[function_true]
@@ -361,7 +416,7 @@ def review(
     result_summary: ExtendedResultSummary,
     logger: logging.Logger,
     raise_error: bool,
-) -> Tuple[ExtendedLayersSummary, ExtendedResultSummary]:
+) -> tuple[ExtendedLayersSummary, ExtendedResultSummary]:
     """
     Populate a review DataFrame for each layer, including:
     - validation summaries
@@ -604,7 +659,7 @@ def execute(
     result_summary: ExtendedResultSummary,
     logger: logging.Logger,
     raise_error: bool,
-) -> Tuple[ExtendedHyDAMO, ExtendedLayersSummary, ExtendedResultSummary]:
+) -> tuple[ExtendedHyDAMO, ExtendedLayersSummary, ExtendedResultSummary]:
     """
     Apply fix-rules and optionally general-rules to the datamodel.
 
