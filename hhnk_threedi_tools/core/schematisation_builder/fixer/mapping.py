@@ -122,7 +122,7 @@ def _extract_inputs_from_function(
     prefix = ""
 
     # -------------------------------------------------------------
-    # STEP 1 — Detect object references via "*object*" in key
+    # STEP 1 - Detect object references via "*object*" in key
     # -------------------------------------------------------------
     referenced_objects: dict[str, str] = {}  # {object: prefix}
     for key, val in params.items():
@@ -131,17 +131,17 @@ def _extract_inputs_from_function(
             referenced_objects[val] = prefix
 
     # -------------------------------------------------------------
-    # STEP 2 — Process each parameter
+    # STEP 2 - Process each parameter
     # -------------------------------------------------------------
     for key, val in params.items():
         # ----------------------------
-        # CASE A — numeric → ignore
+        # CASE A - numeric → ignore
         # ----------------------------
         if isinstance(val, (int, float, bool)) or val is None:
             continue
 
         # ----------------------------
-        # CASE B — nested function
+        # CASE B - nested function
         # ----------------------------
         if isinstance(val, dict) and len(val) == 1:
             nested = _extract_inputs_from_function(
@@ -156,7 +156,7 @@ def _extract_inputs_from_function(
             continue
 
         # ----------------------------
-        # CASE C — string only
+        # CASE C - string only
         # ----------------------------
         if isinstance(val, str):
             # RULE: If val is a derived variable on current layer → expand recursively
@@ -202,7 +202,7 @@ def _extract_inputs_from_function(
                         break
 
     # -------------------------------------------------------------
-    # STEP 3 — Whole-object inference
+    # STEP 3 - Whole-object inference
     # Only add {object: <obj>, attribute: None} if there is NO key
     # in 'params' that starts with the object's prefix (besides the
     # "<prefix>_object" key itself).
@@ -214,7 +214,7 @@ def _extract_inputs_from_function(
             inputs.append({"object": obj, "attribute": None})
 
     # -------------------------------------------------------------
-    # STEP 4 — Deduplicate
+    # STEP 4 - Deduplicate
     # -------------------------------------------------------------
     final = []
     seen = set()
@@ -496,22 +496,30 @@ def _fix_iterations(
     Build a fix iteration dict based on LAYER_MAPPING attribute priorities.
 
     For each object layer, groups fix rules by iteration key from LAYER_MAPPING.
-    Within each iteration group, fix rules are ordered by the total number of input
-    parameters across their associated validation rules (fewest dependencies first).
+    Within each iteration group, fix rules are ordered by the number of unique
+    (object, attribute) input pairs across their associated validation rules
+    (fewest unique dependencies first).
 
-    Args:
-        validation_rules: Raw validation rules dict (e.g. datamodel.validation_rules).
-            Expected structure: validation_rules[layer]["fix_rules"] -> list of fix rule dicts
-            (each with at least 'fix_id' and 'attribute_name').
-        validation_mapping: Nested dict mapping layer -> {validation_id: [{"object": ..., "attribute": ...}]}.
-        validation_ids: Precomputed dict mapping layer -> {attribute_name: [validation_ids]}.
-            As produced by _validation_ids(validation_mapping).
-        layer_mapping: Dict mapping layer -> {iteration_num: [attribute_names]}.
-            Defaults to LAYER_MAPPING.
+    Parameters
+    ----------
+    validation_rules : dict
+        Raw validation rules dict (e.g. datamodel.validation_rules).
+        Expected structure: validation_rules[layer]["fix_rules"] -> list of fix rule dicts
+        (each with at least ``'fix_id'`` and ``'attribute_name'``).
+    validation_mapping : dict
+        Nested dict mapping layer -> {validation_id: [{"object": ..., "attribute": ...}]}.
+    validation_ids : dict[str, dict[str, list[int]]]
+        Precomputed dict mapping layer -> {attribute_name: [validation_ids]}.
+        As produced by ``_validation_ids(validation_mapping)``.
+    layer_mapping : dict, optional
+        Dict mapping layer -> {iteration_num: [attribute_names]}.
+        Defaults to ``LAYER_MAPPING``.
 
-    Returns:
-        Dict mapping layer -> {iteration_num: [fix_ids]} where fix IDs within each
-        iteration group are sorted by total validation input dependency count (ascending),
+    Returns
+    -------
+    dict[str, dict[int, list[int]]]
+        Mapping layer -> {iteration_num: [fix_ids]} where fix IDs within each
+        iteration group are sorted by unique input dependency count (ascending),
         then by fix_id (ascending).
 
     Example:
@@ -560,10 +568,18 @@ def _fix_iterations(
             # Attributes not in LAYER_MAPPING go into the overflow iteration bucket
             rule_iteration = attribute_to_iteration.get(attribute_name, overflow_iteration)
 
-            # Count total input parameters across all validation rules associated
-            # with this fix rule (via validation_ids lookup)
+            # Count unique (object, attribute) input pairs across all validation rules
+            # associated with this fix rule. Deduplication prevents rules that reference
+            # the same input via multiple validation rule IDs from being ranked higher
+            # than they should be.
             attr_val_ids = validation_ids.get(object_layer, {}).get(attribute_name, [])
-            dep_count = sum(len(entries) for key, entries in layer_checks.items() if int(key) in attr_val_ids)
+            unique_inputs = {
+                (entry["object"], entry["attribute"])
+                for key, entries in layer_checks.items()
+                if int(key) in attr_val_ids
+                for entry in entries
+            }
+            dep_count = len(unique_inputs)
 
             if rule_iteration not in iteration_groups:
                 iteration_groups[rule_iteration] = []  # fallback for iterations not in LAYER_MAPPING

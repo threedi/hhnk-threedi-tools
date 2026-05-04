@@ -240,6 +240,92 @@ def _invalid_indices(
     return [i for i in invalid_indices if i in gdf.index]
 
 
+def _update_validation_result(
+    object_gdf: gpd.GeoDataFrame,
+    object_validation_result: gpd.GeoDataFrame,
+    validation_rules: list[dict],
+    datamodel: "ExtendedHyDAMO",
+) -> gpd.GeoDataFrame:
+    """
+    Re-run a set of validation rules against the current state of ``object_gdf``
+    and update the invalid columns in ``object_validation_result`` accordingly.
+
+    After a fix is applied, the attribute values in ``object_gdf`` change. This
+    function re-evaluates each rule in ``validation_rules`` on the updated data
+    and writes the new pass/fail state back into the ``invalid_critical``,
+    ``invalid_non_critical``, or ``ignored`` column of ``object_validation_result``.
+    Rows that now pass have the rule ID removed from their column value; rows that
+    still fail retain it. This ensures that subsequent calls to ``_invalid_indices``
+    within the same execution pass reflect the current state of the data rather
+    than the original static validation snapshot.
+
+    Parameters
+    ----------
+    object_gdf : GeoDataFrame
+        The layer GeoDataFrame in its current (partially fixed) state.
+    object_validation_result : GeoDataFrame
+        The validation results GeoDataFrame to update in-place. Each invalid
+        column stores rule IDs as ';'-separated strings.
+    validation_rules : list[dict]
+        The validation rule dicts whose IDs should be re-evaluated. Each dict
+        must contain at least ``"id"``, ``"type"``, ``"error_type"``, and
+        ``"function"``.
+    datamodel : ExtendedHyDAMO
+        The full datamodel, required for topologic rule evaluation.
+
+    Returns
+    -------
+    GeoDataFrame
+        The updated ``object_validation_result`` with refreshed invalid columns.
+    """
+    ERROR_TYPE_TO_COL = {
+        "critical": "invalid_critical",
+        "non_critical": "invalid_non_critical",
+        "ignored": "ignored",
+    }
+
+    for rule in validation_rules:
+        rule_id_str = str(rule["id"])
+        rule_type = rule.get("type", "logic")
+        col = ERROR_TYPE_TO_COL.get(rule["error_type"])
+        if col is None:
+            continue
+
+        function = next(iter(rule["function"]))
+        input_variables = rule["function"][function]
+
+        # Re-run the validation rule on the current gdf state.
+        # result is a boolean Series: True = passes validation, False = still invalid.
+        try:
+            if rule_type == "logic":
+                result = _process_logic_function(object_gdf, function, input_variables)
+            elif rule_type == "topologic":
+                result = _process_topologic_function(object_gdf, datamodel, function, input_variables)
+            else:
+                # General rules produce derived values, not pass/fail — skip.
+                continue
+        except Exception:
+            # If the rule cannot be re-evaluated (e.g. missing dependency), leave
+            # the existing invalid entry unchanged so the row remains in scope.
+            continue
+
+        # Update the invalid column for each row that has a result.
+        for idx in result.index:
+            if idx not in object_validation_result.index:
+                continue
+            raw = object_validation_result.at[idx, col]
+            current_ids = set(filter(None, str(raw).split(";"))) if pd.notna(raw) else set()
+            if result.at[idx]:
+                # Row now passes: remove this rule ID from the invalid column.
+                current_ids.discard(rule_id_str)
+            else:
+                # Row still fails: ensure this rule ID is present.
+                current_ids.add(rule_id_str)
+            object_validation_result.at[idx, col] = ";".join(sorted(current_ids)) if current_ids else ""
+
+    return object_validation_result
+
+
 def _manual_indices(gdf: gpd.GeoDataFrame, review_gdf: gpd.GeoDataFrame, manual_column: str):
     """
     Identify all row indices of the hydamo gdf where a value has been filled in the manual_overwrite column of the layer.
@@ -661,28 +747,40 @@ def execute(
     raise_error: bool,
 ) -> tuple[ExtendedHyDAMO, ExtendedLayersSummary, ExtendedResultSummary]:
     """
-    Apply fix-rules and optionally general-rules to the datamodel.
+    Apply fix-rules and general-rules to the datamodel.
 
     This function performs the actual mutation of the HyDAMO layers by writing
     corrected attribute values back into the GeoDataFrames.
 
-    Two main sections are executed:
-    1. General rules (optional, but typically executed after fix rules to ensure all derivations are up to date)
-    2. Fix rules (always executed if available)
+    Per-layer execution order:
+    --------------------------
+    1. General rules are applied once up front (``overwrite=False``) to ensure
+       all derived columns exist before any fix rule reads them.
+    2. Fix rules are applied in the order defined by ``fix_iterations`` (see
+       ``mapping._fix_iterations``). For each fix rule:
 
-    Fix-rule execution steps:
-    -------------------------
-    - Identify invalid rows based on rule.validation_ids
-    - Optionally apply rule-level filters
-    - Resolve related-object or join-object dependencies
-    - Execute fix function and write results into the datamodel
+       a. ``_invalid_indices`` is called against the current
+          ``object_validation_result`` to identify which rows are still invalid
+          for this attribute.
+       b. An optional rule-level filter further narrows the set of rows to fix.
+       c. Related-object or join-object dependencies are resolved if needed.
+       d. The fix function is executed and results are written into ``object_gdf``.
+       e. Manual overwrites from ``layers_summary`` are applied.
+       f. General rules are recomputed (``overwrite=True``) so that derived
+          columns reflect the updated attribute values before the next fix rule.
+       g. ``_update_validation_result`` re-runs the validation rules associated
+          with this attribute against the updated ``object_gdf`` and refreshes
+          ``object_validation_result``. This ensures that step (a) of the *next*
+          fix rule reads a current validity snapshot rather than the original
+          pre-fix validation results, preventing fixes from being applied to rows
+          that have already been corrected by an earlier step.
 
     Parameters
     ----------
     datamodel : ExtendedHyDAMO
         Datamodel that will be modified in-place based on fix rules.
     layers_summary : ExtendedLayersSummary
-        Summary of review layers (optional for overwrite functionality).
+        Summary of review layers used to apply manual overwrites.
     result_summary : ExtendedResultSummary
         Accumulates warnings, errors, and final statistics.
     logger : logging.Logger
@@ -788,6 +886,18 @@ def execute(
                         logger=logger,
                         result_summary=result_summary,
                         raise_error=raise_error,
+                    )
+
+                    # re-evaluate the validation rules for this attribute on the updated gdf
+                    # so that subsequent _invalid_indices calls reflect the current data state
+                    validation_rules_for_attr = [
+                        vrule
+                        for i in attribute_validation_ids
+                        for vrule in object_rules.get("validation_rules", [])
+                        if vrule["id"] == i
+                    ]
+                    object_validation_result = _update_validation_result(
+                        object_gdf, object_validation_result, validation_rules_for_attr, new_datamodel
                     )
 
                 except Exception as e:
