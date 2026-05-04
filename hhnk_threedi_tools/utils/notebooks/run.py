@@ -108,7 +108,10 @@ def user_installed_ipython_path():
     if os.path.exists(path + "/ipython.exe"):
         return path + "/ipython.exe"
     else:
-        return None
+        raise EnvironmentError(
+            "ipython is not installed in the user directory. Please install open QGIS python console (CTRL+ALF+P) \n"
+            "and run 'pip install jupyter' to use this feature."
+        )
 
 
 def notebook_command(location="osgeo", ipython=False):
