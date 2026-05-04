@@ -102,7 +102,7 @@ class ModelSchematisations:
         only the globalsettings"""
         row = self.settings_df.loc[name].copy()
 
-        # schema_name = self.folder.model._add_modelpath(name)
+        self.folder.model._add_modelpath(name)  # JK aangepast tbv raamcontract
 
         # Copy the files that are in the global settings.
         # This menas rasters that are not defined are not added to the schematisation.
@@ -322,7 +322,7 @@ or do not use this run in the modelsplitter.
 if __name__ == "__main__":
     from hhnk_threedi_tools.core.folders import Folders
 
-    path = r"E:\02.modellen\wormer_leggertool"
+    path = r"Y:\02.modellen\1_Heerhugowaard_leggertool\02_schematisation"
 
     folder = Folders(path)
     name = "0d1d_test"

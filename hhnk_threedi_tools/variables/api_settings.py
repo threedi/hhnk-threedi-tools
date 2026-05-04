@@ -23,7 +23,7 @@ RAIN_INTENSITY["blok"]["T1000"] = "184.9 / 48"  # mm/hour
 RAIN_INTENSITY["piek"] = {}
 RAIN_INTENSITY["piek"]["T10"] = "45.4 / 2"  # mm/hour
 RAIN_INTENSITY["piek"]["T100"] = "84.5 / 2"  # mm/hour
-RAIN_INTENSITY["piek"]["T1000"] = "157.5.4 / 2"  # mm/hour
+RAIN_INTENSITY["piek"]["T1000"] = "157.5 / 2"  # mm/hour
 
 RAIN_TYPES = ["piek", "blok"]
 GROUNDWATER = ["glg", "ggg", "ghg"]

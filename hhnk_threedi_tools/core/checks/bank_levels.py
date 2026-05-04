@@ -529,16 +529,20 @@ def dataframe_from_new_manholes(new_manholes):
         new_manholes_model_df.loc[new_manholes_model_df[drain_level_col].isna(), drain_level_col] = "null"
 
         new_manholes_model_df[bottom_lvl_col] = -10
-        new_manholes_model_df[surface_lvl_col] = new_manholes[initial_waterlevel_col]
+        new_manholes_model_df[surface_lvl_col] = new_manholes[initial_waterlevel_col].fillna(
+            -0.5
+        )  # JK aangepast tbv raamcontract NAN column error
         new_manholes_model_df[zoom_cat_col] = 0
         new_manholes_model_df.set_index(conn_node_id_col)
-        new_manholes_model_df[storage_area_col] = new_manholes[storage_area_col]
+        new_manholes_model_df[storage_area_col] = new_manholes[storage_area_col].fillna(
+            -9999
+        )  # JK aangepast tbv raamcontract NAN column error
         # Add new storage area column where appropriate
         new_manholes_model_df.insert(
             new_manholes_model_df.columns.get_loc(storage_area_col) + 1,
             NEW_STORAGE_AREA_COL,
-            np.where(np.isnan(new_manholes_model_df[storage_area_col]), 2.0, "-"),
-        )
+            np.where((new_manholes_model_df[storage_area_col] == -9999), 2.0, new_manholes_model_df[storage_area_col]),
+        )  # JK aangepast tbv raamcontract NAN column error
         return new_manholes_model_df
     except Exception as e:
         raise e from None
