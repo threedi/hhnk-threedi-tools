@@ -130,9 +130,7 @@ class Submodels:
             and self.subareas.crs is not None
             and self.calculation_grid_cells.crs != self.subareas.crs
         ):
-            self.calculation_grid_cells = self.calculation_grid_cells.to_crs(
-                self.subareas.crs
-            )
+            self.calculation_grid_cells = self.calculation_grid_cells.to_crs(self.subareas.crs)
 
         # Process each sub-area
         for _, subarea in tqdm(
@@ -149,9 +147,7 @@ class Submodels:
         """Return the first file matching *pattern* in the schematisation directory."""
         match = next(self.schematisation_directory.glob(pattern), None)
         if match is None:
-            raise error_cls(
-                f"No file matching '{pattern}' found in '{self.schematisation_directory}'."
-            )
+            raise error_cls(f"No file matching '{pattern}' found in '{self.schematisation_directory}'.")
         return match
 
     def _find_rasters_directory(self) -> Path | None:
@@ -161,9 +157,7 @@ class Submodels:
 
     def _check_file_exists(self, file_path: Path) -> None:
         if not file_path.exists():
-            raise SchematisationFileNotFoundError(
-                f"Required file not found: '{file_path}'."
-            )
+            raise SchematisationFileNotFoundError(f"Required file not found: '{file_path}'.")
 
     def _read_to_gdf(self, path: Path, layer_name: str | None) -> gpd.GeoDataFrame:
         """Read a vector file into a GeoDataFrame."""
@@ -171,24 +165,16 @@ class Submodels:
             try:
                 return gpd.read_file(path, layer=layer_name)
             except Exception as exc:
-                raise LayerNotFoundError(
-                    f"Layer '{layer_name}' not found in '{path}'."
-                ) from exc
+                raise LayerNotFoundError(f"Layer '{layer_name}' not found in '{path}'.") from exc
         return gpd.read_file(path)
 
     def _check_field_existence_and_uniqueness(self) -> None:
         if self.subareas.empty:
-            raise SubareaLayerEmptyError(
-                f"Sub-areas file '{self.subareas_path}' contains no features."
-            )
+            raise SubareaLayerEmptyError(f"Sub-areas file '{self.subareas_path}' contains no features.")
         if self.field_name not in self.subareas.columns:
-            raise FieldNameNotFoundError(
-                f"Field '{self.field_name}' not found in '{self.subareas_path}'."
-            )
+            raise FieldNameNotFoundError(f"Field '{self.field_name}' not found in '{self.subareas_path}'.")
         if self.subareas[self.field_name].duplicated().any():
-            raise SubareaNamesNotUniqueError(
-                f"Values in field '{self.field_name}' are not unique."
-            )
+            raise SubareaNamesNotUniqueError(f"Values in field '{self.field_name}' are not unique.")
 
     # GeoPackage reading (via Fiona — preserves model IDs)
 
@@ -313,9 +299,7 @@ class Submodels:
         output_directory = self.schematisation_directory / name
         output_directory.mkdir(parents=True, exist_ok=True)
 
-        output_gpkg = output_directory / (
-            self.schematisation_gpkg.stem + "_" + name + self.schematisation_gpkg.suffix
-        )
+        output_gpkg = output_directory / (self.schematisation_gpkg.stem + "_" + name + self.schematisation_gpkg.suffix)
         output_sqlite = output_directory / (
             self.schematisation_sqlite.stem + "_" + name + self.schematisation_sqlite.suffix
         )
@@ -327,48 +311,42 @@ class Submodels:
         # ---- Read all layers from the copied GeoPackage ----
         layers = self._read_geopackage_layers(output_gpkg)
 
-        connection_node   = layers[LAYER_NAMES["connection_node"]]
-        pipe              = layers[LAYER_NAMES["pipe"]]
-        weir              = layers[LAYER_NAMES["weir"]]
-        orifice           = layers[LAYER_NAMES["orifice"]]
-        culvert           = layers[LAYER_NAMES["culvert"]]
+        connection_node = layers[LAYER_NAMES["connection_node"]]
+        pipe = layers[LAYER_NAMES["pipe"]]
+        weir = layers[LAYER_NAMES["weir"]]
+        orifice = layers[LAYER_NAMES["orifice"]]
+        culvert = layers[LAYER_NAMES["culvert"]]
         cross_section_loc = layers[LAYER_NAMES["cross_section_location"]]
-        channel           = layers[LAYER_NAMES["channel"]]
-        pump_map          = layers[LAYER_NAMES["pump_map"]]
-        pump              = layers[LAYER_NAMES["pump"]]
-        bc_1d             = layers[LAYER_NAMES["boundary_condition_1d"]]
-        bc_2d             = layers[LAYER_NAMES["boundary_condition_2d"]]
-        lateral_1d        = layers[LAYER_NAMES["lateral_1d"]]
-        lateral_2d        = layers[LAYER_NAMES["lateral_2d"]]
-        surface_map       = layers[LAYER_NAMES["surface_map"]]
-        surface           = layers[LAYER_NAMES["surface"]]
-        obstacle          = layers[LAYER_NAMES["obstacle"]]
-        potential_breach  = layers[LAYER_NAMES["potential_breach"]]
-        exchange_line     = layers[LAYER_NAMES["exchange_line"]]
-        grid_ref_line     = layers[LAYER_NAMES["grid_refinement_line"]]
-        grid_ref_area     = layers[LAYER_NAMES["grid_refinement_area"]]
+        channel = layers[LAYER_NAMES["channel"]]
+        pump_map = layers[LAYER_NAMES["pump_map"]]
+        pump = layers[LAYER_NAMES["pump"]]
+        bc_1d = layers[LAYER_NAMES["boundary_condition_1d"]]
+        bc_2d = layers[LAYER_NAMES["boundary_condition_2d"]]
+        lateral_1d = layers[LAYER_NAMES["lateral_1d"]]
+        lateral_2d = layers[LAYER_NAMES["lateral_2d"]]
+        surface_map = layers[LAYER_NAMES["surface_map"]]
+        surface = layers[LAYER_NAMES["surface"]]
+        obstacle = layers[LAYER_NAMES["obstacle"]]
+        potential_breach = layers[LAYER_NAMES["potential_breach"]]
+        exchange_line = layers[LAYER_NAMES["exchange_line"]]
+        grid_ref_line = layers[LAYER_NAMES["grid_refinement_line"]]
+        grid_ref_area = layers[LAYER_NAMES["grid_refinement_area"]]
 
         # Sub-area as single-row GeoDataFrame
-        subarea_gdf = gpd.GeoDataFrame(
-            subarea.to_frame().T, geometry="geometry", crs=self.subareas.crs
-        )
+        subarea_gdf = gpd.GeoDataFrame(subarea.to_frame().T, geometry="geometry", crs=self.subareas.crs)
 
         # ---- Step 1: Select connection nodes inside the sub-area ----
-        filtered_cn = self._spatial_join(
-            connection_node, subarea_gdf, how="inner", predicate="intersects"
-        )
+        filtered_cn = self._spatial_join(connection_node, subarea_gdf, how="inner", predicate="intersects")
         valid_cn_ids = set(filtered_cn["id"])
 
         # ---- Step 2: Filter 1-D structures by their endpoint connection nodes ----
         filtered_pump = pump[pump["connection_node_id"].isin(valid_cn_ids)]
 
         filtered_pipe = pipe[
-            pipe["connection_node_id_start"].isin(valid_cn_ids)
-            & pipe["connection_node_id_end"].isin(valid_cn_ids)
+            pipe["connection_node_id_start"].isin(valid_cn_ids) & pipe["connection_node_id_end"].isin(valid_cn_ids)
         ]
         filtered_weir = weir[
-            weir["connection_node_id_start"].isin(valid_cn_ids)
-            & weir["connection_node_id_end"].isin(valid_cn_ids)
+            weir["connection_node_id_start"].isin(valid_cn_ids) & weir["connection_node_id_end"].isin(valid_cn_ids)
         ]
         filtered_orifice = orifice[
             orifice["connection_node_id_start"].isin(valid_cn_ids)
@@ -383,16 +361,18 @@ class Submodels:
             channel["connection_node_id_start"].isin(valid_cn_ids)
             & channel["connection_node_id_end"].isin(valid_cn_ids)
         ]
-        filtered_cross_section_loc = cross_section_loc[
-            cross_section_loc["channel_id"].isin(filtered_channel["id"])
-        ]
+        filtered_cross_section_loc = cross_section_loc[cross_section_loc["channel_id"].isin(filtered_channel["id"])]
 
         # ---- Step 3: Rebuild connection-node set from connected structures only ----
         # Removes 'floating' nodes not actually connected to any element.
         connected_cn_ids: set = set()
         for structure in (
-            filtered_channel, filtered_pipe, filtered_orifice,
-            filtered_culvert, filtered_weir, filtered_pump,
+            filtered_channel,
+            filtered_pipe,
+            filtered_orifice,
+            filtered_culvert,
+            filtered_weir,
+            filtered_pump,
         ):
             for col in ("connection_node_id", "connection_node_id_start", "connection_node_id_end"):
                 if col in structure.columns:
@@ -402,10 +382,10 @@ class Submodels:
         valid_cn_ids = set(filtered_cn["id"])
 
         # ---- Step 4: Filter remaining 1-D elements ----
-        filtered_bc_1d      = bc_1d[bc_1d["connection_node_id"].isin(valid_cn_ids)]
+        filtered_bc_1d = bc_1d[bc_1d["connection_node_id"].isin(valid_cn_ids)]
         filtered_lateral_1d = lateral_1d[lateral_1d["connection_node_id"].isin(valid_cn_ids)]
         filtered_surface_map = surface_map[surface_map["connection_node_id"].isin(valid_cn_ids)]
-        filtered_surface     = surface[surface["id"].isin(filtered_surface_map["surface_id"])]
+        filtered_surface = surface[surface["id"].isin(filtered_surface_map["surface_id"])]
 
         # ---- Step 5: Filter 2-D / spatial elements ----
         # Exchange lines: channel must exist AND geometry must intersect sub-area
@@ -414,37 +394,39 @@ class Submodels:
             temp_exchange_line, subarea_gdf, how="inner", predicate="intersects"
         )
 
-        filtered_lateral_2d      = self._spatial_join(lateral_2d,        subarea_gdf, how="inner", predicate="within")
-        filtered_bc_2d           = self._spatial_join(bc_2d,             subarea_gdf, how="inner", predicate="within")
-        filtered_potential_breach = self._spatial_join(potential_breach,  subarea_gdf, how="inner", predicate="intersects")
-        filtered_obstacle        = self._spatial_join(obstacle,           subarea_gdf, how="inner", predicate="intersects")
-        filtered_grid_ref_line   = self._spatial_join(grid_ref_line,      subarea_gdf, how="inner", predicate="intersects")
-        filtered_grid_ref_area   = self._spatial_join(grid_ref_area,      subarea_gdf, how="inner", predicate="intersects")
+        filtered_lateral_2d = self._spatial_join(lateral_2d, subarea_gdf, how="inner", predicate="within")
+        filtered_bc_2d = self._spatial_join(bc_2d, subarea_gdf, how="inner", predicate="within")
+        filtered_potential_breach = self._spatial_join(
+            potential_breach, subarea_gdf, how="inner", predicate="intersects"
+        )
+        filtered_obstacle = self._spatial_join(obstacle, subarea_gdf, how="inner", predicate="intersects")
+        filtered_grid_ref_line = self._spatial_join(grid_ref_line, subarea_gdf, how="inner", predicate="intersects")
+        filtered_grid_ref_area = self._spatial_join(grid_ref_area, subarea_gdf, how="inner", predicate="intersects")
 
         # ---- Step 6 (optional): Isolate 1-D elements outside sub-area ----
         if self.isolate_1d:
-            isolated_pipe    = pipe[~pipe["id"].isin(filtered_pipe["id"])].copy()
+            isolated_pipe = pipe[~pipe["id"].isin(filtered_pipe["id"])].copy()
             isolated_culvert = culvert[~culvert["id"].isin(filtered_culvert["id"])].copy()
             isolated_channel = channel[~channel["id"].isin(filtered_channel["id"])].copy()
 
-            isolated_pipe["exchange_type"]    = 101
+            isolated_pipe["exchange_type"] = 101
             isolated_culvert["exchange_type"] = 101
             isolated_channel["exchange_type"] = 101
 
-            filtered_pipe    = gpd.GeoDataFrame(pd.concat([filtered_pipe,    isolated_pipe],    ignore_index=True))
+            filtered_pipe = gpd.GeoDataFrame(pd.concat([filtered_pipe, isolated_pipe], ignore_index=True))
             filtered_culvert = gpd.GeoDataFrame(pd.concat([filtered_culvert, isolated_culvert], ignore_index=True))
             filtered_channel = gpd.GeoDataFrame(pd.concat([filtered_channel, isolated_channel], ignore_index=True))
 
             # Restore all other 1-D elements to the full original set
-            filtered_cn                = connection_node
-            filtered_pump              = pump
-            filtered_weir              = weir
-            filtered_orifice           = orifice
-            filtered_pump_map          = pump_map
+            filtered_cn = connection_node
+            filtered_pump = pump
+            filtered_weir = weir
+            filtered_orifice = orifice
+            filtered_pump_map = pump_map
             filtered_cross_section_loc = cross_section_loc
-            filtered_bc_1d             = bc_1d
-            filtered_lateral_1d        = lateral_1d
-            filtered_surface_map       = surface_map
+            filtered_bc_1d = bc_1d
+            filtered_lateral_1d = lateral_1d
+            filtered_surface_map = surface_map
 
         # ---- Step 7: Drop the helper 'id' column before writing ----
         # 'id' was added during reading to enable filtering; must not be
@@ -454,26 +436,26 @@ class Submodels:
 
         # ---- Step 8: Write filtered layers to the output GeoPackage ----
         write_pairs = [
-            (filtered_cn,               LAYER_NAMES["connection_node"]),
-            (filtered_pipe,             LAYER_NAMES["pipe"]),
-            (filtered_weir,             LAYER_NAMES["weir"]),
-            (filtered_orifice,          LAYER_NAMES["orifice"]),
-            (filtered_culvert,          LAYER_NAMES["culvert"]),
+            (filtered_cn, LAYER_NAMES["connection_node"]),
+            (filtered_pipe, LAYER_NAMES["pipe"]),
+            (filtered_weir, LAYER_NAMES["weir"]),
+            (filtered_orifice, LAYER_NAMES["orifice"]),
+            (filtered_culvert, LAYER_NAMES["culvert"]),
             (filtered_cross_section_loc, LAYER_NAMES["cross_section_location"]),
-            (filtered_channel,          LAYER_NAMES["channel"]),
-            (filtered_pump_map,         LAYER_NAMES["pump_map"]),
-            (filtered_pump,             LAYER_NAMES["pump"]),
-            (filtered_bc_1d,            LAYER_NAMES["boundary_condition_1d"]),
-            (filtered_bc_2d,            LAYER_NAMES["boundary_condition_2d"]),
-            (filtered_lateral_1d,       LAYER_NAMES["lateral_1d"]),
-            (filtered_lateral_2d,       LAYER_NAMES["lateral_2d"]),
-            (filtered_surface_map,      LAYER_NAMES["surface_map"]),
-            (filtered_surface,          LAYER_NAMES["surface"]),
-            (filtered_obstacle,         LAYER_NAMES["obstacle"]),
+            (filtered_channel, LAYER_NAMES["channel"]),
+            (filtered_pump_map, LAYER_NAMES["pump_map"]),
+            (filtered_pump, LAYER_NAMES["pump"]),
+            (filtered_bc_1d, LAYER_NAMES["boundary_condition_1d"]),
+            (filtered_bc_2d, LAYER_NAMES["boundary_condition_2d"]),
+            (filtered_lateral_1d, LAYER_NAMES["lateral_1d"]),
+            (filtered_lateral_2d, LAYER_NAMES["lateral_2d"]),
+            (filtered_surface_map, LAYER_NAMES["surface_map"]),
+            (filtered_surface, LAYER_NAMES["surface"]),
+            (filtered_obstacle, LAYER_NAMES["obstacle"]),
             (filtered_potential_breach, LAYER_NAMES["potential_breach"]),
-            (filtered_exchange_line,    LAYER_NAMES["exchange_line"]),
-            (filtered_grid_ref_line,    LAYER_NAMES["grid_refinement_line"]),
-            (filtered_grid_ref_area,    LAYER_NAMES["grid_refinement_area"]),
+            (filtered_exchange_line, LAYER_NAMES["exchange_line"]),
+            (filtered_grid_ref_line, LAYER_NAMES["grid_refinement_line"]),
+            (filtered_grid_ref_area, LAYER_NAMES["grid_refinement_area"]),
         ]
 
         for gdf, layer_name in write_pairs:
@@ -484,19 +466,15 @@ class Submodels:
             return
 
         tif_files = [
-            f for f in self.rasters_directory.iterdir()
-            if f.is_file() and f.suffix.lower() in {".tif", ".tiff"}
+            f for f in self.rasters_directory.iterdir() if f.is_file() and f.suffix.lower() in {".tif", ".tiff"}
         ]
         if not tif_files:
             return
 
-        intersecting_cells = self.calculation_grid_cells[
-            self.calculation_grid_cells.intersects(subarea.geometry)
-        ]
+        intersecting_cells = self.calculation_grid_cells[self.calculation_grid_cells.intersects(subarea.geometry)]
         if intersecting_cells.empty:
             raise NoCalcGridCellsSelectedError(
-                f"No calculation-grid cells intersect sub-area '{name}'. "
-                "Check your sub-area extent."
+                f"No calculation-grid cells intersect sub-area '{name}'. Check your sub-area extent."
             )
 
         dissolved_mask = unary_union(intersecting_cells.geometry)
@@ -564,3 +542,4 @@ def run(
 #     calculation_grid_cells_layer_name="cell",
 #     isolate_1d=True,
 # )
+    
