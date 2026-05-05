@@ -1,11 +1,17 @@
 """
-
-Clips a Rana Model (GeoPackage + SQLite + rasters) into spatial
+submodels.py
+------------
+Clips a 3Di schematisation (GeoPackage + SQLite + rasters) into spatial
 sub-models based on a set of polygon sub-areas.
+
+Supports two schematisation formats via the `schematisation_type` parameter:
+- SchematisationType.RANA    (default) — newer RANA toolchain format
+- SchematisationType.THREEDI — classic 3Di schematisation builder format
 
 Usage
 -----
     from hhnk_threedi_tools.breaches.submodels import run
+    from hhnk_threedi_tools.breaches.constants import SchematisationType
 
     run(
         schematisation_directory="path/to/schematisation",
@@ -14,6 +20,7 @@ Usage
         calculation_grid_cells_path="path/to/grid.gpkg",
         calculation_grid_cells_layer_name="cell",
         isolate_1d=True,
+        schematisation_type=SchematisationType.RANA,
     )
 """
 
@@ -43,6 +50,7 @@ from hhnk_threedi_tools.breaches.exceptions import (
     SubareaLayerEmptyError,
     SubareaNamesNotUniqueError,
 )
+from hhnk_threedi_tools.breaches.submodel_constants import LAYER_NAMES, SchematisationType
 
 warnings.filterwarnings(
     "ignore",
@@ -54,36 +62,8 @@ gdal.UseExceptions()
 
 
 # ---------------------------------------------------------------------------
-# Layer name mapping
-# ---------------------------------------------------------------------------
-# Maps internal variable names to GeoPackage layer names.
-# Read and write use the same name.
-
-LAYER_NAMES: dict[str, str] = {
-    "connection_node": "connection_node",
-    "pipe": "pipe",
-    "weir": "weir",
-    "orifice": "orifice",
-    "culvert": "culvert",
-    "cross_section_location": "cross_section_location",
-    "channel": "channel",
-    "pump_map": "pump_map",
-    "pump": "pump",
-    "boundary_condition_1d": "boundary_condition_1d",
-    "boundary_condition_2d": "boundary_condition_2d",
-    "lateral_1d": "lateral_1d",
-    "lateral_2d": "lateral_2d",
-    "surface_map": "surface_map",
-    "surface": "surface",
-    "obstacle": "obstacle",
-    "potential_breach": "potential_breach",
-    "exchange_line": "exchange_line",
-    "grid_refinement_line": "grid_refinement_line",
-    "grid_refinement_area": "grid_refinement_area",
-}
-
-
 # Main class
+# ---------------------------------------------------------------------------
 
 
 class Submodels:
@@ -98,6 +78,7 @@ class Submodels:
         subareas_layer_name: str | None = None,
         calculation_grid_cells_layer_name: str | None = None,
         isolate_1d: bool = False,
+        schematisation_type: SchematisationType = SchematisationType.RANA,
     ) -> None:
         self.schematisation_directory = Path(schematisation_directory)
         self.subareas_path = Path(subareas_path)
@@ -106,6 +87,7 @@ class Submodels:
         self.calculation_grid_cells_path = Path(calculation_grid_cells_path)
         self.calculation_grid_cells_layer_name = calculation_grid_cells_layer_name
         self.isolate_1d = isolate_1d
+        self.layer_names = LAYER_NAMES[schematisation_type]
 
         # Locate required files / directories
         self.schematisation_gpkg = self._find_file("*.gpkg", GeoPackageFileNotFoundError)
@@ -141,7 +123,9 @@ class Submodels:
         ):
             self._clip(subarea)
 
-    # helpers
+    # ------------------------------------------------------------------
+    # Private helpers
+    # ------------------------------------------------------------------
 
     def _find_file(self, pattern: str, error_cls: type[Exception]) -> Path:
         """Return the first file matching *pattern* in the schematisation directory."""
@@ -176,7 +160,9 @@ class Submodels:
         if self.subareas[self.field_name].duplicated().any():
             raise SubareaNamesNotUniqueError(f"Values in field '{self.field_name}' are not unique.")
 
+    # ------------------------------------------------------------------
     # GeoPackage reading (via Fiona — preserves model IDs)
+    # ------------------------------------------------------------------
 
     def _read_geopackage_layers(self, gpkg_path: Path) -> dict[str, gpd.GeoDataFrame]:
         """Read all layers from a GeoPackage using Fiona to preserve feature IDs.
@@ -203,7 +189,9 @@ class Submodels:
 
         return layers_dict
 
+    # ------------------------------------------------------------------
     # Spatial helpers
+    # ------------------------------------------------------------------
 
     @staticmethod
     def _spatial_join(
@@ -288,11 +276,14 @@ class Submodels:
             except OSError:
                 pass
 
+    # ------------------------------------------------------------------
     # Core clip logic
+    # ------------------------------------------------------------------
 
     def _clip(self, subarea: pd.Series) -> None:
         """Clip all schematisation data for a single sub-area."""
 
+        ln = self.layer_names
         name: str = subarea[self.field_name]
 
         # ---- Output directories ----
@@ -311,26 +302,26 @@ class Submodels:
         # ---- Read all layers from the copied GeoPackage ----
         layers = self._read_geopackage_layers(output_gpkg)
 
-        connection_node = layers[LAYER_NAMES["connection_node"]]
-        pipe = layers[LAYER_NAMES["pipe"]]
-        weir = layers[LAYER_NAMES["weir"]]
-        orifice = layers[LAYER_NAMES["orifice"]]
-        culvert = layers[LAYER_NAMES["culvert"]]
-        cross_section_loc = layers[LAYER_NAMES["cross_section_location"]]
-        channel = layers[LAYER_NAMES["channel"]]
-        pump_map = layers[LAYER_NAMES["pump_map"]]
-        pump = layers[LAYER_NAMES["pump"]]
-        bc_1d = layers[LAYER_NAMES["boundary_condition_1d"]]
-        bc_2d = layers[LAYER_NAMES["boundary_condition_2d"]]
-        lateral_1d = layers[LAYER_NAMES["lateral_1d"]]
-        lateral_2d = layers[LAYER_NAMES["lateral_2d"]]
-        surface_map = layers[LAYER_NAMES["surface_map"]]
-        surface = layers[LAYER_NAMES["surface"]]
-        obstacle = layers[LAYER_NAMES["obstacle"]]
-        potential_breach = layers[LAYER_NAMES["potential_breach"]]
-        exchange_line = layers[LAYER_NAMES["exchange_line"]]
-        grid_ref_line = layers[LAYER_NAMES["grid_refinement_line"]]
-        grid_ref_area = layers[LAYER_NAMES["grid_refinement_area"]]
+        connection_node = layers[ln["connection_node"]]
+        pipe = layers[ln["pipe"]]
+        weir = layers[ln["weir"]]
+        orifice = layers[ln["orifice"]]
+        culvert = layers[ln["culvert"]]
+        cross_section_loc = layers[ln["cross_section_location"]]
+        channel = layers[ln["channel"]]
+        pump_map = layers[ln["pump_map"]]
+        pump = layers[ln["pump"]]
+        bc_1d = layers[ln["boundary_condition_1d"]]
+        bc_2d = layers[ln["boundary_condition_2d"]]
+        lateral_1d = layers[ln["lateral_1d"]]
+        lateral_2d = layers[ln["lateral_2d"]]
+        surface_map = layers[ln["surface_map"]]
+        surface = layers[ln["surface"]]
+        obstacle = layers[ln["obstacle"]]
+        potential_breach = layers[ln["potential_breach"]]
+        exchange_line = layers[ln["exchange_line"]]
+        grid_ref_line = layers[ln["grid_refinement_line"]]
+        grid_ref_area = layers[ln["grid_refinement_area"]]
 
         # Sub-area as single-row GeoDataFrame
         subarea_gdf = gpd.GeoDataFrame(subarea.to_frame().T, geometry="geometry", crs=self.subareas.crs)
@@ -436,26 +427,26 @@ class Submodels:
 
         # ---- Step 8: Write filtered layers to the output GeoPackage ----
         write_pairs = [
-            (filtered_cn, LAYER_NAMES["connection_node"]),
-            (filtered_pipe, LAYER_NAMES["pipe"]),
-            (filtered_weir, LAYER_NAMES["weir"]),
-            (filtered_orifice, LAYER_NAMES["orifice"]),
-            (filtered_culvert, LAYER_NAMES["culvert"]),
-            (filtered_cross_section_loc, LAYER_NAMES["cross_section_location"]),
-            (filtered_channel, LAYER_NAMES["channel"]),
-            (filtered_pump_map, LAYER_NAMES["pump_map"]),
-            (filtered_pump, LAYER_NAMES["pump"]),
-            (filtered_bc_1d, LAYER_NAMES["boundary_condition_1d"]),
-            (filtered_bc_2d, LAYER_NAMES["boundary_condition_2d"]),
-            (filtered_lateral_1d, LAYER_NAMES["lateral_1d"]),
-            (filtered_lateral_2d, LAYER_NAMES["lateral_2d"]),
-            (filtered_surface_map, LAYER_NAMES["surface_map"]),
-            (filtered_surface, LAYER_NAMES["surface"]),
-            (filtered_obstacle, LAYER_NAMES["obstacle"]),
-            (filtered_potential_breach, LAYER_NAMES["potential_breach"]),
-            (filtered_exchange_line, LAYER_NAMES["exchange_line"]),
-            (filtered_grid_ref_line, LAYER_NAMES["grid_refinement_line"]),
-            (filtered_grid_ref_area, LAYER_NAMES["grid_refinement_area"]),
+            (filtered_cn, ln["connection_node"]),
+            (filtered_pipe, ln["pipe"]),
+            (filtered_weir, ln["weir"]),
+            (filtered_orifice, ln["orifice"]),
+            (filtered_culvert, ln["culvert"]),
+            (filtered_cross_section_loc, ln["cross_section_location"]),
+            (filtered_channel, ln["channel"]),
+            (filtered_pump_map, ln["pump_map"]),
+            (filtered_pump, ln["pump"]),
+            (filtered_bc_1d, ln["boundary_condition_1d"]),
+            (filtered_bc_2d, ln["boundary_condition_2d"]),
+            (filtered_lateral_1d, ln["lateral_1d"]),
+            (filtered_lateral_2d, ln["lateral_2d"]),
+            (filtered_surface_map, ln["surface_map"]),
+            (filtered_surface, ln["surface"]),
+            (filtered_obstacle, ln["obstacle"]),
+            (filtered_potential_breach, ln["potential_breach"]),
+            (filtered_exchange_line, ln["exchange_line"]),
+            (filtered_grid_ref_line, ln["grid_refinement_line"]),
+            (filtered_grid_ref_area, ln["grid_refinement_area"]),
         ]
 
         for gdf, layer_name in write_pairs:
@@ -499,6 +490,7 @@ def run(
     subareas_layer_name: str | None = None,
     calculation_grid_cells_layer_name: str | None = None,
     isolate_1d: bool = False,
+    schematisation_type: SchematisationType = SchematisationType.RANA,
 ) -> None:
     """Entry point for creating sub-models from a 3Di schematisation.
 
@@ -519,6 +511,9 @@ def run(
     isolate_1d:
         If True, 1-D elements outside the sub-area are kept but their
         exchange_type is set to 101 (isolated) instead of being removed.
+    schematisation_type:
+        SchematisationType.RANA (default) or SchematisationType.THREEDI.
+        Controls which GeoPackage layer names are used for reading and writing.
     """
     Submodels(
         schematisation_directory=schematisation_directory,
@@ -528,17 +523,5 @@ def run(
         subareas_layer_name=subareas_layer_name,
         calculation_grid_cells_layer_name=calculation_grid_cells_layer_name,
         isolate_1d=isolate_1d,
+        schematisation_type=schematisation_type,
     )
-
-
-# test_submodels.ipynb o scratch.py (fuera del paquete)
-# from hhnk_threedi_tools.breaches.submodels import run
-
-# run(
-#     schematisation_directory=r"Y:\...\schematisation",
-#     subareas_path=r"Y:\...\flood_area_oost.gpkg",
-#     field_name="Deelgebied",
-#     calculation_grid_cells_path=r"Y:\...\computational_grid_sbhz.gpkg",
-#     calculation_grid_cells_layer_name="cell",
-#     isolate_1d=True,
-# )
