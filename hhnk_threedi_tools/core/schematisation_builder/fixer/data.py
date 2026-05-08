@@ -4,14 +4,12 @@ from pathlib import Path
 import fiona
 import geopandas as gpd
 import numpy as np
-import pandas as pd
 from core.schematisation_builder.fixer.mapping import (
     _fix_iterations,
     _validation_ids,
     _validation_iterations,
     _validation_mapping,
 )
-from hydamo_validation import __version__
 from hydamo_validation.datamodel import HyDAMO
 from hydamo_validation.summaries import LayersSummary, ResultSummary
 from hydamo_validation.utils import normalize_fiona_schema, read_geopackage
@@ -26,19 +24,16 @@ class ExtendedResultSummary(ResultSummary):
         self.fix_result = []
         self.fix_layers = []
 
-    def to_json(self, results_path, file_name):
+    def to_json(self, results_path: str | Path, file_name: str) -> None:
         """
-        Write result to json
+        Serialise the result summary to a JSON file.
 
         Parameters
         ----------
         results_path : str or Path
-            Directory where results are to be written to
-
-        Returns
-        -------
-        None.
-
+            Directory where the JSON file will be written.
+        file_name : str
+            Name of the output JSON file (e.g. ``"fix_result.json"``).
         """
 
         result_json = Path(results_path).joinpath(file_name)
@@ -207,7 +202,7 @@ class ExtendedHyDAMO(HyDAMO):
 
         self._set_properties()
 
-    def _set_properties(self):
+    def _set_properties(self) -> dict:
         self.properties = {}
         if self.hydamo_path:
             layers = fiona.listlayers(self.hydamo_path)
@@ -298,23 +293,35 @@ class ExtendedHyDAMO(HyDAMO):
         check_geotype=True,
     ):
         """
-        Initialize ExtendedHyDAMO class from GeoPackage
+        Initialise an ``ExtendedHyDAMO`` instance from a HyDAMO GeoPackage.
 
         Parameters
         ----------
-        file_path : path-string
-            Path-string to the hydamo GeoPackage
+        hydamo_path : Path or None
+            Path to the validated HyDAMO GeoPackage. Required.
+        results_path : Path or None
+            Path to the validation results GeoPackage used to populate
+            ``validation_results``.
+        rules_objects : list or None
+            List of validation rule object dicts (from ``validationrules.json``).
+        version : str, optional
+            HyDAMO schema version. Default is ``"2.4"``.
+        ignored_layers : list, optional
+            Layers present in the schema but absent from the dataset to skip.
         check_columns : bool, optional
-            Check if all required columns are present in the GeoDataFrame.
-            The default is True.
+            Validate that required columns are present. Default is ``True``.
         check_geotype : bool, optional
-            Check if the geometry is of the required type. The default is True.
+            Validate that geometries match the expected type. Default is ``True``.
 
         Returns
         -------
-        hydamo : ExtendedHyDAMO
-            ExtendedHyDAMO object initialized with content of GeoPackage
+        ExtendedHyDAMO
+            Initialised instance with all available layers loaded.
 
+        Raises
+        ------
+        ValueError
+            If ``hydamo_path`` is not provided.
         """
         if not hydamo_path:
             raise ValueError(f"No geopackage path is provided.")

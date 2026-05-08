@@ -5,14 +5,14 @@ import time
 import traceback
 from functools import partial
 from pathlib import Path
-from typing import Callable, List, Literal, Optional, Tuple, Union
+from typing import Callable, Literal
 
 import geopandas as gpd
 import hhnk_research_tools as hrt
 import hydamo_validation.schemas as hydamo_validation_schemas
 import pandas as pd
 from core.schematisation_builder.fixer import hydamo_fixes
-from core.schematisation_builder.fixer.summaries import ExtendedHyDAMO, ExtendedLayersSummary, ExtendedResultSummary
+from core.schematisation_builder.fixer.data import ExtendedHyDAMO, ExtendedLayersSummary, ExtendedResultSummary
 from hydamo_validation import logical_validation
 from hydamo_validation.datamodel import HyDAMO
 from hydamo_validation.datasets import DataSets
@@ -31,7 +31,8 @@ SCHEMAS_PATH = hrt.get_pkg_resource_path(schematisation_builder_resources, "sche
 HYDAMO_SCHEMAS_PATH = hrt.get_pkg_resource_path(hydamo_validation_schemas, "hydamo")
 
 
-def _continue(message="Would you like to proceed? (y/n): "):
+def _continue(message: str = "Would you like to proceed? (y/n): ") -> bool:
+    """Prompt the user to confirm or cancel. Loops until a valid 'y' or 'n' answer is given."""
     while True:
         choice = input(message).strip().lower()
         if choice in ("y", "yes"):
@@ -42,11 +43,27 @@ def _continue(message="Would you like to proceed? (y/n): "):
             print("Please answer with 'y' or 'n'.")
 
 
-def pause_for_review(file_path: Path, logger: logging.Logger, result_summary: ExtendedResultSummary) -> bool:
+def pause_for_review(file_path: Path, logger: logging.Logger, result_summary: ExtendedResultSummary) -> None:
     """
-    Log a review pause, prompt the user to continue, and record the outcome.
+    Pause execution for a manual user review, then continue or terminate.
 
-    Returns True if the user chooses to proceed, False otherwise.
+    Logs the path to the review geopackage and prompts the user to decide
+    whether to proceed. If the user cancels, updates ``result_summary`` and
+    raises ``SystemExit``.
+
+    Parameters
+    ----------
+    file_path : Path
+        Path to the review geopackage the user can inspect or edit.
+    logger : logging.Logger
+        Logger instance for status messages.
+    result_summary : ExtendedResultSummary
+        Summary object that records a warning when the user terminates.
+
+    Raises
+    ------
+    SystemExit
+        Raised when the user answers 'n' to the continue prompt.
     """
     logger.info("User review")
     logger.info(f"Review: You can inspect or edit the review geopackage here: \n{file_path}")
@@ -59,19 +76,49 @@ def pause_for_review(file_path: Path, logger: logging.Logger, result_summary: Ex
         raise SystemExit("Process terminated by user during review.")
 
 
-def _read_schema(version: str, schemas_path: Path):
+def _read_schema(version: str, schemas_path: Path) -> dict:
+    """
+    Load the fix schema JSON for a given HyDAMO version.
+
+    Parameters
+    ----------
+    version : str
+        HyDAMO version string (e.g. "2.4").
+    schemas_path : Path
+        Directory containing ``fixes_<version>.json`` files.
+
+    Returns
+    -------
+    dict
+        Parsed JSON schema for the requested version.
+    """
     schema_json = schemas_path.joinpath(rf"fixes_{version}.json").resolve()
     with open(schema_json) as src:
         schema = json.load(src)
     return schema
 
 
-def _check_attributes(gdf, attributes):
+def _check_attributes(gdf: gpd.GeoDataFrame, attributes: list) -> None:
+    """
+    Verify that all string-valued attribute names exist as columns in ``gdf``.
+
+    Parameters
+    ----------
+    gdf : GeoDataFrame
+        The layer to validate against.
+    attributes : list
+        Attribute names or other values expected by a rule. Non-string items
+        are silently skipped.
+
+    Raises
+    ------
+    KeyError
+        If any string attribute is not present as a column in ``gdf``.
+    """
     for i in attributes:
-        if type(i) == str:
-            if not i in gdf.columns:
+        if isinstance(i, str):
+            if i not in gdf.columns:
                 raise KeyError(rf"'{i}' not in columns: {gdf.columns.to_list()}. Rule cannot be executed")
-    ## maybe write logic to check whether attributes are dependent on another dataframe or smth
 
 
 def _init_logger(log_level: str):
@@ -97,32 +144,36 @@ def _close_log_file(logger: logging.Logger):
         logger.removeHandler(h)
 
 
-def _log_to_results(log_file: Path, result_summary: ExtendedResultSummary):
+def _log_to_results(log_file: Path, result_summary: ExtendedResultSummary) -> None:
+    """Read the log file and store its lines in ``result_summary.log``."""
     result_summary.log = log_file.read_text().split("\n")
 
 
 def fixer(
-    output_types: List[str] = OUTPUT_TYPES,
+    output_types: list[str] = OUTPUT_TYPES,
     log_level: Literal["INFO", "DEBUG"] = "INFO",
     coverages: dict = {},
 ) -> Callable:
     """
+    Create a pre-configured callable for running the HyDAMO fixer.
+
+    Returns a partial of ``_fixer`` with the given settings bound. Call the
+    returned callable with a ``directory`` argument to run the fix process.
 
     Parameters
     ----------
-    output_types : List[str], optional
-        The types of output files that will be written. Options are
-        ["geojson", "csv", "geopackage"]. By default all will be written
-    log_level : Literal['INFO', 'DEBUG'], optional
-        Level for logger. The default is "INFO".
+    output_types : list[str], optional
+        Output file formats to write. Supported options: ``"geopackage"``,
+        ``"geojson"``, ``"csv"``. Default is ``["geopackage"]``.
+    log_level : {'INFO', 'DEBUG'}, optional
+        Logging verbosity. Default is ``"INFO"``.
     coverages : dict, optional
-    Location of coverages. E.g. {"AHN: path_to_ahn_dir} The default is {}.
+        Coverage lookup, e.g. ``{"AHN": path_to_ahn_dir}``. Default is ``{}``.
 
     Returns
     -------
-    Callable[[str], dict]
-        Partial of _validator function
-
+    Callable
+        Partial of ``_fixer`` with the provided arguments pre-filled.
     """
 
     return partial(
@@ -134,31 +185,45 @@ def fixer(
 
 
 def _fixer(
-    directory,
-    output_types: List[str] = OUTPUT_TYPES,
+    directory: Path,
+    output_types: list[str] = OUTPUT_TYPES,
     log_level: Literal["INFO", "DEBUG"] = "INFO",
     coverages: dict = {},
     raise_error: bool = False,
-):
+) -> tuple["ExtendedHyDAMO", "ExtendedLayersSummary", "ExtendedResultSummary"]:
     """
+    Run the full HyDAMO fix pipeline on a prepared fix directory.
+
+    The directory must contain:
+    - ``datasets/HyDAMO_validated.gpkg``
+    - ``validationrules.json``
+    - ``results.gpkg`` (from a prior validation run)
+
+    The fix process proceeds in the following stages:
+    1. Fix-preparation: review layer is built and exported for manual inspection.
+    2. User review pause: the process halts so fixes can be checked or adjusted.
+    3. Fix execution: staged fixes (including any manual overwrites) are applied.
+    4. Export: the corrected HyDAMO geopackage and result JSON are written.
+
     Parameters
     ----------
-    directory : str
-        Directory with datasets sub-directory and validation_rules.json
-    output_types : List[str], optional
-        The types of output files that will be written. Options are
-        ["geojson", "csv", "geopackage"]. By default all will be written
-    log_level : Literal['INFO', 'DEBUG'], optional
-        Level for logger. The default is "INFO".
+    directory : Path
+        Root directory containing the datasets, validation rules, and results.
+    output_types : list[str], optional
+        Output file formats to write. Default is ``["geopackage"]``.
+    log_level : {'INFO', 'DEBUG'}, optional
+        Logging verbosity. Default is ``"INFO"``.
     coverages : dict, optional
-       Location of coverages. E.g. {"AHN: path_to_ahn_dir} The default is {}.
-    raise_error: bool, optional
-        Will raise an error (or not) when Exception is raised. The default is False
+        Coverage lookup, e.g. ``{"AHN": path_to_ahn_dir}``. Default is ``{}``.
+    raise_error : bool, optional
+        If ``True``, re-raise exceptions instead of logging them and continuing.
+        Default is ``False``.
 
     Returns
     -------
-    HyDAMO, LayersSummary, ResultSummary
-        Will return a tuple with a filled HyDAMO datamodel, layers_summary and result_summary
+    tuple[ExtendedHyDAMO, ExtendedLayersSummary, ExtendedResultSummary]
+        The corrected datamodel, fix layer summary, and overall result summary.
+        On failure, returns ``(None, fix_summary, result_summary)``.
     """
     timer = Timer()
     try:
@@ -369,27 +434,30 @@ def _fixer(
 
 
 def fixer(
-    output_types: List[str] = OUTPUT_TYPES,
+    output_types: list[str] = OUTPUT_TYPES,
     log_level: Literal["INFO", "DEBUG"] = "INFO",
     coverages: dict = {},
 ) -> Callable:
     """
+    Create a pre-configured callable for running the HyDAMO fixer.
+
+    Returns a partial of ``_fixer`` with the given settings bound. Call the
+    returned callable with a ``directory`` argument to run the fix process.
 
     Parameters
     ----------
-    output_types : List[str], optional
-        The types of output files that will be written. Options are
-        ["geojson", "csv", "geopackage"]. By default all will be written
-    log_level : Literal['INFO', 'DEBUG'], optional
-        Level for logger. The default is "INFO".
+    output_types : list[str], optional
+        Output file formats to write. Supported options: ``"geopackage"``,
+        ``"geojson"``, ``"csv"``. Default is ``["geopackage"]``.
+    log_level : {'INFO', 'DEBUG'}, optional
+        Logging verbosity. Default is ``"INFO"``.
     coverages : dict, optional
-    Location of coverages. E.g. {"AHN: path_to_ahn_dir} The default is {}.
+        Coverage lookup, e.g. ``{"AHN": path_to_ahn_dir}``. Default is ``{}``.
 
     Returns
     -------
-    Callable[[str], dict]
-        Partial of _validator function
-
+    Callable
+        Partial of ``_fixer`` with the provided arguments pre-filled.
     """
 
     return partial(

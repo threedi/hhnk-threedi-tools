@@ -2,8 +2,8 @@ import shutil
 from pathlib import Path
 
 import hhnk_research_tools as hrt
+from core.schematisation_builder.fixer.data import ExtendedHyDAMO
 from core.schematisation_builder.fixer.fixer import fixer
-from core.schematisation_builder.fixer.summaries import ExtendedHyDAMO
 
 
 def fix_hydamo(
@@ -14,32 +14,44 @@ def fix_hydamo(
     coverages_dict: dict,
     output_types: list[str] = ["geopackage"],
     logger=None,
-) -> tuple[ExtendedHyDAMO, dict]:
+) -> tuple[ExtendedHyDAMO, dict, dict]:
     r"""
-    Validate the HyDAMO file
+    Apply automated fixes to a validated HyDAMO file.
+
+    Copies the HyDAMO file, validation rules, and validation results into
+    ``fix_directory_path``, then runs the fixer pipeline which:
+    1. Builds a review layer with fix suggestions and validation summaries.
+    2. Pauses for manual inspection (the user can edit ``manual_overwrite`` columns).
+    3. Applies staged fixes and manual overwrites to produce ``HyDAMO_fixed.gpkg``.
 
     Parameters
     ----------
     hydamo_file_path : Path
-        Path to the HyDAMO file
+        Path to the validated HyDAMO GeoPackage.
     validation_rules_json_path : Path
-        Path to the JSON file with validation rules
+        Path to the JSON file with validation rules.
+    results_gpkg_path : Path
+        Path to the validation results GeoPackage (from a prior validation run).
+    fix_directory_path : Path
+        Working directory for the fix process. Created if it does not exist.
+        Receives copies of the input files and all intermediate outputs.
     coverages_dict : dict
-        Dictionary with the coverages, e.g. {"AHN": r"../tests/data/dtm"}. This dtm dir needs to
-        hold an index.shp file, see hydamo_validation/functions/general.py buffer(). Here it uses
-        the COVERAGES dict to load an index.shp to gdf.
+        Coverage lookup used by topologic/general rules,
+        e.g. ``{"AHN": r"../tests/data/dtm"}``. The directory must contain an
+        ``index.shp`` file (see ``hydamo_validation/functions/general.py``).
     output_types : list[str], optional
-        List with the output types, by default ["geopackage"]
-
-    Writes
-    ------
-    TODO
+        Output file formats to write. Default is ``["geopackage"]``.
+    logger : logging.Logger, optional
+        Logger instance. A default logger is created if not provided.
 
     Returns
     -------
+    datamodel : ExtendedHyDAMO
+        The corrected HyDAMO datamodel.
+    layer_summary : dict
+        Per-layer fix summary produced during the review phase.
     result_summary : dict
-        Output dict with summary of validation, including; succesful, missing_layers, logs.
-        This is also written to results\validation_result.json.
+        Overall fix result summary including status, warnings, and errors.
     """
     if not logger:
         logger = hrt.logging.get_logger(__name__)

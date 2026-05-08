@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Set, Tuple
+from typing import Any
 
 from shapely.geometry import LineString, Point, Polygon
 
@@ -26,7 +26,7 @@ LAYER_MAPPING = {
 }
 
 
-def _build_general_rules_lookup_table(validation_rules: Dict[str, Any]) -> Dict[str, Dict[str, Dict[str, Any]]]:
+def _build_general_rules_lookup_table(validation_rules: dict[str, Any]) -> dict[str, dict[str, dict[str, Any]]]:
     """
     Build a lookup table for derived variables originating from 'general_rules'.
 
@@ -56,10 +56,10 @@ def _build_general_rules_lookup_table(validation_rules: Dict[str, Any]) -> Dict[
           }
         }
     """
-    lookup: Dict[str, Dict[str, Dict[str, Any]]] = {}
+    lookup: dict[str, dict[str, dict[str, Any]]] = {}
     for layer, ruleset in validation_rules.items():
         general_rules = ruleset.get("general_rules", [])
-        layer_lookup: Dict[str, Dict[str, Any]] = {}
+        layer_lookup: dict[str, dict[str, Any]] = {}
         for gr in general_rules:
             # NOTE: your JSON uses "result_variable" for name
             rv = gr.get("result_variable")
@@ -70,13 +70,13 @@ def _build_general_rules_lookup_table(validation_rules: Dict[str, Any]) -> Dict[
 
 
 def _extract_inputs_from_function(
-    func: Dict[str, Any],
+    func: dict[str, Any],
     current_layer: str,
-    layers: Set[str],
-    columns_by_layer: Dict[str, Set[str]],
-    general_lookup_by_layer: Dict[str, Dict[str, Dict[str, Any]]],
-    seen_general: Set[Tuple[str, str]] | None = None,
-) -> List[Dict[str, Any]]:
+    layers: set[str],
+    columns_by_layer: dict[str, set[str]],
+    general_lookup_by_layer: dict[str, dict[str, dict[str, Any]]],
+    seen_general: set[tuple[str, str]] | None = None,
+) -> list[dict[str, Any]]:
     """
     Recursively extract all concrete input references required by a function
     definition used in logical/general/topologic rules.
@@ -118,30 +118,30 @@ def _extract_inputs_from_function(
 
     fname = next(iter(func))
     params = func[fname]
-    inputs: List[Dict[str, Any]] = []
+    inputs: list[dict[str, Any]] = []
     prefix = ""
 
     # -------------------------------------------------------------
-    # STEP 1 — Detect object references via "*object*" in key
+    # STEP 1 - Detect object references via "*object*" in key
     # -------------------------------------------------------------
-    referenced_objects: Dict[str, str] = {}  # {object: prefix}
+    referenced_objects: dict[str, str] = {}  # {object: prefix}
     for key, val in params.items():
         if "object" in key.lower() and isinstance(val, str) and val in layers:
             prefix = key.lower().split("object")[0].rstrip("_")
             referenced_objects[val] = prefix
 
     # -------------------------------------------------------------
-    # STEP 2 — Process each parameter
+    # STEP 2 - Process each parameter
     # -------------------------------------------------------------
     for key, val in params.items():
         # ----------------------------
-        # CASE A — numeric → ignore
+        # CASE A - numeric → ignore
         # ----------------------------
         if isinstance(val, (int, float, bool)) or val is None:
             continue
 
         # ----------------------------
-        # CASE B — nested function
+        # CASE B - nested function
         # ----------------------------
         if isinstance(val, dict) and len(val) == 1:
             nested = _extract_inputs_from_function(
@@ -156,7 +156,7 @@ def _extract_inputs_from_function(
             continue
 
         # ----------------------------
-        # CASE C — string only
+        # CASE C - string only
         # ----------------------------
         if isinstance(val, str):
             # RULE: If val is a derived variable on current layer → expand recursively
@@ -202,7 +202,7 @@ def _extract_inputs_from_function(
                         break
 
     # -------------------------------------------------------------
-    # STEP 3 — Whole-object inference
+    # STEP 3 - Whole-object inference
     # Only add {object: <obj>, attribute: None} if there is NO key
     # in 'params' that starts with the object's prefix (besides the
     # "<prefix>_object" key itself).
@@ -214,7 +214,7 @@ def _extract_inputs_from_function(
             inputs.append({"object": obj, "attribute": None})
 
     # -------------------------------------------------------------
-    # STEP 4 — Deduplicate
+    # STEP 4 - Deduplicate
     # -------------------------------------------------------------
     final = []
     seen = set()
@@ -229,8 +229,8 @@ def _extract_inputs_from_function(
 
 def map_general_rule_inputs(
     datamodel,
-    layers: List[str],
-) -> Dict[str, Dict[int, List[Dict[str, Any]]]]:
+    layers: list[str],
+) -> dict[str, dict[int, list[dict[str, Any]]]]:
     """
     Build a mapping of general-rule input dependencies for each layer.
 
@@ -260,14 +260,14 @@ def map_general_rule_inputs(
     """
 
     # Cache columns per layer
-    columns_by_layer: Dict[str, Set[str]] = {
+    columns_by_layer: dict[str, set[str]] = {
         layer: set(getattr(getattr(datamodel, layer), "columns", [])) for layer in layers
     }
 
     validation_rules = datamodel.validation_rules
     general_lookup_by_layer = _build_general_rules_lookup_table(validation_rules)
 
-    mapping: Dict[str, Dict[int, List[Dict[str, Any]]]] = {}
+    mapping: dict[str, dict[int, list[dict[str, Any]]]] = {}
 
     for layer in layers:
         mapping[layer] = {}
@@ -292,10 +292,10 @@ def map_general_rule_inputs(
 
 def _validation_mapping(
     datamodel,
-    layers: List[str],
+    layers: list[str],
     include_topologic: bool = True,
     omit_topologic_as_none: bool = False,
-) -> Dict[str, Dict[int, List[Dict[str, Any]]]]:
+) -> dict[str, dict[int, list[dict[str, Any]]]]:
     """
     Build a mapping of validation-rule input dependencies for each layer.
 
@@ -334,7 +334,7 @@ def _validation_mapping(
     }
     """
     # Cache columns per layer
-    columns_by_layer: Dict[str, Set[str]] = {}
+    columns_by_layer: dict[str, set[str]] = {}
     for layer in layers:
         gdf = getattr(datamodel, layer)
         columns_by_layer[layer] = set(getattr(gdf, "columns", []))
@@ -343,7 +343,7 @@ def _validation_mapping(
     validation_rules = getattr(datamodel, "validation_rules")
     general_lookup_by_layer = _build_general_rules_lookup_table(validation_rules)
 
-    mapping: Dict[str, Dict[int, List[Dict[str, Any]]]] = {}
+    mapping: dict[str, dict[int, list[dict[str, Any]]]] = {}
     for layer in layers:
         mapping[layer] = {}
         ruleset = validation_rules.get(layer, {})
@@ -377,19 +377,21 @@ def _validation_mapping(
 
 def _validation_iterations(mapping: dict) -> dict[str, int]:
     """
-    Assigns an execution round (integer) to each key in the mapping dictionary.
+    Assign an execution round to each layer based on inter-layer dependencies.
 
-    Rules:
-    - Round is determined by the depth of dependencies on other top-level keys.
-    - Keys with no references to other top-level keys get round 1.
-    - Keys that reference keys from round N get at least round N+1.
-    - Rounds are resolved iteratively until stable (handles transitive dependencies).
+    Layers with no references to other layers are assigned round 1. Layers that
+    depend on layers in round N are assigned at least round N+1. Rounds are
+    resolved iteratively until stable, handling transitive dependencies.
 
-    Args:
-        mapping: Dictionary as loaded from the JSON file.
+    Parameters
+    ----------
+    mapping : dict
+        Nested mapping from layer -> {validation_id: [{"object": ..., "attribute": ...}]}.
 
-    Returns:
-        Dictionary mapping each top-level key to its execution round integer.
+    Returns
+    -------
+    dict[str, int]
+        Mapping from each layer name to its execution round number.
     """
     top_level_keys = set(mapping.keys())
 
@@ -424,16 +426,22 @@ def _validation_iterations(mapping: dict) -> dict[str, int]:
 
 def _get_validation_ids_for_attribute(mapping: dict, object_layer: str, attribute_name: str) -> list[int]:
     """
-    Returns the indexes (subkeys) within an object_layer whose entries contain
-    a specific object + attribute combination matching the object_layer itself.
+    Return validation IDs that reference a specific attribute of a given layer.
 
-    Args:
-        mapping: Nested dict mapping layer -> {validation_id: [{"object": ..., "attribute": ...}]}.
-        object_layer: The top-level key to look in (e.g. "stuw").
-        attribute_name: The attribute to match (e.g. "hoogteconstructie").
+    Parameters
+    ----------
+    mapping : dict
+        Nested dict mapping layer -> {validation_id: [{"object": ..., "attribute": ...}]}.
+    object_layer : str
+        Layer name to look up (e.g. ``"stuw"``).
+    attribute_name : str
+        Attribute name to match (e.g. ``"hoogteconstructie"``).
 
-    Returns:
-        List of integer indexes where the object_layer + attribute_name combination is found.
+    Returns
+    -------
+    list[int]
+        Validation IDs where the ``object_layer`` + ``attribute_name`` combination
+        is found in the mapping.
     """
     layer_checks = mapping.get(object_layer, {})
 
@@ -448,12 +456,16 @@ def _validation_ids(validation_mapping: dict) -> dict[str, dict[str, list[int]]]
     """
     Build a full mapping of validation IDs for every attribute of every layer.
 
-    Args:
-        validation_mapping: Nested dict mapping layer -> {validation_id: [{"object": ..., "attribute": ...}]}.
+    Parameters
+    ----------
+    validation_mapping : dict
+        Nested dict mapping layer -> {validation_id: [{"object": ..., "attribute": ...}]}.
 
-    Returns:
-        Dict mapping layer -> {attribute_name: [validation_ids]}.
-        e.g. {'duikersifonhevel': {'hoogteopening': [10, 11], 'breedteopening': [12]}}
+    Returns
+    -------
+    dict[str, dict[str, list[int]]]
+        Mapping from layer -> {attribute_name: [validation_ids]}.
+        Example: ``{'duikersifonhevel': {'hoogteopening': [10, 11], 'breedteopening': [12]}}``
     """
     result: dict[str, dict[str, list[int]]] = {}
     for object_layer, layer_checks in validation_mapping.items():
@@ -484,22 +496,30 @@ def _fix_iterations(
     Build a fix iteration dict based on LAYER_MAPPING attribute priorities.
 
     For each object layer, groups fix rules by iteration key from LAYER_MAPPING.
-    Within each iteration group, fix rules are ordered by the total number of input
-    parameters across their associated validation rules (fewest dependencies first).
+    Within each iteration group, fix rules are ordered by the number of unique
+    (object, attribute) input pairs across their associated validation rules
+    (fewest unique dependencies first).
 
-    Args:
-        validation_rules: Raw validation rules dict (e.g. datamodel.validation_rules).
-            Expected structure: validation_rules[layer]["fix_rules"] -> list of fix rule dicts
-            (each with at least 'fix_id' and 'attribute_name').
-        validation_mapping: Nested dict mapping layer -> {validation_id: [{"object": ..., "attribute": ...}]}.
-        validation_ids: Precomputed dict mapping layer -> {attribute_name: [validation_ids]}.
-            As produced by _validation_ids(validation_mapping).
-        layer_mapping: Dict mapping layer -> {iteration_num: [attribute_names]}.
-            Defaults to LAYER_MAPPING.
+    Parameters
+    ----------
+    validation_rules : dict
+        Raw validation rules dict (e.g. datamodel.validation_rules).
+        Expected structure: validation_rules[layer]["fix_rules"] -> list of fix rule dicts
+        (each with at least ``'fix_id'`` and ``'attribute_name'``).
+    validation_mapping : dict
+        Nested dict mapping layer -> {validation_id: [{"object": ..., "attribute": ...}]}.
+    validation_ids : dict[str, dict[str, list[int]]]
+        Precomputed dict mapping layer -> {attribute_name: [validation_ids]}.
+        As produced by ``_validation_ids(validation_mapping)``.
+    layer_mapping : dict, optional
+        Dict mapping layer -> {iteration_num: [attribute_names]}.
+        Defaults to ``LAYER_MAPPING``.
 
-    Returns:
-        Dict mapping layer -> {iteration_num: [fix_ids]} where fix IDs within each
-        iteration group are sorted by total validation input dependency count (ascending),
+    Returns
+    -------
+    dict[str, dict[int, list[int]]]
+        Mapping layer -> {iteration_num: [fix_ids]} where fix IDs within each
+        iteration group are sorted by unique input dependency count (ascending),
         then by fix_id (ascending).
 
     Example:
@@ -548,10 +568,18 @@ def _fix_iterations(
             # Attributes not in LAYER_MAPPING go into the overflow iteration bucket
             rule_iteration = attribute_to_iteration.get(attribute_name, overflow_iteration)
 
-            # Count total input parameters across all validation rules associated
-            # with this fix rule (via validation_ids lookup)
+            # Count unique (object, attribute) input pairs across all validation rules
+            # associated with this fix rule. Deduplication prevents rules that reference
+            # the same input via multiple validation rule IDs from being ranked higher
+            # than they should be.
             attr_val_ids = validation_ids.get(object_layer, {}).get(attribute_name, [])
-            dep_count = sum(len(entries) for key, entries in layer_checks.items() if int(key) in attr_val_ids)
+            unique_inputs = {
+                (entry["object"], entry["attribute"])
+                for key, entries in layer_checks.items()
+                if int(key) in attr_val_ids
+                for entry in entries
+            }
+            dep_count = len(unique_inputs)
 
             if rule_iteration not in iteration_groups:
                 iteration_groups[rule_iteration] = []  # fallback for iterations not in LAYER_MAPPING
