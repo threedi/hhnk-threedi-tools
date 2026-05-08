@@ -54,6 +54,10 @@ openpyxl = "*"  # 3.1.2
 pandas = "==2.2.2"
 scipy = "==1.13.0"
 urllib3 = "2.*" #2.2.3
+<<<<<<< Updated upstream
+=======
+pre-commit = "*"
+>>>>>>> Stashed changes
 
 # HHNK deps
 cached_property = "*"
