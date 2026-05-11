@@ -190,7 +190,6 @@ class Submodels:
 
         return layers_dict
 
-
     @staticmethod
     def _write_layer(
         gdf: gpd.GeoDataFrame,
