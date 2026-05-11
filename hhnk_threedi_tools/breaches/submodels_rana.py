@@ -167,8 +167,9 @@ class Submodels:
     def _read_geopackage_layers(self, gpkg_path: Path) -> dict[str, gpd.GeoDataFrame]:
         """Read all layers from a GeoPackage using Fiona to preserve feature IDs.
 
-        The 'id' column is added to every layer regardless of whether it has
-        features, so downstream filtering on 'id' never raises a KeyError.
+        The 'id' column is added to every layer (populated from fiona's feat["id"],
+        which is the SQLite primary key). This enables downstream filtering by id.
+        The column is always dropped before writing back via _write_layer().
         """
         layers_dict: dict[str, gpd.GeoDataFrame] = {}
 
@@ -181,7 +182,7 @@ class Submodels:
                 gdf = gpd.GeoDataFrame.from_features(records, crs=crs)
                 gdf["id"] = [int(feat["id"]) for feat in records]
             else:
-                gdf = gpd.read_file(gpkg_path, layer=layer_name, driver="GPKG")
+                gdf = gpd.read_file(gpkg_path, layer=layer_name, engine="fiona")
                 if "id" not in gdf.columns:
                     gdf["id"] = pd.array([], dtype="int64")
 
@@ -189,9 +190,34 @@ class Submodels:
 
         return layers_dict
 
-    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _write_layer(
+        gdf: gpd.GeoDataFrame,
+        gpkg_path: Path,
+        layer_name: str,
+    ) -> None:
+        if gdf.empty:
+            return
+
+        # IDs a mantener
+        valid_ids = set(gdf["id"].astype(int))
+
+        # Abrir con GDAL y eliminar features que no están en valid_ids
+        ds = ogr.Open(str(gpkg_path), update=1)  # update=1 → escritura
+        layer = ds.GetLayerByName(layer_name)
+
+        ids_to_delete = []
+        for feature in layer:
+            if feature.GetFID() not in valid_ids:
+                ids_to_delete.append(feature.GetFID())
+
+        for fid in ids_to_delete:
+            layer.DeleteFeature(fid)
+
+        ds = None  # cerrar
+
     # Spatial helpers
-    # ------------------------------------------------------------------
 
     @staticmethod
     def _spatial_join(
@@ -295,7 +321,9 @@ class Submodels:
             self.schematisation_sqlite.stem + "_" + name + self.schematisation_sqlite.suffix
         )
 
-        # Copy base schematisation files
+        # Copy base schematisation files.
+        # This preserves the original GeoPackage schema (including primary keys,
+        # column types and empty layers) for all layers before any filtering.
         shutil.copy(self.schematisation_gpkg, output_gpkg)
         shutil.copy(self.schematisation_sqlite, output_sqlite)
 
@@ -419,13 +447,10 @@ class Submodels:
             filtered_lateral_1d = lateral_1d
             filtered_surface_map = surface_map
 
-        # ---- Step 7: Drop the helper 'id' column before writing ----
-        # 'id' was added during reading to enable filtering; must not be
-        # written back to avoid schema conflicts with the original GeoPackage.
-        def _drop_id(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
-            return gdf.drop(columns=["id"], errors="ignore")
-
-        # ---- Step 8: Write filtered layers to the output GeoPackage ----
+        # print(filtered_channel[["id", "connection_node_id_start", "connection_node_id_end"]].head(10))
+        # ---- Step 7: Write filtered layers to the output GeoPackage ----
+        # _write_layer() drops the helper 'id' column and skips empty layers
+        # to preserve the original GeoPackage schema from shutil.copy().
         write_pairs = [
             (filtered_cn, ln["connection_node"]),
             (filtered_pipe, ln["pipe"]),
@@ -450,9 +475,9 @@ class Submodels:
         ]
 
         for gdf, layer_name in write_pairs:
-            _drop_id(gdf).to_file(output_gpkg, layer=layer_name, driver="GPKG")
+            self._write_layer(gdf, output_gpkg, layer_name)
 
-        # ---- Step 9: Clip rasters (if present) ----
+        # ---- Step 8: Clip rasters (if present) ----
         if self.rasters_directory is None:
             return
 
