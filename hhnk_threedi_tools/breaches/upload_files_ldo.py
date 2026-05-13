@@ -382,7 +382,7 @@ if __name__ == "__main__":
             time.sleep(sleeptime)
 
 # %%
-excel_path = r"Y:\03.resultaten\Normering Regionale Keringen\output\scenarios_output\N&S\check_list_control_table.xlsx"
+excel_path = r"H:\03.resultaten\Normering Regionale Keringen\ipo_ldo_sctructuur\scenarios_ids.xlsx"
 check_excel = pd.read_excel(excel_path, sheet_name="Blad2")
 scenario_id = check_excel["Scenario ID"].values
 ldo_api = LDO_API(api_key=LDO_API_KEY)
