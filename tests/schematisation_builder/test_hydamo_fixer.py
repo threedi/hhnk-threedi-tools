@@ -19,7 +19,7 @@ MANUAL_FIX = False
 
 @pytest.mark.skipif(sys.version_info < (3, 12), reason="Requires Python 3.12 or higher")
 def test_hydamo_fixer():
-    hydamo_file_path = TEST_DIRECTORY / "schematisation_builder" / "HyDAMO_validated.gpkg"
+    hydamo_file_path_validated = TEST_DIRECTORY / "schematisation_builder" / "HyDAMO_validated.gpkg"
 
     if RUN_VALIDATION:
         validation_directory_path = TEMP_DIR / f"temp_HyDAMO_validator_{hrt.current_time(date=True)}"
@@ -39,7 +39,11 @@ def test_hydamo_fixer():
             output_types=["geopackage", "csv", "geojson"],
         )
         datamodel.to_geopackage(validation_directory_path / "HyDAMO_validated.gpkg", use_schema=False)
-        shutil.copy2(validation_directory_path / "HyDAMO_validated.gpkg", hydamo_file_path)
+        shutil.copy2(validation_directory_path / "HyDAMO_validated.gpkg", hydamo_file_path_validated)
+        shutil.copy2(
+            validation_directory_path / "results" / "results.gpkg",
+            TEST_DIRECTORY / "schematisation_builder" / "results.gpkg",
+        )
 
     hydamo_file_path = TEST_DIRECTORY / "schematisation_builder" / "HyDAMO_validated.gpkg"
     validation_rules_json_path = hrt.get_pkg_resource_path(schematisation_builder_resources, "validationrules.json")

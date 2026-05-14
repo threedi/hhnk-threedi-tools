@@ -476,7 +476,7 @@
 			"validation_rules": [
 				{
 					"id": 0,
-					"name": "BOK bovenstrooms plausibel (-8m - maaiveld)",
+					"name": "BOK bovenstrooms plausibel (-8m - 10m)",
 					"type": "logic",
 					"validation_rule_set": "basic",
 					"error_type": "critical",
@@ -488,14 +488,14 @@
 						"BE": {
 							"parameter": "hoogtebinnenonderkantbov",
 							"min": -8,
-							"max": 325,
+							"max": 10,
 							"inclusive": false
 						}
 					}
 				},
 				{
 					"id": 1,
-					"name": "BOK benedenstrooms plausibel (-8m - maaiveld)",
+					"name": "BOK benedenstrooms plausibel (-8m - 10m)",
 					"type": "logic",
 					"validation_rule_set": "basic",
 					"error_type": "critical",
@@ -506,7 +506,7 @@
 						"BE": {
 							"parameter": "hoogtebinnenonderkantbene",
 							"min": -8,
-							"max": 325,
+							"max": 10,
 							"inclusive": false
 						}
 					}
@@ -656,7 +656,7 @@
 					"error_type": "critical",
 					"result_variable": "bok_bov_boven_bodem",
 					"error_message": "bok bovenstrooms beneden bodem",
-					"active": true,
+					"active": false,
 					"function": {
 						"compare_longitudinal": {
 							"parameter": "hoogtebinnenonderkantbov",
@@ -669,13 +669,13 @@
 				},
 				{
 					"id": 11,
-					"name": "De BOK benedenstrooms mag slechts minimaal lager liggen dan de bendenstroomse bodemhoogte van het hydroobject",
+					"name": "De BOK benedenstrooms mag slechts minimaal lager liggen dan de benedenstroomse bodemhoogte van het hydroobject",
 					"type": "topologic",
 					"validation_rule_set": "basic",
 					"error_type": "critical",
 					"result_variable": "bok_ben_boven_bodem",
-					"error_message": "bok bendenstrooms beneden bodem",
-					"active": true,
+					"error_message": "bok benedenstrooms beneden bodem",
+					"active": false,
 					"function": {
 						"compare_longitudinal": {
 							"parameter": "hoogtebinnenonderkantbene",
@@ -683,6 +683,38 @@
 							"compare_parameter": "bodemhoogte_marge_min",
 							"logical_operator": "GT",
 							"direction": "downstream"
+						}
+					}
+				},
+				{
+					"id": 12,
+					"name": "Duikers moeten een minimale hoogte van 0.01m hebben",
+					"type": "logic",
+					"validation_rule_set": "basic",
+					"error_type": "non-critical",
+					"result_variable": "hoogte_min_0_01m",
+					"error_message": "hoogteopening < 0.01m",
+					"active": true,
+					"function": {
+						"GE": {
+							"left": "hoogteopening",
+							"right": 0.01
+						}
+					}
+				},
+				{
+					"id": 13,
+					"name": "Duikers moeten een minimale breedte van 0.01m hebben",
+					"type": "logic",
+					"validation_rule_set": "basic",
+					"error_type": "non-critical",
+					"result_variable": "breedte_min_0_01m",
+					"error_message": "breedteopening < 0.01m",
+					"active": true,
+					"function": {
+						"GE": {
+							"left": "breedteopening",
+							"right": 0.01
 						}
 					}
 				}
@@ -697,8 +729,8 @@
                     "fix_method": {
                         "custom_hydamo": {
 							"custom_function_name": "fix_relative_to_level",
-							"parameter": "hoogteopening",
-							"compare_parameter": "peilgebiedpraktijk_laagste_streefpeil",
+							"parameter":"peilgebiedpraktijk_laagste_streefpeil",
+							"compare_parameter": "hoogteopening",
 							"operator": "-" 
 						}
                     },
@@ -718,22 +750,53 @@
                     },
                     "fix_description": "hoogtebinnenonderkantbov - 50"
                 },
-                {
-                    "attribute_name": "lengte",
-                    "validation_ids": [4],
+				{
+                    "attribute_name": "hoogteopening",
+                    "validation_ids": [12],
                     "fix_id": 3,
-                    "fix_action": "Derived assumption",
+                    "fix_action": "Replace",
                     "fix_type": "automatic",
                     "fix_method": {
                         "equal": {
-							"to": -993
+							"to": "breedteopening"
 						}
                     },
-                    "fix_description": "Set to -993"
+                    "fix_description": "hoogte gelijk aan breedte als valide"
                 },
 				{
+                    "attribute_name": "hoogteopening",
+					"validation_ids": [12],
+                    "fix_id": 4,
+                    "fix_action": "Derived assumption",
+                    "fix_type": "automatic",
+                    "fix_method": {
+                   		"custom_hydamo":{
+							"custom_function_name": "if_else",
+							"logic": {
+								"ISIN": {
+									"parameter": "categorieinwatersysteem",
+									"array": [
+										"primair"
+									]
+								}
+							},
+							"true": {
+								"equal": {
+									"to": 0.8
+								}
+							},
+							"false": {
+								"equal": {
+									"to": 0.5
+								}
+							}
+                    	}
+					},
+                    "fix_description": "if duikersifonhevel in primair watersysteem: hoogteopening = 0.8m, anders hoogteopening = 0.5m"
+				},
+				{
                     "attribute_name": "breedteopening",
-					"validation_ids": [5],
+					"validation_ids": [13],
                     "fix_id": 5,
                     "fix_action": "Derived assumption",
                     "fix_type": "automatic",
@@ -760,7 +823,14 @@
 							}
                     	}
 					},
-                    "fix_description": "if duikersifonhevel in primair watersysteem: breedteopening = 0.8m, anders breedteopening = 0.5m",
+                    "fix_description": "if duikersifonhevel in primair watersysteem: breedteopening = 0.8m, anders breedteopening = 0.5m"
+				},
+				{
+					"attribute_name": "hoogteopening",
+					"validation_ids": [5],
+					"fix_id": 6,
+					"fix_action": "Replace",
+					"fix_type": "automatic",
 					"filter": {
 						"ISIN": {
 							"parameter": "vormkoker",
@@ -768,7 +838,13 @@
 								"Rond"
 							]
 						}
-					}
+					},
+					"fix_method": {
+						"equal": {
+							"to": "breedteopening"
+						}
+					},
+					"fix_description": "hoogte gelijk aan breedte als valide wanneer vormkoker rond is"
 				}
 			]
 		},
@@ -964,160 +1040,6 @@
 						"LE": {
 							"left": "maximalehoogtebovenkant",
 							"right": "kunstwerkopening_hoogstedoorstroomhoogte"
-						}
-					}
-				}
-			]
-		},
-		{
-			"object": "kunstwerkopening",
-			"general_rules": [
-				{
-					"id": 0,
-					"result_variable": "regelmiddel_minimalehoogtebovenkant",
-					"function": {
-						"object_relation": {
-							"statistic": "min",
-							"related_object": "regelmiddel",
-							"related_parameter": "minimalehoogtebovenkant"
-						}
-					}
-				},
-				{
-					"id": 1,
-					"result_variable": "regelmiddel_soortregelmiddel",
-					"function": {
-						"object_relation": {
-							"statistic": "majority",
-							"related_object": "regelmiddel",
-							"related_parameter": "soortregelmiddel"
-						}
-					}
-				},
-				{
-					"id": 2,
-					"result_variable": "regelmiddel_maximalehoogtebovenkant",
-					"function": {
-						"object_relation": {
-							"statistic": "max",
-							"related_object": "regelmiddel",
-							"related_parameter": "maximalehoogtebovenkant"
-						}
-					}
-				},
-				{
-					"id": 3,
-					"result_variable": "regelmiddel_aantal_regelmiddelen",
-					"function": {
-						"object_relation": {
-							"statistic": "count",
-							"related_object": "regelmiddel",
-							"fill_value": 0
-						}
-					}
-				}
-			],
-			"validation_rules": [
-				{
-					"id": 0,
-					"name": "hoogstedoorstroomhoogte plausibel (-8m - 325m)",
-					"type": "logic",
-					"validation_rule_set": "basic",
-					"error_type": "critical",
-					"result_variable": "hoogstedoorstroomhoogte_plausibel",
-					"error_message": "hoogstedoorstroomhoogte niet plausibel",
-					"active": true,
-					"function": {
-						"BE": {
-							"parameter": "hoogstedoorstroomhoogte",
-							"min": -8,
-							"max": 325,
-							"inclusive": false
-						}
-					}
-				},
-				{
-					"id": 1,
-					"name": "laagstedoorstroomhoogte plausibel (-8m - 325m)",
-					"type": "logic",
-					"validation_rule_set": "basic",
-					"error_type": "critical",
-					"result_variable": "laagstedoorstroomhoogte_plausibel",
-					"error_message": "laagstedoorstroomhoogte niet plausibel",
-					"active": true,
-					"function": {
-						"BE": {
-							"parameter": "laagstedoorstroomhoogte",
-							"min": -8,
-							"max": 325,
-							"inclusive": false
-						}
-					}
-				},
-				{
-					"id": 2,
-					"name": "De laagste doorstroombreedte moet kleiner zijn dan de hoogste doorstroombreedte, bij een driehoekige of trapeziumvormige opening",
-					"type": "logic",
-					"validation_rule_set": "basic",
-					"error_type": "critical",
-					"result_variable": "laagstedrstrmbreedte_lt_hoogstedrstrmbreedte",
-					"error_message": "laagstedrstrmbreedte > hoogstedrstrmbreedte",
-					"active": true,
-					"filter": {
-						"ISIN": {
-							"parameter": "vormopening",
-							"array": [
-								"Driehoekig",
-								"Trapeziumvormig"
-							]
-						}
-					},
-					"function": {
-						"LT": {
-							"left": "laagstedoorstroombreedte",
-							"right": "hoogstedoorstroombreedte"
-						}
-					}
-				},
-				{
-					"id": 3,
-					"name": "De laagste doorstroomhoogte moet kleiner zijn dan de hoogste doorstroomhoogte",
-					"type": "logic",
-					"validation_rule_set": "basic",
-					"error_type": "critical",
-					"result_variable": "laagstedrstrmhoogte_lt_hoogstedrstrmhoogte",
-					"error_message": "laagstedrstrmhoogte > hoogstedrstrmhoogte",
-					"active": true,
-					"function": {
-						"LT": {
-							"left": "laagstedoorstroomhoogte",
-							"right": "hoogstedoorstroomhoogte"
-						}
-					}
-				},
-				{
-					"id": 4,
-					"name": "Is de vorm opening niet driehoekig, trapezium- of heulvormig, dan moeten de laagste en hoogste doorstroombreedtes gelijk zijn aan elkaar",
-					"type": "logic",
-					"validation_rule_set": "basic",
-					"error_type": "critical",
-					"result_variable": "laagstedrstrmbreedte_eq_hoogstedrstrmbreedte",
-					"error_message": "laagstedrstrmbreedte != hoogstedrstrmbreedte",
-					"active": true,
-					"filter": {
-						"NOTIN": {
-							"parameter": "vormopening",
-							"array": [
-								"Driehoekig",
-								"Heulprofiel",
-								"Trapeziumvormig"
-							]
-						}
-					},
-					"function": {
-						"EQ": {
-							"left": "laagstedoorstroomhoogte",
-							"right": "hoogstedoorstroomhoogte"
 						}
 					}
 				}
