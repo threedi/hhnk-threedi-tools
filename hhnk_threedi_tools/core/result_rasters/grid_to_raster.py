@@ -1,6 +1,6 @@
 # %%
 from pathlib import Path
-from typing import Union
+from typing import Callable, Union
 
 import geopandas as gpd
 import hhnk_research_tools as hrt
@@ -180,82 +180,115 @@ def get_delaunay_grid(grid_gdf: gpd.GeoDataFrame, wlvl_column: str, no_data_valu
     return gdf
 
 
-# def get_interpolator(
-#     grid_gdf: gpd.GeoDataFrame, wlvl_column: str, no_data_value: float, reorder=True
-# ) -> LinearNDInterpolator:
-#     """LinearNDInterpolator op basis van Delauny triangulatie.
+class LinearInterpolator:
+    """LinearNDInterpolator op basis van Delaunay triangulatie.
 
-#     https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.LinearNDInterpolator.html
+    https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.LinearNDInterpolator.html
 
-#     Parameters
-#     ----------
-#     grid_gdf : gpd.GeoDataFrame
-#         3Di grid in GeoDataFrame
-#     wlvl_column : str
-#         kolom in GeoDataFrame met waterstanden
-#     no_data_value : float
-#         no_data_value in 3Di grid
-#     reorder : bool, optional
-#         optie om threedidepth.morton.reorder uit te voeren, staat default op True
+    Warning: may cause MemoryError on large 3Di grids. Use IDWInterpolator
+    for large models.
 
-#     Returns
-#     -------
-#     LinearNDInterpolator
-#         LinearNDInterpolator
-#     """
-
-#     # aanmaken delaunay grid
-#     gdf = get_delaunay_grid(grid_gdf, wlvl_column, no_data_value)
-
-#     # converteren naar numpy-array met punt_grid
-#     points_grid = gdf.get_coordinates().to_numpy()
-
-#     # inlezen waterstanden als numpy-array
-#     wlvl = gdf[wlvl_column].to_numpy()
-
-#     # herordenen volgens threedidepth (geen idee wat het doet)
-#     if reorder:
-#         points_grid, wlvl = morton.reorder(points_grid, wlvl)
-
-#     return LinearNDInterpolator(Delaunay(points_grid), wlvl)
-
-
-def get_interpolator(grid_gdf: gpd.GeoDataFrame, wlvl_column: str, no_data_value: float, reorder=True, k_neighbors=6):
-    """KDTree + IDW interpolator. Replaces LinearNDInterpolator to avoid
-    MemoryError during calculation. The reorder parameter is kept for
-    caunting but it is not used anymore.
+    Parameters
+    ----------
+    grid_gdf : gpd.GeoDataFrame
+        3Di grid in GeoDataFrame
+    wlvl_column : str
+        kolom in GeoDataFrame met waterstanden
+    no_data_value : float
+        no_data_value in 3Di grid
+    reorder : bool, optional
+        optie om threedidepth.morton.reorder uit te voeren, staat default op True
     """
-    gdf = grid_gdf[grid_gdf["vol_max"] > 1]
 
-    # convert to numpy array using the centroid of the grid cells, as this is what we want to interpolate to
-    points = np.column_stack([gdf.centroid.x, gdf.centroid.y])
+    def __init__(
+        self,
+        grid_gdf: gpd.GeoDataFrame,
+        wlvl_column: str,
+        no_data_value: float = NO_DATA_VALUE,
+        reorder: bool = True,
+    ):
+        gdf = get_delaunay_grid(grid_gdf, wlvl_column, no_data_value)
 
-    wlvl = gdf[wlvl_column].to_numpy()
+        points_grid = gdf.get_coordinates().to_numpy()
+        wlvl = gdf[wlvl_column].to_numpy()
 
-    # this object return data from the nearest neighbors, so we can do IDW interpolation and method to query.
-    tree = cKDTree(points)
+        if reorder:
+            points_grid, wlvl = morton.reorder(points_grid, wlvl)
 
-    def interpolator(x, y):
+        self._interpolator = LinearNDInterpolator(Delaunay(points_grid), wlvl)
+
+    def __call__(self, x: np.ndarray, y: np.ndarray) -> np.ndarray:
         original_shape = x.shape
+        pts = np.column_stack([x.ravel(), y.ravel()])
+        return self._interpolator(pts).reshape(original_shape)
 
-        # taxe de 2d pixels from the dem and reshape to a list of points to query the tree with
-        points = np.column_stack([x.ravel(), y.ravel()])
 
-        # query the tree for the k nearest neighbors of each point and get the distances and indices of those neighbors
-        distances, indices = tree.query(points, k=k_neighbors, workers=-1)
+class IDWInterpolator:
+    """KDTree + Inverse Distance Weighting (IDW) interpolator.
 
-        # avoid division by zero by replacing zero distances with a very small number
+    Replaces LinearNDInterpolator (Delaunay) to avoid MemoryError on large
+    3Di grids. Instead of building a full triangulation, it finds the k
+    nearest grid cell centroids for each raster pixel and computes a
+    distance-weighted average of their water levels.
+
+    Parameters
+    ----------
+    grid_gdf : gpd.GeoDataFrame
+        3Di grid GeoDataFrame — pass the pre-filtered grid (only cells with
+        water) from grid_selection() for best performance.
+    wlvl_column : str
+        Column name containing water levels.
+    no_data_value : float
+        Value used for dry / inactive cells. These are excluded from the
+        interpolation points.
+    k_neighbors : int, optional
+        Number of nearest neighbours to use for IDW (default 6). Increase
+        to 12 if you see nodata holes in the output raster.
+    """
+
+    def __init__(
+        self,
+        grid_gdf: gpd.GeoDataFrame,
+        wlvl_column: str,
+        no_data_value: float = NO_DATA_VALUE,
+        k_neighbors: int = 6,
+    ):
+        # Only use cells that actually have water
+        # gdf = grid_gdf[grid_gdf[wlvl_column] != no_data_value]
+        gdf = grid_gdf[grid_gdf["vol_max"] > 0]
+
+        points = np.column_stack([gdf.centroid.x, gdf.centroid.y])
+        self.wlvl = gdf[wlvl_column].to_numpy()
+        self.tree = cKDTree(points)
+        self.k_neighbors = k_neighbors
+
+    def __call__(self, x: np.ndarray, y: np.ndarray) -> np.ndarray:
+        """Interpolate water levels at raster pixel coordinates.
+
+        Parameters
+        ----------
+        x, y : np.ndarray
+            2-D arrays of pixel x- and y-coordinates (from np.meshgrid).
+
+        Returns
+        -------
+        np.ndarray
+            2-D array of interpolated water levels, same shape as x/y.
+        """
+        original_shape = x.shape
+        pts = np.column_stack([x.ravel(), y.ravel()])
+
+        distances, indices = self.tree.query(pts, k=self.k_neighbors, workers=-1)
+
+        # Avoid division by zero when a pixel falls exactly on a centroid
         distances = np.where(distances == 0, 1e-10, distances)
 
-        # IDW: weights = 1 / distances^2
+        # IDW weights: w = 1 / d²
         weights = 1.0 / distances**2
-        # normalize weights so that they sum to 1 for each point
         weights /= weights.sum(axis=1, keepdims=True)
-        # calculate the interpolated value as the weighted average of the neighbors' values
-        result = (weights * wlvl[indices]).sum(axis=1)
-        return result.reshape(original_shape)
 
-    return interpolator
+        result = (weights * self.wlvl[indices]).sum(axis=1)
+        return result.reshape(original_shape)
 
 
 """Calculate interpolated rasters from a grid. The grid_gdf is
@@ -267,9 +300,15 @@ It is possible to calculate the wlvl and wdepth.
 
 
 class GridToWaterLevel:
-    def __init__(self, dem_path: Path, grid_gdf: gpd.GeoDataFrame, wlvl_column: str):
-        """Bereken waterstanden geinterpoleerd naar de resolutie van de DEM, gebruikmakend van Delaunay-interpolatie
-
+    def __init__(
+        self,
+        dem_path: Path,
+        grid_gdf: gpd.GeoDataFrame,
+        wlvl_column: str,
+        interpolator_type: str = "idw",
+    ):
+        """Bereken waterstanden geinterpoleerd naar de resolutie van de DEM.
+ 
         Parameters
         ----------
         dem_path : Path
@@ -278,21 +317,36 @@ class GridToWaterLevel:
             3Di grid in GeoDataFrame
         wlvl_column : str
             kolom in GeoDataFrame met waterstanden
+        interpolator_type : str, optional
+            Interpolation method: "idw" (default, memory-efficient) or
+            "linear" (original Delaunay — may cause MemoryError on large grids)
         """
         self.dem_raster = hrt.Raster(dem_path)
         self.grid_gdf = grid_gdf
         self.wlvl_column = wlvl_column
+        self.interpolator_type = interpolator_type
         self.wlvl_raster = None
         self._interpolator = None
         self._delaunay_grid_gdf = None
 
     @property
     def interpolator(self):
-        """2D Delaunay interpolator"""
+        """2D interpolator — IDW (default) or Delaunay linear."""
         if self._interpolator is None:
-            self._interpolator = get_interpolator(
-                grid_gdf=self.grid_gdf, wlvl_column=self.wlvl_column, no_data_value=NO_DATA_VALUE
-            )
+            if self.interpolator_type == "idw":
+                self._interpolator = IDWInterpolator(
+                    grid_gdf=self.grid_gdf,
+                    wlvl_column=self.wlvl_column,
+                    no_data_value=NO_DATA_VALUE,
+                )
+            elif self.interpolator_type == "linear":
+                self._interpolator = LinearInterpolator(
+                    grid_gdf=self.grid_gdf,
+                    wlvl_column=self.wlvl_column,
+                    no_data_value=NO_DATA_VALUE,
+                )
+            else:
+                raise ValueError(f"Unknown interpolator_type '{self.interpolator_type}'. Use 'idw' or 'linear'.")
         return self._interpolator
 
     @property
@@ -300,7 +354,7 @@ class GridToWaterLevel:
         """Grid voor Delaunay interpolator als GeoDataFrame"""
         if self._delaunay_grid_gdf is None:
             self._delaunay_grid_gdf = get_delaunay_grid(
-                grid_gdf=self.grid_gdf, wlvl_column=self.wlvl_column, no_data_value=self.wlvl_column
+                grid_gdf=self.grid_gdf, wlvl_column=self.wlvl_column, no_data_value=NO_DATA_VALUE
             )
         return self._delaunay_grid_gdf
 
@@ -404,20 +458,32 @@ if __name__ == "__main__":
 
     OVERWRITE = True
 
-    folder_path = r"E:\02.modellen\23_Katvoed"
+    folder_path = r"H:\02.modelrepos\00_DPRA_stresstest_1d2d_modellen\katvoed"
     folder = Folders(folder_path)
-    threedi_result = folder.threedi_results.one_d_two_d["ghg_blok_t1000"]
+    threedi_result = folder.threedi_results.one_d_two_d["katvoed_1d2d_dpra_120 (399091)"]
 
     # grid_gdf = gpd.read_file(threedi_result.path/"grid_raw.gpkg", driver="GPKG")
-    grid_gdf = threedi_result.full_path("grid_corr.gpkg").load()
+    grid_gdf = threedi_result.full_path("grid_raw.gpkg").load()
 
     calculator_kwargs = {
         "dem_path": folder.model.schema_base.rasters.dem.base,
         "grid_gdf": grid_gdf,
-        "wlvl_column": "wlvl_max_orig",
+        "wlvl_column": "wlvl_max",
+        "interpolator_type": "idw",  # swap to "linear" to use original Delaunay
     }
 
     # Init calculator
     with GridToWaterLevel(**calculator_kwargs) as self:
-        self.run(output_file=threedi_result.full_path("wdepth_orig.tif"), overwrite=OVERWRITE)
+        self.run(output_file=threedi_result.full_path("wlvl_orig_idw_v3.tif"), overwrite=OVERWRITE)
         print("Done.")
+    
+    with GridToWaterDepth(
+                dem_path=folder.model.schema_base.rasters.dem.base,
+                wlvl_path=threedi_result.full_path("wlvl_orig_idw_v3.tif"),
+            ) as raster_calc:
+                wdepth_raster = raster_calc.run(
+                    output_file=threedi_result.full_path("wdepth_orig_idw_v3.tif"),
+                    overwrite=True,
+                )
+
+# %%
