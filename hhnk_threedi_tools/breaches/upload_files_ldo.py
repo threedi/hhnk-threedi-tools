@@ -46,6 +46,9 @@ try to check after it upload the information to ensure that the data is correctl
 Dem is aggregated to 5x5 results created at 0.5x0.5m
 
 It is important to set a sleep time so the API wil not be overloaded
+
+IMPORTANT: Sometimes you will need to donwload a certificate package to be able to upload the information. If you get an error related to the certificate, try to install the package certifi using pip install certifi. After installing the package, try to upload the information again.
+You should run pixi run python -m pip install -U certifi pip-system-certs in the pixi environment to ensure that the certificate is correctly installed.
 """
 
 # %%
@@ -61,6 +64,7 @@ import hhnk_research_tools as hrt
 import pandas as pd
 import requests
 
+from hhnk_threedi_tools.breaches import breach_wdepth_damage
 from hhnk_threedi_tools.breaches.breaches import Breaches
 
 LDO_API_URL = "https://ldo.overstromingsinformatie.nl/api/v1/"
@@ -169,7 +173,7 @@ class LDO_API:
             excel_response = requests.post(url=url_excel_import, headers=self.headers_excel, files=excel_files)
         response_json = json.loads(excel_response.content.decode("utf-8"))
         if response_json.__contains__("message"):
-            msg = response_json["detail"][0]["msg"]
+            msg = response_json["message"]
             logger.error("The excel file has an error")
             raise ValueError(msg)
 
@@ -260,19 +264,17 @@ class LdoUploadFolder(hrt.Folder):
         self.zip_path = None
 
     def _find_scenario_folder(self):
-        """Get Path to scenario results"""
+        """Get Path to scenario results."""
+        if self.scenario_results_path.parent.name != "Normering Regionale Keringen":
+            for scenario_path in self.scenario_results_path.glob(f"*/*{self.name}"):
+                if scenario_path.is_dir():
+                    return scenario_path
+        else:
+            for scenario_path in self.scenario_results_path.glob(f"*/{self.name}*"):
+                if scenario_path.is_dir():
+                    return scenario_path
 
-        # scenario_paths = [j for i in self.scenario_results_path.glob("*/") for j in list(i.glob("*/*/"))]
-        # for scenario_path in scenario_paths:
-        #     if scenario_path.name == self.name:
-        #         return scenario_path
-
-        scenario_path = self.scenario_results_path / self.name
-        if scenario_path.is_dir():
-            return scenario_path
-
-        warnings.warn(f"Scenario folder '{self.name}' not found in '{self.scenario_results_path}'. Skipping.")
-        return None
+        raise FileNotFoundError(f"Scenario folder '{self.name}' was not found in {self.scenario_results_path}")
 
     def copy_files(self):
         """Copy NetCDF and DEM to the upload folder"""
@@ -281,7 +283,22 @@ class LdoUploadFolder(hrt.Folder):
             return
 
         breach = Breaches(scenario_folder)
-        raster_compress_path = breach.wss.path.joinpath("dem_clip.tif")
+        raster_compress_path = breach.wss.path.joinpath("dem.tif")
+        if not raster_compress_path.exists():
+            raster_vrt = breach.wss.path.joinpath("dem_clip.vrt")
+            mask = breach.wss.path.joinpath("mask_flood.gpkg")
+            resolution = 5
+            projection = "EPSG:28992"
+            raster_format = "GTiff"
+            breach_wdepth_damage.clip_DEM(
+                raster_vrt,
+                raster_compress_path,
+                projection,
+                mask,
+                resolution,
+                raster_format,
+            )
+
         netcdf_path = breach.netcdf.path.joinpath("results_3di.nc")
 
         shutil.copy2(raster_compress_path, self.path)
@@ -300,7 +317,8 @@ class LdoUploadFolder(hrt.Folder):
         with zipfile.ZipFile(self.zip_path, "w") as zipf:
             for file in self.path.glob("*"):
                 if file.name != zip_name:
-                    zipf.write(file, arcname=file.name)
+                    arcname = Path(self.path.name) / file.name
+                    zipf.write(file, arcname=arcname)
 
         self.zip_size = round(self.zip_path.stat().st_size / 1024, 0)  # KB
         logger.info(f"Zip {zip_name} created with size {self.zip_size / 1024} MB")
@@ -311,27 +329,27 @@ class LdoUploadFolder(hrt.Folder):
 if __name__ == "__main__":
     # Set Paths from the data to be uploaded
 
+    base_path = Path(r"H:\03.resultaten\Normering Regionale Keringen")
     # Excel files per scenario.
-    base_path = Path(r"Y:\03.resultaten\Normering Regionale Keringen\output\scenarios_output\N&S")
-    metadata_folder = base_path.joinpath(r"ldo_structuur\metadata_per_scenario")
+    metadata_folder = base_path.joinpath(r"ipo_ldo_sctructuur\metadata_per_scenario")
 
     # Excel file where the ID and size of the upload is going to be stored
-    id_scenarios = base_path.joinpath(r"ldo_structuur\scenarios_ids.xlsx")
+    id_scenarios = base_path.joinpath(r"ipo_ldo_sctructuur\scenarios_ids.xlsx")
 
     # Folder location where the scenarios are going to be copied
-    ldo_structuur_path = base_path.joinpath("ldo_structuur")
+    ldo_structuur_path = base_path.joinpath("ipo_ldo_sctructuur")
 
     # Folder where scenario results are stored.
-    scenario_results_path = base_path.joinpath("sbln")
+    scenario_results_path = base_path.joinpath("output")
 
     # data frame from the scenarios that are gonig to be uploaded.
     pd_scenarios = pd.read_excel(id_scenarios)
 
     # Select scenarios ids that area already uploaded to be skiped
-    scenarios_done = pd_scenarios.loc[pd_scenarios["ID_SCENARIO"] > 0, "Naam van het scenario"].to_list()
+    scenarios_done = pd_scenarios.loc[pd_scenarios["Scenario ID"] > 0, "Naam van het scenario"].to_list()
 
     # Sleep time to not burn out the API
-    sleeptime = 300  # FIXME 7 minutes seems alot?
+    sleeptime = 200  # FIXME 7 minutes seems alot?
 
     # Set API key
     ldo_api = LDO_API(api_key=LDO_API_KEY)
@@ -342,11 +360,12 @@ if __name__ == "__main__":
     for metadata_xlsx in scenarios:
         # Set Scenario Name
         scenario_name = metadata_xlsx.stem
-        print(f"Processing scenario {scenario_name}")
+
         # If the scenario is done the continue
         if scenario_name in scenarios_done:
             continue
         else:
+            print(f"Processing scenario {scenario_name}")
             # Set folder with scenario name to be uploaded to LDO
             scenario_path = ldo_structuur_path.joinpath(scenario_name)
 
@@ -366,7 +385,7 @@ if __name__ == "__main__":
             ldo_api.upload_zip_file(zip_path=zip_path, excel_id=excel_id)
 
             # Save the id of upload from the scenario
-            pd_scenarios.loc[pd_scenarios["Naam van het scenario"] == scenario_name, "ID_SCENARIO"] = scenario_id
+            pd_scenarios.loc[pd_scenarios["Naam van het scenario"] == scenario_name, "Scenario ID"] = scenario_id
 
             # Save the size of the scenario in the metdata dataframe
             pd_scenarios.loc[pd_scenarios["Naam van het scenario"] == scenario_name, "SIZE_KB"] = (
@@ -382,9 +401,10 @@ if __name__ == "__main__":
             time.sleep(sleeptime)
 
 # %%
-excel_path = r"H:\03.resultaten\Normering Regionale Keringen\ipo_ldo_sctructuur\scenarios_ids.xlsx"
-check_excel = pd.read_excel(excel_path, sheet_name="Blad2")
-scenario_id = check_excel["Scenario ID"].values
+excel_path = id_scenarios
+check_excel = pd.read_excel(excel_path, sheet_name="Sheet1")
+# scenario_id = check_excel["Scenario ID"].values
+scenario_id = check_excel.loc[check_excel["Totaalschade"].isnull(), "Scenario ID"].to_list()
 ldo_api = LDO_API(api_key=LDO_API_KEY)
 sleeptime = 10
 for scenario in scenario_id:
