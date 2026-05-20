@@ -250,7 +250,7 @@ class IDWInterpolator:
         self,
         grid_gdf: gpd.GeoDataFrame,
         wlvl_column: str,
-        no_data_value: float = NO_DATA_VALUE,
+        # no_data_value: float = NO_DATA_VALUE,
         k_neighbors: int = 6,
     ):
         # Only use cells that actually have water
@@ -469,20 +469,20 @@ if __name__ == "__main__":
         "dem_path": folder.model.schema_base.rasters.dem.base,
         "grid_gdf": grid_gdf,
         "wlvl_column": "wlvl_max",
-        "interpolator_type": "idw",  # swap to "linear" to use original Delaunay
+        "interpolator_type": "idw",  # change to "linear" to use original Delaunay
     }
 
     # Init calculator
     with GridToWaterLevel(**calculator_kwargs) as self:
-        self.run(output_file=threedi_result.full_path("wlvl_orig_idw_v3.tif"), overwrite=OVERWRITE)
+        self.run(output_file=threedi_result.full_path("wlvl_orig_idw.tif"), overwrite=OVERWRITE)
         print("Done.")
 
     with GridToWaterDepth(
         dem_path=folder.model.schema_base.rasters.dem.base,
-        wlvl_path=threedi_result.full_path("wlvl_orig_idw_v3.tif"),
+        wlvl_path=threedi_result.full_path("wlvl_orig_idw.tif"),
     ) as raster_calc:
         wdepth_raster = raster_calc.run(
-            output_file=threedi_result.full_path("wdepth_orig_idw_v3.tif"),
+            output_file=threedi_result.full_path("wdepth_orig_idw.tif"),
             overwrite=True,
         )
 
