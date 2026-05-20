@@ -470,21 +470,21 @@ if __name__ == "__main__":
         "dem_path": folder.model.schema_base.rasters.dem.base,
         "grid_gdf": grid_gdf,
         "wlvl_column": "wlvl_max",
-        "interpolator_type": "linear",  # change to "linear"  to use original Delaunay otherwise use "idw"
+        "interpolator_type": "idw",  # change to "linear"  to use original Delaunay otherwise use "idw"
         
     }
 
     # Init calculator
     with GridToWaterLevel(**calculator_kwargs) as self:
-        self.run(output_file=threedi_result.full_path("wlvl_orig_linear.tif"), chunksize= chunksize, overwrite=OVERWRITE)
+        self.run(output_file=threedi_result.full_path("wlvl_orig_idw.tif"), chunksize= chunksize, overwrite=OVERWRITE)
         
 
     with GridToWaterDepth(
         dem_path=folder.model.schema_base.rasters.dem.base,
-        wlvl_path=threedi_result.full_path("wlvl_orig_linear.tif"),
+        wlvl_path=threedi_result.full_path("wlvl_orig_idw.tif"),
     ) as raster_calc:
         wdepth_raster = raster_calc.run(
-            output_file=threedi_result.full_path("wdepth_orig_linear.tif"),
+            output_file=threedi_result.full_path("wdepth_orig_idw.tif"),
             overwrite=True,
         )
     print("Done.")
