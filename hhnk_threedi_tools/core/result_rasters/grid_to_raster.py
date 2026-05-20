@@ -471,13 +471,11 @@ if __name__ == "__main__":
         "grid_gdf": grid_gdf,
         "wlvl_column": "wlvl_max",
         "interpolator_type": "idw",  # change to "linear"  to use original Delaunay otherwise use "idw"
-        
     }
 
     # Init calculator
     with GridToWaterLevel(**calculator_kwargs) as self:
-        self.run(output_file=threedi_result.full_path("wlvl_orig_idw.tif"), chunksize= chunksize, overwrite=OVERWRITE)
-        
+        self.run(output_file=threedi_result.full_path("wlvl_orig_idw.tif"), chunksize=chunksize, overwrite=OVERWRITE)
 
     with GridToWaterDepth(
         dem_path=folder.model.schema_base.rasters.dem.base,
