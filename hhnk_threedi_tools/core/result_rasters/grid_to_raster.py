@@ -465,25 +465,28 @@ if __name__ == "__main__":
     # grid_gdf = gpd.read_file(threedi_result.path/"grid_raw.gpkg", driver="GPKG")
     grid_gdf = threedi_result.full_path("grid_raw.gpkg").load()
 
+    chunksize = 1024  # adjust based on available memory; None for no chunking (may cause MemoryError)
     calculator_kwargs = {
         "dem_path": folder.model.schema_base.rasters.dem.base,
         "grid_gdf": grid_gdf,
         "wlvl_column": "wlvl_max",
-        "interpolator_type": "idw",  # change to "linear" to use original Delaunay
+        "interpolator_type": "linear",  # change to "linear"  to use original Delaunay otherwise use "idw"
+        
     }
 
     # Init calculator
     with GridToWaterLevel(**calculator_kwargs) as self:
-        self.run(output_file=threedi_result.full_path("wlvl_orig_idw.tif"), overwrite=OVERWRITE)
-        print("Done.")
+        self.run(output_file=threedi_result.full_path("wlvl_orig_linear.tif"), chunksize= chunksize, overwrite=OVERWRITE)
+        
 
     with GridToWaterDepth(
         dem_path=folder.model.schema_base.rasters.dem.base,
-        wlvl_path=threedi_result.full_path("wlvl_orig_idw.tif"),
+        wlvl_path=threedi_result.full_path("wlvl_orig_linear.tif"),
     ) as raster_calc:
         wdepth_raster = raster_calc.run(
-            output_file=threedi_result.full_path("wdepth_orig_idw.tif"),
+            output_file=threedi_result.full_path("wdepth_orig_linear.tif"),
             overwrite=True,
         )
+    print("Done.")
 
 # %%
