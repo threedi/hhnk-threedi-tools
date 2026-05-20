@@ -308,7 +308,7 @@ class GridToWaterLevel:
         interpolator_type: str = "idw",
     ):
         """Bereken waterstanden geinterpoleerd naar de resolutie van de DEM.
- 
+
         Parameters
         ----------
         dem_path : Path
@@ -476,14 +476,14 @@ if __name__ == "__main__":
     with GridToWaterLevel(**calculator_kwargs) as self:
         self.run(output_file=threedi_result.full_path("wlvl_orig_idw_v3.tif"), overwrite=OVERWRITE)
         print("Done.")
-    
+
     with GridToWaterDepth(
-                dem_path=folder.model.schema_base.rasters.dem.base,
-                wlvl_path=threedi_result.full_path("wlvl_orig_idw_v3.tif"),
-            ) as raster_calc:
-                wdepth_raster = raster_calc.run(
-                    output_file=threedi_result.full_path("wdepth_orig_idw_v3.tif"),
-                    overwrite=True,
-                )
+        dem_path=folder.model.schema_base.rasters.dem.base,
+        wlvl_path=threedi_result.full_path("wlvl_orig_idw_v3.tif"),
+    ) as raster_calc:
+        wdepth_raster = raster_calc.run(
+            output_file=threedi_result.full_path("wdepth_orig_idw_v3.tif"),
+            overwrite=True,
+        )
 
 # %%
