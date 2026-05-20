@@ -337,7 +337,7 @@ class GridToWaterLevel:
                 self._interpolator = IDWInterpolator(
                     grid_gdf=self.grid_gdf,
                     wlvl_column=self.wlvl_column,
-                    no_data_value=NO_DATA_VALUE,
+                    # no_data_value=NO_DATA_VALUE,
                 )
             elif self.interpolator_type == "linear":
                 self._interpolator = LinearInterpolator(
