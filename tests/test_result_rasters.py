@@ -49,7 +49,9 @@ def test_grid_to_raster():
     # WLVL raster
     wlvl_raster = hrt.Folder(TEMP_DIR).full_path(f"wlvl_corr_{hrt.get_uuid()}.tif")
 
-    gridtowlvl = GridToWaterLevel(dem_path=dem_path, grid_gdf=grid_gdf, wlvl_column=wlvl_column, interpolator_type = 'linear')
+    gridtowlvl = GridToWaterLevel(
+        dem_path=dem_path, grid_gdf=grid_gdf, wlvl_column=wlvl_column, interpolator_type="linear"
+    )
     gridtowlvl.run(output_file=wlvl_raster, overwrite=True)
 
     assert wlvl_raster.sum() == 43.86664581298828
