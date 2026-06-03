@@ -1,6 +1,6 @@
 # %%
 from pathlib import Path
-from typing import Callable, Union
+from typing import Callable, Literal, Union
 
 import geopandas as gpd
 import hhnk_research_tools as hrt
@@ -301,11 +301,7 @@ It is possible to calculate the wlvl and wdepth.
 
 class GridToWaterLevel:
     def __init__(
-        self,
-        dem_path: Path,
-        grid_gdf: gpd.GeoDataFrame,
-        wlvl_column: str,
-        interpolator_type: str = "idw",
+        self, dem_path: Path, grid_gdf: gpd.GeoDataFrame, wlvl_column: str, interpolator_type: Literal["idw", "linear"]
     ):
         """Bereken waterstanden geinterpoleerd naar de resolutie van de DEM.
 
@@ -337,7 +333,6 @@ class GridToWaterLevel:
                 self._interpolator = IDWInterpolator(
                     grid_gdf=self.grid_gdf,
                     wlvl_column=self.wlvl_column,
-                    # no_data_value=NO_DATA_VALUE,
                 )
             elif self.interpolator_type == "linear":
                 self._interpolator = LinearInterpolator(
@@ -368,14 +363,14 @@ class GridToWaterLevel:
             )
 
             # interpolate levels to x and y coordinates
-            level = interpolator(x, y)
-            level = np.expand_dims(level, axis=0)
+            wlvl_array = interpolator(x, y)
+            wlvl_array = np.expand_dims(wlvl_array, axis=0)
 
             # Return as xarray DataArray, using dem_da's coordinates
-            level_da = xr.full_like(dem_da, dem_da.rio.nodata)
-            level_da.values = level
+            wlvl_da = xr.full_like(dem_da, dem_da.rio.nodata)
+            wlvl_da.values = wlvl_array
 
-            return level_da
+            return wlvl_da
 
         # get dem as xarray
         dem = self.dem_raster.open_rxr(chunksize)
