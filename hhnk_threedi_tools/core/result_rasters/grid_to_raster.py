@@ -255,8 +255,12 @@ class IDWInterpolator:
     ):
         # Only use cells that actually have water
         # gdf = grid_gdf[grid_gdf[wlvl_column] != no_data_value]
-        gdf = grid_gdf[grid_gdf["vol_max"] > 0]
 
+        volume_column = "vol_max"
+        if "vol_max" not in grid_gdf.columns:
+            volume_column = "vol_netcdf_m3"
+
+        gdf = grid_gdf[grid_gdf[volume_column] > 0]
         points = np.column_stack([gdf.centroid.x, gdf.centroid.y])
         self.wlvl = gdf[wlvl_column].to_numpy()
         self.tree = cKDTree(points)
