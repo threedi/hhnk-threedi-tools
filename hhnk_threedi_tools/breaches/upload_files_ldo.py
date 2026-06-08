@@ -266,7 +266,7 @@ class LdoUploadFolder(hrt.Folder):
     def _find_scenario_folder(self):
         """Get Path to scenario results."""
         if self.scenario_results_path.parent.name != "Normering Regionale Keringen":
-            for scenario_path in self.scenario_results_path.glob(f"*/*{self.name}"):
+            for scenario_path in self.scenario_results_path.rglob(f"*{self.name}"):
                 if scenario_path.is_dir():
                     return scenario_path
         else:
@@ -317,7 +317,7 @@ class LdoUploadFolder(hrt.Folder):
         with zipfile.ZipFile(self.zip_path, "w") as zipf:
             for file in self.path.glob("*"):
                 if file.name != zip_name:
-                    arcname = Path(self.path.name) / file.name
+                    arcname = file.relative_to(self.path)
                     zipf.write(file, arcname=arcname)
 
         self.zip_size = round(self.zip_path.stat().st_size / 1024, 0)  # KB
@@ -329,15 +329,15 @@ class LdoUploadFolder(hrt.Folder):
 if __name__ == "__main__":
     # Set Paths from the data to be uploaded
 
-    base_path = Path(r"H:\03.resultaten\Normering Regionale Keringen")
+    base_path = Path(r"H:\03.resultaten\IPO_Overstromingsberekeningen_compartimentering")
     # Excel files per scenario.
-    metadata_folder = base_path.joinpath(r"ipo_ldo_sctructuur\metadata_per_scenario")
+    metadata_folder = base_path.joinpath(r"ldo_structuur\metadata_per_scenario")
 
     # Excel file where the ID and size of the upload is going to be stored
-    id_scenarios = base_path.joinpath(r"ipo_ldo_sctructuur\scenarios_ids.xlsx")
+    id_scenarios = base_path.joinpath(r"ldo_structuur\scenarios_ids.xlsx")
 
     # Folder location where the scenarios are going to be copied
-    ldo_structuur_path = base_path.joinpath("ipo_ldo_sctructuur")
+    ldo_structuur_path = base_path.joinpath("ldo_structuur")
 
     # Folder where scenario results are stored.
     scenario_results_path = base_path.joinpath("output")
@@ -366,6 +366,17 @@ if __name__ == "__main__":
             continue
         else:
             print(f"Processing scenario {scenario_name}")
+            
+            # Add scenario name to the dataframe if it is not there yet
+            if scenario_name not in pd_scenarios["Naam van het scenario"].values:
+                pd_scenarios = pd.concat(
+                    [
+                        pd_scenarios,
+                        pd.DataFrame([{"Naam van het scenario": scenario_name, "Scenario ID": None, "SIZE_KB": None}]),
+                    ],
+                    ignore_index=True,
+                )
+
             # Set folder with scenario name to be uploaded to LDO
             scenario_path = ldo_structuur_path.joinpath(scenario_name)
 
@@ -376,8 +387,8 @@ if __name__ == "__main__":
             # if not copied:
             #     continue
 
-            zip_path = ldo_structuur.zip_files()
-
+            zip_path = ldo_structuur.zip_files()            
+            
             # Upload excel file from the scenario, and retrieve json infomration
             excel_id, scenario_id = ldo_api.upload_excel(metadata_xlsx=metadata_xlsx)
 
