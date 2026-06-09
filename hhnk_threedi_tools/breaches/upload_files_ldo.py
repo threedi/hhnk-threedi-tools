@@ -366,7 +366,7 @@ if __name__ == "__main__":
             continue
         else:
             print(f"Processing scenario {scenario_name}")
-            
+
             # Add scenario name to the dataframe if it is not there yet
             if scenario_name not in pd_scenarios["Naam van het scenario"].values:
                 pd_scenarios = pd.concat(
@@ -387,8 +387,8 @@ if __name__ == "__main__":
             # if not copied:
             #     continue
 
-            zip_path = ldo_structuur.zip_files()            
-            
+            zip_path = ldo_structuur.zip_files()
+
             # Upload excel file from the scenario, and retrieve json infomration
             excel_id, scenario_id = ldo_api.upload_excel(metadata_xlsx=metadata_xlsx)
 
