@@ -1,12 +1,6 @@
 # Vergelijkingstool DAMO / modelgegevens
 
-Tool om verschillen tussen actuele DAMO-data en de gegevens die als input voor het model zijn gebruikt inzichtelijk te maken, zodat modelleurs sneller kunnen beoordelen of het model nog aansluit op de meest recente brongegevens.
-
----
-
-## Doel van de tool
-
-De vergelijkingstool helpt om te controleren of de gegevens in een model nog overeenkomen met de actuele DAMO-export. De tool vergelijkt onder andere:
+Met de vergelijkingstool zijn de verschillen tussen actuele DAMO-data te vergelijken met de gegevens in een bestaand model of met een oude DAMO-data-set. De tool helpt modelleurs de actualiteit van het model te beoordelen. De tool vergelijkt onder andere:
 
 | Onderdeel | Controle |
 | --- | --- |
@@ -21,7 +15,9 @@ Het doel is niet om automatisch te bepalen wat “goed” of “fout” is, maar
 
 ## Workflow
 
-Onderstaande figuur geeft de globale workflow van de vergelijkingstool weer.
+# TODO @JUAN de afbeelding bevat een spelfout. aanpass moet 'pas het bestaande model aan' zijn. Een waarom gebruik je specifiek 2014? Dat kan elk jaar zijn toch? Ik vind de figuur niet zo duidelijk. Kun je wat tekst schrijven wat er in staat en waarom het nuttig is?
+
+De vergelijkingstool kan de gegevens van een eerdere modelbouw vergelijken met een bestaand model en met een oude gegevens set. Onderstaande figuur geeft de globale workflow van de vergelijkingstool weer bij de vergelijking van een gegevens set uit 2014 met een set uit 2026.
 
 ![Workflow](workflow_vergelijkingstool.png)
 
@@ -70,7 +66,7 @@ model_folder/
 
 ---
 
-## Gebruiksworkflow
+## **Handleiding**
 
 De `vergelijkingstool` wordt gebruikt vanuit de QGIS-plugin en wordt vervolgens uitgevoerd vanuit JupyterLab.
 
@@ -139,6 +135,8 @@ Selecteer vervolgens de optie: **`Damo Updated vs 3Di model`**
 
 Deze optie vergelijkt de geactualiseerde DAMO-database met de gegevens die in het 3Di-model zijn gebruikt. Als de mappenstructuur niet correct is ingericht, kan de `vergelijkingstool` de benodigde bestanden niet vinden en zal de tool niet goed werken.
 
+# TODO WAAR STAAT HET MODEL? WORDT STANDAARD NAAR HET BASISMODEL GEKEKEN? WAT IS DAMO UPDATED? IS DAT NIEUW? BIJ DEZE OPTIE HEB JE DUS GEEN DAMO OLD NODIG? HET IS VERWARREND ALS DAMO NIEUW UIT DE SOURCE DATA KOMT EN HET MODEL UIT DE BASIS SCHEMATISATIE. DAN MOET JE DUS EEN MODELMAP HEBBEN WAARIN ZOWEL NIEUWE ALS OUDE GEGEVENS STAAN, DAT HEB JE NOOIT EN IS HEEL ERG VERWARREND. KAN DIT OOK ALLEMAAL IN DE APARTE MAP?
+
 #### **Stap 5. De naam van het outputbestand definiëren**
 
 In het veld **“Enter output file name”** moet de naam van het outputbestand worden ingevoerd. De naam moet eindigen op de extensie `.gpkg`.
@@ -175,19 +173,21 @@ Als algemene richtlijn geldt:
 | Er zijn kritieke structurele verschillen in belangrijke delen van het systeem | Overwegen om het model opnieuw op te bouwen |
 | De verschillen liggen aan de randen van het model of zijn geïsoleerde gevallen | Beoordelen of ze handmatig kunnen worden gecorrigeerd |
 
-De uiteindelijke beslissing moet door de modelleur worden genomen op basis van een inhoudelijke beoordeling van de lagen die in QGIS zijn gegenereerd. Voor een uitgebreidere beschrijving van het beoordelingsproces en de vastlegging van de beslissing, zie het criteriadocument:
+Ook als er bijvoorbeeld veel verschillen in de attributen zijn kan het efficiënter zijn om het model opnieuw op te bouwen. De uiteindelijke beslissing moet door de modelleur worden genomen op basis van een inhoudelijke beoordeling van de lagen die in QGIS zijn gegenereerd. Voor een uitgebreidere beschrijving van het beoordelingsproces en de vastlegging van de beslissing, zie het criteria-document:
 
 [Document met criteria voor de vergelijkingstool](https://corphhnk-my.sharepoint.com/:w:/g/personal/j_acostabarragan_hhnk_nl/IQAnmle5aVm8QIQ1-YdJs5yTATWDOvRhuQel_Nb1JKrNoP8?e=Lrqv8t)
 
+Ten slotte kan het zijn dat de adviseur van watersystemen reden ziet om het model aan te passen of opnieuw op te bouwen op basis van de bestaande resultaten.
+
 ---
 
-## Aanbevolen werkwijze
+## Aanbevolen werkwijze in het kort
 
 1. Controleer eerst of de gebruikte DAMO-export recent is.
 2. Open het resultaat in QGIS.
 3. Beoordeel de belangrijkste verschillen.
 4. Vergelijk de gemarkeerde objecten met de oorspronkelijke modelgegevens.
-5. Bespreek twijfelgevallen met de inhoudelijk verantwoordelijke.
+5. Bespreek twijfelgevallen met de inhoudelijk verantwoordelijke adviseur.
 6. Documenteer welke verschillen moeten worden gecorrigeerd en welke kunnen worden geaccepteerd.
 
 ---
