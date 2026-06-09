@@ -52,31 +52,37 @@ def _get_breach_info(
 ) -> dict:
     simulations_data = os.listdir(region_path)
 
-    coordinate_x = _get_scalar(
-        bresen_df.loc[bresen_df["EQ_naam"] == simulation_name, "x-coordina"],
-        "x-coordina",
-        simulation_name,
-    )
-    coordinate_y = _get_scalar(
-        bresen_df.loc[bresen_df["EQ_naam"] == simulation_name, "y-coordina"],
-        "y-coordina",
-        simulation_name,
-    )
-    naam_waterkering = _get_scalar(
-        bresen_df.loc[bresen_df["EQ_naam"] == simulation_name, "Naam water"],
-        "Naam water",
-        simulation_name,
-    )
-    initial_crest_level = _get_scalar(
-        bresen_df.loc[bresen_df["EQ_naam"] == simulation_name, "In_Cr_lvl"],
-        "In_Cr_lvl",
-        simulation_name,
-    )
-    material = _get_scalar(
-        bresen_df.loc[bresen_df["EQ_naam"] == simulation_name, "levee_mate"],
-        "levee_mate",
-        simulation_name,
-    )
+    coordinate_x = bresen_df.loc[bresen_df["SC_NAAM"] == simulation_name, "LOC_X"].to_numpy()[0]
+    coordinate_y = bresen_df.loc[bresen_df["SC_NAAM"] == simulation_name, "LOC_Y"].to_numpy()[0]
+    naam_waterkering = bresen_df.loc[bresen_df["SC_NAAM"] == simulation_name, "LOC_BUITEN"].to_numpy()[0]
+    initial_crest_level = bresen_df.loc[bresen_df["SC_NAAM"] == simulation_name, "DBR_BR_INI"].to_numpy()[0]
+    material = bresen_df.loc[bresen_df["SC_NAAM"] == simulation_name, "DRB_MAT"].to_numpy()[0]
+
+    # coordinate_x = _get_scalar(
+    #     bresen_df.loc[bresen_df["SC_NAAM"] == simulation_name, "LOC_X"],
+    #     "x-coordina",
+    #     simulation_name,
+    # )
+    # coordinate_y = _get_scalar(
+    #     bresen_df.loc[bresen_df["SC_NAAM"] == simulation_name, "LOC_Y"],
+    #     "y-coordina",
+    #     simulation_name,
+    # )
+    # naam_waterkering = _get_scalar(
+    #     bresen_df.loc[bresen_df["SC_NAAM"] == simulation_name, "LOC_BUITEN"],
+    #     "Naam water",
+    #     simulation_name,
+    # )
+    # initial_crest_level = _get_scalar(
+    #     bresen_df.loc[bresen_df["SC_NAAM"] == simulation_name, "DBR_BR_INI"],
+    #     "In_Cr_lvl",
+    #     simulation_name,
+    # )
+    # material = _get_scalar(
+    #     bresen_df.loc[bresen_df["SC_NAAM"] == simulation_name, "DBR_MAT"],
+    #     "levee_mate",
+    #     simulation_name,
+    # )
 
     if "simulation_data.csv" in simulations_data:
         csv_simulation_data = pd.read_csv(region_path / "simulation_data.csv", sep=";")
@@ -88,22 +94,22 @@ def _get_breach_info(
         maximale_buitenwaterstand = float(str(breach_data["Maximum Upstream Water Level"]).replace(",", "."))
     else:
         bresdiepte = _get_scalar(
-            metadata_df_ns.loc[metadata_df_ns["Scenarionaam"] == simulation_name, "Bresdiepte"],
+            metadata_df_ns.loc[metadata_df_ns["SC_NAAM"] == simulation_name, "Bresdiepte"],
             "Bresdiepte",
             simulation_name,
         )
         maximale_bresbreedte = _get_scalar(
-            metadata_df_ns.loc[metadata_df_ns["Scenarionaam"] == simulation_name, "Maximale bresbreedte"],
+            metadata_df_ns.loc[metadata_df_ns["SC_NAAM"] == simulation_name, "Maximale bresbreedte"],
             "Maximale bresbreedte",
             simulation_name,
         )
         maximaal_bresdebiet = _get_scalar(
-            metadata_df_ns.loc[metadata_df_ns["Scenarionaam"] == simulation_name, "Maximaal bresdebiet"],
+            metadata_df_ns.loc[metadata_df_ns["SC_NAAM"] == simulation_name, "Maximaal bresdebiet"],
             "Maximaal bresdebiet",
             simulation_name,
         )
         maximale_buitenwaterstand = _get_scalar(
-            metadata_df_ns.loc[metadata_df_ns["Scenarionaam"] == simulation_name, "Maximale buitenwaterstand"],
+            metadata_df_ns.loc[metadata_df_ns["SC_NAAM"] == simulation_name, "Maximale buitenwaterstand"],
             "Maximale buitenwaterstand",
             simulation_name,
         )
@@ -165,45 +171,45 @@ def _get_simulation_info(
         mod_date = mod_date_raw.split("T")[0]
 
         model_versie = _get_scalar(
-            metadata_df_ns.loc[metadata_df_ns["Scenarionaam"] == simulation_name, "Modelversie"],
-            "Modelversie",
+            metadata_df_ns.loc[metadata_df_ns["SC_NAAM"] == simulation_name, "MOD_VERSIE"],
+            "MOD_VERSIE",
             simulation_name,
         )
         scenariodatum = _get_scalar(
-            metadata_df_ns.loc[metadata_df_ns["Scenarionaam"] == simulation_name, "Scenariodatum"],
-            "Scenariodatum",
+            metadata_df_ns.loc[metadata_df_ns["SC_NAAM"] == simulation_name, "MOD_DATE"],
+            "MOD_DATE",
             simulation_name,
         )
         log_start_datum = _get_scalar(
-            metadata_df_ns.loc[metadata_df_ns["Scenarionaam"] == simulation_name, "Start berekening"],
+            metadata_df_ns.loc[metadata_df_ns["SC_NAAM"] == simulation_name, "MOD_SIM_ST"],
             "Start berekening",
             simulation_name,
         )
         log_end_datum = _get_scalar(
-            metadata_df_ns.loc[metadata_df_ns["Scenarionaam"] == simulation_name, "Einde berekening"],
+            metadata_df_ns.loc[metadata_df_ns["SC_NAAM"] == simulation_name, "MOD_SIM_EI"],
             "Einde berekening",
             simulation_name,
         )
         log_total_time = _get_scalar(
-            metadata_df_ns.loc[metadata_df_ns["Scenarionaam"] == simulation_name, "Rekenduur"],
+            metadata_df_ns.loc[metadata_df_ns["SC_NAAM"] == simulation_name, "MOD_SIM_DU"],
             "Rekenduur",
             simulation_name,
         )
-        simulation_start = _get_scalar(
-            metadata_df_ns.loc[metadata_df_ns["Scenarionaam"] == simulation_name, "Start simulatie"],
-            "Start simulatie",
-            simulation_name,
-        )
-        simulation_end = _get_scalar(
-            metadata_df_ns.loc[metadata_df_ns["Scenarionaam"] == simulation_name, "Einde simulatie"],
-            "Einde simulatie",
-            simulation_name,
-        )
-        sim_duur = _get_scalar(
-            metadata_df_ns.loc[metadata_df_ns["Scenarionaam"] == simulation_name, "Duur"],
-            "Duur",
-            simulation_name,
-        )
+        # simulation_start = _get_scalar(
+        #     metadata_df_ns.loc[metadata_df_ns["SC_NAAM"] == simulation_name, "Start simulatie"],
+        #     "Start simulatie",
+        #     simulation_name,
+        # )
+        # simulation_end = _get_scalar(
+        #     metadata_df_ns.loc[metadata_df_ns["SC_NAAM"] == simulation_name, "Einde simulatie"],
+        #     "Einde simulatie",
+        #     simulation_name,
+        # )
+        # sim_duur = _get_scalar(
+        #     metadata_df_ns.loc[metadata_df_ns["SC_NAAM"] == simulation_name, "Duur"],
+        #     "Duur",
+        #     simulation_name,
+        # )
 
     return {
         "model_versie": model_versie,
@@ -320,7 +326,8 @@ def generate_ldo_metadata_per_scenario(
     skip_scenarios_set = set(skip_scenarios)
 
     row0 = pd.read_excel(metadata_template_path, header=None, nrows=1)
-    metadata_df_ns = pd.read_excel(metadata_nzk_path, sheet_name="Scenario data", header=1)
+    # metadata_df_ns = pd.read_excel(metadata_nzk_path, sheet_name="Scenario data", header=1)
+    metadata_df_ns = gpd.read_file(metadata_nzk_path)
     metadata_df = pd.read_excel(metadata_template_path, header=1)
     bresen_df = gpd.read_file(bresen_path)
     scenario_id_df = pd.read_excel(scenario_id_path)
@@ -410,15 +417,23 @@ def generate_ldo_metadata_per_scenario(
 
 
 # %%
-
 result = generate_ldo_metadata_per_scenario(
-    bresen_path=r"Y:\03.resultaten\Normering Regionale Keringen\ipo_ldo_sctructuur\bressen.shp",
-    metadata_template_path=r"Y:\03.resultaten\Normering Regionale Keringen\ipo_ldo_sctructuur\import_scenarios.xlsx",
-    metadata_nzk_path=r"Y:\03.resultaten\Normering Regionale Keringen\output\scenarios_output\N&S\20260217_Scenarios_in_LDO.xlsx",
-    base_folder=r"\\corp.hhnk.nl\data\Hydrologen_data\Data\03.resultaten\Normering Regionale Keringen\output\scenarios_output\N&S\sbln",
+    bresen_path=r"H:\03.resultaten\IPO_Overstromingsberekeningen_compartimentering\metadata\metadata_cmp.gpkg",
+    metadata_template_path=r"h:\03.resultaten\Normering Regionale Keringen\ipo_ldo_sctructuur\import_scenarios.xlsx",
+    metadata_nzk_path=r"H:\03.resultaten\IPO_Overstromingsberekeningen_compartimentering\metadata\metadata_cmp.gpkg",
+    base_folder=r"H:\03.resultaten\IPO_Overstromingsberekeningen_compartimentering\output",
     metadata_per_scenario_folder=r"Y:\03.resultaten\Normering Regionale Keringen\output\scenarios_output\N&S\ldo_structuur\metadata_per_scenario",
     scenario_id_path=r"Y:\03.resultaten\Normering Regionale Keringen\output\scenarios_output\N&S\ldo_structuur\scenarios_ids.xlsx",
-    skip_scenarios=["IPO_SBMN_EQ_1632", "IPO_AB_EQ_1125"],
+    skip_scenarios=[
+        "IPO_SBLN_CMPTR_24_JA",
+        "IPO_SBLN_CMPTR_5_JA",
+        "IPO_SBLZ_CMPTR_25_JA",
+        "IPO_SBLZ_CMPTR_40_JA",
+        "IPO_SBMN_CMPTR_23_JA",
+        "IPO_SBMZ_CMPTR_75_JA",
+        "IPO_SBMZ_CMPTR_92_JA",
+        "IPO_VRNK_W_CMPTR_5_JA",
+    ],
 )
 print(result)
 
