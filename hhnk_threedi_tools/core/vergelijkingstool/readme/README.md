@@ -17,43 +17,15 @@ Het doel is niet om automatisch te bepalen wat “goed” of “fout” is, maar
 
 # TODO @JUAN de afbeelding bevat een spelfout. aanpass moet 'pas het bestaande model aan' zijn. Een waarom gebruik je specifiek 2014? Dat kan elk jaar zijn toch? Ik vind de figuur niet zo duidelijk. Kun je wat tekst schrijven wat er in staat en waarom het nuttig is?
 
-De vergelijkingstool kan de gegevens van een eerdere modelbouw vergelijken met een bestaand model en met een oude gegevens set. Onderstaande figuur geeft de globale workflow van de vergelijkingstool weer bij de vergelijking van een gegevens set uit 2014 met een set uit 2026.
+De vergelijkingstool maakt het mogelijk om de verschillen te analyseren tussen de gegevens uit een recente DAMO export en een bestaand model dat is opgebouwd op basis van een oudere DAMO export. Op basis van deze vergelijking kan worden bepaald of het nodig is om een nieuw model te bouwen, of dat het bestaande model met enkele aanpassingen nog gebruikt kan worden.
+
+Het onderstaande stroomschema toont de workflow en de besluitvorming voor een situatie waarin wordt uitgegaan van een model dat is opgebouwd met gegevens uit 2014. Hierin worden de stappen weergegeven die nodig zijn om te bepalen of er een nieuw model moet worden ontwikkeld, of dat het bestaande model kan worden aangepast.
 
 ![Workflow](workflow_vergelijkingstool.png)
 
 ## Benodigde input
 
-De tool verwacht de volgende bestandsstructuur:
-
-```text
-model_folder/
-    │
-    ├── 01_source_data/
-    │   ├── vergelijkingstool/
-    │   │   ├── input_data_old/
-    │   │   │   ├── DAMO.gpkg
-    │   │   │   ├── HDB.gpkg
-    │   │   │
-    │   │   ├── output/
-    │   │   │   ├── vergelijkingstool_output.gpkg
-```
-
-> Let op: de naam van het outputbestand kan worden aangepast op basis van het model of het studiegebied. De mappen worden automatisch aangemaakt zodra het pad in de vergelijkingstool is ingevoerd. Daarna moeten de GeoPackage-bestanden worden gekopieerd en geplakt in de map `input_data_old`.
-
----
-
-## Minimale vereisten
-
-| Bestand / map | Beschrijving |
-| --- | --- |
-| `DAMO.gpkg` | Recente export van de DAMO-data |
-| `HDB.gpkg` | Gegevens die eerder in het model zijn gebruikt |
-| `output/` | Map waarin de resultaten van de vergelijking worden opgeslagen |
-
-Als de bestanden niet op de juiste locaties staan, is de kans groot dat de tool niet werkt. Daarnaast is het belangrijk om te vermelden dat het model de afgesproken mappenstructuur moet volgen. Als dat niet het geval is, zal de tool niet goed functioneren.
-
-De minimale mappenstructuur van het model is:
-
+De vergelijkingstool verwacht dat de invoerbestanden volgens een vaste mappenstructuur zijn opgeslagen. Het model moet minimaal de volgende mappen bevatten:
 ```text
 model_folder/
     ├── 00_config
@@ -61,9 +33,47 @@ model_folder/
     ├── 02_schematisation
     ├── 03_3di_results
     ├── 04_test_results
-    ├── Notebooks
+    └── Notebooks
 ```
 
+Binnen deze structuur leest de tool de gegevens uit de volgende locaties:
+```text
+model_folder/
+    ├── 01_source_data/
+    │   ├── DAMO.gpkg                        ← Nieuwe DAMO-export
+    │   ├── HDB.gpkg                         ← Nieuwe HDB-export
+    │   └── vergelijkingstool/
+    │       ├── input_data_old/
+    │       │   ├── DAMO.gpkg                ← Oude DAMO-export
+    │       │   └── HDB.gpkg                 ← Oude HDB-export
+    │       └── output/
+    │           └── vergelijkingstool_output.gpkg
+    └── 02_schematisation/
+        └── 00_basis/
+            └── HUB.gpkg                     ← Bestaand 3Di model
+```
+      
+Voordat de bestanden in `01_source_data` worden bijgewerkt, moeten de huidige DAMO en HDB bestanden eerst worden gekopieerd naar `vergelijkingstool/input_data_old/`. Voor het model HUB ziet dat er als volgt uit:
+
+De oude bestanden worden gekopieerd naar:
+
+<p align="center">
+<code>H:\02.modellen\HUB\01_source_data\vergelijkingstool\input_data_old</code>
+</p>
+
+Daarna moet de nieuwe DAMO en HDB export worden geplaatst in de map:
+<p align="center">
+<code>H:\02.modellen\HUB\01_source_data</code>
+</p>
+
+Vanuit deze map leest de vergelijkingstool automatisch de geactualiseerde gegevens in. Het bestaande 3Di model wordt gelezen vanuit de basisschematisatie:
+<p align="center">
+<code>H:\02.modellen\HUB\02_schematisation\00_basis</code>
+</p>
+
+De oude DAMO en HDB bestanden in `input_data_old` zijn nodig om de oorspronkelijke situatie vast te leggen. De nieuwe DAMO en HDBbestanden in `01_source_data` worden gebruikt als geactualiseerde invoer. Het bestaande model in `02_schematisation/00_basis` wordt gebruikt als referentie voor de vergelijking met het 3Di model.
+
+Deze structuur is nodig voor zowel de vergelijking **`Damo Updated vs Damo Old`** als voor de vergelijking **`Damo Updated vs 3Di model`**. Als de bestanden niet op deze manier zijn opgeslagen, kan de vergelijkingstool de benodigde invoer niet correct vinden en zal de tool niet goed werken.
 ---
 
 ## **Handleiding**
@@ -133,21 +143,25 @@ In het veld *“Enter the Model folder path”* moet de locatie van het model wa
 
 Selecteer vervolgens de optie: **`Damo Updated vs 3Di model`**
 
-Deze optie vergelijkt de geactualiseerde DAMO-database met de gegevens die in het 3Di-model zijn gebruikt. Als de mappenstructuur niet correct is ingericht, kan de `vergelijkingstool` de benodigde bestanden niet vinden en zal de tool niet goed werken.
+Deze optie vergelijkt de geactualiseerde DAMO en HDB bestanden met het bestaande 3Di model. De nieuwe DAMO en HDB-export wordt automatisch gelezen vanuit de map `01_source_data`. Het bestaande 3Di model wordt gelezen vanuit de basisschematisatie van het model, op de volgende locatie:
+
+<p align="center">
+<code>H:\02.modellen\HUB\02_schematisation\00_basis</code>
+</p>
+
+Voordat de DAMO en HDB bestanden in `01_source_data` worden geactualiseerd, moeten de oude bestanden eerst worden gekopieerd of verplaatst naar de map:
+
+<p align="center">
+<code>H:\02.modellen\HUB\01_source_data\vergelijkingstool\input_data_old</code>
+</p>
+
+Deze structuur is noodzakelijk om de vergelijkingstool correct te laten werken. Als de mappenstructuur niet correct is ingericht, kan de `vergelijkingstool` de benodigde bestanden niet vinden en zal de tool niet goed werken.
 
 # TODO WAAR STAAT HET MODEL? WORDT STANDAARD NAAR HET BASISMODEL GEKEKEN? WAT IS DAMO UPDATED? IS DAT NIEUW? BIJ DEZE OPTIE HEB JE DUS GEEN DAMO OLD NODIG? HET IS VERWARREND ALS DAMO NIEUW UIT DE SOURCE DATA KOMT EN HET MODEL UIT DE BASIS SCHEMATISATIE. DAN MOET JE DUS EEN MODELMAP HEBBEN WAARIN ZOWEL NIEUWE ALS OUDE GEGEVENS STAAN, DAT HEB JE NOOIT EN IS HEEL ERG VERWARREND. KAN DIT OOK ALLEMAAL IN DE APARTE MAP?
 
-#### **Stap 5. De naam van het outputbestand definiëren**
-
-In het veld **“Enter output file name”** moet de naam van het outputbestand worden ingevoerd. De naam moet eindigen op de extensie `.gpkg`.
-
-Bijvoorbeeld:
-
-`vergelijkingstool_output.gpkg`
-
 #### **Stap 6. De vergelijking uitvoeren**
 
-Wanneer alle instellingen klaarstaan, klik je op de knop *“Run Comparison”*. De tool voert de vergelijking tussen de geselecteerde databases uit en genereert het outputbestand. De volledige locatie van het gegenereerde bestand wordt weergegeven in het veld *“Full path”*. Dit `.gpkg`-bestand kan daarna in QGIS worden geopend om de gevonden verschillen te beoordelen.
+Wanneer alle instellingen klaarstaan, klik je op de knop *“Run Comparison”*. De tool voert de vergelijking tussen de geselecteerde databases uit en genereert het outputbestand. De volledige locatie van het gegenereerde bestand wordt weergegeven in het veld *“Full path”*. Dit `.gpkg` bestand kan daarna in QGIS worden geopend om de gevonden verschillen te beoordelen.
 
 ---
 
@@ -183,7 +197,7 @@ Ten slotte kan het zijn dat de adviseur van watersystemen reden ziet om het mode
 
 ## Aanbevolen werkwijze in het kort
 
-1. Controleer eerst of de gebruikte DAMO-export recent is.
+1. Controleer eerst of de gebruikte DAMO export recent is.
 2. Open het resultaat in QGIS.
 3. Beoordeel de belangrijkste verschillen.
 4. Vergelijk de gemarkeerde objecten met de oorspronkelijke modelgegevens.
