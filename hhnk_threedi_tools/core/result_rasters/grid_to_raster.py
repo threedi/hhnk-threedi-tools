@@ -363,12 +363,14 @@ class GridToWaterLevel:
 
     def run(self, output_file, chunksize: Union[int, None] = None, overwrite: bool = False):
         # level block_calculator
-        def calc_level(_: xr.DataArray, dem_chunk_da: xr.DataArray, interpolator: Union[LinearNDInterpolator, IDWInterpolator]) -> xr.DataArray:
-            """"
+        def calc_level(
+            _: xr.DataArray, dem_chunk_da: xr.DataArray, interpolator: Union[LinearNDInterpolator, IDWInterpolator]
+        ) -> xr.DataArray:
+            """
             Calculate water level for a chunk of the DEM using the provided interpolator.
-            The first is the chunk of the result template, which we ignore (we just need the coordinates). 
-            The second is the chunk of the DEM, and the third is the interpolator function.  
-            
+            The first is the chunk of the result template, which we ignore (we just need the coordinates).
+            The second is the chunk of the DEM, and the third is the interpolator function.
+
             Parameters
             ----------
             _ : xarray.DataArray
@@ -377,9 +379,9 @@ class GridToWaterLevel:
                 Chunk of the DEM raster as a DataArray
             interpolator : callable
                 Interpolator function that takes x and y coordinates and returns interpolated water levels
-                it could be: idw oir linear interpolator, but it must be pre-initialized and passed as an argument 
-                to avoid re-initialization for every chunk.
-            """"
+                it could be: idw oir linear interpolator, but it must be pre initialized and passed as an argument,
+                to avoid re initialization for every chunk.
+            """
             # get x and y coordinates from dem_da
             x, y = np.meshgrid(
                 dem_chunk_da.x.data,
@@ -411,7 +413,7 @@ class GridToWaterLevel:
             wlvl_da = xr.map_blocks(
                 calc_level, obj=result_template, args=[dem, self.interpolator], template=result_template
             )
-            #Write  the results
+            # Write  the results
             self.wlvl_raster = hrt.Raster.write(
                 output_file, result=wlvl_da, nodata=dem.rio.nodata, chunksize=chunksize
             )
@@ -485,7 +487,7 @@ if __name__ == "__main__":
 
     folder_path = r"H:\02.modelrepos\00_DPRA_stresstest_1d2d_modellen\katvoed"
     folder = Folders(folder_path)
-    threedi_result = folder.threedi_results.one_d_two_d["katvoed_1d2d_dpra_120 (399091)"]
+    threedi_result = folder.threedi_results.one_d_two_d["katvoed_1d2d_dpra_120 (403700)"]
 
     # grid_gdf = gpd.read_file(threedi_result.path/"grid_raw.gpkg", driver="GPKG")
     grid_gdf = threedi_result.full_path("grid_raw.gpkg").load()
