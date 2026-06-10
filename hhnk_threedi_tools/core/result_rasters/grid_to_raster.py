@@ -1,6 +1,6 @@
 # %%
 from pathlib import Path
-from typing import Callable, Literal, Union
+from typing import Literal, Union
 
 import geopandas as gpd
 import hhnk_research_tools as hrt
@@ -305,7 +305,11 @@ It is possible to calculate the wlvl and wdepth.
 
 class GridToWaterLevel:
     def __init__(
-        self, dem_path: Path, grid_gdf: gpd.GeoDataFrame, wlvl_column: str, interpolator_type: Literal["idw", "linear"]
+        self,
+        dem_path: Path,
+        grid_gdf: gpd.GeoDataFrame,
+        wlvl_column: str,
+        interpolator_type: Literal["idw", "linear"] = "idw",
     ):
         """Bereken waterstanden geinterpoleerd naar de resolutie van de DEM.
 
@@ -359,11 +363,27 @@ class GridToWaterLevel:
 
     def run(self, output_file, chunksize: Union[int, None] = None, overwrite: bool = False):
         # level block_calculator
-        def calc_level(_, dem_da, interpolator):
+        def calc_level(_: xr.DataArray, dem_chunk_da: xr.DataArray, interpolator: Union[LinearNDInterpolator, IDWInterpolator]) -> xr.DataArray:
+            """"
+            Calculate water level for a chunk of the DEM using the provided interpolator.
+            The first is the chunk of the result template, which we ignore (we just need the coordinates). 
+            The second is the chunk of the DEM, and the third is the interpolator function.  
+            
+            Parameters
+            ----------
+            _ : xarray.DataArray
+                Chunk of the result template (ignored)
+            dem_chunk_da : xarray.DataArray
+                Chunk of the DEM raster as a DataArray
+            interpolator : callable
+                Interpolator function that takes x and y coordinates and returns interpolated water levels
+                it could be: idw oir linear interpolator, but it must be pre-initialized and passed as an argument 
+                to avoid re-initialization for every chunk.
+            """"
             # get x and y coordinates from dem_da
             x, y = np.meshgrid(
-                dem_da.x.data,
-                dem_da.y.data,
+                dem_chunk_da.x.data,
+                dem_chunk_da.y.data,
             )
 
             # interpolate levels to x and y coordinates
@@ -371,24 +391,30 @@ class GridToWaterLevel:
             wlvl_array = np.expand_dims(wlvl_array, axis=0)
 
             # Return as xarray DataArray, using dem_da's coordinates
-            wlvl_da = xr.full_like(dem_da, dem_da.rio.nodata)
-            wlvl_da.values = wlvl_array
+            wlvl_chunk_da = xr.full_like(dem_chunk_da, dem_chunk_da.rio.nodata)
+            wlvl_chunk_da.values = wlvl_array
 
-            return wlvl_da
-
-        # get dem as xarray
-        dem = self.dem_raster.open_rxr(chunksize)
+            return wlvl_chunk_da
 
         # init result raster
         create = hrt.check_create_new_file(output_file=output_file, overwrite=overwrite)
 
         if create:
-            # create empty result array
-            result = xr.full_like(dem, dem.rio.nodata)
+            # get dem as xarray according to chunksize
+            dem = self.dem_raster.open_rxr(chunksize=chunksize)
 
-            result = xr.map_blocks(calc_level, obj=result, args=[dem, self.interpolator], template=result)
+            # create empty result array base on the dem coordinates
+            result_template = xr.full_like(dem, dem.rio.nodata)
 
-            self.wlvl_raster = hrt.Raster.write(output_file, result=result, nodata=dem.rio.nodata, chunksize=chunksize)
+            # calculate water levels in blocks (chunks) to avoid MemoryError on large rasters
+            # map_blocks: """Apply a function (calc_level) to each block of a DataArray or Dataset.
+            wlvl_da = xr.map_blocks(
+                calc_level, obj=result_template, args=[dem, self.interpolator], template=result_template
+            )
+            #Write  the results
+            self.wlvl_raster = hrt.Raster.write(
+                output_file, result=wlvl_da, nodata=dem.rio.nodata, chunksize=chunksize
+            )
 
         return self.wlvl_raster
 
@@ -431,8 +457,8 @@ class GridToWaterDepth:
         create = hrt.check_create_new_file(output_file=self.depth_raster.path, overwrite=overwrite)
 
         if create:
-            dem = self.dem_raster.open_rxr(chunksize)
-            level = self.wlvl_raster.open_rxr(chunksize)
+            dem = self.dem_raster.open_rxr(chunksize=chunksize)
+            level = self.wlvl_raster.open_rxr(chunksize=chunksize)
 
             # create empty result array
             result = level - dem
