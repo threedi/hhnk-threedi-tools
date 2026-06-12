@@ -6,18 +6,19 @@ Created on Tue May  5 09:39:22 2026
 """
 
 #%% Importeren van alle benodigde Python-bibliotheken
-from pathlib import Path
-import numpy as np
-import rasterio
 import os
-import xarray as xr
+from contextlib import ExitStack
+from pathlib import Path
+
+import numpy as np
 import pandas as pd
+import rasterio
+import xarray as xr
 from rasterio.features import rasterize
 from rasterio.merge import merge
-from rasterio.warp import reproject, Resampling
+from rasterio.warp import Resampling, reproject
 from shapely.geometry import Polygon, box
 from threedigrid.admin.gridresultadmin import GridH5ResultAdmin
-from contextlib import ExitStack
 
 
 # Deze functie zoekt binnen een hoofdmap naar een specifieke scenario-map.
