@@ -5,7 +5,7 @@ Created on Tue May  5 09:39:22 2026
 @author: rick.vanbentem
 """
 
-#%% Importeren van alle benodigde Python-bibliotheken
+# %% Importeren van alle benodigde Python-bibliotheken
 import os
 from contextlib import ExitStack
 from pathlib import Path
@@ -29,26 +29,26 @@ def find_project_folder(root: Path, scenario_id: str) -> Path:
             return Path(dirpath) / scenario_id
     raise FileNotFoundError(f"{scenario_id} not found in {root}")
 
+
 # Deze functie zoekt één bestand met een bepaalde extensie (bijv. .tif of .nc) voor het specifieke scenario in de projectmap
 def find_single_file(folder: Path, suffixes):
     for p in folder.iterdir():
         if p.is_file() and p.suffix.lower() in suffixes:
             return p
-    raise FileNotFoundError(f"No file with suffix {suffixes} in {folder}") 
+    raise FileNotFoundError(f"No file with suffix {suffixes} in {folder}")
+
 
 # Geeft alle submapnamen terug binnen een map
 def get_subfolder_names(folder):
     return [p.name for p in Path(folder).iterdir() if p.is_dir()]
 
+
 # Controleert of een scenario bestaat in één van de opgegeven hoofdmappen
 def scenario_bestaat(scenario, *root_folders):
-    return any(
-        any(p.is_dir() and p.name == scenario for p in root.rglob("*"))
-        for root in root_folders
-    )
+    return any(any(p.is_dir() and p.name == scenario for p in root.rglob("*")) for root in root_folders)
 
 
-#%% Variables
+# %% Variables
 
 # Defineren van de minimale waterdiepte waarvoor output gegenereerd wordt, alles onder deze waarde wordt niet meegenomen in de output raster
 MIN_DEPTH = 0.20
@@ -73,10 +73,17 @@ df_scenarios = pd.read_excel(project_folder / "Scenarios_per_gebied.xlsx")
 df_scenarios.columns = ["traject", "naam", "locatie", "scenario"]
 
 # Overzicht trajecten
-trajecten = (df_scenarios.groupby("traject")["scenario"].unique().apply(list))
+trajecten = df_scenarios.groupby("traject")["scenario"].unique().apply(list)
 
 # Maak een leesbare naam per traject
-traject_namen = (df_scenarios.set_index("traject")[["locatie", "naam"]].stack().dropna().groupby(level=0).unique().apply(lambda x: ", ".join(x)))
+traject_namen = (
+    df_scenarios.set_index("traject")[["locatie", "naam"]]
+    .stack()
+    .dropna()
+    .groupby(level=0)
+    .unique()
+    .apply(lambda x: ", ".join(x))
+)
 
 # Selecteer het traject op basis van de volgorde in het excel bestand
 # Python is zero based, dus de eerste waarde is 0, de tweede waarde is 1, etc.
@@ -98,10 +105,7 @@ for t in times:
     output_folder.mkdir(parents=True, exist_ok=True)
 
 # Check of de bestanden er zijn
-map_ontbreekt = [
-    s for s in traject_scenarios
-    if not scenario_bestaat(s, dem_folder, nc_folder)
-]
+map_ontbreekt = [s for s in traject_scenarios if not scenario_bestaat(s, dem_folder, nc_folder)]
 
 if map_ontbreekt:
     print("Scenario’s zonder map:")
@@ -109,7 +113,7 @@ if map_ontbreekt:
         print(f" - {s}")
 
 
-#%%
+# %%
 # -------------------------------------------------------------
 # HOOFDVERWERKING PER SCENARIO
 # -----------------------------------------------------------
@@ -118,20 +122,18 @@ if map_ontbreekt:
 dem_missing = []
 
 for scenario_id in traject_scenarios:
-    
     # Start instance
     print(f"Start met {scenario_id}")
-    
+
     # Als map ontbreekt -> overslaan
     if scenario_id in map_ontbreekt:
         print(f"Map ontbreekt voor {scenario_id}, overslaan")
         continue
 
-    
     # Bepaal locaties van data
     dem_location = find_project_folder(dem_folder, scenario_id)
     nc_location = find_project_folder(nc_folder, scenario_id)
-    
+
     # Bestanden ophalen
     try:
         dem_file = str(find_single_file(dem_location, {".tif", ".tiff"}))
@@ -142,12 +144,11 @@ for scenario_id in traject_scenarios:
 
     gridadmin_file = str(find_single_file(nc_location / "netcdf", {".h5"}))
     nc_file = str(find_single_file(nc_location / "netcdf", {".nc"}))
- 
 
     # -------------------------------------------------------------
     # DEM CONTROLE
     # -------------------------------------------------------------
-    
+
     # We controleren of:
     # - er een nodata waarde is
     # - deze correct wordt gebruikt
@@ -155,18 +156,17 @@ for scenario_id in traject_scenarios:
     with rasterio.open(dem_file) as src:
         nodata = src.nodata
         data = src.read(1, masked=True)
-    
+
     print(f"DEM nodata value: {nodata}")
-    
+
     if nodata is None:
         raise ValueError("DEM heeft geen nodata-waarde gedefinieerd")
-    
+
     if not np.ma.is_masked(data):
         raise ValueError("DEM nodata wordt niet als mask gebruikt")
-    
+
     print(f"Aantal nodata pixels: {data.mask.sum()}")
     print(f"DEM min/max (zonder nodata): {data.min()} / {data.max()}")
-    
 
     # -------------------------------------------------------------
     # 3Di RESULTATEN INLEZEN
@@ -174,37 +174,35 @@ for scenario_id in traject_scenarios:
 
     gr = GridH5ResultAdmin(gridadmin_file, nc_file)
     timestamps = gr.nodes.timestamps
-            
+
     # Open NetCDF met 3Di-resultaten
     ds = xr.open_dataset(nc_file)
-    
+
     # Waterstand per 2D-element (tijd, element)
     waterlevel = ds["Mesh2D_s1"]
-    
+
     # Maximale waterstand ooit per element (voor voorfilter)
     sumax = ds["Mesh2DFace_sumax"].values
-    
+
     # Contourcoördinaten van 2D-elementen
     x = ds["Mesh2DContour_x"].values
     y = ds["Mesh2DContour_y"].values
-    
+
     # Selecteer timestamps voor de gevraagde stappen
     timesteps = [t * 3600 for t in times]
     indices = [int(np.abs(timestamps - t).argmin()) for t in timesteps]
-    
 
     # -------------------------------------------------------------
     # DEM VOORBEREIDEN
     # ------------------------------------------------------------
 
     with rasterio.open(dem_file) as dem_src:
-        dem = dem_src.read(1)                 # maaiveldhoogte
-        dem_transform = dem_src.transform     # pixels naar kaartcoördinaten
-        dem_crs = dem_src.crs                 # CRS voor output
-        dem_shape = dem.shape                 # rastervorm (rows, cols)
-        dem_nodata = dem_src.nodata           # nodata-waarde DEM
-        dem_bbox = box(*dem_src.bounds)       # extent DEM als polygon
-    
+        dem = dem_src.read(1)  # maaiveldhoogte
+        dem_transform = dem_src.transform  # pixels naar kaartcoördinaten
+        dem_crs = dem_src.crs  # CRS voor output
+        dem_shape = dem.shape  # rastervorm (rows, cols)
+        dem_nodata = dem_src.nodata  # nodata-waarde DEM
+        dem_bbox = box(*dem_src.bounds)  # extent DEM als polygon
 
     # -------------------------------------------------------------
     # POLYGONEN VAN GRIDCELLEN MAKEN
@@ -212,53 +210,47 @@ for scenario_id in traject_scenarios:
 
     polygons = []
     poly_index = []
-    
+
     for i in range(x.shape[0]):
         # sla cellen over die nooit nat zijn geweest
         if not np.isfinite(sumax[i]) or sumax[i] <= 0:
             continue
-    
+
         # maak lijst van hoekpunten
         coords = list(zip(x[i], y[i]))
-    
+
         # minimaal 3 unieke punten nodig
         if len(set(coords)) < 3:
             continue
-    
+
         # maak polygon van cel
         poly = Polygon(coords)
-    
+
         # sla ongeldige of lege polygonen over
         if not poly.is_valid or poly.area == 0:
             continue
-    
+
         # sla polygonen buiten DEM-gebied over
         if not poly.intersects(dem_bbox):
             continue
-    
+
         # bewaar geldige polygon en bijbehorende index
         polygons.append(poly)
         poly_index.append(i)
-    
 
     # -------------------------------------------------------------
     # WATERDIEPTE BEREKENEN PER TIJDSTAP
     # -------------------------------------------------------------
 
-    
     for t_hour, t_idx in zip(times, indices):
         print(f"  Tijdstap {t_hour} uur (index {t_idx})")
 
         # waterstand per element op tijdstip t
         wl_t = waterlevel.isel(time=t_idx).values
-    
+
         # combineer polygonen met waterstand
-        shapes = [
-            (polygons[j], float(wl_t[i]))
-            for j, i in enumerate(poly_index)
-            if np.isfinite(wl_t[i])
-        ]
-    
+        shapes = [(polygons[j], float(wl_t[i])) for j, i in enumerate(poly_index) if np.isfinite(wl_t[i])]
+
         # rasteriseer waterstand naar DEM-grid
         wl_raster = rasterize(
             shapes,
@@ -268,21 +260,20 @@ for scenario_id in traject_scenarios:
             dtype="float32",
             all_touched=True,
         )
-    
+
         # bereken waterdiepte per pixel
         depth = wl_raster - dem
-    
+
         # alles onder minimale diepte naar nan
         depth[depth <= MIN_DEPTH] = np.nan
-    
+
         # DEM-nodata naar nan
         if dem_nodata is not None:
             depth[dem == dem_nodata] = np.nan
-    
+
         # defineer output tif
-        out_file = (
-            base_output_folder / f"t{t_hour:02d}h" / f"waterdiepte_t{t_hour:02d}h_s{scenario_id}.tif")
-    
+        out_file = base_output_folder / f"t{t_hour:02d}h" / f"waterdiepte_t{t_hour:02d}h_s{scenario_id}.tif"
+
         # schrijf waterdiepte naar GeoTIFF
         with rasterio.open(
             out_file,
@@ -300,7 +291,7 @@ for scenario_id in traject_scenarios:
         ) as dst:
             dst.write(depth, 1)
 
-#%%
+# %%
 # -------------------------------------------------------------
 # SAMENVOEGEN VAN RESULTATEN
 # -------------------------------------------------------------
@@ -372,18 +363,18 @@ for output_folder in sorted(base_output_folder.glob("t*h")):
         merged_transform = merged_src.transform
         merged_crs = merged_src.crs
         merged_shape = merged_arr.shape
-    
+
     for tif in tif_files:
         with rasterio.open(tif) as src:
             src_arr = src.read(1).astype("float32")
-    
+
             # normaliseer nodata
             if src.nodata is not None:
                 src_arr[src_arr == src.nodata] = np.nan
-    
+
             # projecteer input naar merged raster grid
             reproj_arr = np.full(merged_shape, np.nan, dtype="float32")
-    
+
             reproject(
                 source=src_arr,
                 destination=reproj_arr,
@@ -393,35 +384,7 @@ for output_folder in sorted(base_output_folder.glob("t*h")):
                 dst_crs=merged_crs,
                 resampling=Resampling.nearest,
             )
-    
+
             # inhoudelijke check: globale max mag niet groter zijn dan merged
             if np.nanmax(reproj_arr) > np.nanmax(merged_arr) + 1e-6:
-                raise ValueError(
-                    f"Waarden verloren bij merge: {tif.name} "
-                    f"(tijd {output_folder.name})"
-                )
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+                raise ValueError(f"Waarden verloren bij merge: {tif.name} (tijd {output_folder.name})")
