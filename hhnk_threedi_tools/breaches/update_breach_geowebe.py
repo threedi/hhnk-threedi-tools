@@ -15,7 +15,7 @@ bressen = gpd.read_file(gdb_path, engine="pyogrio")
 
 bressen_schade_gdf["Scenario_Identificatie"] = bressen_schade_gdf["Scenario_I"]
 bressen_copy = bressen.copy()
-
+#%%
 bressen_copy = bressen_copy.merge(
     bressen_schade_gdf[["Scenario_Identificatie", "Totale_Kos"]], on="Scenario_Identificatie", how="left"
 )
@@ -52,7 +52,24 @@ bressen_copy.loc[bressen_copy["Naam_buitenwater_text"] == "Waddenzee", "Naam_bui
 bressen_copy["SIMULATIEDUUR"] = bressen_copy["Simulatietijd"]
 bressen_copy.loc[bressen_copy["Varianttype"] == "Primaire Keringen", "SIMULATIEDUUR"] = 10
 bressen_copy.loc[bressen_copy["Varianttype"] != "Primaire Keringen", "SIMULATIEDUUR"] = 5
+bressen_copy.loc[bressen_copy["Varianttype"] == "Primaire Keringen", "CATEGORIE_WATERKERING"] = 1
+bressen_copy.loc[bressen_copy["Varianttype"] != "Primaire Keringen", "CATEGORIE_WATERKERING"] = 2
 
+
+bressen_copy.loc[bressen_copy["Overschrijdingsfrequentie"] == "10", "Overschrijdingsfrequentie_code"] = 1
+bressen_copy.loc[bressen_copy["Overschrijdingsfrequentie"] == "100", "Overschrijdingsfrequentie_code"] = 2
+bressen_copy.loc[bressen_copy["Overschrijdingsfrequentie"] == "1000", "Overschrijdingsfrequentie_code"] = 4
+bressen_copy.loc[bressen_copy["Overschrijdingsfrequentie"] == "3000", "Overschrijdingsfrequentie_code"] = 5
+bressen_copy.loc[bressen_copy["Overschrijdingsfrequentie"] == "10000", "Overschrijdingsfrequentie_code"] = 6
+bressen_copy.loc[bressen_copy["Overschrijdingsfrequentie"] == "100000", "Overschrijdingsfrequentie_code"] = 8
+
+#rename
+bressen_copy.rename(columns={'Overschrijdingsfrequentie': 'Overschrijdingsfrequentie_value'},inplace=True)
+bressen_copy.rename(columns={'Overschrijdingsfrequentie_code': 'Overschrijdingsfrequentie'},inplace=True)
+bressen_copy.rename(columns={'Naam_buitenwater_text': 'Naam_buitenwater_value'},inplace=True)
+
+
+#%%
 bressen_copy.loc[bressen_copy["Varianttype"] == "Primaire Keringen", "DOORBRAAK_SCENARIO"] = 1
 bressen_copy.loc[bressen_copy["Varianttype"] != "Primaire Keringen", "DOORBRAAK_SCENARIO"] = 2
 
@@ -61,6 +78,14 @@ bressen_copy.loc[bressen_copy["Varianttype"] != "Primaire Keringen", "DOORBRAAK_
 
 bressen_copy.loc[bressen_copy["Varianttype"] == "Primaire Keringen", "COMPARTIMENTERING"] = "n"
 bressen_copy.loc[bressen_copy["Varianttype"] != "Primaire Keringen", "COMPARTIMENTERING"] = "n"
+
+bressen_copy.loc[bressen_copy["Varianttype"] == "Primaire Keringen", "COMPARTIMENTERING"] = "n"
+bressen_copy.loc[bressen_copy["Varianttype"] != "Primaire Keringen", "COMPARTIMENTERING"] = "n"
+bressen_copy.loc[bressen_copy["Varianttype"] != "Primaire Keringen", "COMPARTIMENTERING"] = "n"
+bressen_copy.loc[bressen_copy["Varianttype"] != "Primaire Keringen", "COMPARTIMENTERING"] = "n"
+bressen_copy.loc[bressen_copy["Varianttype"] != "Primaire Keringen", "COMPARTIMENTERING"] = "n"
+bressen_copy.loc[bressen_copy["Varianttype"] != "Primaire Keringen", "COMPARTIMENTERING"] = "n"
+
 
 bressen_copy.loc[bressen_copy["Varianttype"] == "Primaire Keringen", "RASTER_RESOLUTIE_M"] = float(0.5)
 bressen_copy.loc[bressen_copy["Varianttype"] != "Primaire Keringen", "RASTER_RESOLUTIE_M"] = float(0.5)
@@ -74,7 +99,13 @@ bressen_copy.loc[bressen_copy["Varianttype"] != "Primaire Keringen", "OPMERKINGE
 bressen_copy.loc[bressen_copy["Varianttype"] != "Primaire Keringen", "OPMERKINGEN"] = (
     "Schade berekening nog niet berend"
 )
-
+#%%
+cols = ['OBJECTID', 'Scenario_Identificatie', 'Scenarionaam','Naam_waterkering', 'CATEGORIE_WATERKERING',
+       'DIJKGEBIED_NAAM',  'Overschrijdingsfrequentie','Naam_buitenwater_Code', 'png_path',
+       'png_schade_path','Totale_Kost_Schade','SIMULATIEDUUR', 'DOORBRAAK_SCENARIO','DOORBRAAK_AFSLUITBAAR', 
+       'COMPARTIMENTERING', 'RASTER_RESOLUTIE_M', 'OPMERKINGEN', 'Varianttype', 'Gebiedsnaam', 
+       'Overschrijdingsfrequentie_value', 'Gebidsnaam_Code',   'Opmerking', 'Simulatietijd',
+       'Totale_Kos', 'Total_Schade_Kost','Naam_buitenwater_value',  'geometry', ]
 bressen_copy.to_file(
     r"G:\02_Werkplaatsen\06_HYD\Projecten\HKC25007 Ontsluiten Overstromingsbeelden\geoweb_gdb\bressen_copy.gpkg",
     driver="GPKG",
