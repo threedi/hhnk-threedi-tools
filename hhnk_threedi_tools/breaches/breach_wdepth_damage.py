@@ -297,11 +297,10 @@ def sum_total_raster(calculation_type, region_path):
         raster_path = os.path.join(output_scenario_wss, name)
         print(f"Calculating {name}")
     # Open Damage Raster, get pixel width, calculate area and sum values
-    raster_resolution = gdal.Open(raster_path, gdal.GA_ReadOnly)
+    # raster_resolution = gdal.Open(raster_path, gdal.GA_ReadOnly)
     raster = hrt.Raster(raster_path)
-    area_pixel = pow(hrt.RasterMetadata(raster_resolution).pixel_width, 2)
-    sum_values = raster.sum()
-    total_cost = sum_values * area_pixel
+    # area_pixel = pow(hrt.RasterMetadata(raster_resolution).pixel_width, 2)
+    total_cost = raster.sum()
 
     return total_cost
 
@@ -449,4 +448,9 @@ if __name__ == "__main__":
     calculate_damage_raster(region_paths, landuse_file, cfg_file, EPSG)
     save_damage_csv(region_paths)
     create_pgn_dagame(region_paths)
+# %%
+import sys
+
+print(sys.executable)
+
 # %%
