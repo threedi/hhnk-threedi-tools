@@ -161,12 +161,11 @@ def calculate_depth_raster(region_paths, dem_path, OVERWRITE, EPSG, spatialResol
             # Set the parameters for the calculator
 
             with GridToWaterLevel(
-                dem_path=dem_clip_output,
-                grid_gdf=new_grid_gdf,
-                wlvl_column="wlvl_max",
+                dem_path=dem_clip_output, grid_gdf=new_grid_gdf, wlvl_column="wlvl_max", interpolator_type="idw"
             ) as raster_calc:
                 wlvl_raster = raster_calc.run(
                     output_file=output_waterlevel_raster,
+                    chunksize=512,
                     overwrite=True,
                 )
             with GridToWaterDepth(
@@ -175,6 +174,7 @@ def calculate_depth_raster(region_paths, dem_path, OVERWRITE, EPSG, spatialResol
             ) as raster_calc:
                 wdepth_raster = raster_calc.run(
                     output_file=output_file_depth,
+                    chunksize=512,
                     overwrite=True,
                 )
 

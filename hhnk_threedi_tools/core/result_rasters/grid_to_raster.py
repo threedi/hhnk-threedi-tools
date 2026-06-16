@@ -200,8 +200,6 @@ class LinearInterpolator:
         optie om threedidepth.morton.reorder uit te voeren, staat default op True
     """
 
-    gdf = grid_gdf[grid_gdf["vol_max"] > 1]
-
     def __init__(
         self,
         grid_gdf: gpd.GeoDataFrame,
