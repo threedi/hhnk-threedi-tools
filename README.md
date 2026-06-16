@@ -27,9 +27,42 @@ To run test locally:
 * Run `pixi run tests` in terminal. Make sure postinstall has been run.
 
 2025-06 -> migration towards python 3.12.
+Not all checks work yet on 3.12. The github checks therefore run on py39
+
+Tests this locally with
+`pixi run -e py39 tests`
+
 Not all checks work yet on 3.12. The github checks therefore run on python 3.9 (pixi environment `py39`)
 
 2025-09: Beware that the py39 test environment uses the main from `hhnk-research-tools` and, not local editable install.
 
 To run tests locally on python 3.9 use
 `pixi run -e py39 tests`
+
+
+# Model Repository
+
+## Initialize a model repository
+
+Run this after cloning a model repository or creating a new one. This will add the nescessary git hooks (to .get/hooks),
+initialize git LFS (Large File Storage), create or append to the .gitattributes and .gitignore file.
+
+### Windows
+
+```shell
+# from the root of the model repository
+<root of hhnk-treedi-tools repo>\hhnk_threedi_tools\git_model_repo\bin\initialize_repo.bat
+# or from other path
+<root of hhnk-treedi-tools repo>\hhnk_threedi_tools\git_model_repo\bin\initialize_repo.bat <path to model repo>
+``` 
+
+### Or on Mac/ Linux
+
+```shell
+# from the root of the model repository
+<root of hhnk-treedi-tools repo>/hhnk_threedi_tools/git_model_repo/bin/linux/initialize_repo.sh
+# or from other path
+<root of hhnk-treedi-tools repo>/hhnk_threedi_tools/git_model_repo/bin/linux/initialize_repo.sh <path to model repo>
+```
+
+

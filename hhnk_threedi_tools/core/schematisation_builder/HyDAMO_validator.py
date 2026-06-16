@@ -2,14 +2,20 @@ import os
 import shutil
 from pathlib import Path
 
+import fiona
+import geopandas as gpd
 import hhnk_research_tools as hrt
 from hydamo_validation import validator
+from shapely import LineString, MultiLineString, MultiPoint, MultiPolygon, Point, Polygon
+
+from .utils.hydamo_validation_styler import HyDAMOValidationStyler
 
 
 def validate_hydamo(
     hydamo_file_path: Path,
     validation_rules_json_path: Path,
     validation_directory_path: Path,
+    template_file_path: Path,
     coverages_dict: dict,
     output_types: list[str] = ["geopackage", "csv", "geojson"],
     logger=None,
@@ -48,6 +54,7 @@ def validate_hydamo(
     validation_directory_path.mkdir(parents=True, exist_ok=True)
     hydamo_file_path = Path(hydamo_file_path)
     validation_rules_json_path = Path(validation_rules_json_path)
+    results_path = validation_directory_path.joinpath("results/results.gpkg")
 
     hydamo_file_path2 = validation_directory_path.joinpath("datasets", hydamo_file_path.name)
     # Copy the HyDAMO file and the validation rules to the validation directory, to ensure you use the most recent HyDAMO file
@@ -64,5 +71,11 @@ def validate_hydamo(
 
     # Validate the HyDAMO file
     datamodel, layer_summary, result_summary = hydamo_validator(directory=validation_directory_path, raise_error=True)
+
+    if template_file_path.exists():
+        validation_styler = HyDAMOValidationStyler(
+            hydamo_path=hydamo_file_path2, results_path=results_path, template_path=template_file_path
+        )
+        validation_styler.save_to_gpkg()
 
     return result_summary.to_dict()

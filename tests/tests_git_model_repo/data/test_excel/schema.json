@@ -1,0 +1,13 @@
+{
+  "Sheet1": {
+    "a": "int64",
+    "b": "object",
+    "c": "datetime64[ns]",
+    "d": "bool",
+    "e": "float64",
+    "f": "object"
+  },
+  "extra": {
+    "a": "int64"
+  }
+}

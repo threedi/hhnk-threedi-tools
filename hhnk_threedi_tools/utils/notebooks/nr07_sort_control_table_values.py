@@ -1,10 +1,5 @@
 # %%
-try:
-    from hhnk_threedi_tools.utils.notebooks.notebook_setup import setup_notebook
-except:
-    from notebook_setup import setup_notebook  # in case hhnk-threedi-tools is not part of python installation
 
-notebook_data = setup_notebook()
 
 from pathlib import Path
 
@@ -12,77 +7,19 @@ import hhnk_research_tools as hrt
 import numpy as np
 
 from hhnk_threedi_tools import Folders
+from hhnk_threedi_tools.core.checks.schematisation.structure_control import (
+    create_sorted_actiontable_queries,
+    update_sorted_actiontable,
+)
 
 logger = hrt.logging.get_logger(__name__)
 
+try:
+    from hhnk_threedi_tools.utils.notebooks.notebook_setup import setup_notebook
+except:
+    from notebook_setup import setup_notebook  # in case hhnk-threedi-tools is not part of python installation
 
-def create_sorted_actiontable_queries(database: hrt.Sqlite) -> list[str]:
-    """
-    Sommige modellen hebben een sturing die niet door de validatie van 3Di komt.
-    Hier is ergens een keer de action_table verkeerd gesorteerd.
-
-    Met dit script kan de sortering goed gezet worden in de sqlite.
-
-    Parameters
-    ----------
-    database : hrt.Sqlite
-        path to the database. This can be retrieved from htt.Folders with:
-        folder.model.schema_base.database
-
-    Returns
-    -------
-    queries : list[str]
-        list of sql queries of all controls in the provided model. This list should be
-    """
-
-    control_df = database.read_table("v2_control_table")
-    queries = []
-
-    # Voor elke sturings regel de actiontable sorteren
-    for index, row in control_df.iterrows():
-        action_table_string = row["action_table"]
-
-        measure_list = []
-        action_list = []
-
-        action_type = row["action_type"]
-        for entry in action_table_string.split("#"):
-            try:
-                measurement = [float(entry.split(";")[0])]
-                measure_list.append(measurement[0])
-            except ValueError as e:
-                # Problem with action table
-                logger.error(f"""Problem with '{entry}' at index {action_table_string.index(entry)} of the action_table_string for
-    {row}
-    """)
-                raise e
-
-            if action_type in ["set_crest_level", "set_pump_capacity"]:
-                action = [float(entry.split(";")[1])]
-                action_list.append(action[0])
-
-            order = np.argsort(measure_list)
-
-            measure_order = np.array(measure_list)[order]
-            action_order = np.array(action_list)[order]
-
-            action_string = ""
-            for nr, (m, a) in enumerate(zip(measure_order, action_order)):
-                action_string += f"{m};{a}"
-                if nr != len(measure_order) - 1:
-                    action_string += "#"
-
-        update_str = f"UPDATE v2_control_table SET action_table='{action_string}' WHERE id={row['id']}"
-
-        queries.append(update_str)
-    return queries
-
-
-def update_sorted_actiontable(database: hrt.Sqlite, queries: list[str]) -> None:
-    logger.info(f"Updating {len(queries)} table controls for {database.name}")
-    for query in queries:
-        database.execute_sql_changes(query=query)
-
+notebook_data = setup_notebook()
 
 # %% [markdown]
 # Sorteer de waarden in de control table in de modelmap met onderstaande cel
@@ -99,3 +36,5 @@ if __name__ == "__main__":
 
     queries = create_sorted_actiontable_queries(database=folder.model.schema_base.database)
     update_sorted_actiontable(database=folder.model.schema_base.database, queries=queries)
+
+# %%

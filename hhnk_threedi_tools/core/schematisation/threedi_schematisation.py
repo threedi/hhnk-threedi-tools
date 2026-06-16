@@ -1,5 +1,6 @@
 # %%
 import os
+from pathlib import Path
 
 import geopandas as gpd
 import hhnk_research_tools as hrt
@@ -94,17 +95,15 @@ class ThreediSchematisation(Folder):
             super().__init__(os.path.join(base, "rasters"), create=True)
             self.caller = caller
 
-            self.dem = self.get_raster_path(table_name="model_settings", col_name="dem_file")
+            self.dem = self.get_raster_path(table_name="global_settings", col_name="dem_file")
             self.storage = self.get_raster_path(
-                table_name="simple_infiltration",
+                table_name="simple_infiltration_settings",
                 col_name="max_infiltration_volume_file",
             )
-            self.friction = self.get_raster_path(table_name="model_settings", col_name="friction_coefficient_file")
-            self.infiltration = self.get_raster_path(
-                table_name="simple_infiltration", col_name="infiltration_rate_file"
-            )
+            self.friction = self.get_raster_path(table_name="global_settings", col_name="frict_coef_file")
+            self.infiltration = self.get_raster_path(table_name="global_settings", col_name="infiltration_rate_file")
             self.initial_wlvl_2d = self.get_raster_path(
-                table_name="initial_conditions", col_name="initial_water_level_file"
+                table_name="global_settings", col_name="initial_water_level_file"
             )
 
             # Waterschadeschatter required 50cm resolution.
@@ -137,15 +136,23 @@ class ThreediSchematisation(Folder):
                     raster_name = None
                     logger.warning(f"{table_name} has no rows, cannot find raster for {self.caller.database.path}.")
                 else:
-                    raster_name = df.iloc[0][col_name]
+                    if col_name not in df.columns:
+                        raster_name = None
+                        logger.warning(f"Column {col_name} not found in {table_name}.")
+                    else:
+                        raster_name = df.iloc[0][col_name]
 
                 if raster_name is None:
                     raster_path = ""
                 else:
-                    # NOTE in de model settings van gpkg staat het woord 'rasters' niet meer voor de rasterverwijzing
-                    if not raster_name.startswith("rasters/"):
-                        raster_name = os.path.join("rasters", raster_name)
-                    raster_path = self.caller.full_path(raster_name)
+                    # make the raster path a Path object. Ex: rasters/something.tif
+                    raster_name_clean = Path(raster_name)
+                    # parts[0] would be rasters
+                    if raster_name_clean.parts[0] == "rasters":
+                        # make the path relative to the rasters folder, so it can be found in the schematisation folder.
+                        # Ex: rasters/something.tif -> something.tif
+                        raster_name_clean = raster_name_clean.relative_to("rasters")
+                    raster_path = self.caller.full_path(os.path.join("rasters", str(raster_name_clean)))
             else:
                 raster_path = ""
 
