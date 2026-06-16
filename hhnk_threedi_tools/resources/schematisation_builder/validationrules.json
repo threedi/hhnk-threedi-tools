@@ -1340,6 +1340,8 @@
 				{
 					"id": 0,
 					"result_variable": "pomp_aantal_pompen",
+					"name": "Aantal gekoppelde pompen",
+					"description": "Berekent het aantal pompen dat aan het gemaal is gekoppeld",
 					"function": {
 						"object_relation": {
 							"statistic": "count",
@@ -1351,6 +1353,8 @@
 				{
 					"id": 1,
 					"result_variable": "pomp_capaciteit",
+					"name": "Totale capaciteit van gekoppelde pompen",
+					"description": "Som van de maximale capaciteit van alle gekoppelde pompen",
 					"function": {
 						"object_relation": {
 							"statistic": "sum",
@@ -1364,7 +1368,8 @@
 			"validation_rules": [
 				{
 					"id": 0,
-					"name": "Het aantal pompen is groter dan nul",
+					"name": "Aantal pompen groter dan nul",
+					"description": "Het gemaal moet minimaal één gekoppelde pomp hebben",
 					"type": "logic",
 					"validation_rule_set": "basic",
 					"error_type": "critical",
@@ -1380,7 +1385,8 @@
 				},
 				{
 					"id": 1,
-					"name": "Totale capaciteit is groter dan nul",
+					"name": "Totale capaciteit groter dan nul",
+					"description": "De totale capaciteit van alle pompen bij het gemaal moet groter zijn dan nul",
 					"type": "logic",
 					"validation_rule_set": "basic",
 					"error_type": "critical",
@@ -1396,7 +1402,8 @@
 				},
 				{
 					"id": 2,
-					"name": "Een gemaal zal geen overlap met een ander gemaal hebben",
+					"name": "Geen overlap met ander gemaal",
+					"description": "Het gemaal mag niet overlappen met een ander gemaal",
 					"type": "topologic",
 					"validation_rule_set": "basic",
 					"error_type": "critical",
@@ -1405,6 +1412,42 @@
 					"active": true,
 					"function": {
 						"not_overlapping": {
+							"tolerance": 1
+						}
+					}
+				},
+				{
+					"id": 101,
+					"name": "Capaciteit binnen logisch bereik",
+					"description": "De maximale capaciteit van het gemaal ligt tussen 0.92 en 700",
+					"type": "logic",
+					"validation_rule_set": "hhnk",
+					"error_type": "critical",
+					"result_variable": "logische_capacteit",
+					"error_message": "check capacteit van de gemaal",
+					"active": true,
+					"function": {
+						"BE": {
+							"parameter": "maximalecapaciteit",
+							"min": 0.92,
+							"max": 700,
+							"inclusive": true
+						}
+					}
+				},
+				{
+					"id": 102,
+					"name": "Gemaal op watergang",
+					"description": "Het gemaal moet binnen 1 meter van de as van de watergang liggen",
+					"type": "topologic",
+					"validation_rule_set": "hhnk",
+					"error_type": "critical",
+					"result_variable": "gemaal_op_watergang",
+					"error_message": "gemaal niet op watergang",
+					"active": true,
+					"function": {
+						"snaps_to_hydroobject": {
+							"method": "overall",
 							"tolerance": 1
 						}
 					}

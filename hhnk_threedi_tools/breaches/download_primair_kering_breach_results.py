@@ -1,6 +1,6 @@
+# %%
 # def collect_ipo_restults(input_base_folder,base_scenario_prefix):
 # SRIPT for downloading results and creating
-# %%
 """
 Downloaden en opslaan 3Di resultaat met één breslocatie.
 Maakt een grafiek met belangrijkste info van de bres voor in de Storymap Overstromingen.
@@ -16,6 +16,9 @@ import geopandas as gpd
 import hhnk_research_tools as hrt
 import numpy as np
 import pandas as pd
+from breaches import Breaches
+from create_breach_graph import create_breach_graph
+from download_results_from_3di import download_results_from_3di
 from threedi_api_client.api import ThreediApi
 from threedi_api_client.openapi import ApiException
 from threedi_api_client.versions import V3Api
@@ -173,7 +176,6 @@ def download_breach_scenario(base_folder, model_name, metadata_path, new_metadat
             breach_width = gr.lines.timeseries(start_time=0, end_time=gr.lines.timestamps[-1]).breach_width[
                 :, breach_mask
             ][:, 0]
-
             breach_width[breach_width <= -999] = np.nan
             max_breach_width = np.nanmax(breach_width)
 
@@ -209,7 +211,6 @@ def download_breach_scenario(base_folder, model_name, metadata_path, new_metadat
 
             start_time = datetime.strptime(gr.lines.dt_timestamps[0].split(".")[0], "%Y-%m-%dT%H:%M:%S")
             end_time = datetime.strptime(gr.lines.dt_timestamps[-1].split(".")[0], "%Y-%m-%dT%H:%M:%S")
-
             timestamps = gr.lines.dt_timestamps
             time_sec = gr.lines.timestamps
             time_sec_agg = ga.lines.timestamps["q_avg"]

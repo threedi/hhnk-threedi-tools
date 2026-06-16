@@ -85,20 +85,14 @@ def get_paths(base_folder, scenario_name: list = None, specific_scenario=False, 
         else:
             continue
     # If scenario_name is provided, filter the models otherwise use all models
-    for model in models:
-        if specific_scenario:
-            model_scenarios = scenario_name
-        else:
-            model_scenarios = os.listdir(model)
-        for model_scenario in model_scenarios:
-            if model_scenario in skip:
-                continue
+    if specific_scenario:
+        for model_scenario in scenario_name:
             # Check if the path exists and append into the list region_paths
-            path = Path(os.path.join(model, model_scenario))
+            path = Path(os.path.join(base_folder, model_scenario))
             if path.exists():
                 region_paths.append(path)
-        else:
-            continue
+            else:
+                continue
 
     return region_paths
 
@@ -434,30 +428,22 @@ if __name__ == "__main__":
     # Set the paths for the DEM, landuse file, base folder and configuration file
     dem_path = r"Y:\02.modellen\RegionalFloodModel\work in progress\schematisation\rasters\dem_1_met_amstelmeer.tif"
     landuse_file = r"Y:\01.basisgegevens\rasters\landgebruik\landuse2021_tiles\combined_rasters.vrt"
-    base_folder = r"Y:\03.resultaten\Normering Regionale Keringen\output"
+    base_folder = r"H:\03.resultaten\IPO_Overstromingsberekeningen_compartimentering\output"
     cfg_file = schadeschatter_path / "01_data/cfg/cfg_lizard.cfg"
     # ipo_paths_path = r"E:\03.resultaten\Normering Regionale Keringen\output\ipo_scenarios_paths.csv"
-    region_paths = [r"Y:\03.resultaten\Normering Regionale Keringen\output\IPO_SBLN_JA_WIP_DONE\IPO_SBLN_968_JA"]
+    # region_paths = [r"Y:\03.resultaten\Normering Regionale Keringen\output\IPO_SBLN_JA_WIP_DONE\IPO_SBLN_968_JA"]
     # Set the parameters for the calculation
-    OVERWRITE = False
+    OVERWRITE = True
     EPSG = "EPSG:28992"
-
-    # This scenarios need to be recalculated
-    # r'E:\03.resultaten\Normering Regionale Keringen\output\IPO_SBLZ_JA_WIP_DONE\IPO_SBLZ_1097_JA',
-    # r'E:\03.resultaten\Normering Regionale Keringen\output\IPO_VRNKWE_WIP_DONE\IPO_VRNK_WEST_355_WE'
-    # r"E:\03.resultaten\Normering Regionale Keringen\output\IPO_SBLZ_JA_WIP_DONE\IPO_SBLZ_908_JA",
-    # r"E:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\output\ROR_PRI-dijktrajecten_12-1_12-2_13-6_13-7_Deel_Zuid\ROR-PRI-OOSTERDIJK_VAN_DRECHTERLAND_0.5-T10",
-    # r"E:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\output\ROR_PRI-dijktrajecten_12-1_12-2_13-6_13-7_Deel_Zuid\ROR-PRI-OOSTERDIJK_VAN_DRECHTERLAND_0.5-T100",
-    spatialResolution = 0.5
+    scenario_name = ["Starnmeer_SBLN_135", "Beemster_SBLN_527", "BM_SBMZ_1492", "HW_SBMZ_1182"]
+    spatialResolution = 5
 
     # Define scenarios to skip
-
     skip = []
     # I have to structure better this code, the idea is that it finish everything in one go.
     # So frist: calculate damage, second csv, and the create pgn. This process needs to be done by scenario
-    # TODO IPO SBLZ 908, ipo_vrnk_west_355
-    specefic_scenario = False
-    # region_paths = get_paths(base_folder, scenario_name=None, specific_scenario=specefic_scenario, skip=skip)
+    specific_scenario = True
+    region_paths = get_paths(base_folder, scenario_name=scenario_name, specific_scenario=specific_scenario, skip=skip)
 
     calculate_depth_raster(region_paths, dem_path, OVERWRITE, EPSG, spatialResolution)
     calculate_damage_raster(region_paths, landuse_file, cfg_file, EPSG)

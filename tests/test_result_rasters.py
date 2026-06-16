@@ -1,4 +1,6 @@
 # %%
+import sys
+
 import geopandas as gpd
 import hhnk_research_tools as hrt
 import pytest
@@ -38,6 +40,7 @@ class TestGridToRasterOld:
         assert output_file.sum() == 5.868329048156738
 
 
+@pytest.mark.skipif(sys.version_info < (3, 12), reason="Requires Python 3.12 or higher")
 def test_grid_to_raster():
     grid_gdf = gpd.read_file(TEST_RESULT_DIR / "grid_corr_tiny.gpkg", engine="pyogrio")
     dem_path = TEST_RESULT_DIR / "dem_tiny.tif"

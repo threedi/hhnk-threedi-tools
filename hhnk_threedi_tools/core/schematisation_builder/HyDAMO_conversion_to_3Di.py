@@ -159,7 +159,7 @@ def convert_to_3Di(
     hydamo_file_path : Union[Path, hrt.SpatialDatabase]
         Path to the HyDAMO file. Will be converted to hrt.SpatialDatabase
     hydamo_layers : list
-        Layers in hydamo_file_path to process, e.g. HYDROOBJECT
+        Layers in hydamo_file_path to process, e.g. hydroobject
     output_schematisation_directory : Path
         Path to the directory where the 3Di schematisation will be stored.
     empty_schematisation_file_path : Optional[Path], default is None
@@ -185,8 +185,8 @@ def convert_to_3Di(
     shutil.copy2(empty_schematisation_file_path, output_path)
 
     # Process the hydroobject layer if present
-    if "HYDROOBJECT" in layers_dict:
-        hydroobject = layers_dict["HYDROOBJECT"]
+    if "hydroobject" in layers_dict:
+        hydroobject = layers_dict["hydroobject"]
         connection_node_id = get_unique_id(layer_gdf=schematisation_layers.get("connection_node", gpd.GeoDataFrame()))
         channel_id = get_unique_id(layer_gdf=schematisation_layers.get("channel", gpd.GeoDataFrame()))
         crs = hydroobject.crs
@@ -199,4 +199,4 @@ def convert_to_3Di(
             crs=crs,
         )
     else:
-        raise ValueError("No HYDROOBJECT layer found in the HyDAMO file.")
+        raise ValueError("No hydroobject layer found in the HyDAMO file.")

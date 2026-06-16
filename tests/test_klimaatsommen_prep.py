@@ -1,6 +1,7 @@
 # %%
 # First-party imports
 import shutil
+import sys
 
 import hhnk_research_tools as hrt
 import pandas as pd
@@ -26,6 +27,7 @@ def test_klimaatsommenprep_verify():
         )
 
 
+@pytest.mark.skipif(sys.version_info < (3, 12), reason="Requires Python 3.12 or higher")
 def test_klimaatsommenprep():
     """Test creation of gpkg and rasters"""
     # %%

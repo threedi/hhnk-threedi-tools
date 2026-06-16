@@ -132,7 +132,7 @@ class Breaches(Folder):
             "landuse_2021_clip": self.wss.landuse_2021_clip.path_if_exists,
             # ssm
             "max_flow_velocity_5m": self.ssm.max_flow_velocity_5m.path_if_exists,
-            "max_rate_of_rise_5m": self.ssm.max_rate_of_rise_5m.sqlite_tests.path_if_exists,
+            "max_rate_of_rise_5m": self.ssm.max_rate_of_rise_5m.hhnk_schematisation_checks.path_if_exists,
             "max_waterdepth_5m": self.ssm.max_waterdepth_5m.path_if_exists,
             "max_waterlevel_5m": self.ssm.max_waterlevel_5m.path_if_exists,
         }
