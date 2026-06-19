@@ -587,12 +587,13 @@ def update_model_geopackage(
 
 hdb_path = r"H:\01.basisgegevens\00.HDB\Hydro_database.gpkg"
 folder = Folders(r"D:\01.modelrepos\Martine\Zijpe_West_2026")
+source_data = folder.source_data.path
 damo_path = folder.source_data.damo.path
 datacheker_path = folder.source_data.datachecker.path
 polder_polygon_path = folder.source_data.polder_polygon.path
 model_path_gpkg = folder.model.schema_base.path / "bwn_zijpe-west.gpkg"
-impervious_out_polygon_gpkg = model_path_gpkg.with_name(model_path_gpkg.stem + "_impervious_pol_review.gpkg")
-impervious_out_line_gpkg = model_path_gpkg.with_name(model_path_gpkg.stem + "_impervious_line_review.gpkg")
+impervious_out_polygon_gpkg = source_data / "impervious_pol_review.gpkg"
+impervious_out_line_gpkg = source_data / "impervious_line_review.gpkg"
 out_csv = model_path_gpkg.with_name("v2_impervious_surface_map_new.csv")
 # %%
 subcatchments = createa_voronoi_polygons(model_path_gpkg, datacheker_path, polder_polygon_path)
@@ -606,7 +607,7 @@ update_model_geopackage(
     output_model_path=None,
     surface_layer_name="impervious_surface",
     surface_map_layer_name="impervious_surface_map",
-    sure_update=False,
+    sure_update=True,
 )
 
 # %%
