@@ -52,7 +52,7 @@ def createa_voronoi_polygons(
         GeoDataFrame with columns: con_id, fdla_code, connection_node_id,
         surface_id, area, geometry. One row per subcatchment polygon.
     """
-    # read geopackges to create tissen polygons.
+    # read geopackges to create tissen (voronoi) polygons.
     nodes = gpd.read_file(model_path_gpkg, layer="connection_node")
     fdla = gpd.read_file(datacheker_path, layer="fixeddrainagelevelarea")
     polder = gpd.read_file(polder_polygon_path)
@@ -309,11 +309,11 @@ def create_surface_layer(
         ]
     ]
     # save geopackges
-    surfaces.to_file(
-        impervious_out_polygon_gpkg,
-        layer="v2_impervious_surface_new",
-        driver="GPKG",
-    )
+    # surfaces.to_file(
+    #     impervious_out_polygon_gpkg,
+    #     layer="v2_impervious_surface_new",
+    #     driver="GPKG",
+    # )
 
     return surfaces
 
@@ -493,11 +493,11 @@ def create_surface_map_layer(
     # drop nan
     surface_map = surface_map.dropna(subset=["geometry"]).copy()
 
-    surface_map.to_file(
-        impervious_out_line_gpkg,
-        layer="v2_impervious_surface_map_new",
-        driver="GPKG",
-    )
+    # surface_map.to_file(
+    #     impervious_out_line_gpkg,
+    #     layer="v2_impervious_surface_map_new",
+    #     driver="GPKG",
+    # )
     return surface_map
 
 
