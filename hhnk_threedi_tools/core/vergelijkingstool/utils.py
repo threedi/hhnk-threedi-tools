@@ -3,7 +3,9 @@ import logging
 import os
 import time
 from dataclasses import dataclass
+from importlib.resources import as_file, files
 from pathlib import Path
+from shutil import copy2
 from typing import Any, Dict, List, Optional, Union
 
 import fiona
@@ -11,7 +13,7 @@ import geopandas as gpd
 import pandas as pd
 
 from hhnk_threedi_tools.core.folders import Folders
-from hhnk_threedi_tools.core.vergelijkingstool import config
+from hhnk_threedi_tools.core.vergelijkingstool import config, docs
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -37,6 +39,35 @@ class ModelInfo:
     date_hdb_old: str
     date_hdb_new: str
     date_sqlite: str
+    decision_doc: Path
+
+
+DECISION_DOC_NAME = "Beslissing nieuwbouw of hergebruik 3Di.docx"
+
+
+def ensure_decision_document(source_data: str | Path, overwrite: bool = False) -> Path:
+    """
+    Copy the decision document template to:
+    01_source_data/vergelijkingstool/
+
+    The document is not overwritten unless overwrite=True.
+    """
+    source_data = Path(source_data)
+
+    target_dir = source_data / "vergelijkingstool"
+    target_dir.mkdir(parents=True, exist_ok=True)
+
+    target_doc = target_dir / DECISION_DOC_NAME
+
+    if target_doc.exists() and not overwrite:
+        return target_doc
+
+    template_resource = files(docs).joinpath(DECISION_DOC_NAME)
+
+    with as_file(template_resource) as template_doc:
+        copy2(template_doc, target_doc)
+
+    return target_doc
 
 
 def get_model_info(path: Union[str, Path]) -> ModelInfo:
@@ -59,6 +90,7 @@ def get_model_info(path: Union[str, Path]) -> ModelInfo:
     fn_hdb_old = source_data / "HDB.gpkg"
     damo_selection = source_data / "polder_polygon.gpkg"
     output_folder = source_data / "vergelijkingstool" / "output"
+    decision_doc = ensure_decision_document(source_data)
 
     return ModelInfo(
         model_name=model_name,
@@ -77,6 +109,7 @@ def get_model_info(path: Union[str, Path]) -> ModelInfo:
         date_hdb_old=time.ctime(os.path.getmtime(fn_hdb_old)),
         date_hdb_new=time.ctime(os.path.getmtime(fn_hdb_new)),
         date_sqlite=time.ctime(os.path.getmtime(fn_threedimodel)),
+        decision_doc=decision_doc,
     )
 
 

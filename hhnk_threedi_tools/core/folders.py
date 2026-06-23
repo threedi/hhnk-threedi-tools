@@ -350,8 +350,8 @@ class SourceDir(Folder):
 
             self.input_nieuwe_export = self.full_path("input_nieuwe_export")
             self.input_nieuwe_export.mkdir(parents=True, exist_ok=True)
-            self.add_file("input_nieuwe_export")
-            self.add_file("input_nieuwe_export")
+            self.add_file("input_nieuwe_export", "DAMO.gpkg")
+            self.add_file("input_nieuwe_export", "HDB.gpkg")
 
             self.output = self.full_path("output")
             self.output.mkdir(parents=True, exist_ok=True)
