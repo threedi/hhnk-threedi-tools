@@ -1,13 +1,13 @@
 # Vergelijkingstool DAMO / modelgegevens
 
-Met de vergelijkingstool zijn de verschillen tussen actuele DAMO-data te vergelijken met de gegevens in een bestaand model of met een oude DAMO-data-set. De tool helpt modelleurs de actualiteit van het model te beoordelen. De tool vergelijkt onder andere:
+Met de vergelijkingstool kunnen de verschillen tussen actuele DAMO en HDB data worden vergeleken met de gegevens in een bestaand model of met een oude DAMO en HDB-dataset. De tool helpt modelleurs de actualiteit van het model te beoordelen. De tool vergelijkt onder andere:
 
 | Onderdeel | Controle |
 | --- | --- |
 | Watergangen | Aanwezigheid, geometrie en attributen |
 | Kunstwerken | Verschillen in ligging en kenmerken |
 | Peilgebieden | Controle van actuele grenzen en waterpeilen |
-| Modelinput | Vergelijking tussen de bestaande modelgegevens en de nieuwe DAMO-export |
+| Modelinput | Vergelijking tussen de bestaande modelgegevens en de nieuwe DAMO en HDB export |
 
 Het doel is niet om automatisch te bepalen wat “goed” of “fout” is, maar om verschillen zichtbaar te maken, zodat daarna een inhoudelijke beoordeling kan worden uitgevoerd.
 
@@ -15,13 +15,11 @@ Het doel is niet om automatisch te bepalen wat “goed” of “fout” is, maar
 
 ## Workflow
 
-# TODO @JUAN de afbeelding bevat een spelfout. aanpass moet 'pas het bestaande model aan' zijn. Een waarom gebruik je specifiek 2014? Dat kan elk jaar zijn toch? Ik vind de figuur niet zo duidelijk. Kun je wat tekst schrijven wat er in staat en waarom het nuttig is?
+De vergelijkingstool maakt het mogelijk om de verschillen te analyseren tussen gegevens uit een recente DAMO- en HDB-export en een bestaand model dat is opgebouwd op basis van oudere brongegevens. Op basis van deze vergelijking kan worden beoordeeld of het nodig is om een nieuw model te bouwen, of dat het bestaande model met enkele aanpassingen nog kan worden gebruikt.
 
-De vergelijkingstool maakt het mogelijk om de verschillen te analyseren tussen de gegevens uit een recente DAMO export en een bestaand model dat is opgebouwd op basis van een oudere DAMO export. Op basis van deze vergelijking kan worden bepaald of het nodig is om een nieuw model te bouwen, of dat het bestaande model met enkele aanpassingen nog gebruikt kan worden.
+Het onderstaande stroomschema toont de algemene workflow en de bijbehorende besluitvorming. Het jaar 2014 wordt hierin alleen gebruikt als voorbeeld van een oudere brondata-export. Het diagram laat zien welke stappen nodig zijn om te bepalen of een bestaand model kan worden hergebruikt, moet worden aangepast, of opnieuw moet worden opgebouwd.
 
-Het onderstaande stroomschema toont de workflow en de besluitvorming voor een situatie waarin wordt uitgegaan van een model dat is opgebouwd met gegevens uit 2014. Hierin worden de stappen weergegeven die nodig zijn om te bepalen of er een nieuw model moet worden ontwikkeld, of dat het bestaande model kan worden aangepast.
-
-![Workflow](workflow_vergelijkingstool.png)
+![Workflow](../../../../../hhnk-threedi-plugin/docs/images/4_gebruik_plugin/f_vergelijkingstool/workflow_vergelijkingstool.png)
 
 ## Benodigde input
 
@@ -40,12 +38,12 @@ Binnen deze structuur leest de tool de gegevens uit de volgende locaties:
 ```text
 model_folder/
     ├── 01_source_data/
-    │   ├── DAMO.gpkg                        ← Nieuwe DAMO-export
-    │   ├── HDB.gpkg                         ← Nieuwe HDB-export
+    │   ├── DAMO.gpkg                        ← Oude DAMO-export
+    │   ├── HDB.gpkg                         ← Oude HDB-export
     │   └── vergelijkingstool/
-    │       ├── input_data_old/
-    │       │   ├── DAMO.gpkg                ← Oude DAMO-export
-    │       │   └── HDB.gpkg                 ← Oude HDB-export
+    │       ├── input_nieuwe_export/
+    │       │   ├── DAMO.gpkg                ← Nieuwe DAMO-export
+    │       │   └── HDB.gpkg                 ← Nieuwe HDB-export
     │       └── output/
     │           └── vergelijkingstool_output.gpkg
     └── 02_schematisation/
@@ -53,27 +51,19 @@ model_folder/
             └── HUB.gpkg                     ← Bestaand 3Di model
 ```
       
-Voordat de bestanden in `01_source_data` worden bijgewerkt, moeten de huidige DAMO en HDB bestanden eerst worden gekopieerd naar `vergelijkingstool/input_data_old/`. Voor het model HUB ziet dat er als volgt uit:
-
-De oude bestanden worden gekopieerd naar:
+Om de vergelijkingstool goed te laten werken, moet eerst vanuit FME een nieuwe export van DAMO en HDB worden gemaakt. Deze meest recente export wordt opgeslagen in de map `input_nieuwe_export`. Voor het model HUB is dat de volgende locatie:
 
 <p align="center">
-<code>H:\02.modellen\HUB\01_source_data\vergelijkingstool\input_data_old</code>
+<code>H:\02.modellen\HUB\01_source_data\vergelijkingstool\input_nieuwe_export</code>
 </p>
 
-Daarna moet de nieuwe DAMO en HDB export worden geplaatst in de map:
-<p align="center">
-<code>H:\02.modellen\HUB\01_source_data</code>
-</p>
+Daarnaast moeten ook de oude DAMO en HDB bestanden in `01_source_data` aanwezig zijn en moet het bestaande 3Di model beschikbaar zijn in de basisschematisatie:
 
-Vanuit deze map leest de vergelijkingstool automatisch de geactualiseerde gegevens in. Het bestaande 3Di model wordt gelezen vanuit de basisschematisatie:
 <p align="center">
 <code>H:\02.modellen\HUB\02_schematisation\00_basis</code>
 </p>
 
-De oude DAMO en HDB bestanden in `input_data_old` zijn nodig om de oorspronkelijke situatie vast te leggen. De nieuwe DAMO en HDBbestanden in `01_source_data` worden gebruikt als geactualiseerde invoer. Het bestaande model in `02_schematisation/00_basis` wordt gebruikt als referentie voor de vergelijking met het 3Di model.
-
-Deze structuur is nodig voor zowel de vergelijking **`Damo Updated vs Damo Old`** als voor de vergelijking **`Damo Updated vs 3Di model`**. Als de bestanden niet op deze manier zijn opgeslagen, kan de vergelijkingstool de benodigde invoer niet correct vinden en zal de tool niet goed werken.
+Deze vaste mappenstructuur is noodzakelijk voor de werking van de vergelijkingstool, ongeacht of de vergelijking **`Damo Updated vs Damo Old`** of **`Damo Updated vs 3Di model`** wordt uitgevoerd. Als de bestanden niet volgens deze structuur zijn opgeslagen, kan de vergelijkingstool de benodigde invoer niet correct vinden en zal de tool niet goed werken.
 ---
 
 ## **Handleiding**
@@ -91,7 +81,7 @@ De workflow bestaat uit twee hoofdonderdelen:
 
 Het eerste deel van het proces wordt uitgevoerd vanuit het hoofdtabblad van de plugin.
 
-![Workflow plugin](workflow_plugin.png)
+![Workflow plugin](../../../../../hhnk-threedi-plugin/docs/images/4_gebruik_plugin/f_vergelijkingstool/workflow_plugin.png)
 
 #### **Stap 1. De modellenmap selecteren**
 
@@ -115,7 +105,7 @@ Klik vervolgens op de knop *“Open Jupyter Notebook Server”*. Deze knop start
 
 Zodra JupyterLab in de browser is geopend, moet het bestand worden geopend en uitgevoerd dat hoort bij de `vergelijkingstool`.
 
-![Workflow notebook](workflow_notebook.png)
+![Workflow notebook](../../../../../hhnk-threedi-plugin/docs/images/4_gebruik_plugin/f_vergelijkingstool/workflow_notebook.png)
 
 #### **Stap 1. Het bestand `06_vergelijkingstool.py` openen**
 
@@ -143,23 +133,21 @@ In het veld *“Enter the Model folder path”* moet de locatie van het model wa
 
 Selecteer vervolgens de optie: **`Damo Updated vs 3Di model`**
 
-Deze optie vergelijkt de geactualiseerde DAMO en HDB bestanden met het bestaande 3Di model. De nieuwe DAMO en HDB-export wordt automatisch gelezen vanuit de map `01_source_data`. Het bestaande 3Di model wordt gelezen vanuit de basisschematisatie van het model, op de volgende locatie:
+Deze optie vergelijkt de geactualiseerde DAMO en HDB bestanden met het bestaande 3Di model. De nieuwe DAMO en HDB-export wordt automatisch gelezen vanuit de map:
+
+<p align="center">
+<code>H:\02.modellen\HUB\01_source_data\vergelijkingstool\input_nieuwe_export</code>
+</p>
+
+Het bestaande 3Di model wordt gelezen vanuit de basisschematisatie map van het model, op de volgende locatie:
 
 <p align="center">
 <code>H:\02.modellen\HUB\02_schematisation\00_basis</code>
 </p>
 
-Voordat de DAMO en HDB bestanden in `01_source_data` worden geactualiseerd, moeten de oude bestanden eerst worden gekopieerd of verplaatst naar de map:
-
-<p align="center">
-<code>H:\02.modellen\HUB\01_source_data\vergelijkingstool\input_data_old</code>
-</p>
-
 Deze structuur is noodzakelijk om de vergelijkingstool correct te laten werken. Als de mappenstructuur niet correct is ingericht, kan de `vergelijkingstool` de benodigde bestanden niet vinden en zal de tool niet goed werken.
 
-# TODO WAAR STAAT HET MODEL? WORDT STANDAARD NAAR HET BASISMODEL GEKEKEN? WAT IS DAMO UPDATED? IS DAT NIEUW? BIJ DEZE OPTIE HEB JE DUS GEEN DAMO OLD NODIG? HET IS VERWARREND ALS DAMO NIEUW UIT DE SOURCE DATA KOMT EN HET MODEL UIT DE BASIS SCHEMATISATIE. DAN MOET JE DUS EEN MODELMAP HEBBEN WAARIN ZOWEL NIEUWE ALS OUDE GEGEVENS STAAN, DAT HEB JE NOOIT EN IS HEEL ERG VERWARREND. KAN DIT OOK ALLEMAAL IN DE APARTE MAP?
-
-#### **Stap 6. De vergelijking uitvoeren**
+#### **Stap 5. De vergelijking uitvoeren**
 
 Wanneer alle instellingen klaarstaan, klik je op de knop *“Run Comparison”*. De tool voert de vergelijking tussen de geselecteerde databases uit en genereert het outputbestand. De volledige locatie van het gegenereerde bestand wordt weergegeven in het veld *“Full path”*. Dit `.gpkg` bestand kan daarna in QGIS worden geopend om de gevonden verschillen te beoordelen.
 
@@ -194,10 +182,18 @@ Ook als er bijvoorbeeld veel verschillen in de attributen zijn kan het efficiën
 Ten slotte kan het zijn dat de adviseur van watersystemen reden ziet om het model aan te passen of opnieuw op te bouwen op basis van de bestaande resultaten.
 
 ---
+## Vastlegging van de beoordeling
 
+Na het uitvoeren van de vergelijkingstool moet de beoordeling van de resultaten worden vastgelegd in een apart Word-document. Dit document wordt gebruikt om de keuze te onderbouwen of een bestaand 3Di model kan worden hergebruikt, moet worden aangepast, of opnieuw moet worden opgebouwd.
+
+Nadat de vergelijkingstool is gebruikt, wordt het document geplaatst in de map van de vergelijkingstool: `H:\02.modellen\HUB\01_source_data\vergelijkingstool`.
+
+In dit document legt de modelleur vast welke beslissing is genomen op basis van de resultaten van de vergelijkingstool. Het `.gpkg` outputbestand van de vergelijkingstool blijft de basis voor de inhoudelijke beoordeling in QGIS. Het Word-document is bedoeld als formele vastlegging van de gemaakte keuze en de belangrijkste aandachtspunten voor vervolgacties.
+
+---
 ## Aanbevolen werkwijze in het kort
 
-1. Controleer eerst of de gebruikte DAMO export recent is.
+1. Controleer eerst of de gebruikte DAMO en HDB export recent is.
 2. Open het resultaat in QGIS.
 3. Beoordeel de belangrijkste verschillen.
 4. Vergelijk de gemarkeerde objecten met de oorspronkelijke modelgegevens.
