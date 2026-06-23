@@ -1,6 +1,6 @@
 # Vergelijkingstool DAMO / modelgegevens
 
-Met de vergelijkingstool kunnen de verschillen tussen actuele DAMO en HDB data worden vergeleken met de gegevens in een bestaand model of met een oude DAMO en HDB-dataset. De tool helpt modelleurs de actualiteit van het model te beoordelen. De tool vergelijkt onder andere:
+Binnen HHNK worden 3Di modellen opgebouwd met brongegevens uit DAMO en de lokale HDB-database. Deze gegevens worden via FME geëxporteerd. Met de vergelijkingstool kunnen modelleurs verschillen inzichtelijk maken tussen een recente DAMO- en HDB-export en een bestaand 3Di model. Daarnaast kan dezelfde export worden vergeleken met een oudere DAMO- en HDB-dataset. De tool vergelijkt onder andere:
 
 | Onderdeel | Controle |
 | --- | --- |
@@ -15,11 +15,11 @@ Het doel is niet om automatisch te bepalen wat “goed” of “fout” is, maar
 
 ## Workflow
 
-De vergelijkingstool maakt het mogelijk om de verschillen te analyseren tussen gegevens uit een recente DAMO- en HDB-export en een bestaand model dat is opgebouwd op basis van oudere brongegevens. Op basis van deze vergelijking kan worden beoordeeld of het nodig is om een nieuw model te bouwen, of dat het bestaande model met enkele aanpassingen nog kan worden gebruikt.
+Op basis van de vergelijking kan worden beoordeeld of het bestaande model nog geschikt is voor hergebruik, met enkele aanpassingen kan worden bijgewerkt, of opnieuw moet worden opgebouwd.
 
-Het onderstaande stroomschema toont de algemene workflow en de bijbehorende besluitvorming. Het jaar 2014 wordt hierin alleen gebruikt als voorbeeld van een oudere brondata-export. Het diagram laat zien welke stappen nodig zijn om te bepalen of een bestaand model kan worden hergebruikt, moet worden aangepast, of opnieuw moet worden opgebouwd.
+Het onderstaande stroomschema toont de algemene workflow en de bijbehorende besluitvorming. Het jaar 2014 wordt hierin alleen gebruikt als voorbeeld van een oudere brondata-export. Het diagram laat zien hoe de resultaten van de vergelijkingstool kunnen worden gebruikt om een onderbouwde keuze te maken tussen hergebruik, aanpassing of nieuwbouw van het model.
 
-![Workflow](../../../../../hhnk-threedi-plugin/docs/images/4_gebruik_plugin/f_vergelijkingstool/workflow_vergelijkingstool.png)
+![Workflow](../../hhnk-threedi-plugin/docs/images/4_gebruik_plugin/f_vergelijkingstool/workflow_vergelijkingstool.png)
 
 ## Benodigde input
 
@@ -57,13 +57,13 @@ Om de vergelijkingstool goed te laten werken, moet eerst vanuit FME een nieuwe e
 <code>H:\02.modellen\HUB\01_source_data\vergelijkingstool\input_nieuwe_export</code>
 </p>
 
-Daarnaast moeten ook de oude DAMO en HDB bestanden in `01_source_data` aanwezig zijn en moet het bestaande 3Di model beschikbaar zijn in de basisschematisatie:
+Daarnaast moeten ook de oude DAMO en HDB bestanden in `01_source_data` aanwezig zijn en moet het bestaande 3Di model beschikbaar zijn in de map van de basisschematisatie:
 
 <p align="center">
 <code>H:\02.modellen\HUB\02_schematisation\00_basis</code>
 </p>
 
-Deze vaste mappenstructuur is noodzakelijk voor de werking van de vergelijkingstool, ongeacht of de vergelijking **`Damo Updated vs Damo Old`** of **`Damo Updated vs 3Di model`** wordt uitgevoerd. Als de bestanden niet volgens deze structuur zijn opgeslagen, kan de vergelijkingstool de benodigde invoer niet correct vinden en zal de tool niet goed werken.
+Deze vaste mappenstructuur is noodzakelijk voor de werking van de vergelijkingstool, ongeacht of de vergelijking **`Damo Updated vs 3Di model`** of **`Damo Updated vs Damo Old`** wordt uitgevoerd. Als de bestanden niet volgens deze structuur zijn opgeslagen, kan de vergelijkingstool de benodigde invoer niet correct vinden en zal de tool niet goed werken.
 ---
 
 ## **Handleiding**
@@ -81,7 +81,7 @@ De workflow bestaat uit twee hoofdonderdelen:
 
 Het eerste deel van het proces wordt uitgevoerd vanuit het hoofdtabblad van de plugin.
 
-![Workflow plugin](../../../../../hhnk-threedi-plugin/docs/images/4_gebruik_plugin/f_vergelijkingstool/workflow_plugin.png)
+![Workflow plugin](../../hhnk-threedi-plugin/docs/images/4_gebruik_plugin/f_vergelijkingstool/workflow_plugin.png)
 
 #### **Stap 1. De modellenmap selecteren**
 
@@ -131,19 +131,11 @@ In het veld *“Enter the Model folder path”* moet de locatie van het model wa
 
 #### **Stap 4. Het type vergelijking selecteren**
 
-Selecteer vervolgens de optie: **`Damo Updated vs 3Di model`**
+Selecteer vervolgens de optie **`Damo Updated vs 3Di model`**.
 
-Deze optie vergelijkt de geactualiseerde DAMO en HDB bestanden met het bestaande 3Di model. De nieuwe DAMO en HDB-export wordt automatisch gelezen vanuit de map:
+DDeze optie vergelijkt de laatste FME-export van de DAMO- en HDB-bestanden met het bestaande 3Di model. De nieuwe DAMO- en HDB-export wordt gelezen vanuit de map `input_nieuwe_export`. Het bestaande 3Di model wordt gelezen vanuit de map van de basisschematisatie: `02_schematisation/00_basis`.
 
-<p align="center">
-<code>H:\02.modellen\HUB\01_source_data\vergelijkingstool\input_nieuwe_export</code>
-</p>
-
-Het bestaande 3Di model wordt gelezen vanuit de basisschematisatie map van het model, op de volgende locatie:
-
-<p align="center">
-<code>H:\02.modellen\HUB\02_schematisation\00_basis</code>
-</p>
+De volledige mappenstructuur en de exacte locaties van deze bestanden zijn beschreven in de paragraaf [Benodigde input](#benodigde-input)
 
 Deze structuur is noodzakelijk om de vergelijkingstool correct te laten werken. Als de mappenstructuur niet correct is ingericht, kan de `vergelijkingstool` de benodigde bestanden niet vinden en zal de tool niet goed werken.
 
@@ -177,7 +169,7 @@ Als algemene richtlijn geldt:
 
 Ook als er bijvoorbeeld veel verschillen in de attributen zijn kan het efficiënter zijn om het model opnieuw op te bouwen. De uiteindelijke beslissing moet door de modelleur worden genomen op basis van een inhoudelijke beoordeling van de lagen die in QGIS zijn gegenereerd. Voor een uitgebreidere beschrijving van het beoordelingsproces en de vastlegging van de beslissing, zie het criteria-document:
 
-[Document met criteria voor de vergelijkingstool](https://corphhnk-my.sharepoint.com/:w:/g/personal/j_acostabarragan_hhnk_nl/IQAnmle5aVm8QIQ1-YdJs5yTATWDOvRhuQel_Nb1JKrNoP8?e=Lrqv8t)
+[Document met criteria voor de vergelijkingstool](https://corphhnk.sharepoint.com/:w:/s/ROKHydrologischeAdviesdiensten/IQBLc8cGy5ggRKOJ338Pqq9pAeQFvm9HCoX5xgaFdGa_pqI?e=hvBwLz)
 
 Ten slotte kan het zijn dat de adviseur van watersystemen reden ziet om het model aan te passen of opnieuw op te bouwen op basis van de bestaande resultaten.
 

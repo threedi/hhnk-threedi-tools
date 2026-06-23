@@ -348,10 +348,10 @@ class SourceDir(Folder):
         def __init__(self, base, create):
             super().__init__(os.path.join(base, "vergelijkingstool"), create=create)
 
-            self.input_data_old = self.full_path("input_data_old")
-            self.input_data_old.mkdir(parents=True, exist_ok=True)
-            self.add_file("input_data_old", "DAMO.gpkg")
-            self.add_file("input_data_old", "HDB.gpkg")
+            self.input_nieuwe_export = self.full_path("input_nieuwe_export")
+            self.input_nieuwe_export.mkdir(parents=True, exist_ok=True)
+            self.add_file("input_nieuwe_export")
+            self.add_file("input_nieuwe_export")
 
             self.output = self.full_path("output")
             self.output.mkdir(parents=True, exist_ok=True)

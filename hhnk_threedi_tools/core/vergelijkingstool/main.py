@@ -180,13 +180,13 @@ def main(
 
 if __name__ == "__main__":
     # name
-    path = r"D:\01.modelrepos\jkaptein\bwn_7_HUB"
+    path = r"H:\02.modellen\grootslag_leggertool"
     model_info = get_model_info(path)
     source_data = model_info.source_data
 
     fn_threedimodel = model_info.fn_threedimodel
     # Base folder initial files.
-    input_data_old = model_info.input_data_old
+    input_data_new = model_info.input_data_new
 
     # output location.
     out_put_files = model_info.output_folder
@@ -214,7 +214,7 @@ if __name__ == "__main__":
     layer_selection = False
     layers_input_damo_selection = ["AfvoergebiedAanvoergebied", "PeilafwijkingGebied", "PeilgebiedPraktijk"]
     layers_input_hdb_selection = ["Levee_overstromingsmodel", "Sturing_3Di"]
-    fn_threedi_comparison_export = out_put_files / "3DI_v3.gpkg"
+    fn_threedi_comparison_export = out_put_files / "3DI_v4.gpkg"
     # compare_with = "Damo Export vs Damo Updated"
     compare_with = "Damo Updated vs 3Di model"
     # config.UPDATE_SYMBOLOGY = True

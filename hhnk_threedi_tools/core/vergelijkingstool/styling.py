@@ -29,70 +29,135 @@ STYLING_BASIC_TABLE_COLUMNS = [
 ]
 
 
+from pathlib import Path
+from typing import Dict, Union
+import geopandas as gpd
+
+
 def prepare_layers_for_export(
-    table_C: Dict[str, gpd.GeoDataFrame], filename: Union[str, Path], overwrite: bool = False
+    table_C: Dict[str, gpd.GeoDataFrame],
+    filename: Union[str, Path],
+    overwrite: bool = False,
 ) -> Dict[str, gpd.GeoDataFrame]:
     """
-    Prepare layers for export by exploding geometries and handling representative points.
-    Layers with mixed point+other geometry types are normalized to Point.
-    Layers with only lines, polygons or mixed lines/polygons are left as-is.
+    Prepare layers for export by exploding geometries and handling mixed geometry types.
+
+    Special rule for KDU:
+    - If KDU has only line geometries, keep it as KDU.
+    - If KDU has point geometries or mixed point+line geometries, convert to Point
+      and export it as KDU_point.
+
+    Other layers keep the previous behavior:
+    - Mixed point+other geometries are normalized to Point.
+    - Only lines, only polygons, or mixed lines/polygons are left as-is.
 
     :param table_C: Dictionary of GeoDataFrames
     :param filename: Output file path
     :param overwrite: Whether to overwrite existing file
-    :return: Modified table_C
+    :return: Modified table_C ready for export
     """
 
-    # Ensure output file handling and normalize geometries for export.
-    if Path(filename).exists():
+    filename = Path(filename)
+
+    if filename.exists():
         if overwrite:
-            Path.unlink(filename)
+            filename.unlink()
         else:
             raise FileExistsError(
-                f'The file "{filename}" already exists. If you want to overwrite the existing file, add overwrite=True to the function.'
+                f'The file "{filename}" already exists. '
+                'If you want to overwrite the existing file, add overwrite=True to the function.'
             )
-    # exploded geometries to ensure proper per-feature rows
-    for layer_name in list(table_C):
-        table_C[layer_name] = table_C[layer_name].explode(index_parts=True)
 
-    # convert mixed-geometry layers to representative points to avoid mixed-type write errors
-    for layer_name in list(table_C):
-        gdf = table_C[layer_name].copy()
-        # Check geometry types in layer
+    def to_point(geom):
+        if geom is None or geom.is_empty:
+            return None
+
+        geometry_type = geom.geom_type
+
+        if geometry_type == "Point":
+            return geom
+
+        if geometry_type == "MultiPoint":
+            return geom.centroid
+
+        if "Line" in geometry_type:
+            return geom.interpolate(0.5, normalized=True)
+
+        return geom.centroid
+
+    prepared_layers: Dict[str, gpd.GeoDataFrame] = {}
+
+    for layer_name, gdf in table_C.items():
+        gdf = gdf.copy()
+
+        # Explode geometries to ensure proper per-feature rows
+        gdf = gdf.explode(index_parts=True)
+
+        # Remove null or empty geometries before checking types
+        gdf = gdf[~gdf.geometry.isna() & ~gdf.geometry.is_empty].copy()
+
+        if gdf.empty:
+            continue
+
         unique_types = set(gdf.geometry.geom_type.unique())
-        # expected geometry
-        point_types = {"Point", "MultiPoint"}
-        # Check if geometries are mixed point + other types
-        has_points = bool(unique_types & point_types)
-        # Check if all geometries are points
-        only_points = unique_types.issubset(point_types)
 
+        point_types = {"Point", "MultiPoint"}
+        line_types = {"LineString", "MultiLineString", "LinearRing"}
+
+        has_points = bool(unique_types & point_types)
+        has_lines = bool(unique_types & line_types)
+
+        only_points = unique_types.issubset(point_types)
+        only_lines = unique_types.issubset(line_types)
+
+        # Special handling for KDU
+        if layer_name == "KDU":
+
+            # KDU only line geometries: keep as KDU
+            if only_lines:
+                prepared_layers["KDU"] = gdf
+                continue
+
+            # KDU only points or mixed point+line: export as KDU_point
+            if only_points or (has_points and has_lines):
+                gdf["geometry"] = gdf.geometry.apply(to_point)
+                gdf = gdf.set_geometry("geometry")
+                gdf = gdf[~gdf.geometry.isna() & ~gdf.geometry.is_empty].copy()
+
+                prepared_layers["KDU_point"] = gdf
+                continue
+
+            # Fallback for unexpected KDU geometry combinations
+            if has_points:
+                gdf["geometry"] = gdf.geometry.apply(to_point)
+                gdf = gdf.set_geometry("geometry")
+                gdf = gdf[~gdf.geometry.isna() & ~gdf.geometry.is_empty].copy()
+
+                prepared_layers["KDU_point"] = gdf
+                continue
+
+            prepared_layers["KDU"] = gdf
+            continue
+
+        
         # Skip if no points involved, or if already all points
         if not has_points or only_points:
-            table_C[layer_name] = gdf
+            prepared_layers[layer_name] = gdf
             continue
 
         # Mixed point + other geometry types: normalize all to Point
         logger.debug(
-            f"Layer {layer_name} has mixed point+other geometry types: {unique_types}. Normalizing all to Point."
+            f"Layer {layer_name} has mixed point+other geometry types: {unique_types}. "
+            "Normalizing all to Point."
         )
 
-        def to_point(geom):
-            if geom is None:
-                return None
-            geometry_type = geom.geom_type
-            if geometry_type in ("Point", "MultiPoint"):
-                return geom
-            elif "Line" in geometry_type:
-                return geom.interpolate(0.5, normalized=True)
-            else:
-                return geom.centroid
-
-        gdf["geometry"] = gdf["geometry"].apply(to_point)
+        gdf["geometry"] = gdf.geometry.apply(to_point)
         gdf = gdf.set_geometry("geometry")
-        table_C[layer_name] = gdf
+        gdf = gdf[~gdf.geometry.isna() & ~gdf.geometry.is_empty].copy()
 
-    return table_C
+        prepared_layers[layer_name] = gdf
+
+    return prepared_layers
 
 
 def export_comparison_DAMO(

@@ -23,7 +23,7 @@ class ModelInfo:
 
     model_name: str
     source_data: Path
-    input_data_old: Path
+    input_data_new: Path
     fn_damo_old: Path
     fn_hdb_old: Path
     fn_damo_new: Path
@@ -51,19 +51,19 @@ def get_model_info(path: Union[str, Path]) -> ModelInfo:
     model_name = folder.name
     fn_threedimodel = folder.model.schema_base.content[0]
 
-    input_data_old = source_data / "vergelijkingstool" / "input_data_old"
-    fn_damo_old = input_data_old / "DAMO.gpkg"
+    input_data_new = source_data / "vergelijkingstool" / "input_nieuwe_export"
+    fn_damo_new = input_data_new / "DAMO.gpkg"
     json_folder = Path(__file__).parent / "json_files"
-    fn_hdb_old = input_data_old / "HDB.gpkg"
-    fn_damo_new = source_data / "DAMO.gpkg"
-    fn_hdb_new = source_data / "HDB.gpkg"
+    fn_hdb_new = input_data_new / "HDB.gpkg"
+    fn_damo_old = source_data / "DAMO.gpkg"
+    fn_hdb_old = source_data / "HDB.gpkg"
     damo_selection = source_data / "polder_polygon.gpkg"
     output_folder = source_data / "vergelijkingstool" / "output"
 
     return ModelInfo(
         model_name=model_name,
         source_data=source_data,
-        input_data_old=input_data_old,
+        input_data_new=input_data_new,
         fn_damo_old=fn_damo_old,
         fn_hdb_old=fn_hdb_old,
         fn_damo_new=fn_damo_new,
