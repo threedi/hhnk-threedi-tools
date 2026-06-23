@@ -31,6 +31,7 @@ STYLING_BASIC_TABLE_COLUMNS = [
 
 from pathlib import Path
 from typing import Dict, Union
+
 import geopandas as gpd
 
 
@@ -65,7 +66,7 @@ def prepare_layers_for_export(
         else:
             raise FileExistsError(
                 f'The file "{filename}" already exists. '
-                'If you want to overwrite the existing file, add overwrite=True to the function.'
+                "If you want to overwrite the existing file, add overwrite=True to the function."
             )
 
     def to_point(geom):
@@ -112,7 +113,6 @@ def prepare_layers_for_export(
 
         # Special handling for KDU
         if layer_name == "KDU":
-
             # KDU only line geometries: keep as KDU
             if only_lines:
                 prepared_layers["KDU"] = gdf
@@ -139,7 +139,6 @@ def prepare_layers_for_export(
             prepared_layers["KDU"] = gdf
             continue
 
-        
         # Skip if no points involved, or if already all points
         if not has_points or only_points:
             prepared_layers[layer_name] = gdf
@@ -147,8 +146,7 @@ def prepare_layers_for_export(
 
         # Mixed point + other geometry types: normalize all to Point
         logger.debug(
-            f"Layer {layer_name} has mixed point+other geometry types: {unique_types}. "
-            "Normalizing all to Point."
+            f"Layer {layer_name} has mixed point+other geometry types: {unique_types}. Normalizing all to Point."
         )
 
         gdf["geometry"] = gdf.geometry.apply(to_point)
