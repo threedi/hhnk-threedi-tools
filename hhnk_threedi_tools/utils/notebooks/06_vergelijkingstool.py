@@ -27,3 +27,5 @@ from hhnk_threedi_tools.core.vergelijkingstool.gui.vergelijkingstool_gui import 
 self = VergelijkingstoolGUI()
 
 display(self)
+
+# %%

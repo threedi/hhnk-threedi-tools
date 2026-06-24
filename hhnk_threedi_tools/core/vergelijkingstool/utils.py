@@ -3,15 +3,17 @@ import logging
 import os
 import time
 from dataclasses import dataclass
+from importlib.resources import as_file, files
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from shutil import copy2
+from typing import Dict, List, Optional, Union
 
 import fiona
 import geopandas as gpd
 import pandas as pd
 
 from hhnk_threedi_tools.core.folders import Folders
-from hhnk_threedi_tools.core.vergelijkingstool import config
+from hhnk_threedi_tools.core.vergelijkingstool import config, docs
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -23,7 +25,7 @@ class ModelInfo:
 
     model_name: str
     source_data: Path
-    input_data_old: Path
+    input_data_new: Path
     fn_damo_old: Path
     fn_hdb_old: Path
     fn_damo_new: Path
@@ -37,6 +39,35 @@ class ModelInfo:
     date_hdb_old: str
     date_hdb_new: str
     date_sqlite: str
+    decision_doc: Path
+
+
+DECISION_DOC_NAME = "Beslissing nieuwbouw of hergebruik 3Di.docx"
+
+
+def ensure_decision_document(source_data: Union[str, Path], overwrite: bool = False) -> Path:
+    """
+    Copy the decision document template to:
+    01_source_data/vergelijkingstool/
+
+    The document is not overwritten unless overwrite=True.
+    """
+    source_data = Path(source_data)
+
+    target_dir = source_data / "vergelijkingstool"
+    target_dir.mkdir(parents=True, exist_ok=True)
+
+    target_doc = target_dir / DECISION_DOC_NAME
+
+    if target_doc.exists() and not overwrite:
+        return target_doc
+
+    template_resource = files(docs).joinpath(DECISION_DOC_NAME)
+
+    with as_file(template_resource) as template_doc:
+        copy2(template_doc, target_doc)
+
+    return target_doc
 
 
 def get_model_info(path: Union[str, Path]) -> ModelInfo:
@@ -51,19 +82,20 @@ def get_model_info(path: Union[str, Path]) -> ModelInfo:
     model_name = folder.name
     fn_threedimodel = folder.model.schema_base.content[0]
 
-    input_data_old = source_data / "vergelijkingstool" / "input_data_old"
-    fn_damo_old = input_data_old / "DAMO.gpkg"
+    input_data_new = source_data / "vergelijkingstool" / "input_nieuwe_export"
+    fn_damo_new = input_data_new / "DAMO.gpkg"
     json_folder = Path(__file__).parent / "json_files"
-    fn_hdb_old = input_data_old / "HDB.gpkg"
-    fn_damo_new = source_data / "DAMO.gpkg"
-    fn_hdb_new = source_data / "HDB.gpkg"
+    fn_hdb_new = input_data_new / "HDB.gpkg"
+    fn_damo_old = source_data / "DAMO.gpkg"
+    fn_hdb_old = source_data / "HDB.gpkg"
     damo_selection = source_data / "polder_polygon.gpkg"
     output_folder = source_data / "vergelijkingstool" / "output"
+    decision_doc = ensure_decision_document(source_data)
 
     return ModelInfo(
         model_name=model_name,
         source_data=source_data,
-        input_data_old=input_data_old,
+        input_data_new=input_data_new,
         fn_damo_old=fn_damo_old,
         fn_hdb_old=fn_hdb_old,
         fn_damo_new=fn_damo_new,
@@ -77,6 +109,7 @@ def get_model_info(path: Union[str, Path]) -> ModelInfo:
         date_hdb_old=time.ctime(os.path.getmtime(fn_hdb_old)),
         date_hdb_new=time.ctime(os.path.getmtime(fn_hdb_new)),
         date_sqlite=time.ctime(os.path.getmtime(fn_threedimodel)),
+        decision_doc=decision_doc,
     )
 
 
@@ -117,12 +150,14 @@ def translate(data: Dict[str, gpd.GeoDataFrame], translation_file: Union[str, Pa
 
     return data
 
+
 def get_hdb_name(layer: str, layer_map: Dict[str, List[str]]) -> Optional[str]:
     """Returns the canonical name for a layer, or None if not found."""
     for hdb_name, version_name in layer_map.items():
         if layer in version_name:
             return hdb_name
     return None
+
 
 def load_file_and_translate(
     damo_filename: Optional[Union[str, Path]] = None,
@@ -212,7 +247,10 @@ def load_file_and_translate(
 
 
 def update_channel_codes(
-    channel: gpd.GeoDataFrame, cross_section_location: gpd.GeoDataFrame, damo, model_path
+    channel: gpd.GeoDataFrame,
+    cross_section_location: gpd.GeoDataFrame,
+    damo,
+    model_path,
 ) -> gpd.GeoDataFrame:
     """
     Update channel `code` values by nearest-matching DAMO hydroobject codes and persist the result.
@@ -280,7 +318,9 @@ def update_channel_codes(
     return gdf_channel
 
 
-def add_priority_summaries(table_dict: Dict[str, gpd.GeoDataFrame]) -> Dict[str, gpd.GeoDataFrame]:
+def add_priority_summaries(
+    table_dict: Dict[str, gpd.GeoDataFrame],
+) -> Dict[str, gpd.GeoDataFrame]:
     """
     For each table create a dictionary that create columns
     Summary_Critical and  Summary_Warnings with the respective
@@ -316,7 +356,9 @@ def add_priority_summaries(table_dict: Dict[str, gpd.GeoDataFrame]) -> Dict[str,
     return table_dict
 
 
-def build_summary_layers(table_dict: Dict[str, gpd.GeoDataFrame]) -> Dict[str, gpd.GeoDataFrame]:
+def build_summary_layers(
+    table_dict: Dict[str, gpd.GeoDataFrame],
+) -> Dict[str, gpd.GeoDataFrame]:
     """
     Build a summary for each layer from a dictionary of GeoDataFrames.
     Assumes that the input GeoDataFrames already contain the necessary columns.
