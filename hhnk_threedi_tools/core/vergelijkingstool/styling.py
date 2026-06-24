@@ -179,9 +179,7 @@ def export_comparison_DAMO(
             qml_name = layer_name + ".qml"
             qml_file = (styling_path) / qml_name
         if qml_file.exists():
-            logger.debug(
-                f"Style layer for layer {layer_name} found, adding it to the GeoPackage"
-            )
+            logger.debug(f"Style layer for layer {layer_name} found, adding it to the GeoPackage")
             with open(qml_file, "r") as file:
                 style = file.read()
 
@@ -205,9 +203,7 @@ def export_comparison_DAMO(
                 ]
             )
 
-        logger.info(
-            f"Export results of comparing DAMO/3Di layer {layer_name} to {filename}"
-        )
+        logger.info(f"Export results of comparing DAMO/3Di layer {layer_name} to {filename}")
 
         table_C[layer_name].to_file(filename, layer=layer_name, driver="GPKG")
     # construct GeoDataFrame describing layer styles
@@ -248,9 +244,7 @@ def export_comparison_3di(
             qml_file = (styling_path) / qml_name
 
         if qml_file.exists():
-            logger.debug(
-                f"Style layer for layer {layer_name} found, adding it to the GeoPackage"
-            )
+            logger.debug(f"Style layer for layer {layer_name} found, adding it to the GeoPackage")
             with open(qml_file, "r") as file:
                 style = file.read()
 
@@ -273,9 +267,7 @@ def export_comparison_3di(
                 ]
             )
 
-        logger.info(
-            f"Export results of comparing DAMO/3Di layer {layer_name} to {filename}"
-        )
+        logger.info(f"Export results of comparing DAMO/3Di layer {layer_name} to {filename}")
 
         # ensure layer uses requested CRS before export
         table_C[layer_name] = table_C[layer_name].set_crs(crs, allow_override=True)
