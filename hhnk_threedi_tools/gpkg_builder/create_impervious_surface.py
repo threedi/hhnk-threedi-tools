@@ -581,6 +581,20 @@ def update_model_geopackage(
         print("check the results before updateing the model. Once you have checked them update model")
     return model_path_gpkg
 
+def run(model_path_gpkg, datacheker_path, polder_polygon_path, sure_update):
+    subcatchments = createa_voronoi_polygons(model_path_gpkg, datacheker_path, polder_polygon_path)
+    surfaces = create_surface_layer(subcatchments, impervious_out_polygon_gpkg)
+    percentage_by_surface = get_percentage_afvoernorm(hdb_path, surfaces)
+    surface_map = create_surface_map_layer(model_path_gpkg, surfaces, percentage_by_surface, impervious_out_line_gpkg)
+    update_model_geopackage(
+        model_path_gpkg,
+        surfaces,
+        surface_map,
+        output_model_path=None,
+        surface_layer_name="impervious_surface",
+        surface_map_layer_name="impervious_surface_map",
+        sure_update=sure_update,
+    )
 
 # %%
 # inputs

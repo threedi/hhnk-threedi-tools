@@ -1,0 +1,26 @@
+import shutil
+from pathlib import Path
+
+import threedigrid_builder.application as app
+from threedi_schema import ThreediDatabase
+from hhnk_threedi_tools.gpkg_builder 
+sqlite_path = Path(r"H:\02.modellen\grootslag_leggertool\02_schematisation\1d2d_ghg\bwn_grootslag.sqlite")
+
+db = ThreediDatabase(sqlite_path)
+
+db.schema.convert_to_geopackage(delete_spatialite=False)
+
+print(db.path)
+
+temp_sqlite_path = sqlite_path.parent / "tmp" / (sqlite_path.stem + "_copy.sqlite")
+shutil.copy(sqlite_path, temp_sqlite_path)
+app.make_gridadmin(
+    sqlite_path=temp_sqlite_path,
+    dem_path=dem_path,
+    out_path=out_path,
+    meta=None,
+    progress_callback=None,
+    upgrade=True,
+    convert_to_geopackage=convert_to_geopackage,
+)
+shutil.rmtree(tmp_folder)
