@@ -1,5 +1,8 @@
+import json
 import shutil
 import sys
+import tempfile
+from pathlib import Path
 
 import fiona
 import geopandas as gpd
@@ -15,6 +18,61 @@ LAYERS = ["duikersifonhevel"]
 
 RUN_VALIDATION = False
 MANUAL_FIX = False
+
+TEST_FIX_RULE_BREEDTEOPENING = {
+    "attribute_name": "breedteopening",
+    "validation_ids": [13],
+    "fix_id": 5,
+    "fix_action": "Derived assumption",
+    "fix_type": "automatic",
+    "fix_method": {
+        "custom_hydamo": {
+            "custom_function_name": "if_else",
+            "logic": {
+                "ISIN": {
+                    "parameter": "categorieinwatersysteem",
+                    "array": ["primair"],
+                }
+            },
+            "true": {"equal": {"to": 0.8}},
+            "false": {"equal": {"to": 0.5}},
+        }
+    },
+    "fix_description": "if duikersifonhevel in primair watersysteem: breedteopening = 0.8m, anders breedteopening = 0.5m",
+}
+
+
+def apply_test_settings_to_validationrules(validation_rules_json_path: Path) -> Path:
+    """Read the validation rules JSON and ensure the breedteopening fix rule for
+    duikersifonhevel is present and matches the expected definition.
+
+    If the rule is absent it is added and the modified JSON is written to a
+    temporary file; that temp path is returned.
+    If the rule is present and correct, the original path is returned unchanged.
+    If it is present but differs from the expected content, an AssertionError is raised.
+    """
+    with open(validation_rules_json_path) as f:
+        rules = json.load(f)
+
+    duikersifonhevel_obj = next((obj for obj in rules["objects"] if obj["object"] == "duikersifonhevel"), None)
+    assert duikersifonhevel_obj is not None, "duikersifonhevel not found in validation rules"
+
+    fix_rules = duikersifonhevel_obj.get("fix_rules", [])
+    existing = next((r for r in fix_rules if r.get("attribute_name") == "breedteopening"), None)
+
+    if existing is None:
+        fix_rules.append(TEST_FIX_RULE_BREEDTEOPENING)
+        tmp_dir = Path(tempfile.mkdtemp())
+        tmp_path = tmp_dir / "validationrules.json"
+        with open(tmp_path, "w") as f:
+            json.dump(rules, f, indent="\t", ensure_ascii=False)
+        return tmp_path
+    else:
+        assert existing == TEST_FIX_RULE_BREEDTEOPENING, (
+            f"breedteopening fix rule does not match expected.\n"
+            f"Expected: {TEST_FIX_RULE_BREEDTEOPENING}\nGot: {existing}"
+        )
+        return Path(validation_rules_json_path)
 
 
 @pytest.mark.skipif(sys.version_info < (3, 12), reason="Requires Python 3.12 or higher")
@@ -46,7 +104,9 @@ def test_hydamo_fixer():
         )
 
     hydamo_file_path = TEST_DIRECTORY / "schematisation_builder" / "HyDAMO_validated.gpkg"
-    validation_rules_json_path = hrt.get_pkg_resource_path(schematisation_builder_resources, "validationrules.json")
+    validation_rules_json_path = apply_test_settings_to_validationrules(
+        hrt.get_pkg_resource_path(schematisation_builder_resources, "validationrules.json")
+    )
     results_gpkg_path = TEST_DIRECTORY / "schematisation_builder" / "results.gpkg"
     fix_directory_path = TEMP_DIR / f"temp_hydamo_fixer_{hrt.current_time(date=True)}"
 
@@ -104,6 +164,29 @@ def test_hydamo_fixer():
     # Check if is_usable column is added
     assert "is_usable" in gdf_review_duikersifonhevel.columns
     # NOTE: if code includes function to set features to unusable if topological fix is required, check if value in is_usable column is correct for one of the features of which you are sure that it is unusable or usable
+
+    # Check breedteopening values in HyDAMO_fixed against the fix rule logic
+    hydamo_fixed_path = fix_directory_path / "results" / "HyDAMO_fixed.gpkg"
+    assert hydamo_fixed_path.exists()
+    gdf_fixed_duikersifonhevel = gpd.read_file(hydamo_fixed_path, layer="duikersifonhevel")
+    assert "breedteopening" in gdf_fixed_duikersifonhevel.columns
+    assert "categorieinwatersysteem" in gdf_fixed_duikersifonhevel.columns
+
+    fixed_idx = gdf_review_duikersifonhevel.index[
+        gdf_review_duikersifonhevel["fixes_breedteopening"].str.strip().str.len() > 0
+    ]
+    assert len(fixed_idx) > 0, "Expected at least one feature with breedteopening fix applied"
+    assert gdf_fixed_duikersifonhevel.loc[fixed_idx, "breedteopening"].notna().all(), (
+        "Some fixed features have a null breedteopening in HyDAMO_fixed"
+    )
+    for idx in fixed_idx:
+        categorie = gdf_fixed_duikersifonhevel.loc[idx, "categorieinwatersysteem"]
+        expected_breedte = 0.8 if categorie == "primair" else 0.5
+        assert gdf_fixed_duikersifonhevel.loc[idx, "breedteopening"] == expected_breedte, (
+            f"Feature {idx}: expected breedteopening={expected_breedte} "
+            f"(categorieinwatersysteem={categorie!r}), "
+            f"got {gdf_fixed_duikersifonhevel.loc[idx, 'breedteopening']}"
+        )
 
 
 if __name__ == "__main__":

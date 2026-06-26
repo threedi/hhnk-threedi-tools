@@ -385,7 +385,7 @@ def _fixer(
 
         # finish validation and export results
         logger.info("exporteren resultaten")
-        datamodel.to_geopackage(results_path / "HyDAMO_fixed.gpkg")
+        datamodel.to_geopackage(results_path / "HyDAMO_fixed.gpkg", use_schema=False)
         result_summary.status = "export results"
         result_summary.fix_layers = fix_layers
         result_summary.error_layers = [i for i in datasets.layers if i.lower() not in fix_layers]
