@@ -321,18 +321,11 @@ def _fixer(
 
         ## validate syntax of datasets on layers-level and append to result
         logger.info("start fix-voorbereiding van object-lagen")
-        valid_layers = datamodel_layers(datamodel.layers, datasets.layers)
         result_summary.missing_layers = missing_layers(datamodel.layers, datasets.layers)
 
         ## validate valid_layers on fields-level and add them to data_model
         result_summary.status = "fix-preparation (staging)"
         fix_preparation_result = []
-
-        ## get status_object if any
-        status_object = None
-        if "status_object" in validation_rules_sets.keys():
-            status_object = validation_rules_sets["status_object"]
-            ## allows us to filter the invalid rows. Only need to add status_object to gdf based on validation result. Should be valid or invalid
 
         # do fix execution: apply fixes and export results
         datamodel_check, fix_summary, result_summary = hydamo_fixes.execute(
@@ -431,38 +424,3 @@ def _fixer(
         _close_log_file(logger)
 
         return None, fix_summary, result_summary
-
-
-def fixer(
-    output_types: list[str] = OUTPUT_TYPES,
-    log_level: Literal["INFO", "DEBUG"] = "INFO",
-    coverages: dict = {},
-) -> Callable:
-    """
-    Create a pre-configured callable for running the HyDAMO fixer.
-
-    Returns a partial of ``_fixer`` with the given settings bound. Call the
-    returned callable with a ``directory`` argument to run the fix process.
-
-    Parameters
-    ----------
-    output_types : list[str], optional
-        Output file formats to write. Supported options: ``"geopackage"``,
-        ``"geojson"``, ``"csv"``. Default is ``["geopackage"]``.
-    log_level : {'INFO', 'DEBUG'}, optional
-        Logging verbosity. Default is ``"INFO"``.
-    coverages : dict, optional
-        Coverage lookup, e.g. ``{"AHN": path_to_ahn_dir}``. Default is ``{}``.
-
-    Returns
-    -------
-    Callable
-        Partial of ``_fixer`` with the provided arguments pre-filled.
-    """
-
-    return partial(
-        _fixer,
-        output_types=output_types,
-        log_level=log_level,
-        coverages=coverages,
-    )

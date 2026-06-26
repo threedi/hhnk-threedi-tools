@@ -301,9 +301,9 @@ class ProfielConverter(RawExportToDAMOConverter):
 
         self.data.profielpunt[column_name] = pd.to_numeric(self.data.profielpunt[column_name], errors="coerce")
         self.data.profielpunt["geometry"] = self.data.profielpunt.apply(
-            lambda row: Point(row.geometry.x, row.geometry.y, row[column_name])
-            if pd.notna(row[column_name])
-            else row.geometry,
+            lambda row: (
+                Point(row.geometry.x, row.geometry.y, row[column_name]) if pd.notna(row[column_name]) else row.geometry
+            ),
             axis=1,
         )
 

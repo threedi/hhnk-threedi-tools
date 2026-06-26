@@ -159,9 +159,7 @@ def _run_true_false(gdf: gpd.GeoDataFrame, input_variables: dict) -> dict:
 
 
 def _iterate_by_rounds(data: dict, execution_dict: dict[str, int]):
-    """
-    Yields (round_num, key, value) from `data` in execution round order.
-    """
+    """Yield (round_num, key, value) from `data` in execution round order."""
     rounds = sorted(set(execution_dict.values()))
 
     for round_num in rounds:
@@ -172,7 +170,7 @@ def _iterate_by_rounds(data: dict, execution_dict: dict[str, int]):
 
 def _iterate_by_steps(fix_rules: list[dict], fix_iterations: dict[str, dict[int, list[int]]]):
     """
-    Yields (step, rule) from `fix_rules` ordered by fix_iterations.
+    Yield (step, rule) from `fix_rules` ordered by fix_iterations.
 
     Iterates iteration keys in ascending order. Within each key, fix_ids are
     yielded in ascending order. The step label is the iteration key if the
@@ -313,15 +311,15 @@ def _update_validation_result(
         for idx in result.index:
             if idx not in object_validation_result.index:
                 continue
-            raw = object_validation_result.at[idx, col]
+            raw = object_validation_result.loc[idx, col]
             current_ids = set(filter(None, str(raw).split(";"))) if pd.notna(raw) else set()
-            if result.at[idx]:
+            if result.loc[idx]:
                 # Row now passes: remove this rule ID from the invalid column.
                 current_ids.discard(rule_id_str)
             else:
                 # Row still fails: ensure this rule ID is present.
                 current_ids.add(rule_id_str)
-            object_validation_result.at[idx, col] = ";".join(sorted(current_ids)) if current_ids else ""
+            object_validation_result.loc[idx, col] = ";".join(sorted(current_ids)) if current_ids else ""
 
     return object_validation_result
 
@@ -543,7 +541,7 @@ def review(
         Updated summary objects containing review-layer data.
     """
 
-    logger.info(rf"Start review")
+    logger.info("Start review")
     new_datamodel = datamodel
 
     ## create an updated datamodel based on datamodel post processing information
@@ -554,7 +552,7 @@ def review(
     fix_iterations = deepcopy(new_datamodel.fix_iterations)
 
     logger.info(
-        rf"lagen met valide objecten en regels: {[i for i in list(object_rules_sets.keys())]}"
+        f"lagen met valide objecten en regels: {list(object_rules_sets.keys())}"
     )  ## add check to tell which objects have fixes
     for round, object_layer, object_rules in _iterate_by_rounds(object_rules_sets, validation_iterations):
         logger.info(f"Round {round}: review fix for {object_layer}")
@@ -563,7 +561,7 @@ def review(
         )  ## maybe use is_usable to deselect rows that are not getting fixed?
         result_gdf = validation_results[object_layer]
 
-        if not all([col in result_gdf.columns for col in KEEP_COLUMNS]):
+        if not all(col in result_gdf.columns for col in KEEP_COLUMNS):
             logger.info(
                 f"Validation did not result run properly. Some the following columns not available: {KEEP_COLUMNS}"
             )
@@ -804,7 +802,7 @@ def execute(
     fix_iterations = deepcopy(new_datamodel.fix_iterations)
 
     logger.info(
-        rf"lagen met valide objecten en regels: {[i for i in list(object_rules_sets.keys())]}"
+        f"lagen met valide objecten en regels: {list(object_rules_sets.keys())}"
     )  ## add check to tell which objects have fixes
     for round, object_layer, object_rules in _iterate_by_rounds(object_rules_sets, validation_iterations):
         logger.info(f"Round {round}: start fix for {object_layer}")

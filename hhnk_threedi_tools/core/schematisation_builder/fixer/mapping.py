@@ -177,7 +177,7 @@ def _extract_inputs_from_function(
             # RULE: If val is a column of current object and key does not start with a prefix → bind to current layer
             if val in columns_by_layer[current_layer] or val.startswith("geometry."):
                 if referenced_objects:
-                    if not any([key.lower().startswith(prefix) for prefix in list(referenced_objects.values())]):
+                    if not any(key.lower().startswith(prefix) for prefix in referenced_objects.values()):
                         inputs.append({"object": current_layer, "attribute": val})
                         continue
                 else:
@@ -409,7 +409,7 @@ def _validation_iterations(mapping: dict) -> dict[str, int]:
 
     # Iteratively assign rounds until stable.
     # Start everyone at round 1, then propagate upward.
-    rounds: dict[str, int] = {key: 1 for key in top_level_keys}
+    rounds: dict[str, int] = dict.fromkeys(top_level_keys, 1)
 
     changed = True
     while changed:

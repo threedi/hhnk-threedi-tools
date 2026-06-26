@@ -49,9 +49,7 @@ class ExtendedLayersSummary(LayersSummary):
 
     @property
     def empty(self) -> bool:
-        """
-        Return True if the instance has *no* GeoDataFrame attributes.
-        """
+        """Return True if the instance has *no* GeoDataFrame attributes."""
         for value in self.__dict__.values():
             if isinstance(value, gpd.GeoDataFrame):
                 return False
@@ -72,6 +70,7 @@ class ExtendedLayersSummary(LayersSummary):
         output_types : List[str], optional
             The types of output files that will be written. Options are
             ["geojson", "csv", "geopackage"]. By default all will be written
+
         Returns
         -------
         layers : List(str)
@@ -175,9 +174,7 @@ class ExtendedHyDAMO(HyDAMO):
 
     @property
     def empty(self) -> bool:
-        """
-        Return True if the instance has *no* GeoDataFrame attributes.
-        """
+        """Return True if the instance has *no* GeoDataFrame attributes."""
         for value in self.__dict__.values():
             if isinstance(value, gpd.GeoDataFrame):
                 return False
@@ -251,7 +248,7 @@ class ExtendedHyDAMO(HyDAMO):
         """
 
         if not self.hydamo_path:
-            raise ValueError(f"Path to geopackage unknown. This function only works if a geopackage is available.")
+            raise ValueError("Path to geopackage unknown. This function only works if a geopackage is available.")
 
         if layer in self.layers:
             dataset = {k: v for k, v in self.properties.items() if layer in v.keys()}
@@ -324,7 +321,7 @@ class ExtendedHyDAMO(HyDAMO):
             If ``hydamo_path`` is not provided.
         """
         if not hydamo_path:
-            raise ValueError(f"No geopackage path is provided.")
+            raise ValueError("No geopackage path is provided.")
 
         hydamo = cls(
             hydamo_path=hydamo_path,
