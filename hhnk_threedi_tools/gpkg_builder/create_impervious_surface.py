@@ -17,8 +17,6 @@ import pandas as pd
 from shapely import get_parts, voronoi_polygons
 from shapely.geometry import LineString, MultiPoint, Polygon
 
-from hhnk_threedi_tools import Folders
-
 
 # %%
 def createa_voronoi_polygons(
@@ -537,7 +535,7 @@ def update_model_geopackage(
     Returns
     -------
     Path
-        Path to updated model geopackage (or original if sure_update=False).
+        Path to updated model geopackage (or original if sure_up    date=False).
     """
     # SET PATHS to save and copy geopackges
     model_path_gpkg = Path(model_path_gpkg)
@@ -602,26 +600,36 @@ def run(model_path_gpkg, datacheker_path, polder_polygon_path, sure_update):
 # inputs
 
 hdb_path = r"H:\01.basisgegevens\00.HDB\Hydro_database.gpkg"
-folder = Folders(r"H:\02.modellen\grootslag_leggertool")
-source_data = folder.source_data.path
-damo_path = folder.source_data.damo.path
-datacheker_path = folder.source_data.datachecker.path
-polder_polygon_path = folder.source_data.polder_polygon.path
-model_path_gpkg = folder.model.schema_base.model_path()
+folder = Path(r"H:\personen\jacosta\update_3di_model_test\Zijpe_West_2026_MR")
+source_data = folder / "01_source_data"
+damo_path = source_data / "DAMO.gpkg"
+datacheker_path = source_data / "datachecker_output.gpkg"
+polder_polygon_path = source_data / "polder_polygon.shp"
+model_path_gpkg = folder / "02_schematisation" / "00_basis" / "bwn_zijpe-west.gpkg"
 impervious_out_polygon_gpkg = source_data / "impervious_pol_review.gpkg"
 impervious_out_line_gpkg = source_data / "impervious_line_review.gpkg"
 # %%
-subcatchments = createa_voronoi_polygons(model_path_gpkg, datacheker_path, polder_polygon_path)
-surfaces = create_surface_layer(subcatchments, impervious_out_polygon_gpkg)
-percentage_by_surface = get_percentage_afvoernorm(hdb_path, surfaces)
-surface_map = create_surface_map_layer(model_path_gpkg, surfaces, percentage_by_surface, impervious_out_line_gpkg)
-update_model_geopackage(
-    model_path_gpkg,
-    surfaces,
-    surface_map,
-    output_model_path=None,
-    surface_layer_name="impervious_surface",
-    surface_map_layer_name="impervious_surface_map",
-    sure_update=True,
-)
+# subcatchments = createa_voronoi_polygons(model_path_gpkg, datacheker_path, polder_polygon_path)
+# surfaces = create_surface_layer(subcatchments, impervious_out_polygon_gpkg)
+# percentage_by_surface = get_percentage_afvoernorm(hdb_path, surfaces)
+# surface_map = create_surface_map_layer(model_path_gpkg, surfaces, percentage_by_surface, impervious_out_line_gpkg)
+# update_model_geopackage(
+#     model_path_gpkg,
+#     surfaces,
+#     surface_map,
+#     output_model_path=None,
+#     surface_layer_name="impervious_surface",
+#     surface_map_layer_name="impervious_surface_map",
+#     sure_update=True,
+# )
+# %%
+# hdb_path = r"H:\01.basisgegevens\00.HDB\Hydro_database.gpkg"
+# folder = Path(r"D:\01.modelrepos\Martine\Zijpe_West_2026_MR")
+# source_data = folder / 'source_data'
+# damo_path = source_data  / "DAMO.gpkg"
+# datacheker_path = source_data / "datachecker_output.gpkg"
+# polder_polygon_path = source_data / "polder_polygon.shp"
+# model_path_gpkg = folder / "02_schematisation" / "00_basis" / "bwn_zijpe-west.gpkg"
+# impervious_out_polygon_gpkg = source_data / "impervious_pol_review.gpkg"
+# impervious_out_line_gpkg = source_data / "impervious_line_review.gpkg"
 # %%
