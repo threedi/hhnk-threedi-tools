@@ -45,9 +45,7 @@ class ModelInfo:
 DECISION_DOC_NAME = "Beslissing nieuwbouw of hergebruik 3Di.docx"
 
 
-def ensure_decision_document(
-    source_data: Union[str, Path], overwrite: bool = False
-) -> Path:
+def ensure_decision_document(source_data: Union[str, Path], overwrite: bool = False) -> Path:
     """
     Copy the decision document template to:
     01_source_data/vergelijkingstool/
@@ -115,9 +113,7 @@ def get_model_info(path: Union[str, Path]) -> ModelInfo:
     )
 
 
-def translate(
-    data: Dict[str, gpd.GeoDataFrame], translation_file: Union[str, Path]
-) -> Dict[str, gpd.GeoDataFrame]:
+def translate(data: Dict[str, gpd.GeoDataFrame], translation_file: Union[str, Path]) -> Dict[str, gpd.GeoDataFrame]:
     """
     Load a translation file and translates the data datastructure.
     Renames tables and columns as indicated in the translation_file
@@ -133,9 +129,7 @@ def translate(
     try:
         mapping = json.loads(json.dumps(json.load(f)).lower())
     except json.decoder.JSONDecodeError:
-        logger.error(
-            "Structure of DAMO-translation file is incorrect, check brackets and commas"
-        )
+        logger.error("Structure of DAMO-translation file is incorrect, check brackets and commas")
         raise
 
     translate_layers = {}
@@ -305,19 +299,13 @@ def update_channel_codes(
     code_map.columns = ["channel_id", "code"]
 
     # attach codes to cross sections and keep only those with a match
-    gdf_cross_with_code = cross_section_location.merge(
-        code_map, on="channel_id", how="left"
-    )
+    gdf_cross_with_code = cross_section_location.merge(code_map, on="channel_id", how="left")
     gdf_cross_with_code = (
-        gdf_cross_with_code[["code_y", "geometry"]]
-        .dropna(subset=["code_y"])
-        .rename(columns={"code_y": "code"})
+        gdf_cross_with_code[["code_y", "geometry"]].dropna(subset=["code_y"]).rename(columns={"code_y": "code"})
     )
 
     # nearest join: channels -> cross sections with code, one match per channel
-    joined_channel = gpd.sjoin_nearest(
-        gdf_channel[["id", "geometry"]], gdf_cross_with_code, how="left"
-    )
+    joined_channel = gpd.sjoin_nearest(gdf_channel[["id", "geometry"]], gdf_cross_with_code, how="left")
     joined_channel = joined_channel[~joined_channel.index.duplicated(keep="first")]
     gdf_channel["code"] = joined_channel["code"].values
 
@@ -360,12 +348,8 @@ def add_priority_summaries(
             return " | ".join(hits)
 
         # apply the previous function per row
-        gdf["Summary_Critical"] = gdf.apply(
-            lambda r: collect_names(r, "critical"), axis=1
-        )
-        gdf["Summary_Warnings"] = gdf.apply(
-            lambda r: collect_names(r, "warning"), axis=1
-        )
+        gdf["Summary_Critical"] = gdf.apply(lambda r: collect_names(r, "critical"), axis=1)
+        gdf["Summary_Warnings"] = gdf.apply(lambda r: collect_names(r, "warning"), axis=1)
 
         table_dict[layer_name] = gdf
 
@@ -417,17 +401,13 @@ def build_summary_layers(
         columns_to_keep = ["code", "in_both", "Summary_Critical", "number_of_critical"]
 
         # Keep only existing columns
-        columns_to_keep = [
-            col for col in columns_to_keep if col in gdf_selection.columns
-        ]
+        columns_to_keep = [col for col in columns_to_keep if col in gdf_selection.columns]
 
         # Add source layer name
         gdf_selection["source_layer"] = layer_name
 
         # Create GeoDataFrame without geometry
-        summary_gdf = gpd.GeoDataFrame(
-            gdf_selection[columns_to_keep + ["source_layer"]], geometry=None
-        )
+        summary_gdf = gpd.GeoDataFrame(gdf_selection[columns_to_keep + ["source_layer"]], geometry=None)
 
         # Add to result dictionary
         result[layer_name] = summary_gdf
@@ -458,9 +438,7 @@ def get_waterway_category(
         gdf = table_C[layer_name].copy()
 
         if both_col not in gdf.columns:
-            logger.debug(
-                f"Layer {layer_name} has no '{both_col}' column, skipping enrichment."
-            )
+            logger.debug(f"Layer {layer_name} has no '{both_col}' column, skipping enrichment.")
             continue
 
         mask_missing = gdf[both_col].str.contains(r"\ssqlite$", na=False)
@@ -468,14 +446,10 @@ def get_waterway_category(
         present = gdf[~mask_missing].copy()
 
         if missing.empty:
-            logger.debug(
-                f"Layer {layer_name} has no missing features, skipping enrichment."
-            )
+            logger.debug(f"Layer {layer_name} has no missing features, skipping enrichment.")
             continue
 
-        logger.debug(
-            f"Layer {layer_name}: enriching {len(missing)} features not in DAMO."
-        )
+        logger.debug(f"Layer {layer_name}: enriching {len(missing)} features not in DAMO.")
 
         get_category = gpd.sjoin_nearest(
             missing,
@@ -486,9 +460,7 @@ def get_waterway_category(
 
         get_category["ws_categorie_damo"] = get_category[category_col]
 
-        get_category = get_category.drop(
-            columns=[category_col, "index_right", "_join_distance"], errors="ignore"
-        )
+        get_category = get_category.drop(columns=[category_col, "index_right", "_join_distance"], errors="ignore")
         get_category = get_category[~get_category.index.duplicated(keep="first")]
 
         table_C[layer_name] = gpd.GeoDataFrame(
