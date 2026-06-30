@@ -3,15 +3,17 @@ import logging
 import os
 import time
 from dataclasses import dataclass
+from importlib.resources import as_file, files
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from shutil import copy2
+from typing import Dict, List, Optional, Union
 
 import fiona
 import geopandas as gpd
 import pandas as pd
 
 from hhnk_threedi_tools.core.folders import Folders
-from hhnk_threedi_tools.core.vergelijkingstool import config
+from hhnk_threedi_tools.core.vergelijkingstool import config, docs
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -23,7 +25,7 @@ class ModelInfo:
 
     model_name: str
     source_data: Path
-    input_data_old: Path
+    input_data_new: Path
     fn_damo_old: Path
     fn_hdb_old: Path
     fn_damo_new: Path
@@ -37,6 +39,37 @@ class ModelInfo:
     date_hdb_old: str
     date_hdb_new: str
     date_sqlite: str
+    decision_doc: Path
+
+
+DECISION_DOC_NAME = "Beslissing nieuwbouw of hergebruik 3Di.docx"
+
+
+def ensure_decision_document(
+    source_data: Union[str, Path], overwrite: bool = False
+) -> Path:
+    """
+    Copy the decision document template to:
+    01_source_data/vergelijkingstool/
+
+    The document is not overwritten unless overwrite=True.
+    """
+    source_data = Path(source_data)
+
+    target_dir = source_data / "vergelijkingstool"
+    target_dir.mkdir(parents=True, exist_ok=True)
+
+    target_doc = target_dir / DECISION_DOC_NAME
+
+    if target_doc.exists() and not overwrite:
+        return target_doc
+
+    template_resource = files(docs).joinpath(DECISION_DOC_NAME)
+
+    with as_file(template_resource) as template_doc:
+        copy2(template_doc, target_doc)
+
+    return target_doc
 
 
 def get_model_info(path: Union[str, Path]) -> ModelInfo:
@@ -51,19 +84,20 @@ def get_model_info(path: Union[str, Path]) -> ModelInfo:
     model_name = folder.name
     fn_threedimodel = folder.model.schema_base.content[0]
 
-    input_data_old = source_data / "vergelijkingstool" / "input_data_old"
-    fn_damo_old = input_data_old / "DAMO.gpkg"
+    input_data_new = source_data / "vergelijkingstool" / "input_nieuwe_export"
+    fn_damo_new = input_data_new / "DAMO.gpkg"
     json_folder = Path(__file__).parent / "json_files"
-    fn_hdb_old = input_data_old / "HDB.gpkg"
-    fn_damo_new = source_data / "DAMO.gpkg"
-    fn_hdb_new = source_data / "HDB.gpkg"
+    fn_hdb_new = input_data_new / "HDB.gpkg"
+    fn_damo_old = source_data / "DAMO.gpkg"
+    fn_hdb_old = source_data / "HDB.gpkg"
     damo_selection = source_data / "polder_polygon.gpkg"
     output_folder = source_data / "vergelijkingstool" / "output"
+    decision_doc = ensure_decision_document(source_data)
 
     return ModelInfo(
         model_name=model_name,
         source_data=source_data,
-        input_data_old=input_data_old,
+        input_data_new=input_data_new,
         fn_damo_old=fn_damo_old,
         fn_hdb_old=fn_hdb_old,
         fn_damo_new=fn_damo_new,
@@ -77,10 +111,13 @@ def get_model_info(path: Union[str, Path]) -> ModelInfo:
         date_hdb_old=time.ctime(os.path.getmtime(fn_hdb_old)),
         date_hdb_new=time.ctime(os.path.getmtime(fn_hdb_new)),
         date_sqlite=time.ctime(os.path.getmtime(fn_threedimodel)),
+        decision_doc=decision_doc,
     )
 
 
-def translate(data: Dict[str, gpd.GeoDataFrame], translation_file: Union[str, Path]) -> Dict[str, gpd.GeoDataFrame]:
+def translate(
+    data: Dict[str, gpd.GeoDataFrame], translation_file: Union[str, Path]
+) -> Dict[str, gpd.GeoDataFrame]:
     """
     Load a translation file and translates the data datastructure.
     Renames tables and columns as indicated in the translation_file
@@ -96,7 +133,9 @@ def translate(data: Dict[str, gpd.GeoDataFrame], translation_file: Union[str, Pa
     try:
         mapping = json.loads(json.dumps(json.load(f)).lower())
     except json.decoder.JSONDecodeError:
-        logger.error("Structure of DAMO-translation file is incorrect, check brackets and commas")
+        logger.error(
+            "Structure of DAMO-translation file is incorrect, check brackets and commas"
+        )
         raise
 
     translate_layers = {}
@@ -214,7 +253,10 @@ def load_file_and_translate(
 
 
 def update_channel_codes(
-    channel: gpd.GeoDataFrame, cross_section_location: gpd.GeoDataFrame, damo, model_path
+    channel: gpd.GeoDataFrame,
+    cross_section_location: gpd.GeoDataFrame,
+    damo,
+    model_path,
 ) -> gpd.GeoDataFrame:
     """
     Update channel `code` values by nearest-matching DAMO hydroobject codes and persist the result.
@@ -263,13 +305,19 @@ def update_channel_codes(
     code_map.columns = ["channel_id", "code"]
 
     # attach codes to cross sections and keep only those with a match
-    gdf_cross_with_code = cross_section_location.merge(code_map, on="channel_id", how="left")
+    gdf_cross_with_code = cross_section_location.merge(
+        code_map, on="channel_id", how="left"
+    )
     gdf_cross_with_code = (
-        gdf_cross_with_code[["code_y", "geometry"]].dropna(subset=["code_y"]).rename(columns={"code_y": "code"})
+        gdf_cross_with_code[["code_y", "geometry"]]
+        .dropna(subset=["code_y"])
+        .rename(columns={"code_y": "code"})
     )
 
     # nearest join: channels -> cross sections with code, one match per channel
-    joined_channel = gpd.sjoin_nearest(gdf_channel[["id", "geometry"]], gdf_cross_with_code, how="left")
+    joined_channel = gpd.sjoin_nearest(
+        gdf_channel[["id", "geometry"]], gdf_cross_with_code, how="left"
+    )
     joined_channel = joined_channel[~joined_channel.index.duplicated(keep="first")]
     gdf_channel["code"] = joined_channel["code"].values
 
@@ -282,7 +330,9 @@ def update_channel_codes(
     return gdf_channel
 
 
-def add_priority_summaries(table_dict: Dict[str, gpd.GeoDataFrame]) -> Dict[str, gpd.GeoDataFrame]:
+def add_priority_summaries(
+    table_dict: Dict[str, gpd.GeoDataFrame],
+) -> Dict[str, gpd.GeoDataFrame]:
     """
     For each table create a dictionary that create columns
     Summary_Critical and  Summary_Warnings with the respective
@@ -310,15 +360,21 @@ def add_priority_summaries(table_dict: Dict[str, gpd.GeoDataFrame]) -> Dict[str,
             return " | ".join(hits)
 
         # apply the previous function per row
-        gdf["Summary_Critical"] = gdf.apply(lambda r: collect_names(r, "critical"), axis=1)
-        gdf["Summary_Warnings"] = gdf.apply(lambda r: collect_names(r, "warning"), axis=1)
+        gdf["Summary_Critical"] = gdf.apply(
+            lambda r: collect_names(r, "critical"), axis=1
+        )
+        gdf["Summary_Warnings"] = gdf.apply(
+            lambda r: collect_names(r, "warning"), axis=1
+        )
 
         table_dict[layer_name] = gdf
 
     return table_dict
 
 
-def build_summary_layers(table_dict: Dict[str, gpd.GeoDataFrame]) -> Dict[str, gpd.GeoDataFrame]:
+def build_summary_layers(
+    table_dict: Dict[str, gpd.GeoDataFrame],
+) -> Dict[str, gpd.GeoDataFrame]:
     """
     Build a summary for each layer from a dictionary of GeoDataFrames.
     Assumes that the input GeoDataFrames already contain the necessary columns.
@@ -361,13 +417,17 @@ def build_summary_layers(table_dict: Dict[str, gpd.GeoDataFrame]) -> Dict[str, g
         columns_to_keep = ["code", "in_both", "Summary_Critical", "number_of_critical"]
 
         # Keep only existing columns
-        columns_to_keep = [col for col in columns_to_keep if col in gdf_selection.columns]
+        columns_to_keep = [
+            col for col in columns_to_keep if col in gdf_selection.columns
+        ]
 
         # Add source layer name
         gdf_selection["source_layer"] = layer_name
 
         # Create GeoDataFrame without geometry
-        summary_gdf = gpd.GeoDataFrame(gdf_selection[columns_to_keep + ["source_layer"]], geometry=None)
+        summary_gdf = gpd.GeoDataFrame(
+            gdf_selection[columns_to_keep + ["source_layer"]], geometry=None
+        )
 
         # Add to result dictionary
         result[layer_name] = summary_gdf
@@ -398,7 +458,9 @@ def get_waterway_category(
         gdf = table_C[layer_name].copy()
 
         if both_col not in gdf.columns:
-            logger.debug(f"Layer {layer_name} has no '{both_col}' column, skipping enrichment.")
+            logger.debug(
+                f"Layer {layer_name} has no '{both_col}' column, skipping enrichment."
+            )
             continue
 
         mask_missing = gdf[both_col].str.contains(r"\ssqlite$", na=False)
@@ -406,10 +468,14 @@ def get_waterway_category(
         present = gdf[~mask_missing].copy()
 
         if missing.empty:
-            logger.debug(f"Layer {layer_name} has no missing features, skipping enrichment.")
+            logger.debug(
+                f"Layer {layer_name} has no missing features, skipping enrichment."
+            )
             continue
 
-        logger.debug(f"Layer {layer_name}: enriching {len(missing)} features not in DAMO.")
+        logger.debug(
+            f"Layer {layer_name}: enriching {len(missing)} features not in DAMO."
+        )
 
         get_category = gpd.sjoin_nearest(
             missing,
@@ -420,7 +486,9 @@ def get_waterway_category(
 
         get_category["ws_categorie_damo"] = get_category[category_col]
 
-        get_category = get_category.drop(columns=[category_col, "index_right", "_join_distance"], errors="ignore")
+        get_category = get_category.drop(
+            columns=[category_col, "index_right", "_join_distance"], errors="ignore"
+        )
         get_category = get_category[~get_category.index.duplicated(keep="first")]
 
         table_C[layer_name] = gpd.GeoDataFrame(
