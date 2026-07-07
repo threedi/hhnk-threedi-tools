@@ -15,7 +15,7 @@ import pandas as pd
 from hhnk_threedi_tools.core.folders import Folders
 from hhnk_threedi_tools.core.vergelijkingstool import config, docs
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("utils")
 logger.setLevel(logging.DEBUG)
 
 
@@ -439,7 +439,6 @@ def get_waterway_category(
         present = gdf[~mask_missing].copy()
 
         if missing.empty:
-            logger.debug(f"Layer {layer_name} has no missing features, skipping enrichment.")
             continue
 
         logger.debug(f"Layer {layer_name}: enriching {len(missing)} features not in DAMO.")

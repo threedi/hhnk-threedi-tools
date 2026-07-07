@@ -7,7 +7,7 @@ import geopandas as gpd
 
 from hhnk_threedi_tools.core.vergelijkingstool.utils import ModelInfo
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("Styling")
 logger.setLevel(logging.DEBUG)
 
 # styling.py
@@ -27,12 +27,6 @@ STYLING_BASIC_TABLE_COLUMNS = [
     "ui",
     "update_time",
 ]
-
-
-from pathlib import Path
-from typing import Dict, Union
-
-import geopandas as gpd
 
 
 def prepare_layers_for_export(
@@ -186,7 +180,6 @@ def export_comparison_DAMO(
             qml_name = layer_name + ".qml"
             qml_file = (styling_path) / qml_name
         if qml_file.exists():
-            logger.debug(f"Style layer for layer {layer_name} found, adding it to the GeoPackage")
             with open(qml_file, "r") as file:
                 style = file.read()
 
@@ -209,11 +202,11 @@ def export_comparison_DAMO(
                     None,
                 ]
             )
-
-        logger.info(f"Export results of comparing DAMO/3Di layer {layer_name} to {filename}")
-
+        else:
+            logger.error(f"Style layer for layer {layer_name} not found, adding it to the GeoPackage")
         table_C[layer_name].to_file(filename, layer=layer_name, driver="GPKG")
     # construct GeoDataFrame describing layer styles
+    logger.info(f"Export results of comparing DAMO/3Di layer to {filename}")
     layer_styles = gpd.GeoDataFrame(columns=STYLING_BASIC_TABLE_COLUMNS, data=table)
     layer_styles.fillna("", inplace=True)
     return layer_styles
@@ -251,7 +244,6 @@ def export_comparison_3di(
             qml_file = (styling_path) / qml_name
 
         if qml_file.exists():
-            logger.debug(f"Style layer for layer {layer_name} found, adding it to the GeoPackage")
             with open(qml_file, "r") as file:
                 style = file.read()
 
@@ -273,13 +265,15 @@ def export_comparison_3di(
                     None,
                 ]
             )
-
-        logger.info(f"Export results of comparing DAMO/3Di layer {layer_name} to {filename}")
-
+        else:
+            logger.error(f"Style layer for layer {layer_name} not found, adding it to the GeoPackage")
+        
         # ensure layer uses requested CRS before export
         table_C[layer_name] = table_C[layer_name].set_crs(crs, allow_override=True)
         table_C[layer_name].to_file(filename, layer=layer_name, driver="GPKG")
+    
     # add styling to layers
     layer_styles = gpd.GeoDataFrame(columns=STYLING_BASIC_TABLE_COLUMNS, data=table)
+    logger.info(f"Export results of comparing DAMO/3Di layer {layer_name} to {filename}")
     layer_styles.fillna("", inplace=True)
     return layer_styles

@@ -1,6 +1,5 @@
 # %%
 import json
-import os
 import shutil
 import sys
 from pathlib import Path
@@ -13,12 +12,10 @@ import pandas as pd
 import pytest
 
 from hhnk_threedi_tools.core.vergelijkingstool import styling, utils
-from hhnk_threedi_tools.core.vergelijkingstool.DAMO import DAMO
-from hhnk_threedi_tools.core.vergelijkingstool.Threedimodel import Threedimodel
+from hhnk_threedi_tools.core.vergelijkingstool.dataset.damo import DAMO
+from hhnk_threedi_tools.core.vergelijkingstool.dataset.threedimodel import Threedimodel
 from hhnk_threedi_tools.core.vergelijkingstool.utils import ModelInfo, get_model_info
 from tests.config import FOLDER_TEST
-
-# model_info = get_model_info(FOLDER_TEST)
 
 
 # %%
@@ -85,7 +82,7 @@ def test_compare_with_damo(model_info: ModelInfo, damos: Tuple[DAMO, DAMO]) -> N
 @pytest.mark.skipif(sys.version_info < (3, 12), reason="Requires Python 3.12 or higher")
 def test_compare_with_threedi(model_info: ModelInfo, damos) -> None:
     """Compare a Threedimodel with DAMO and check KDU/KST warning counts.
-    This function writes a GPKG file and then inspects layers 'stuw' and 'gemaal
+    This function writes a GPKG file and then inspects layers 'stuw' and 'duikers'
     and test de function compare_with_damo from the Threedimodel class.
     """
 
@@ -316,7 +313,7 @@ def test_translate_invalid_json(damos: Tuple[DAMO, DAMO], tmp_path: Path, caplog
 
 
 @pytest.mark.skipif(sys.version_info < (3, 12), reason="Requires Python 3.12 or higher")
-def test_pprepare_layers_for_export(damos: Tuple[DAMO, DAMO], model_info: ModelInfo) -> None:
+def test_specific_layers_for_export(damos: Tuple[DAMO, DAMO], model_info: ModelInfo) -> None:
     """Test specific layer selection"""
 
     # get all damo variable to test function load_file_and_translate using select layer as true
@@ -347,7 +344,7 @@ def test_pprepare_layers_for_export(damos: Tuple[DAMO, DAMO], model_info: ModelI
         mode=mode,
     )
     # assert that the layer is in the dictionary
-    assert "peilafwijkinggebied" in data.keys()
+    assert "peilgebiedpraktijk" in data.keys()
     assert "gemaal" not in data.keys()
 
 

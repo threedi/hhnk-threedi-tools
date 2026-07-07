@@ -9,7 +9,7 @@ import pandas as pd
 from hhnk_threedi_tools.core.vergelijkingstool import json_files as json_files_path
 from hhnk_threedi_tools.core.vergelijkingstool import styling, utils
 from hhnk_threedi_tools.core.vergelijkingstool.config import *
-from hhnk_threedi_tools.core.vergelijkingstool.Dataset import DataSet
+from hhnk_threedi_tools.core.vergelijkingstool.dataset.dataset import DataSet
 from hhnk_threedi_tools.core.vergelijkingstool.qml_styling_files import DAMO as DAMO_styling_path
 from hhnk_threedi_tools.core.vergelijkingstool.utils import ModelInfo
 
@@ -90,7 +90,6 @@ class DAMO(DataSet):
             # layers_to_remove = []
             gdf = data[layer]
             if isinstance(gdf, gpd.GeoDataFrame):
-                self.logger.debug(f"Check if layer {layer} has geometry")
                 gdf = data[layer]
                 intersections = gdf[gdf.geometry.intersects(shape) | gdf.geometry.isnull()]
                 data[layer] = intersections
@@ -221,9 +220,8 @@ class DAMO(DataSet):
                 table_merged = gpd.GeoDataFrame(table_merged, geometry="geometry")
 
                 # fillna values of the two columns by False
-                table_merged[["dataset_New", "dataset_Old"]] = table_merged[["dataset_New", "dataset_Old"]].fillna(
-                    value=False
-                )
+                cols = ["dataset_New", "dataset_Old"]
+                table_merged[cols] = table_merged[cols].astype("boolean").fillna(False)
 
                 # add column with values A, B or AB, depending on code
                 inboth: List[str] = []
@@ -244,8 +242,8 @@ class DAMO(DataSet):
                 if layer in [x.lower() for x in GEOMETRICAL_COMPARISON_LAYERS]:
                     if layer == "waterdeel":
                         # union/intersect/difference approach for 'waterdeel'
-                        union_A = table_merged.geometry_New.unary_union
-                        union_B = table_merged.geometry_Old.unary_union
+                        union_A = table_merged.geometry_New.union_all()
+                        union_B = table_merged.geometry_Old.union_all()
                         intersection = union_A.intersection(union_B)
                         diff_A = union_A.difference(union_B)
                         diff_B = union_B.difference(union_A)
@@ -316,7 +314,13 @@ class DAMO(DataSet):
                         diff_B["origin"] = "diff_Old"
 
                         df_intersections = pd.concat([intersection, diff_A, diff_B])
-                        df_intersections = df_intersections[df_intersections["geometry_diff"].notna()]
+
+                        # df_intersections = df_intersections[df_intersections["geometry_diff"].notna()] -> keep it for testing lines 320-322
+
+                        geometry_diff = df_intersections["geometry_diff"]
+                        mask = geometry_diff.notna() & geometry_diff.is_empty.eq(False)
+                        df_intersections = df_intersections.loc[mask]
+
                         table_merged = table_merged.merge(df_intersections, how="outer", on="code")
 
                         # choose significant geometry when geometry_diff missing
@@ -326,7 +330,9 @@ class DAMO(DataSet):
                             else x["geometry_diff"],
                             axis=1,
                         )
-                        table_merged["origin"].fillna(table_merged["in_both"], inplace=True)
+
+                        # table_merged["origin"].fillna(table_merged["in_both"], inplace=True) -> KEEP IT FOR TESTING
+                        table_merged["origin"] = table_merged["origin"].fillna(table_merged["in_both"])
                         table_merged["geometry"] = table_merged["geometry_diff"]
 
                         table_merged = table_merged.explode(column="geometry", index_parts=True)
@@ -452,7 +458,6 @@ class DAMO(DataSet):
 
         # optionally export results to a GeoPackage file
         if filename is not None:
-            print(filename)
             self.export_comparison_new(table_C, statistics, filename, overwrite=overwrite)
 
         return table_C, statistics

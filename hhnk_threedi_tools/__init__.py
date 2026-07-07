@@ -39,7 +39,7 @@ from hhnk_threedi_tools.core.schematisation.model_backup import (
     update_bank_levels_last_calc,
 )
 
-# backup
+# vergelijkingstool
 from hhnk_threedi_tools.core.vergelijkingstool import *
 
 #

@@ -17,5 +17,11 @@
             "invert_level_start_point": "invert_level_start",
             "invert_level_end_point": "invert_level_end"
         }
+    },
+    "pump": {
+        "name": "pumpstation",
+        "columns": {
+           "cul_code": "code"
+        }
     }
 }

@@ -240,9 +240,12 @@ class DataSet:
         """
 
         if "both" in row.in_both:
-            left = row[0]
-            right = row[1]
+            # KEEP IT TO TEST
+            # left = row[0]
+            # right = row[1]
 
+            left = row.iloc[0]
+            right = row.iloc[1]
             if isinstance(left, float):
                 if left.is_integer():
                     left = str(int(left))
@@ -259,7 +262,7 @@ class DataSet:
             else:
                 # if left and right the same and not nan
                 if isinstance(left, float):
-                    if ~math.isnan(left):
+                    if not math.isnan(left):
                         return ("not changed", None)
                 else:
                     return ("not changed", None)
@@ -408,11 +411,10 @@ class DataSet:
                     table_name = comparison["table"]
                     self.logger.debug(f"Start applying attribute comparison, table name {table_name}")
                     if table_name in table.keys():
-                        print(table_name)
                         table = self.compare_attribute(table, comparison)
                     else:
                         # table not present in this dataset, skip it
-                        print(f"The table {table_name} is not included in the comparision process")
+                        self.logger.debug(f"The table {table_name} is not included in the comparision process")
 
         except json.decoder.JSONDecodeError as err:
             self.logger.error(

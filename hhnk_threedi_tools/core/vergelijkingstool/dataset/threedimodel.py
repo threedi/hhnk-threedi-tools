@@ -12,14 +12,14 @@ import pandas as pd
 import hhnk_threedi_tools.core.vergelijkingstool.config as config
 from hhnk_threedi_tools.core.vergelijkingstool import styling, utils
 from hhnk_threedi_tools.core.vergelijkingstool.config import *
-from hhnk_threedi_tools.core.vergelijkingstool.Dataset import DataSet
+from hhnk_threedi_tools.core.vergelijkingstool.dataset.dataset import DataSet
 from hhnk_threedi_tools.core.vergelijkingstool.qml_styling_files import Threedi as Threedi_styling_path
 from hhnk_threedi_tools.core.vergelijkingstool.styling import *
 from hhnk_threedi_tools.core.vergelijkingstool.utils import ModelInfo
 
 
 class Threedimodel(DataSet):
-    def __init__(self, filename: Union[str, Path], model_info: ModelInfo, translation: Optional[dict] = None) -> None:
+    def __init__(self, filename: Union[str, Path], model_info: ModelInfo) -> None:
         """
         Create a Threedimodel object and reads the data from the 3Di schematisation sqlite.
         If translation dictionaries are supplied, layer and column names are mapped.
@@ -27,6 +27,7 @@ class Threedimodel(DataSet):
         :param filename: Path of the .sqlite file to be loaded
         :param translation: Path of the translation dictionary to be used
         """
+        # this super() initializes the DataSet class, which is the parent class of Threedimodel.
         super().__init__(model_info)
 
         self.json_files_path = model_info.json_folder
@@ -207,7 +208,7 @@ class Threedimodel(DataSet):
                 number_of_critical,
                 number_of_warning,
             ]
-        statistics = statistics.fillna(0).astype(int)
+        statistics = statistics.infer_objects(copy=False).fillna(0).astype(int)
         return statistics
 
     def export_comparison_3di(
@@ -285,7 +286,7 @@ class Threedimodel(DataSet):
             STRUCTURE_CODES = structure_codes
         else:
             STRUCTURE_CODES = config.STRUCTURE_CODES
-            print("threedi layer selection is OFF")
+            # print("threedi layer selection is OFF")
 
         for struc in STRUCTURE_CODES:
             # collect per-structure GeoDataFrames from model and DAMO
@@ -328,9 +329,8 @@ class Threedimodel(DataSet):
             table_merged["geometry"] = None
             table_merged = gpd.GeoDataFrame(table_merged, geometry="geometry")
             # fillna values of the two columns by False
-            table_merged[["dataset_model", "dataset_damo"]] = table_merged[["dataset_model", "dataset_damo"]].fillna(
-                value=False
-            )
+            cols = ["dataset_model", "dataset_damo"]
+            table_merged[cols] = table_merged[cols].astype("boolean").fillna(False)
 
             # add column with values model, damo or both, depending on code
             inboth = []

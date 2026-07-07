@@ -37,7 +37,6 @@ DAMO_LAYERS: List[str] = [
     "VasteDam",
     # "Vispassage",
     "Waterdeel",
-    # "Waterdeel", it does not contains code should be done in a different way
 ]
 
 # HDB layer names (HDB exports)
