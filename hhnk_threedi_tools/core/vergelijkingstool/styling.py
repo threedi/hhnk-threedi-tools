@@ -267,11 +267,11 @@ def export_comparison_3di(
             )
         else:
             logger.error(f"Style layer for layer {layer_name} not found, adding it to the GeoPackage")
-        
+
         # ensure layer uses requested CRS before export
         table_C[layer_name] = table_C[layer_name].set_crs(crs, allow_override=True)
         table_C[layer_name].to_file(filename, layer=layer_name, driver="GPKG")
-    
+
     # add styling to layers
     layer_styles = gpd.GeoDataFrame(columns=STYLING_BASIC_TABLE_COLUMNS, data=table)
     logger.info(f"Export results of comparing DAMO/3Di layer {layer_name} to {filename}")
