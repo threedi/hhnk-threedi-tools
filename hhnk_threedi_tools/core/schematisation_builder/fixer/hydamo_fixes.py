@@ -405,7 +405,7 @@ def _apply_manual_overwrites(
     if not object_indices:
         return object_gdf
 
-    manual_gdf = review_gdf.loc[review_indices, manual_column]
+    manual_gdf = review_gdf.loc[review_indices, manual_column].copy()
     manual_dtype = object_gdf.loc[object_indices, attribute_name].dtypes
     if manual_dtype == "float64":
         manual_gdf = manual_gdf.astype(float)
@@ -653,6 +653,12 @@ def review(
                         review_gdf[fix_columns.manual_overwrite] = getattr(layers_summary, object_layer)[
                             fix_columns.manual_overwrite
                         ]
+                        manual_mask = review_gdf[fix_columns.manual_overwrite].notna()
+                        review_gdf.loc[manual_mask, fix_columns.fix_suggestion] = (
+                            review_gdf.loc[manual_mask, fix_columns.manual_overwrite]
+                            .astype(str)
+                            .apply(lambda v: f"Handmatig omgezet naar {v}")
+                        )
 
                     for _rule in validation_rules:
                         _rule_id: int = _rule["id"]

@@ -54,7 +54,9 @@ def apply_test_settings_to_validationrules(validation_rules_json_path: Path) -> 
     with open(validation_rules_json_path) as f:
         rules = json.load(f)
 
-    duikersifonhevel_obj = next((obj for obj in rules["objects"] if obj["object"] == "duikersifonhevel"), None)
+    duikersifonhevel_obj: dict[str, list] = next(
+        (obj for obj in rules["objects"] if obj["object"] == "duikersifonhevel"), None
+    )
     assert duikersifonhevel_obj is not None, "duikersifonhevel not found in validation rules"
 
     fix_rules = duikersifonhevel_obj.get("fix_rules", [])
@@ -151,8 +153,6 @@ def test_hydamo_fixer():
         in gdf_review_duikersifonhevel["fixes_breedteopening"][13]
     )
     assert gdf_review_duikersifonhevel["breedteopening"][13] == 0.8
-
-    # TODO: make check for hoogteopening and check if this fis is also applied correctly
 
     # Check if manual fix is applied correctly. Set variable MANUAL_FIX to True to apply this check
     assert "manual_overwrite_breedteopening" in gdf_review_duikersifonhevel.columns
