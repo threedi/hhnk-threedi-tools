@@ -45,7 +45,7 @@ class ModelInfo:
 DECISION_DOC_NAME = "Beslissing nieuwbouw of hergebruik 3Di.docx"
 
 
-def ensure_decision_document(source_data: str | Path, overwrite: bool = False) -> Path:
+def ensure_decision_document(source_data: Union[str, Path], overwrite: bool = False) -> Path:
     """
     Copy the decision document template to:
     01_source_data/vergelijkingstool/
