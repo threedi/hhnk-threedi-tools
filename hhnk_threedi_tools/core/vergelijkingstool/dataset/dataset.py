@@ -161,15 +161,22 @@ class DataSet:
             :param parameter: String, dict or number
             :return:
             """
+            # if parameter is a string, return the column in the table with that header
+            # for example parameter = "water_level_old" should return table["water_level_oo"]
             if isinstance(parameter, str):
                 try:
                     return table[parameter]
+
+                # If the column does not exist in the table, a KeyError occurs. Log it and return None
                 except KeyError:
                     self.logger.error(f"Could not resolve comperation parameter {parameter}")
                     return None
+
+            # fi the paramenter is a dict, the we apply the function compare function
             elif isinstance(parameter, dict):
                 compare, *_ = self.compare_function(table, parameter)
                 return compare
+            # if the parameter is a number, we return the number
             elif isinstance(parameter, int) or isinstance(parameter, float):
                 return parameter
             else:
@@ -177,6 +184,7 @@ class DataSet:
                 return None
 
         try:
+            # resolve the left and right parameters of the function
             param_left = function[function_name]["left"]
             param_right = function[function_name]["right"]
             left = resolve_parameter(table, param_left)

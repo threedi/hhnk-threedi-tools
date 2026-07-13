@@ -203,7 +203,7 @@ def export_comparison_DAMO(
                 ]
             )
         else:
-            logger.error(f"Style layer for layer {layer_name} not found, adding it to the GeoPackage")
+            logger.error(f"Style layer for layer {layer_name} not found")
         table_C[layer_name].to_file(filename, layer=layer_name, driver="GPKG")
     # construct GeoDataFrame describing layer styles
     logger.info(f"Export results of comparing DAMO/3Di layer to {filename}")
