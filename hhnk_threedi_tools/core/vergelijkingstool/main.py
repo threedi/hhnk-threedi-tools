@@ -14,8 +14,8 @@ import logging
 import warnings
 
 import geopandas as gpd
-from hhnk_threedi_tools.core.vergelijkingstool.DAMO import DAMO
-from hhnk_threedi_tools.core.vergelijkingstool.Threedimodel import Threedimodel
+from hhnk_threedi_tools.core.vergelijkingstool.dataset.damo import DAMO
+from hhnk_threedi_tools.core.vergelijkingstool.dataset.threedimodel import Threedimodel
 
 from hhnk_threedi_tools.core.vergelijkingstool.utils import ModelInfo, get_model_info
 

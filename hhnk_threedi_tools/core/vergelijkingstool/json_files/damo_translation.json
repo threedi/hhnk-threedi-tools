@@ -18,6 +18,12 @@
 			"CODE": "code"
 		}
 	},
+	"gw_pro": {
+		"name": "gw_pro",
+		"columns": {
+			"PROIDENT": "code"
+		}
+	},
 	"hydroobject": {
     "name": "hydroobject",
     "columns": {
