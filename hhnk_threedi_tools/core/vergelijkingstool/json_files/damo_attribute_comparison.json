@@ -1524,6 +1524,116 @@
 			"priority": "critical",
 			"left": "geom_type_Old",
 			"right": "geom_type_New"
+		},
+		{
+			"name": "cmp_doorvaartbreedte",
+			"table": "sluis",
+			"type": "numeric",
+			"description": "Verschil in doorvaartbreedte",
+			"priority": "warning",
+			"function": {
+				"difference": {
+					"left": "doorvaartbreedte_Old",
+					"right": "doorvaartbreedte_New"
+				}
+			}
+		},
+		{
+			"name": "cmp_doorvaartbreedte",
+			"table": "sluis",
+			"type": "category",
+			"description": "Verschil in hydroobject_naam",
+			"priority": "warning",
+			"left": "naam_Old",
+			"right": "naam_New"
+		}, 
+		{
+			"name": "cmp_breedte",
+			"table": "sluis",
+			"type": "numeric",
+			"description": "Verschil in doorvaartbreedte",
+			"priority": "critical",
+			"function": {
+				"difference": {
+					"left": "breedte_Old",
+					"right": "breedte_New"
+				}
+			}
+		},
+		{
+			"name": "cmp_hoogtebinnenonderkantben",
+			"table": "sluis",
+			"type": "numeric",
+			"description": "Verschil in hoogtebinnenonderkantben",
+			"priority": "critical",
+			"function": {
+				"difference": {
+					"left": "hoogtebinnenonderkantben_Old",
+					"right": "hoogtebinnenonderkantben_New"
+				}
+			}
+		},
+		{
+			"name": "cmp_hoogtebinnenonderkantbov",
+			"table": "sluis",
+			"type": "numeric",
+			"description": "Verschil in hoogtebinnenonderkantbov",
+			"priority": "critical",
+			"function": {
+				"difference": {
+					"left": "hoogtebinnenonderkantbov_Old",
+					"right": "hoogtebinnenonderkantbov_New"
+				}
+			}
+		},
+		{
+			"name": "cmp_doorvaartbreedte",
+			"table": "sluis",
+			"type": "numeric",
+			"description": "Verschil in doorvaartbreedte",
+			"priority": "critical",
+			"function": {
+				"difference": {
+					"left": "doorvaartbreedte_Old",
+					"right": "doorvaartbreedte_New"
+				}
+			}
+		},
+		{
+			"name": "cmp_ws_categorie",
+			"table": "sluis",
+			"type": "numeric",
+			"description": "Verschil in ws_categorie",
+			"priority": "warning",
+			"function": {
+				"difference": {
+					"left": "ws_categorie_Old",
+					"right": "ws_categorie_New"
+				}
+			}
+		},
+		{
+			"name": "cmp_ws_doorvaarlengte",
+			"table": "sluis",
+			"type": "numeric",
+			"description": "Verschil in ws_doorvaarlengte",
+			"priority": "critical",
+			"function": {
+				"difference": {
+					"left": "ws_doorvaarlengte_Old",
+					"right": "ws_doorvaarlengte_New"
+				}
+			}
+		},
+		{
+			"name": "cmp_geom_type",
+			"table": "sluis",
+			"type": "category",
+			"description": "Verschil in geometrie type",
+			"priority": "critical",
+			"left": "geom_type_Old",
+			"right": "geom_type_New"
 		}
+
 	]
 }
