@@ -7,7 +7,7 @@ file = r"H:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\output
 # breach data
 B0 = 50
 T0 = 900
-# selected time 
+# selected time
 # Start after T0, when horizontal breach growth is established and the parameter comparison is more robust.
 start_time = 2700
 end_time = 1717201
@@ -32,12 +32,12 @@ df = df.dropna(
     ]
 )
 # %%
-#filter data to selected time range
+# filter data to selected time range
 df = df[(df["time_sec"] >= start_time) & (df["time_sec"] <= end_time)].copy()
 
 # df = df.sort_values("time_sec").reset_index(drop=True)
 
-#replace negative water levels with 0
+# replace negative water levels with 0
 df["delta_h"] = (df["breach_wlev_upstream"] - df["breach_wlev_downstream"]).clip(lower=0)
 
 df["dt"] = df["time_sec"].diff().fillna(0)
@@ -46,19 +46,19 @@ df["dt"] = df["time_sec"].diff().fillna(0)
 observed_growth = df["breach_width"].iloc[-1] - df["breach_width"].iloc[0]
 
 summary = []
-#%%
+# %%
 for name, values in parameters.items():
     f1, uc, f2 = values
 
     # calculate breach growth rate per time step
     rate = (f1 * f2 / (uc**2 * np.log(10))) * (g * df["delta_h"]) ** 1.5 / (1 + (f2 * g / uc) * (df["time_sec"] - T0))
 
-    # save rate growth to dataframe with name 
+    # save rate growth to dataframe with name
     df[f"rate_{name}"] = rate
 
     # accumulative growht rate using trapezoidal rule to calculate growth over time
-    # shifit helps to get the previous value of the rate so we can sum and the multiply 
-    # by the time step. This way we get the area and thereby the growth in METERS over the time. 
+    # shifit helps to get the previous value of the rate so we can sum and the multiply
+    # by the time step. This way we get the area and thereby the growth in METERS over the time.
 
     # Example:
     # At t = 0 s, the growth rate is 2 m/s.
@@ -73,17 +73,17 @@ for name, values in parameters.items():
     average_rate = (rate.shift(1) + rate) / 2
     growth_per_timestep = average_rate * df["dt"]
 
-    #calculated cumulative growth over time
+    # calculated cumulative growth over time
     df[f"growth_{name}"] = growth_per_timestep.fillna(0).cumsum()
 
     # Reconstruct the breach width by adding the calculated cumulative growth
     # to the observed breach width at the start of the selected time range.
     df[f"width_{name}"] = df["breach_width"].iloc[0] + df[f"growth_{name}"]
 
-    #Calculate the difference between the observed breach width and the calculated breach width
+    # Calculate the difference between the observed breach width and the calculated breach width
     error = df[f"width_{name}"] - df["breach_width"]
-    
-    #create summary 
+
+    # create summary
     summary.append(
         {
             "material": name,
@@ -97,7 +97,7 @@ for name, values in parameters.items():
         }
     )
 
-#save data
+# save data
 summary = pd.DataFrame(summary)
 
 df.to_csv(
