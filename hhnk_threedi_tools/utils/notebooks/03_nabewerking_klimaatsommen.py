@@ -463,3 +463,69 @@ for T in [10, 100, 1000]:
         min_value=None,
         extra_nodata_value=0,
     )
+
+
+# %% [Markdown]
+# Schaderasters per herhalingstijd
+
+wss_settings = {
+    "inundation_period": 48,  # uren
+    "herstelperiode": "10 dagen",
+    "maand": "sep",
+    "cfg_file": hrt.get_pkg_resource_path(package_resource=hrt.waterschadeschatter.resources, name="cfg_lizard.cfg"),
+    "dmg_type": "gem",
+}
+
+folder = Folders(OEFEN_MODEL)
+
+
+def create_schaderaster(scenario: str):
+    depth_file = folder.threedi_results.batch["BWN3"].output.joinpath(f"inundatiediepte_{scenario}.tif")
+    damage_file = hrt.Raster(depth_file.with_stem(f"damage_{scenario}"))
+
+    if not damage_file.exists():
+        wss = hrt.Waterschadeschatter(
+            depth_file=depth_file,
+            landuse_file=r"\\corp.hhnk.nl\data\Hydrologen_data\Data\01.basisgegevens\rasters\landgebruik\landuse2019_tiles\combined_rasters.vrt",
+            wss_settings=wss_settings,
+            min_block_size=1024,
+        )
+        ### !!! ik krijg hierbij nog de volgende feedback:
+        ### Uitzondering - Gamma herstelperiode voor lizard config is vermenigvuldigd met herstelperiode
+
+        # door onderstaande functie uit te voeren, wordt een .tif-bestand met de bestandsnaam die hierboven is gekozen gecreëerd.
+        wss.run(output_raster=damage_file, calculation_type="sum", overwrite=False)
+
+
+for scenario in ["T0010", "T0100", "T1000"]:
+    create_schaderaster(scenario)
+
+
+# %% [Markdown]
+# Schade per peilgebied voor t10,t100 en t1000
+
+
+def calculate_schade_per_peilgebied(batch_fd):
+    schade_gdf = batch_fd.output.temp.peilgebieden.load()
+    labels_raster = batch_fd.output.temp.peilgebieden_damage
+    labels_index = schade_gdf["index"].values
+
+    output_file = batch_fd.output.schade_peilgebied
+
+    # Bereken totale schade per peilgebied voor de twee gemaskerde schaderasters.
+    schade_raster = getattr(batch_fd.output, f"cw_schade_{scenario}")
+
+    # Calculate sum per region
+    accum = schade_raster.sum_labels(label_raster=labels_raster, label_idx=labels_index)
+
+    schade_gdf[f"cw_{mask_name}"] = schade_gdf["index"].map(accum)  # map values to gdf
+
+    schade_gdf["cw_tot"] = schade_gdf["cw_ws"] + schade_gdf["cw_mv"]
+
+    # schade_gdf = schade_gdf.loc[schade_gdf['cw_tot'] > 0.0]
+
+    return schade_gdf
+
+
+for scenario in ["T0010", "T0100", "T1000"]:
+    create_schaderaster(scenario)
