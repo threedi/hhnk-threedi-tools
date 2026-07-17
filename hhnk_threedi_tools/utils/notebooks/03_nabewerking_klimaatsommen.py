@@ -518,7 +518,7 @@ create_schaderaster(output)
 # Schade per peilgebied voor t10,t100 en t1000
 
 
-def calculate_schade_per_peilgebied_v6(output: Folders) -> gpd.GeoDataFrame:
+def calculate_schade_per_peilgebied(output: Folders) -> gpd.GeoDataFrame:
     """Calculate total damage per peilgebied from generated damage rasters.
 
     Loads the peilgebieden vector data and label raster, then sums damage values
@@ -549,4 +549,4 @@ def calculate_schade_per_peilgebied_v6(output: Folders) -> gpd.GeoDataFrame:
     return schade_gdf
 
 
-calculate_schade_per_peilgebied_v6(output)
+calculate_schade_per_peilgebied(output)
