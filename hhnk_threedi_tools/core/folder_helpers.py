@@ -93,8 +93,8 @@ class ClimateResult(hrt.Folder):
             self.add_file("mask_depth_overlast", "mask_depth_overlast.tif")
             self.add_file("mask_damage_overlast", "mask_damage_overlast.tif")
             self.add_file("ruimtekaart", "ruimtekaart.shp")
-            self.add_file("schade_peilgebied", "schade_per_peilgebied.gpkg")
-            self.add_file("schade_peilgebied_corr", "schade_per_peilgebied_correctie.gpkg")
+            self.add_file("schade_peilgebied", "schade_per_peilgebied.shp")
+            self.add_file("schade_peilgebied_corr", "schade_per_peilgebied_correctie.shp")
             self.add_file("schade_polder", "schade_per_polder.csv")
             self.add_file("schade_polder_corr", "schade_per_polder_correctie.csv")
 

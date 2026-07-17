@@ -17,8 +17,7 @@ except:
 
 
 notebook_data = setup_notebook()
-from pathlib import Path
-from typing import Any
+
 
 import geopandas as gpd
 import hhnk_research_tools as hrt
@@ -467,97 +466,66 @@ for T in [10, 100, 1000]:
 
 
 # %% [Markdown]
-# Total Schaderasters per herhalingstijd
-
-# folder = Folders(
-#     r"H:\personen\rderonde\bwn_4_Grootlimmerpolder"
-# )
-
 # Schaderasters per herhalingstijd
-output = folder.threedi_results.batch["Referentie_update"].output
 
-# %%
+wss_settings = {
+    "inundation_period": 48,  # uren
+    "herstelperiode": "10 dagen",
+    "maand": "sep",
+    "cfg_file": hrt.get_pkg_resource_path(package_resource=hrt.waterschadeschatter.resources, name="cfg_lizard.cfg"),
+    "dmg_type": "gem",
+}
 
-
-def create_schaderaster(output: Folders) -> None:
-    """Generate damage rasters from depth rasters in the given output.
-
-    Iterates over attributes of the output batch, finds depth rasters whose
-    names start with "depth", creates a corresponding damage raster path, and
-    runs the waterschadeschatter to generate the damage raster file.
-    """
-
-    wss_settings = {
-        "inundation_period": 48,  # uren
-        "herstelperiode": "10 dagen",
-        "maand": "sep",
-        "cfg_file": hrt.get_pkg_resource_path(
-            package_resource=hrt.waterschadeschatter.resources, name="cfg_lizard.cfg"
-        ),
-        "dmg_type": "gem",
-    }
-
-    for attr_name in dir(output):
-        # get attributes from  the bach and check if they exist.
-        if attr_name.startswith("depth"):
-            depth_raster = getattr(output, attr_name)
-            if depth_raster.exists():
-                # replace the output name with schade
-                name = depth_raster.stem.replace("inundatiediepte", "schade")
-                # create the damage raster file path
-                damage_file = hrt.Raster(depth_raster.path.with_stem(f"{name}"))
-
-                if not damage_file.path.exists():
-                    # Create de waterscahdeschatter object and run calculation
-                    wss = hrt.Waterschadeschatter(
-                        depth_file=depth_raster,
-                        landuse_file=r"\\corp.hhnk.nl\data\Hydrologen_data\Data\01.basisgegevens\rasters\landgebruik\landuse2019_tiles\combined_rasters.vrt",
-                        wss_settings=wss_settings,
-                        min_block_size=1024,
-                    )
-
-                    ### !!! ik krijg hierbij nog de volgende feedback:
-                    ### Uitzondering - Gamma herstelperiode voor lizard config is vermenigvuldigd met herstelperiode
-
-                    # door onderstaande functie uit te voeren, wordt een .tif-bestand met de bestandsnaam die hierboven is gekozen gecreëerd.
-                    wss.run(output_raster=damage_file, calculation_type="sum", overwrite=False)
+folder = Folders(OEFEN_MODEL)
 
 
-create_schaderaster(output)
+def create_schaderaster(scenario: str):
+    depth_file = folder.threedi_results.batch["BWN3"].output.joinpath(f"inundatiediepte_{scenario}.tif")
+    damage_file = hrt.Raster(depth_file.with_stem(f"damage_{scenario}"))
+
+    if not damage_file.exists():
+        wss = hrt.Waterschadeschatter(
+            depth_file=depth_file,
+            landuse_file=r"\\corp.hhnk.nl\data\Hydrologen_data\Data\01.basisgegevens\rasters\landgebruik\landuse2019_tiles\combined_rasters.vrt",
+            wss_settings=wss_settings,
+            min_block_size=1024,
+        )
+        ### !!! ik krijg hierbij nog de volgende feedback:
+        ### Uitzondering - Gamma herstelperiode voor lizard config is vermenigvuldigd met herstelperiode
+
+        # door onderstaande functie uit te voeren, wordt een .tif-bestand met de bestandsnaam die hierboven is gekozen gecreëerd.
+        wss.run(output_raster=damage_file, calculation_type="sum", overwrite=False)
+
+
+for scenario in ["T0010", "T0100", "T1000"]:
+    create_schaderaster(scenario)
+
 
 # %% [Markdown]
 # Schade per peilgebied voor t10,t100 en t1000
 
 
-def calculate_schade_per_peilgebied_v6(output: Folders) -> gpd.GeoDataFrame:
-    """Calculate total damage per peilgebied from generated damage rasters.
-
-    Loads the peilgebieden vector data and label raster, then sums damage values
-    per label for each damage raster found in the output. The results are saved
-    to a GeoPackage and returned as a GeoDataFrame.
-    """
-
-    # load peilgebiede and schaderasters intdex
-    schade_gdf = output.temp.peilgebieden.load()
-    labels_raster = output.temp.peilgebieden_damage
+def calculate_schade_per_peilgebied(batch_fd):
+    schade_gdf = batch_fd.output.temp.peilgebieden.load()
+    labels_raster = batch_fd.output.temp.peilgebieden_damage
     labels_index = schade_gdf["index"].values
-    # get the raster attibutes from the bacht output and loop to calculate totals.
-    for attr_name in dir(output):
-        # get attributes from  the bach and check if they exist.
-        if attr_name.startswith("damage_"):
-            schade_raster = getattr(output, attr_name)
-            if schade_raster.exists():
-                # calculate the total damage per peilgebied
-                accum = schade_raster.sum_labels(label_raster=labels_raster, label_idx=labels_index)
-                # map the total damge and save it.
-                schade_gdf[f"{schade_raster.stem}"] = schade_gdf["index"].map(accum)  # map values to gdf
-    # sava the results.
-    output_file = output.schade_peilgebied
-    schade_gdf.to_file(
-        output_file.path,
-        driver="GPKG",
-    )
+
+    output_file = batch_fd.output.schade_peilgebied
+
+    # Bereken totale schade per peilgebied voor de twee gemaskerde schaderasters.
+    schade_raster = getattr(batch_fd.output, f"cw_schade_{scenario}")
+
+    # Calculate sum per region
+    accum = schade_raster.sum_labels(label_raster=labels_raster, label_idx=labels_index)
+
+    schade_gdf[f"cw_{mask_name}"] = schade_gdf["index"].map(accum)  # map values to gdf
+
+    schade_gdf["cw_tot"] = schade_gdf["cw_ws"] + schade_gdf["cw_mv"]
+
+    # schade_gdf = schade_gdf.loc[schade_gdf['cw_tot'] > 0.0]
+
     return schade_gdf
 
 
-calculate_schade_per_peilgebied_v6(output)
+for scenario in ["T0010", "T0100", "T1000"]:
+    create_schaderaster(scenario)
