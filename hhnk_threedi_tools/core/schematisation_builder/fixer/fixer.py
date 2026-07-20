@@ -1,0 +1,426 @@
+import json
+import logging
+import shutil
+import time
+import traceback
+from functools import partial
+from pathlib import Path
+from typing import Callable, Literal
+
+import geopandas as gpd
+import hhnk_research_tools as hrt
+import hydamo_validation.schemas as hydamo_validation_schemas
+import pandas as pd
+from core.schematisation_builder.fixer import hydamo_fixes
+from core.schematisation_builder.fixer.data import ExtendedHyDAMO, ExtendedLayersSummary, ExtendedResultSummary
+from hydamo_validation import logical_validation
+from hydamo_validation.datamodel import HyDAMO
+from hydamo_validation.datasets import DataSets
+from hydamo_validation.syntax_validation import (
+    datamodel_layers,
+    missing_layers,
+)
+from hydamo_validation.utils import Timer
+from hydamo_validation.validator import read_validation_rules
+
+import hhnk_threedi_tools.resources.schematisation_builder as schematisation_builder_resources
+
+OUTPUT_TYPES = ["geopackage"]
+LOG_LEVELS = Literal["INFO", "DEBUG"]
+SCHEMAS_PATH = hrt.get_pkg_resource_path(schematisation_builder_resources, "schemas")
+HYDAMO_SCHEMAS_PATH = hrt.get_pkg_resource_path(hydamo_validation_schemas, "hydamo")
+
+
+def _continue(message: str = "Would you like to proceed? (y/n): ") -> bool:
+    """Prompt the user to confirm or cancel. Loops until a valid 'y' or 'n' answer is given."""
+    while True:
+        choice = input(message).strip().lower()
+        if choice in ("y", "yes"):
+            return True
+        elif choice in ("n", "no"):
+            return False
+        else:
+            print("Please answer with 'y' or 'n'.")
+
+
+def pause_for_review(file_path: Path, logger: logging.Logger, result_summary: ExtendedResultSummary) -> None:
+    """
+    Pause execution for a manual user review, then continue or terminate.
+
+    Logs the path to the review geopackage and prompts the user to decide
+    whether to proceed. If the user cancels, updates ``result_summary`` and
+    raises ``SystemExit``.
+
+    Parameters
+    ----------
+    file_path : Path
+        Path to the review geopackage the user can inspect or edit.
+    logger : logging.Logger
+        Logger instance for status messages.
+    result_summary : ExtendedResultSummary
+        Summary object that records a warning when the user terminates.
+
+    Raises
+    ------
+    SystemExit
+        Raised when the user answers 'n' to the continue prompt.
+    """
+    logger.info("User review")
+    logger.info(f"Review: You can inspect or edit the review geopackage here: \n{file_path}")
+    logger.info("Review: Edit staged fixes manually by filling in values in the manual_overwrite columns.")
+    time.sleep(0.1)
+    if not _continue("Do you wish to proceed? Answering no will terminate the process. (y/n): "):
+        logger.info("Review: User does not want to proceed.")
+        result_summary.append_warning("Review: User has terminated the process during the review stage.")
+        result_summary.status = "terminated by user during review"
+        raise SystemExit("Process terminated by user during review.")
+
+
+def _read_schema(version: str, schemas_path: Path) -> dict:
+    """
+    Load the fix schema JSON for a given HyDAMO version.
+
+    Parameters
+    ----------
+    version : str
+        HyDAMO version string (e.g. "2.4").
+    schemas_path : Path
+        Directory containing ``fixes_<version>.json`` files.
+
+    Returns
+    -------
+    dict
+        Parsed JSON schema for the requested version.
+    """
+    schema_json = schemas_path.joinpath(rf"fixes_{version}.json").resolve()
+    with open(schema_json) as src:
+        schema = json.load(src)
+    return schema
+
+
+def _check_attributes(gdf: gpd.GeoDataFrame, attributes: list) -> None:
+    """
+    Verify that all string-valued attribute names exist as columns in ``gdf``.
+
+    Parameters
+    ----------
+    gdf : GeoDataFrame
+        The layer to validate against.
+    attributes : list
+        Attribute names or other values expected by a rule. Non-string items
+        are silently skipped.
+
+    Raises
+    ------
+    KeyError
+        If any string attribute is not present as a column in ``gdf``.
+    """
+    for i in attributes:
+        if isinstance(i, str):
+            if i not in gdf.columns:
+                raise KeyError(rf"'{i}' not in columns: {gdf.columns.to_list()}. Rule cannot be executed")
+
+
+def _init_logger(log_level: str):
+    """Init logger for validator."""
+    logger = logging.getLogger(__name__)
+    logger.setLevel(getattr(logging, log_level))
+    return logger
+
+
+def _add_log_file(logger: logging.Logger, log_file: Path):
+    """Add log-file to existing logger"""
+    fh = logging.FileHandler(log_file)
+    fh.setFormatter(logging.Formatter("%(asctime)s %(name)s %(levelname)s - %(message)s"))
+    fh.setLevel(logging.DEBUG)
+    logger.addHandler(fh)
+    return logger
+
+
+def _close_log_file(logger: logging.Logger):
+    """Remove log-file from existing logger"""
+    for h in logger.handlers:
+        h.close()
+        logger.removeHandler(h)
+
+
+def _log_to_results(log_file: Path, result_summary: ExtendedResultSummary) -> None:
+    """Read the log file and store its lines in ``result_summary.log``."""
+    result_summary.log = log_file.read_text().split("\n")
+
+
+def fixer(
+    output_types: list[str] = OUTPUT_TYPES,
+    log_level: Literal["INFO", "DEBUG"] = "INFO",
+    coverages: dict = {},
+) -> Callable:
+    """
+    Create a pre-configured callable for running the HyDAMO fixer.
+
+    Returns a partial of ``_fixer`` with the given settings bound. Call the
+    returned callable with a ``directory`` argument to run the fix process.
+
+    Parameters
+    ----------
+    output_types : list[str], optional
+        Output file formats to write. Supported options: ``"geopackage"``,
+        ``"geojson"``, ``"csv"``. Default is ``["geopackage"]``.
+    log_level : {'INFO', 'DEBUG'}, optional
+        Logging verbosity. Default is ``"INFO"``.
+    coverages : dict, optional
+        Coverage lookup, e.g. ``{"AHN": path_to_ahn_dir}``. Default is ``{}``.
+
+    Returns
+    -------
+    Callable
+        Partial of ``_fixer`` with the provided arguments pre-filled.
+    """
+
+    return partial(
+        _fixer,
+        output_types=output_types,
+        log_level=log_level,
+        coverages=coverages,
+    )
+
+
+def _fixer(
+    directory: Path,
+    output_types: list[str] = OUTPUT_TYPES,
+    log_level: Literal["INFO", "DEBUG"] = "INFO",
+    coverages: dict = {},
+    raise_error: bool = False,
+) -> tuple["ExtendedHyDAMO", "ExtendedLayersSummary", "ExtendedResultSummary"]:
+    """
+    Run the full HyDAMO fix pipeline on a prepared fix directory.
+
+    The directory must contain:
+    - ``datasets/HyDAMO_validated.gpkg``
+    - ``validationrules.json``
+    - ``results.gpkg`` (from a prior validation run)
+
+    The fix process proceeds in the following stages:
+    1. Fix-preparation: review layer is built and exported for manual inspection.
+    2. User review pause: the process halts so fixes can be checked or adjusted.
+    3. Fix execution: staged fixes (including any manual overwrites) are applied.
+    4. Export: the corrected HyDAMO geopackage and result JSON are written.
+
+    Parameters
+    ----------
+    directory : Path
+        Root directory containing the datasets, validation rules, and results.
+    output_types : list[str], optional
+        Output file formats to write. Default is ``["geopackage"]``.
+    log_level : {'INFO', 'DEBUG'}, optional
+        Logging verbosity. Default is ``"INFO"``.
+    coverages : dict, optional
+        Coverage lookup, e.g. ``{"AHN": path_to_ahn_dir}``. Default is ``{}``.
+    raise_error : bool, optional
+        If ``True``, re-raise exceptions instead of logging them and continuing.
+        Default is ``False``.
+
+    Returns
+    -------
+    tuple[ExtendedHyDAMO, ExtendedLayersSummary, ExtendedResultSummary]
+        The corrected datamodel, fix layer summary, and overall result summary.
+        On failure, returns ``(None, fix_summary, result_summary)``.
+    """
+    timer = Timer()
+    try:
+        results_path = None
+        dir_path = Path(directory)
+        logger = _init_logger(
+            log_level=log_level,
+        )
+
+        logger.info("init fixer")
+        date_check = pd.Timestamp.now().isoformat()
+        fix_summary = ExtendedLayersSummary(date_check=date_check)
+        result_summary = ExtendedResultSummary(date_check=date_check)
+
+        # check if all files are present
+        # create a results_path
+        results_permission_error = review_permission_error = False
+        if dir_path.exists():
+            review_path = dir_path.joinpath("review")
+            if review_path.exists():
+                try:
+                    shutil.rmtree(review_path)
+                except PermissionError:
+                    review_permission_error = True
+            review_path.mkdir(parents=True, exist_ok=True)
+            results_path = dir_path.joinpath("results")
+            if results_path.exists():
+                try:
+                    shutil.rmtree(results_path)
+                except PermissionError:
+                    results_permission_error = True
+            results_path.mkdir(parents=True, exist_ok=True)
+        else:
+            raise FileNotFoundError(f"{dir_path.absolute().resolve()} does not exist")
+
+        log_file = results_path.joinpath("fixer.log")
+        logger = _add_log_file(logger, log_file=log_file)
+        logger.info("start fixer")
+        if review_permission_error:
+            logger.warning(f"Kan pad {review_path} niet verwijderen. Dit kan later tot problemen leiden!")
+        if results_permission_error:
+            logger.warning(f"Kan pad {results_path} niet verwijderen. Dit kan later tot problemen leiden!")
+        dataset_path = dir_path.joinpath("datasets")
+        validation_rules_json = dir_path.joinpath("validationrules.json")
+        validation_results_gpkg = dir_path.joinpath("results.gpkg")
+        hydamo_gpkg = dataset_path.joinpath("HyDAMO_validated.gpkg")
+        missing_paths = []
+        for path in [dataset_path, validation_rules_json, validation_results_gpkg, hydamo_gpkg]:
+            if not path.exists():
+                missing_paths += [str(path)]
+        if missing_paths:
+            result_summary.error += [f"missing_paths: {','.join(missing_paths)}"]
+            raise FileNotFoundError(f"missing_paths: {','.join(missing_paths)}")
+        else:
+            validation_rules_sets = read_validation_rules(validation_rules_json, result_summary)
+            validation_rules_objects = validation_rules_sets["objects"]
+
+        # check if output-files are supported
+        unsupported_output_types = [item for item in output_types if item not in OUTPUT_TYPES]
+        if unsupported_output_types:
+            error_message = r"unsupported output types: " f"{','.join(unsupported_output_types)}"
+            result_summary.error += [error_message]
+            raise TypeError(error_message)
+
+        # set coverages
+        if coverages:
+            for key, item in coverages.items():
+                logical_validation.general_functions._set_coverage(key, item)
+
+        # start fixing
+        # read data-model
+        result_summary.status = "load data-model"
+        datasets = DataSets(dataset_path)
+        try:
+            hydamo_version = validation_rules_sets["hydamo_version"]
+            hydamo_schema_layers = HyDAMO(
+                version=hydamo_version,
+                schemas_path=HYDAMO_SCHEMAS_PATH,
+            ).layers
+            schema_layers_not_in_dataset = [i for i in hydamo_schema_layers if i not in datasets.layers]
+            datamodel = ExtendedHyDAMO.from_geopackage(
+                hydamo_path=hydamo_gpkg,
+                results_path=validation_results_gpkg,
+                rules_objects=validation_rules_objects,
+                version=hydamo_version,
+                ignored_layers=schema_layers_not_in_dataset,
+            )
+        except Exception as e:
+            result_summary.error = ["datamodel cannot be loaded (see exception)"]
+            raise e
+
+        # validate dataset syntax
+        result_summary.status = "fix-preparation (layers)"
+        result_summary.dataset_layers = datasets.layers
+
+        ## validate syntax of datasets on layers-level and append to result
+        logger.info("start fix-voorbereiding van object-lagen")
+        result_summary.missing_layers = missing_layers(datamodel.layers, datasets.layers)
+
+        ## validate valid_layers on fields-level and add them to data_model
+        result_summary.status = "fix-preparation (staging)"
+        fix_preparation_result = []
+
+        # do fix execution: apply fixes and export results
+        datamodel_check, fix_summary, result_summary = hydamo_fixes.execute(
+            datamodel,
+            fix_summary,
+            result_summary,
+            logger,
+            raise_error,
+        )
+        # do fix review: append result to fix_summary
+        result_summary.status = "fix-preparation (reviewing)"
+        fix_preparation_result = []
+        fix_summary, result_summary = hydamo_fixes.review(
+            datamodel_check,
+            fix_summary,
+            result_summary,
+            logger,
+            raise_error,
+        )
+        fix_layers = fix_summary.export(
+            results_path=review_path, gpkg_name="fix_summary.gpkg", output_types=OUTPUT_TYPES
+        )
+        fix_preparation_result = fix_layers
+
+        # user review: pause the process and allow the user to review fixes
+        result_summary.status = "fix-review (pause for review)"
+        pause_for_review(review_path / "fix_summary.gpkg", logger, result_summary)
+
+        # read fix review: review and prepare for fix execution
+        result_summary.status = "load fix summary"
+        logger.info("start inladen van fix summary")
+        fix_summary = ExtendedLayersSummary.from_geopackage(file_path=review_path / "fix_summary.gpkg")
+        fix_preparation_result = fix_summary.data_layers
+
+        # do fix execution: apply fixes and export results
+        result_summary.status = "fix execution"
+        logger.info("start toepassen fixes op object-lagen")
+        datamodel, fix_summary, result_summary = hydamo_fixes.execute(
+            datamodel,
+            fix_summary,
+            result_summary,
+            logger,
+            raise_error,
+        )
+        result_summary.status = "fix review (manual overwrites)"
+        logger.info("start fix review van object-lagen met handmatige aanpassingen")
+        fix_summary, result_summary = hydamo_fixes.review(
+            datamodel,
+            fix_summary,
+            result_summary,
+            logger,
+            raise_error,
+        )
+        fix_layers = fix_summary.export(
+            results_path=review_path, gpkg_name="fix_summary.gpkg", output_types=OUTPUT_TYPES
+        )
+
+        # finish validation and export results
+        logger.info("exporteren resultaten")
+        datamodel.to_geopackage(results_path / "HyDAMO_fixed.gpkg", use_schema=False)
+        result_summary.status = "export results"
+        result_summary.fix_layers = fix_layers
+        result_summary.error_layers = [i for i in datasets.layers if i.lower() not in fix_layers]
+        result_summary.prep_result = fix_preparation_result
+        result_summary.fix_result = [
+            i["object"] for i in validation_rules_sets["objects"] if i["object"] in fix_layers
+        ]
+        result_summary.success = True
+        result_summary.status = "finished"
+        result_summary.duration = timer.report()
+        logger.info(f"klaar in {result_summary.duration:.2f} seconden")
+
+        _log_to_results(log_file, result_summary)
+
+        result_summary.to_json(results_path, "fix_result.json")
+
+        _close_log_file(logger)
+
+        return datamodel, fix_summary, result_summary
+
+    except Exception as e:
+        stacktrace = rf"\n{traceback.format_exc(limit=0, chain=False)}".split("\n")
+        if result_summary.error is not None:
+            result_summary.error += stacktrace
+        else:
+            result_summary.error = stacktrace
+        if results_path is not None:
+            fix_layers = fix_summary.export(results_path, "fix_summary.gpkg", output_types)
+            _log_to_results(log_file, result_summary)
+            result_summary.to_json(results_path, "fix_result.json")
+        if raise_error:
+            raise e
+        else:
+            result_summary.to_dict()
+
+        _close_log_file(logger)
+
+        return None, fix_summary, result_summary

@@ -63,7 +63,10 @@ jobs:
         run: |
           $diff_validation = git diff -- hhnk_threedi_tools/resources/schematisation_builder/validation_rules.csv
           $diff_general = git diff -- hhnk_threedi_tools/resources/schematisation_builder/general_rules.csv
-          if (-not [string]::IsNullOrEmpty($diff_validation) -or -not [string]::IsNullOrEmpty($diff_general)) {
+          $diff_fix = git diff -- hhnk_threedi_tools/resources/schematisation_builder/fix_rules.csv
+          if (-not [string]::IsNullOrEmpty($diff_validation) -or 
+              -not [string]::IsNullOrEmpty($diff_general) -or
+              -not [string]::IsNullOrEmpty($diff_fix)) {
             "changed=true" >> $env:GITHUB_OUTPUT
           } else {
             "changed=false" >> $env:GITHUB_OUTPUT
@@ -77,6 +80,8 @@ jobs:
           git diff -- hhnk_threedi_tools/resources/schematisation_builder/validation_rules.csv || true
           Write-Host "Changes detected in general_rules.csv (if any):"
           git diff -- hhnk_threedi_tools/resources/schematisation_builder/general_rules.csv || true
+          Write-Host "Changes detected in fix_rules.csv (if any):"
+          git diff -- hhnk_threedi_tools/resources/schematisation_builder/fix_rules.csv || true
       
       # Auto-commit changes for both PRs and main
       - name: Commit and push changes
@@ -85,7 +90,9 @@ jobs:
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git add hhnk_threedi_tools/resources/schematisation_builder/validation_rules.csv hhnk_threedi_tools/resources/schematisation_builder/general_rules.csv
+          git add hhnk_threedi_tools/resources/schematisation_builder/validation_rules.csv 
+          git add hhnk_threedi_tools/resources/schematisation_builder/general_rules.csv
+          git add hhnk_threedi_tools/resources/schematisation_builder/fix_rules.csv
           git commit -m "chore: auto-update validation rules CSV [skip ci]"
           git push
       
@@ -93,7 +100,7 @@ jobs:
         if: steps.check_bot.outputs.skip == 'false' && steps.check_changes.outputs.changed == 'false'
         shell: pwsh
         run: |
-          Write-Host "✅ validation_rules.csv and general_rules.csv are up-to-date!"
+          Write-Host "✅ validation_rules.csv, general_rules.csv, and fix_rules.csv are up-to-date!"
       
       - name: Skipped message
         if: steps.check_bot.outputs.skip == 'true'
