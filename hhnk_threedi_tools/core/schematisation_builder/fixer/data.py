@@ -4,15 +4,16 @@ from pathlib import Path
 import fiona
 import geopandas as gpd
 import numpy as np
-from core.schematisation_builder.fixer.mapping import (
+from hydamo_validation.datamodel import HyDAMO
+from hydamo_validation.summaries import LayersSummary, ResultSummary
+from hydamo_validation.utils import normalize_fiona_schema, read_geopackage
+
+from hhnk_threedi_tools.core.schematisation_builder.fixer.mapping import (
     _fix_iterations,
     _validation_ids,
     _validation_iterations,
     _validation_mapping,
 )
-from hydamo_validation.datamodel import HyDAMO
-from hydamo_validation.summaries import LayersSummary, ResultSummary
-from hydamo_validation.utils import normalize_fiona_schema, read_geopackage
 
 OUTPUT_TYPES = ["geopackage", "geojson", "csv"]
 

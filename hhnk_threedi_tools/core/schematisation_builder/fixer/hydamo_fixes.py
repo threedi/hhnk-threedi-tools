@@ -4,7 +4,6 @@ from dataclasses import dataclass
 import geopandas as gpd
 import numpy as np
 import pandas as pd
-from core.schematisation_builder.fixer.data import ExtendedHyDAMO, ExtendedLayersSummary, ExtendedResultSummary
 from hhnk_research_tools.logging import logging
 from hydamo_validation.logical_validation import (
     _add_join_gdf,
@@ -16,6 +15,12 @@ from hydamo_validation.logical_validation import (
     _process_topologic_function,
 )
 from shapely.geometry import LineString, Point, Polygon
+
+from hhnk_threedi_tools.core.schematisation_builder.fixer.data import (
+    ExtendedHyDAMO,
+    ExtendedLayersSummary,
+    ExtendedResultSummary,
+)
 
 GEOTYPE_MAPPING = {LineString: "LineString", Point: "Point", Polygon: "Polygon"}
 SUMMARY_COLUMNS = [
