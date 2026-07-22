@@ -20,7 +20,7 @@ jobs:
     strategy:
       matrix:
         os: ["windows-latest", ]
-        python-version: [ "py39", "default"]
+        python-version: [ "default"]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
