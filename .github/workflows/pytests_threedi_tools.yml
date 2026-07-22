@@ -41,7 +41,7 @@ jobs:
           pixi run ruff format --check --force-exclude
 
       - name: Run Tests
-        run: pixi run tests tests/
+        run: pixi run -e ${{ matrix.python-version }} tests tests/
         env: 
           SKIP_DATABASE: "1"
 
