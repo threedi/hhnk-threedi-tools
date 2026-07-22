@@ -421,7 +421,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/win-64/zlib-ng-2.3.3-h0261ad2_1.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/zstd-1.5.7-h534d264_6.conda
       - pypi: .
-      - pypi: git+https://github.com/hhnk/HyDAMOValidatieModule.git?rev=jz-hydamo-fixer#bbe0567230a6aadc8b518c8a0c7b96466112629f
+      - pypi: git+https://github.com/hhnk/HyDAMOValidatieModule.git?rev=main#79f4273627ee19df7a14fa7ffe987a6079d46dcb
       - pypi: https://files.pythonhosted.org/packages/03/c1/0976b235cf29ead553e22f2fb6385a8252b533715e00d0ae52ed7b900582/h5py-3.16.0-cp312-cp312-win_amd64.whl
       - pypi: https://files.pythonhosted.org/packages/0d/fe/6bea5c9162869c5beba5d9c8abbed835ec85bf1ec1fba05a3822325c45f3/build-1.5.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/21/89/5eb2d0d66e4814970708d9f858be6c9fee9c305a11f6b3fe4d7f10324063/threedigrid_builder-1.25.0-cp312-cp312-win_amd64.whl
@@ -11807,7 +11807,7 @@ packages:
 - pypi: .
   name: hhnk-threedi-tools
   requires_python: '>=3.9'
-- pypi: git+https://github.com/hhnk/HyDAMOValidatieModule.git?rev=jz-hydamo-fixer#bbe0567230a6aadc8b518c8a0c7b96466112629f
+- pypi: git+https://github.com/hhnk/HyDAMOValidatieModule.git?rev=main#79f4273627ee19df7a14fa7ffe987a6079d46dcb
   name: hydamo-validation
   version: 1.4.0
   requires_dist:
