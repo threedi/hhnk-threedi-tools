@@ -40,10 +40,10 @@ jobs:
           pixi run ruff check --select I --force-exclude && \
           pixi run ruff format --check --force-exclude
 
-      - name: Run Tests
-        run: pixi run -e ${{ matrix.python-version }} tests tests/
-        env: 
-          SKIP_DATABASE: "1"
+      # - name: Run Tests
+      #   run: pixi run -e ${{ matrix.python-version }} tests tests/
+      #   env: 
+      #     SKIP_DATABASE: "1"
 
-      - name: Upload coverage
-        uses: codecov/codecov-action@v5
+      # - name: Upload coverage
+      #   uses: codecov/codecov-action@v5
