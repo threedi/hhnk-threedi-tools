@@ -11,8 +11,8 @@ import geopandas as gpd
 import hhnk_research_tools as hrt
 import hydamo_validation.schemas as hydamo_validation_schemas
 import pandas as pd
-from core.schematisation_builder.fixer import hydamo_fixes
-from core.schematisation_builder.fixer.data import ExtendedHyDAMO, ExtendedLayersSummary, ExtendedResultSummary
+from hhnk_threedi_tools.core.schematisation_builder.fixer import hydamo_fixes
+from hhnk_threedi_tools.core.schematisation_builder.fixer.data import ExtendedHyDAMO, ExtendedLayersSummary, ExtendedResultSummary
 from hydamo_validation import logical_validation
 from hydamo_validation.datamodel import HyDAMO
 from hydamo_validation.datasets import DataSets

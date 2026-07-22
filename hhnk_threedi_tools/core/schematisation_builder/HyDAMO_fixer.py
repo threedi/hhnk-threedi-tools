@@ -2,8 +2,9 @@ import shutil
 from pathlib import Path
 
 import hhnk_research_tools as hrt
-from core.schematisation_builder.fixer.data import ExtendedHyDAMO
-from core.schematisation_builder.fixer.fixer import fixer
+
+from hhnk_threedi_tools.core.schematisation_builder.fixer.data import ExtendedHyDAMO
+from hhnk_threedi_tools.core.schematisation_builder.fixer.fixer import fixer
 
 
 def fix_hydamo(
