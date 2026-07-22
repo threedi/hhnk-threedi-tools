@@ -423,10 +423,10 @@ mask = mask > 0
 # %%
 for mask_type, mask_name in zip(["plas", "overlast"], ["mv", "ws"]):
     schade_raster = getattr(batch_fd.output, f"cw_schade_{mask_type}")
-    output = batch_fd.output.full_path(f"cw_schade_{mask_type}_correctie.tif")
+    output_dir = batch_fd.output.full_path(f"cw_schade_{mask_type}_correctie.tif")
     array = schade_raster._read_array()
     array[mask] = raster.nodata
-    hrt.save_raster_array_to_tiff(output, array, raster.nodata, raster.metadata)
+    hrt.save_raster_array_to_tiff(output_dir, array, raster.nodata, raster.metadata)
 
 # %%
 schade_raster_corr_file = {
@@ -468,11 +468,18 @@ for T in [10, 100, 1000]:
 # %% [Markdown]
 
 # folder = Folders(r"H:\personen\rderonde\bwn_4_Grootlimmerpolder")
-# Schaderasters per herhalingstijd
-output = folder.threedi_results.batch["Referentie_update"].output
+# Schaderasters per herhalingstijd [optioneel]
+revisie = "Referentie_update"
+
+if revisie not in [f.stem for f in folder.threedi_results.batch.revisions]:
+    raise ValueError(
+        f"Revisie {revisie} niet gevonden in batch resultaten. Beschikbare revisies: {[f.stem for f in folder.threedi_results.batch.revisions]}"
+    )
+
+output_dir = folder.threedi_results.batch[revisie].output
 
 
-def create_schaderaster(output: Folders) -> None:
+def create_schaderaster(output_dir: Folders) -> None:
     """Generate damage rasters from depth rasters in the given output.
 
     Iterates over attributes of the output batch, finds depth rasters whose
@@ -490,12 +497,16 @@ def create_schaderaster(output: Folders) -> None:
         "dmg_type": "gem",
     }
 
-    for attr_name in dir(output):
+    for attr_name in dir(output_dir):
         # get attributes from  the bach and check if they exist.
         if attr_name.startswith("depth"):
-            depth_raster = getattr(output, attr_name)
+            depth_raster = getattr(output_dir, attr_name)
+            if "inundatiediepte" not in depth_raster.stem:
+                raise ValueError("Expected 'inundatiediepte' in depth raster filename")
+
             if depth_raster.exists():
                 # replace the output name with schade
+
                 name = depth_raster.stem.replace("inundatiediepte", "schade")
                 # create the damage raster file path
                 damage_file = hrt.Raster(depth_raster.path.with_stem(f"{name}"))
@@ -512,13 +523,13 @@ def create_schaderaster(output: Folders) -> None:
                     wss.run(output_raster=damage_file, calculation_type="sum", overwrite=False)
 
 
-create_schaderaster(output)
+create_schaderaster(output_dir)
 
 # %% [Markdown]
 # Schade per peilgebied voor t10,t100 en t1000
 
 
-def calculate_schade_per_peilgebied(output: Folders) -> gpd.GeoDataFrame:
+def calculate_schade_per_peilgebied(output_dir: Folders) -> gpd.GeoDataFrame:
     """Calculate total damage per peilgebied from generated damage rasters.
 
     Loads the peilgebieden vector data and label raster, then sums damage values
@@ -527,21 +538,21 @@ def calculate_schade_per_peilgebied(output: Folders) -> gpd.GeoDataFrame:
     """
 
     # load peilgebiede and schaderasters intdex
-    schade_gdf = output.temp.peilgebieden.load()
-    labels_raster = output.temp.peilgebieden_damage
+    schade_gdf = output_dir.temp.peilgebieden.load()
+    labels_raster = output_dir.temp.peilgebieden_damage
     labels_index = schade_gdf["index"].values
     # get the raster attibutes from the bacht output and loop to calculate totals.
-    for attr_name in dir(output):
+    for attr_name in dir(output_dir):
         # get attributes from  the bach and check if they exist.
         if attr_name.startswith("damage_"):
-            schade_raster = getattr(output, attr_name)
+            schade_raster = getattr(output_dir, attr_name)
             if schade_raster.exists():
                 # calculate the total damage per peilgebied
                 accum = schade_raster.sum_labels(label_raster=labels_raster, label_idx=labels_index)
                 # map the total damge and save it.
                 schade_gdf[f"{schade_raster.stem}"] = schade_gdf["index"].map(accum)  # map values to gdf
     # sava the results.
-    output_file = output.schade_peilgebied
+    output_file = output_dir.schade_peilgebied
     schade_gdf.to_file(
         output_file.path,
         driver="GPKG",
@@ -549,4 +560,4 @@ def calculate_schade_per_peilgebied(output: Folders) -> gpd.GeoDataFrame:
     return schade_gdf
 
 
-calculate_schade_per_peilgebied(output)
+calculate_schade_per_peilgebied(output_dir)
