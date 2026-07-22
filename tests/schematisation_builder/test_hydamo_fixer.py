@@ -10,8 +10,6 @@ import hhnk_research_tools as hrt
 import pytest
 
 import hhnk_threedi_tools.resources.schematisation_builder as schematisation_builder_resources
-from hhnk_threedi_tools.core.schematisation_builder.HyDAMO_fixer import fix_hydamo
-from hhnk_threedi_tools.core.schematisation_builder.HyDAMO_validator import validate_hydamo
 from tests.config import TEMP_DIR, TEST_DIRECTORY
 
 LAYERS = ["duikersifonhevel"]
@@ -79,6 +77,9 @@ def apply_test_settings_to_validationrules(validation_rules_json_path: Path) -> 
 
 @pytest.mark.skipif(sys.version_info < (3, 12), reason="Requires Python 3.12 or higher")
 def test_hydamo_fixer():
+    from hhnk_threedi_tools.core.schematisation_builder.HyDAMO_fixer import fix_hydamo
+    from hhnk_threedi_tools.core.schematisation_builder.HyDAMO_validator import validate_hydamo
+
     hydamo_file_path_validated = TEST_DIRECTORY / "schematisation_builder" / "HyDAMO_validated.gpkg"
 
     if RUN_VALIDATION:
