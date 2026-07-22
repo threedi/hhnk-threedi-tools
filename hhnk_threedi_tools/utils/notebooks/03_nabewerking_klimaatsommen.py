@@ -497,30 +497,23 @@ def create_schaderaster(output_dir: Folders) -> None:
         "dmg_type": "gem",
     }
 
-    for attr_name in dir(output_dir):
-        # get attributes from  the bach and check if they exist.
-        if attr_name.startswith("depth"):
-            depth_raster = getattr(output_dir, attr_name)
-            if "inundatiediepte" not in depth_raster.stem:
-                raise ValueError("Expected 'inundatiediepte' in depth raster filename")
+    for depth_raster in output_dir.path.glob("inundatiediepte_*.tif"):
+        # replace the output name with schade
+        name = depth_raster.stem.replace("inundatiediepte", "schade")
 
-            if depth_raster.exists():
-                # replace the output name with schade
+        # create the damage raster file path
+        damage_file = hrt.Raster(depth_raster.with_stem(name))
 
-                name = depth_raster.stem.replace("inundatiediepte", "schade")
-                # create the damage raster file path
-                damage_file = hrt.Raster(depth_raster.path.with_stem(f"{name}"))
+        if not damage_file.path.exists():
+            # Create de waterscahdeschatter object and run calculation
+            wss = hrt.Waterschadeschatter(
+                depth_file=depth_raster,
+                landuse_file=r"\\corp.hhnk.nl\data\Hydrologen_data\Data\01.basisgegevens\rasters\landgebruik\landuse2019_tiles\combined_rasters.vrt",
+                wss_settings=wss_settings,
+                min_block_size=1024,
+            )
 
-                if not damage_file.path.exists():
-                    # Create de waterscahdeschatter object and run calculation
-                    wss = hrt.Waterschadeschatter(
-                        depth_file=depth_raster,
-                        landuse_file=r"\\corp.hhnk.nl\data\Hydrologen_data\Data\01.basisgegevens\rasters\landgebruik\landuse2019_tiles\combined_rasters.vrt",
-                        wss_settings=wss_settings,
-                        min_block_size=1024,
-                    )
-
-                    wss.run(output_raster=damage_file, calculation_type="sum", overwrite=False)
+            wss.run(output_raster=damage_file, calculation_type="sum", overwrite=False)
 
 
 create_schaderaster(output_dir)
@@ -542,15 +535,11 @@ def calculate_schade_per_peilgebied(output_dir: Folders) -> gpd.GeoDataFrame:
     labels_raster = output_dir.temp.peilgebieden_damage
     labels_index = schade_gdf["index"].values
     # get the raster attibutes from the bacht output and loop to calculate totals.
-    for attr_name in dir(output_dir):
-        # get attributes from  the bach and check if they exist.
-        if attr_name.startswith("damage_"):
-            schade_raster = getattr(output_dir, attr_name)
-            if schade_raster.exists():
-                # calculate the total damage per peilgebied
-                accum = schade_raster.sum_labels(label_raster=labels_raster, label_idx=labels_index)
-                # map the total damge and save it.
-                schade_gdf[f"{schade_raster.stem}"] = schade_gdf["index"].map(accum)  # map values to gdf
+    for schade_raster in output_dir.path.glob("schade_*.tif"):
+        # calculate the total damage per peilgebied
+        accum = schade_raster.sum_labels(label_raster=labels_raster, label_idx=labels_index)
+        # map the total damge and save it.
+        schade_gdf[f"{schade_raster.stem}"] = schade_gdf["index"].map(accum)  # map values to gdf
     # sava the results.
     output_file = output_dir.schade_peilgebied
     schade_gdf.to_file(
