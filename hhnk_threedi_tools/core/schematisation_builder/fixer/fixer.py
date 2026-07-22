@@ -11,8 +11,6 @@ import geopandas as gpd
 import hhnk_research_tools as hrt
 import hydamo_validation.schemas as hydamo_validation_schemas
 import pandas as pd
-from hhnk_threedi_tools.core.schematisation_builder.fixer import hydamo_fixes
-from hhnk_threedi_tools.core.schematisation_builder.fixer.data import ExtendedHyDAMO, ExtendedLayersSummary, ExtendedResultSummary
 from hydamo_validation import logical_validation
 from hydamo_validation.datamodel import HyDAMO
 from hydamo_validation.datasets import DataSets
@@ -24,6 +22,12 @@ from hydamo_validation.utils import Timer
 from hydamo_validation.validator import read_validation_rules
 
 import hhnk_threedi_tools.resources.schematisation_builder as schematisation_builder_resources
+from hhnk_threedi_tools.core.schematisation_builder.fixer import hydamo_fixes
+from hhnk_threedi_tools.core.schematisation_builder.fixer.data import (
+    ExtendedHyDAMO,
+    ExtendedLayersSummary,
+    ExtendedResultSummary,
+)
 
 OUTPUT_TYPES = ["geopackage"]
 LOG_LEVELS = Literal["INFO", "DEBUG"]

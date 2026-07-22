@@ -243,7 +243,7 @@ def _validate_no_overlapping_segments(output_file: Path, logger):
         logger.info(f"✓ No overlapping segments found (checked {len(waterkering)} segments)")
 
 
-@pytest.mark.skip(reason="On Github tests take 6h.")
+@pytest.mark.skip(reason="On Github tests take 6h. Disabled.")
 def test_peilgebied_converter():
     """Test PeilgebiedConverter with all validations in a single run."""
     logger = hrt.logging.get_logger(__name__)
