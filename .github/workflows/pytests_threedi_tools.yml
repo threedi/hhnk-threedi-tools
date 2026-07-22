@@ -37,11 +37,11 @@ jobs:
       - name: Run ruff
         shell: bash
         run: |
-          pixi run -e py39 ruff check --select I --force-exclude && \
-          pixi run -e py39 ruff format --check --force-exclude
+          pixi run ruff check --select I --force-exclude && \
+          pixi run ruff format --check --force-exclude
 
       - name: Run Tests
-        run: pixi run -e py39 tests tests/
+        run: pixi run tests tests/
         env: 
           SKIP_DATABASE: "1"
 
