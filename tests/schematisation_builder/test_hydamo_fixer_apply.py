@@ -9,17 +9,16 @@ import pytest
 from tests.config import TEMP_DIR, TEST_DIRECTORY
 
 LAYERS = ["duikersifonhevel"]
-temp_dir_out = TEMP_DIR / f"temp_Fixer1_converter_{hrt.current_time(date=True)}"
 
 
 # test for creation of summary validation and fix report gpkg
 @pytest.mark.skipif(sys.version_info < (3, 12), reason="Requires Python 3.12 or higher")
-def test_creation_validation_fixes_summary():
+def test_apply_validation_fixes():
     from hhnk_threedi_tools.core.schematisation_builder.HyDAMO_fixer import HyDAMOFixer
 
     # define paths
     hydamo_file_path = TEST_DIRECTORY / "schematisation_builder" / "HyDAMO.gpkg"
-    validation_directory_path = TEMP_DIR / f"temp_HyDAMO_Fixer1_ValFix_summary_{hrt.current_time(date=True)}"
+    validation_directory_path = TEMP_DIR / f"temp_hydamo_fixer_apply_fixes_{hrt.current_time(date=True)}"
 
     # create folder results and fix_phase
     (validation_directory_path / "results").mkdir(parents=True, exist_ok=True)
@@ -34,39 +33,23 @@ def test_creation_validation_fixes_summary():
         hydamo_file_path=hydamo_file_path,
         validation_directory_path=validation_directory_path,
     )
-
-    # act
     fixer.create_validation_fix_reports()
+    fixer.execute()
 
     # assert
-    report_gpkg_path = validation_directory_path / "fix_phase" / "validaton_fix_overview.gpkg"
-    assert report_gpkg_path.exists()
+    hydamo_fixed_gpkg_path = validation_directory_path / "results" / "HyDAMO_fix.gpkg"
+    assert hydamo_fixed_gpkg_path.exists()
 
     # check if expected layers are in report gpkg
-    report_layers = fiona.listlayers(report_gpkg_path)
-
-    # TODO: add more layers when more layers are in fixconfig
+    fix_layers = fiona.listlayers(hydamo_fixed_gpkg_path)
     expected_layers = LAYERS
     for layer in expected_layers:
-        assert layer in report_layers
+        assert layer in fix_layers
     # check if expected columns are in one of the layers
-    report_gdf = gpd.read_file(report_gpkg_path, layer="duikersifonhevel")
-    expected_columns = [
-        "code",
-        "valid",
-        "invalid_critical",
-        "invalid_non_critical",
-        "ignored",
-        "geometry",
-        "hoogtebinnenonderkantbov",
-        "validation_sum_hoogtebinnenonderkantbov",
-        "fixes_hoogtebinnenonderkantbov",
-        "manual_overwrite_hoogtebinnenonderkantbov",
-    ]
-    for col in expected_columns:
-        assert col in report_gdf.columns
+    fix_gdf = gpd.read_file(hydamo_fixed_gpkg_path, layer="duikersifonhevel")
+    assert "is_usable" in fix_gdf.columns
 
 
 # %%
 if __name__ == "__main__":
-    test_creation_validation_fixes_summary()
+    test_apply_validation_fixes()

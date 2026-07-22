@@ -5,7 +5,7 @@ from pathlib import Path
 import fiona
 import geopandas as gpd
 import hhnk_research_tools as hrt
-from hydamo_validation import validator
+from hydamo_validation import datamodel, validator
 from shapely import LineString, MultiLineString, MultiPoint, MultiPolygon, Point, Polygon
 
 from .utils.hydamo_validation_styler import HyDAMOValidationStyler
@@ -19,7 +19,7 @@ def validate_hydamo(
     coverages_dict: dict,
     output_types: list[str] = ["geopackage", "csv", "geojson"],
     logger=None,
-) -> dict:
+) -> tuple[datamodel.HyDAMO, dict]:
     r"""
     Validate the HyDAMO file
 
@@ -78,4 +78,4 @@ def validate_hydamo(
         )
         validation_styler.save_to_gpkg()
 
-    return result_summary.to_dict()
+    return datamodel, result_summary.to_dict()
