@@ -4,13 +4,13 @@ RAIN_SETTINGS = {}
 
 # blok= 2 days of continuous rain
 RAIN_SETTINGS["blok"] = {}
-RAIN_SETTINGS["blok"]["simulation_duration"] = "48*3600"
+RAIN_SETTINGS["blok"]["simulation_duration"] = "{}*3600"
 RAIN_SETTINGS["blok"]["rain_offset"] = "0"
 RAIN_SETTINGS["blok"]["rain_duration"] = "48*3600"
 
 # piek=2 hours of rain in a 2 day simulation
 RAIN_SETTINGS["piek"] = {}
-RAIN_SETTINGS["piek"]["simulation_duration"] = "48*3600"
+RAIN_SETTINGS["piek"]["simulation_duration"] = "{}*3600"
 RAIN_SETTINGS["piek"]["rain_offset"] = "0"
 RAIN_SETTINGS["piek"]["rain_duration"] = "2*3600"
 
