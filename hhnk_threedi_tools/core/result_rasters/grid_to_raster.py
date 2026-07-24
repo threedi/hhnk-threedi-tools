@@ -513,5 +513,44 @@ if __name__ == "__main__":
             overwrite=True,
         )
     print("Done.")
+#%%
+# from hhnk_threedi_tools import Folders
+import os
+OVERWRITE = True
+
+folder_path = r"H:\03.resultaten\Normering Regionale Keringen\output\IPO_SBHZ_JA_WIP_DONE\IPO_SBHZ_72_JA\02_WSS"
+# folder = Folders(folder_path)
+threedi_result = os.path.join(folder_path, 'grid_raw_test.gpkg')
+
+# grid_gdf = gpd.read_file(threedi_result.path/"grid_raw.gpkg", driver="GPKG")
+grid_gdf = gpd.read_file(threedi_result, driver="GPKG")
+volume_column = "vol_max"
+
+if "vol_max" not in grid_gdf.columns:
+    volume_column = "vol_netcdf_m3"
+
+gdf = grid_gdf[grid_gdf[volume_column] > 0]
+dem_path = r"H:\03.resultaten\Normering Regionale Keringen\output\IPO_SBHZ_JA_WIP_DONE\IPO_SBHZ_72_JA\02_WSS\IPO_SBHZ_72_JA_dem_clip.tif"
+chunksize = 1024  # adjust based on available memory; None for no chunking (may cause MemoryError)
+calculator_kwargs = {
+    "dem_path": dem_path,
+    "grid_gdf": gdf,
+    "wlvl_column": "wlvl_max",
+    "interpolator_type": "linear",  # change to "linear"  to use original Delaunay otherwise use "idw"
+}
+
+# Init calculator
+with GridToWaterLevel(**calculator_kwargs) as self:
+    self.run(output_file=os.path.join(folder_path,("wlvl_orig_linear.tif")), chunksize=chunksize, overwrite=OVERWRITE)
+
+with GridToWaterDepth(
+    dem_path=dem_path,
+    wlvl_path=os.path.join(folder_path, "wlvl_orig_linear.tif"),
+) as raster_calc:
+    wdepth_raster = raster_calc.run(
+        output_file=os.path.join(folder_path, "wdepth_orig_linear.tif"),
+        overwrite=True,
+    )
+print("Done.")
 
 # %%
