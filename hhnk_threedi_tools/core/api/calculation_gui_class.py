@@ -361,6 +361,28 @@ class StartCalculationWidgets:
     class BatchRainSchemaWidgets:
         def __init__(self):
             # Searching for the schema on 3Di servers.
+
+            self.custom_simulation_duration_toggle = widgets.ToggleButton(
+                value=False,
+                description="Custom simulation duration",
+                icon="plus",
+                layout=item_layout(grid_area="batch_custom_duration_toggle"),
+            )
+
+            self.simulation_duration_label = widgets.Label(
+                "Simulation duration [hours]:",
+                layout=item_layout(grid_area="batch_simulation_duration_label"),
+            )
+
+            self.simulation_duration_widget = widgets.BoundedIntText(
+                value=48,
+                min=1,
+                max=1000,
+                step=1,
+                disabled=True,
+                layout=item_layout(grid_area="batch_simulation_duration_widget"),
+            )
+
             self.label = widgets.HTML(
                 "<b>4. Select scenarios to be run</b>",
                 layout=item_layout(grid_area="batch_scenario_label"),
@@ -626,6 +648,18 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
                 self.model.revision_dropdown.value = self.vars.revision_dropdown_viewlist[0]
 
             self.update_organisations()
+
+        def toggle_custom_simulation_duration(change):
+            enabled = change["new"]
+
+            self.batch.simulation_duration_widget.disabled = not enabled
+
+            self.batch.custom_simulation_duration_toggle.icon = "check" if enabled else "plus"
+
+        self.batch.custom_simulation_duration_toggle.observe(
+            toggle_custom_simulation_duration,
+            names="value",
+        )
 
         # Search revisions
         def on_select_schematisation(selected_schematisation):
@@ -1016,6 +1050,9 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
             self.add_feedback(
                 "INFO", f"Starting simulations.\nOutput wil be stored in {self.vars.output_folder_batch}"
             )
+
+            simulation_duration = self.batch.simulation_duration_widget.value * 3600
+
             for rt, gxg, rs, i in self.loop_batch_selection():
                 shortname = f"{rt}_{gxg}_{rs}"
 
@@ -1031,12 +1068,17 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
 
                 self.vars.sqlite_path_batch[shortname] = sim.download_sqlite()
 
+                if self.batch.custom_simulation_duration_toggle.value:
+                    simulation_duration = self.batch.simulation_duration_widget.value * 3600
+                else:
+                    simulation_duration = eval(RAIN_SETTINGS[rt]["simulation_duration"])
+
                 sim.create(
                     output_folder=self.vars.output_folder_batch,
                     simulation_name=batch_scenario_names[shortname],
                     model_id=self.selected_threedimodel_id_gxg(gxg),
                     organisation_uuid=self.selected_organisation_id,
-                    sim_duration=eval(RAIN_SETTINGS[rt]["simulation_duration"]),
+                    sim_duration=simulation_duration,
                 )
 
                 # Load data from sqlite
@@ -1851,6 +1893,9 @@ class StartCalculationGui:
                 self.w.batch.rain_label_box,
                 self.w.batch.scenario_box,
                 self.w.batch.rain_type_box,
+                self.w.batch.custom_simulation_duration_toggle,
+                self.w.batch.simulation_duration_label,
+                self.w.batch.simulation_duration_widget,
                 self.w.output.label,
                 self.w.output.folder_label,
                 # self.w.output.folder_value,
@@ -1891,6 +1936,8 @@ class StartCalculationGui:
 '. . . . . . organisation_label organisation_box organisation_box'
 '. batch_scenario_label batch_scenario_label batch_scenario_label batch_scenario_label . output_label output_label output_label'
 '. . batch_rain_type_box batch_rain_type_box batch_rain_type_box . output_folder_label output_folder_value_batch output_folder_value_batch'
+'. batch_custom_duration_toggle batch_custom_duration_toggle batch_custom_duration_toggle batch_custom_duration_toggle . output_folder_label output_folder_value_batch output_folder_value_batch'
+'. batch_simulation_duration_label batch_simulation_duration_label batch_simulation_duration_widget batch_simulation_duration_widget . output_folder_label output_folder_value_batch output_folder_value_batch'
 '. . gxg_label_box gxg_label_box gxg_label_box . output_subfolder_batch_label output_subfolder_batch_value output_subfolder_batch_value'
 '. rain_label_box batch_scenario_box batch_scenario_box batch_scenario_box . calc_settings_label calc_settings_label calc_settings_label'
 '. rain_label_box batch_scenario_box batch_scenario_box batch_scenario_box . calc_settings_basic_processing calc_settings_damage_processing .'
@@ -1934,7 +1981,6 @@ class StartCalculationGui:
         scenarios["model_type"] = ""
         scenarios["api_data"] = {}  # API call
         scenarios["api_data_json"] = ""
-
         # Fetch the first folder
         scenarios["folder"] = Folders(self.main_folder, create=False)
         return scenarios
@@ -1942,7 +1988,7 @@ class StartCalculationGui:
 
 if __name__ == "__main__":
     data = {
-        "polder_folder": "E:\\02.modellen\\model_test_v2",
+        "polder_folder": "E:\\02.modellen\\castricum",
         "api_keys_path": rf"{os.getenv('APPDATA')}\3Di\QGIS3\profiles\default\python\plugins\hhnk_threedi_plugin\api_key.txt",
     }
     self = StartCalculationGui(data=data)
@@ -1951,8 +1997,8 @@ if __name__ == "__main__":
 
     # display(self.w.batch.scenario_box)
 
-    self.widgets.model.schema_name_widget.value = "model_test"
-    # self.widgets.model.schema_name_widget.value='katvoed'
+    # self.widgets.model.schema_name_widget.value = "model_test"
+    self.widgets.model.schema_name_widget.value='castricum'
 
 # %%
 
