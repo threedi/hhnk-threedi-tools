@@ -1998,7 +1998,7 @@ if __name__ == "__main__":
     # display(self.w.batch.scenario_box)
 
     # self.widgets.model.schema_name_widget.value = "model_test"
-    self.widgets.model.schema_name_widget.value='castricum'
+    self.widgets.model.schema_name_widget.value = "castricum"
 
 # %%
 
