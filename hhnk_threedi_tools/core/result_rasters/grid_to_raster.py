@@ -513,14 +513,15 @@ if __name__ == "__main__":
             overwrite=True,
         )
     print("Done.")
-#%%
+# %%
 # from hhnk_threedi_tools import Folders
 import os
+
 OVERWRITE = True
 
 folder_path = r"H:\03.resultaten\Normering Regionale Keringen\output\IPO_SBHZ_JA_WIP_DONE\IPO_SBHZ_72_JA\02_WSS"
 # folder = Folders(folder_path)
-threedi_result = os.path.join(folder_path, 'grid_raw_test.gpkg')
+threedi_result = os.path.join(folder_path, "grid_raw_test.gpkg")
 
 # grid_gdf = gpd.read_file(threedi_result.path/"grid_raw.gpkg", driver="GPKG")
 grid_gdf = gpd.read_file(threedi_result, driver="GPKG")
@@ -541,7 +542,7 @@ calculator_kwargs = {
 
 # Init calculator
 with GridToWaterLevel(**calculator_kwargs) as self:
-    self.run(output_file=os.path.join(folder_path,("wlvl_orig_linear.tif")), chunksize=chunksize, overwrite=OVERWRITE)
+    self.run(output_file=os.path.join(folder_path, ("wlvl_orig_linear.tif")), chunksize=chunksize, overwrite=OVERWRITE)
 
 with GridToWaterDepth(
     dem_path=dem_path,
