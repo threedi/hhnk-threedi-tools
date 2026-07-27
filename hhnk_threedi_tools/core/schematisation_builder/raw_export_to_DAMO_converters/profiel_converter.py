@@ -301,9 +301,9 @@ class ProfielConverter(RawExportToDAMOConverter):
 
         self.data.profielpunt[column_name] = pd.to_numeric(self.data.profielpunt[column_name], errors="coerce")
         self.data.profielpunt["geometry"] = self.data.profielpunt.apply(
-            lambda row: Point(row.geometry.x, row.geometry.y, row[column_name])
-            if pd.notna(row[column_name])
-            else row.geometry,
+            lambda row: (
+                Point(row.geometry.x, row.geometry.y, row[column_name]) if pd.notna(row[column_name]) else row.geometry
+            ),
             axis=1,
         )
 
@@ -335,7 +335,7 @@ class ProfielConverter(RawExportToDAMOConverter):
                 overlap = intersection.length
                 if overlap > max_length:
                     max_length = overlap
-                    best_peilgebied_id = peil_row["objectid"]
+                    best_peilgebied_id = peil_row["globalid"]
             if best_peilgebied_id is not None:
                 hydroobject_to_peilgebied[idx] = best_peilgebied_id
 

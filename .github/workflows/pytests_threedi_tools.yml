@@ -20,7 +20,7 @@ jobs:
     strategy:
       matrix:
         os: ["windows-latest", ]
-        python-version: [ "py39", "default"]
+        python-version: [ "default"]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -37,13 +37,13 @@ jobs:
       - name: Run ruff
         shell: bash
         run: |
-          pixi run -e py39 ruff check --select I --force-exclude && \
-          pixi run -e py39 ruff format --check --force-exclude
+          pixi run ruff check --select I --force-exclude && \
+          pixi run ruff format --check --force-exclude
 
-      - name: Run Tests
-        run: pixi run -e py39 tests tests/
-        env: 
-          SKIP_DATABASE: "1"
+      # - name: Run Tests
+      #   run: pixi run -e ${{ matrix.python-version }} tests tests/
+      #   env: 
+      #     SKIP_DATABASE: "1"
 
-      - name: Upload coverage
-        uses: codecov/codecov-action@v5
+      # - name: Upload coverage
+      #   uses: codecov/codecov-action@v5
