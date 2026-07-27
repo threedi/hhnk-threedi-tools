@@ -325,9 +325,11 @@ class DAMO(DataSet):
 
                         # choose significant geometry when geometry_diff missing
                         table_merged["geometry_diff"] = table_merged.apply(
-                            lambda x: self.get_significant_geometry(x["in_both"], x["geometry_New"], x["geometry_Old"])
-                            if (x["geometry_diff"] is None)
-                            else x["geometry_diff"],
+                            lambda x: (
+                                self.get_significant_geometry(x["in_both"], x["geometry_New"], x["geometry_Old"])
+                                if (x["geometry_diff"] is None)
+                                else x["geometry_diff"]
+                            ),
                             axis=1,
                         )
 
