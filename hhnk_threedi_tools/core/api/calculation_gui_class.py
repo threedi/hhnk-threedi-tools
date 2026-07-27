@@ -375,7 +375,7 @@ class StartCalculationWidgets:
             )
 
             self.simulation_duration_widget = widgets.BoundedIntText(
-                value=48,
+                value=eval(RAIN_SETTINGS[rt]["simulation_duration"]),
                 min=1,
                 max=1000,
                 step=1,
