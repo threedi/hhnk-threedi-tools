@@ -362,24 +362,16 @@ class StartCalculationWidgets:
         def __init__(self):
             # Searching for the schema on 3Di servers.
 
-            self.custom_simulation_duration_toggle = widgets.ToggleButton(
-                value=False,
-                description="Custom simulation duration",
-                icon="plus",
-                layout=item_layout(grid_area="batch_custom_duration_toggle"),
-            )
-
             self.simulation_duration_label = widgets.Label(
                 "Simulation duration [hours]:",
                 layout=item_layout(grid_area="batch_simulation_duration_label"),
             )
 
             self.simulation_duration_widget = widgets.BoundedIntText(
-                value=eval(RAIN_SETTINGS[rt]["simulation_duration"]),
+                value=48,
                 min=1,
                 max=1000,
                 step=1,
-                disabled=True,
                 layout=item_layout(grid_area="batch_simulation_duration_widget"),
             )
 
@@ -1067,11 +1059,6 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
                 sim.simulation_created = False
 
                 self.vars.sqlite_path_batch[shortname] = sim.download_sqlite()
-
-                if self.batch.custom_simulation_duration_toggle.value:
-                    simulation_duration = self.batch.simulation_duration_widget.value * 3600
-                else:
-                    simulation_duration = eval(RAIN_SETTINGS[rt]["simulation_duration"])
 
                 sim.create(
                     output_folder=self.vars.output_folder_batch,
