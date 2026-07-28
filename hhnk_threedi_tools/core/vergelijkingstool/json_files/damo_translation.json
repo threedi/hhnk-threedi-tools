@@ -28,10 +28,10 @@
     "name": "hydroobject",
     "columns": {
       "bodemhoogteNAP": "bodemhoogte_nap",
-      "WS_TALUD_LINKS": "WS_TALUD_LINKS",
-      "WS_TALUD_RECHTS": "WS_TALUD_RECHTS",
       "WS_BODEMBREEDTE": "WS_BODEMBREEDTE",
-      "WS_IN_PEILGEBIED": "ws_in_peilgebied"
+      "ws_in_peilgebied": "WS_IN_PEILGEBIED",  
+	  "BREEDTE": "breedte_getabuleerd",
+	  "Diepte": "hoogte_getabuleerd"
     }
   }
 }

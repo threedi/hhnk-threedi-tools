@@ -206,7 +206,7 @@ def export_comparison_DAMO(
             logger.warning(f"Style layer for layer {layer_name} not found")
         table_C[layer_name].to_file(filename, layer=layer_name, driver="GPKG")
     # construct GeoDataFrame describing layer styles
-    logger.info(f"Export results of comparing DAMO/3Di layer to {filename}")
+    logger.info(f"Export results of comparing layer to {filename}")
     layer_styles = gpd.GeoDataFrame(columns=STYLING_BASIC_TABLE_COLUMNS, data=table)
     layer_styles.fillna("", inplace=True)
     return layer_styles

@@ -492,15 +492,6 @@
 			"right": "hydroobject_id_New"
 		},
 		{
-			"name": "cmp_naam",
-			"table": "hydroobject",
-			"type": "category",
-			"description": "Verschil in naam",
-			"priority": "warning",
-			"left": "naam_Old",
-			"right": "naam_New"
-		},
-		{
 			"name": "cmp_soortoppwaterkwantiteit",
 			"table": "hydroobject",
 			"type": "category",
@@ -1464,15 +1455,6 @@
 			"right": "hydroobject_id_New"
 		},
 		{
-			"name": "cmp_hydroobject_naam",
-			"table": "hydroobject",
-			"type": "category",
-			"description": "Verschil in hydroobject_naam",
-			"priority": "warning",
-			"left": "naam_Old",
-			"right": "naam_New"
-		},
-		{
 			"name": "cmp_soortafvoeraanvoergebied",
 			"table": "afvoergebiedaanvoergebied",
 			"type": "category",
@@ -1626,6 +1608,15 @@
 			}
 		},
 		{
+			"name": "cmp_ws_inlaatfunctie",
+			"table": "sluis",
+			"type": "category",
+			"description": "Verschil in ws_inlaatfunctie",
+			"priority": "critical",
+			"left": "ws_inlaatfunctie_Old",
+			"right": "ws_inlaatfunctie_New"
+		},
+		{
 			"name": "cmp_geom_type",
 			"table": "sluis",
 			"type": "category",
@@ -1633,7 +1624,78 @@
 			"priority": "critical",
 			"left": "geom_type_Old",
 			"right": "geom_type_New"
+		},
+		{
+			"name": "cmp_type_kunstwerk",
+			"table": "sturing_kunstwerken",
+			"type": "category",
+			"description": "Verschil in kunstwerk type",
+			"priority": "critical",
+			"left": "type_kunstwerk_Old",
+			"right": "type_kunstwerk_New"
+		},
+		{
+			"name": "cmp_keuzeregeling",
+			"table": "sturing_kunstwerken",
+			"type": "category",
+			"description": "Verschil in keuzeregeling",
+			"priority": "critical",
+			"left": "keuzeregeling_Old",
+			"right": "keuzeregeling_New"
+		},
+		{
+			"name": "cmp_meetvariabele",
+			"table": "sturing_kunstwerken",
+			"type": "category",
+			"description": "Verschil in meetvariabele",
+			"priority": "critical",
+			"left": "meetvariabele_Old",
+			"right": "meetvariabele_New"	
+		},
+		{
+			"name": "cmp_actievariabele",
+			"table": "sturing_kunstwerken",
+			"type": "category",
+			"description": "Verschil in actievariabele",
+			"priority": "critical",
+			"left": "actievariabele_Old",
+			"right": "actievariabele_New"		
+		},
+		{
+			"name": "cmp_meetwaarden",
+			"table": "sturing_kunstwerken",
+			"type": "category",
+			"description": "Verschil in meetwaarden",
+			"priority": "critical",
+			"left": "meetwaarden_Old",
+			"right": "meetwaarden_New"	
+		},
+		{
+			"name": "cmp_actiewaarden",
+			"table": "sturing_kunstwerken",
+			"type": "category",
+			"description": "Verschil in actiewaarden",
+			"priority": "critical",
+			"left": "actiewaarden_Old",
+			"right": "actiewaarden_New"	
+		},
+		{
+			"name": "cmp_action_table",
+			"table": "sturing_kunstwerken",
+			"type": "category",
+			"description": "Verschil in actievariabele",
+			"priority": "critical",
+			"left": "action_table_Old",
+			"right": "action_table_New"		
+		},
+		{
+			"name": "cmp_hoe_geregeld",
+			"table": "sturing_kunstwerken",
+			"type": "category",
+			"description": "Verschil in hoe_geregeld",
+			"priority": "warning",
+			"left": "hoe_geregeld_Old",
+			"right": "hoe_geregeld_New"		
 		}
-
 	]
 }
