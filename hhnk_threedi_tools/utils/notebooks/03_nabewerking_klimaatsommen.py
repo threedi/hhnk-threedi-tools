@@ -94,15 +94,11 @@ dem_path_dropdown = widgets.Select(
 # Display precipitation zones
 polder_shape = folder.source_data.polder_polygon.load()
 
-precip_zones_raster = hrt.get_pkg_resource_path(
-    package_resource=htt.resources, name="precipitation_zones_hhnk.tif"
-)
+precip_zones_raster = hrt.get_pkg_resource_path(package_resource=htt.resources, name="precipitation_zones_hhnk.tif")
 precip_zones_raster = rio.open(precip_zones_raster)
 
 
-freqs_xlsx = hrt.get_pkg_resource_path(
-    package_resource=htt.resources, name="precipitation_frequency.xlsx"
-)
+freqs_xlsx = hrt.get_pkg_resource_path(package_resource=htt.resources, name="precipitation_frequency.xlsx")
 freqs = pd.read_excel(freqs_xlsx, engine="openpyxl")
 
 f, ax = plt.subplots(figsize=(8, 8))
@@ -160,12 +156,8 @@ if dem.metadata.pixel_width != 0.5:
 
 df = pd.DataFrame(batch_fd.downloads.names, columns=["dl_name"])
 for dl_name in batch_fd.downloads.names:
-    df.loc[df["dl_name"] == dl_name, "depth_max"] = getattr(
-        batch_fd.downloads, dl_name
-    ).depth_max.base
-    df.loc[df["dl_name"] == dl_name, "damage_total"] = getattr(
-        batch_fd.downloads, dl_name
-    ).damage_total.base
+    df.loc[df["dl_name"] == dl_name, "depth_max"] = getattr(batch_fd.downloads, dl_name).depth_max.base
+    df.loc[df["dl_name"] == dl_name, "damage_total"] = getattr(batch_fd.downloads, dl_name).damage_total.base
 
 
 ## %%
@@ -189,13 +181,9 @@ if not folder.source_data.peilgebieden.peilgebieden.exists():
     # fixeddrainage.pop("start")
 
     fixeddrainage.to_file(folder.source_data.peilgebieden.peilgebieden.base)
-    print(
-        f"Peilgebieden shapefile aangemaakt: {folder.source_data.peilgebieden.peilgebieden.name}"
-    )
+    print(f"Peilgebieden shapefile aangemaakt: {folder.source_data.peilgebieden.peilgebieden.name}")
 else:
-    print(
-        f"Peilgebieden shapefile gevonden: {folder.source_data.peilgebieden.peilgebieden.name}"
-    )
+    print(f"Peilgebieden shapefile gevonden: {folder.source_data.peilgebieden.peilgebieden.name}")
 
 # %% [markdown]
 # ## Input klaarzetten
@@ -213,9 +201,7 @@ klimaatsommen_prep = KlimaatsommenPrep(
     old_wlvl=True,  # wvg 2025-01; zet naar True om de oude (lizard) wdepth berekening te gebruiken
 )
 
-klimaatsommen_prep.run(
-    gridgpkg=True, wlvl_wdepth=True, create_wdepth=True, dmg=True, overwrite=False
-)
+klimaatsommen_prep.run(gridgpkg=True, wlvl_wdepth=True, create_wdepth=True, dmg=True, overwrite=False)
 
 # %% [markdown]
 # ## Maskerkaart aanmaken
@@ -405,10 +391,7 @@ schade_gdf["cw_tot"] = schade_gdf["cw_ws"] + schade_gdf["cw_mv"]
 
 
 schade_per_polder = (
-    schade_gdf[["name", "cw_tot", "cw_ws", "cw_mv"]]
-    .groupby("name")
-    .sum()
-    .sort_values(by="cw_ws", ascending=False)
+    schade_gdf[["name", "cw_tot", "cw_ws", "cw_mv"]].groupby("name").sum().sort_values(by="cw_ws", ascending=False)
 )
 
 # Opslaan naar shapefile en csv
@@ -426,22 +409,16 @@ raster = hrt.RasterOld(str(batch_fd.output.cw_schade_plas))
 dv = 0.04  # discontovoet [%]
 n = 50  # investeringstermijn [jaren]
 cw_factor = (1 - (1 - dv) ** n) / dv
-pixel_factor = (
-    raster.metadata["pixel_width"] ** 2 / 0.25
-)  # niet nodig als resolutie goed staat
+pixel_factor = raster.metadata["pixel_width"] ** 2 / 0.25  # niet nodig als resolutie goed staat
 
 # %% [markdown]
 # ## Verwijder onrealistische schades
 #
 
 # %%
-maskerkaart2 = gpd.read_file(
-    str(folder.source_data.peilgebieden.geen_schade)
-)  # load maskerkaart (geen_schade.shp)
+maskerkaart2 = gpd.read_file(str(folder.source_data.peilgebieden.geen_schade))  # load maskerkaart (geen_schade.shp)
 
-maskerkaart_union = maskerkaart2.buffer(0.1).unary_union.buffer(
-    -0.1
-)  # make one geometry from gdf.
+maskerkaart_union = maskerkaart2.buffer(0.1).unary_union.buffer(-0.1)  # make one geometry from gdf.
 
 # Rasterize polygon
 maskerkaart_union = gpd.GeoDataFrame(geometry=[maskerkaart_union])
@@ -576,13 +553,9 @@ def calculate_schade_per_peilgebied(output_dir: Folders) -> gpd.GeoDataFrame:
     # get the raster attibutes from the bacht output and loop to calculate totals.
     for schade_raster in output_dir.path.glob("schade_*.tif"):
         # calculate the total damage per peilgebied
-        accum = schade_raster.sum_labels(
-            label_raster=labels_raster, label_idx=labels_index
-        )
+        accum = schade_raster.sum_labels(label_raster=labels_raster, label_idx=labels_index)
         # map the total damge and save it.
-        schade_gdf[f"{schade_raster.stem}"] = schade_gdf["index"].map(
-            accum
-        )  # map values to gdf
+        schade_gdf[f"{schade_raster.stem}"] = schade_gdf["index"].map(accum)  # map values to gdf
     # sava the results.
     output_file = output_dir.schade_peilgebied
     schade_gdf.to_file(
