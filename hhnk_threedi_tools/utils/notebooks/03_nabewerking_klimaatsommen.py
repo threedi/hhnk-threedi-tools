@@ -13,7 +13,9 @@
 try:
     from hhnk_threedi_tools.utils.notebooks.notebook_setup import setup_notebook
 except:
-    from notebook_setup import setup_notebook  # in case hhnk-threedi-tools is not part of python installation
+    from notebook_setup import (
+        setup_notebook,
+    )  # in case hhnk-threedi-tools is not part of python installation
 
 
 notebook_data = setup_notebook()
@@ -35,10 +37,18 @@ import hhnk_threedi_tools.core.climate_scenarios.peilgebieden as peilgebieden
 import hhnk_threedi_tools.core.climate_scenarios.ruimtekaart as ruimtekaart
 import hhnk_threedi_tools.core.climate_scenarios.schadekaart as schadekaart
 from hhnk_threedi_tools import Folders
-from hhnk_threedi_tools.core.climate_scenarios.interpolate_rasters import main_interpolate_rasters
-from hhnk_threedi_tools.core.climate_scenarios.klimaatsommen_prep import KlimaatsommenPrep
-from hhnk_threedi_tools.core.climate_scenarios.maskerkaart_raster import rasterize_maskerkaart
-from hhnk_threedi_tools.core.climate_scenarios.schadekaart_peilgebieden import maak_schade_polygon
+from hhnk_threedi_tools.core.climate_scenarios.interpolate_rasters import (
+    main_interpolate_rasters,
+)
+from hhnk_threedi_tools.core.climate_scenarios.klimaatsommen_prep import (
+    KlimaatsommenPrep,
+)
+from hhnk_threedi_tools.core.climate_scenarios.maskerkaart_raster import (
+    rasterize_maskerkaart,
+)
+from hhnk_threedi_tools.core.climate_scenarios.schadekaart_peilgebieden import (
+    maak_schade_polygon,
+)
 
 # Folders inladen
 folder = Folders(notebook_data["polder_folder"])
@@ -84,11 +94,15 @@ dem_path_dropdown = widgets.Select(
 # Display precipitation zones
 polder_shape = folder.source_data.polder_polygon.load()
 
-precip_zones_raster = hrt.get_pkg_resource_path(package_resource=htt.resources, name="precipitation_zones_hhnk.tif")
+precip_zones_raster = hrt.get_pkg_resource_path(
+    package_resource=htt.resources, name="precipitation_zones_hhnk.tif"
+)
 precip_zones_raster = rio.open(precip_zones_raster)
 
 
-freqs_xlsx = hrt.get_pkg_resource_path(package_resource=htt.resources, name="precipitation_frequency.xlsx")
+freqs_xlsx = hrt.get_pkg_resource_path(
+    package_resource=htt.resources, name="precipitation_frequency.xlsx"
+)
 freqs = pd.read_excel(freqs_xlsx, engine="openpyxl")
 
 f, ax = plt.subplots(figsize=(8, 8))
@@ -146,8 +160,12 @@ if dem.metadata.pixel_width != 0.5:
 
 df = pd.DataFrame(batch_fd.downloads.names, columns=["dl_name"])
 for dl_name in batch_fd.downloads.names:
-    df.loc[df["dl_name"] == dl_name, "depth_max"] = getattr(batch_fd.downloads, dl_name).depth_max.base
-    df.loc[df["dl_name"] == dl_name, "damage_total"] = getattr(batch_fd.downloads, dl_name).damage_total.base
+    df.loc[df["dl_name"] == dl_name, "depth_max"] = getattr(
+        batch_fd.downloads, dl_name
+    ).depth_max.base
+    df.loc[df["dl_name"] == dl_name, "damage_total"] = getattr(
+        batch_fd.downloads, dl_name
+    ).damage_total.base
 
 
 ## %%
@@ -171,9 +189,13 @@ if not folder.source_data.peilgebieden.peilgebieden.exists():
     # fixeddrainage.pop("start")
 
     fixeddrainage.to_file(folder.source_data.peilgebieden.peilgebieden.base)
-    print(f"Peilgebieden shapefile aangemaakt: {folder.source_data.peilgebieden.peilgebieden.name}")
+    print(
+        f"Peilgebieden shapefile aangemaakt: {folder.source_data.peilgebieden.peilgebieden.name}"
+    )
 else:
-    print(f"Peilgebieden shapefile gevonden: {folder.source_data.peilgebieden.peilgebieden.name}")
+    print(
+        f"Peilgebieden shapefile gevonden: {folder.source_data.peilgebieden.peilgebieden.name}"
+    )
 
 # %% [markdown]
 # ## Input klaarzetten
@@ -191,7 +213,9 @@ klimaatsommen_prep = KlimaatsommenPrep(
     old_wlvl=True,  # wvg 2025-01; zet naar True om de oude (lizard) wdepth berekening te gebruiken
 )
 
-klimaatsommen_prep.run(gridgpkg=True, wlvl_wdepth=True, create_wdepth=True, dmg=True, overwrite=False)
+klimaatsommen_prep.run(
+    gridgpkg=True, wlvl_wdepth=True, create_wdepth=True, dmg=True, overwrite=False
+)
 
 # %% [markdown]
 # ## Maskerkaart aanmaken
@@ -381,7 +405,10 @@ schade_gdf["cw_tot"] = schade_gdf["cw_ws"] + schade_gdf["cw_mv"]
 
 
 schade_per_polder = (
-    schade_gdf[["name", "cw_tot", "cw_ws", "cw_mv"]].groupby("name").sum().sort_values(by="cw_ws", ascending=False)
+    schade_gdf[["name", "cw_tot", "cw_ws", "cw_mv"]]
+    .groupby("name")
+    .sum()
+    .sort_values(by="cw_ws", ascending=False)
 )
 
 # Opslaan naar shapefile en csv
@@ -399,16 +426,22 @@ raster = hrt.RasterOld(str(batch_fd.output.cw_schade_plas))
 dv = 0.04  # discontovoet [%]
 n = 50  # investeringstermijn [jaren]
 cw_factor = (1 - (1 - dv) ** n) / dv
-pixel_factor = raster.metadata["pixel_width"] ** 2 / 0.25  # niet nodig als resolutie goed staat
+pixel_factor = (
+    raster.metadata["pixel_width"] ** 2 / 0.25
+)  # niet nodig als resolutie goed staat
 
 # %% [markdown]
 # ## Verwijder onrealistische schades
 #
 
 # %%
-maskerkaart2 = gpd.read_file(str(folder.source_data.peilgebieden.geen_schade))  # load maskerkaart (geen_schade.shp)
+maskerkaart2 = gpd.read_file(
+    str(folder.source_data.peilgebieden.geen_schade)
+)  # load maskerkaart (geen_schade.shp)
 
-maskerkaart_union = maskerkaart2.buffer(0.1).unary_union.buffer(-0.1)  # make one geometry from gdf.
+maskerkaart_union = maskerkaart2.buffer(0.1).unary_union.buffer(
+    -0.1
+)  # make one geometry from gdf.
 
 # Rasterize polygon
 maskerkaart_union = gpd.GeoDataFrame(geometry=[maskerkaart_union])
@@ -416,7 +449,13 @@ maskerkaart_union = gpd.GeoDataFrame(geometry=[maskerkaart_union])
 maskerkaart_union["val"] = 1
 
 mask = hrt.gdf_to_raster(
-    maskerkaart_union, value_field="val", raster_out="", nodata=0, metadata=raster.metadata, epsg=28992, driver="MEM"
+    maskerkaart_union,
+    value_field="val",
+    raster_out="",
+    nodata=0,
+    metadata=raster.metadata,
+    epsg=28992,
+    driver="MEM",
 )
 mask = mask > 0
 
@@ -463,3 +502,94 @@ for T in [10, 100, 1000]:
         min_value=None,
         extra_nodata_value=0,
     )
+
+
+# %% [Markdown]
+
+# folder = Folders(r"H:\personen\rderonde\bwn_4_Grootlimmerpolder")
+# Schaderasters per herhalingstijd [optioneel]
+revisie = "Referentie_update"
+
+if revisie not in [f.stem for f in folder.threedi_results.batch.revisions]:
+    raise ValueError(
+        f"Revisie {revisie} niet gevonden in batch resultaten. Beschikbare revisies: {[f.stem for f in folder.threedi_results.batch.revisions]}"
+    )
+
+output_dir = folder.threedi_results.batch[revisie].output
+
+
+def create_schaderaster(output_dir: Folders) -> None:
+    """Generate damage rasters from depth rasters in the given output.
+
+    Iterates over attributes of the output batch, finds depth rasters whose
+    names start with "depth", creates a corresponding damage raster path, and
+    runs the waterschadeschatter to generate the damage raster file.
+    """
+
+    wss_settings = {
+        "inundation_period": 48,  # uren
+        "herstelperiode": "10 dagen",
+        "maand": "sep",
+        "cfg_file": hrt.get_pkg_resource_path(
+            package_resource=hrt.waterschadeschatter.resources, name="cfg_lizard.cfg"
+        ),
+        "dmg_type": "gem",
+    }
+
+    for depth_raster in output_dir.path.glob("inundatiediepte_*.tif"):
+        # replace the output name with schade
+        name = depth_raster.stem.replace("inundatiediepte", "schade")
+
+        # create the damage raster file path
+        damage_file = hrt.Raster(depth_raster.with_stem(name))
+
+        if not damage_file.path.exists():
+            # Create de waterscahdeschatter object and run calculation
+            wss = hrt.Waterschadeschatter(
+                depth_file=depth_raster,
+                landuse_file=r"\\corp.hhnk.nl\data\Hydrologen_data\Data\01.basisgegevens\rasters\landgebruik\landuse2019_tiles\combined_rasters.vrt",
+                wss_settings=wss_settings,
+                min_block_size=1024,
+            )
+
+            wss.run(output_raster=damage_file, calculation_type="sum", overwrite=False)
+
+
+create_schaderaster(output_dir)
+
+# %% [Markdown]
+# Schade per peilgebied voor t10,t100 en t1000
+
+
+def calculate_schade_per_peilgebied(output_dir: Folders) -> gpd.GeoDataFrame:
+    """Calculate total damage per peilgebied from generated damage rasters.
+
+    Loads the peilgebieden vector data and label raster, then sums damage values
+    per label for each damage raster found in the output. The results are saved
+    to a GeoPackage and returned as a GeoDataFrame.
+    """
+
+    # load peilgebiede and schaderasters intdex
+    schade_gdf = output_dir.temp.peilgebieden.load()
+    labels_raster = output_dir.temp.peilgebieden_damage
+    labels_index = schade_gdf["index"].values
+    # get the raster attibutes from the bacht output and loop to calculate totals.
+    for schade_raster in output_dir.path.glob("schade_*.tif"):
+        # calculate the total damage per peilgebied
+        accum = schade_raster.sum_labels(
+            label_raster=labels_raster, label_idx=labels_index
+        )
+        # map the total damge and save it.
+        schade_gdf[f"{schade_raster.stem}"] = schade_gdf["index"].map(
+            accum
+        )  # map values to gdf
+    # sava the results.
+    output_file = output_dir.schade_peilgebied
+    schade_gdf.to_file(
+        output_file.path,
+        driver="GPKG",
+    )
+    return schade_gdf
+
+
+calculate_schade_per_peilgebied(output_dir)

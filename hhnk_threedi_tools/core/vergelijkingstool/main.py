@@ -8,28 +8,9 @@ There are two main usages within this module:
     This gives an indication in how much the model differs from the (current) situation.
     Possibly the model was updated in the years together with the DAMO/HDB or the datachecker/modelbuilder induced
     differences
-
-Installation:
-The sqlite3 module needs some .dll's in order to unlock the spatial functionality.
-These .dll's need to be downloaded from http://www.gaia-gis.it/gaia-sins/.
-Under MS Windows binaries -> current stable version -> choose x86 or amd64 -> mod_spatialite-x.x.x-win-xxx.7z.
-Module was tested with http://www.gaia-gis.it/gaia-sins/windows-bin-amd64/mod_spatialite-5.0.1-win-amd64.7z
-Unpack content of .7z file and place them in the C:\\Windows\\System32 folder
 """
 
 # %%
-__authors__ = [
-    "Thijs van den Pol (Royal HaskoningDHV)",
-    "Emiel Verstegen (Royal HaskoningDHV)",
-]
-__contact__ = "emiel.verstegen@rhdhv.com"
-__credits__ = ["Thijs van den Pol", "Emiel Verstegen"]
-__date__ = "2023/03/13"
-__deprecated__ = False
-__email__ = "emiel.verstegen@rhdhv.com"
-__maintainer__ = "developer"
-__status__ = "Production"
-__version__ = "1.1.0"
 
 import logging
 import warnings
