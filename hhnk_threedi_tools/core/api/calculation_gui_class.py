@@ -641,18 +641,6 @@ class StartCalculationWidgetsInteraction(StartCalculationWidgets):
 
             self.update_organisations()
 
-        def toggle_custom_simulation_duration(change):
-            enabled = change["new"]
-
-            self.batch.simulation_duration_widget.disabled = not enabled
-
-            self.batch.custom_simulation_duration_toggle.icon = "check" if enabled else "plus"
-
-        self.batch.custom_simulation_duration_toggle.observe(
-            toggle_custom_simulation_duration,
-            names="value",
-        )
-
         # Search revisions
         def on_select_schematisation(selected_schematisation):
             """Update revisions options when repository/schematisation is selected"""
@@ -1880,7 +1868,6 @@ class StartCalculationGui:
                 self.w.batch.rain_label_box,
                 self.w.batch.scenario_box,
                 self.w.batch.rain_type_box,
-                self.w.batch.custom_simulation_duration_toggle,
                 self.w.batch.simulation_duration_label,
                 self.w.batch.simulation_duration_widget,
                 self.w.output.label,
