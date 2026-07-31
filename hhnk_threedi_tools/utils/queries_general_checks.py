@@ -77,6 +77,8 @@ msg_culvert_strt_end_not_same_init_waterlvl = (
 )
 msg_imp_surface_perc = "WARNING: percentage = 100 and should be 14.4 or 11.5"
 msg_control_table_too_many_chars = "ERROR: action_table has more than 1000 characters (model will crash)"
+msg_structure_control_culvert = "ERROR: structure control does not work for culverts"
+msg_impervious_surface_map_empty = "ERROR: impervious_surface_map is empty"
 
 
 def constr_in_clause(innotin, sel=False, frm=False, where=None):
@@ -490,6 +492,23 @@ model_checks = {
         f"{impervious_surface_map_layer}.{percentage_col}",
     ),
     ######################################################################################
+    "structure_control_for_culvert": construct_sel_from_where_query(where="{} IS NOT NULL AND {} LIKE '{}'").format(
+        construct_query_head(control_table_layer, msg_structure_control_culvert),
+        control_table_layer,
+        f"{control_table_layer}.{action_col}",
+        f"{control_table_layer}.target_type",
+        "culvert%",
+    ),
+    ######################################################################################
+    "impervious_surface_map_empty": construct_sel_from_where_query(
+        sel="{}",
+        frm="",
+        where="(SELECT COUNT(*) FROM {}) = 0",
+    ).format(
+        f"'{impervious_surface_map_layer}' as table_name,\n0 as id,\n'{msg_impervious_surface_map_empty}' as error",
+        impervious_surface_map_layer,
+    ),
+    ######################################################################################
     "action_table_char_count": construct_sel_from_where_query(where="length({}) > 1000").format(
         construct_query_head(control_table_layer, msg_control_table_too_many_chars),
         control_table_layer,
@@ -531,6 +550,8 @@ class ModelCheck:
         self.orifice_strt_end_not_same_init_waterlvl = model_checks["orifice_strt_end_not_same_init_waterlvl"]
         self.culvert_strt_end_not_same_init_waterlvl = model_checks["culvert_strt_end_not_same_init_waterlvl"]
         self.impervious_surface_perc = model_checks["imp_surface_perc"]
+        self.structure_control_for_culvert = model_checks["structure_control_for_culvert"]
+        self.impervious_surface_map_empty = model_checks["impervious_surface_map_empty"]
         self.action_table_too_many_chars = model_checks["action_table_char_count"]
 
     @classmethod
@@ -538,3 +559,6 @@ class ModelCheck:
         """Get a all variables as query to execute on model"""
         queries_lst = [item for item in vars(cls()).values()]
         return "UNION ALL\n".join(queries_lst)
+
+
+# %%
