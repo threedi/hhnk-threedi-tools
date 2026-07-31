@@ -1696,6 +1696,56 @@
 			"priority": "warning",
 			"left": "hoe_geregeld_Old",
 			"right": "hoe_geregeld_New"		
+		},
+		{
+			"name": "cmp_pro_id",
+			"table": "gw_pro",
+			"type": "category",
+			"description": "Verschil in id ",
+			"priority": "warning",
+			"left": "pro_id_Old",
+			"right": "pro_id_New"		
+		},
+		{
+			"name": "cmp_osmomsch",
+			"table": "gw_pro",
+			"type": "category",
+			"description": "Verschil in osmomsch",
+			"priority": "warning",
+			"left": "osmomsch_Old",
+			"right": "osmomsch_New"		
+		},
+		{
+			"name": "cmp_oprdatop",
+			"table": "gw_pro",
+			"type": "category",
+			"description": "Verschil in oprdatop",
+			"priority": "warning",
+			"left": "oprdatop_Old",
+			"right": "oprdatop_New"		
+		},
+		{
+			"name": "cmp_geom_length",
+			"table": "gw_pro",
+			"type": "numeric",
+			"description": "Verschil in geometrie lengte",
+			"priority": "critical",
+			"function": {
+				"difference": {
+					"left": "geom_length_Old",
+					"right": "geom_length_New"
+				}
+			}
+		},
+		{
+			"name": "cmp_geom_ovkovk",
+			"table": "gw_pro",
+			"type": "category",
+			"description": "Verschil in hydroobject_id",
+			"priority": "warning",
+			"left": "ovk_ovk_id_Old",
+			"right": "ovk_ovk_id_New"
+				
 		}
 	]
 }

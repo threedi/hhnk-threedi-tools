@@ -228,6 +228,7 @@ def load_file_and_translate(
             # logger.debug("Start mapping layer and column names of HDB layers")
             data = translate(data, translation_HDB)
 
+        data = add_ws_categoie(data)
     # Load 3Di dataset
 
     if mode in ["threedi", "both"]:
@@ -313,6 +314,32 @@ def update_channel_codes(
     gdf_channel.to_file(model_path, layer="channel", driver="GPKG")
 
     return gdf_channel
+
+
+def add_ws_categoie(data: Dict[str, gpd.GeoDataFrame]) -> Dict[str, gpd.GeoDataFrame]:
+    """Add the water category from hydro_object to gw_pro using a spatial intersection."""
+
+    gw_pro = data["gw_pro"].copy()
+    hydro_object = data["hydroobject"][["categorieoppwaterlichaam", "geometry"]].copy()
+
+    gw_pro = gpd.sjoin(
+        gw_pro,
+        hydro_object,
+        how="left",
+        predicate="intersects",
+    )
+
+    # A cross section could intersect more than one hydro_object.
+    # Keep the first intersecting hydro_object per gw_pro feature.
+    gw_pro = gw_pro[~gw_pro.index.duplicated(keep="first")]
+
+    gw_pro = gw_pro.rename(columns={"categorieoppwaterlichaam": "ws_categorie"})
+
+    gw_pro = gw_pro.drop(columns=["index_right"])
+
+    data["gw_pro"] = gw_pro
+
+    return data
 
 
 def add_priority_summaries(table_dict: Dict[str, gpd.GeoDataFrame]) -> Dict[str, gpd.GeoDataFrame]:
