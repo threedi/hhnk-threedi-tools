@@ -1333,7 +1333,7 @@
 		{
 			"name": "cmp_geom_type",
 			"table": "gemalen_op_peilgrens",
-			"type": "critical",
+			"type": "category",
 			"description": "Verschil in geometry type",
 			"priority": "critical",
 			"left": "geom_type_Old",
@@ -1729,7 +1729,7 @@
 			"table": "gw_pro",
 			"type": "numeric",
 			"description": "Verschil in geometrie lengte",
-			"priority": "critical",
+			"priority": "warning",
 			"function": {
 				"difference": {
 					"left": "geom_length_Old",
@@ -1746,6 +1746,153 @@
 			"left": "ovk_ovk_id_Old",
 			"right": "ovk_ovk_id_New"
 				
+		},
+		{
+			"name": "cmp_naam",
+			"table": "aquaductlijn",
+			"type": "category",
+			"description": "Verschil in naam",
+			"priority": "warning",
+			"left": "naam_Old",
+			"right": "naam_New"
+		},
+		{
+			"name": "cmp_bodemhoogtebenedenstrooms",
+			"table": "aquaductlijn",
+			"type": "numeric",
+			"description": "Verschil in bodemhoogtebenedenstrooms",
+			"priority": "critical",
+			"function": {
+				"difference": {
+					"left": "bodemhoogtebenedenstrooms_New",
+					"right": "bodemhoogtebenedenstrooms_Old"
+				}
+			},
+			"left": "bodemhoogtebenedenstrooms_New",
+			"right": "bodemhoogtebenedenstrooms_Old"
+		},
+		{
+			"name": "cmp_bodemhoogtebovenstrooms",
+			"table": "aquaductlijn",
+			"type": "numeric",
+			"description": "Verschil in bodemhoogtebovenstrooms",
+			"priority": "critical",
+			"function": {
+				"difference": {
+					"left": "bodemhoogtebovenstrooms_New",
+					"right": "bodemhoogtebovenstrooms_Old"
+				}
+			}
+		},
+		{
+			"name": "cmp_hoogteconstructie",
+			"table": "aquaductlijn",
+			"type": "numeric",
+			"description": "Verschil in hoogteconstructie",
+			"priority": "warning",
+			"function": {
+				"difference": {
+					"left": "hoogteconstructie_New",
+					"right": "hoogteconstructie_Old"
+				}
+			}
+		},
+		{
+			"name": "cmp_breedte",
+			"table": "aquaductlijn",
+			"type": "numeric",
+			"description": "Verschil in breedte",
+			"priority": "critical",
+			"function": {
+				"difference": {
+					"left": "breedte_New",
+					"right": "breedte_Old"
+				}
+			}
+		},
+		{
+			"name": "cmp_soortmateriaal",
+			"table": "aquaductlijn",
+			"type": "category",
+			"description": "Verschil in soortmateriaal",
+			"priority": "warning",
+			"left": "soortmateriaal_New",
+			"right": "soortmateriaal_Old"
+		},
+		{
+			"name": "cmp_typekruising",
+			"table": "aquaductlijn",
+			"type": "category",
+			"description": "Verschil in typekruising",
+			"priority": "warning",
+			"left": "typekruising_New",
+			"right": "typekruising_Old"
+		},
+		{
+			"name": "cmp_ws_bodembreedte",
+			"table": "aquaductlijn",
+			"type": "numeric",
+			"description": "Verschil in ws_bodembreedte",
+			"priority": "critical",
+			"function": {
+				"difference": {
+					"left": "ws_bodembreedte_New",
+					"right": "ws_bodembreedte_Old"
+				}
+			}
+		},
+		{
+			"name": "cmp_ws_bovenbreedte",
+			"table": "aquaductlijn",
+			"type": "numeric",
+			"description": "Verschil in ws_bovenbreedte",
+			"priority": "critical",
+			"function": {
+				"difference": {
+					"left": "ws_bovenbreedte_New",
+					"right": "ws_bovenbreedte_Old"
+				}
+			}
+		},
+		{
+			"name": "cmp_ws_categorie",
+			"table": "aquaductlijn",
+			"type": "category",
+			"description": "Verschil in ws_categorie",
+			"priority": "warning",
+			"left": "ws_categorie_New",
+			"right": "ws_categorie_Old"
+		},
+		{
+			"name": "cmp_objectid",
+			"table": "aquaductlijn",
+			"type": "category",
+			"description": "Verschil in objectid",
+			"priority": "warning",
+			"left": "objectid_New",
+			"right": "objectid_Old"
+		},
+		{
+			"name": "cmp_geom_type",
+			"table": "aquaductlijn",
+			"type": "category",
+			"description": "Verschil in geometrie type",
+			"priority": "critical",
+			"left": "geom_type_New",
+			"right": "geom_type_Old"
+		},
+		{
+			"name": "cmp_geom_length",
+			"table": "aquaductlijn",
+			"type": "numeric",
+			"description": "Verschil in geometrie lengte",
+			"priority": "critical",
+			"function": {
+				"difference": {
+					"left": "geom_length_New",
+					"right": "geom_length_Old"
+				}
+			}
 		}
 	]
 }

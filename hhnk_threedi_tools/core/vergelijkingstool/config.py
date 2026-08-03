@@ -18,7 +18,7 @@ SQLITE_LAYERS: List[str] = [
 # DAMO layer names (source dataset)
 DAMO_LAYERS: List[str] = [
     "AfvoergebiedAanvoergebied",
-    "AquaductLijn",  # Niet in beide datasets
+    "AquaductLijn",
     # "Bergingsgebied",  # Niet in beide datasets
     "Brug",
     "DuikerSifonHevel",
