@@ -43,7 +43,7 @@
 	"iws_geo_beschr_profielpunten": {
 		"name": "iws_geo_beschr_profielpunten",
 		"columns": {
-			"id": "code"
+			"PBP_PBP_ID": "code"
 		}
 	}
 }

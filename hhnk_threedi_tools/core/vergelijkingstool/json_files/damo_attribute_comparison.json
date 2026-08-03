@@ -1955,6 +1955,33 @@
 					"right": "geom_area_Old"
 				}
 			}
+		},
+		{
+			"name": "cmp_ws_categorie",
+			"table": "iws_geo_beschr_profielpunten",
+			"type": "category",
+			"description": "Verschil in ws_categorie",
+			"priority": "warning",
+			"left": "ws_categorie_New",
+			"right": "ws_categorie_Old"
+		},
+		{
+			"name": "cmp_geom_type",
+			"table": "iws_geo_beschr_profielpunten",
+			"type": "category",
+			"description": "Verschil in geom_type",
+			"priority": "critical",
+			"left": "geom_type_New",
+			"right": "geom_type_Old"
+		},
+		{
+			"name": "cmp_origin",
+			"table": "iws_geo_beschr_profielpunten",
+			"type": "category",
+			"description": "Verschil in origin",
+			"priority": "critical",
+			"left": "origin_New",
+			"right": "origin_Old"
 		}
 	]
 }

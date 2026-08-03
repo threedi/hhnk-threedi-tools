@@ -317,9 +317,12 @@ def update_channel_codes(
 
 
 def add_ws_categoie(data: Dict[str, gpd.GeoDataFrame]) -> Dict[str, gpd.GeoDataFrame]:
-    """Add the water category from hydro_object to gw_pro using a spatial intersection."""
+    """Add the water category from hydro_object to gw_pro using a spatial intersection. Also add the
+    water category to iws_geo_beschr_profielpunten using a spatial intersection with gw_pro.
+    """
 
     gw_pro = data["gw_pro"].copy()
+    iws_geo_beschr_profielpunten = data["iws_geo_beschr_profielpunten"].copy()
     hydro_object = data["hydroobject"][["categorieoppwaterlichaam", "geometry"]].copy()
 
     gw_pro = gpd.sjoin(
@@ -337,6 +340,20 @@ def add_ws_categoie(data: Dict[str, gpd.GeoDataFrame]) -> Dict[str, gpd.GeoDataF
 
     gw_pro = gw_pro.drop(columns=["index_right"])
 
+    gw_pro_join = gw_pro[["ws_categorie", "geometry"]].copy()
+
+    data["gw_pro"] = gw_pro
+
+    iws_geo_beschr_profielpunten = gpd.sjoin(
+        iws_geo_beschr_profielpunten,
+        gw_pro_join,
+        how="left",
+        predicate="intersects",
+    )
+
+    iws_geo_beschr_profielpunten = iws_geo_beschr_profielpunten.drop(columns=["index_right"])
+
+    data["iws_geo_beschr_profielpunten"] = iws_geo_beschr_profielpunten
     data["gw_pro"] = gw_pro
 
     return data
