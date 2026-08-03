@@ -19,7 +19,7 @@ SQLITE_LAYERS: List[str] = [
 DAMO_LAYERS: List[str] = [
     "AfvoergebiedAanvoergebied",
     "AquaductLijn",
-    # "Bergingsgebied",  # Niet in beide datasets
+    "Bergingsgebied",
     "Brug",
     "DuikerSifonHevel",
     "Gemaal",
@@ -27,7 +27,7 @@ DAMO_LAYERS: List[str] = [
     "GW_PRO",
     # "GW_PRW", no gdf
     "HydroObject",
-    #'IWS_GEO_BESCHR_PROFIELPUNTEN',
+    "IWS_GEO_BESCHR_PROFIELPUNTEN",
     "PeilafwijkingGebied",
     "PeilgebiedPraktijk",
     "REF_BEHEERGEBIEDSGRENS_HHNK",

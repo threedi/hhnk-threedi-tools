@@ -104,7 +104,7 @@
 			"name": "cmp_ID",
 			"table": "brug",
 			"type": "category",
-			"description": "Verschil in code een naam",
+			"description": "Verschil in id",
 			"priority": "warning",
 			"left": "brug_id_Old",
 			"right": "brug_id_New"
@@ -322,7 +322,7 @@
 			"name": "cmp_ID",
 			"table": "gemaal",
 			"type": "category",
-			"description": "Verschil in code een naam",
+			"description": "Verschil in naam",
 			"priority": "warning",
 			"left": "naam_Old",
 			"right": "naam_New"
@@ -1891,6 +1891,68 @@
 				"difference": {
 					"left": "geom_length_New",
 					"right": "geom_length_Old"
+				}
+			}
+		},
+		{
+			"name": "cmp_naam_kort",
+			"table": "polderclusters",
+			"type": "category",
+			"description": "Verschil in naam kort",
+			"priority": "warning",
+			"left": "naam_kort_New",
+			"right": "naam_kort_Old"
+		},
+		{
+			"name": "cmp_polder_id",
+			"table": "polderclusters",
+			"type": "category",
+			"description": "Verschil in polder id",
+			"priority": "warning",
+			"left": "polder_id_New",
+			"right": "polder_id_Old"
+		},
+		{
+			"name": "cmp_status_wsa",
+			"table": "polderclusters",
+			"type": "category",
+			"description": "Verschil in status wsa",
+			"priority": "warning",
+			"left": "status_wsa_New",
+			"right": "status_wsa_Old"
+		},
+		{
+			"name": "cmp_geom_type",
+			"table": "polderclusters",
+			"type": "category",
+			"description": "Verschil in geom_type",
+			"priority": "critical",
+			"left": "geom_type_New",
+			"right": "geom_type_Old"
+		},
+		{
+			"name": "cmp_geom_length",
+			"table": "polderclusters",
+			"type": "numeric",
+			"description": "Verschil in geom_length",
+			"priority": "critical",
+			"function": {
+				"difference": {
+					"left": "geom_length_New",
+					"right": "geom_length_Old"
+				}
+			}
+		},
+		{
+			"name": "cmp_geom_area",
+			"table": "polderclusters",
+			"type": "numeric",
+			"description": "Verschil in geom_area",
+			"priority": "critical",
+			"function": {
+				"difference": {
+					"left": "geom_area_New",
+					"right": "geom_area_Old"
 				}
 			}
 		}

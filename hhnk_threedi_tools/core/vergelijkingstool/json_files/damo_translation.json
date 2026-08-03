@@ -25,13 +25,25 @@
 		}
 	},
 	"hydroobject": {
-    "name": "hydroobject",
-    "columns": {
-      "bodemhoogteNAP": "bodemhoogte_nap",
-      "WS_BODEMBREEDTE": "WS_BODEMBREEDTE",
-      "ws_in_peilgebied": "WS_IN_PEILGEBIED",  
-	  "BREEDTE": "breedte_getabuleerd",
-	  "Diepte": "hoogte_getabuleerd"
-    }
-  }
+		"name": "hydroobject",
+		"columns": {
+			"bodemhoogteNAP": "bodemhoogte_nap",
+			"WS_BODEMBREEDTE": "WS_BODEMBREEDTE",
+			"ws_in_peilgebied": "WS_IN_PEILGEBIED",  
+			"BREEDTE": "breedte_getabuleerd",
+			"Diepte": "hoogte_getabuleerd"
+		}
+  	},
+	"polderclusters": {
+		"name": "polderclusters",
+		"columns": {
+			"OBJECTID": "code"
+		}
+	},
+	"iws_geo_beschr_profielpunten": {
+		"name": "iws_geo_beschr_profielpunten",
+		"columns": {
+			"id": "code"
+		}
+	}
 }
