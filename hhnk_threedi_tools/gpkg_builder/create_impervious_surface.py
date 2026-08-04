@@ -599,29 +599,29 @@ def run(model_path_gpkg, datacheker_path, polder_polygon_path, sure_update):
 # %%
 # inputs
 
-hdb_path = r"H:\01.basisgegevens\00.HDB\Hydro_database.gpkg"
-folder = Path(r"H:\personen\jacosta\update_3di_model_test\Zijpe_West_2026_MR")
+hdb_path = r"H:\02.modellen\bergen_noord_huidig_situatie_JA\01_source_data\HDB.gpkg"
+folder = Path(r"H:\02.modellen\bergen_noord_huidig_situatie_JA")
 source_data = folder / "01_source_data"
 damo_path = source_data / "DAMO.gpkg"
 datacheker_path = source_data / "datachecker_output.gpkg"
 polder_polygon_path = source_data / "polder_polygon.shp"
-model_path_gpkg = folder / "02_schematisation" / "00_basis" / "bwn_zijpe-west.gpkg"
+model_path_gpkg = folder / "02_schematisation" / "00_basis" / "bwn_bergen_noord.gpkg"
 impervious_out_polygon_gpkg = source_data / "impervious_pol_review.gpkg"
 impervious_out_line_gpkg = source_data / "impervious_line_review.gpkg"
-# %%
-# subcatchments = createa_voronoi_polygons(model_path_gpkg, datacheker_path, polder_polygon_path)
-# surfaces = create_surface_layer(subcatchments, impervious_out_polygon_gpkg)
-# percentage_by_surface = get_percentage_afvoernorm(hdb_path, surfaces)
-# surface_map = create_surface_map_layer(model_path_gpkg, surfaces, percentage_by_surface, impervious_out_line_gpkg)
-# update_model_geopackage(
-#     model_path_gpkg,
-#     surfaces,
-#     surface_map,
-#     output_model_path=None,
-#     surface_layer_name="impervious_surface",
-#     surface_map_layer_name="impervious_surface_map",
-#     sure_update=True,
-# )
+#%%
+subcatchments = createa_voronoi_polygons(model_path_gpkg, datacheker_path, polder_polygon_path)
+surfaces = create_surface_layer(subcatchments, impervious_out_polygon_gpkg)
+percentage_by_surface = get_percentage_afvoernorm(hdb_path, surfaces)
+surface_map = create_surface_map_layer(model_path_gpkg, surfaces, percentage_by_surface, impervious_out_line_gpkg)
+update_model_geopackage(
+    model_path_gpkg,
+    surfaces,
+    surface_map,
+    output_model_path=None,
+    surface_layer_name="impervious_surface",
+    surface_map_layer_name="impervious_surface_map",
+    sure_update=True,
+)
 # %%
 # hdb_path = r"H:\01.basisgegevens\00.HDB\Hydro_database.gpkg"
 # folder = Path(r"D:\01.modelrepos\Martine\Zijpe_West_2026_MR")
