@@ -608,7 +608,7 @@ polder_polygon_path = source_data / "polder_polygon.shp"
 model_path_gpkg = folder / "02_schematisation" / "00_basis" / "bwn_bergen_noord.gpkg"
 impervious_out_polygon_gpkg = source_data / "impervious_pol_review.gpkg"
 impervious_out_line_gpkg = source_data / "impervious_line_review.gpkg"
-#%%
+# %%
 subcatchments = createa_voronoi_polygons(model_path_gpkg, datacheker_path, polder_polygon_path)
 surfaces = create_surface_layer(subcatchments, impervious_out_polygon_gpkg)
 percentage_by_surface = get_percentage_afvoernorm(hdb_path, surfaces)
