@@ -1,4 +1,4 @@
-#%%
+# %%
 #!/usr/bin/env python
 r"""Module for the comparison of DAMO/HDB data and 3Di model data.
 With this module the actuality of 3Di models can be assessed.
