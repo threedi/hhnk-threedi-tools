@@ -146,8 +146,8 @@
   </elevation>
   <renderer-v2 referencescale="-1" symbollevels="0" type="RuleRenderer" forceraster="0" enableorderby="0">
     <rules key="{4e6bafbf-7308-4d43-ad4b-842300af65a1}">
-      <rule filter=" &quot;in_both&quot;  LIKE  '%old' " key="{0a4eadb9-0003-4393-85b7-f422cd741226}" label="Bestaat niet meer in DAMO nieuw" symbol="0"/>
-      <rule filter=" &quot;in_both&quot;  LIKE  '%new' " key="{d545ced7-b5df-4458-a9a9-a98877bf496a}" label="Bestond nog niet in DAMO oud" symbol="1"/>
+      <rule filter=" &quot;in_both&quot;  LIKE  '%old' " key="{0a4eadb9-0003-4393-85b7-f422cd741226}" label="Bestaat in DAMO old - niet meer in DAMO nieuw" symbol="0"/>
+      <rule filter=" &quot;in_both&quot;  LIKE  '%new' " key="{d545ced7-b5df-4458-a9a9-a98877bf496a}" label="Bestaat in DAMO nieuw - niet meer in DAMO oud" symbol="1"/>
       <rule filter=" &quot;in_both&quot;   LIKE  '%both' AND  &quot;number_of_critical&quot; > 0" key="{913b76ee-b6ec-4170-8a4d-9a19e579395e}" label="Kritiek verschil tussen beide datasets" symbol="2"/>
       <rule filter=" &quot;in_both&quot;   LIKE  '%both' AND  &quot;number_of_critical&quot; = 0 AND ( &quot;number_of_info&quot;  +  &quot;number_of_warning&quot; ) > 0" key="{e9832d88-8009-43af-89ae-bba834bd0966}" label="Klein verschil tussen beide datasets" symbol="3"/>
       <rule filter="ELSE" key="{ae471d64-ae9c-4285-8e7f-07c8b8b3a2af}" label="Geen verschillen gevonden" symbol="4"/>

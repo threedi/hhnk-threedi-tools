@@ -1,553 +1,553 @@
 <!DOCTYPE qgis PUBLIC 'http://mrcc.com/qgis.dtd' 'SYSTEM'>
-<qgis simplifyLocal="1" version="3.34.5-Prizren" hasScaleBasedVisibilityFlag="0" simplifyDrawingTol="1" simplifyMaxScale="1" styleCategories="AllStyleCategories" simplifyAlgorithm="0" symbologyReferenceScale="-1" simplifyDrawingHints="0" readOnly="0" labelsEnabled="1" maxScale="0" minScale="0">
+<qgis styleCategories="AllStyleCategories" simplifyAlgorithm="0" simplifyDrawingHints="0" simplifyMaxScale="1" readOnly="0" symbologyReferenceScale="-1" version="3.34.4-Prizren" hasScaleBasedVisibilityFlag="0" minScale="0" labelsEnabled="1" maxScale="0" simplifyDrawingTol="1" simplifyLocal="1">
   <flags>
     <Identifiable>1</Identifiable>
     <Removable>1</Removable>
     <Searchable>1</Searchable>
     <Private>0</Private>
   </flags>
-  <temporal fixedDuration="0" durationField="fid" enabled="0" endExpression="" limitMode="0" durationUnit="min" mode="0" endField="" startExpression="" startField="" accumulate="0">
+  <temporal accumulate="0" endExpression="" startExpression="" mode="0" durationUnit="min" startField="" endField="" durationField="fid" enabled="0" limitMode="0" fixedDuration="0">
     <fixedRange>
       <start></start>
       <end></end>
     </fixedRange>
   </temporal>
-  <elevation zscale="1" binding="Centroid" respectLayerSymbol="1" extrusionEnabled="0" type="IndividualFeatures" extrusion="0" clamping="Terrain" symbology="Line" showMarkerSymbolInSurfacePlots="0" zoffset="0">
+  <elevation respectLayerSymbol="1" zoffset="0" type="IndividualFeatures" symbology="Line" clamping="Terrain" extrusionEnabled="0" binding="Centroid" extrusion="0" showMarkerSymbolInSurfacePlots="0" zscale="1">
     <data-defined-properties>
       <Option type="Map">
-        <Option name="name" type="QString" value=""/>
+        <Option type="QString" value="" name="name"/>
         <Option name="properties"/>
-        <Option name="type" type="QString" value="collection"/>
+        <Option type="QString" value="collection" name="type"/>
       </Option>
     </data-defined-properties>
     <profileLineSymbol>
-      <symbol name="" force_rhr="0" clip_to_extent="1" alpha="1" type="line" is_animated="0" frame_rate="10">
+      <symbol force_rhr="0" is_animated="0" type="line" alpha="1" clip_to_extent="1" name="" frame_rate="10">
         <data_defined_properties>
           <Option type="Map">
-            <Option name="name" type="QString" value=""/>
+            <Option type="QString" value="" name="name"/>
             <Option name="properties"/>
-            <Option name="type" type="QString" value="collection"/>
+            <Option type="QString" value="collection" name="type"/>
           </Option>
         </data_defined_properties>
-        <layer enabled="1" class="SimpleLine" locked="0" pass="0" id="{71daaf28-65a1-48d3-a4ea-59a5830a85d9}">
+        <layer id="{71daaf28-65a1-48d3-a4ea-59a5830a85d9}" locked="0" class="SimpleLine" enabled="1" pass="0">
           <Option type="Map">
-            <Option name="align_dash_pattern" type="QString" value="0"/>
-            <Option name="capstyle" type="QString" value="square"/>
-            <Option name="customdash" type="QString" value="5;2"/>
-            <Option name="customdash_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
-            <Option name="customdash_unit" type="QString" value="MM"/>
-            <Option name="dash_pattern_offset" type="QString" value="0"/>
-            <Option name="dash_pattern_offset_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
-            <Option name="dash_pattern_offset_unit" type="QString" value="MM"/>
-            <Option name="draw_inside_polygon" type="QString" value="0"/>
-            <Option name="joinstyle" type="QString" value="bevel"/>
-            <Option name="line_color" type="QString" value="145,82,45,255"/>
-            <Option name="line_style" type="QString" value="solid"/>
-            <Option name="line_width" type="QString" value="0.6"/>
-            <Option name="line_width_unit" type="QString" value="MM"/>
-            <Option name="offset" type="QString" value="0"/>
-            <Option name="offset_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
-            <Option name="offset_unit" type="QString" value="MM"/>
-            <Option name="ring_filter" type="QString" value="0"/>
-            <Option name="trim_distance_end" type="QString" value="0"/>
-            <Option name="trim_distance_end_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
-            <Option name="trim_distance_end_unit" type="QString" value="MM"/>
-            <Option name="trim_distance_start" type="QString" value="0"/>
-            <Option name="trim_distance_start_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
-            <Option name="trim_distance_start_unit" type="QString" value="MM"/>
-            <Option name="tweak_dash_pattern_on_corners" type="QString" value="0"/>
-            <Option name="use_custom_dash" type="QString" value="0"/>
-            <Option name="width_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
+            <Option type="QString" value="0" name="align_dash_pattern"/>
+            <Option type="QString" value="square" name="capstyle"/>
+            <Option type="QString" value="5;2" name="customdash"/>
+            <Option type="QString" value="3x:0,0,0,0,0,0" name="customdash_map_unit_scale"/>
+            <Option type="QString" value="MM" name="customdash_unit"/>
+            <Option type="QString" value="0" name="dash_pattern_offset"/>
+            <Option type="QString" value="3x:0,0,0,0,0,0" name="dash_pattern_offset_map_unit_scale"/>
+            <Option type="QString" value="MM" name="dash_pattern_offset_unit"/>
+            <Option type="QString" value="0" name="draw_inside_polygon"/>
+            <Option type="QString" value="bevel" name="joinstyle"/>
+            <Option type="QString" value="145,82,45,255" name="line_color"/>
+            <Option type="QString" value="solid" name="line_style"/>
+            <Option type="QString" value="0.6" name="line_width"/>
+            <Option type="QString" value="MM" name="line_width_unit"/>
+            <Option type="QString" value="0" name="offset"/>
+            <Option type="QString" value="3x:0,0,0,0,0,0" name="offset_map_unit_scale"/>
+            <Option type="QString" value="MM" name="offset_unit"/>
+            <Option type="QString" value="0" name="ring_filter"/>
+            <Option type="QString" value="0" name="trim_distance_end"/>
+            <Option type="QString" value="3x:0,0,0,0,0,0" name="trim_distance_end_map_unit_scale"/>
+            <Option type="QString" value="MM" name="trim_distance_end_unit"/>
+            <Option type="QString" value="0" name="trim_distance_start"/>
+            <Option type="QString" value="3x:0,0,0,0,0,0" name="trim_distance_start_map_unit_scale"/>
+            <Option type="QString" value="MM" name="trim_distance_start_unit"/>
+            <Option type="QString" value="0" name="tweak_dash_pattern_on_corners"/>
+            <Option type="QString" value="0" name="use_custom_dash"/>
+            <Option type="QString" value="3x:0,0,0,0,0,0" name="width_map_unit_scale"/>
           </Option>
           <data_defined_properties>
             <Option type="Map">
-              <Option name="name" type="QString" value=""/>
+              <Option type="QString" value="" name="name"/>
               <Option name="properties"/>
-              <Option name="type" type="QString" value="collection"/>
+              <Option type="QString" value="collection" name="type"/>
             </Option>
           </data_defined_properties>
         </layer>
       </symbol>
     </profileLineSymbol>
     <profileFillSymbol>
-      <symbol name="" force_rhr="0" clip_to_extent="1" alpha="1" type="fill" is_animated="0" frame_rate="10">
+      <symbol force_rhr="0" is_animated="0" type="fill" alpha="1" clip_to_extent="1" name="" frame_rate="10">
         <data_defined_properties>
           <Option type="Map">
-            <Option name="name" type="QString" value=""/>
+            <Option type="QString" value="" name="name"/>
             <Option name="properties"/>
-            <Option name="type" type="QString" value="collection"/>
+            <Option type="QString" value="collection" name="type"/>
           </Option>
         </data_defined_properties>
-        <layer enabled="1" class="SimpleFill" locked="0" pass="0" id="{e7e9ccf2-a339-4c20-883a-6b7f7ed4c879}">
+        <layer id="{e7e9ccf2-a339-4c20-883a-6b7f7ed4c879}" locked="0" class="SimpleFill" enabled="1" pass="0">
           <Option type="Map">
-            <Option name="border_width_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
-            <Option name="color" type="QString" value="145,82,45,255"/>
-            <Option name="joinstyle" type="QString" value="bevel"/>
-            <Option name="offset" type="QString" value="0,0"/>
-            <Option name="offset_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
-            <Option name="offset_unit" type="QString" value="MM"/>
-            <Option name="outline_color" type="QString" value="104,59,32,255"/>
-            <Option name="outline_style" type="QString" value="solid"/>
-            <Option name="outline_width" type="QString" value="0.2"/>
-            <Option name="outline_width_unit" type="QString" value="MM"/>
-            <Option name="style" type="QString" value="solid"/>
+            <Option type="QString" value="3x:0,0,0,0,0,0" name="border_width_map_unit_scale"/>
+            <Option type="QString" value="145,82,45,255" name="color"/>
+            <Option type="QString" value="bevel" name="joinstyle"/>
+            <Option type="QString" value="0,0" name="offset"/>
+            <Option type="QString" value="3x:0,0,0,0,0,0" name="offset_map_unit_scale"/>
+            <Option type="QString" value="MM" name="offset_unit"/>
+            <Option type="QString" value="104,59,32,255" name="outline_color"/>
+            <Option type="QString" value="solid" name="outline_style"/>
+            <Option type="QString" value="0.2" name="outline_width"/>
+            <Option type="QString" value="MM" name="outline_width_unit"/>
+            <Option type="QString" value="solid" name="style"/>
           </Option>
           <data_defined_properties>
             <Option type="Map">
-              <Option name="name" type="QString" value=""/>
+              <Option type="QString" value="" name="name"/>
               <Option name="properties"/>
-              <Option name="type" type="QString" value="collection"/>
+              <Option type="QString" value="collection" name="type"/>
             </Option>
           </data_defined_properties>
         </layer>
       </symbol>
     </profileFillSymbol>
     <profileMarkerSymbol>
-      <symbol name="" force_rhr="0" clip_to_extent="1" alpha="1" type="marker" is_animated="0" frame_rate="10">
+      <symbol force_rhr="0" is_animated="0" type="marker" alpha="1" clip_to_extent="1" name="" frame_rate="10">
         <data_defined_properties>
           <Option type="Map">
-            <Option name="name" type="QString" value=""/>
+            <Option type="QString" value="" name="name"/>
             <Option name="properties"/>
-            <Option name="type" type="QString" value="collection"/>
+            <Option type="QString" value="collection" name="type"/>
           </Option>
         </data_defined_properties>
-        <layer enabled="1" class="SimpleMarker" locked="0" pass="0" id="{9b46e643-0fbc-40bf-a50b-5a434b3fa2a4}">
+        <layer id="{9b46e643-0fbc-40bf-a50b-5a434b3fa2a4}" locked="0" class="SimpleMarker" enabled="1" pass="0">
           <Option type="Map">
-            <Option name="angle" type="QString" value="0"/>
-            <Option name="cap_style" type="QString" value="square"/>
-            <Option name="color" type="QString" value="145,82,45,255"/>
-            <Option name="horizontal_anchor_point" type="QString" value="1"/>
-            <Option name="joinstyle" type="QString" value="bevel"/>
-            <Option name="name" type="QString" value="diamond"/>
-            <Option name="offset" type="QString" value="0,0"/>
-            <Option name="offset_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
-            <Option name="offset_unit" type="QString" value="MM"/>
-            <Option name="outline_color" type="QString" value="104,59,32,255"/>
-            <Option name="outline_style" type="QString" value="solid"/>
-            <Option name="outline_width" type="QString" value="0.2"/>
-            <Option name="outline_width_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
-            <Option name="outline_width_unit" type="QString" value="MM"/>
-            <Option name="scale_method" type="QString" value="diameter"/>
-            <Option name="size" type="QString" value="3"/>
-            <Option name="size_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
-            <Option name="size_unit" type="QString" value="MM"/>
-            <Option name="vertical_anchor_point" type="QString" value="1"/>
+            <Option type="QString" value="0" name="angle"/>
+            <Option type="QString" value="square" name="cap_style"/>
+            <Option type="QString" value="145,82,45,255" name="color"/>
+            <Option type="QString" value="1" name="horizontal_anchor_point"/>
+            <Option type="QString" value="bevel" name="joinstyle"/>
+            <Option type="QString" value="diamond" name="name"/>
+            <Option type="QString" value="0,0" name="offset"/>
+            <Option type="QString" value="3x:0,0,0,0,0,0" name="offset_map_unit_scale"/>
+            <Option type="QString" value="MM" name="offset_unit"/>
+            <Option type="QString" value="104,59,32,255" name="outline_color"/>
+            <Option type="QString" value="solid" name="outline_style"/>
+            <Option type="QString" value="0.2" name="outline_width"/>
+            <Option type="QString" value="3x:0,0,0,0,0,0" name="outline_width_map_unit_scale"/>
+            <Option type="QString" value="MM" name="outline_width_unit"/>
+            <Option type="QString" value="diameter" name="scale_method"/>
+            <Option type="QString" value="3" name="size"/>
+            <Option type="QString" value="3x:0,0,0,0,0,0" name="size_map_unit_scale"/>
+            <Option type="QString" value="MM" name="size_unit"/>
+            <Option type="QString" value="1" name="vertical_anchor_point"/>
           </Option>
           <data_defined_properties>
             <Option type="Map">
-              <Option name="name" type="QString" value=""/>
+              <Option type="QString" value="" name="name"/>
               <Option name="properties"/>
-              <Option name="type" type="QString" value="collection"/>
+              <Option type="QString" value="collection" name="type"/>
             </Option>
           </data_defined_properties>
         </layer>
       </symbol>
     </profileMarkerSymbol>
   </elevation>
-  <renderer-v2 enableorderby="0" type="RuleRenderer" forceraster="0" referencescale="-1" symbollevels="0">
+  <renderer-v2 referencescale="-1" forceraster="0" type="RuleRenderer" symbollevels="0" enableorderby="0">
     <rules key="{9d73088f-d86f-43cb-a94a-369b6a4cdebc}">
-      <rule key="{cb6f418f-7582-4301-b147-660375870e62}" filter=" &quot;ws_categorie_New&quot;  = 1 OR  &quot;ws_categorie_Old&quot;  = 1" label="Primaire watersysteem">
-        <rule symbol="0" key="{8e88bce5-bc69-4a9d-8982-f4677b64d9d7}" description="Dit object zit wel in de oude dataset, maar niet in de nieuwe." filter=" &quot;in_both&quot;  LIKE  '%old' " label="Bestaat niet meer in DAMO nieuw"/>
-        <rule symbol="1" key="{eade4fe8-660f-4c18-8858-a12a4024f880}" description="Dit object zit wel in de oude dataset, maar niet in de nieuwe." filter=" &quot;in_both&quot;  LIKE  '%new' " label="Bestond nog niet in DAMO oud"/>
-        <rule symbol="2" key="{a5153a9c-2463-41b2-aa78-4c2093b5d781}" description="Verschillen in kolommen die zorgen voor andere schematisatie." filter=" &quot;in_both&quot;   LIKE  '%both' AND  &quot;number_of_critical&quot; > 0" label="Kritiek verschil tussen beide datasets"/>
-        <rule symbol="3" key="{e264702d-adb4-4211-bedd-5e14627cc3c1}" description="Verschillen in naam of kolommen die niet direct invloed hebben op de schematisatie." filter=" &quot;in_both&quot;   LIKE  '%both' AND  &quot;number_of_critical&quot; = 0 AND ( &quot;number_of_info&quot;  +  &quot;number_of_warning&quot; ) > 0" label="Klein verschil tussen beide datasets"/>
-        <rule symbol="4" key="{d8deefea-bca8-454a-9fd5-ddd99bc17a35}" description="In beide datasets zonder verschillen tussen de belangrijkste eigenschappen" filter="ELSE" label="Geen verschillen gevonden" checkstate="0"/>
+      <rule label="Primaire watersysteem" key="{cb6f418f-7582-4301-b147-660375870e62}" filter=" &quot;ws_categorie_New&quot;  = 1 OR  &quot;ws_categorie_Old&quot;  = 1">
+        <rule label="Bestaat in DAMO old - niet meer in DAMO nieuw" key="{8e88bce5-bc69-4a9d-8982-f4677b64d9d7}" symbol="0" description="Dit object zit wel in de oude dataset, maar niet in de nieuwe." filter=" &quot;in_both&quot;  LIKE  '%old' "/>
+        <rule label="Bestaat in DAMO nieuw - niet meer in DAMO oud" key="{eade4fe8-660f-4c18-8858-a12a4024f880}" symbol="1" description="Dit object zit wel in de oude dataset, maar niet in de nieuwe." filter=" &quot;in_both&quot;  LIKE  '%new' "/>
+        <rule label="Kritiek verschil tussen beide datasets" key="{a5153a9c-2463-41b2-aa78-4c2093b5d781}" symbol="2" description="Verschillen in kolommen die zorgen voor andere schematisatie." filter=" &quot;in_both&quot;   LIKE  '%both' AND  &quot;number_of_critical&quot; > 0"/>
+        <rule label="Klein verschil tussen beide datasets" checkstate="0" key="{e264702d-adb4-4211-bedd-5e14627cc3c1}" symbol="3" description="Verschillen in naam of kolommen die niet direct invloed hebben op de schematisatie." filter=" &quot;in_both&quot;   LIKE  '%both' AND  &quot;number_of_critical&quot; = 0 AND ( &quot;number_of_info&quot;  +  &quot;number_of_warning&quot; ) > 0"/>
+        <rule label="Geen verschillen gevonden" checkstate="0" key="{d8deefea-bca8-454a-9fd5-ddd99bc17a35}" symbol="4" description="In beide datasets zonder verschillen tussen de belangrijkste eigenschappen" filter="ELSE"/>
       </rule>
-      <rule key="{0105f042-1fb2-4445-9b48-30b1b69ab82c}" filter="&quot;ws_categorie_New&quot;  > 1 OR  &quot;ws_categorie_Old&quot;  > 1" label="Niet-primaire watersysteem">
-        <rule symbol="5" key="{738fac80-fda3-474d-aa3e-8d049beec2d4}" description="Dit object zit wel in de oude dataset, maar niet in de nieuwe." filter=" &quot;in_both&quot;  LIKE  '%old' " label="Bestaat niet meer in DAMO nieuw"/>
-        <rule symbol="6" key="{b47d627a-83a5-45bd-8520-424d12c425b3}" description="Dit object zit wel in de oude dataset, maar niet in de nieuwe." filter=" &quot;in_both&quot;  LIKE  '%new' " label="Bestond nog niet in DAMO oud"/>
-        <rule symbol="7" key="{7cac7715-bb61-497c-9357-5c78e2e557be}" description="Verschillen in kolommen die zorgen voor andere schematisatie." filter=" &quot;in_both&quot;   LIKE  '%both' AND  &quot;number_of_critical&quot; > 0" label="Kritiek verschil tussen beide datasets"/>
-        <rule symbol="8" key="{f273d694-091b-4372-bc98-4900302cb6d5}" description="Verschillen in naam of kolommen die niet direct invloed hebben op de schematisatie." filter=" &quot;in_both&quot;   LIKE  '%both' AND  &quot;number_of_critical&quot; = 0 AND ( &quot;number_of_info&quot;  +  &quot;number_of_warning&quot; ) > 0" label="Klein verschil tussen beide datasets"/>
-        <rule symbol="9" key="{ee7f29e2-9ddf-42ac-8515-e56c724105cb}" description="In beide datasets zonder verschillen tussen de belangrijkste eigenschappen" filter="ELSE" label="Geen verschillen gevonden" checkstate="0"/>
+      <rule label="Niet-primaire watersysteem" key="{0105f042-1fb2-4445-9b48-30b1b69ab82c}" filter="&quot;ws_categorie_New&quot;  > 1 OR  &quot;ws_categorie_Old&quot;  > 1">
+        <rule label="Bestaat in DAMO old - niet meer in DAMO nieuw" key="{738fac80-fda3-474d-aa3e-8d049beec2d4}" symbol="5" description="Dit object zit wel in de oude dataset, maar niet in de nieuwe." filter=" &quot;in_both&quot;  LIKE  '%old' "/>
+        <rule label="Bestaat in DAMO nieuw - niet meer in DAMO oud" key="{b47d627a-83a5-45bd-8520-424d12c425b3}" symbol="6" description="Dit object zit wel in de oude dataset, maar niet in de nieuwe." filter=" &quot;in_both&quot;  LIKE  '%new' "/>
+        <rule label="Kritiek verschil tussen beide datasets" key="{7cac7715-bb61-497c-9357-5c78e2e557be}" symbol="7" description="Verschillen in kolommen die zorgen voor andere schematisatie." filter=" &quot;in_both&quot;   LIKE  '%both' AND  &quot;number_of_critical&quot; > 0"/>
+        <rule label="Klein verschil tussen beide datasets" checkstate="0" key="{f273d694-091b-4372-bc98-4900302cb6d5}" symbol="8" description="Verschillen in naam of kolommen die niet direct invloed hebben op de schematisatie." filter=" &quot;in_both&quot;   LIKE  '%both' AND  &quot;number_of_critical&quot; = 0 AND ( &quot;number_of_info&quot;  +  &quot;number_of_warning&quot; ) > 0"/>
+        <rule label="Geen verschillen gevonden" checkstate="0" key="{ee7f29e2-9ddf-42ac-8515-e56c724105cb}" symbol="9" description="In beide datasets zonder verschillen tussen de belangrijkste eigenschappen" filter="ELSE"/>
       </rule>
     </rules>
     <symbols>
-      <symbol name="0" force_rhr="0" clip_to_extent="1" alpha="1" type="marker" is_animated="0" frame_rate="10">
+      <symbol force_rhr="0" is_animated="0" type="marker" alpha="1" clip_to_extent="1" name="0" frame_rate="10">
         <data_defined_properties>
           <Option type="Map">
-            <Option name="name" type="QString" value=""/>
+            <Option type="QString" value="" name="name"/>
             <Option name="properties"/>
-            <Option name="type" type="QString" value="collection"/>
+            <Option type="QString" value="collection" name="type"/>
           </Option>
         </data_defined_properties>
-        <layer enabled="1" class="SimpleMarker" locked="0" pass="0" id="{da31b105-8abc-4f7d-b0e1-761a49168419}">
+        <layer id="{da31b105-8abc-4f7d-b0e1-761a49168419}" locked="0" class="SimpleMarker" enabled="1" pass="0">
           <Option type="Map">
-            <Option name="angle" type="QString" value="180"/>
-            <Option name="cap_style" type="QString" value="square"/>
-            <Option name="color" type="QString" value="227,26,28,255"/>
-            <Option name="horizontal_anchor_point" type="QString" value="1"/>
-            <Option name="joinstyle" type="QString" value="bevel"/>
-            <Option name="name" type="QString" value="triangle"/>
-            <Option name="offset" type="QString" value="0,0"/>
-            <Option name="offset_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
-            <Option name="offset_unit" type="QString" value="MM"/>
-            <Option name="outline_color" type="QString" value="35,35,35,255"/>
-            <Option name="outline_style" type="QString" value="solid"/>
-            <Option name="outline_width" type="QString" value="0"/>
-            <Option name="outline_width_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
-            <Option name="outline_width_unit" type="QString" value="MM"/>
-            <Option name="scale_method" type="QString" value="diameter"/>
-            <Option name="size" type="QString" value="5"/>
-            <Option name="size_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
-            <Option name="size_unit" type="QString" value="MM"/>
-            <Option name="vertical_anchor_point" type="QString" value="1"/>
+            <Option type="QString" value="180" name="angle"/>
+            <Option type="QString" value="square" name="cap_style"/>
+            <Option type="QString" value="227,26,28,255" name="color"/>
+            <Option type="QString" value="1" name="horizontal_anchor_point"/>
+            <Option type="QString" value="bevel" name="joinstyle"/>
+            <Option type="QString" value="triangle" name="name"/>
+            <Option type="QString" value="0,0" name="offset"/>
+            <Option type="QString" value="3x:0,0,0,0,0,0" name="offset_map_unit_scale"/>
+            <Option type="QString" value="MM" name="offset_unit"/>
+            <Option type="QString" value="35,35,35,255" name="outline_color"/>
+            <Option type="QString" value="solid" name="outline_style"/>
+            <Option type="QString" value="0" name="outline_width"/>
+            <Option type="QString" value="3x:0,0,0,0,0,0" name="outline_width_map_unit_scale"/>
+            <Option type="QString" value="MM" name="outline_width_unit"/>
+            <Option type="QString" value="diameter" name="scale_method"/>
+            <Option type="QString" value="5" name="size"/>
+            <Option type="QString" value="3x:0,0,0,0,0,0" name="size_map_unit_scale"/>
+            <Option type="QString" value="MM" name="size_unit"/>
+            <Option type="QString" value="1" name="vertical_anchor_point"/>
           </Option>
           <data_defined_properties>
             <Option type="Map">
-              <Option name="name" type="QString" value=""/>
+              <Option type="QString" value="" name="name"/>
               <Option name="properties"/>
-              <Option name="type" type="QString" value="collection"/>
+              <Option type="QString" value="collection" name="type"/>
             </Option>
           </data_defined_properties>
         </layer>
       </symbol>
-      <symbol name="1" force_rhr="0" clip_to_extent="1" alpha="1" type="marker" is_animated="0" frame_rate="10">
+      <symbol force_rhr="0" is_animated="0" type="marker" alpha="1" clip_to_extent="1" name="1" frame_rate="10">
         <data_defined_properties>
           <Option type="Map">
-            <Option name="name" type="QString" value=""/>
+            <Option type="QString" value="" name="name"/>
             <Option name="properties"/>
-            <Option name="type" type="QString" value="collection"/>
+            <Option type="QString" value="collection" name="type"/>
           </Option>
         </data_defined_properties>
-        <layer enabled="1" class="SimpleMarker" locked="0" pass="0" id="{da31b105-8abc-4f7d-b0e1-761a49168419}">
+        <layer id="{da31b105-8abc-4f7d-b0e1-761a49168419}" locked="0" class="SimpleMarker" enabled="1" pass="0">
           <Option type="Map">
-            <Option name="angle" type="QString" value="0"/>
-            <Option name="cap_style" type="QString" value="square"/>
-            <Option name="color" type="QString" value="227,26,28,255"/>
-            <Option name="horizontal_anchor_point" type="QString" value="1"/>
-            <Option name="joinstyle" type="QString" value="bevel"/>
-            <Option name="name" type="QString" value="triangle"/>
-            <Option name="offset" type="QString" value="0,0"/>
-            <Option name="offset_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
-            <Option name="offset_unit" type="QString" value="MM"/>
-            <Option name="outline_color" type="QString" value="35,35,35,255"/>
-            <Option name="outline_style" type="QString" value="solid"/>
-            <Option name="outline_width" type="QString" value="0"/>
-            <Option name="outline_width_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
-            <Option name="outline_width_unit" type="QString" value="MM"/>
-            <Option name="scale_method" type="QString" value="diameter"/>
-            <Option name="size" type="QString" value="5"/>
-            <Option name="size_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
-            <Option name="size_unit" type="QString" value="MM"/>
-            <Option name="vertical_anchor_point" type="QString" value="1"/>
+            <Option type="QString" value="0" name="angle"/>
+            <Option type="QString" value="square" name="cap_style"/>
+            <Option type="QString" value="227,26,28,255" name="color"/>
+            <Option type="QString" value="1" name="horizontal_anchor_point"/>
+            <Option type="QString" value="bevel" name="joinstyle"/>
+            <Option type="QString" value="triangle" name="name"/>
+            <Option type="QString" value="0,0" name="offset"/>
+            <Option type="QString" value="3x:0,0,0,0,0,0" name="offset_map_unit_scale"/>
+            <Option type="QString" value="MM" name="offset_unit"/>
+            <Option type="QString" value="35,35,35,255" name="outline_color"/>
+            <Option type="QString" value="solid" name="outline_style"/>
+            <Option type="QString" value="0" name="outline_width"/>
+            <Option type="QString" value="3x:0,0,0,0,0,0" name="outline_width_map_unit_scale"/>
+            <Option type="QString" value="MM" name="outline_width_unit"/>
+            <Option type="QString" value="diameter" name="scale_method"/>
+            <Option type="QString" value="5" name="size"/>
+            <Option type="QString" value="3x:0,0,0,0,0,0" name="size_map_unit_scale"/>
+            <Option type="QString" value="MM" name="size_unit"/>
+            <Option type="QString" value="1" name="vertical_anchor_point"/>
           </Option>
           <data_defined_properties>
             <Option type="Map">
-              <Option name="name" type="QString" value=""/>
+              <Option type="QString" value="" name="name"/>
               <Option name="properties"/>
-              <Option name="type" type="QString" value="collection"/>
+              <Option type="QString" value="collection" name="type"/>
             </Option>
           </data_defined_properties>
         </layer>
       </symbol>
-      <symbol name="2" force_rhr="0" clip_to_extent="1" alpha="1" type="marker" is_animated="0" frame_rate="10">
+      <symbol force_rhr="0" is_animated="0" type="marker" alpha="1" clip_to_extent="1" name="2" frame_rate="10">
         <data_defined_properties>
           <Option type="Map">
-            <Option name="name" type="QString" value=""/>
+            <Option type="QString" value="" name="name"/>
             <Option name="properties"/>
-            <Option name="type" type="QString" value="collection"/>
+            <Option type="QString" value="collection" name="type"/>
           </Option>
         </data_defined_properties>
-        <layer enabled="1" class="SimpleMarker" locked="0" pass="0" id="{b9e046d4-cfac-4943-9d35-abcfca80965e}">
+        <layer id="{b9e046d4-cfac-4943-9d35-abcfca80965e}" locked="0" class="SimpleMarker" enabled="1" pass="0">
           <Option type="Map">
-            <Option name="angle" type="QString" value="0"/>
-            <Option name="cap_style" type="QString" value="square"/>
-            <Option name="color" type="QString" value="227,26,28,255"/>
-            <Option name="horizontal_anchor_point" type="QString" value="1"/>
-            <Option name="joinstyle" type="QString" value="bevel"/>
-            <Option name="name" type="QString" value="circle"/>
-            <Option name="offset" type="QString" value="0,0"/>
-            <Option name="offset_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
-            <Option name="offset_unit" type="QString" value="MM"/>
-            <Option name="outline_color" type="QString" value="35,35,35,255"/>
-            <Option name="outline_style" type="QString" value="solid"/>
-            <Option name="outline_width" type="QString" value="0"/>
-            <Option name="outline_width_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
-            <Option name="outline_width_unit" type="QString" value="MM"/>
-            <Option name="scale_method" type="QString" value="diameter"/>
-            <Option name="size" type="QString" value="5"/>
-            <Option name="size_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
-            <Option name="size_unit" type="QString" value="MM"/>
-            <Option name="vertical_anchor_point" type="QString" value="1"/>
+            <Option type="QString" value="0" name="angle"/>
+            <Option type="QString" value="square" name="cap_style"/>
+            <Option type="QString" value="227,26,28,255" name="color"/>
+            <Option type="QString" value="1" name="horizontal_anchor_point"/>
+            <Option type="QString" value="bevel" name="joinstyle"/>
+            <Option type="QString" value="circle" name="name"/>
+            <Option type="QString" value="0,0" name="offset"/>
+            <Option type="QString" value="3x:0,0,0,0,0,0" name="offset_map_unit_scale"/>
+            <Option type="QString" value="MM" name="offset_unit"/>
+            <Option type="QString" value="35,35,35,255" name="outline_color"/>
+            <Option type="QString" value="solid" name="outline_style"/>
+            <Option type="QString" value="0" name="outline_width"/>
+            <Option type="QString" value="3x:0,0,0,0,0,0" name="outline_width_map_unit_scale"/>
+            <Option type="QString" value="MM" name="outline_width_unit"/>
+            <Option type="QString" value="diameter" name="scale_method"/>
+            <Option type="QString" value="5" name="size"/>
+            <Option type="QString" value="3x:0,0,0,0,0,0" name="size_map_unit_scale"/>
+            <Option type="QString" value="MM" name="size_unit"/>
+            <Option type="QString" value="1" name="vertical_anchor_point"/>
           </Option>
           <data_defined_properties>
             <Option type="Map">
-              <Option name="name" type="QString" value=""/>
+              <Option type="QString" value="" name="name"/>
               <Option name="properties"/>
-              <Option name="type" type="QString" value="collection"/>
+              <Option type="QString" value="collection" name="type"/>
             </Option>
           </data_defined_properties>
         </layer>
       </symbol>
-      <symbol name="3" force_rhr="0" clip_to_extent="1" alpha="1" type="marker" is_animated="0" frame_rate="10">
+      <symbol force_rhr="0" is_animated="0" type="marker" alpha="1" clip_to_extent="1" name="3" frame_rate="10">
         <data_defined_properties>
           <Option type="Map">
-            <Option name="name" type="QString" value=""/>
+            <Option type="QString" value="" name="name"/>
             <Option name="properties"/>
-            <Option name="type" type="QString" value="collection"/>
+            <Option type="QString" value="collection" name="type"/>
           </Option>
         </data_defined_properties>
-        <layer enabled="1" class="SimpleMarker" locked="0" pass="0" id="{b9e046d4-cfac-4943-9d35-abcfca80965e}">
+        <layer id="{b9e046d4-cfac-4943-9d35-abcfca80965e}" locked="0" class="SimpleMarker" enabled="1" pass="0">
           <Option type="Map">
-            <Option name="angle" type="QString" value="0"/>
-            <Option name="cap_style" type="QString" value="square"/>
-            <Option name="color" type="QString" value="253,191,111,255"/>
-            <Option name="horizontal_anchor_point" type="QString" value="1"/>
-            <Option name="joinstyle" type="QString" value="bevel"/>
-            <Option name="name" type="QString" value="circle"/>
-            <Option name="offset" type="QString" value="0,0"/>
-            <Option name="offset_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
-            <Option name="offset_unit" type="QString" value="MM"/>
-            <Option name="outline_color" type="QString" value="35,35,35,255"/>
-            <Option name="outline_style" type="QString" value="solid"/>
-            <Option name="outline_width" type="QString" value="0"/>
-            <Option name="outline_width_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
-            <Option name="outline_width_unit" type="QString" value="MM"/>
-            <Option name="scale_method" type="QString" value="diameter"/>
-            <Option name="size" type="QString" value="2"/>
-            <Option name="size_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
-            <Option name="size_unit" type="QString" value="MM"/>
-            <Option name="vertical_anchor_point" type="QString" value="1"/>
+            <Option type="QString" value="0" name="angle"/>
+            <Option type="QString" value="square" name="cap_style"/>
+            <Option type="QString" value="253,191,111,255" name="color"/>
+            <Option type="QString" value="1" name="horizontal_anchor_point"/>
+            <Option type="QString" value="bevel" name="joinstyle"/>
+            <Option type="QString" value="circle" name="name"/>
+            <Option type="QString" value="0,0" name="offset"/>
+            <Option type="QString" value="3x:0,0,0,0,0,0" name="offset_map_unit_scale"/>
+            <Option type="QString" value="MM" name="offset_unit"/>
+            <Option type="QString" value="35,35,35,255" name="outline_color"/>
+            <Option type="QString" value="solid" name="outline_style"/>
+            <Option type="QString" value="0" name="outline_width"/>
+            <Option type="QString" value="3x:0,0,0,0,0,0" name="outline_width_map_unit_scale"/>
+            <Option type="QString" value="MM" name="outline_width_unit"/>
+            <Option type="QString" value="diameter" name="scale_method"/>
+            <Option type="QString" value="2" name="size"/>
+            <Option type="QString" value="3x:0,0,0,0,0,0" name="size_map_unit_scale"/>
+            <Option type="QString" value="MM" name="size_unit"/>
+            <Option type="QString" value="1" name="vertical_anchor_point"/>
           </Option>
           <data_defined_properties>
             <Option type="Map">
-              <Option name="name" type="QString" value=""/>
+              <Option type="QString" value="" name="name"/>
               <Option name="properties"/>
-              <Option name="type" type="QString" value="collection"/>
+              <Option type="QString" value="collection" name="type"/>
             </Option>
           </data_defined_properties>
         </layer>
       </symbol>
-      <symbol name="4" force_rhr="0" clip_to_extent="1" alpha="1" type="marker" is_animated="0" frame_rate="10">
+      <symbol force_rhr="0" is_animated="0" type="marker" alpha="1" clip_to_extent="1" name="4" frame_rate="10">
         <data_defined_properties>
           <Option type="Map">
-            <Option name="name" type="QString" value=""/>
+            <Option type="QString" value="" name="name"/>
             <Option name="properties"/>
-            <Option name="type" type="QString" value="collection"/>
+            <Option type="QString" value="collection" name="type"/>
           </Option>
         </data_defined_properties>
-        <layer enabled="1" class="SimpleMarker" locked="0" pass="0" id="{cc1a88ec-0018-4ee2-a3b2-a7dc3d531d2f}">
+        <layer id="{cc1a88ec-0018-4ee2-a3b2-a7dc3d531d2f}" locked="0" class="SimpleMarker" enabled="1" pass="0">
           <Option type="Map">
-            <Option name="angle" type="QString" value="0"/>
-            <Option name="cap_style" type="QString" value="square"/>
-            <Option name="color" type="QString" value="178,223,138,255"/>
-            <Option name="horizontal_anchor_point" type="QString" value="1"/>
-            <Option name="joinstyle" type="QString" value="bevel"/>
-            <Option name="name" type="QString" value="circle"/>
-            <Option name="offset" type="QString" value="0,0"/>
-            <Option name="offset_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
-            <Option name="offset_unit" type="QString" value="MM"/>
-            <Option name="outline_color" type="QString" value="35,35,35,255"/>
-            <Option name="outline_style" type="QString" value="solid"/>
-            <Option name="outline_width" type="QString" value="0"/>
-            <Option name="outline_width_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
-            <Option name="outline_width_unit" type="QString" value="MM"/>
-            <Option name="scale_method" type="QString" value="diameter"/>
-            <Option name="size" type="QString" value="1.8"/>
-            <Option name="size_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
-            <Option name="size_unit" type="QString" value="MM"/>
-            <Option name="vertical_anchor_point" type="QString" value="1"/>
+            <Option type="QString" value="0" name="angle"/>
+            <Option type="QString" value="square" name="cap_style"/>
+            <Option type="QString" value="178,223,138,255" name="color"/>
+            <Option type="QString" value="1" name="horizontal_anchor_point"/>
+            <Option type="QString" value="bevel" name="joinstyle"/>
+            <Option type="QString" value="circle" name="name"/>
+            <Option type="QString" value="0,0" name="offset"/>
+            <Option type="QString" value="3x:0,0,0,0,0,0" name="offset_map_unit_scale"/>
+            <Option type="QString" value="MM" name="offset_unit"/>
+            <Option type="QString" value="35,35,35,255" name="outline_color"/>
+            <Option type="QString" value="solid" name="outline_style"/>
+            <Option type="QString" value="0" name="outline_width"/>
+            <Option type="QString" value="3x:0,0,0,0,0,0" name="outline_width_map_unit_scale"/>
+            <Option type="QString" value="MM" name="outline_width_unit"/>
+            <Option type="QString" value="diameter" name="scale_method"/>
+            <Option type="QString" value="1.8" name="size"/>
+            <Option type="QString" value="3x:0,0,0,0,0,0" name="size_map_unit_scale"/>
+            <Option type="QString" value="MM" name="size_unit"/>
+            <Option type="QString" value="1" name="vertical_anchor_point"/>
           </Option>
           <data_defined_properties>
             <Option type="Map">
-              <Option name="name" type="QString" value=""/>
+              <Option type="QString" value="" name="name"/>
               <Option name="properties"/>
-              <Option name="type" type="QString" value="collection"/>
+              <Option type="QString" value="collection" name="type"/>
             </Option>
           </data_defined_properties>
         </layer>
       </symbol>
-      <symbol name="5" force_rhr="0" clip_to_extent="1" alpha="1" type="marker" is_animated="0" frame_rate="10">
+      <symbol force_rhr="0" is_animated="0" type="marker" alpha="1" clip_to_extent="1" name="5" frame_rate="10">
         <data_defined_properties>
           <Option type="Map">
-            <Option name="name" type="QString" value=""/>
+            <Option type="QString" value="" name="name"/>
             <Option name="properties"/>
-            <Option name="type" type="QString" value="collection"/>
+            <Option type="QString" value="collection" name="type"/>
           </Option>
         </data_defined_properties>
-        <layer enabled="1" class="SimpleMarker" locked="0" pass="0" id="{da31b105-8abc-4f7d-b0e1-761a49168419}">
+        <layer id="{da31b105-8abc-4f7d-b0e1-761a49168419}" locked="0" class="SimpleMarker" enabled="1" pass="0">
           <Option type="Map">
-            <Option name="angle" type="QString" value="180"/>
-            <Option name="cap_style" type="QString" value="square"/>
-            <Option name="color" type="QString" value="227,26,28,255"/>
-            <Option name="horizontal_anchor_point" type="QString" value="1"/>
-            <Option name="joinstyle" type="QString" value="bevel"/>
-            <Option name="name" type="QString" value="triangle"/>
-            <Option name="offset" type="QString" value="0,0"/>
-            <Option name="offset_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
-            <Option name="offset_unit" type="QString" value="MM"/>
-            <Option name="outline_color" type="QString" value="35,35,35,255"/>
-            <Option name="outline_style" type="QString" value="solid"/>
-            <Option name="outline_width" type="QString" value="0"/>
-            <Option name="outline_width_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
-            <Option name="outline_width_unit" type="QString" value="MM"/>
-            <Option name="scale_method" type="QString" value="diameter"/>
-            <Option name="size" type="QString" value="3"/>
-            <Option name="size_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
-            <Option name="size_unit" type="QString" value="MM"/>
-            <Option name="vertical_anchor_point" type="QString" value="1"/>
+            <Option type="QString" value="180" name="angle"/>
+            <Option type="QString" value="square" name="cap_style"/>
+            <Option type="QString" value="227,26,28,255" name="color"/>
+            <Option type="QString" value="1" name="horizontal_anchor_point"/>
+            <Option type="QString" value="bevel" name="joinstyle"/>
+            <Option type="QString" value="triangle" name="name"/>
+            <Option type="QString" value="0,0" name="offset"/>
+            <Option type="QString" value="3x:0,0,0,0,0,0" name="offset_map_unit_scale"/>
+            <Option type="QString" value="MM" name="offset_unit"/>
+            <Option type="QString" value="35,35,35,255" name="outline_color"/>
+            <Option type="QString" value="solid" name="outline_style"/>
+            <Option type="QString" value="0" name="outline_width"/>
+            <Option type="QString" value="3x:0,0,0,0,0,0" name="outline_width_map_unit_scale"/>
+            <Option type="QString" value="MM" name="outline_width_unit"/>
+            <Option type="QString" value="diameter" name="scale_method"/>
+            <Option type="QString" value="3" name="size"/>
+            <Option type="QString" value="3x:0,0,0,0,0,0" name="size_map_unit_scale"/>
+            <Option type="QString" value="MM" name="size_unit"/>
+            <Option type="QString" value="1" name="vertical_anchor_point"/>
           </Option>
           <data_defined_properties>
             <Option type="Map">
-              <Option name="name" type="QString" value=""/>
+              <Option type="QString" value="" name="name"/>
               <Option name="properties"/>
-              <Option name="type" type="QString" value="collection"/>
+              <Option type="QString" value="collection" name="type"/>
             </Option>
           </data_defined_properties>
         </layer>
       </symbol>
-      <symbol name="6" force_rhr="0" clip_to_extent="1" alpha="1" type="marker" is_animated="0" frame_rate="10">
+      <symbol force_rhr="0" is_animated="0" type="marker" alpha="1" clip_to_extent="1" name="6" frame_rate="10">
         <data_defined_properties>
           <Option type="Map">
-            <Option name="name" type="QString" value=""/>
+            <Option type="QString" value="" name="name"/>
             <Option name="properties"/>
-            <Option name="type" type="QString" value="collection"/>
+            <Option type="QString" value="collection" name="type"/>
           </Option>
         </data_defined_properties>
-        <layer enabled="1" class="SimpleMarker" locked="0" pass="0" id="{da31b105-8abc-4f7d-b0e1-761a49168419}">
+        <layer id="{da31b105-8abc-4f7d-b0e1-761a49168419}" locked="0" class="SimpleMarker" enabled="1" pass="0">
           <Option type="Map">
-            <Option name="angle" type="QString" value="0"/>
-            <Option name="cap_style" type="QString" value="square"/>
-            <Option name="color" type="QString" value="227,26,28,255"/>
-            <Option name="horizontal_anchor_point" type="QString" value="1"/>
-            <Option name="joinstyle" type="QString" value="bevel"/>
-            <Option name="name" type="QString" value="triangle"/>
-            <Option name="offset" type="QString" value="0,0"/>
-            <Option name="offset_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
-            <Option name="offset_unit" type="QString" value="MM"/>
-            <Option name="outline_color" type="QString" value="35,35,35,255"/>
-            <Option name="outline_style" type="QString" value="solid"/>
-            <Option name="outline_width" type="QString" value="0"/>
-            <Option name="outline_width_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
-            <Option name="outline_width_unit" type="QString" value="MM"/>
-            <Option name="scale_method" type="QString" value="diameter"/>
-            <Option name="size" type="QString" value="3"/>
-            <Option name="size_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
-            <Option name="size_unit" type="QString" value="MM"/>
-            <Option name="vertical_anchor_point" type="QString" value="1"/>
+            <Option type="QString" value="0" name="angle"/>
+            <Option type="QString" value="square" name="cap_style"/>
+            <Option type="QString" value="227,26,28,255" name="color"/>
+            <Option type="QString" value="1" name="horizontal_anchor_point"/>
+            <Option type="QString" value="bevel" name="joinstyle"/>
+            <Option type="QString" value="triangle" name="name"/>
+            <Option type="QString" value="0,0" name="offset"/>
+            <Option type="QString" value="3x:0,0,0,0,0,0" name="offset_map_unit_scale"/>
+            <Option type="QString" value="MM" name="offset_unit"/>
+            <Option type="QString" value="35,35,35,255" name="outline_color"/>
+            <Option type="QString" value="solid" name="outline_style"/>
+            <Option type="QString" value="0" name="outline_width"/>
+            <Option type="QString" value="3x:0,0,0,0,0,0" name="outline_width_map_unit_scale"/>
+            <Option type="QString" value="MM" name="outline_width_unit"/>
+            <Option type="QString" value="diameter" name="scale_method"/>
+            <Option type="QString" value="3" name="size"/>
+            <Option type="QString" value="3x:0,0,0,0,0,0" name="size_map_unit_scale"/>
+            <Option type="QString" value="MM" name="size_unit"/>
+            <Option type="QString" value="1" name="vertical_anchor_point"/>
           </Option>
           <data_defined_properties>
             <Option type="Map">
-              <Option name="name" type="QString" value=""/>
+              <Option type="QString" value="" name="name"/>
               <Option name="properties"/>
-              <Option name="type" type="QString" value="collection"/>
+              <Option type="QString" value="collection" name="type"/>
             </Option>
           </data_defined_properties>
         </layer>
       </symbol>
-      <symbol name="7" force_rhr="0" clip_to_extent="1" alpha="1" type="marker" is_animated="0" frame_rate="10">
+      <symbol force_rhr="0" is_animated="0" type="marker" alpha="1" clip_to_extent="1" name="7" frame_rate="10">
         <data_defined_properties>
           <Option type="Map">
-            <Option name="name" type="QString" value=""/>
+            <Option type="QString" value="" name="name"/>
             <Option name="properties"/>
-            <Option name="type" type="QString" value="collection"/>
+            <Option type="QString" value="collection" name="type"/>
           </Option>
         </data_defined_properties>
-        <layer enabled="1" class="SimpleMarker" locked="0" pass="0" id="{b9e046d4-cfac-4943-9d35-abcfca80965e}">
+        <layer id="{b9e046d4-cfac-4943-9d35-abcfca80965e}" locked="0" class="SimpleMarker" enabled="1" pass="0">
           <Option type="Map">
-            <Option name="angle" type="QString" value="0"/>
-            <Option name="cap_style" type="QString" value="square"/>
-            <Option name="color" type="QString" value="227,26,28,255"/>
-            <Option name="horizontal_anchor_point" type="QString" value="1"/>
-            <Option name="joinstyle" type="QString" value="bevel"/>
-            <Option name="name" type="QString" value="circle"/>
-            <Option name="offset" type="QString" value="0,0"/>
-            <Option name="offset_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
-            <Option name="offset_unit" type="QString" value="MM"/>
-            <Option name="outline_color" type="QString" value="35,35,35,255"/>
-            <Option name="outline_style" type="QString" value="solid"/>
-            <Option name="outline_width" type="QString" value="0"/>
-            <Option name="outline_width_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
-            <Option name="outline_width_unit" type="QString" value="MM"/>
-            <Option name="scale_method" type="QString" value="diameter"/>
-            <Option name="size" type="QString" value="3"/>
-            <Option name="size_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
-            <Option name="size_unit" type="QString" value="MM"/>
-            <Option name="vertical_anchor_point" type="QString" value="1"/>
+            <Option type="QString" value="0" name="angle"/>
+            <Option type="QString" value="square" name="cap_style"/>
+            <Option type="QString" value="227,26,28,255" name="color"/>
+            <Option type="QString" value="1" name="horizontal_anchor_point"/>
+            <Option type="QString" value="bevel" name="joinstyle"/>
+            <Option type="QString" value="circle" name="name"/>
+            <Option type="QString" value="0,0" name="offset"/>
+            <Option type="QString" value="3x:0,0,0,0,0,0" name="offset_map_unit_scale"/>
+            <Option type="QString" value="MM" name="offset_unit"/>
+            <Option type="QString" value="35,35,35,255" name="outline_color"/>
+            <Option type="QString" value="solid" name="outline_style"/>
+            <Option type="QString" value="0" name="outline_width"/>
+            <Option type="QString" value="3x:0,0,0,0,0,0" name="outline_width_map_unit_scale"/>
+            <Option type="QString" value="MM" name="outline_width_unit"/>
+            <Option type="QString" value="diameter" name="scale_method"/>
+            <Option type="QString" value="3" name="size"/>
+            <Option type="QString" value="3x:0,0,0,0,0,0" name="size_map_unit_scale"/>
+            <Option type="QString" value="MM" name="size_unit"/>
+            <Option type="QString" value="1" name="vertical_anchor_point"/>
           </Option>
           <data_defined_properties>
             <Option type="Map">
-              <Option name="name" type="QString" value=""/>
+              <Option type="QString" value="" name="name"/>
               <Option name="properties"/>
-              <Option name="type" type="QString" value="collection"/>
+              <Option type="QString" value="collection" name="type"/>
             </Option>
           </data_defined_properties>
         </layer>
       </symbol>
-      <symbol name="8" force_rhr="0" clip_to_extent="1" alpha="1" type="marker" is_animated="0" frame_rate="10">
+      <symbol force_rhr="0" is_animated="0" type="marker" alpha="1" clip_to_extent="1" name="8" frame_rate="10">
         <data_defined_properties>
           <Option type="Map">
-            <Option name="name" type="QString" value=""/>
+            <Option type="QString" value="" name="name"/>
             <Option name="properties"/>
-            <Option name="type" type="QString" value="collection"/>
+            <Option type="QString" value="collection" name="type"/>
           </Option>
         </data_defined_properties>
-        <layer enabled="1" class="SimpleMarker" locked="0" pass="0" id="{b9e046d4-cfac-4943-9d35-abcfca80965e}">
+        <layer id="{b9e046d4-cfac-4943-9d35-abcfca80965e}" locked="0" class="SimpleMarker" enabled="1" pass="0">
           <Option type="Map">
-            <Option name="angle" type="QString" value="0"/>
-            <Option name="cap_style" type="QString" value="square"/>
-            <Option name="color" type="QString" value="253,191,111,255"/>
-            <Option name="horizontal_anchor_point" type="QString" value="1"/>
-            <Option name="joinstyle" type="QString" value="bevel"/>
-            <Option name="name" type="QString" value="circle"/>
-            <Option name="offset" type="QString" value="0,0"/>
-            <Option name="offset_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
-            <Option name="offset_unit" type="QString" value="MM"/>
-            <Option name="outline_color" type="QString" value="35,35,35,255"/>
-            <Option name="outline_style" type="QString" value="solid"/>
-            <Option name="outline_width" type="QString" value="0"/>
-            <Option name="outline_width_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
-            <Option name="outline_width_unit" type="QString" value="MM"/>
-            <Option name="scale_method" type="QString" value="diameter"/>
-            <Option name="size" type="QString" value="2"/>
-            <Option name="size_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
-            <Option name="size_unit" type="QString" value="MM"/>
-            <Option name="vertical_anchor_point" type="QString" value="1"/>
+            <Option type="QString" value="0" name="angle"/>
+            <Option type="QString" value="square" name="cap_style"/>
+            <Option type="QString" value="253,191,111,255" name="color"/>
+            <Option type="QString" value="1" name="horizontal_anchor_point"/>
+            <Option type="QString" value="bevel" name="joinstyle"/>
+            <Option type="QString" value="circle" name="name"/>
+            <Option type="QString" value="0,0" name="offset"/>
+            <Option type="QString" value="3x:0,0,0,0,0,0" name="offset_map_unit_scale"/>
+            <Option type="QString" value="MM" name="offset_unit"/>
+            <Option type="QString" value="35,35,35,255" name="outline_color"/>
+            <Option type="QString" value="solid" name="outline_style"/>
+            <Option type="QString" value="0" name="outline_width"/>
+            <Option type="QString" value="3x:0,0,0,0,0,0" name="outline_width_map_unit_scale"/>
+            <Option type="QString" value="MM" name="outline_width_unit"/>
+            <Option type="QString" value="diameter" name="scale_method"/>
+            <Option type="QString" value="2" name="size"/>
+            <Option type="QString" value="3x:0,0,0,0,0,0" name="size_map_unit_scale"/>
+            <Option type="QString" value="MM" name="size_unit"/>
+            <Option type="QString" value="1" name="vertical_anchor_point"/>
           </Option>
           <data_defined_properties>
             <Option type="Map">
-              <Option name="name" type="QString" value=""/>
+              <Option type="QString" value="" name="name"/>
               <Option name="properties"/>
-              <Option name="type" type="QString" value="collection"/>
+              <Option type="QString" value="collection" name="type"/>
             </Option>
           </data_defined_properties>
         </layer>
       </symbol>
-      <symbol name="9" force_rhr="0" clip_to_extent="1" alpha="1" type="marker" is_animated="0" frame_rate="10">
+      <symbol force_rhr="0" is_animated="0" type="marker" alpha="1" clip_to_extent="1" name="9" frame_rate="10">
         <data_defined_properties>
           <Option type="Map">
-            <Option name="name" type="QString" value=""/>
+            <Option type="QString" value="" name="name"/>
             <Option name="properties"/>
-            <Option name="type" type="QString" value="collection"/>
+            <Option type="QString" value="collection" name="type"/>
           </Option>
         </data_defined_properties>
-        <layer enabled="1" class="SimpleMarker" locked="0" pass="0" id="{cc1a88ec-0018-4ee2-a3b2-a7dc3d531d2f}">
+        <layer id="{cc1a88ec-0018-4ee2-a3b2-a7dc3d531d2f}" locked="0" class="SimpleMarker" enabled="1" pass="0">
           <Option type="Map">
-            <Option name="angle" type="QString" value="0"/>
-            <Option name="cap_style" type="QString" value="square"/>
-            <Option name="color" type="QString" value="178,223,138,255"/>
-            <Option name="horizontal_anchor_point" type="QString" value="1"/>
-            <Option name="joinstyle" type="QString" value="bevel"/>
-            <Option name="name" type="QString" value="circle"/>
-            <Option name="offset" type="QString" value="0,0"/>
-            <Option name="offset_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
-            <Option name="offset_unit" type="QString" value="MM"/>
-            <Option name="outline_color" type="QString" value="35,35,35,255"/>
-            <Option name="outline_style" type="QString" value="solid"/>
-            <Option name="outline_width" type="QString" value="0"/>
-            <Option name="outline_width_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
-            <Option name="outline_width_unit" type="QString" value="MM"/>
-            <Option name="scale_method" type="QString" value="diameter"/>
-            <Option name="size" type="QString" value="1.8"/>
-            <Option name="size_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
-            <Option name="size_unit" type="QString" value="MM"/>
-            <Option name="vertical_anchor_point" type="QString" value="1"/>
+            <Option type="QString" value="0" name="angle"/>
+            <Option type="QString" value="square" name="cap_style"/>
+            <Option type="QString" value="178,223,138,255" name="color"/>
+            <Option type="QString" value="1" name="horizontal_anchor_point"/>
+            <Option type="QString" value="bevel" name="joinstyle"/>
+            <Option type="QString" value="circle" name="name"/>
+            <Option type="QString" value="0,0" name="offset"/>
+            <Option type="QString" value="3x:0,0,0,0,0,0" name="offset_map_unit_scale"/>
+            <Option type="QString" value="MM" name="offset_unit"/>
+            <Option type="QString" value="35,35,35,255" name="outline_color"/>
+            <Option type="QString" value="solid" name="outline_style"/>
+            <Option type="QString" value="0" name="outline_width"/>
+            <Option type="QString" value="3x:0,0,0,0,0,0" name="outline_width_map_unit_scale"/>
+            <Option type="QString" value="MM" name="outline_width_unit"/>
+            <Option type="QString" value="diameter" name="scale_method"/>
+            <Option type="QString" value="1.8" name="size"/>
+            <Option type="QString" value="3x:0,0,0,0,0,0" name="size_map_unit_scale"/>
+            <Option type="QString" value="MM" name="size_unit"/>
+            <Option type="QString" value="1" name="vertical_anchor_point"/>
           </Option>
           <data_defined_properties>
             <Option type="Map">
-              <Option name="name" type="QString" value=""/>
+              <Option type="QString" value="" name="name"/>
               <Option name="properties"/>
-              <Option name="type" type="QString" value="collection"/>
+              <Option type="QString" value="collection" name="type"/>
             </Option>
           </data_defined_properties>
         </layer>
@@ -557,41 +557,41 @@
   <selection mode="Default">
     <selectionColor invalid="1"/>
     <selectionSymbol>
-      <symbol name="" force_rhr="0" clip_to_extent="1" alpha="1" type="marker" is_animated="0" frame_rate="10">
+      <symbol force_rhr="0" is_animated="0" type="marker" alpha="1" clip_to_extent="1" name="" frame_rate="10">
         <data_defined_properties>
           <Option type="Map">
-            <Option name="name" type="QString" value=""/>
+            <Option type="QString" value="" name="name"/>
             <Option name="properties"/>
-            <Option name="type" type="QString" value="collection"/>
+            <Option type="QString" value="collection" name="type"/>
           </Option>
         </data_defined_properties>
-        <layer enabled="1" class="SimpleMarker" locked="0" pass="0" id="{f5a44d98-87cc-41f8-b507-234a49ac8419}">
+        <layer id="{f5a44d98-87cc-41f8-b507-234a49ac8419}" locked="0" class="SimpleMarker" enabled="1" pass="0">
           <Option type="Map">
-            <Option name="angle" type="QString" value="0"/>
-            <Option name="cap_style" type="QString" value="square"/>
-            <Option name="color" type="QString" value="255,0,0,255"/>
-            <Option name="horizontal_anchor_point" type="QString" value="1"/>
-            <Option name="joinstyle" type="QString" value="bevel"/>
-            <Option name="name" type="QString" value="circle"/>
-            <Option name="offset" type="QString" value="0,0"/>
-            <Option name="offset_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
-            <Option name="offset_unit" type="QString" value="MM"/>
-            <Option name="outline_color" type="QString" value="35,35,35,255"/>
-            <Option name="outline_style" type="QString" value="solid"/>
-            <Option name="outline_width" type="QString" value="0"/>
-            <Option name="outline_width_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
-            <Option name="outline_width_unit" type="QString" value="MM"/>
-            <Option name="scale_method" type="QString" value="diameter"/>
-            <Option name="size" type="QString" value="2"/>
-            <Option name="size_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
-            <Option name="size_unit" type="QString" value="MM"/>
-            <Option name="vertical_anchor_point" type="QString" value="1"/>
+            <Option type="QString" value="0" name="angle"/>
+            <Option type="QString" value="square" name="cap_style"/>
+            <Option type="QString" value="255,0,0,255" name="color"/>
+            <Option type="QString" value="1" name="horizontal_anchor_point"/>
+            <Option type="QString" value="bevel" name="joinstyle"/>
+            <Option type="QString" value="circle" name="name"/>
+            <Option type="QString" value="0,0" name="offset"/>
+            <Option type="QString" value="3x:0,0,0,0,0,0" name="offset_map_unit_scale"/>
+            <Option type="QString" value="MM" name="offset_unit"/>
+            <Option type="QString" value="35,35,35,255" name="outline_color"/>
+            <Option type="QString" value="solid" name="outline_style"/>
+            <Option type="QString" value="0" name="outline_width"/>
+            <Option type="QString" value="3x:0,0,0,0,0,0" name="outline_width_map_unit_scale"/>
+            <Option type="QString" value="MM" name="outline_width_unit"/>
+            <Option type="QString" value="diameter" name="scale_method"/>
+            <Option type="QString" value="2" name="size"/>
+            <Option type="QString" value="3x:0,0,0,0,0,0" name="size_map_unit_scale"/>
+            <Option type="QString" value="MM" name="size_unit"/>
+            <Option type="QString" value="1" name="vertical_anchor_point"/>
           </Option>
           <data_defined_properties>
             <Option type="Map">
-              <Option name="name" type="QString" value=""/>
+              <Option type="QString" value="" name="name"/>
               <Option name="properties"/>
-              <Option name="type" type="QString" value="collection"/>
+              <Option type="QString" value="collection" name="type"/>
             </Option>
           </data_defined_properties>
         </layer>
@@ -602,124 +602,124 @@
     <rules key="{60e03903-cd6f-4119-85cf-1af98e849b07}">
       <rule key="{283124e8-c8ae-42ea-ac46-4b600b1d9b23}" description="Aantal kritieke fouten" filter="&quot;in_both&quot;   LIKE  '%both' AND  &quot;number_of_critical&quot; > 0">
         <settings calloutType="simple">
-          <text-style fontSizeMapUnitScale="3x:0,0,0,0,0,0" textOrientation="horizontal" allowHtml="0" fontWordSpacing="0" forcedItalic="0" fieldName="CASE&#xd;&#xa;  WHEN &quot;in_both&quot; LIKE '%both' AND &quot;number_of_critical&quot; > 0 &#xd;&#xa;  THEN 'Aantal Kritieke Fouten: ' || &quot;number_of_critical&quot;&#xd;&#xa;  ELSE ''&#xd;&#xa;END&#xd;&#xa;" blendMode="0" fontFamily="Arial" forcedBold="0" useSubstitutions="0" textOpacity="1" fontSize="10" fontWeight="50" namedStyle="Standaard" fontLetterSpacing="0" textColor="227,26,28,255" fontItalic="0" capitalization="0" previewBkgrdColor="255,255,255,255" fontStrikeout="0" multilineHeight="1" fontSizeUnit="Point" fontUnderline="0" multilineHeightUnit="Percentage" isExpression="1" legendString="Aa" fontKerning="1">
+          <text-style forcedBold="0" fontWeight="50" fontSizeMapUnitScale="3x:0,0,0,0,0,0" multilineHeightUnit="Percentage" textOpacity="1" fontStrikeout="0" fontLetterSpacing="0" textOrientation="horizontal" fontWordSpacing="0" namedStyle="Standaard" multilineHeight="1" isExpression="1" capitalization="0" previewBkgrdColor="255,255,255,255" legendString="Aa" useSubstitutions="0" fieldName="CASE&#xd;&#xa;  WHEN &quot;in_both&quot; LIKE '%both' AND &quot;number_of_critical&quot; > 0 &#xd;&#xa;  THEN 'Aantal Kritieke Fouten: ' || &quot;number_of_critical&quot;&#xd;&#xa;  ELSE ''&#xd;&#xa;END&#xd;&#xa;" allowHtml="0" fontSize="10" textColor="227,26,28,255" blendMode="0" fontFamily="Arial" fontUnderline="0" forcedItalic="0" fontKerning="1" fontSizeUnit="Point" fontItalic="0">
             <families/>
-            <text-buffer bufferJoinStyle="128" bufferDraw="1" bufferSizeMapUnitScale="3x:0,0,0,0,0,0" bufferSize="1" bufferSizeUnits="MM" bufferColor="250,250,250,255" bufferNoFill="1" bufferBlendMode="0" bufferOpacity="1"/>
-            <text-mask maskEnabled="0" maskSizeMapUnitScale="3x:0,0,0,0,0,0" maskedSymbolLayers="" maskType="0" maskSizeUnits="MM" maskJoinStyle="128" maskOpacity="1" maskSize="0"/>
-            <background shapeRadiiX="0" shapeOffsetY="0" shapeSizeX="0" shapeOffsetMapUnitScale="3x:0,0,0,0,0,0" shapeBorderColor="128,128,128,255" shapeRadiiMapUnitScale="3x:0,0,0,0,0,0" shapeOffsetX="0" shapeSizeType="0" shapeBorderWidth="0" shapeSizeUnit="Point" shapeRotationType="0" shapeType="0" shapeBorderWidthUnit="Point" shapeOpacity="1" shapeBorderWidthMapUnitScale="3x:0,0,0,0,0,0" shapeRadiiUnit="Point" shapeBlendMode="0" shapeSVGFile="" shapeRotation="0" shapeFillColor="255,255,255,255" shapeRadiiY="0" shapeSizeY="0" shapeDraw="0" shapeJoinStyle="64" shapeOffsetUnit="Point" shapeSizeMapUnitScale="3x:0,0,0,0,0,0">
-              <symbol name="markerSymbol" force_rhr="0" clip_to_extent="1" alpha="1" type="marker" is_animated="0" frame_rate="10">
+            <text-buffer bufferDraw="1" bufferOpacity="1" bufferSizeMapUnitScale="3x:0,0,0,0,0,0" bufferBlendMode="0" bufferNoFill="1" bufferSize="1" bufferJoinStyle="128" bufferColor="250,250,250,255" bufferSizeUnits="MM"/>
+            <text-mask maskType="0" maskSize="0" maskSizeMapUnitScale="3x:0,0,0,0,0,0" maskOpacity="1" maskEnabled="0" maskSizeUnits="MM" maskJoinStyle="128" maskedSymbolLayers=""/>
+            <background shapeRadiiY="0" shapeBorderWidthMapUnitScale="3x:0,0,0,0,0,0" shapeOffsetUnit="Point" shapeSizeMapUnitScale="3x:0,0,0,0,0,0" shapeRotationType="0" shapeSizeX="0" shapeSizeType="0" shapeRotation="0" shapeRadiiUnit="Point" shapeBorderWidthUnit="Point" shapeRadiiMapUnitScale="3x:0,0,0,0,0,0" shapeBorderColor="128,128,128,255" shapeOffsetMapUnitScale="3x:0,0,0,0,0,0" shapeOffsetY="0" shapeDraw="0" shapeBorderWidth="0" shapeJoinStyle="64" shapeSizeUnit="Point" shapeOffsetX="0" shapeOpacity="1" shapeFillColor="255,255,255,255" shapeRadiiX="0" shapeType="0" shapeSVGFile="" shapeBlendMode="0" shapeSizeY="0">
+              <symbol force_rhr="0" is_animated="0" type="marker" alpha="1" clip_to_extent="1" name="markerSymbol" frame_rate="10">
                 <data_defined_properties>
                   <Option type="Map">
-                    <Option name="name" type="QString" value=""/>
+                    <Option type="QString" value="" name="name"/>
                     <Option name="properties"/>
-                    <Option name="type" type="QString" value="collection"/>
+                    <Option type="QString" value="collection" name="type"/>
                   </Option>
                 </data_defined_properties>
-                <layer enabled="1" class="SimpleMarker" locked="0" pass="0" id="">
+                <layer id="" locked="0" class="SimpleMarker" enabled="1" pass="0">
                   <Option type="Map">
-                    <Option name="angle" type="QString" value="0"/>
-                    <Option name="cap_style" type="QString" value="square"/>
-                    <Option name="color" type="QString" value="232,113,141,255"/>
-                    <Option name="horizontal_anchor_point" type="QString" value="1"/>
-                    <Option name="joinstyle" type="QString" value="bevel"/>
-                    <Option name="name" type="QString" value="circle"/>
-                    <Option name="offset" type="QString" value="0,0"/>
-                    <Option name="offset_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
-                    <Option name="offset_unit" type="QString" value="MM"/>
-                    <Option name="outline_color" type="QString" value="35,35,35,255"/>
-                    <Option name="outline_style" type="QString" value="solid"/>
-                    <Option name="outline_width" type="QString" value="0"/>
-                    <Option name="outline_width_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
-                    <Option name="outline_width_unit" type="QString" value="MM"/>
-                    <Option name="scale_method" type="QString" value="diameter"/>
-                    <Option name="size" type="QString" value="2"/>
-                    <Option name="size_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
-                    <Option name="size_unit" type="QString" value="MM"/>
-                    <Option name="vertical_anchor_point" type="QString" value="1"/>
+                    <Option type="QString" value="0" name="angle"/>
+                    <Option type="QString" value="square" name="cap_style"/>
+                    <Option type="QString" value="232,113,141,255" name="color"/>
+                    <Option type="QString" value="1" name="horizontal_anchor_point"/>
+                    <Option type="QString" value="bevel" name="joinstyle"/>
+                    <Option type="QString" value="circle" name="name"/>
+                    <Option type="QString" value="0,0" name="offset"/>
+                    <Option type="QString" value="3x:0,0,0,0,0,0" name="offset_map_unit_scale"/>
+                    <Option type="QString" value="MM" name="offset_unit"/>
+                    <Option type="QString" value="35,35,35,255" name="outline_color"/>
+                    <Option type="QString" value="solid" name="outline_style"/>
+                    <Option type="QString" value="0" name="outline_width"/>
+                    <Option type="QString" value="3x:0,0,0,0,0,0" name="outline_width_map_unit_scale"/>
+                    <Option type="QString" value="MM" name="outline_width_unit"/>
+                    <Option type="QString" value="diameter" name="scale_method"/>
+                    <Option type="QString" value="2" name="size"/>
+                    <Option type="QString" value="3x:0,0,0,0,0,0" name="size_map_unit_scale"/>
+                    <Option type="QString" value="MM" name="size_unit"/>
+                    <Option type="QString" value="1" name="vertical_anchor_point"/>
                   </Option>
                   <data_defined_properties>
                     <Option type="Map">
-                      <Option name="name" type="QString" value=""/>
+                      <Option type="QString" value="" name="name"/>
                       <Option name="properties"/>
-                      <Option name="type" type="QString" value="collection"/>
+                      <Option type="QString" value="collection" name="type"/>
                     </Option>
                   </data_defined_properties>
                 </layer>
               </symbol>
-              <symbol name="fillSymbol" force_rhr="0" clip_to_extent="1" alpha="1" type="fill" is_animated="0" frame_rate="10">
+              <symbol force_rhr="0" is_animated="0" type="fill" alpha="1" clip_to_extent="1" name="fillSymbol" frame_rate="10">
                 <data_defined_properties>
                   <Option type="Map">
-                    <Option name="name" type="QString" value=""/>
+                    <Option type="QString" value="" name="name"/>
                     <Option name="properties"/>
-                    <Option name="type" type="QString" value="collection"/>
+                    <Option type="QString" value="collection" name="type"/>
                   </Option>
                 </data_defined_properties>
-                <layer enabled="1" class="SimpleFill" locked="0" pass="0" id="">
+                <layer id="" locked="0" class="SimpleFill" enabled="1" pass="0">
                   <Option type="Map">
-                    <Option name="border_width_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
-                    <Option name="color" type="QString" value="255,255,255,255"/>
-                    <Option name="joinstyle" type="QString" value="bevel"/>
-                    <Option name="offset" type="QString" value="0,0"/>
-                    <Option name="offset_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
-                    <Option name="offset_unit" type="QString" value="MM"/>
-                    <Option name="outline_color" type="QString" value="128,128,128,255"/>
-                    <Option name="outline_style" type="QString" value="no"/>
-                    <Option name="outline_width" type="QString" value="0"/>
-                    <Option name="outline_width_unit" type="QString" value="Point"/>
-                    <Option name="style" type="QString" value="solid"/>
+                    <Option type="QString" value="3x:0,0,0,0,0,0" name="border_width_map_unit_scale"/>
+                    <Option type="QString" value="255,255,255,255" name="color"/>
+                    <Option type="QString" value="bevel" name="joinstyle"/>
+                    <Option type="QString" value="0,0" name="offset"/>
+                    <Option type="QString" value="3x:0,0,0,0,0,0" name="offset_map_unit_scale"/>
+                    <Option type="QString" value="MM" name="offset_unit"/>
+                    <Option type="QString" value="128,128,128,255" name="outline_color"/>
+                    <Option type="QString" value="no" name="outline_style"/>
+                    <Option type="QString" value="0" name="outline_width"/>
+                    <Option type="QString" value="Point" name="outline_width_unit"/>
+                    <Option type="QString" value="solid" name="style"/>
                   </Option>
                   <data_defined_properties>
                     <Option type="Map">
-                      <Option name="name" type="QString" value=""/>
+                      <Option type="QString" value="" name="name"/>
                       <Option name="properties"/>
-                      <Option name="type" type="QString" value="collection"/>
+                      <Option type="QString" value="collection" name="type"/>
                     </Option>
                   </data_defined_properties>
                 </layer>
               </symbol>
             </background>
-            <shadow shadowOffsetMapUnitScale="3x:0,0,0,0,0,0" shadowDraw="0" shadowRadiusMapUnitScale="3x:0,0,0,0,0,0" shadowRadiusUnit="MM" shadowRadiusAlphaOnly="0" shadowUnder="0" shadowScale="100" shadowColor="0,0,0,255" shadowRadius="1.5" shadowOffsetAngle="135" shadowOpacity="0.69999999999999996" shadowOffsetGlobal="1" shadowOffsetUnit="MM" shadowBlendMode="6" shadowOffsetDist="1"/>
+            <shadow shadowOffsetDist="1" shadowOffsetUnit="MM" shadowRadiusUnit="MM" shadowRadius="1.5" shadowDraw="0" shadowOpacity="0.69999999999999996" shadowRadiusAlphaOnly="0" shadowBlendMode="6" shadowOffsetMapUnitScale="3x:0,0,0,0,0,0" shadowOffsetGlobal="1" shadowUnder="0" shadowOffsetAngle="135" shadowColor="0,0,0,255" shadowRadiusMapUnitScale="3x:0,0,0,0,0,0" shadowScale="100"/>
             <dd_properties>
               <Option type="Map">
-                <Option name="name" type="QString" value=""/>
+                <Option type="QString" value="" name="name"/>
                 <Option name="properties"/>
-                <Option name="type" type="QString" value="collection"/>
+                <Option type="QString" value="collection" name="type"/>
               </Option>
             </dd_properties>
             <substitutions/>
           </text-style>
-          <text-format decimals="3" leftDirectionSymbol="&lt;" formatNumbers="0" placeDirectionSymbol="0" wrapChar="" autoWrapLength="0" multilineAlign="3" rightDirectionSymbol=">" addDirectionSymbol="0" useMaxLineLengthForAutoWrap="1" plussign="0" reverseDirectionSymbol="0"/>
-          <placement rotationUnit="AngleDegrees" fitInPolygonOnly="0" preserveRotation="1" lineAnchorClipping="0" repeatDistanceMapUnitScale="3x:0,0,0,0,0,0" priority="5" offsetType="1" maxCurvedCharAngleIn="25" layerType="PointGeometry" overlapHandling="PreventOverlap" centroidWhole="0" geometryGenerator="" distMapUnitScale="3x:0,0,0,0,0,0" distUnits="MM" dist="0" maxCurvedCharAngleOut="-25" placement="1" rotationAngle="0" labelOffsetMapUnitScale="3x:0,0,0,0,0,0" polygonPlacementFlags="2" centroidInside="0" repeatDistance="0" overrunDistance="0" allowDegraded="0" geometryGeneratorType="PointGeometry" geometryGeneratorEnabled="0" quadOffset="1" lineAnchorType="0" lineAnchorPercent="0.5" offsetUnits="MM" lineAnchorTextPoint="FollowPlacement" predefinedPositionOrder="TR,TL,BR,BL,R,L,TSR,BSR" overrunDistanceMapUnitScale="3x:0,0,0,0,0,0" xOffset="0" repeatDistanceUnits="MM" yOffset="-2.5" placementFlags="10" overrunDistanceUnit="MM"/>
-          <rendering labelPerPart="0" zIndex="0" maxNumLabels="2000" fontMaxPixelSize="10000" upsidedownLabels="0" fontLimitPixelSize="0" drawLabels="1" scaleVisibility="0" scaleMin="0" obstacleFactor="1" minFeatureSize="0" unplacedVisibility="0" fontMinPixelSize="3" obstacle="1" limitNumLabels="0" obstacleType="1" scaleMax="0" mergeLines="0"/>
+          <text-format useMaxLineLengthForAutoWrap="1" plussign="0" rightDirectionSymbol=">" wrapChar="" leftDirectionSymbol="&lt;" multilineAlign="3" addDirectionSymbol="0" autoWrapLength="0" reverseDirectionSymbol="0" formatNumbers="0" decimals="3" placeDirectionSymbol="0"/>
+          <placement polygonPlacementFlags="2" quadOffset="1" overrunDistanceMapUnitScale="3x:0,0,0,0,0,0" offsetUnits="MM" overrunDistance="0" placementFlags="10" lineAnchorClipping="0" rotationUnit="AngleDegrees" lineAnchorPercent="0.5" dist="0" xOffset="0" rotationAngle="0" centroidInside="0" predefinedPositionOrder="TR,TL,BR,BL,R,L,TSR,BSR" geometryGenerator="" yOffset="-2.5" repeatDistance="0" geometryGeneratorEnabled="0" preserveRotation="1" lineAnchorTextPoint="FollowPlacement" priority="5" overlapHandling="PreventOverlap" labelOffsetMapUnitScale="3x:0,0,0,0,0,0" distUnits="MM" distMapUnitScale="3x:0,0,0,0,0,0" repeatDistanceMapUnitScale="3x:0,0,0,0,0,0" maxCurvedCharAngleIn="25" lineAnchorType="0" geometryGeneratorType="PointGeometry" placement="1" allowDegraded="0" offsetType="1" overrunDistanceUnit="MM" centroidWhole="0" repeatDistanceUnits="MM" maxCurvedCharAngleOut="-25" layerType="PointGeometry" fitInPolygonOnly="0"/>
+          <rendering unplacedVisibility="0" mergeLines="0" obstacleFactor="1" minFeatureSize="0" zIndex="0" scaleVisibility="0" labelPerPart="0" drawLabels="1" limitNumLabels="0" fontMaxPixelSize="10000" maxNumLabels="2000" obstacleType="1" upsidedownLabels="0" obstacle="1" fontLimitPixelSize="0" fontMinPixelSize="3" scaleMax="0" scaleMin="0"/>
           <dd_properties>
             <Option type="Map">
-              <Option name="name" type="QString" value=""/>
+              <Option type="QString" value="" name="name"/>
               <Option name="properties"/>
-              <Option name="type" type="QString" value="collection"/>
+              <Option type="QString" value="collection" name="type"/>
             </Option>
           </dd_properties>
           <callout type="simple">
             <Option type="Map">
-              <Option name="anchorPoint" type="QString" value="pole_of_inaccessibility"/>
-              <Option name="blendMode" type="int" value="0"/>
-              <Option name="ddProperties" type="Map">
-                <Option name="name" type="QString" value=""/>
+              <Option type="QString" value="pole_of_inaccessibility" name="anchorPoint"/>
+              <Option type="int" value="0" name="blendMode"/>
+              <Option type="Map" name="ddProperties">
+                <Option type="QString" value="" name="name"/>
                 <Option name="properties"/>
-                <Option name="type" type="QString" value="collection"/>
+                <Option type="QString" value="collection" name="type"/>
               </Option>
-              <Option name="drawToAllParts" type="bool" value="false"/>
-              <Option name="enabled" type="QString" value="0"/>
-              <Option name="labelAnchorPoint" type="QString" value="point_on_exterior"/>
-              <Option name="lineSymbol" type="QString" value="&lt;symbol name=&quot;symbol&quot; force_rhr=&quot;0&quot; clip_to_extent=&quot;1&quot; alpha=&quot;1&quot; type=&quot;line&quot; is_animated=&quot;0&quot; frame_rate=&quot;10&quot;>&lt;data_defined_properties>&lt;Option type=&quot;Map&quot;>&lt;Option name=&quot;name&quot; type=&quot;QString&quot; value=&quot;&quot;/>&lt;Option name=&quot;properties&quot;/>&lt;Option name=&quot;type&quot; type=&quot;QString&quot; value=&quot;collection&quot;/>&lt;/Option>&lt;/data_defined_properties>&lt;layer enabled=&quot;1&quot; class=&quot;SimpleLine&quot; locked=&quot;0&quot; pass=&quot;0&quot; id=&quot;{0559038c-a499-456c-a734-3f312effd6b5}&quot;>&lt;Option type=&quot;Map&quot;>&lt;Option name=&quot;align_dash_pattern&quot; type=&quot;QString&quot; value=&quot;0&quot;/>&lt;Option name=&quot;capstyle&quot; type=&quot;QString&quot; value=&quot;square&quot;/>&lt;Option name=&quot;customdash&quot; type=&quot;QString&quot; value=&quot;5;2&quot;/>&lt;Option name=&quot;customdash_map_unit_scale&quot; type=&quot;QString&quot; value=&quot;3x:0,0,0,0,0,0&quot;/>&lt;Option name=&quot;customdash_unit&quot; type=&quot;QString&quot; value=&quot;MM&quot;/>&lt;Option name=&quot;dash_pattern_offset&quot; type=&quot;QString&quot; value=&quot;0&quot;/>&lt;Option name=&quot;dash_pattern_offset_map_unit_scale&quot; type=&quot;QString&quot; value=&quot;3x:0,0,0,0,0,0&quot;/>&lt;Option name=&quot;dash_pattern_offset_unit&quot; type=&quot;QString&quot; value=&quot;MM&quot;/>&lt;Option name=&quot;draw_inside_polygon&quot; type=&quot;QString&quot; value=&quot;0&quot;/>&lt;Option name=&quot;joinstyle&quot; type=&quot;QString&quot; value=&quot;bevel&quot;/>&lt;Option name=&quot;line_color&quot; type=&quot;QString&quot; value=&quot;60,60,60,255&quot;/>&lt;Option name=&quot;line_style&quot; type=&quot;QString&quot; value=&quot;solid&quot;/>&lt;Option name=&quot;line_width&quot; type=&quot;QString&quot; value=&quot;0.3&quot;/>&lt;Option name=&quot;line_width_unit&quot; type=&quot;QString&quot; value=&quot;MM&quot;/>&lt;Option name=&quot;offset&quot; type=&quot;QString&quot; value=&quot;0&quot;/>&lt;Option name=&quot;offset_map_unit_scale&quot; type=&quot;QString&quot; value=&quot;3x:0,0,0,0,0,0&quot;/>&lt;Option name=&quot;offset_unit&quot; type=&quot;QString&quot; value=&quot;MM&quot;/>&lt;Option name=&quot;ring_filter&quot; type=&quot;QString&quot; value=&quot;0&quot;/>&lt;Option name=&quot;trim_distance_end&quot; type=&quot;QString&quot; value=&quot;0&quot;/>&lt;Option name=&quot;trim_distance_end_map_unit_scale&quot; type=&quot;QString&quot; value=&quot;3x:0,0,0,0,0,0&quot;/>&lt;Option name=&quot;trim_distance_end_unit&quot; type=&quot;QString&quot; value=&quot;MM&quot;/>&lt;Option name=&quot;trim_distance_start&quot; type=&quot;QString&quot; value=&quot;0&quot;/>&lt;Option name=&quot;trim_distance_start_map_unit_scale&quot; type=&quot;QString&quot; value=&quot;3x:0,0,0,0,0,0&quot;/>&lt;Option name=&quot;trim_distance_start_unit&quot; type=&quot;QString&quot; value=&quot;MM&quot;/>&lt;Option name=&quot;tweak_dash_pattern_on_corners&quot; type=&quot;QString&quot; value=&quot;0&quot;/>&lt;Option name=&quot;use_custom_dash&quot; type=&quot;QString&quot; value=&quot;0&quot;/>&lt;Option name=&quot;width_map_unit_scale&quot; type=&quot;QString&quot; value=&quot;3x:0,0,0,0,0,0&quot;/>&lt;/Option>&lt;data_defined_properties>&lt;Option type=&quot;Map&quot;>&lt;Option name=&quot;name&quot; type=&quot;QString&quot; value=&quot;&quot;/>&lt;Option name=&quot;properties&quot;/>&lt;Option name=&quot;type&quot; type=&quot;QString&quot; value=&quot;collection&quot;/>&lt;/Option>&lt;/data_defined_properties>&lt;/layer>&lt;/symbol>"/>
-              <Option name="minLength" type="double" value="0"/>
-              <Option name="minLengthMapUnitScale" type="QString" value="3x:0,0,0,0,0,0"/>
-              <Option name="minLengthUnit" type="QString" value="MM"/>
-              <Option name="offsetFromAnchor" type="double" value="0"/>
-              <Option name="offsetFromAnchorMapUnitScale" type="QString" value="3x:0,0,0,0,0,0"/>
-              <Option name="offsetFromAnchorUnit" type="QString" value="MM"/>
-              <Option name="offsetFromLabel" type="double" value="0"/>
-              <Option name="offsetFromLabelMapUnitScale" type="QString" value="3x:0,0,0,0,0,0"/>
-              <Option name="offsetFromLabelUnit" type="QString" value="MM"/>
+              <Option type="bool" value="false" name="drawToAllParts"/>
+              <Option type="QString" value="0" name="enabled"/>
+              <Option type="QString" value="point_on_exterior" name="labelAnchorPoint"/>
+              <Option type="QString" value="&lt;symbol force_rhr=&quot;0&quot; is_animated=&quot;0&quot; type=&quot;line&quot; alpha=&quot;1&quot; clip_to_extent=&quot;1&quot; name=&quot;symbol&quot; frame_rate=&quot;10&quot;>&lt;data_defined_properties>&lt;Option type=&quot;Map&quot;>&lt;Option type=&quot;QString&quot; value=&quot;&quot; name=&quot;name&quot;/>&lt;Option name=&quot;properties&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;collection&quot; name=&quot;type&quot;/>&lt;/Option>&lt;/data_defined_properties>&lt;layer id=&quot;{0559038c-a499-456c-a734-3f312effd6b5}&quot; locked=&quot;0&quot; class=&quot;SimpleLine&quot; enabled=&quot;1&quot; pass=&quot;0&quot;>&lt;Option type=&quot;Map&quot;>&lt;Option type=&quot;QString&quot; value=&quot;0&quot; name=&quot;align_dash_pattern&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;square&quot; name=&quot;capstyle&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;5;2&quot; name=&quot;customdash&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;3x:0,0,0,0,0,0&quot; name=&quot;customdash_map_unit_scale&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;MM&quot; name=&quot;customdash_unit&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;0&quot; name=&quot;dash_pattern_offset&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;3x:0,0,0,0,0,0&quot; name=&quot;dash_pattern_offset_map_unit_scale&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;MM&quot; name=&quot;dash_pattern_offset_unit&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;0&quot; name=&quot;draw_inside_polygon&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;bevel&quot; name=&quot;joinstyle&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;60,60,60,255&quot; name=&quot;line_color&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;solid&quot; name=&quot;line_style&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;0.3&quot; name=&quot;line_width&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;MM&quot; name=&quot;line_width_unit&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;0&quot; name=&quot;offset&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;3x:0,0,0,0,0,0&quot; name=&quot;offset_map_unit_scale&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;MM&quot; name=&quot;offset_unit&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;0&quot; name=&quot;ring_filter&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;0&quot; name=&quot;trim_distance_end&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;3x:0,0,0,0,0,0&quot; name=&quot;trim_distance_end_map_unit_scale&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;MM&quot; name=&quot;trim_distance_end_unit&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;0&quot; name=&quot;trim_distance_start&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;3x:0,0,0,0,0,0&quot; name=&quot;trim_distance_start_map_unit_scale&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;MM&quot; name=&quot;trim_distance_start_unit&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;0&quot; name=&quot;tweak_dash_pattern_on_corners&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;0&quot; name=&quot;use_custom_dash&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;3x:0,0,0,0,0,0&quot; name=&quot;width_map_unit_scale&quot;/>&lt;/Option>&lt;data_defined_properties>&lt;Option type=&quot;Map&quot;>&lt;Option type=&quot;QString&quot; value=&quot;&quot; name=&quot;name&quot;/>&lt;Option name=&quot;properties&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;collection&quot; name=&quot;type&quot;/>&lt;/Option>&lt;/data_defined_properties>&lt;/layer>&lt;/symbol>" name="lineSymbol"/>
+              <Option type="double" value="0" name="minLength"/>
+              <Option type="QString" value="3x:0,0,0,0,0,0" name="minLengthMapUnitScale"/>
+              <Option type="QString" value="MM" name="minLengthUnit"/>
+              <Option type="double" value="0" name="offsetFromAnchor"/>
+              <Option type="QString" value="3x:0,0,0,0,0,0" name="offsetFromAnchorMapUnitScale"/>
+              <Option type="QString" value="MM" name="offsetFromAnchorUnit"/>
+              <Option type="double" value="0" name="offsetFromLabel"/>
+              <Option type="QString" value="3x:0,0,0,0,0,0" name="offsetFromLabelMapUnitScale"/>
+              <Option type="QString" value="MM" name="offsetFromLabelUnit"/>
             </Option>
           </callout>
         </settings>
@@ -728,65 +728,65 @@
   </labeling>
   <customproperties>
     <Option type="Map">
-      <Option name="dualview/previewExpressions" type="List">
+      <Option type="List" name="dualview/previewExpressions">
         <Option type="QString" value="&quot;code&quot;"/>
       </Option>
-      <Option name="embeddedWidgets/count" type="int" value="0"/>
-      <Option name="variableNames"/>
-      <Option name="variableValues"/>
+      <Option type="int" value="0" name="embeddedWidgets/count"/>
+      <Option type="invalid" name="variableNames"/>
+      <Option type="invalid" name="variableValues"/>
     </Option>
   </customproperties>
   <blendMode>0</blendMode>
   <featureBlendMode>0</featureBlendMode>
   <layerOpacity>1</layerOpacity>
   <SingleCategoryDiagramRenderer attributeLegend="1" diagramType="Histogram">
-    <DiagramCategory direction="0" backgroundColor="#ffffff" penAlpha="255" opacity="1" barWidth="5" lineSizeType="MM" showAxis="1" minScaleDenominator="0" lineSizeScale="3x:0,0,0,0,0,0" spacing="5" scaleBasedVisibility="0" penWidth="0" rotationOffset="270" enabled="0" sizeType="MM" width="15" minimumSize="0" maxScaleDenominator="0" height="15" penColor="#000000" spacingUnitScale="3x:0,0,0,0,0,0" backgroundAlpha="255" sizeScale="3x:0,0,0,0,0,0" labelPlacementMethod="XHeight" diagramOrientation="Up" scaleDependency="Area" spacingUnit="MM">
-      <fontProperties style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
-      <attribute field="" color="#000000" colorOpacity="1" label=""/>
+    <DiagramCategory backgroundColor="#ffffff" minimumSize="0" opacity="1" scaleBasedVisibility="0" penColor="#000000" barWidth="5" penAlpha="255" spacingUnitScale="3x:0,0,0,0,0,0" height="15" minScaleDenominator="0" sizeType="MM" maxScaleDenominator="0" backgroundAlpha="255" penWidth="0" rotationOffset="270" lineSizeScale="3x:0,0,0,0,0,0" labelPlacementMethod="XHeight" sizeScale="3x:0,0,0,0,0,0" showAxis="1" spacing="5" direction="0" spacingUnit="MM" lineSizeType="MM" scaleDependency="Area" width="15" enabled="0" diagramOrientation="Up">
+      <fontProperties bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
+      <attribute label="" field="" colorOpacity="1" color="#000000"/>
       <axisSymbol>
-        <symbol name="" force_rhr="0" clip_to_extent="1" alpha="1" type="line" is_animated="0" frame_rate="10">
+        <symbol force_rhr="0" is_animated="0" type="line" alpha="1" clip_to_extent="1" name="" frame_rate="10">
           <data_defined_properties>
             <Option type="Map">
-              <Option name="name" type="QString" value=""/>
+              <Option type="QString" value="" name="name"/>
               <Option name="properties"/>
-              <Option name="type" type="QString" value="collection"/>
+              <Option type="QString" value="collection" name="type"/>
             </Option>
           </data_defined_properties>
-          <layer enabled="1" class="SimpleLine" locked="0" pass="0" id="{6d918d7a-fc01-45ec-a381-9b1426df189d}">
+          <layer id="{6d918d7a-fc01-45ec-a381-9b1426df189d}" locked="0" class="SimpleLine" enabled="1" pass="0">
             <Option type="Map">
-              <Option name="align_dash_pattern" type="QString" value="0"/>
-              <Option name="capstyle" type="QString" value="square"/>
-              <Option name="customdash" type="QString" value="5;2"/>
-              <Option name="customdash_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
-              <Option name="customdash_unit" type="QString" value="MM"/>
-              <Option name="dash_pattern_offset" type="QString" value="0"/>
-              <Option name="dash_pattern_offset_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
-              <Option name="dash_pattern_offset_unit" type="QString" value="MM"/>
-              <Option name="draw_inside_polygon" type="QString" value="0"/>
-              <Option name="joinstyle" type="QString" value="bevel"/>
-              <Option name="line_color" type="QString" value="35,35,35,255"/>
-              <Option name="line_style" type="QString" value="solid"/>
-              <Option name="line_width" type="QString" value="0.26"/>
-              <Option name="line_width_unit" type="QString" value="MM"/>
-              <Option name="offset" type="QString" value="0"/>
-              <Option name="offset_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
-              <Option name="offset_unit" type="QString" value="MM"/>
-              <Option name="ring_filter" type="QString" value="0"/>
-              <Option name="trim_distance_end" type="QString" value="0"/>
-              <Option name="trim_distance_end_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
-              <Option name="trim_distance_end_unit" type="QString" value="MM"/>
-              <Option name="trim_distance_start" type="QString" value="0"/>
-              <Option name="trim_distance_start_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
-              <Option name="trim_distance_start_unit" type="QString" value="MM"/>
-              <Option name="tweak_dash_pattern_on_corners" type="QString" value="0"/>
-              <Option name="use_custom_dash" type="QString" value="0"/>
-              <Option name="width_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
+              <Option type="QString" value="0" name="align_dash_pattern"/>
+              <Option type="QString" value="square" name="capstyle"/>
+              <Option type="QString" value="5;2" name="customdash"/>
+              <Option type="QString" value="3x:0,0,0,0,0,0" name="customdash_map_unit_scale"/>
+              <Option type="QString" value="MM" name="customdash_unit"/>
+              <Option type="QString" value="0" name="dash_pattern_offset"/>
+              <Option type="QString" value="3x:0,0,0,0,0,0" name="dash_pattern_offset_map_unit_scale"/>
+              <Option type="QString" value="MM" name="dash_pattern_offset_unit"/>
+              <Option type="QString" value="0" name="draw_inside_polygon"/>
+              <Option type="QString" value="bevel" name="joinstyle"/>
+              <Option type="QString" value="35,35,35,255" name="line_color"/>
+              <Option type="QString" value="solid" name="line_style"/>
+              <Option type="QString" value="0.26" name="line_width"/>
+              <Option type="QString" value="MM" name="line_width_unit"/>
+              <Option type="QString" value="0" name="offset"/>
+              <Option type="QString" value="3x:0,0,0,0,0,0" name="offset_map_unit_scale"/>
+              <Option type="QString" value="MM" name="offset_unit"/>
+              <Option type="QString" value="0" name="ring_filter"/>
+              <Option type="QString" value="0" name="trim_distance_end"/>
+              <Option type="QString" value="3x:0,0,0,0,0,0" name="trim_distance_end_map_unit_scale"/>
+              <Option type="QString" value="MM" name="trim_distance_end_unit"/>
+              <Option type="QString" value="0" name="trim_distance_start"/>
+              <Option type="QString" value="3x:0,0,0,0,0,0" name="trim_distance_start_map_unit_scale"/>
+              <Option type="QString" value="MM" name="trim_distance_start_unit"/>
+              <Option type="QString" value="0" name="tweak_dash_pattern_on_corners"/>
+              <Option type="QString" value="0" name="use_custom_dash"/>
+              <Option type="QString" value="3x:0,0,0,0,0,0" name="width_map_unit_scale"/>
             </Option>
             <data_defined_properties>
               <Option type="Map">
-                <Option name="name" type="QString" value=""/>
+                <Option type="QString" value="" name="name"/>
                 <Option name="properties"/>
-                <Option name="type" type="QString" value="collection"/>
+                <Option type="QString" value="collection" name="type"/>
               </Option>
             </data_defined_properties>
           </layer>
@@ -794,414 +794,414 @@
       </axisSymbol>
     </DiagramCategory>
   </SingleCategoryDiagramRenderer>
-  <DiagramLayerSettings placement="0" dist="0" showAll="1" priority="0" zIndex="0" linePlacementFlags="18" obstacle="0">
+  <DiagramLayerSettings linePlacementFlags="18" showAll="1" zIndex="0" dist="0" priority="0" placement="0" obstacle="0">
     <properties>
       <Option type="Map">
-        <Option name="name" type="QString" value=""/>
+        <Option type="QString" value="" name="name"/>
         <Option name="properties"/>
-        <Option name="type" type="QString" value="collection"/>
+        <Option type="QString" value="collection" name="type"/>
       </Option>
     </properties>
   </DiagramLayerSettings>
-  <geometryOptions geometryPrecision="0" removeDuplicateNodes="0">
+  <geometryOptions removeDuplicateNodes="0" geometryPrecision="0">
     <activeChecks/>
     <checkConfiguration/>
   </geometryOptions>
   <legend type="default-vector" showLabelLegend="0"/>
   <referencedLayers/>
   <fieldConfiguration>
-    <field name="fid" configurationFlags="NoFlag">
+    <field configurationFlags="NoFlag" name="fid">
       <editWidget type="TextEdit">
         <config>
           <Option type="Map">
-            <Option name="IsMultiline" type="bool" value="false"/>
-            <Option name="UseHtml" type="bool" value="false"/>
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
           </Option>
         </config>
       </editWidget>
     </field>
-    <field name="level_0" configurationFlags="NoFlag">
+    <field configurationFlags="NoFlag" name="level_0">
       <editWidget type="TextEdit">
         <config>
           <Option type="Map">
-            <Option name="IsMultiline" type="bool" value="false"/>
-            <Option name="UseHtml" type="bool" value="false"/>
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
           </Option>
         </config>
       </editWidget>
     </field>
-    <field name="level_1" configurationFlags="NoFlag">
+    <field configurationFlags="NoFlag" name="level_1">
       <editWidget type="TextEdit">
         <config>
           <Option type="Map">
-            <Option name="IsMultiline" type="bool" value="false"/>
-            <Option name="UseHtml" type="bool" value="false"/>
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
           </Option>
         </config>
       </editWidget>
     </field>
-    <field name="code" configurationFlags="NoFlag">
+    <field configurationFlags="NoFlag" name="code">
       <editWidget type="TextEdit">
         <config>
           <Option/>
         </config>
       </editWidget>
     </field>
-    <field name="naam_New" configurationFlags="NoFlag">
+    <field configurationFlags="NoFlag" name="naam_New">
       <editWidget type="TextEdit">
         <config>
           <Option type="Map">
-            <Option name="IsMultiline" type="bool" value="false"/>
-            <Option name="UseHtml" type="bool" value="false"/>
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
           </Option>
         </config>
       </editWidget>
     </field>
-    <field name="functiegemaal_New" configurationFlags="NoFlag">
+    <field configurationFlags="NoFlag" name="functiegemaal_New">
       <editWidget type="TextEdit">
         <config>
           <Option type="Map">
-            <Option name="IsMultiline" type="bool" value="false"/>
-            <Option name="UseHtml" type="bool" value="false"/>
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
           </Option>
         </config>
       </editWidget>
     </field>
-    <field name="maximalecapaciteit_New" configurationFlags="NoFlag">
+    <field configurationFlags="NoFlag" name="maximalecapaciteit_New">
       <editWidget type="TextEdit">
         <config>
           <Option type="Map">
-            <Option name="IsMultiline" type="bool" value="false"/>
-            <Option name="UseHtml" type="bool" value="false"/>
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
           </Option>
         </config>
       </editWidget>
     </field>
-    <field name="ws_categorie_New" configurationFlags="NoFlag">
+    <field configurationFlags="NoFlag" name="ws_categorie_New">
       <editWidget type="TextEdit">
         <config>
           <Option type="Map">
-            <Option name="IsMultiline" type="bool" value="false"/>
-            <Option name="UseHtml" type="bool" value="false"/>
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
           </Option>
         </config>
       </editWidget>
     </field>
-    <field name="geom_type_New" configurationFlags="NoFlag">
+    <field configurationFlags="NoFlag" name="geom_type_New">
       <editWidget type="TextEdit">
         <config>
           <Option type="Map">
-            <Option name="IsMultiline" type="bool" value="false"/>
-            <Option name="UseHtml" type="bool" value="false"/>
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
           </Option>
         </config>
       </editWidget>
     </field>
-    <field name="geom_length_New" configurationFlags="NoFlag">
+    <field configurationFlags="NoFlag" name="geom_length_New">
       <editWidget type="TextEdit">
         <config>
           <Option type="Map">
-            <Option name="IsMultiline" type="bool" value="false"/>
-            <Option name="UseHtml" type="bool" value="false"/>
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
           </Option>
         </config>
       </editWidget>
     </field>
-    <field name="geom_area_New" configurationFlags="NoFlag">
+    <field configurationFlags="NoFlag" name="geom_area_New">
       <editWidget type="TextEdit">
         <config>
           <Option type="Map">
-            <Option name="IsMultiline" type="bool" value="false"/>
-            <Option name="UseHtml" type="bool" value="false"/>
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
           </Option>
         </config>
       </editWidget>
     </field>
-    <field name="dataset_New" configurationFlags="NoFlag">
+    <field configurationFlags="NoFlag" name="dataset_New">
       <editWidget type="CheckBox">
         <config>
           <Option type="Map">
-            <Option name="AllowNullState" type="bool" value="false"/>
-            <Option name="CheckedState" type="QString" value=""/>
-            <Option name="TextDisplayMethod" type="int" value="0"/>
-            <Option name="UncheckedState" type="QString" value=""/>
+            <Option type="bool" value="false" name="AllowNullState"/>
+            <Option type="QString" value="" name="CheckedState"/>
+            <Option type="int" value="0" name="TextDisplayMethod"/>
+            <Option type="QString" value="" name="UncheckedState"/>
           </Option>
         </config>
       </editWidget>
     </field>
-    <field name="origin_New" configurationFlags="NoFlag">
+    <field configurationFlags="NoFlag" name="origin_New">
       <editWidget type="TextEdit">
         <config>
           <Option type="Map">
-            <Option name="IsMultiline" type="bool" value="false"/>
-            <Option name="UseHtml" type="bool" value="false"/>
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
           </Option>
         </config>
       </editWidget>
     </field>
-    <field name="naam_Old" configurationFlags="NoFlag">
+    <field configurationFlags="NoFlag" name="naam_Old">
       <editWidget type="TextEdit">
         <config>
           <Option type="Map">
-            <Option name="IsMultiline" type="bool" value="false"/>
-            <Option name="UseHtml" type="bool" value="false"/>
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
           </Option>
         </config>
       </editWidget>
     </field>
-    <field name="functiegemaal_Old" configurationFlags="NoFlag">
+    <field configurationFlags="NoFlag" name="functiegemaal_Old">
       <editWidget type="TextEdit">
         <config>
           <Option/>
         </config>
       </editWidget>
     </field>
-    <field name="maximalecapaciteit_Old" configurationFlags="NoFlag">
+    <field configurationFlags="NoFlag" name="maximalecapaciteit_Old">
       <editWidget type="TextEdit">
         <config>
           <Option/>
         </config>
       </editWidget>
     </field>
-    <field name="ws_categorie_Old" configurationFlags="NoFlag">
+    <field configurationFlags="NoFlag" name="ws_categorie_Old">
       <editWidget type="TextEdit">
         <config>
           <Option type="Map">
-            <Option name="IsMultiline" type="bool" value="false"/>
-            <Option name="UseHtml" type="bool" value="false"/>
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
           </Option>
         </config>
       </editWidget>
     </field>
-    <field name="geom_type_Old" configurationFlags="NoFlag">
+    <field configurationFlags="NoFlag" name="geom_type_Old">
       <editWidget type="TextEdit">
         <config>
           <Option type="Map">
-            <Option name="IsMultiline" type="bool" value="false"/>
-            <Option name="UseHtml" type="bool" value="false"/>
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
           </Option>
         </config>
       </editWidget>
     </field>
-    <field name="geom_length_Old" configurationFlags="NoFlag">
+    <field configurationFlags="NoFlag" name="geom_length_Old">
       <editWidget type="TextEdit">
         <config>
           <Option type="Map">
-            <Option name="IsMultiline" type="bool" value="false"/>
-            <Option name="UseHtml" type="bool" value="false"/>
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
           </Option>
         </config>
       </editWidget>
     </field>
-    <field name="geom_area_Old" configurationFlags="NoFlag">
+    <field configurationFlags="NoFlag" name="geom_area_Old">
       <editWidget type="TextEdit">
         <config>
           <Option type="Map">
-            <Option name="IsMultiline" type="bool" value="false"/>
-            <Option name="UseHtml" type="bool" value="false"/>
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
           </Option>
         </config>
       </editWidget>
     </field>
-    <field name="dataset_Old" configurationFlags="NoFlag">
+    <field configurationFlags="NoFlag" name="dataset_Old">
       <editWidget type="CheckBox">
         <config>
           <Option type="Map">
-            <Option name="AllowNullState" type="bool" value="false"/>
-            <Option name="CheckedState" type="QString" value=""/>
-            <Option name="TextDisplayMethod" type="int" value="0"/>
-            <Option name="UncheckedState" type="QString" value=""/>
+            <Option type="bool" value="false" name="AllowNullState"/>
+            <Option type="QString" value="" name="CheckedState"/>
+            <Option type="int" value="0" name="TextDisplayMethod"/>
+            <Option type="QString" value="" name="UncheckedState"/>
           </Option>
         </config>
       </editWidget>
     </field>
-    <field name="origin_Old" configurationFlags="NoFlag">
+    <field configurationFlags="NoFlag" name="origin_Old">
       <editWidget type="TextEdit">
         <config>
           <Option type="Map">
-            <Option name="IsMultiline" type="bool" value="false"/>
-            <Option name="UseHtml" type="bool" value="false"/>
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
           </Option>
         </config>
       </editWidget>
     </field>
-    <field name="in_both" configurationFlags="NoFlag">
+    <field configurationFlags="NoFlag" name="in_both">
       <editWidget type="TextEdit">
         <config>
           <Option type="Map">
-            <Option name="IsMultiline" type="bool" value="false"/>
-            <Option name="UseHtml" type="bool" value="false"/>
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
           </Option>
         </config>
       </editWidget>
     </field>
-    <field name="geometry_adjusted" configurationFlags="NoFlag">
+    <field configurationFlags="NoFlag" name="geometry_adjusted">
       <editWidget type="CheckBox">
         <config>
           <Option type="Map">
-            <Option name="AllowNullState" type="bool" value="false"/>
-            <Option name="CheckedState" type="QString" value=""/>
-            <Option name="TextDisplayMethod" type="int" value="0"/>
-            <Option name="UncheckedState" type="QString" value=""/>
+            <Option type="bool" value="false" name="AllowNullState"/>
+            <Option type="QString" value="" name="CheckedState"/>
+            <Option type="int" value="0" name="TextDisplayMethod"/>
+            <Option type="QString" value="" name="UncheckedState"/>
           </Option>
         </config>
       </editWidget>
     </field>
-    <field name="cmp_ID" configurationFlags="NoFlag">
+    <field configurationFlags="NoFlag" name="cmp_ID">
       <editWidget type="TextEdit">
         <config>
           <Option type="Map">
-            <Option name="IsMultiline" type="bool" value="false"/>
-            <Option name="UseHtml" type="bool" value="false"/>
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
           </Option>
         </config>
       </editWidget>
     </field>
-    <field name="cmp_ID_priority" configurationFlags="NoFlag">
+    <field configurationFlags="NoFlag" name="cmp_ID_priority">
       <editWidget type="TextEdit">
         <config>
           <Option type="Map">
-            <Option name="IsMultiline" type="bool" value="false"/>
-            <Option name="UseHtml" type="bool" value="false"/>
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
           </Option>
         </config>
       </editWidget>
     </field>
-    <field name="cmp_functiegemaal" configurationFlags="NoFlag">
+    <field configurationFlags="NoFlag" name="cmp_functiegemaal">
       <editWidget type="TextEdit">
         <config>
           <Option type="Map">
-            <Option name="IsMultiline" type="bool" value="false"/>
-            <Option name="UseHtml" type="bool" value="false"/>
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
           </Option>
         </config>
       </editWidget>
     </field>
-    <field name="cmp_functiegemaal_priority" configurationFlags="NoFlag">
+    <field configurationFlags="NoFlag" name="cmp_functiegemaal_priority">
       <editWidget type="TextEdit">
         <config>
           <Option type="Map">
-            <Option name="IsMultiline" type="bool" value="false"/>
-            <Option name="UseHtml" type="bool" value="false"/>
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
           </Option>
         </config>
       </editWidget>
     </field>
-    <field name="cmp_maximalecapaciteit" configurationFlags="NoFlag">
+    <field configurationFlags="NoFlag" name="cmp_maximalecapaciteit">
       <editWidget type="TextEdit">
         <config>
           <Option type="Map">
-            <Option name="IsMultiline" type="bool" value="false"/>
-            <Option name="UseHtml" type="bool" value="false"/>
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
           </Option>
         </config>
       </editWidget>
     </field>
-    <field name="cmp_maximalecapaciteit_change_NaN" configurationFlags="NoFlag">
+    <field configurationFlags="NoFlag" name="cmp_maximalecapaciteit_change_NaN">
       <editWidget type="CheckBox">
         <config>
           <Option type="Map">
-            <Option name="AllowNullState" type="bool" value="false"/>
-            <Option name="CheckedState" type="QString" value=""/>
-            <Option name="TextDisplayMethod" type="int" value="0"/>
-            <Option name="UncheckedState" type="QString" value=""/>
+            <Option type="bool" value="false" name="AllowNullState"/>
+            <Option type="QString" value="" name="CheckedState"/>
+            <Option type="int" value="0" name="TextDisplayMethod"/>
+            <Option type="QString" value="" name="UncheckedState"/>
           </Option>
         </config>
       </editWidget>
     </field>
-    <field name="cmp_maximalecapaciteit_priority" configurationFlags="NoFlag">
+    <field configurationFlags="NoFlag" name="cmp_maximalecapaciteit_priority">
       <editWidget type="TextEdit">
         <config>
           <Option type="Map">
-            <Option name="IsMultiline" type="bool" value="false"/>
-            <Option name="UseHtml" type="bool" value="false"/>
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
           </Option>
         </config>
       </editWidget>
     </field>
-    <field name="cmp_categorie" configurationFlags="NoFlag">
+    <field configurationFlags="NoFlag" name="cmp_categorie">
       <editWidget type="TextEdit">
         <config>
           <Option type="Map">
-            <Option name="IsMultiline" type="bool" value="false"/>
-            <Option name="UseHtml" type="bool" value="false"/>
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
           </Option>
         </config>
       </editWidget>
     </field>
-    <field name="cmp_categorie_priority" configurationFlags="NoFlag">
+    <field configurationFlags="NoFlag" name="cmp_categorie_priority">
       <editWidget type="TextEdit">
         <config>
           <Option type="Map">
-            <Option name="IsMultiline" type="bool" value="false"/>
-            <Option name="UseHtml" type="bool" value="false"/>
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
           </Option>
         </config>
       </editWidget>
     </field>
-    <field name="cmp_geom_type" configurationFlags="NoFlag">
+    <field configurationFlags="NoFlag" name="cmp_geom_type">
       <editWidget type="TextEdit">
         <config>
           <Option type="Map">
-            <Option name="IsMultiline" type="bool" value="false"/>
-            <Option name="UseHtml" type="bool" value="false"/>
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
           </Option>
         </config>
       </editWidget>
     </field>
-    <field name="cmp_geom_type_priority" configurationFlags="NoFlag">
+    <field configurationFlags="NoFlag" name="cmp_geom_type_priority">
       <editWidget type="TextEdit">
         <config>
           <Option type="Map">
-            <Option name="IsMultiline" type="bool" value="false"/>
-            <Option name="UseHtml" type="bool" value="false"/>
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
           </Option>
         </config>
       </editWidget>
     </field>
-    <field name="number_of_info" configurationFlags="NoFlag">
+    <field configurationFlags="NoFlag" name="number_of_info">
       <editWidget type="TextEdit">
         <config>
           <Option type="Map">
-            <Option name="IsMultiline" type="bool" value="false"/>
-            <Option name="UseHtml" type="bool" value="false"/>
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
           </Option>
         </config>
       </editWidget>
     </field>
-    <field name="number_of_warning" configurationFlags="NoFlag">
+    <field configurationFlags="NoFlag" name="number_of_warning">
       <editWidget type="TextEdit">
         <config>
           <Option/>
         </config>
       </editWidget>
     </field>
-    <field name="number_of_critical" configurationFlags="NoFlag">
+    <field configurationFlags="NoFlag" name="number_of_critical">
       <editWidget type="TextEdit">
         <config>
           <Option type="Map">
-            <Option name="IsMultiline" type="bool" value="false"/>
-            <Option name="UseHtml" type="bool" value="false"/>
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
           </Option>
         </config>
       </editWidget>
     </field>
-    <field name="Summary_Critical" configurationFlags="NoFlag">
+    <field configurationFlags="NoFlag" name="Summary_Critical">
       <editWidget type="TextEdit">
         <config>
           <Option type="Map">
-            <Option name="IsMultiline" type="bool" value="false"/>
-            <Option name="UseHtml" type="bool" value="false"/>
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
           </Option>
         </config>
       </editWidget>
     </field>
-    <field name="Summary_Warnings" configurationFlags="NoFlag">
+    <field configurationFlags="NoFlag" name="Summary_Warnings">
       <editWidget type="TextEdit">
         <config>
           <Option type="Map">
-            <Option name="IsMultiline" type="bool" value="false"/>
-            <Option name="UseHtml" type="bool" value="false"/>
+            <Option type="bool" value="false" name="IsMultiline"/>
+            <Option type="bool" value="false" name="UseHtml"/>
           </Option>
         </config>
       </editWidget>
@@ -1292,178 +1292,178 @@
     <policy field="Summary_Warnings" policy="DefaultValue"/>
   </splitPolicies>
   <defaults>
-    <default field="fid" expression="" applyOnUpdate="0"/>
-    <default field="level_0" expression="" applyOnUpdate="0"/>
-    <default field="level_1" expression="" applyOnUpdate="0"/>
-    <default field="code" expression="" applyOnUpdate="0"/>
-    <default field="naam_New" expression="" applyOnUpdate="0"/>
-    <default field="functiegemaal_New" expression="" applyOnUpdate="0"/>
-    <default field="maximalecapaciteit_New" expression="" applyOnUpdate="0"/>
-    <default field="ws_categorie_New" expression="" applyOnUpdate="0"/>
-    <default field="geom_type_New" expression="" applyOnUpdate="0"/>
-    <default field="geom_length_New" expression="" applyOnUpdate="0"/>
-    <default field="geom_area_New" expression="" applyOnUpdate="0"/>
-    <default field="dataset_New" expression="" applyOnUpdate="0"/>
-    <default field="origin_New" expression="" applyOnUpdate="0"/>
-    <default field="naam_Old" expression="" applyOnUpdate="0"/>
-    <default field="functiegemaal_Old" expression="" applyOnUpdate="0"/>
-    <default field="maximalecapaciteit_Old" expression="" applyOnUpdate="0"/>
-    <default field="ws_categorie_Old" expression="" applyOnUpdate="0"/>
-    <default field="geom_type_Old" expression="" applyOnUpdate="0"/>
-    <default field="geom_length_Old" expression="" applyOnUpdate="0"/>
-    <default field="geom_area_Old" expression="" applyOnUpdate="0"/>
-    <default field="dataset_Old" expression="" applyOnUpdate="0"/>
-    <default field="origin_Old" expression="" applyOnUpdate="0"/>
-    <default field="in_both" expression="" applyOnUpdate="0"/>
-    <default field="geometry_adjusted" expression="" applyOnUpdate="0"/>
-    <default field="cmp_ID" expression="" applyOnUpdate="0"/>
-    <default field="cmp_ID_priority" expression="" applyOnUpdate="0"/>
-    <default field="cmp_functiegemaal" expression="" applyOnUpdate="0"/>
-    <default field="cmp_functiegemaal_priority" expression="" applyOnUpdate="0"/>
-    <default field="cmp_maximalecapaciteit" expression="" applyOnUpdate="0"/>
-    <default field="cmp_maximalecapaciteit_change_NaN" expression="" applyOnUpdate="0"/>
-    <default field="cmp_maximalecapaciteit_priority" expression="" applyOnUpdate="0"/>
-    <default field="cmp_categorie" expression="" applyOnUpdate="0"/>
-    <default field="cmp_categorie_priority" expression="" applyOnUpdate="0"/>
-    <default field="cmp_geom_type" expression="" applyOnUpdate="0"/>
-    <default field="cmp_geom_type_priority" expression="" applyOnUpdate="0"/>
-    <default field="number_of_info" expression="" applyOnUpdate="0"/>
-    <default field="number_of_warning" expression="" applyOnUpdate="0"/>
-    <default field="number_of_critical" expression="" applyOnUpdate="0"/>
-    <default field="Summary_Critical" expression="" applyOnUpdate="0"/>
-    <default field="Summary_Warnings" expression="" applyOnUpdate="0"/>
+    <default applyOnUpdate="0" expression="" field="fid"/>
+    <default applyOnUpdate="0" expression="" field="level_0"/>
+    <default applyOnUpdate="0" expression="" field="level_1"/>
+    <default applyOnUpdate="0" expression="" field="code"/>
+    <default applyOnUpdate="0" expression="" field="naam_New"/>
+    <default applyOnUpdate="0" expression="" field="functiegemaal_New"/>
+    <default applyOnUpdate="0" expression="" field="maximalecapaciteit_New"/>
+    <default applyOnUpdate="0" expression="" field="ws_categorie_New"/>
+    <default applyOnUpdate="0" expression="" field="geom_type_New"/>
+    <default applyOnUpdate="0" expression="" field="geom_length_New"/>
+    <default applyOnUpdate="0" expression="" field="geom_area_New"/>
+    <default applyOnUpdate="0" expression="" field="dataset_New"/>
+    <default applyOnUpdate="0" expression="" field="origin_New"/>
+    <default applyOnUpdate="0" expression="" field="naam_Old"/>
+    <default applyOnUpdate="0" expression="" field="functiegemaal_Old"/>
+    <default applyOnUpdate="0" expression="" field="maximalecapaciteit_Old"/>
+    <default applyOnUpdate="0" expression="" field="ws_categorie_Old"/>
+    <default applyOnUpdate="0" expression="" field="geom_type_Old"/>
+    <default applyOnUpdate="0" expression="" field="geom_length_Old"/>
+    <default applyOnUpdate="0" expression="" field="geom_area_Old"/>
+    <default applyOnUpdate="0" expression="" field="dataset_Old"/>
+    <default applyOnUpdate="0" expression="" field="origin_Old"/>
+    <default applyOnUpdate="0" expression="" field="in_both"/>
+    <default applyOnUpdate="0" expression="" field="geometry_adjusted"/>
+    <default applyOnUpdate="0" expression="" field="cmp_ID"/>
+    <default applyOnUpdate="0" expression="" field="cmp_ID_priority"/>
+    <default applyOnUpdate="0" expression="" field="cmp_functiegemaal"/>
+    <default applyOnUpdate="0" expression="" field="cmp_functiegemaal_priority"/>
+    <default applyOnUpdate="0" expression="" field="cmp_maximalecapaciteit"/>
+    <default applyOnUpdate="0" expression="" field="cmp_maximalecapaciteit_change_NaN"/>
+    <default applyOnUpdate="0" expression="" field="cmp_maximalecapaciteit_priority"/>
+    <default applyOnUpdate="0" expression="" field="cmp_categorie"/>
+    <default applyOnUpdate="0" expression="" field="cmp_categorie_priority"/>
+    <default applyOnUpdate="0" expression="" field="cmp_geom_type"/>
+    <default applyOnUpdate="0" expression="" field="cmp_geom_type_priority"/>
+    <default applyOnUpdate="0" expression="" field="number_of_info"/>
+    <default applyOnUpdate="0" expression="" field="number_of_warning"/>
+    <default applyOnUpdate="0" expression="" field="number_of_critical"/>
+    <default applyOnUpdate="0" expression="" field="Summary_Critical"/>
+    <default applyOnUpdate="0" expression="" field="Summary_Warnings"/>
   </defaults>
   <constraints>
-    <constraint field="fid" notnull_strength="1" unique_strength="1" exp_strength="0" constraints="3"/>
-    <constraint field="level_0" notnull_strength="0" unique_strength="0" exp_strength="0" constraints="0"/>
-    <constraint field="level_1" notnull_strength="0" unique_strength="0" exp_strength="0" constraints="0"/>
-    <constraint field="code" notnull_strength="0" unique_strength="0" exp_strength="0" constraints="0"/>
-    <constraint field="naam_New" notnull_strength="0" unique_strength="0" exp_strength="0" constraints="0"/>
-    <constraint field="functiegemaal_New" notnull_strength="0" unique_strength="0" exp_strength="0" constraints="0"/>
-    <constraint field="maximalecapaciteit_New" notnull_strength="0" unique_strength="0" exp_strength="0" constraints="0"/>
-    <constraint field="ws_categorie_New" notnull_strength="0" unique_strength="0" exp_strength="0" constraints="0"/>
-    <constraint field="geom_type_New" notnull_strength="0" unique_strength="0" exp_strength="0" constraints="0"/>
-    <constraint field="geom_length_New" notnull_strength="0" unique_strength="0" exp_strength="0" constraints="0"/>
-    <constraint field="geom_area_New" notnull_strength="0" unique_strength="0" exp_strength="0" constraints="0"/>
-    <constraint field="dataset_New" notnull_strength="0" unique_strength="0" exp_strength="0" constraints="0"/>
-    <constraint field="origin_New" notnull_strength="0" unique_strength="0" exp_strength="0" constraints="0"/>
-    <constraint field="naam_Old" notnull_strength="0" unique_strength="0" exp_strength="0" constraints="0"/>
-    <constraint field="functiegemaal_Old" notnull_strength="0" unique_strength="0" exp_strength="0" constraints="0"/>
-    <constraint field="maximalecapaciteit_Old" notnull_strength="0" unique_strength="0" exp_strength="0" constraints="0"/>
-    <constraint field="ws_categorie_Old" notnull_strength="0" unique_strength="0" exp_strength="0" constraints="0"/>
-    <constraint field="geom_type_Old" notnull_strength="0" unique_strength="0" exp_strength="0" constraints="0"/>
-    <constraint field="geom_length_Old" notnull_strength="0" unique_strength="0" exp_strength="0" constraints="0"/>
-    <constraint field="geom_area_Old" notnull_strength="0" unique_strength="0" exp_strength="0" constraints="0"/>
-    <constraint field="dataset_Old" notnull_strength="0" unique_strength="0" exp_strength="0" constraints="0"/>
-    <constraint field="origin_Old" notnull_strength="0" unique_strength="0" exp_strength="0" constraints="0"/>
-    <constraint field="in_both" notnull_strength="0" unique_strength="0" exp_strength="0" constraints="0"/>
-    <constraint field="geometry_adjusted" notnull_strength="0" unique_strength="0" exp_strength="0" constraints="0"/>
-    <constraint field="cmp_ID" notnull_strength="0" unique_strength="0" exp_strength="0" constraints="0"/>
-    <constraint field="cmp_ID_priority" notnull_strength="0" unique_strength="0" exp_strength="0" constraints="0"/>
-    <constraint field="cmp_functiegemaal" notnull_strength="0" unique_strength="0" exp_strength="0" constraints="0"/>
-    <constraint field="cmp_functiegemaal_priority" notnull_strength="0" unique_strength="0" exp_strength="0" constraints="0"/>
-    <constraint field="cmp_maximalecapaciteit" notnull_strength="0" unique_strength="0" exp_strength="0" constraints="0"/>
-    <constraint field="cmp_maximalecapaciteit_change_NaN" notnull_strength="0" unique_strength="0" exp_strength="0" constraints="0"/>
-    <constraint field="cmp_maximalecapaciteit_priority" notnull_strength="0" unique_strength="0" exp_strength="0" constraints="0"/>
-    <constraint field="cmp_categorie" notnull_strength="0" unique_strength="0" exp_strength="0" constraints="0"/>
-    <constraint field="cmp_categorie_priority" notnull_strength="0" unique_strength="0" exp_strength="0" constraints="0"/>
-    <constraint field="cmp_geom_type" notnull_strength="0" unique_strength="0" exp_strength="0" constraints="0"/>
-    <constraint field="cmp_geom_type_priority" notnull_strength="0" unique_strength="0" exp_strength="0" constraints="0"/>
-    <constraint field="number_of_info" notnull_strength="0" unique_strength="0" exp_strength="0" constraints="0"/>
-    <constraint field="number_of_warning" notnull_strength="0" unique_strength="0" exp_strength="0" constraints="0"/>
-    <constraint field="number_of_critical" notnull_strength="0" unique_strength="0" exp_strength="0" constraints="0"/>
-    <constraint field="Summary_Critical" notnull_strength="0" unique_strength="0" exp_strength="0" constraints="0"/>
-    <constraint field="Summary_Warnings" notnull_strength="0" unique_strength="0" exp_strength="0" constraints="0"/>
+    <constraint exp_strength="0" field="fid" constraints="3" unique_strength="1" notnull_strength="1"/>
+    <constraint exp_strength="0" field="level_0" constraints="0" unique_strength="0" notnull_strength="0"/>
+    <constraint exp_strength="0" field="level_1" constraints="0" unique_strength="0" notnull_strength="0"/>
+    <constraint exp_strength="0" field="code" constraints="0" unique_strength="0" notnull_strength="0"/>
+    <constraint exp_strength="0" field="naam_New" constraints="0" unique_strength="0" notnull_strength="0"/>
+    <constraint exp_strength="0" field="functiegemaal_New" constraints="0" unique_strength="0" notnull_strength="0"/>
+    <constraint exp_strength="0" field="maximalecapaciteit_New" constraints="0" unique_strength="0" notnull_strength="0"/>
+    <constraint exp_strength="0" field="ws_categorie_New" constraints="0" unique_strength="0" notnull_strength="0"/>
+    <constraint exp_strength="0" field="geom_type_New" constraints="0" unique_strength="0" notnull_strength="0"/>
+    <constraint exp_strength="0" field="geom_length_New" constraints="0" unique_strength="0" notnull_strength="0"/>
+    <constraint exp_strength="0" field="geom_area_New" constraints="0" unique_strength="0" notnull_strength="0"/>
+    <constraint exp_strength="0" field="dataset_New" constraints="0" unique_strength="0" notnull_strength="0"/>
+    <constraint exp_strength="0" field="origin_New" constraints="0" unique_strength="0" notnull_strength="0"/>
+    <constraint exp_strength="0" field="naam_Old" constraints="0" unique_strength="0" notnull_strength="0"/>
+    <constraint exp_strength="0" field="functiegemaal_Old" constraints="0" unique_strength="0" notnull_strength="0"/>
+    <constraint exp_strength="0" field="maximalecapaciteit_Old" constraints="0" unique_strength="0" notnull_strength="0"/>
+    <constraint exp_strength="0" field="ws_categorie_Old" constraints="0" unique_strength="0" notnull_strength="0"/>
+    <constraint exp_strength="0" field="geom_type_Old" constraints="0" unique_strength="0" notnull_strength="0"/>
+    <constraint exp_strength="0" field="geom_length_Old" constraints="0" unique_strength="0" notnull_strength="0"/>
+    <constraint exp_strength="0" field="geom_area_Old" constraints="0" unique_strength="0" notnull_strength="0"/>
+    <constraint exp_strength="0" field="dataset_Old" constraints="0" unique_strength="0" notnull_strength="0"/>
+    <constraint exp_strength="0" field="origin_Old" constraints="0" unique_strength="0" notnull_strength="0"/>
+    <constraint exp_strength="0" field="in_both" constraints="0" unique_strength="0" notnull_strength="0"/>
+    <constraint exp_strength="0" field="geometry_adjusted" constraints="0" unique_strength="0" notnull_strength="0"/>
+    <constraint exp_strength="0" field="cmp_ID" constraints="0" unique_strength="0" notnull_strength="0"/>
+    <constraint exp_strength="0" field="cmp_ID_priority" constraints="0" unique_strength="0" notnull_strength="0"/>
+    <constraint exp_strength="0" field="cmp_functiegemaal" constraints="0" unique_strength="0" notnull_strength="0"/>
+    <constraint exp_strength="0" field="cmp_functiegemaal_priority" constraints="0" unique_strength="0" notnull_strength="0"/>
+    <constraint exp_strength="0" field="cmp_maximalecapaciteit" constraints="0" unique_strength="0" notnull_strength="0"/>
+    <constraint exp_strength="0" field="cmp_maximalecapaciteit_change_NaN" constraints="0" unique_strength="0" notnull_strength="0"/>
+    <constraint exp_strength="0" field="cmp_maximalecapaciteit_priority" constraints="0" unique_strength="0" notnull_strength="0"/>
+    <constraint exp_strength="0" field="cmp_categorie" constraints="0" unique_strength="0" notnull_strength="0"/>
+    <constraint exp_strength="0" field="cmp_categorie_priority" constraints="0" unique_strength="0" notnull_strength="0"/>
+    <constraint exp_strength="0" field="cmp_geom_type" constraints="0" unique_strength="0" notnull_strength="0"/>
+    <constraint exp_strength="0" field="cmp_geom_type_priority" constraints="0" unique_strength="0" notnull_strength="0"/>
+    <constraint exp_strength="0" field="number_of_info" constraints="0" unique_strength="0" notnull_strength="0"/>
+    <constraint exp_strength="0" field="number_of_warning" constraints="0" unique_strength="0" notnull_strength="0"/>
+    <constraint exp_strength="0" field="number_of_critical" constraints="0" unique_strength="0" notnull_strength="0"/>
+    <constraint exp_strength="0" field="Summary_Critical" constraints="0" unique_strength="0" notnull_strength="0"/>
+    <constraint exp_strength="0" field="Summary_Warnings" constraints="0" unique_strength="0" notnull_strength="0"/>
   </constraints>
   <constraintExpressions>
-    <constraint field="fid" exp="" desc=""/>
-    <constraint field="level_0" exp="" desc=""/>
-    <constraint field="level_1" exp="" desc=""/>
-    <constraint field="code" exp="" desc=""/>
-    <constraint field="naam_New" exp="" desc=""/>
-    <constraint field="functiegemaal_New" exp="" desc=""/>
-    <constraint field="maximalecapaciteit_New" exp="" desc=""/>
-    <constraint field="ws_categorie_New" exp="" desc=""/>
-    <constraint field="geom_type_New" exp="" desc=""/>
-    <constraint field="geom_length_New" exp="" desc=""/>
-    <constraint field="geom_area_New" exp="" desc=""/>
-    <constraint field="dataset_New" exp="" desc=""/>
-    <constraint field="origin_New" exp="" desc=""/>
-    <constraint field="naam_Old" exp="" desc=""/>
-    <constraint field="functiegemaal_Old" exp="" desc=""/>
-    <constraint field="maximalecapaciteit_Old" exp="" desc=""/>
-    <constraint field="ws_categorie_Old" exp="" desc=""/>
-    <constraint field="geom_type_Old" exp="" desc=""/>
-    <constraint field="geom_length_Old" exp="" desc=""/>
-    <constraint field="geom_area_Old" exp="" desc=""/>
-    <constraint field="dataset_Old" exp="" desc=""/>
-    <constraint field="origin_Old" exp="" desc=""/>
-    <constraint field="in_both" exp="" desc=""/>
-    <constraint field="geometry_adjusted" exp="" desc=""/>
-    <constraint field="cmp_ID" exp="" desc=""/>
-    <constraint field="cmp_ID_priority" exp="" desc=""/>
-    <constraint field="cmp_functiegemaal" exp="" desc=""/>
-    <constraint field="cmp_functiegemaal_priority" exp="" desc=""/>
-    <constraint field="cmp_maximalecapaciteit" exp="" desc=""/>
-    <constraint field="cmp_maximalecapaciteit_change_NaN" exp="" desc=""/>
-    <constraint field="cmp_maximalecapaciteit_priority" exp="" desc=""/>
-    <constraint field="cmp_categorie" exp="" desc=""/>
-    <constraint field="cmp_categorie_priority" exp="" desc=""/>
-    <constraint field="cmp_geom_type" exp="" desc=""/>
-    <constraint field="cmp_geom_type_priority" exp="" desc=""/>
-    <constraint field="number_of_info" exp="" desc=""/>
-    <constraint field="number_of_warning" exp="" desc=""/>
-    <constraint field="number_of_critical" exp="" desc=""/>
-    <constraint field="Summary_Critical" exp="" desc=""/>
-    <constraint field="Summary_Warnings" exp="" desc=""/>
+    <constraint exp="" field="fid" desc=""/>
+    <constraint exp="" field="level_0" desc=""/>
+    <constraint exp="" field="level_1" desc=""/>
+    <constraint exp="" field="code" desc=""/>
+    <constraint exp="" field="naam_New" desc=""/>
+    <constraint exp="" field="functiegemaal_New" desc=""/>
+    <constraint exp="" field="maximalecapaciteit_New" desc=""/>
+    <constraint exp="" field="ws_categorie_New" desc=""/>
+    <constraint exp="" field="geom_type_New" desc=""/>
+    <constraint exp="" field="geom_length_New" desc=""/>
+    <constraint exp="" field="geom_area_New" desc=""/>
+    <constraint exp="" field="dataset_New" desc=""/>
+    <constraint exp="" field="origin_New" desc=""/>
+    <constraint exp="" field="naam_Old" desc=""/>
+    <constraint exp="" field="functiegemaal_Old" desc=""/>
+    <constraint exp="" field="maximalecapaciteit_Old" desc=""/>
+    <constraint exp="" field="ws_categorie_Old" desc=""/>
+    <constraint exp="" field="geom_type_Old" desc=""/>
+    <constraint exp="" field="geom_length_Old" desc=""/>
+    <constraint exp="" field="geom_area_Old" desc=""/>
+    <constraint exp="" field="dataset_Old" desc=""/>
+    <constraint exp="" field="origin_Old" desc=""/>
+    <constraint exp="" field="in_both" desc=""/>
+    <constraint exp="" field="geometry_adjusted" desc=""/>
+    <constraint exp="" field="cmp_ID" desc=""/>
+    <constraint exp="" field="cmp_ID_priority" desc=""/>
+    <constraint exp="" field="cmp_functiegemaal" desc=""/>
+    <constraint exp="" field="cmp_functiegemaal_priority" desc=""/>
+    <constraint exp="" field="cmp_maximalecapaciteit" desc=""/>
+    <constraint exp="" field="cmp_maximalecapaciteit_change_NaN" desc=""/>
+    <constraint exp="" field="cmp_maximalecapaciteit_priority" desc=""/>
+    <constraint exp="" field="cmp_categorie" desc=""/>
+    <constraint exp="" field="cmp_categorie_priority" desc=""/>
+    <constraint exp="" field="cmp_geom_type" desc=""/>
+    <constraint exp="" field="cmp_geom_type_priority" desc=""/>
+    <constraint exp="" field="number_of_info" desc=""/>
+    <constraint exp="" field="number_of_warning" desc=""/>
+    <constraint exp="" field="number_of_critical" desc=""/>
+    <constraint exp="" field="Summary_Critical" desc=""/>
+    <constraint exp="" field="Summary_Warnings" desc=""/>
   </constraintExpressions>
   <expressionfields/>
   <attributeactions>
-    <defaultAction key="Canvas" value="{00000000-0000-0000-0000-000000000000}"/>
+    <defaultAction value="{00000000-0000-0000-0000-000000000000}" key="Canvas"/>
   </attributeactions>
-  <attributetableconfig sortExpression="&quot;Summary_Critical&quot;" actionWidgetStyle="dropDown" sortOrder="1">
+  <attributetableconfig actionWidgetStyle="dropDown" sortExpression="&quot;Summary_Critical&quot;" sortOrder="1">
     <columns>
-      <column name="fid" type="field" hidden="0" width="-1"/>
-      <column name="code" type="field" hidden="0" width="-1"/>
-      <column name="in_both" type="field" hidden="0" width="-1"/>
-      <column name="geometry_adjusted" type="field" hidden="0" width="-1"/>
-      <column name="level_0" type="field" hidden="0" width="-1"/>
-      <column name="level_1" type="field" hidden="0" width="-1"/>
-      <column name="naam_New" type="field" hidden="0" width="-1"/>
-      <column name="functiegemaal_New" type="field" hidden="0" width="-1"/>
-      <column name="maximalecapaciteit_New" type="field" hidden="0" width="-1"/>
-      <column name="ws_categorie_New" type="field" hidden="0" width="-1"/>
-      <column name="geom_type_New" type="field" hidden="0" width="-1"/>
-      <column name="geom_length_New" type="field" hidden="0" width="-1"/>
-      <column name="geom_area_New" type="field" hidden="0" width="-1"/>
-      <column name="dataset_New" type="field" hidden="0" width="-1"/>
-      <column name="origin_New" type="field" hidden="0" width="-1"/>
-      <column name="naam_Old" type="field" hidden="0" width="-1"/>
-      <column name="functiegemaal_Old" type="field" hidden="0" width="-1"/>
-      <column name="maximalecapaciteit_Old" type="field" hidden="0" width="-1"/>
-      <column name="ws_categorie_Old" type="field" hidden="0" width="-1"/>
-      <column name="geom_type_Old" type="field" hidden="0" width="-1"/>
-      <column name="geom_length_Old" type="field" hidden="0" width="-1"/>
-      <column name="geom_area_Old" type="field" hidden="0" width="-1"/>
-      <column name="dataset_Old" type="field" hidden="0" width="-1"/>
-      <column name="origin_Old" type="field" hidden="0" width="-1"/>
-      <column name="cmp_functiegemaal" type="field" hidden="0" width="-1"/>
-      <column name="cmp_functiegemaal_priority" type="field" hidden="0" width="-1"/>
-      <column name="cmp_maximalecapaciteit" type="field" hidden="0" width="-1"/>
-      <column name="cmp_maximalecapaciteit_change_NaN" type="field" hidden="0" width="-1"/>
-      <column name="cmp_maximalecapaciteit_priority" type="field" hidden="0" width="-1"/>
-      <column name="number_of_info" type="field" hidden="0" width="-1"/>
-      <column name="number_of_warning" type="field" hidden="0" width="-1"/>
-      <column name="number_of_critical" type="field" hidden="0" width="-1"/>
-      <column name="cmp_categorie" type="field" hidden="0" width="-1"/>
-      <column name="cmp_categorie_priority" type="field" hidden="0" width="-1"/>
-      <column name="cmp_geom_type" type="field" hidden="0" width="-1"/>
-      <column name="cmp_geom_type_priority" type="field" hidden="0" width="-1"/>
-      <column name="cmp_ID" type="field" hidden="0" width="-1"/>
-      <column name="cmp_ID_priority" type="field" hidden="0" width="-1"/>
-      <column name="Summary_Critical" type="field" hidden="0" width="125"/>
-      <column name="Summary_Warnings" type="field" hidden="0" width="-1"/>
-      <column type="actions" hidden="1" width="-1"/>
+      <column type="field" width="-1" name="fid" hidden="0"/>
+      <column type="field" width="-1" name="code" hidden="0"/>
+      <column type="field" width="-1" name="in_both" hidden="0"/>
+      <column type="field" width="-1" name="geometry_adjusted" hidden="0"/>
+      <column type="field" width="-1" name="level_0" hidden="0"/>
+      <column type="field" width="-1" name="level_1" hidden="0"/>
+      <column type="field" width="-1" name="naam_New" hidden="0"/>
+      <column type="field" width="-1" name="functiegemaal_New" hidden="0"/>
+      <column type="field" width="-1" name="maximalecapaciteit_New" hidden="0"/>
+      <column type="field" width="-1" name="ws_categorie_New" hidden="0"/>
+      <column type="field" width="-1" name="geom_type_New" hidden="0"/>
+      <column type="field" width="-1" name="geom_length_New" hidden="0"/>
+      <column type="field" width="-1" name="geom_area_New" hidden="0"/>
+      <column type="field" width="-1" name="dataset_New" hidden="0"/>
+      <column type="field" width="-1" name="origin_New" hidden="0"/>
+      <column type="field" width="-1" name="naam_Old" hidden="0"/>
+      <column type="field" width="-1" name="functiegemaal_Old" hidden="0"/>
+      <column type="field" width="-1" name="maximalecapaciteit_Old" hidden="0"/>
+      <column type="field" width="-1" name="ws_categorie_Old" hidden="0"/>
+      <column type="field" width="-1" name="geom_type_Old" hidden="0"/>
+      <column type="field" width="-1" name="geom_length_Old" hidden="0"/>
+      <column type="field" width="-1" name="geom_area_Old" hidden="0"/>
+      <column type="field" width="-1" name="dataset_Old" hidden="0"/>
+      <column type="field" width="-1" name="origin_Old" hidden="0"/>
+      <column type="field" width="-1" name="cmp_functiegemaal" hidden="0"/>
+      <column type="field" width="-1" name="cmp_functiegemaal_priority" hidden="0"/>
+      <column type="field" width="-1" name="cmp_maximalecapaciteit" hidden="0"/>
+      <column type="field" width="-1" name="cmp_maximalecapaciteit_change_NaN" hidden="0"/>
+      <column type="field" width="-1" name="cmp_maximalecapaciteit_priority" hidden="0"/>
+      <column type="field" width="-1" name="number_of_info" hidden="0"/>
+      <column type="field" width="-1" name="number_of_warning" hidden="0"/>
+      <column type="field" width="-1" name="number_of_critical" hidden="0"/>
+      <column type="field" width="-1" name="cmp_categorie" hidden="0"/>
+      <column type="field" width="-1" name="cmp_categorie_priority" hidden="0"/>
+      <column type="field" width="-1" name="cmp_geom_type" hidden="0"/>
+      <column type="field" width="-1" name="cmp_geom_type_priority" hidden="0"/>
+      <column type="field" width="-1" name="cmp_ID" hidden="0"/>
+      <column type="field" width="-1" name="cmp_ID_priority" hidden="0"/>
+      <column type="field" width="125" name="Summary_Critical" hidden="0"/>
+      <column type="field" width="-1" name="Summary_Warnings" hidden="0"/>
+      <column type="actions" width="-1" hidden="1"/>
     </columns>
   </attributetableconfig>
   <conditionalstyles>
@@ -1687,588 +1687,588 @@ def highlight_priority_tabs(dialog, layer, feature):
   <featformsuppress>0</featformsuppress>
   <editorlayout>tablayout</editorlayout>
   <attributeEditorForm>
-    <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
-      <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
+    <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+      <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
     </labelStyle>
-    <attributeEditorContainer horizontalStretch="0" name="Report" visibilityExpressionEnabled="0" columnCount="1" groupBox="1" type="GroupBox" verticalStretch="0" collapsed="0" collapsedExpressionEnabled="0" visibilityExpression="" collapsedExpression="" showLabel="1">
-      <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
-        <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
+    <attributeEditorContainer verticalStretch="0" groupBox="1" collapsedExpression="" collapsed="0" type="GroupBox" visibilityExpressionEnabled="0" visibilityExpression="" horizontalStretch="0" name="Report" showLabel="1" columnCount="1" collapsedExpressionEnabled="0">
+      <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+        <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
       </labelStyle>
-      <attributeEditorField horizontalStretch="0" index="38" name="Summary_Critical" verticalStretch="0" showLabel="1">
-        <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
-          <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
+      <attributeEditorField verticalStretch="0" index="38" horizontalStretch="0" name="Summary_Critical" showLabel="1">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
         </labelStyle>
       </attributeEditorField>
-      <attributeEditorField horizontalStretch="0" index="39" name="Summary_Warnings" verticalStretch="0" showLabel="1">
-        <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
-          <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
+      <attributeEditorField verticalStretch="0" index="39" horizontalStretch="0" name="Summary_Warnings" showLabel="1">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
         </labelStyle>
       </attributeEditorField>
     </attributeEditorContainer>
-    <attributeEditorContainer horizontalStretch="0" name="ID" visibilityExpressionEnabled="0" columnCount="1" groupBox="0" type="Tab" verticalStretch="0" collapsed="0" collapsedExpressionEnabled="0" visibilityExpression="" collapsedExpression="" showLabel="1">
-      <labelStyle labelColor="0,0,0,255" overrideLabelFont="1" overrideLabelColor="0">
-        <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,75,0,0,0,0,0" bold="1" italic="0" underline="0" strikethrough="0"/>
+    <attributeEditorContainer verticalStretch="0" groupBox="0" collapsedExpression="" collapsed="0" type="Tab" visibilityExpressionEnabled="0" visibilityExpression="" horizontalStretch="0" name="ID" showLabel="1" columnCount="1" collapsedExpressionEnabled="0">
+      <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="1">
+        <labelFont bold="1" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,75,0,0,0,0,0" style=""/>
       </labelStyle>
-      <attributeEditorField horizontalStretch="0" index="0" name="fid" verticalStretch="0" showLabel="1">
-        <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
-          <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
+      <attributeEditorField verticalStretch="0" index="0" horizontalStretch="0" name="fid" showLabel="1">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
         </labelStyle>
       </attributeEditorField>
-      <attributeEditorField horizontalStretch="0" index="3" name="code" verticalStretch="0" showLabel="1">
-        <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
-          <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
+      <attributeEditorField verticalStretch="0" index="3" horizontalStretch="0" name="code" showLabel="1">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
         </labelStyle>
       </attributeEditorField>
-      <attributeEditorField horizontalStretch="0" index="13" name="naam_Old" verticalStretch="0" showLabel="1">
-        <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
-          <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
+      <attributeEditorField verticalStretch="0" index="13" horizontalStretch="0" name="naam_Old" showLabel="1">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
         </labelStyle>
       </attributeEditorField>
-      <attributeEditorField horizontalStretch="0" index="4" name="naam_New" verticalStretch="0" showLabel="1">
-        <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
-          <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
+      <attributeEditorField verticalStretch="0" index="4" horizontalStretch="0" name="naam_New" showLabel="1">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
         </labelStyle>
       </attributeEditorField>
-      <attributeEditorField horizontalStretch="0" index="24" name="cmp_ID" verticalStretch="0" showLabel="1">
-        <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
-          <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
+      <attributeEditorField verticalStretch="0" index="24" horizontalStretch="0" name="cmp_ID" showLabel="1">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
         </labelStyle>
       </attributeEditorField>
-      <attributeEditorField horizontalStretch="0" index="25" name="cmp_ID_priority" verticalStretch="0" showLabel="1">
-        <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
-          <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
+      <attributeEditorField verticalStretch="0" index="25" horizontalStretch="0" name="cmp_ID_priority" showLabel="1">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
         </labelStyle>
       </attributeEditorField>
     </attributeEditorContainer>
-    <attributeEditorContainer horizontalStretch="0" name="Category" visibilityExpressionEnabled="0" columnCount="1" groupBox="0" type="Tab" verticalStretch="0" collapsed="0" collapsedExpressionEnabled="0" visibilityExpression="" collapsedExpression="" showLabel="1">
-      <labelStyle labelColor="0,0,0,255" overrideLabelFont="1" overrideLabelColor="0">
-        <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,75,0,0,0,0,0" bold="1" italic="0" underline="0" strikethrough="0"/>
+    <attributeEditorContainer verticalStretch="0" groupBox="0" collapsedExpression="" collapsed="0" type="Tab" visibilityExpressionEnabled="0" visibilityExpression="" horizontalStretch="0" name="Category" showLabel="1" columnCount="1" collapsedExpressionEnabled="0">
+      <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="1">
+        <labelFont bold="1" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,75,0,0,0,0,0" style=""/>
       </labelStyle>
-      <attributeEditorField horizontalStretch="0" index="16" name="ws_categorie_Old" verticalStretch="0" showLabel="1">
-        <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
-          <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
+      <attributeEditorField verticalStretch="0" index="16" horizontalStretch="0" name="ws_categorie_Old" showLabel="1">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
         </labelStyle>
       </attributeEditorField>
-      <attributeEditorField horizontalStretch="0" index="7" name="ws_categorie_New" verticalStretch="0" showLabel="1">
-        <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
-          <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
+      <attributeEditorField verticalStretch="0" index="7" horizontalStretch="0" name="ws_categorie_New" showLabel="1">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
         </labelStyle>
       </attributeEditorField>
-      <attributeEditorField horizontalStretch="0" index="31" name="cmp_categorie" verticalStretch="0" showLabel="1">
-        <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
-          <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
+      <attributeEditorField verticalStretch="0" index="31" horizontalStretch="0" name="cmp_categorie" showLabel="1">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
         </labelStyle>
       </attributeEditorField>
-      <attributeEditorField horizontalStretch="0" index="32" name="cmp_categorie_priority" verticalStretch="0" showLabel="1">
-        <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
-          <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
+      <attributeEditorField verticalStretch="0" index="32" horizontalStretch="0" name="cmp_categorie_priority" showLabel="1">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
         </labelStyle>
       </attributeEditorField>
     </attributeEditorContainer>
-    <attributeEditorContainer horizontalStretch="0" name="Capacity" visibilityExpressionEnabled="0" columnCount="1" groupBox="0" type="Tab" verticalStretch="0" collapsed="0" collapsedExpressionEnabled="0" visibilityExpression="" collapsedExpression="" showLabel="1">
-      <labelStyle labelColor="0,0,0,255" overrideLabelFont="1" overrideLabelColor="0">
-        <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,75,0,0,0,0,0" bold="1" italic="0" underline="0" strikethrough="0"/>
+    <attributeEditorContainer verticalStretch="0" groupBox="0" collapsedExpression="" collapsed="0" type="Tab" visibilityExpressionEnabled="0" visibilityExpression="" horizontalStretch="0" name="Capacity" showLabel="1" columnCount="1" collapsedExpressionEnabled="0">
+      <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="1">
+        <labelFont bold="1" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,75,0,0,0,0,0" style=""/>
       </labelStyle>
-      <attributeEditorField horizontalStretch="0" index="15" name="maximalecapaciteit_Old" verticalStretch="0" showLabel="1">
-        <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
-          <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
+      <attributeEditorField verticalStretch="0" index="15" horizontalStretch="0" name="maximalecapaciteit_Old" showLabel="1">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
         </labelStyle>
       </attributeEditorField>
-      <attributeEditorField horizontalStretch="0" index="6" name="maximalecapaciteit_New" verticalStretch="0" showLabel="1">
-        <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
-          <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
+      <attributeEditorField verticalStretch="0" index="6" horizontalStretch="0" name="maximalecapaciteit_New" showLabel="1">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
         </labelStyle>
       </attributeEditorField>
-      <attributeEditorField horizontalStretch="0" index="28" name="cmp_maximalecapaciteit" verticalStretch="0" showLabel="1">
-        <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
-          <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
+      <attributeEditorField verticalStretch="0" index="28" horizontalStretch="0" name="cmp_maximalecapaciteit" showLabel="1">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
         </labelStyle>
       </attributeEditorField>
-      <attributeEditorField horizontalStretch="0" index="29" name="cmp_maximalecapaciteit_change_NaN" verticalStretch="0" showLabel="1">
-        <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
-          <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
+      <attributeEditorField verticalStretch="0" index="29" horizontalStretch="0" name="cmp_maximalecapaciteit_change_NaN" showLabel="1">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
         </labelStyle>
       </attributeEditorField>
-      <attributeEditorField horizontalStretch="0" index="30" name="cmp_maximalecapaciteit_priority" verticalStretch="0" showLabel="1">
-        <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
-          <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
+      <attributeEditorField verticalStretch="0" index="30" horizontalStretch="0" name="cmp_maximalecapaciteit_priority" showLabel="1">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
         </labelStyle>
       </attributeEditorField>
     </attributeEditorContainer>
-    <attributeEditorContainer horizontalStretch="0" name="Dataset_Origin" visibilityExpressionEnabled="0" columnCount="1" groupBox="0" type="Tab" verticalStretch="0" collapsed="0" collapsedExpressionEnabled="0" visibilityExpression="" collapsedExpression="" showLabel="1">
-      <labelStyle labelColor="0,0,0,255" overrideLabelFont="1" overrideLabelColor="0">
-        <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,75,0,0,0,0,0" bold="1" italic="0" underline="0" strikethrough="0"/>
+    <attributeEditorContainer verticalStretch="0" groupBox="0" collapsedExpression="" collapsed="0" type="Tab" visibilityExpressionEnabled="0" visibilityExpression="" horizontalStretch="0" name="Dataset_Origin" showLabel="1" columnCount="1" collapsedExpressionEnabled="0">
+      <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="1">
+        <labelFont bold="1" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,75,0,0,0,0,0" style=""/>
       </labelStyle>
-      <attributeEditorContainer horizontalStretch="0" name="Dataset" visibilityExpressionEnabled="0" columnCount="1" groupBox="1" type="GroupBox" verticalStretch="0" collapsed="0" collapsedExpressionEnabled="0" visibilityExpression="" collapsedExpression="" showLabel="1">
-        <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
-          <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
+      <attributeEditorContainer verticalStretch="0" groupBox="1" collapsedExpression="" collapsed="0" type="GroupBox" visibilityExpressionEnabled="0" visibilityExpression="" horizontalStretch="0" name="Dataset" showLabel="1" columnCount="1" collapsedExpressionEnabled="0">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
         </labelStyle>
-        <attributeEditorField horizontalStretch="0" index="20" name="dataset_Old" verticalStretch="0" showLabel="1">
-          <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
-            <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
+        <attributeEditorField verticalStretch="0" index="20" horizontalStretch="0" name="dataset_Old" showLabel="1">
+          <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+            <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
           </labelStyle>
         </attributeEditorField>
-        <attributeEditorField horizontalStretch="0" index="11" name="dataset_New" verticalStretch="0" showLabel="1">
-          <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
-            <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
+        <attributeEditorField verticalStretch="0" index="11" horizontalStretch="0" name="dataset_New" showLabel="1">
+          <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+            <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
           </labelStyle>
         </attributeEditorField>
       </attributeEditorContainer>
-      <attributeEditorContainer horizontalStretch="0" name="Origin" visibilityExpressionEnabled="0" columnCount="1" groupBox="1" type="GroupBox" verticalStretch="0" collapsed="0" collapsedExpressionEnabled="0" visibilityExpression="" collapsedExpression="" showLabel="1">
-        <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
-          <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
+      <attributeEditorContainer verticalStretch="0" groupBox="1" collapsedExpression="" collapsed="0" type="GroupBox" visibilityExpressionEnabled="0" visibilityExpression="" horizontalStretch="0" name="Origin" showLabel="1" columnCount="1" collapsedExpressionEnabled="0">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
         </labelStyle>
-        <attributeEditorField horizontalStretch="0" index="21" name="origin_Old" verticalStretch="0" showLabel="1">
-          <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
-            <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
+        <attributeEditorField verticalStretch="0" index="21" horizontalStretch="0" name="origin_Old" showLabel="1">
+          <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+            <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
           </labelStyle>
         </attributeEditorField>
-        <attributeEditorField horizontalStretch="0" index="12" name="origin_New" verticalStretch="0" showLabel="1">
-          <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
-            <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
+        <attributeEditorField verticalStretch="0" index="12" horizontalStretch="0" name="origin_New" showLabel="1">
+          <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+            <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
           </labelStyle>
         </attributeEditorField>
       </attributeEditorContainer>
-      <attributeEditorField horizontalStretch="0" index="22" name="in_both" verticalStretch="0" showLabel="1">
-        <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
-          <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
+      <attributeEditorField verticalStretch="0" index="22" horizontalStretch="0" name="in_both" showLabel="1">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
         </labelStyle>
       </attributeEditorField>
     </attributeEditorContainer>
-    <attributeEditorContainer horizontalStretch="0" name="Function" visibilityExpressionEnabled="0" columnCount="1" groupBox="0" type="Tab" verticalStretch="0" collapsed="0" collapsedExpressionEnabled="0" visibilityExpression="" collapsedExpression="" showLabel="1">
-      <labelStyle labelColor="0,0,0,255" overrideLabelFont="1" overrideLabelColor="0">
-        <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,75,0,0,0,0,0" bold="1" italic="0" underline="0" strikethrough="0"/>
+    <attributeEditorContainer verticalStretch="0" groupBox="0" collapsedExpression="" collapsed="0" type="Tab" visibilityExpressionEnabled="0" visibilityExpression="" horizontalStretch="0" name="Function" showLabel="1" columnCount="1" collapsedExpressionEnabled="0">
+      <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="1">
+        <labelFont bold="1" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,75,0,0,0,0,0" style=""/>
       </labelStyle>
-      <attributeEditorField horizontalStretch="0" index="14" name="functiegemaal_Old" verticalStretch="0" showLabel="1">
-        <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
-          <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
+      <attributeEditorField verticalStretch="0" index="14" horizontalStretch="0" name="functiegemaal_Old" showLabel="1">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
         </labelStyle>
       </attributeEditorField>
-      <attributeEditorField horizontalStretch="0" index="5" name="functiegemaal_New" verticalStretch="0" showLabel="1">
-        <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
-          <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
+      <attributeEditorField verticalStretch="0" index="5" horizontalStretch="0" name="functiegemaal_New" showLabel="1">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
         </labelStyle>
       </attributeEditorField>
-      <attributeEditorField horizontalStretch="0" index="26" name="cmp_functiegemaal" verticalStretch="0" showLabel="1">
-        <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
-          <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
+      <attributeEditorField verticalStretch="0" index="26" horizontalStretch="0" name="cmp_functiegemaal" showLabel="1">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
         </labelStyle>
       </attributeEditorField>
-      <attributeEditorField horizontalStretch="0" index="27" name="cmp_functiegemaal_priority" verticalStretch="0" showLabel="1">
-        <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
-          <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
+      <attributeEditorField verticalStretch="0" index="27" horizontalStretch="0" name="cmp_functiegemaal_priority" showLabel="1">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
         </labelStyle>
       </attributeEditorField>
     </attributeEditorContainer>
-    <attributeEditorContainer horizontalStretch="0" name="Geometry" visibilityExpressionEnabled="0" columnCount="1" groupBox="0" type="Tab" verticalStretch="0" collapsed="0" collapsedExpressionEnabled="0" visibilityExpression="" collapsedExpression="" showLabel="1">
-      <labelStyle labelColor="0,0,0,255" overrideLabelFont="1" overrideLabelColor="0">
-        <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,75,0,0,0,0,0" bold="1" italic="0" underline="0" strikethrough="0"/>
+    <attributeEditorContainer verticalStretch="0" groupBox="0" collapsedExpression="" collapsed="0" type="Tab" visibilityExpressionEnabled="0" visibilityExpression="" horizontalStretch="0" name="Geometry" showLabel="1" columnCount="1" collapsedExpressionEnabled="0">
+      <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="1">
+        <labelFont bold="1" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,75,0,0,0,0,0" style=""/>
       </labelStyle>
-      <attributeEditorContainer horizontalStretch="0" name="Area" visibilityExpressionEnabled="0" columnCount="1" groupBox="1" type="GroupBox" verticalStretch="0" collapsed="0" collapsedExpressionEnabled="0" visibilityExpression="" collapsedExpression="" showLabel="1">
-        <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
-          <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
+      <attributeEditorContainer verticalStretch="0" groupBox="1" collapsedExpression="" collapsed="0" type="GroupBox" visibilityExpressionEnabled="0" visibilityExpression="" horizontalStretch="0" name="Area" showLabel="1" columnCount="1" collapsedExpressionEnabled="0">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
         </labelStyle>
-        <attributeEditorField horizontalStretch="0" index="19" name="geom_area_Old" verticalStretch="0" showLabel="1">
-          <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
-            <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
+        <attributeEditorField verticalStretch="0" index="19" horizontalStretch="0" name="geom_area_Old" showLabel="1">
+          <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+            <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
           </labelStyle>
         </attributeEditorField>
-        <attributeEditorField horizontalStretch="0" index="10" name="geom_area_New" verticalStretch="0" showLabel="1">
-          <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
-            <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
+        <attributeEditorField verticalStretch="0" index="10" horizontalStretch="0" name="geom_area_New" showLabel="1">
+          <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+            <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
           </labelStyle>
         </attributeEditorField>
       </attributeEditorContainer>
-      <attributeEditorContainer horizontalStretch="0" name="Length" visibilityExpressionEnabled="0" columnCount="1" groupBox="1" type="GroupBox" verticalStretch="0" collapsed="0" collapsedExpressionEnabled="0" visibilityExpression="" collapsedExpression="" showLabel="1">
-        <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
-          <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
+      <attributeEditorContainer verticalStretch="0" groupBox="1" collapsedExpression="" collapsed="0" type="GroupBox" visibilityExpressionEnabled="0" visibilityExpression="" horizontalStretch="0" name="Length" showLabel="1" columnCount="1" collapsedExpressionEnabled="0">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
         </labelStyle>
-        <attributeEditorField horizontalStretch="0" index="18" name="geom_length_Old" verticalStretch="0" showLabel="1">
-          <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
-            <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
+        <attributeEditorField verticalStretch="0" index="18" horizontalStretch="0" name="geom_length_Old" showLabel="1">
+          <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+            <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
           </labelStyle>
         </attributeEditorField>
-        <attributeEditorField horizontalStretch="0" index="9" name="geom_length_New" verticalStretch="0" showLabel="1">
-          <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
-            <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
+        <attributeEditorField verticalStretch="0" index="9" horizontalStretch="0" name="geom_length_New" showLabel="1">
+          <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+            <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
           </labelStyle>
         </attributeEditorField>
       </attributeEditorContainer>
-      <attributeEditorContainer horizontalStretch="0" name="Type" visibilityExpressionEnabled="0" columnCount="1" groupBox="1" type="GroupBox" verticalStretch="0" collapsed="0" collapsedExpressionEnabled="0" visibilityExpression="" collapsedExpression="" showLabel="1">
-        <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
-          <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
+      <attributeEditorContainer verticalStretch="0" groupBox="1" collapsedExpression="" collapsed="0" type="GroupBox" visibilityExpressionEnabled="0" visibilityExpression="" horizontalStretch="0" name="Type" showLabel="1" columnCount="1" collapsedExpressionEnabled="0">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
         </labelStyle>
-        <attributeEditorField horizontalStretch="0" index="17" name="geom_type_Old" verticalStretch="0" showLabel="1">
-          <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
-            <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
+        <attributeEditorField verticalStretch="0" index="17" horizontalStretch="0" name="geom_type_Old" showLabel="1">
+          <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+            <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
           </labelStyle>
         </attributeEditorField>
-        <attributeEditorField horizontalStretch="0" index="8" name="geom_type_New" verticalStretch="0" showLabel="1">
-          <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
-            <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
+        <attributeEditorField verticalStretch="0" index="8" horizontalStretch="0" name="geom_type_New" showLabel="1">
+          <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+            <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
           </labelStyle>
         </attributeEditorField>
-        <attributeEditorField horizontalStretch="0" index="33" name="cmp_geom_type" verticalStretch="0" showLabel="1">
-          <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
-            <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
+        <attributeEditorField verticalStretch="0" index="33" horizontalStretch="0" name="cmp_geom_type" showLabel="1">
+          <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+            <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
           </labelStyle>
         </attributeEditorField>
-        <attributeEditorField horizontalStretch="0" index="34" name="cmp_geom_type_priority" verticalStretch="0" showLabel="1">
-          <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
-            <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
+        <attributeEditorField verticalStretch="0" index="34" horizontalStretch="0" name="cmp_geom_type_priority" showLabel="1">
+          <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+            <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
           </labelStyle>
         </attributeEditorField>
       </attributeEditorContainer>
-      <attributeEditorField horizontalStretch="0" index="23" name="geometry_adjusted" verticalStretch="0" showLabel="1">
-        <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
-          <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
+      <attributeEditorField verticalStretch="0" index="23" horizontalStretch="0" name="geometry_adjusted" showLabel="1">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
         </labelStyle>
       </attributeEditorField>
     </attributeEditorContainer>
-    <attributeEditorContainer horizontalStretch="0" name="Vergelijken_Resultaten" visibilityExpressionEnabled="0" columnCount="1" groupBox="0" type="Tab" verticalStretch="0" collapsed="0" collapsedExpressionEnabled="0" visibilityExpression="" collapsedExpression="" showLabel="1">
-      <labelStyle labelColor="0,0,0,255" overrideLabelFont="1" overrideLabelColor="0">
-        <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,75,0,0,0,0,0" bold="1" italic="0" underline="0" strikethrough="0"/>
+    <attributeEditorContainer verticalStretch="0" groupBox="0" collapsedExpression="" collapsed="0" type="Tab" visibilityExpressionEnabled="0" visibilityExpression="" horizontalStretch="0" name="Vergelijken_Resultaten" showLabel="1" columnCount="1" collapsedExpressionEnabled="0">
+      <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="1">
+        <labelFont bold="1" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,75,0,0,0,0,0" style=""/>
       </labelStyle>
-      <attributeEditorField horizontalStretch="0" index="35" name="number_of_info" verticalStretch="0" showLabel="1">
-        <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
-          <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
+      <attributeEditorField verticalStretch="0" index="35" horizontalStretch="0" name="number_of_info" showLabel="1">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
         </labelStyle>
       </attributeEditorField>
-      <attributeEditorField horizontalStretch="0" index="36" name="number_of_warning" verticalStretch="0" showLabel="1">
-        <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
-          <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
+      <attributeEditorField verticalStretch="0" index="36" horizontalStretch="0" name="number_of_warning" showLabel="1">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
         </labelStyle>
       </attributeEditorField>
-      <attributeEditorField horizontalStretch="0" index="37" name="number_of_critical" verticalStretch="0" showLabel="1">
-        <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
-          <labelFont style="" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" bold="0" italic="0" underline="0" strikethrough="0"/>
+      <attributeEditorField verticalStretch="0" index="37" horizontalStretch="0" name="number_of_critical" showLabel="1">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
         </labelStyle>
       </attributeEditorField>
     </attributeEditorContainer>
   </attributeEditorForm>
   <editable>
-    <field name="Naam_verschil" editable="1"/>
-    <field name="Naam_verschil_priority" editable="1"/>
-    <field name="Summary_Critical" editable="1"/>
-    <field name="Summary_Warnings" editable="1"/>
-    <field name="Width Verschil" editable="1"/>
-    <field name="Width Verschil_change_NaN" editable="1"/>
-    <field name="Width Verschil_priority" editable="1"/>
-    <field name="aantal_doorstroomopeningen_A" editable="1"/>
-    <field name="aantal_doorstroomopeningen_B" editable="1"/>
-    <field name="brug_id_A" editable="1"/>
-    <field name="brug_id_B" editable="1"/>
-    <field name="cmp_ID" editable="1"/>
-    <field name="cmp_ID_priority" editable="1"/>
-    <field name="cmp_aantal_doorstroomopeningen" editable="1"/>
-    <field name="cmp_aantal_doorstroomopeningen_change_NaN" editable="1"/>
-    <field name="cmp_aantal_doorstroomopeningen_priority" editable="1"/>
-    <field name="cmp_categorie" editable="1"/>
-    <field name="cmp_categorie_priority" editable="1"/>
-    <field name="cmp_doorvaarbreedte" editable="1"/>
-    <field name="cmp_doorvaarbreedte_change_NaN" editable="1"/>
-    <field name="cmp_doorvaarbreedte_priority" editable="1"/>
-    <field name="cmp_functiegemaal" editable="1"/>
-    <field name="cmp_functiegemaal_priority" editable="1"/>
-    <field name="cmp_geom_type" editable="1"/>
-    <field name="cmp_geom_type_priority" editable="1"/>
-    <field name="cmp_hoogteonderzijde" editable="1"/>
-    <field name="cmp_hoogteonderzijde_change_NaN" editable="1"/>
-    <field name="cmp_hoogteonderzijde_priority" editable="1"/>
-    <field name="cmp_maximalecapaciteit" editable="1"/>
-    <field name="cmp_maximalecapaciteit_change_NaN" editable="1"/>
-    <field name="cmp_maximalecapaciteit_priority" editable="1"/>
-    <field name="cmp_ws_categorie" editable="1"/>
-    <field name="cmp_ws_categorie_priority" editable="1"/>
-    <field name="code" editable="1"/>
-    <field name="dataset_A" editable="1"/>
-    <field name="dataset_B" editable="1"/>
-    <field name="dataset_New" editable="1"/>
-    <field name="dataset_Old" editable="1"/>
-    <field name="doorstroombreedte_A" editable="1"/>
-    <field name="doorstroombreedte_B" editable="1"/>
-    <field name="doorvaartbreedte_A" editable="1"/>
-    <field name="doorvaartbreedte_B" editable="1"/>
-    <field name="fid" editable="1"/>
-    <field name="functie_A" editable="1"/>
-    <field name="functie_B" editable="1"/>
-    <field name="functiegemaal_New" editable="1"/>
-    <field name="functiegemaal_Old" editable="1"/>
-    <field name="geom_area_A" editable="1"/>
-    <field name="geom_area_B" editable="1"/>
-    <field name="geom_area_New" editable="1"/>
-    <field name="geom_area_Old" editable="1"/>
-    <field name="geom_length_A" editable="1"/>
-    <field name="geom_length_B" editable="1"/>
-    <field name="geom_length_New" editable="1"/>
-    <field name="geom_length_Old" editable="1"/>
-    <field name="geom_type_A" editable="1"/>
-    <field name="geom_type_B" editable="1"/>
-    <field name="geom_type_New" editable="1"/>
-    <field name="geom_type_Old" editable="1"/>
-    <field name="geometry_adjusted" editable="1"/>
-    <field name="hoogstedoorstroomhoogte_A" editable="1"/>
-    <field name="hoogstedoorstroomhoogte_B" editable="1"/>
-    <field name="hoogteonderzijde_A" editable="1"/>
-    <field name="hoogteonderzijde_B" editable="1"/>
-    <field name="in_both" editable="1"/>
-    <field name="kruinbreedte_A" editable="1"/>
-    <field name="kruinbreedte_B" editable="1"/>
-    <field name="kruinhoogte_hdb_A" editable="1"/>
-    <field name="kruinhoogte_hdb_B" editable="1"/>
-    <field name="laagstedoorstroomhoogte_A" editable="1"/>
-    <field name="laagstedoorstroomhoogte_B" editable="1"/>
-    <field name="level_0" editable="1"/>
-    <field name="level_1" editable="1"/>
-    <field name="maximalecapaciteit_New" editable="1"/>
-    <field name="maximalecapaciteit_Old" editable="1"/>
-    <field name="moet_op_peilgrens_A" editable="1"/>
-    <field name="moet_op_peilgrens_B" editable="1"/>
-    <field name="naam_A" editable="1"/>
-    <field name="naam_B" editable="1"/>
-    <field name="naam_New" editable="1"/>
-    <field name="naam_Old" editable="1"/>
-    <field name="number_of_critical" editable="1"/>
-    <field name="number_of_info" editable="1"/>
-    <field name="number_of_warning" editable="1"/>
-    <field name="opmerkingen_A" editable="1"/>
-    <field name="opmerkingen_B" editable="1"/>
-    <field name="origin_A" editable="1"/>
-    <field name="origin_B" editable="1"/>
-    <field name="origin_New" editable="1"/>
-    <field name="origin_Old" editable="1"/>
-    <field name="point_x_A" editable="1"/>
-    <field name="point_x_B" editable="1"/>
-    <field name="point_y_A" editable="1"/>
-    <field name="point_y_B" editable="1"/>
-    <field name="som_doorstroombreedte_A" editable="1"/>
-    <field name="som_doorstroombreedte_B" editable="1"/>
-    <field name="soortregelbaarheid_A" editable="1"/>
-    <field name="soortregelbaarheid_B" editable="1"/>
-    <field name="ws_categorie_A" editable="1"/>
-    <field name="ws_categorie_B" editable="1"/>
-    <field name="ws_categorie_New" editable="1"/>
-    <field name="ws_categorie_Old" editable="1"/>
-    <field name="ws_functiestuw_A" editable="1"/>
-    <field name="ws_functiestuw_B" editable="1"/>
-    <field name="ws_kruinvorm_A" editable="1"/>
-    <field name="ws_kruinvorm_B" editable="1"/>
+    <field editable="1" name="Naam_verschil"/>
+    <field editable="1" name="Naam_verschil_priority"/>
+    <field editable="1" name="Summary_Critical"/>
+    <field editable="1" name="Summary_Warnings"/>
+    <field editable="1" name="Width Verschil"/>
+    <field editable="1" name="Width Verschil_change_NaN"/>
+    <field editable="1" name="Width Verschil_priority"/>
+    <field editable="1" name="aantal_doorstroomopeningen_A"/>
+    <field editable="1" name="aantal_doorstroomopeningen_B"/>
+    <field editable="1" name="brug_id_A"/>
+    <field editable="1" name="brug_id_B"/>
+    <field editable="1" name="cmp_ID"/>
+    <field editable="1" name="cmp_ID_priority"/>
+    <field editable="1" name="cmp_aantal_doorstroomopeningen"/>
+    <field editable="1" name="cmp_aantal_doorstroomopeningen_change_NaN"/>
+    <field editable="1" name="cmp_aantal_doorstroomopeningen_priority"/>
+    <field editable="1" name="cmp_categorie"/>
+    <field editable="1" name="cmp_categorie_priority"/>
+    <field editable="1" name="cmp_doorvaarbreedte"/>
+    <field editable="1" name="cmp_doorvaarbreedte_change_NaN"/>
+    <field editable="1" name="cmp_doorvaarbreedte_priority"/>
+    <field editable="1" name="cmp_functiegemaal"/>
+    <field editable="1" name="cmp_functiegemaal_priority"/>
+    <field editable="1" name="cmp_geom_type"/>
+    <field editable="1" name="cmp_geom_type_priority"/>
+    <field editable="1" name="cmp_hoogteonderzijde"/>
+    <field editable="1" name="cmp_hoogteonderzijde_change_NaN"/>
+    <field editable="1" name="cmp_hoogteonderzijde_priority"/>
+    <field editable="1" name="cmp_maximalecapaciteit"/>
+    <field editable="1" name="cmp_maximalecapaciteit_change_NaN"/>
+    <field editable="1" name="cmp_maximalecapaciteit_priority"/>
+    <field editable="1" name="cmp_ws_categorie"/>
+    <field editable="1" name="cmp_ws_categorie_priority"/>
+    <field editable="1" name="code"/>
+    <field editable="1" name="dataset_A"/>
+    <field editable="1" name="dataset_B"/>
+    <field editable="1" name="dataset_New"/>
+    <field editable="1" name="dataset_Old"/>
+    <field editable="1" name="doorstroombreedte_A"/>
+    <field editable="1" name="doorstroombreedte_B"/>
+    <field editable="1" name="doorvaartbreedte_A"/>
+    <field editable="1" name="doorvaartbreedte_B"/>
+    <field editable="1" name="fid"/>
+    <field editable="1" name="functie_A"/>
+    <field editable="1" name="functie_B"/>
+    <field editable="1" name="functiegemaal_New"/>
+    <field editable="1" name="functiegemaal_Old"/>
+    <field editable="1" name="geom_area_A"/>
+    <field editable="1" name="geom_area_B"/>
+    <field editable="1" name="geom_area_New"/>
+    <field editable="1" name="geom_area_Old"/>
+    <field editable="1" name="geom_length_A"/>
+    <field editable="1" name="geom_length_B"/>
+    <field editable="1" name="geom_length_New"/>
+    <field editable="1" name="geom_length_Old"/>
+    <field editable="1" name="geom_type_A"/>
+    <field editable="1" name="geom_type_B"/>
+    <field editable="1" name="geom_type_New"/>
+    <field editable="1" name="geom_type_Old"/>
+    <field editable="1" name="geometry_adjusted"/>
+    <field editable="1" name="hoogstedoorstroomhoogte_A"/>
+    <field editable="1" name="hoogstedoorstroomhoogte_B"/>
+    <field editable="1" name="hoogteonderzijde_A"/>
+    <field editable="1" name="hoogteonderzijde_B"/>
+    <field editable="1" name="in_both"/>
+    <field editable="1" name="kruinbreedte_A"/>
+    <field editable="1" name="kruinbreedte_B"/>
+    <field editable="1" name="kruinhoogte_hdb_A"/>
+    <field editable="1" name="kruinhoogte_hdb_B"/>
+    <field editable="1" name="laagstedoorstroomhoogte_A"/>
+    <field editable="1" name="laagstedoorstroomhoogte_B"/>
+    <field editable="1" name="level_0"/>
+    <field editable="1" name="level_1"/>
+    <field editable="1" name="maximalecapaciteit_New"/>
+    <field editable="1" name="maximalecapaciteit_Old"/>
+    <field editable="1" name="moet_op_peilgrens_A"/>
+    <field editable="1" name="moet_op_peilgrens_B"/>
+    <field editable="1" name="naam_A"/>
+    <field editable="1" name="naam_B"/>
+    <field editable="1" name="naam_New"/>
+    <field editable="1" name="naam_Old"/>
+    <field editable="1" name="number_of_critical"/>
+    <field editable="1" name="number_of_info"/>
+    <field editable="1" name="number_of_warning"/>
+    <field editable="1" name="opmerkingen_A"/>
+    <field editable="1" name="opmerkingen_B"/>
+    <field editable="1" name="origin_A"/>
+    <field editable="1" name="origin_B"/>
+    <field editable="1" name="origin_New"/>
+    <field editable="1" name="origin_Old"/>
+    <field editable="1" name="point_x_A"/>
+    <field editable="1" name="point_x_B"/>
+    <field editable="1" name="point_y_A"/>
+    <field editable="1" name="point_y_B"/>
+    <field editable="1" name="som_doorstroombreedte_A"/>
+    <field editable="1" name="som_doorstroombreedte_B"/>
+    <field editable="1" name="soortregelbaarheid_A"/>
+    <field editable="1" name="soortregelbaarheid_B"/>
+    <field editable="1" name="ws_categorie_A"/>
+    <field editable="1" name="ws_categorie_B"/>
+    <field editable="1" name="ws_categorie_New"/>
+    <field editable="1" name="ws_categorie_Old"/>
+    <field editable="1" name="ws_functiestuw_A"/>
+    <field editable="1" name="ws_functiestuw_B"/>
+    <field editable="1" name="ws_kruinvorm_A"/>
+    <field editable="1" name="ws_kruinvorm_B"/>
   </editable>
   <labelOnTop>
-    <field name="Naam_verschil" labelOnTop="0"/>
-    <field name="Naam_verschil_priority" labelOnTop="0"/>
-    <field name="Summary_Critical" labelOnTop="0"/>
-    <field name="Summary_Warnings" labelOnTop="0"/>
-    <field name="Width Verschil" labelOnTop="0"/>
-    <field name="Width Verschil_change_NaN" labelOnTop="0"/>
-    <field name="Width Verschil_priority" labelOnTop="0"/>
-    <field name="aantal_doorstroomopeningen_A" labelOnTop="0"/>
-    <field name="aantal_doorstroomopeningen_B" labelOnTop="0"/>
-    <field name="brug_id_A" labelOnTop="0"/>
-    <field name="brug_id_B" labelOnTop="0"/>
-    <field name="cmp_ID" labelOnTop="0"/>
-    <field name="cmp_ID_priority" labelOnTop="0"/>
-    <field name="cmp_aantal_doorstroomopeningen" labelOnTop="0"/>
-    <field name="cmp_aantal_doorstroomopeningen_change_NaN" labelOnTop="0"/>
-    <field name="cmp_aantal_doorstroomopeningen_priority" labelOnTop="0"/>
-    <field name="cmp_categorie" labelOnTop="0"/>
-    <field name="cmp_categorie_priority" labelOnTop="0"/>
-    <field name="cmp_doorvaarbreedte" labelOnTop="0"/>
-    <field name="cmp_doorvaarbreedte_change_NaN" labelOnTop="0"/>
-    <field name="cmp_doorvaarbreedte_priority" labelOnTop="0"/>
-    <field name="cmp_functiegemaal" labelOnTop="0"/>
-    <field name="cmp_functiegemaal_priority" labelOnTop="0"/>
-    <field name="cmp_geom_type" labelOnTop="0"/>
-    <field name="cmp_geom_type_priority" labelOnTop="0"/>
-    <field name="cmp_hoogteonderzijde" labelOnTop="0"/>
-    <field name="cmp_hoogteonderzijde_change_NaN" labelOnTop="0"/>
-    <field name="cmp_hoogteonderzijde_priority" labelOnTop="0"/>
-    <field name="cmp_maximalecapaciteit" labelOnTop="0"/>
-    <field name="cmp_maximalecapaciteit_change_NaN" labelOnTop="0"/>
-    <field name="cmp_maximalecapaciteit_priority" labelOnTop="0"/>
-    <field name="cmp_ws_categorie" labelOnTop="0"/>
-    <field name="cmp_ws_categorie_priority" labelOnTop="0"/>
-    <field name="code" labelOnTop="0"/>
-    <field name="dataset_A" labelOnTop="0"/>
-    <field name="dataset_B" labelOnTop="0"/>
-    <field name="dataset_New" labelOnTop="0"/>
-    <field name="dataset_Old" labelOnTop="0"/>
-    <field name="doorstroombreedte_A" labelOnTop="0"/>
-    <field name="doorstroombreedte_B" labelOnTop="0"/>
-    <field name="doorvaartbreedte_A" labelOnTop="0"/>
-    <field name="doorvaartbreedte_B" labelOnTop="0"/>
-    <field name="fid" labelOnTop="0"/>
-    <field name="functie_A" labelOnTop="0"/>
-    <field name="functie_B" labelOnTop="0"/>
-    <field name="functiegemaal_New" labelOnTop="0"/>
-    <field name="functiegemaal_Old" labelOnTop="0"/>
-    <field name="geom_area_A" labelOnTop="0"/>
-    <field name="geom_area_B" labelOnTop="0"/>
-    <field name="geom_area_New" labelOnTop="0"/>
-    <field name="geom_area_Old" labelOnTop="0"/>
-    <field name="geom_length_A" labelOnTop="0"/>
-    <field name="geom_length_B" labelOnTop="0"/>
-    <field name="geom_length_New" labelOnTop="0"/>
-    <field name="geom_length_Old" labelOnTop="0"/>
-    <field name="geom_type_A" labelOnTop="0"/>
-    <field name="geom_type_B" labelOnTop="0"/>
-    <field name="geom_type_New" labelOnTop="0"/>
-    <field name="geom_type_Old" labelOnTop="0"/>
-    <field name="geometry_adjusted" labelOnTop="0"/>
-    <field name="hoogstedoorstroomhoogte_A" labelOnTop="0"/>
-    <field name="hoogstedoorstroomhoogte_B" labelOnTop="0"/>
-    <field name="hoogteonderzijde_A" labelOnTop="0"/>
-    <field name="hoogteonderzijde_B" labelOnTop="0"/>
-    <field name="in_both" labelOnTop="0"/>
-    <field name="kruinbreedte_A" labelOnTop="0"/>
-    <field name="kruinbreedte_B" labelOnTop="0"/>
-    <field name="kruinhoogte_hdb_A" labelOnTop="0"/>
-    <field name="kruinhoogte_hdb_B" labelOnTop="0"/>
-    <field name="laagstedoorstroomhoogte_A" labelOnTop="0"/>
-    <field name="laagstedoorstroomhoogte_B" labelOnTop="0"/>
-    <field name="level_0" labelOnTop="0"/>
-    <field name="level_1" labelOnTop="0"/>
-    <field name="maximalecapaciteit_New" labelOnTop="0"/>
-    <field name="maximalecapaciteit_Old" labelOnTop="0"/>
-    <field name="moet_op_peilgrens_A" labelOnTop="0"/>
-    <field name="moet_op_peilgrens_B" labelOnTop="0"/>
-    <field name="naam_A" labelOnTop="0"/>
-    <field name="naam_B" labelOnTop="0"/>
-    <field name="naam_New" labelOnTop="0"/>
-    <field name="naam_Old" labelOnTop="0"/>
-    <field name="number_of_critical" labelOnTop="0"/>
-    <field name="number_of_info" labelOnTop="0"/>
-    <field name="number_of_warning" labelOnTop="0"/>
-    <field name="opmerkingen_A" labelOnTop="0"/>
-    <field name="opmerkingen_B" labelOnTop="0"/>
-    <field name="origin_A" labelOnTop="0"/>
-    <field name="origin_B" labelOnTop="0"/>
-    <field name="origin_New" labelOnTop="0"/>
-    <field name="origin_Old" labelOnTop="0"/>
-    <field name="point_x_A" labelOnTop="0"/>
-    <field name="point_x_B" labelOnTop="0"/>
-    <field name="point_y_A" labelOnTop="0"/>
-    <field name="point_y_B" labelOnTop="0"/>
-    <field name="som_doorstroombreedte_A" labelOnTop="0"/>
-    <field name="som_doorstroombreedte_B" labelOnTop="0"/>
-    <field name="soortregelbaarheid_A" labelOnTop="0"/>
-    <field name="soortregelbaarheid_B" labelOnTop="0"/>
-    <field name="ws_categorie_A" labelOnTop="0"/>
-    <field name="ws_categorie_B" labelOnTop="0"/>
-    <field name="ws_categorie_New" labelOnTop="0"/>
-    <field name="ws_categorie_Old" labelOnTop="0"/>
-    <field name="ws_functiestuw_A" labelOnTop="0"/>
-    <field name="ws_functiestuw_B" labelOnTop="0"/>
-    <field name="ws_kruinvorm_A" labelOnTop="0"/>
-    <field name="ws_kruinvorm_B" labelOnTop="0"/>
+    <field labelOnTop="0" name="Naam_verschil"/>
+    <field labelOnTop="0" name="Naam_verschil_priority"/>
+    <field labelOnTop="0" name="Summary_Critical"/>
+    <field labelOnTop="0" name="Summary_Warnings"/>
+    <field labelOnTop="0" name="Width Verschil"/>
+    <field labelOnTop="0" name="Width Verschil_change_NaN"/>
+    <field labelOnTop="0" name="Width Verschil_priority"/>
+    <field labelOnTop="0" name="aantal_doorstroomopeningen_A"/>
+    <field labelOnTop="0" name="aantal_doorstroomopeningen_B"/>
+    <field labelOnTop="0" name="brug_id_A"/>
+    <field labelOnTop="0" name="brug_id_B"/>
+    <field labelOnTop="0" name="cmp_ID"/>
+    <field labelOnTop="0" name="cmp_ID_priority"/>
+    <field labelOnTop="0" name="cmp_aantal_doorstroomopeningen"/>
+    <field labelOnTop="0" name="cmp_aantal_doorstroomopeningen_change_NaN"/>
+    <field labelOnTop="0" name="cmp_aantal_doorstroomopeningen_priority"/>
+    <field labelOnTop="0" name="cmp_categorie"/>
+    <field labelOnTop="0" name="cmp_categorie_priority"/>
+    <field labelOnTop="0" name="cmp_doorvaarbreedte"/>
+    <field labelOnTop="0" name="cmp_doorvaarbreedte_change_NaN"/>
+    <field labelOnTop="0" name="cmp_doorvaarbreedte_priority"/>
+    <field labelOnTop="0" name="cmp_functiegemaal"/>
+    <field labelOnTop="0" name="cmp_functiegemaal_priority"/>
+    <field labelOnTop="0" name="cmp_geom_type"/>
+    <field labelOnTop="0" name="cmp_geom_type_priority"/>
+    <field labelOnTop="0" name="cmp_hoogteonderzijde"/>
+    <field labelOnTop="0" name="cmp_hoogteonderzijde_change_NaN"/>
+    <field labelOnTop="0" name="cmp_hoogteonderzijde_priority"/>
+    <field labelOnTop="0" name="cmp_maximalecapaciteit"/>
+    <field labelOnTop="0" name="cmp_maximalecapaciteit_change_NaN"/>
+    <field labelOnTop="0" name="cmp_maximalecapaciteit_priority"/>
+    <field labelOnTop="0" name="cmp_ws_categorie"/>
+    <field labelOnTop="0" name="cmp_ws_categorie_priority"/>
+    <field labelOnTop="0" name="code"/>
+    <field labelOnTop="0" name="dataset_A"/>
+    <field labelOnTop="0" name="dataset_B"/>
+    <field labelOnTop="0" name="dataset_New"/>
+    <field labelOnTop="0" name="dataset_Old"/>
+    <field labelOnTop="0" name="doorstroombreedte_A"/>
+    <field labelOnTop="0" name="doorstroombreedte_B"/>
+    <field labelOnTop="0" name="doorvaartbreedte_A"/>
+    <field labelOnTop="0" name="doorvaartbreedte_B"/>
+    <field labelOnTop="0" name="fid"/>
+    <field labelOnTop="0" name="functie_A"/>
+    <field labelOnTop="0" name="functie_B"/>
+    <field labelOnTop="0" name="functiegemaal_New"/>
+    <field labelOnTop="0" name="functiegemaal_Old"/>
+    <field labelOnTop="0" name="geom_area_A"/>
+    <field labelOnTop="0" name="geom_area_B"/>
+    <field labelOnTop="0" name="geom_area_New"/>
+    <field labelOnTop="0" name="geom_area_Old"/>
+    <field labelOnTop="0" name="geom_length_A"/>
+    <field labelOnTop="0" name="geom_length_B"/>
+    <field labelOnTop="0" name="geom_length_New"/>
+    <field labelOnTop="0" name="geom_length_Old"/>
+    <field labelOnTop="0" name="geom_type_A"/>
+    <field labelOnTop="0" name="geom_type_B"/>
+    <field labelOnTop="0" name="geom_type_New"/>
+    <field labelOnTop="0" name="geom_type_Old"/>
+    <field labelOnTop="0" name="geometry_adjusted"/>
+    <field labelOnTop="0" name="hoogstedoorstroomhoogte_A"/>
+    <field labelOnTop="0" name="hoogstedoorstroomhoogte_B"/>
+    <field labelOnTop="0" name="hoogteonderzijde_A"/>
+    <field labelOnTop="0" name="hoogteonderzijde_B"/>
+    <field labelOnTop="0" name="in_both"/>
+    <field labelOnTop="0" name="kruinbreedte_A"/>
+    <field labelOnTop="0" name="kruinbreedte_B"/>
+    <field labelOnTop="0" name="kruinhoogte_hdb_A"/>
+    <field labelOnTop="0" name="kruinhoogte_hdb_B"/>
+    <field labelOnTop="0" name="laagstedoorstroomhoogte_A"/>
+    <field labelOnTop="0" name="laagstedoorstroomhoogte_B"/>
+    <field labelOnTop="0" name="level_0"/>
+    <field labelOnTop="0" name="level_1"/>
+    <field labelOnTop="0" name="maximalecapaciteit_New"/>
+    <field labelOnTop="0" name="maximalecapaciteit_Old"/>
+    <field labelOnTop="0" name="moet_op_peilgrens_A"/>
+    <field labelOnTop="0" name="moet_op_peilgrens_B"/>
+    <field labelOnTop="0" name="naam_A"/>
+    <field labelOnTop="0" name="naam_B"/>
+    <field labelOnTop="0" name="naam_New"/>
+    <field labelOnTop="0" name="naam_Old"/>
+    <field labelOnTop="0" name="number_of_critical"/>
+    <field labelOnTop="0" name="number_of_info"/>
+    <field labelOnTop="0" name="number_of_warning"/>
+    <field labelOnTop="0" name="opmerkingen_A"/>
+    <field labelOnTop="0" name="opmerkingen_B"/>
+    <field labelOnTop="0" name="origin_A"/>
+    <field labelOnTop="0" name="origin_B"/>
+    <field labelOnTop="0" name="origin_New"/>
+    <field labelOnTop="0" name="origin_Old"/>
+    <field labelOnTop="0" name="point_x_A"/>
+    <field labelOnTop="0" name="point_x_B"/>
+    <field labelOnTop="0" name="point_y_A"/>
+    <field labelOnTop="0" name="point_y_B"/>
+    <field labelOnTop="0" name="som_doorstroombreedte_A"/>
+    <field labelOnTop="0" name="som_doorstroombreedte_B"/>
+    <field labelOnTop="0" name="soortregelbaarheid_A"/>
+    <field labelOnTop="0" name="soortregelbaarheid_B"/>
+    <field labelOnTop="0" name="ws_categorie_A"/>
+    <field labelOnTop="0" name="ws_categorie_B"/>
+    <field labelOnTop="0" name="ws_categorie_New"/>
+    <field labelOnTop="0" name="ws_categorie_Old"/>
+    <field labelOnTop="0" name="ws_functiestuw_A"/>
+    <field labelOnTop="0" name="ws_functiestuw_B"/>
+    <field labelOnTop="0" name="ws_kruinvorm_A"/>
+    <field labelOnTop="0" name="ws_kruinvorm_B"/>
   </labelOnTop>
   <reuseLastValue>
-    <field name="Naam_verschil" reuseLastValue="0"/>
-    <field name="Naam_verschil_priority" reuseLastValue="0"/>
-    <field name="Summary_Critical" reuseLastValue="0"/>
-    <field name="Summary_Warnings" reuseLastValue="0"/>
-    <field name="Width Verschil" reuseLastValue="0"/>
-    <field name="Width Verschil_change_NaN" reuseLastValue="0"/>
-    <field name="Width Verschil_priority" reuseLastValue="0"/>
-    <field name="aantal_doorstroomopeningen_A" reuseLastValue="0"/>
-    <field name="aantal_doorstroomopeningen_B" reuseLastValue="0"/>
-    <field name="brug_id_A" reuseLastValue="0"/>
-    <field name="brug_id_B" reuseLastValue="0"/>
-    <field name="cmp_ID" reuseLastValue="0"/>
-    <field name="cmp_ID_priority" reuseLastValue="0"/>
-    <field name="cmp_aantal_doorstroomopeningen" reuseLastValue="0"/>
-    <field name="cmp_aantal_doorstroomopeningen_change_NaN" reuseLastValue="0"/>
-    <field name="cmp_aantal_doorstroomopeningen_priority" reuseLastValue="0"/>
-    <field name="cmp_categorie" reuseLastValue="0"/>
-    <field name="cmp_categorie_priority" reuseLastValue="0"/>
-    <field name="cmp_doorvaarbreedte" reuseLastValue="0"/>
-    <field name="cmp_doorvaarbreedte_change_NaN" reuseLastValue="0"/>
-    <field name="cmp_doorvaarbreedte_priority" reuseLastValue="0"/>
-    <field name="cmp_functiegemaal" reuseLastValue="0"/>
-    <field name="cmp_functiegemaal_priority" reuseLastValue="0"/>
-    <field name="cmp_geom_type" reuseLastValue="0"/>
-    <field name="cmp_geom_type_priority" reuseLastValue="0"/>
-    <field name="cmp_hoogteonderzijde" reuseLastValue="0"/>
-    <field name="cmp_hoogteonderzijde_change_NaN" reuseLastValue="0"/>
-    <field name="cmp_hoogteonderzijde_priority" reuseLastValue="0"/>
-    <field name="cmp_maximalecapaciteit" reuseLastValue="0"/>
-    <field name="cmp_maximalecapaciteit_change_NaN" reuseLastValue="0"/>
-    <field name="cmp_maximalecapaciteit_priority" reuseLastValue="0"/>
-    <field name="cmp_ws_categorie" reuseLastValue="0"/>
-    <field name="cmp_ws_categorie_priority" reuseLastValue="0"/>
-    <field name="code" reuseLastValue="0"/>
-    <field name="dataset_A" reuseLastValue="0"/>
-    <field name="dataset_B" reuseLastValue="0"/>
-    <field name="dataset_New" reuseLastValue="0"/>
-    <field name="dataset_Old" reuseLastValue="0"/>
-    <field name="doorstroombreedte_A" reuseLastValue="0"/>
-    <field name="doorstroombreedte_B" reuseLastValue="0"/>
-    <field name="doorvaartbreedte_A" reuseLastValue="0"/>
-    <field name="doorvaartbreedte_B" reuseLastValue="0"/>
-    <field name="fid" reuseLastValue="0"/>
-    <field name="functie_A" reuseLastValue="0"/>
-    <field name="functie_B" reuseLastValue="0"/>
-    <field name="functiegemaal_New" reuseLastValue="0"/>
-    <field name="functiegemaal_Old" reuseLastValue="0"/>
-    <field name="geom_area_A" reuseLastValue="0"/>
-    <field name="geom_area_B" reuseLastValue="0"/>
-    <field name="geom_area_New" reuseLastValue="0"/>
-    <field name="geom_area_Old" reuseLastValue="0"/>
-    <field name="geom_length_A" reuseLastValue="0"/>
-    <field name="geom_length_B" reuseLastValue="0"/>
-    <field name="geom_length_New" reuseLastValue="0"/>
-    <field name="geom_length_Old" reuseLastValue="0"/>
-    <field name="geom_type_A" reuseLastValue="0"/>
-    <field name="geom_type_B" reuseLastValue="0"/>
-    <field name="geom_type_New" reuseLastValue="0"/>
-    <field name="geom_type_Old" reuseLastValue="0"/>
-    <field name="geometry_adjusted" reuseLastValue="0"/>
-    <field name="hoogstedoorstroomhoogte_A" reuseLastValue="0"/>
-    <field name="hoogstedoorstroomhoogte_B" reuseLastValue="0"/>
-    <field name="hoogteonderzijde_A" reuseLastValue="0"/>
-    <field name="hoogteonderzijde_B" reuseLastValue="0"/>
-    <field name="in_both" reuseLastValue="0"/>
-    <field name="kruinbreedte_A" reuseLastValue="0"/>
-    <field name="kruinbreedte_B" reuseLastValue="0"/>
-    <field name="kruinhoogte_hdb_A" reuseLastValue="0"/>
-    <field name="kruinhoogte_hdb_B" reuseLastValue="0"/>
-    <field name="laagstedoorstroomhoogte_A" reuseLastValue="0"/>
-    <field name="laagstedoorstroomhoogte_B" reuseLastValue="0"/>
-    <field name="level_0" reuseLastValue="0"/>
-    <field name="level_1" reuseLastValue="0"/>
-    <field name="maximalecapaciteit_New" reuseLastValue="0"/>
-    <field name="maximalecapaciteit_Old" reuseLastValue="0"/>
-    <field name="moet_op_peilgrens_A" reuseLastValue="0"/>
-    <field name="moet_op_peilgrens_B" reuseLastValue="0"/>
-    <field name="naam_A" reuseLastValue="0"/>
-    <field name="naam_B" reuseLastValue="0"/>
-    <field name="naam_New" reuseLastValue="0"/>
-    <field name="naam_Old" reuseLastValue="0"/>
-    <field name="number_of_critical" reuseLastValue="0"/>
-    <field name="number_of_info" reuseLastValue="0"/>
-    <field name="number_of_warning" reuseLastValue="0"/>
-    <field name="opmerkingen_A" reuseLastValue="0"/>
-    <field name="opmerkingen_B" reuseLastValue="0"/>
-    <field name="origin_A" reuseLastValue="0"/>
-    <field name="origin_B" reuseLastValue="0"/>
-    <field name="origin_New" reuseLastValue="0"/>
-    <field name="origin_Old" reuseLastValue="0"/>
-    <field name="point_x_A" reuseLastValue="0"/>
-    <field name="point_x_B" reuseLastValue="0"/>
-    <field name="point_y_A" reuseLastValue="0"/>
-    <field name="point_y_B" reuseLastValue="0"/>
-    <field name="som_doorstroombreedte_A" reuseLastValue="0"/>
-    <field name="som_doorstroombreedte_B" reuseLastValue="0"/>
-    <field name="soortregelbaarheid_A" reuseLastValue="0"/>
-    <field name="soortregelbaarheid_B" reuseLastValue="0"/>
-    <field name="ws_categorie_A" reuseLastValue="0"/>
-    <field name="ws_categorie_B" reuseLastValue="0"/>
-    <field name="ws_categorie_New" reuseLastValue="0"/>
-    <field name="ws_categorie_Old" reuseLastValue="0"/>
-    <field name="ws_functiestuw_A" reuseLastValue="0"/>
-    <field name="ws_functiestuw_B" reuseLastValue="0"/>
-    <field name="ws_kruinvorm_A" reuseLastValue="0"/>
-    <field name="ws_kruinvorm_B" reuseLastValue="0"/>
+    <field reuseLastValue="0" name="Naam_verschil"/>
+    <field reuseLastValue="0" name="Naam_verschil_priority"/>
+    <field reuseLastValue="0" name="Summary_Critical"/>
+    <field reuseLastValue="0" name="Summary_Warnings"/>
+    <field reuseLastValue="0" name="Width Verschil"/>
+    <field reuseLastValue="0" name="Width Verschil_change_NaN"/>
+    <field reuseLastValue="0" name="Width Verschil_priority"/>
+    <field reuseLastValue="0" name="aantal_doorstroomopeningen_A"/>
+    <field reuseLastValue="0" name="aantal_doorstroomopeningen_B"/>
+    <field reuseLastValue="0" name="brug_id_A"/>
+    <field reuseLastValue="0" name="brug_id_B"/>
+    <field reuseLastValue="0" name="cmp_ID"/>
+    <field reuseLastValue="0" name="cmp_ID_priority"/>
+    <field reuseLastValue="0" name="cmp_aantal_doorstroomopeningen"/>
+    <field reuseLastValue="0" name="cmp_aantal_doorstroomopeningen_change_NaN"/>
+    <field reuseLastValue="0" name="cmp_aantal_doorstroomopeningen_priority"/>
+    <field reuseLastValue="0" name="cmp_categorie"/>
+    <field reuseLastValue="0" name="cmp_categorie_priority"/>
+    <field reuseLastValue="0" name="cmp_doorvaarbreedte"/>
+    <field reuseLastValue="0" name="cmp_doorvaarbreedte_change_NaN"/>
+    <field reuseLastValue="0" name="cmp_doorvaarbreedte_priority"/>
+    <field reuseLastValue="0" name="cmp_functiegemaal"/>
+    <field reuseLastValue="0" name="cmp_functiegemaal_priority"/>
+    <field reuseLastValue="0" name="cmp_geom_type"/>
+    <field reuseLastValue="0" name="cmp_geom_type_priority"/>
+    <field reuseLastValue="0" name="cmp_hoogteonderzijde"/>
+    <field reuseLastValue="0" name="cmp_hoogteonderzijde_change_NaN"/>
+    <field reuseLastValue="0" name="cmp_hoogteonderzijde_priority"/>
+    <field reuseLastValue="0" name="cmp_maximalecapaciteit"/>
+    <field reuseLastValue="0" name="cmp_maximalecapaciteit_change_NaN"/>
+    <field reuseLastValue="0" name="cmp_maximalecapaciteit_priority"/>
+    <field reuseLastValue="0" name="cmp_ws_categorie"/>
+    <field reuseLastValue="0" name="cmp_ws_categorie_priority"/>
+    <field reuseLastValue="0" name="code"/>
+    <field reuseLastValue="0" name="dataset_A"/>
+    <field reuseLastValue="0" name="dataset_B"/>
+    <field reuseLastValue="0" name="dataset_New"/>
+    <field reuseLastValue="0" name="dataset_Old"/>
+    <field reuseLastValue="0" name="doorstroombreedte_A"/>
+    <field reuseLastValue="0" name="doorstroombreedte_B"/>
+    <field reuseLastValue="0" name="doorvaartbreedte_A"/>
+    <field reuseLastValue="0" name="doorvaartbreedte_B"/>
+    <field reuseLastValue="0" name="fid"/>
+    <field reuseLastValue="0" name="functie_A"/>
+    <field reuseLastValue="0" name="functie_B"/>
+    <field reuseLastValue="0" name="functiegemaal_New"/>
+    <field reuseLastValue="0" name="functiegemaal_Old"/>
+    <field reuseLastValue="0" name="geom_area_A"/>
+    <field reuseLastValue="0" name="geom_area_B"/>
+    <field reuseLastValue="0" name="geom_area_New"/>
+    <field reuseLastValue="0" name="geom_area_Old"/>
+    <field reuseLastValue="0" name="geom_length_A"/>
+    <field reuseLastValue="0" name="geom_length_B"/>
+    <field reuseLastValue="0" name="geom_length_New"/>
+    <field reuseLastValue="0" name="geom_length_Old"/>
+    <field reuseLastValue="0" name="geom_type_A"/>
+    <field reuseLastValue="0" name="geom_type_B"/>
+    <field reuseLastValue="0" name="geom_type_New"/>
+    <field reuseLastValue="0" name="geom_type_Old"/>
+    <field reuseLastValue="0" name="geometry_adjusted"/>
+    <field reuseLastValue="0" name="hoogstedoorstroomhoogte_A"/>
+    <field reuseLastValue="0" name="hoogstedoorstroomhoogte_B"/>
+    <field reuseLastValue="0" name="hoogteonderzijde_A"/>
+    <field reuseLastValue="0" name="hoogteonderzijde_B"/>
+    <field reuseLastValue="0" name="in_both"/>
+    <field reuseLastValue="0" name="kruinbreedte_A"/>
+    <field reuseLastValue="0" name="kruinbreedte_B"/>
+    <field reuseLastValue="0" name="kruinhoogte_hdb_A"/>
+    <field reuseLastValue="0" name="kruinhoogte_hdb_B"/>
+    <field reuseLastValue="0" name="laagstedoorstroomhoogte_A"/>
+    <field reuseLastValue="0" name="laagstedoorstroomhoogte_B"/>
+    <field reuseLastValue="0" name="level_0"/>
+    <field reuseLastValue="0" name="level_1"/>
+    <field reuseLastValue="0" name="maximalecapaciteit_New"/>
+    <field reuseLastValue="0" name="maximalecapaciteit_Old"/>
+    <field reuseLastValue="0" name="moet_op_peilgrens_A"/>
+    <field reuseLastValue="0" name="moet_op_peilgrens_B"/>
+    <field reuseLastValue="0" name="naam_A"/>
+    <field reuseLastValue="0" name="naam_B"/>
+    <field reuseLastValue="0" name="naam_New"/>
+    <field reuseLastValue="0" name="naam_Old"/>
+    <field reuseLastValue="0" name="number_of_critical"/>
+    <field reuseLastValue="0" name="number_of_info"/>
+    <field reuseLastValue="0" name="number_of_warning"/>
+    <field reuseLastValue="0" name="opmerkingen_A"/>
+    <field reuseLastValue="0" name="opmerkingen_B"/>
+    <field reuseLastValue="0" name="origin_A"/>
+    <field reuseLastValue="0" name="origin_B"/>
+    <field reuseLastValue="0" name="origin_New"/>
+    <field reuseLastValue="0" name="origin_Old"/>
+    <field reuseLastValue="0" name="point_x_A"/>
+    <field reuseLastValue="0" name="point_x_B"/>
+    <field reuseLastValue="0" name="point_y_A"/>
+    <field reuseLastValue="0" name="point_y_B"/>
+    <field reuseLastValue="0" name="som_doorstroombreedte_A"/>
+    <field reuseLastValue="0" name="som_doorstroombreedte_B"/>
+    <field reuseLastValue="0" name="soortregelbaarheid_A"/>
+    <field reuseLastValue="0" name="soortregelbaarheid_B"/>
+    <field reuseLastValue="0" name="ws_categorie_A"/>
+    <field reuseLastValue="0" name="ws_categorie_B"/>
+    <field reuseLastValue="0" name="ws_categorie_New"/>
+    <field reuseLastValue="0" name="ws_categorie_Old"/>
+    <field reuseLastValue="0" name="ws_functiestuw_A"/>
+    <field reuseLastValue="0" name="ws_functiestuw_B"/>
+    <field reuseLastValue="0" name="ws_kruinvorm_A"/>
+    <field reuseLastValue="0" name="ws_kruinvorm_B"/>
   </reuseLastValue>
   <dataDefinedFieldProperties/>
   <widgets/>

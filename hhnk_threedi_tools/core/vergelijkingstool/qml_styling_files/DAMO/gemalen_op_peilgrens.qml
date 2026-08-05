@@ -1,18 +1,18 @@
 <!DOCTYPE qgis PUBLIC 'http://mrcc.com/qgis.dtd' 'SYSTEM'>
-<qgis minScale="0" labelsEnabled="1" styleCategories="AllStyleCategories" simplifyDrawingHints="0" readOnly="0" version="3.34.4-Prizren" simplifyLocal="1" maxScale="0" simplifyAlgorithm="0" simplifyDrawingTol="1" symbologyReferenceScale="-1" hasScaleBasedVisibilityFlag="0" simplifyMaxScale="1">
+<qgis styleCategories="AllStyleCategories" simplifyAlgorithm="0" simplifyDrawingHints="0" simplifyMaxScale="1" readOnly="0" symbologyReferenceScale="-1" version="3.34.4-Prizren" hasScaleBasedVisibilityFlag="0" minScale="0" labelsEnabled="1" maxScale="0" simplifyDrawingTol="1" simplifyLocal="1">
   <flags>
     <Identifiable>1</Identifiable>
     <Removable>1</Removable>
     <Searchable>1</Searchable>
     <Private>0</Private>
   </flags>
-  <temporal enabled="0" durationUnit="min" endExpression="" accumulate="0" startExpression="" mode="0" endField="" fixedDuration="0" limitMode="0" startField="" durationField="fid">
+  <temporal accumulate="0" endExpression="" startExpression="" mode="0" durationUnit="min" startField="" endField="" durationField="fid" enabled="0" limitMode="0" fixedDuration="0">
     <fixedRange>
       <start></start>
       <end></end>
     </fixedRange>
   </temporal>
-  <elevation extrusionEnabled="0" clamping="Terrain" type="IndividualFeatures" respectLayerSymbol="1" showMarkerSymbolInSurfacePlots="0" zoffset="0" zscale="1" extrusion="0" symbology="Line" binding="Centroid">
+  <elevation respectLayerSymbol="1" zoffset="0" type="IndividualFeatures" symbology="Line" clamping="Terrain" extrusionEnabled="0" binding="Centroid" extrusion="0" showMarkerSymbolInSurfacePlots="0" zscale="1">
     <data-defined-properties>
       <Option type="Map">
         <Option type="QString" value="" name="name"/>
@@ -21,7 +21,7 @@
       </Option>
     </data-defined-properties>
     <profileLineSymbol>
-      <symbol type="line" is_animated="0" alpha="1" name="" frame_rate="10" clip_to_extent="1" force_rhr="0">
+      <symbol force_rhr="0" is_animated="0" type="line" alpha="1" clip_to_extent="1" name="" frame_rate="10">
         <data_defined_properties>
           <Option type="Map">
             <Option type="QString" value="" name="name"/>
@@ -29,7 +29,7 @@
             <Option type="QString" value="collection" name="type"/>
           </Option>
         </data_defined_properties>
-        <layer pass="0" enabled="1" id="{71daaf28-65a1-48d3-a4ea-59a5830a85d9}" locked="0" class="SimpleLine">
+        <layer id="{71daaf28-65a1-48d3-a4ea-59a5830a85d9}" locked="0" class="SimpleLine" enabled="1" pass="0">
           <Option type="Map">
             <Option type="QString" value="0" name="align_dash_pattern"/>
             <Option type="QString" value="square" name="capstyle"/>
@@ -70,7 +70,7 @@
       </symbol>
     </profileLineSymbol>
     <profileFillSymbol>
-      <symbol type="fill" is_animated="0" alpha="1" name="" frame_rate="10" clip_to_extent="1" force_rhr="0">
+      <symbol force_rhr="0" is_animated="0" type="fill" alpha="1" clip_to_extent="1" name="" frame_rate="10">
         <data_defined_properties>
           <Option type="Map">
             <Option type="QString" value="" name="name"/>
@@ -78,7 +78,7 @@
             <Option type="QString" value="collection" name="type"/>
           </Option>
         </data_defined_properties>
-        <layer pass="0" enabled="1" id="{e7e9ccf2-a339-4c20-883a-6b7f7ed4c879}" locked="0" class="SimpleFill">
+        <layer id="{e7e9ccf2-a339-4c20-883a-6b7f7ed4c879}" locked="0" class="SimpleFill" enabled="1" pass="0">
           <Option type="Map">
             <Option type="QString" value="3x:0,0,0,0,0,0" name="border_width_map_unit_scale"/>
             <Option type="QString" value="145,82,45,255" name="color"/>
@@ -103,7 +103,7 @@
       </symbol>
     </profileFillSymbol>
     <profileMarkerSymbol>
-      <symbol type="marker" is_animated="0" alpha="1" name="" frame_rate="10" clip_to_extent="1" force_rhr="0">
+      <symbol force_rhr="0" is_animated="0" type="marker" alpha="1" clip_to_extent="1" name="" frame_rate="10">
         <data_defined_properties>
           <Option type="Map">
             <Option type="QString" value="" name="name"/>
@@ -111,7 +111,7 @@
             <Option type="QString" value="collection" name="type"/>
           </Option>
         </data_defined_properties>
-        <layer pass="0" enabled="1" id="{9b46e643-0fbc-40bf-a50b-5a434b3fa2a4}" locked="0" class="SimpleMarker">
+        <layer id="{9b46e643-0fbc-40bf-a50b-5a434b3fa2a4}" locked="0" class="SimpleMarker" enabled="1" pass="0">
           <Option type="Map">
             <Option type="QString" value="0" name="angle"/>
             <Option type="QString" value="square" name="cap_style"/>
@@ -144,25 +144,25 @@
       </symbol>
     </profileMarkerSymbol>
   </elevation>
-  <renderer-v2 type="RuleRenderer" symbollevels="0" forceraster="0" referencescale="-1" enableorderby="0">
+  <renderer-v2 referencescale="-1" forceraster="0" type="RuleRenderer" symbollevels="0" enableorderby="0">
     <rules key="{9d73088f-d86f-43cb-a94a-369b6a4cdebc}">
-      <rule key="{cb6f418f-7582-4301-b147-660375870e62}" label="Primaire watersysteem" filter=" &quot;ws_categorie_New&quot;  = 1 OR  &quot;ws_categorie_Old&quot;  = 1">
-        <rule description="Dit object zit wel in de oude dataset, maar niet in de nieuwe." key="{8e88bce5-bc69-4a9d-8982-f4677b64d9d7}" label="Bestaat niet meer in DAMO nieuw" symbol="0" filter=" &quot;in_both&quot;  LIKE  '%old' "/>
-        <rule description="Dit object zit wel in de oude dataset, maar niet in de nieuwe." key="{eade4fe8-660f-4c18-8858-a12a4024f880}" label="Bestond nog niet in DAMO oud" symbol="1" filter=" &quot;in_both&quot;  LIKE  '%new' "/>
-        <rule description="Verschillen in kolommen die zorgen voor andere schematisatie." key="{a5153a9c-2463-41b2-aa78-4c2093b5d781}" label="Kritiek verschil tussen beide datasets" symbol="2" filter=" &quot;in_both&quot;   LIKE  '%both' AND  &quot;number_of_critical&quot; > 0"/>
-        <rule description="Verschillen in naam of kolommen die niet direct invloed hebben op de schematisatie." key="{e264702d-adb4-4211-bedd-5e14627cc3c1}" label="Klein verschil tussen beide datasets" symbol="3" filter=" &quot;in_both&quot;   LIKE  '%both' AND  &quot;number_of_critical&quot; = 0 AND ( &quot;number_of_info&quot;  +  &quot;number_of_warning&quot; ) > 0"/>
-        <rule description="In beide datasets zonder verschillen tussen de belangrijkste eigenschappen" key="{d8deefea-bca8-454a-9fd5-ddd99bc17a35}" label="Geen verschillen gevonden" symbol="4" checkstate="0" filter="ELSE"/>
+      <rule label="Primaire watersysteem" key="{cb6f418f-7582-4301-b147-660375870e62}" filter=" &quot;ws_categorie_New&quot;  = 1 OR  &quot;ws_categorie_Old&quot;  = 1">
+        <rule label="Bestaat in DAMO old - niet meer in DAMO nieuw" key="{8e88bce5-bc69-4a9d-8982-f4677b64d9d7}" symbol="0" description="Dit object zit wel in de oude dataset, maar niet in de nieuwe." filter=" &quot;in_both&quot;  LIKE  '%old' "/>
+        <rule label="Bestaat in DAMO nieuw - niet meer in DAMO oud" key="{eade4fe8-660f-4c18-8858-a12a4024f880}" symbol="1" description="Dit object zit wel in de oude dataset, maar niet in de nieuwe." filter=" &quot;in_both&quot;  LIKE  '%new' "/>
+        <rule label="Kritiek verschil tussen beide datasets" key="{a5153a9c-2463-41b2-aa78-4c2093b5d781}" symbol="2" description="Verschillen in kolommen die zorgen voor andere schematisatie." filter=" &quot;in_both&quot;   LIKE  '%both' AND  &quot;number_of_critical&quot; > 0"/>
+        <rule label="Klein verschil tussen beide datasets" checkstate="0" key="{e264702d-adb4-4211-bedd-5e14627cc3c1}" symbol="3" description="Verschillen in naam of kolommen die niet direct invloed hebben op de schematisatie." filter=" &quot;in_both&quot;   LIKE  '%both' AND  &quot;number_of_critical&quot; = 0 AND ( &quot;number_of_info&quot;  +  &quot;number_of_warning&quot; ) > 0"/>
+        <rule label="Geen verschillen gevonden" checkstate="0" key="{d8deefea-bca8-454a-9fd5-ddd99bc17a35}" symbol="4" description="In beide datasets zonder verschillen tussen de belangrijkste eigenschappen" filter="ELSE"/>
       </rule>
-      <rule key="{0105f042-1fb2-4445-9b48-30b1b69ab82c}" label="Niet-primaire watersysteem" filter="&quot;ws_categorie_New&quot;  > 1 OR  &quot;ws_categorie_Old&quot;  > 1">
-        <rule description="Dit object zit wel in de oude dataset, maar niet in de nieuwe." key="{738fac80-fda3-474d-aa3e-8d049beec2d4}" label="Bestaat niet meer in DAMO nieuw" symbol="5" filter=" &quot;in_both&quot;  LIKE  '%old' "/>
-        <rule description="Dit object zit wel in de oude dataset, maar niet in de nieuwe." key="{b47d627a-83a5-45bd-8520-424d12c425b3}" label="Bestond nog niet in DAMO oud" symbol="6" filter=" &quot;in_both&quot;  LIKE  '%new' "/>
-        <rule description="Verschillen in kolommen die zorgen voor andere schematisatie." key="{7cac7715-bb61-497c-9357-5c78e2e557be}" label="Kritiek verschil tussen beide datasets" symbol="7" filter=" &quot;in_both&quot;   LIKE  '%both' AND  &quot;number_of_critical&quot; > 0"/>
-        <rule description="Verschillen in naam of kolommen die niet direct invloed hebben op de schematisatie." key="{f273d694-091b-4372-bc98-4900302cb6d5}" label="Klein verschil tussen beide datasets" symbol="8" filter=" &quot;in_both&quot;   LIKE  '%both' AND  &quot;number_of_critical&quot; = 0 AND ( &quot;number_of_info&quot;  +  &quot;number_of_warning&quot; ) > 0"/>
-        <rule description="In beide datasets zonder verschillen tussen de belangrijkste eigenschappen" key="{ee7f29e2-9ddf-42ac-8515-e56c724105cb}" label="Geen verschillen gevonden" symbol="9" checkstate="0" filter="ELSE"/>
+      <rule label="Niet-primaire watersysteem" key="{0105f042-1fb2-4445-9b48-30b1b69ab82c}" filter="&quot;ws_categorie_New&quot;  > 1 OR  &quot;ws_categorie_Old&quot;  > 1">
+        <rule label="Bestaat in DAMO old - niet meer in DAMO nieuw" key="{738fac80-fda3-474d-aa3e-8d049beec2d4}" symbol="5" description="Dit object zit wel in de oude dataset, maar niet in de nieuwe." filter=" &quot;in_both&quot;  LIKE  '%old' "/>
+        <rule label="Bestaat in DAMO nieuw - niet meer in DAMO oud" key="{b47d627a-83a5-45bd-8520-424d12c425b3}" symbol="6" description="Dit object zit wel in de oude dataset, maar niet in de nieuwe." filter=" &quot;in_both&quot;  LIKE  '%new' "/>
+        <rule label="Kritiek verschil tussen beide datasets" key="{7cac7715-bb61-497c-9357-5c78e2e557be}" symbol="7" description="Verschillen in kolommen die zorgen voor andere schematisatie." filter=" &quot;in_both&quot;   LIKE  '%both' AND  &quot;number_of_critical&quot; > 0"/>
+        <rule label="Klein verschil tussen beide datasets" checkstate="0" key="{f273d694-091b-4372-bc98-4900302cb6d5}" symbol="8" description="Verschillen in naam of kolommen die niet direct invloed hebben op de schematisatie." filter=" &quot;in_both&quot;   LIKE  '%both' AND  &quot;number_of_critical&quot; = 0 AND ( &quot;number_of_info&quot;  +  &quot;number_of_warning&quot; ) > 0"/>
+        <rule label="Geen verschillen gevonden" checkstate="0" key="{ee7f29e2-9ddf-42ac-8515-e56c724105cb}" symbol="9" description="In beide datasets zonder verschillen tussen de belangrijkste eigenschappen" filter="ELSE"/>
       </rule>
     </rules>
     <symbols>
-      <symbol type="marker" is_animated="0" alpha="1" name="0" frame_rate="10" clip_to_extent="1" force_rhr="0">
+      <symbol force_rhr="0" is_animated="0" type="marker" alpha="1" clip_to_extent="1" name="0" frame_rate="10">
         <data_defined_properties>
           <Option type="Map">
             <Option type="QString" value="" name="name"/>
@@ -170,7 +170,7 @@
             <Option type="QString" value="collection" name="type"/>
           </Option>
         </data_defined_properties>
-        <layer pass="0" enabled="1" id="{da31b105-8abc-4f7d-b0e1-761a49168419}" locked="0" class="SimpleMarker">
+        <layer id="{da31b105-8abc-4f7d-b0e1-761a49168419}" locked="0" class="SimpleMarker" enabled="1" pass="0">
           <Option type="Map">
             <Option type="QString" value="180" name="angle"/>
             <Option type="QString" value="square" name="cap_style"/>
@@ -201,7 +201,7 @@
           </data_defined_properties>
         </layer>
       </symbol>
-      <symbol type="marker" is_animated="0" alpha="1" name="1" frame_rate="10" clip_to_extent="1" force_rhr="0">
+      <symbol force_rhr="0" is_animated="0" type="marker" alpha="1" clip_to_extent="1" name="1" frame_rate="10">
         <data_defined_properties>
           <Option type="Map">
             <Option type="QString" value="" name="name"/>
@@ -209,7 +209,7 @@
             <Option type="QString" value="collection" name="type"/>
           </Option>
         </data_defined_properties>
-        <layer pass="0" enabled="1" id="{da31b105-8abc-4f7d-b0e1-761a49168419}" locked="0" class="SimpleMarker">
+        <layer id="{da31b105-8abc-4f7d-b0e1-761a49168419}" locked="0" class="SimpleMarker" enabled="1" pass="0">
           <Option type="Map">
             <Option type="QString" value="0" name="angle"/>
             <Option type="QString" value="square" name="cap_style"/>
@@ -240,7 +240,7 @@
           </data_defined_properties>
         </layer>
       </symbol>
-      <symbol type="marker" is_animated="0" alpha="1" name="2" frame_rate="10" clip_to_extent="1" force_rhr="0">
+      <symbol force_rhr="0" is_animated="0" type="marker" alpha="1" clip_to_extent="1" name="2" frame_rate="10">
         <data_defined_properties>
           <Option type="Map">
             <Option type="QString" value="" name="name"/>
@@ -248,7 +248,7 @@
             <Option type="QString" value="collection" name="type"/>
           </Option>
         </data_defined_properties>
-        <layer pass="0" enabled="1" id="{b9e046d4-cfac-4943-9d35-abcfca80965e}" locked="0" class="SimpleMarker">
+        <layer id="{b9e046d4-cfac-4943-9d35-abcfca80965e}" locked="0" class="SimpleMarker" enabled="1" pass="0">
           <Option type="Map">
             <Option type="QString" value="0" name="angle"/>
             <Option type="QString" value="square" name="cap_style"/>
@@ -279,7 +279,7 @@
           </data_defined_properties>
         </layer>
       </symbol>
-      <symbol type="marker" is_animated="0" alpha="1" name="3" frame_rate="10" clip_to_extent="1" force_rhr="0">
+      <symbol force_rhr="0" is_animated="0" type="marker" alpha="1" clip_to_extent="1" name="3" frame_rate="10">
         <data_defined_properties>
           <Option type="Map">
             <Option type="QString" value="" name="name"/>
@@ -287,7 +287,7 @@
             <Option type="QString" value="collection" name="type"/>
           </Option>
         </data_defined_properties>
-        <layer pass="0" enabled="1" id="{b9e046d4-cfac-4943-9d35-abcfca80965e}" locked="0" class="SimpleMarker">
+        <layer id="{b9e046d4-cfac-4943-9d35-abcfca80965e}" locked="0" class="SimpleMarker" enabled="1" pass="0">
           <Option type="Map">
             <Option type="QString" value="0" name="angle"/>
             <Option type="QString" value="square" name="cap_style"/>
@@ -318,7 +318,7 @@
           </data_defined_properties>
         </layer>
       </symbol>
-      <symbol type="marker" is_animated="0" alpha="1" name="4" frame_rate="10" clip_to_extent="1" force_rhr="0">
+      <symbol force_rhr="0" is_animated="0" type="marker" alpha="1" clip_to_extent="1" name="4" frame_rate="10">
         <data_defined_properties>
           <Option type="Map">
             <Option type="QString" value="" name="name"/>
@@ -326,7 +326,7 @@
             <Option type="QString" value="collection" name="type"/>
           </Option>
         </data_defined_properties>
-        <layer pass="0" enabled="1" id="{cc1a88ec-0018-4ee2-a3b2-a7dc3d531d2f}" locked="0" class="SimpleMarker">
+        <layer id="{cc1a88ec-0018-4ee2-a3b2-a7dc3d531d2f}" locked="0" class="SimpleMarker" enabled="1" pass="0">
           <Option type="Map">
             <Option type="QString" value="0" name="angle"/>
             <Option type="QString" value="square" name="cap_style"/>
@@ -357,7 +357,7 @@
           </data_defined_properties>
         </layer>
       </symbol>
-      <symbol type="marker" is_animated="0" alpha="1" name="5" frame_rate="10" clip_to_extent="1" force_rhr="0">
+      <symbol force_rhr="0" is_animated="0" type="marker" alpha="1" clip_to_extent="1" name="5" frame_rate="10">
         <data_defined_properties>
           <Option type="Map">
             <Option type="QString" value="" name="name"/>
@@ -365,7 +365,7 @@
             <Option type="QString" value="collection" name="type"/>
           </Option>
         </data_defined_properties>
-        <layer pass="0" enabled="1" id="{da31b105-8abc-4f7d-b0e1-761a49168419}" locked="0" class="SimpleMarker">
+        <layer id="{da31b105-8abc-4f7d-b0e1-761a49168419}" locked="0" class="SimpleMarker" enabled="1" pass="0">
           <Option type="Map">
             <Option type="QString" value="180" name="angle"/>
             <Option type="QString" value="square" name="cap_style"/>
@@ -396,7 +396,7 @@
           </data_defined_properties>
         </layer>
       </symbol>
-      <symbol type="marker" is_animated="0" alpha="1" name="6" frame_rate="10" clip_to_extent="1" force_rhr="0">
+      <symbol force_rhr="0" is_animated="0" type="marker" alpha="1" clip_to_extent="1" name="6" frame_rate="10">
         <data_defined_properties>
           <Option type="Map">
             <Option type="QString" value="" name="name"/>
@@ -404,7 +404,7 @@
             <Option type="QString" value="collection" name="type"/>
           </Option>
         </data_defined_properties>
-        <layer pass="0" enabled="1" id="{da31b105-8abc-4f7d-b0e1-761a49168419}" locked="0" class="SimpleMarker">
+        <layer id="{da31b105-8abc-4f7d-b0e1-761a49168419}" locked="0" class="SimpleMarker" enabled="1" pass="0">
           <Option type="Map">
             <Option type="QString" value="0" name="angle"/>
             <Option type="QString" value="square" name="cap_style"/>
@@ -435,7 +435,7 @@
           </data_defined_properties>
         </layer>
       </symbol>
-      <symbol type="marker" is_animated="0" alpha="1" name="7" frame_rate="10" clip_to_extent="1" force_rhr="0">
+      <symbol force_rhr="0" is_animated="0" type="marker" alpha="1" clip_to_extent="1" name="7" frame_rate="10">
         <data_defined_properties>
           <Option type="Map">
             <Option type="QString" value="" name="name"/>
@@ -443,7 +443,7 @@
             <Option type="QString" value="collection" name="type"/>
           </Option>
         </data_defined_properties>
-        <layer pass="0" enabled="1" id="{b9e046d4-cfac-4943-9d35-abcfca80965e}" locked="0" class="SimpleMarker">
+        <layer id="{b9e046d4-cfac-4943-9d35-abcfca80965e}" locked="0" class="SimpleMarker" enabled="1" pass="0">
           <Option type="Map">
             <Option type="QString" value="0" name="angle"/>
             <Option type="QString" value="square" name="cap_style"/>
@@ -474,7 +474,7 @@
           </data_defined_properties>
         </layer>
       </symbol>
-      <symbol type="marker" is_animated="0" alpha="1" name="8" frame_rate="10" clip_to_extent="1" force_rhr="0">
+      <symbol force_rhr="0" is_animated="0" type="marker" alpha="1" clip_to_extent="1" name="8" frame_rate="10">
         <data_defined_properties>
           <Option type="Map">
             <Option type="QString" value="" name="name"/>
@@ -482,7 +482,7 @@
             <Option type="QString" value="collection" name="type"/>
           </Option>
         </data_defined_properties>
-        <layer pass="0" enabled="1" id="{b9e046d4-cfac-4943-9d35-abcfca80965e}" locked="0" class="SimpleMarker">
+        <layer id="{b9e046d4-cfac-4943-9d35-abcfca80965e}" locked="0" class="SimpleMarker" enabled="1" pass="0">
           <Option type="Map">
             <Option type="QString" value="0" name="angle"/>
             <Option type="QString" value="square" name="cap_style"/>
@@ -513,7 +513,7 @@
           </data_defined_properties>
         </layer>
       </symbol>
-      <symbol type="marker" is_animated="0" alpha="1" name="9" frame_rate="10" clip_to_extent="1" force_rhr="0">
+      <symbol force_rhr="0" is_animated="0" type="marker" alpha="1" clip_to_extent="1" name="9" frame_rate="10">
         <data_defined_properties>
           <Option type="Map">
             <Option type="QString" value="" name="name"/>
@@ -521,7 +521,7 @@
             <Option type="QString" value="collection" name="type"/>
           </Option>
         </data_defined_properties>
-        <layer pass="0" enabled="1" id="{cc1a88ec-0018-4ee2-a3b2-a7dc3d531d2f}" locked="0" class="SimpleMarker">
+        <layer id="{cc1a88ec-0018-4ee2-a3b2-a7dc3d531d2f}" locked="0" class="SimpleMarker" enabled="1" pass="0">
           <Option type="Map">
             <Option type="QString" value="0" name="angle"/>
             <Option type="QString" value="square" name="cap_style"/>
@@ -557,7 +557,7 @@
   <selection mode="Default">
     <selectionColor invalid="1"/>
     <selectionSymbol>
-      <symbol type="marker" is_animated="0" alpha="1" name="" frame_rate="10" clip_to_extent="1" force_rhr="0">
+      <symbol force_rhr="0" is_animated="0" type="marker" alpha="1" clip_to_extent="1" name="" frame_rate="10">
         <data_defined_properties>
           <Option type="Map">
             <Option type="QString" value="" name="name"/>
@@ -565,7 +565,7 @@
             <Option type="QString" value="collection" name="type"/>
           </Option>
         </data_defined_properties>
-        <layer pass="0" enabled="1" id="{f5a44d98-87cc-41f8-b507-234a49ac8419}" locked="0" class="SimpleMarker">
+        <layer id="{f5a44d98-87cc-41f8-b507-234a49ac8419}" locked="0" class="SimpleMarker" enabled="1" pass="0">
           <Option type="Map">
             <Option type="QString" value="0" name="angle"/>
             <Option type="QString" value="square" name="cap_style"/>
@@ -600,14 +600,14 @@
   </selection>
   <labeling type="rule-based">
     <rules key="{915c90ce-8156-4edf-9359-80b542efce8f}">
-      <rule scalemaxdenom="15000" description="Aantal kritieke fouten" key="{6137e1ea-785e-407e-8c05-3486fdfaad69}" filter="&quot;in_both&quot;   LIKE  '%both' AND  &quot;number_of_critical&quot; > 0">
+      <rule key="{6137e1ea-785e-407e-8c05-3486fdfaad69}" description="Aantal kritieke fouten" scalemaxdenom="15000" filter="&quot;in_both&quot;   LIKE  '%both' AND  &quot;number_of_critical&quot; > 0">
         <settings calloutType="simple">
-          <text-style legendString="Aa" textOrientation="horizontal" allowHtml="0" blendMode="0" previewBkgrdColor="255,255,255,255" fontLetterSpacing="0" fontWordSpacing="0" multilineHeightUnit="Percentage" multilineHeight="1" textColor="227,26,28,255" forcedItalic="0" fontKerning="1" fontSize="10" useSubstitutions="0" fontFamily="Arial" forcedBold="0" fontSizeUnit="Point" isExpression="1" fontUnderline="0" fontWeight="50" capitalization="0" fontStrikeout="0" namedStyle="Standaard" fieldName="CASE&#xd;&#xa;  WHEN &quot;in_both&quot; LIKE '%both' AND &quot;number_of_critical&quot; > 0 &#xd;&#xa;  THEN 'Aantal Kritieke Fouten: ' || &quot;number_of_critical&quot;&#xd;&#xa;  ELSE ''&#xd;&#xa;END&#xd;&#xa;" textOpacity="1" fontSizeMapUnitScale="3x:0,0,0,0,0,0" fontItalic="0">
+          <text-style forcedBold="0" fontWeight="50" fontSizeMapUnitScale="3x:0,0,0,0,0,0" multilineHeightUnit="Percentage" textOpacity="1" fontStrikeout="0" fontLetterSpacing="0" textOrientation="horizontal" fontWordSpacing="0" namedStyle="Standaard" multilineHeight="1" isExpression="1" capitalization="0" previewBkgrdColor="255,255,255,255" legendString="Aa" useSubstitutions="0" fieldName="CASE&#xd;&#xa;  WHEN &quot;in_both&quot; LIKE '%both' AND &quot;number_of_critical&quot; > 0 &#xd;&#xa;  THEN 'Aantal Kritieke Fouten: ' || &quot;number_of_critical&quot;&#xd;&#xa;  ELSE ''&#xd;&#xa;END&#xd;&#xa;" allowHtml="0" fontSize="10" textColor="227,26,28,255" blendMode="0" fontFamily="Arial" fontUnderline="0" forcedItalic="0" fontKerning="1" fontSizeUnit="Point" fontItalic="0">
             <families/>
-            <text-buffer bufferSizeUnits="MM" bufferDraw="1" bufferSizeMapUnitScale="3x:0,0,0,0,0,0" bufferOpacity="1" bufferColor="250,250,250,255" bufferBlendMode="0" bufferJoinStyle="128" bufferNoFill="1" bufferSize="1"/>
-            <text-mask maskJoinStyle="128" maskSize="0" maskEnabled="0" maskSizeUnits="MM" maskOpacity="1" maskType="0" maskSizeMapUnitScale="3x:0,0,0,0,0,0" maskedSymbolLayers=""/>
-            <background shapeBlendMode="0" shapeDraw="0" shapeRotation="0" shapeRotationType="0" shapeRadiiX="0" shapeSizeY="0" shapeBorderWidth="0" shapeOffsetUnit="Point" shapeOffsetY="0" shapeOpacity="1" shapeRadiiMapUnitScale="3x:0,0,0,0,0,0" shapeFillColor="255,255,255,255" shapeRadiiY="0" shapeBorderWidthMapUnitScale="3x:0,0,0,0,0,0" shapeSizeUnit="Point" shapeSVGFile="" shapeBorderColor="128,128,128,255" shapeOffsetX="0" shapeBorderWidthUnit="Point" shapeJoinStyle="64" shapeRadiiUnit="Point" shapeSizeMapUnitScale="3x:0,0,0,0,0,0" shapeOffsetMapUnitScale="3x:0,0,0,0,0,0" shapeType="0" shapeSizeX="0" shapeSizeType="0">
-              <symbol type="marker" is_animated="0" alpha="1" name="markerSymbol" frame_rate="10" clip_to_extent="1" force_rhr="0">
+            <text-buffer bufferDraw="1" bufferOpacity="1" bufferSizeMapUnitScale="3x:0,0,0,0,0,0" bufferBlendMode="0" bufferNoFill="1" bufferSize="1" bufferJoinStyle="128" bufferColor="250,250,250,255" bufferSizeUnits="MM"/>
+            <text-mask maskType="0" maskSize="0" maskSizeMapUnitScale="3x:0,0,0,0,0,0" maskOpacity="1" maskEnabled="0" maskSizeUnits="MM" maskJoinStyle="128" maskedSymbolLayers=""/>
+            <background shapeRadiiY="0" shapeBorderWidthMapUnitScale="3x:0,0,0,0,0,0" shapeOffsetUnit="Point" shapeSizeMapUnitScale="3x:0,0,0,0,0,0" shapeRotationType="0" shapeSizeX="0" shapeSizeType="0" shapeRotation="0" shapeRadiiUnit="Point" shapeBorderWidthUnit="Point" shapeRadiiMapUnitScale="3x:0,0,0,0,0,0" shapeBorderColor="128,128,128,255" shapeOffsetMapUnitScale="3x:0,0,0,0,0,0" shapeOffsetY="0" shapeDraw="0" shapeBorderWidth="0" shapeJoinStyle="64" shapeSizeUnit="Point" shapeOffsetX="0" shapeOpacity="1" shapeFillColor="255,255,255,255" shapeRadiiX="0" shapeType="0" shapeSVGFile="" shapeBlendMode="0" shapeSizeY="0">
+              <symbol force_rhr="0" is_animated="0" type="marker" alpha="1" clip_to_extent="1" name="markerSymbol" frame_rate="10">
                 <data_defined_properties>
                   <Option type="Map">
                     <Option type="QString" value="" name="name"/>
@@ -615,7 +615,7 @@
                     <Option type="QString" value="collection" name="type"/>
                   </Option>
                 </data_defined_properties>
-                <layer pass="0" enabled="1" id="" locked="0" class="SimpleMarker">
+                <layer id="" locked="0" class="SimpleMarker" enabled="1" pass="0">
                   <Option type="Map">
                     <Option type="QString" value="0" name="angle"/>
                     <Option type="QString" value="square" name="cap_style"/>
@@ -646,7 +646,7 @@
                   </data_defined_properties>
                 </layer>
               </symbol>
-              <symbol type="fill" is_animated="0" alpha="1" name="fillSymbol" frame_rate="10" clip_to_extent="1" force_rhr="0">
+              <symbol force_rhr="0" is_animated="0" type="fill" alpha="1" clip_to_extent="1" name="fillSymbol" frame_rate="10">
                 <data_defined_properties>
                   <Option type="Map">
                     <Option type="QString" value="" name="name"/>
@@ -654,7 +654,7 @@
                     <Option type="QString" value="collection" name="type"/>
                   </Option>
                 </data_defined_properties>
-                <layer pass="0" enabled="1" id="" locked="0" class="SimpleFill">
+                <layer id="" locked="0" class="SimpleFill" enabled="1" pass="0">
                   <Option type="Map">
                     <Option type="QString" value="3x:0,0,0,0,0,0" name="border_width_map_unit_scale"/>
                     <Option type="QString" value="255,255,255,255" name="color"/>
@@ -678,7 +678,7 @@
                 </layer>
               </symbol>
             </background>
-            <shadow shadowOffsetMapUnitScale="3x:0,0,0,0,0,0" shadowOffsetDist="1" shadowOpacity="0.69999999999999996" shadowOffsetUnit="MM" shadowRadius="1.5" shadowRadiusMapUnitScale="3x:0,0,0,0,0,0" shadowOffsetGlobal="1" shadowDraw="0" shadowScale="100" shadowUnder="0" shadowRadiusUnit="MM" shadowColor="0,0,0,255" shadowBlendMode="6" shadowRadiusAlphaOnly="0" shadowOffsetAngle="135"/>
+            <shadow shadowOffsetDist="1" shadowOffsetUnit="MM" shadowRadiusUnit="MM" shadowRadius="1.5" shadowDraw="0" shadowOpacity="0.69999999999999996" shadowRadiusAlphaOnly="0" shadowBlendMode="6" shadowOffsetMapUnitScale="3x:0,0,0,0,0,0" shadowOffsetGlobal="1" shadowUnder="0" shadowOffsetAngle="135" shadowColor="0,0,0,255" shadowRadiusMapUnitScale="3x:0,0,0,0,0,0" shadowScale="100"/>
             <dd_properties>
               <Option type="Map">
                 <Option type="QString" value="" name="name"/>
@@ -688,9 +688,9 @@
             </dd_properties>
             <substitutions/>
           </text-style>
-          <text-format decimals="3" rightDirectionSymbol=">" wrapChar="" leftDirectionSymbol="&lt;" reverseDirectionSymbol="0" plussign="0" autoWrapLength="0" addDirectionSymbol="0" formatNumbers="0" multilineAlign="3" useMaxLineLengthForAutoWrap="1" placeDirectionSymbol="0"/>
-          <placement quadOffset="1" lineAnchorClipping="0" predefinedPositionOrder="TR,TL,BR,BL,R,L,TSR,BSR" repeatDistanceUnits="MM" labelOffsetMapUnitScale="3x:0,0,0,0,0,0" repeatDistanceMapUnitScale="3x:0,0,0,0,0,0" geometryGenerator="" geometryGeneratorEnabled="0" placement="1" lineAnchorPercent="0.5" fitInPolygonOnly="0" overlapHandling="PreventOverlap" layerType="PointGeometry" allowDegraded="0" offsetType="1" distUnits="MM" priority="5" geometryGeneratorType="PointGeometry" lineAnchorType="0" dist="0" overrunDistanceUnit="MM" centroidWhole="0" offsetUnits="MM" distMapUnitScale="3x:0,0,0,0,0,0" maxCurvedCharAngleOut="-25" overrunDistanceMapUnitScale="3x:0,0,0,0,0,0" preserveRotation="1" rotationAngle="0" overrunDistance="0" rotationUnit="AngleDegrees" placementFlags="10" yOffset="-2.5" xOffset="0" centroidInside="0" maxCurvedCharAngleIn="25" polygonPlacementFlags="2" repeatDistance="0" lineAnchorTextPoint="FollowPlacement"/>
-          <rendering upsidedownLabels="0" labelPerPart="0" scaleMax="0" limitNumLabels="0" maxNumLabels="2000" drawLabels="1" scaleMin="0" fontLimitPixelSize="0" scaleVisibility="0" fontMaxPixelSize="10000" mergeLines="0" unplacedVisibility="0" obstacle="1" minFeatureSize="0" obstacleFactor="1" obstacleType="1" fontMinPixelSize="3" zIndex="0"/>
+          <text-format useMaxLineLengthForAutoWrap="1" plussign="0" rightDirectionSymbol=">" wrapChar="" leftDirectionSymbol="&lt;" multilineAlign="3" addDirectionSymbol="0" autoWrapLength="0" reverseDirectionSymbol="0" formatNumbers="0" decimals="3" placeDirectionSymbol="0"/>
+          <placement polygonPlacementFlags="2" quadOffset="1" overrunDistanceMapUnitScale="3x:0,0,0,0,0,0" offsetUnits="MM" overrunDistance="0" placementFlags="10" lineAnchorClipping="0" rotationUnit="AngleDegrees" lineAnchorPercent="0.5" dist="0" xOffset="0" rotationAngle="0" centroidInside="0" predefinedPositionOrder="TR,TL,BR,BL,R,L,TSR,BSR" geometryGenerator="" yOffset="-2.5" repeatDistance="0" geometryGeneratorEnabled="0" preserveRotation="1" lineAnchorTextPoint="FollowPlacement" priority="5" overlapHandling="PreventOverlap" labelOffsetMapUnitScale="3x:0,0,0,0,0,0" distUnits="MM" distMapUnitScale="3x:0,0,0,0,0,0" repeatDistanceMapUnitScale="3x:0,0,0,0,0,0" maxCurvedCharAngleIn="25" lineAnchorType="0" geometryGeneratorType="PointGeometry" placement="1" allowDegraded="0" offsetType="1" overrunDistanceUnit="MM" centroidWhole="0" repeatDistanceUnits="MM" maxCurvedCharAngleOut="-25" layerType="PointGeometry" fitInPolygonOnly="0"/>
+          <rendering unplacedVisibility="0" mergeLines="0" obstacleFactor="1" minFeatureSize="0" zIndex="0" scaleVisibility="0" labelPerPart="0" drawLabels="1" limitNumLabels="0" fontMaxPixelSize="10000" maxNumLabels="2000" obstacleType="1" upsidedownLabels="0" obstacle="1" fontLimitPixelSize="0" fontMinPixelSize="3" scaleMax="0" scaleMin="0"/>
           <dd_properties>
             <Option type="Map">
               <Option type="QString" value="" name="name"/>
@@ -710,7 +710,7 @@
               <Option type="bool" value="false" name="drawToAllParts"/>
               <Option type="QString" value="0" name="enabled"/>
               <Option type="QString" value="point_on_exterior" name="labelAnchorPoint"/>
-              <Option type="QString" value="&lt;symbol type=&quot;line&quot; is_animated=&quot;0&quot; alpha=&quot;1&quot; name=&quot;symbol&quot; frame_rate=&quot;10&quot; clip_to_extent=&quot;1&quot; force_rhr=&quot;0&quot;>&lt;data_defined_properties>&lt;Option type=&quot;Map&quot;>&lt;Option type=&quot;QString&quot; value=&quot;&quot; name=&quot;name&quot;/>&lt;Option name=&quot;properties&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;collection&quot; name=&quot;type&quot;/>&lt;/Option>&lt;/data_defined_properties>&lt;layer pass=&quot;0&quot; enabled=&quot;1&quot; id=&quot;{0559038c-a499-456c-a734-3f312effd6b5}&quot; locked=&quot;0&quot; class=&quot;SimpleLine&quot;>&lt;Option type=&quot;Map&quot;>&lt;Option type=&quot;QString&quot; value=&quot;0&quot; name=&quot;align_dash_pattern&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;square&quot; name=&quot;capstyle&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;5;2&quot; name=&quot;customdash&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;3x:0,0,0,0,0,0&quot; name=&quot;customdash_map_unit_scale&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;MM&quot; name=&quot;customdash_unit&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;0&quot; name=&quot;dash_pattern_offset&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;3x:0,0,0,0,0,0&quot; name=&quot;dash_pattern_offset_map_unit_scale&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;MM&quot; name=&quot;dash_pattern_offset_unit&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;0&quot; name=&quot;draw_inside_polygon&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;bevel&quot; name=&quot;joinstyle&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;60,60,60,255&quot; name=&quot;line_color&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;solid&quot; name=&quot;line_style&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;0.3&quot; name=&quot;line_width&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;MM&quot; name=&quot;line_width_unit&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;0&quot; name=&quot;offset&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;3x:0,0,0,0,0,0&quot; name=&quot;offset_map_unit_scale&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;MM&quot; name=&quot;offset_unit&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;0&quot; name=&quot;ring_filter&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;0&quot; name=&quot;trim_distance_end&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;3x:0,0,0,0,0,0&quot; name=&quot;trim_distance_end_map_unit_scale&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;MM&quot; name=&quot;trim_distance_end_unit&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;0&quot; name=&quot;trim_distance_start&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;3x:0,0,0,0,0,0&quot; name=&quot;trim_distance_start_map_unit_scale&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;MM&quot; name=&quot;trim_distance_start_unit&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;0&quot; name=&quot;tweak_dash_pattern_on_corners&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;0&quot; name=&quot;use_custom_dash&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;3x:0,0,0,0,0,0&quot; name=&quot;width_map_unit_scale&quot;/>&lt;/Option>&lt;data_defined_properties>&lt;Option type=&quot;Map&quot;>&lt;Option type=&quot;QString&quot; value=&quot;&quot; name=&quot;name&quot;/>&lt;Option name=&quot;properties&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;collection&quot; name=&quot;type&quot;/>&lt;/Option>&lt;/data_defined_properties>&lt;/layer>&lt;/symbol>" name="lineSymbol"/>
+              <Option type="QString" value="&lt;symbol force_rhr=&quot;0&quot; is_animated=&quot;0&quot; type=&quot;line&quot; alpha=&quot;1&quot; clip_to_extent=&quot;1&quot; name=&quot;symbol&quot; frame_rate=&quot;10&quot;>&lt;data_defined_properties>&lt;Option type=&quot;Map&quot;>&lt;Option type=&quot;QString&quot; value=&quot;&quot; name=&quot;name&quot;/>&lt;Option name=&quot;properties&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;collection&quot; name=&quot;type&quot;/>&lt;/Option>&lt;/data_defined_properties>&lt;layer id=&quot;{0559038c-a499-456c-a734-3f312effd6b5}&quot; locked=&quot;0&quot; class=&quot;SimpleLine&quot; enabled=&quot;1&quot; pass=&quot;0&quot;>&lt;Option type=&quot;Map&quot;>&lt;Option type=&quot;QString&quot; value=&quot;0&quot; name=&quot;align_dash_pattern&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;square&quot; name=&quot;capstyle&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;5;2&quot; name=&quot;customdash&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;3x:0,0,0,0,0,0&quot; name=&quot;customdash_map_unit_scale&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;MM&quot; name=&quot;customdash_unit&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;0&quot; name=&quot;dash_pattern_offset&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;3x:0,0,0,0,0,0&quot; name=&quot;dash_pattern_offset_map_unit_scale&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;MM&quot; name=&quot;dash_pattern_offset_unit&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;0&quot; name=&quot;draw_inside_polygon&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;bevel&quot; name=&quot;joinstyle&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;60,60,60,255&quot; name=&quot;line_color&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;solid&quot; name=&quot;line_style&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;0.3&quot; name=&quot;line_width&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;MM&quot; name=&quot;line_width_unit&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;0&quot; name=&quot;offset&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;3x:0,0,0,0,0,0&quot; name=&quot;offset_map_unit_scale&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;MM&quot; name=&quot;offset_unit&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;0&quot; name=&quot;ring_filter&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;0&quot; name=&quot;trim_distance_end&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;3x:0,0,0,0,0,0&quot; name=&quot;trim_distance_end_map_unit_scale&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;MM&quot; name=&quot;trim_distance_end_unit&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;0&quot; name=&quot;trim_distance_start&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;3x:0,0,0,0,0,0&quot; name=&quot;trim_distance_start_map_unit_scale&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;MM&quot; name=&quot;trim_distance_start_unit&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;0&quot; name=&quot;tweak_dash_pattern_on_corners&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;0&quot; name=&quot;use_custom_dash&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;3x:0,0,0,0,0,0&quot; name=&quot;width_map_unit_scale&quot;/>&lt;/Option>&lt;data_defined_properties>&lt;Option type=&quot;Map&quot;>&lt;Option type=&quot;QString&quot; value=&quot;&quot; name=&quot;name&quot;/>&lt;Option name=&quot;properties&quot;/>&lt;Option type=&quot;QString&quot; value=&quot;collection&quot; name=&quot;type&quot;/>&lt;/Option>&lt;/data_defined_properties>&lt;/layer>&lt;/symbol>" name="lineSymbol"/>
               <Option type="double" value="0" name="minLength"/>
               <Option type="QString" value="3x:0,0,0,0,0,0" name="minLengthMapUnitScale"/>
               <Option type="QString" value="MM" name="minLengthUnit"/>
@@ -732,19 +732,19 @@
         <Option type="QString" value="&quot;code&quot;"/>
       </Option>
       <Option type="int" value="0" name="embeddedWidgets/count"/>
-      <Option name="variableNames"/>
-      <Option name="variableValues"/>
+      <Option type="invalid" name="variableNames"/>
+      <Option type="invalid" name="variableValues"/>
     </Option>
   </customproperties>
   <blendMode>0</blendMode>
   <featureBlendMode>0</featureBlendMode>
   <layerOpacity>1</layerOpacity>
-  <SingleCategoryDiagramRenderer diagramType="Histogram" attributeLegend="1">
-    <DiagramCategory spacingUnit="MM" maxScaleDenominator="0" width="15" scaleDependency="Area" labelPlacementMethod="XHeight" direction="0" sizeType="MM" spacingUnitScale="3x:0,0,0,0,0,0" penAlpha="255" showAxis="1" penColor="#000000" diagramOrientation="Up" minimumSize="0" lineSizeType="MM" height="15" sizeScale="3x:0,0,0,0,0,0" scaleBasedVisibility="0" minScaleDenominator="0" opacity="1" barWidth="5" spacing="5" rotationOffset="270" lineSizeScale="3x:0,0,0,0,0,0" backgroundAlpha="255" penWidth="0" backgroundColor="#ffffff" enabled="0">
-      <fontProperties style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
-      <attribute colorOpacity="1" field="" label="" color="#000000"/>
+  <SingleCategoryDiagramRenderer attributeLegend="1" diagramType="Histogram">
+    <DiagramCategory backgroundColor="#ffffff" minimumSize="0" opacity="1" scaleBasedVisibility="0" penColor="#000000" barWidth="5" penAlpha="255" spacingUnitScale="3x:0,0,0,0,0,0" height="15" minScaleDenominator="0" sizeType="MM" maxScaleDenominator="0" backgroundAlpha="255" penWidth="0" rotationOffset="270" lineSizeScale="3x:0,0,0,0,0,0" labelPlacementMethod="XHeight" sizeScale="3x:0,0,0,0,0,0" showAxis="1" spacing="5" direction="0" spacingUnit="MM" lineSizeType="MM" scaleDependency="Area" width="15" enabled="0" diagramOrientation="Up">
+      <fontProperties bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
+      <attribute label="" field="" colorOpacity="1" color="#000000"/>
       <axisSymbol>
-        <symbol type="line" is_animated="0" alpha="1" name="" frame_rate="10" clip_to_extent="1" force_rhr="0">
+        <symbol force_rhr="0" is_animated="0" type="line" alpha="1" clip_to_extent="1" name="" frame_rate="10">
           <data_defined_properties>
             <Option type="Map">
               <Option type="QString" value="" name="name"/>
@@ -752,7 +752,7 @@
               <Option type="QString" value="collection" name="type"/>
             </Option>
           </data_defined_properties>
-          <layer pass="0" enabled="1" id="{6d918d7a-fc01-45ec-a381-9b1426df189d}" locked="0" class="SimpleLine">
+          <layer id="{6d918d7a-fc01-45ec-a381-9b1426df189d}" locked="0" class="SimpleLine" enabled="1" pass="0">
             <Option type="Map">
               <Option type="QString" value="0" name="align_dash_pattern"/>
               <Option type="QString" value="square" name="capstyle"/>
@@ -794,7 +794,7 @@
       </axisSymbol>
     </DiagramCategory>
   </SingleCategoryDiagramRenderer>
-  <DiagramLayerSettings placement="0" priority="0" obstacle="0" showAll="1" zIndex="0" linePlacementFlags="18" dist="0">
+  <DiagramLayerSettings linePlacementFlags="18" showAll="1" zIndex="0" dist="0" priority="0" placement="0" obstacle="0">
     <properties>
       <Option type="Map">
         <Option type="QString" value="" name="name"/>
@@ -885,16 +885,6 @@
         </config>
       </editWidget>
     </field>
-    <field configurationFlags="NoFlag" name="geom_type_New">
-      <editWidget type="TextEdit">
-        <config>
-          <Option type="Map">
-            <Option type="bool" value="false" name="IsMultiline"/>
-            <Option type="bool" value="false" name="UseHtml"/>
-          </Option>
-        </config>
-      </editWidget>
-    </field>
     <field configurationFlags="NoFlag" name="geom_length_New">
       <editWidget type="TextEdit">
         <config>
@@ -970,6 +960,13 @@
     </field>
     <field configurationFlags="NoFlag" name="moet_op_peilgrens_Old">
       <editWidget type="TextEdit">
+        <config>
+          <Option/>
+        </config>
+      </editWidget>
+    </field>
+    <field configurationFlags="NoFlag" name="geom_type_Old">
+      <editWidget type="">
         <config>
           <Option/>
         </config>
@@ -1122,40 +1119,40 @@
     </field>
   </fieldConfiguration>
   <aliases>
-    <alias field="fid" name="" index="0"/>
-    <alias field="level_0" name="" index="1"/>
-    <alias field="level_1" name="" index="2"/>
-    <alias field="code" name="" index="3"/>
-    <alias field="ws_categorie_New" name="" index="4"/>
-    <alias field="opmerkingen_New" name="" index="5"/>
-    <alias field="aanslagpeil_rel_New" name="" index="6"/>
-    <alias field="afslagpeil_rel_New" name="" index="7"/>
-    <alias field="moet_op_peilgrens_New" name="" index="8"/>
-    <alias field="geom_type_New" name="" index="9"/>
-    <alias field="geom_length_New" name="" index="10"/>
-    <alias field="geom_area_New" name="" index="11"/>
-    <alias field="dataset_New" name="" index="12"/>
-    <alias field="origin_New" name="" index="13"/>
-    <alias field="ws_categorie_Old" name="" index="14"/>
-    <alias field="opmerkingen_Old" name="" index="15"/>
-    <alias field="aanslagpeil_rel_Old" name="" index="16"/>
-    <alias field="afslagpeil_rel_Old" name="" index="17"/>
-    <alias field="moet_op_peilgrens_Old" name="" index="18"/>
-    <alias field="geom_length_Old" name="" index="19"/>
-    <alias field="geom_area_Old" name="" index="20"/>
-    <alias field="dataset_Old" name="" index="21"/>
-    <alias field="origin_Old" name="" index="22"/>
-    <alias field="in_both" name="" index="23"/>
-    <alias field="geometry_adjusted" name="" index="24"/>
-    <alias field="cmp_modelleren_als" name="" index="25"/>
-    <alias field="cmp_modelleren_als_priority" name="" index="26"/>
-    <alias field="cmp_categorie" name="" index="27"/>
-    <alias field="cmp_categorie_priority" name="" index="28"/>
-    <alias field="number_of_info" name="" index="29"/>
-    <alias field="number_of_warning" name="" index="30"/>
-    <alias field="number_of_critical" name="" index="31"/>
-    <alias field="Summary_Critical" name="" index="32"/>
-    <alias field="Summary_Warnings" name="" index="33"/>
+    <alias field="fid" index="0" name=""/>
+    <alias field="level_0" index="1" name=""/>
+    <alias field="level_1" index="2" name=""/>
+    <alias field="code" index="3" name=""/>
+    <alias field="ws_categorie_New" index="4" name=""/>
+    <alias field="opmerkingen_New" index="5" name=""/>
+    <alias field="aanslagpeil_rel_New" index="6" name=""/>
+    <alias field="afslagpeil_rel_New" index="7" name=""/>
+    <alias field="moet_op_peilgrens_New" index="8" name=""/>
+    <alias field="geom_length_New" index="9" name=""/>
+    <alias field="geom_area_New" index="10" name=""/>
+    <alias field="dataset_New" index="11" name=""/>
+    <alias field="origin_New" index="12" name=""/>
+    <alias field="ws_categorie_Old" index="13" name=""/>
+    <alias field="opmerkingen_Old" index="14" name=""/>
+    <alias field="aanslagpeil_rel_Old" index="15" name=""/>
+    <alias field="afslagpeil_rel_Old" index="16" name=""/>
+    <alias field="moet_op_peilgrens_Old" index="17" name=""/>
+    <alias field="geom_type_Old" index="18" name=""/>
+    <alias field="geom_length_Old" index="19" name=""/>
+    <alias field="geom_area_Old" index="20" name=""/>
+    <alias field="dataset_Old" index="21" name=""/>
+    <alias field="origin_Old" index="22" name=""/>
+    <alias field="in_both" index="23" name=""/>
+    <alias field="geometry_adjusted" index="24" name=""/>
+    <alias field="cmp_modelleren_als" index="25" name=""/>
+    <alias field="cmp_modelleren_als_priority" index="26" name=""/>
+    <alias field="cmp_categorie" index="27" name=""/>
+    <alias field="cmp_categorie_priority" index="28" name=""/>
+    <alias field="number_of_info" index="29" name=""/>
+    <alias field="number_of_warning" index="30" name=""/>
+    <alias field="number_of_critical" index="31" name=""/>
+    <alias field="Summary_Critical" index="32" name=""/>
+    <alias field="Summary_Warnings" index="33" name=""/>
   </aliases>
   <splitPolicies>
     <policy field="fid" policy="DefaultValue"/>
@@ -1167,7 +1164,6 @@
     <policy field="aanslagpeil_rel_New" policy="Duplicate"/>
     <policy field="afslagpeil_rel_New" policy="Duplicate"/>
     <policy field="moet_op_peilgrens_New" policy="Duplicate"/>
-    <policy field="geom_type_New" policy="DefaultValue"/>
     <policy field="geom_length_New" policy="DefaultValue"/>
     <policy field="geom_area_New" policy="DefaultValue"/>
     <policy field="dataset_New" policy="DefaultValue"/>
@@ -1177,6 +1173,7 @@
     <policy field="aanslagpeil_rel_Old" policy="Duplicate"/>
     <policy field="afslagpeil_rel_Old" policy="Duplicate"/>
     <policy field="moet_op_peilgrens_Old" policy="Duplicate"/>
+    <policy field="geom_type_Old" policy="Duplicate"/>
     <policy field="geom_length_Old" policy="DefaultValue"/>
     <policy field="geom_area_Old" policy="DefaultValue"/>
     <policy field="dataset_Old" policy="DefaultValue"/>
@@ -1194,118 +1191,118 @@
     <policy field="Summary_Warnings" policy="DefaultValue"/>
   </splitPolicies>
   <defaults>
-    <default field="fid" applyOnUpdate="0" expression=""/>
-    <default field="level_0" applyOnUpdate="0" expression=""/>
-    <default field="level_1" applyOnUpdate="0" expression=""/>
-    <default field="code" applyOnUpdate="0" expression=""/>
-    <default field="ws_categorie_New" applyOnUpdate="0" expression=""/>
-    <default field="opmerkingen_New" applyOnUpdate="0" expression=""/>
-    <default field="aanslagpeil_rel_New" applyOnUpdate="0" expression=""/>
-    <default field="afslagpeil_rel_New" applyOnUpdate="0" expression=""/>
-    <default field="moet_op_peilgrens_New" applyOnUpdate="0" expression=""/>
-    <default field="geom_type_New" applyOnUpdate="0" expression=""/>
-    <default field="geom_length_New" applyOnUpdate="0" expression=""/>
-    <default field="geom_area_New" applyOnUpdate="0" expression=""/>
-    <default field="dataset_New" applyOnUpdate="0" expression=""/>
-    <default field="origin_New" applyOnUpdate="0" expression=""/>
-    <default field="ws_categorie_Old" applyOnUpdate="0" expression=""/>
-    <default field="opmerkingen_Old" applyOnUpdate="0" expression=""/>
-    <default field="aanslagpeil_rel_Old" applyOnUpdate="0" expression=""/>
-    <default field="afslagpeil_rel_Old" applyOnUpdate="0" expression=""/>
-    <default field="moet_op_peilgrens_Old" applyOnUpdate="0" expression=""/>
-    <default field="geom_length_Old" applyOnUpdate="0" expression=""/>
-    <default field="geom_area_Old" applyOnUpdate="0" expression=""/>
-    <default field="dataset_Old" applyOnUpdate="0" expression=""/>
-    <default field="origin_Old" applyOnUpdate="0" expression=""/>
-    <default field="in_both" applyOnUpdate="0" expression=""/>
-    <default field="geometry_adjusted" applyOnUpdate="0" expression=""/>
-    <default field="cmp_modelleren_als" applyOnUpdate="0" expression=""/>
-    <default field="cmp_modelleren_als_priority" applyOnUpdate="0" expression=""/>
-    <default field="cmp_categorie" applyOnUpdate="0" expression=""/>
-    <default field="cmp_categorie_priority" applyOnUpdate="0" expression=""/>
-    <default field="number_of_info" applyOnUpdate="0" expression=""/>
-    <default field="number_of_warning" applyOnUpdate="0" expression=""/>
-    <default field="number_of_critical" applyOnUpdate="0" expression=""/>
-    <default field="Summary_Critical" applyOnUpdate="0" expression=""/>
-    <default field="Summary_Warnings" applyOnUpdate="0" expression=""/>
+    <default applyOnUpdate="0" expression="" field="fid"/>
+    <default applyOnUpdate="0" expression="" field="level_0"/>
+    <default applyOnUpdate="0" expression="" field="level_1"/>
+    <default applyOnUpdate="0" expression="" field="code"/>
+    <default applyOnUpdate="0" expression="" field="ws_categorie_New"/>
+    <default applyOnUpdate="0" expression="" field="opmerkingen_New"/>
+    <default applyOnUpdate="0" expression="" field="aanslagpeil_rel_New"/>
+    <default applyOnUpdate="0" expression="" field="afslagpeil_rel_New"/>
+    <default applyOnUpdate="0" expression="" field="moet_op_peilgrens_New"/>
+    <default applyOnUpdate="0" expression="" field="geom_length_New"/>
+    <default applyOnUpdate="0" expression="" field="geom_area_New"/>
+    <default applyOnUpdate="0" expression="" field="dataset_New"/>
+    <default applyOnUpdate="0" expression="" field="origin_New"/>
+    <default applyOnUpdate="0" expression="" field="ws_categorie_Old"/>
+    <default applyOnUpdate="0" expression="" field="opmerkingen_Old"/>
+    <default applyOnUpdate="0" expression="" field="aanslagpeil_rel_Old"/>
+    <default applyOnUpdate="0" expression="" field="afslagpeil_rel_Old"/>
+    <default applyOnUpdate="0" expression="" field="moet_op_peilgrens_Old"/>
+    <default applyOnUpdate="0" expression="" field="geom_type_Old"/>
+    <default applyOnUpdate="0" expression="" field="geom_length_Old"/>
+    <default applyOnUpdate="0" expression="" field="geom_area_Old"/>
+    <default applyOnUpdate="0" expression="" field="dataset_Old"/>
+    <default applyOnUpdate="0" expression="" field="origin_Old"/>
+    <default applyOnUpdate="0" expression="" field="in_both"/>
+    <default applyOnUpdate="0" expression="" field="geometry_adjusted"/>
+    <default applyOnUpdate="0" expression="" field="cmp_modelleren_als"/>
+    <default applyOnUpdate="0" expression="" field="cmp_modelleren_als_priority"/>
+    <default applyOnUpdate="0" expression="" field="cmp_categorie"/>
+    <default applyOnUpdate="0" expression="" field="cmp_categorie_priority"/>
+    <default applyOnUpdate="0" expression="" field="number_of_info"/>
+    <default applyOnUpdate="0" expression="" field="number_of_warning"/>
+    <default applyOnUpdate="0" expression="" field="number_of_critical"/>
+    <default applyOnUpdate="0" expression="" field="Summary_Critical"/>
+    <default applyOnUpdate="0" expression="" field="Summary_Warnings"/>
   </defaults>
   <constraints>
-    <constraint exp_strength="0" notnull_strength="1" constraints="3" unique_strength="1" field="fid"/>
-    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="level_0"/>
-    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="level_1"/>
-    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="code"/>
-    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="ws_categorie_New"/>
-    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="opmerkingen_New"/>
-    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="aanslagpeil_rel_New"/>
-    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="afslagpeil_rel_New"/>
-    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="moet_op_peilgrens_New"/>
-    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="geom_type_New"/>
-    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="geom_length_New"/>
-    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="geom_area_New"/>
-    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="dataset_New"/>
-    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="origin_New"/>
-    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="ws_categorie_Old"/>
-    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="opmerkingen_Old"/>
-    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="aanslagpeil_rel_Old"/>
-    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="afslagpeil_rel_Old"/>
-    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="moet_op_peilgrens_Old"/>
-    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="geom_length_Old"/>
-    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="geom_area_Old"/>
-    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="dataset_Old"/>
-    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="origin_Old"/>
-    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="in_both"/>
-    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="geometry_adjusted"/>
-    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="cmp_modelleren_als"/>
-    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="cmp_modelleren_als_priority"/>
-    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="cmp_categorie"/>
-    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="cmp_categorie_priority"/>
-    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="number_of_info"/>
-    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="number_of_warning"/>
-    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="number_of_critical"/>
-    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="Summary_Critical"/>
-    <constraint exp_strength="0" notnull_strength="0" constraints="0" unique_strength="0" field="Summary_Warnings"/>
+    <constraint exp_strength="0" field="fid" constraints="3" unique_strength="1" notnull_strength="1"/>
+    <constraint exp_strength="0" field="level_0" constraints="0" unique_strength="0" notnull_strength="0"/>
+    <constraint exp_strength="0" field="level_1" constraints="0" unique_strength="0" notnull_strength="0"/>
+    <constraint exp_strength="0" field="code" constraints="0" unique_strength="0" notnull_strength="0"/>
+    <constraint exp_strength="0" field="ws_categorie_New" constraints="0" unique_strength="0" notnull_strength="0"/>
+    <constraint exp_strength="0" field="opmerkingen_New" constraints="0" unique_strength="0" notnull_strength="0"/>
+    <constraint exp_strength="0" field="aanslagpeil_rel_New" constraints="0" unique_strength="0" notnull_strength="0"/>
+    <constraint exp_strength="0" field="afslagpeil_rel_New" constraints="0" unique_strength="0" notnull_strength="0"/>
+    <constraint exp_strength="0" field="moet_op_peilgrens_New" constraints="0" unique_strength="0" notnull_strength="0"/>
+    <constraint exp_strength="0" field="geom_length_New" constraints="0" unique_strength="0" notnull_strength="0"/>
+    <constraint exp_strength="0" field="geom_area_New" constraints="0" unique_strength="0" notnull_strength="0"/>
+    <constraint exp_strength="0" field="dataset_New" constraints="0" unique_strength="0" notnull_strength="0"/>
+    <constraint exp_strength="0" field="origin_New" constraints="0" unique_strength="0" notnull_strength="0"/>
+    <constraint exp_strength="0" field="ws_categorie_Old" constraints="0" unique_strength="0" notnull_strength="0"/>
+    <constraint exp_strength="0" field="opmerkingen_Old" constraints="0" unique_strength="0" notnull_strength="0"/>
+    <constraint exp_strength="0" field="aanslagpeil_rel_Old" constraints="0" unique_strength="0" notnull_strength="0"/>
+    <constraint exp_strength="0" field="afslagpeil_rel_Old" constraints="0" unique_strength="0" notnull_strength="0"/>
+    <constraint exp_strength="0" field="moet_op_peilgrens_Old" constraints="0" unique_strength="0" notnull_strength="0"/>
+    <constraint exp_strength="0" field="geom_type_Old" constraints="0" unique_strength="0" notnull_strength="0"/>
+    <constraint exp_strength="0" field="geom_length_Old" constraints="0" unique_strength="0" notnull_strength="0"/>
+    <constraint exp_strength="0" field="geom_area_Old" constraints="0" unique_strength="0" notnull_strength="0"/>
+    <constraint exp_strength="0" field="dataset_Old" constraints="0" unique_strength="0" notnull_strength="0"/>
+    <constraint exp_strength="0" field="origin_Old" constraints="0" unique_strength="0" notnull_strength="0"/>
+    <constraint exp_strength="0" field="in_both" constraints="0" unique_strength="0" notnull_strength="0"/>
+    <constraint exp_strength="0" field="geometry_adjusted" constraints="0" unique_strength="0" notnull_strength="0"/>
+    <constraint exp_strength="0" field="cmp_modelleren_als" constraints="0" unique_strength="0" notnull_strength="0"/>
+    <constraint exp_strength="0" field="cmp_modelleren_als_priority" constraints="0" unique_strength="0" notnull_strength="0"/>
+    <constraint exp_strength="0" field="cmp_categorie" constraints="0" unique_strength="0" notnull_strength="0"/>
+    <constraint exp_strength="0" field="cmp_categorie_priority" constraints="0" unique_strength="0" notnull_strength="0"/>
+    <constraint exp_strength="0" field="number_of_info" constraints="0" unique_strength="0" notnull_strength="0"/>
+    <constraint exp_strength="0" field="number_of_warning" constraints="0" unique_strength="0" notnull_strength="0"/>
+    <constraint exp_strength="0" field="number_of_critical" constraints="0" unique_strength="0" notnull_strength="0"/>
+    <constraint exp_strength="0" field="Summary_Critical" constraints="0" unique_strength="0" notnull_strength="0"/>
+    <constraint exp_strength="0" field="Summary_Warnings" constraints="0" unique_strength="0" notnull_strength="0"/>
   </constraints>
   <constraintExpressions>
-    <constraint field="fid" desc="" exp=""/>
-    <constraint field="level_0" desc="" exp=""/>
-    <constraint field="level_1" desc="" exp=""/>
-    <constraint field="code" desc="" exp=""/>
-    <constraint field="ws_categorie_New" desc="" exp=""/>
-    <constraint field="opmerkingen_New" desc="" exp=""/>
-    <constraint field="aanslagpeil_rel_New" desc="" exp=""/>
-    <constraint field="afslagpeil_rel_New" desc="" exp=""/>
-    <constraint field="moet_op_peilgrens_New" desc="" exp=""/>
-    <constraint field="geom_type_New" desc="" exp=""/>
-    <constraint field="geom_length_New" desc="" exp=""/>
-    <constraint field="geom_area_New" desc="" exp=""/>
-    <constraint field="dataset_New" desc="" exp=""/>
-    <constraint field="origin_New" desc="" exp=""/>
-    <constraint field="ws_categorie_Old" desc="" exp=""/>
-    <constraint field="opmerkingen_Old" desc="" exp=""/>
-    <constraint field="aanslagpeil_rel_Old" desc="" exp=""/>
-    <constraint field="afslagpeil_rel_Old" desc="" exp=""/>
-    <constraint field="moet_op_peilgrens_Old" desc="" exp=""/>
-    <constraint field="geom_length_Old" desc="" exp=""/>
-    <constraint field="geom_area_Old" desc="" exp=""/>
-    <constraint field="dataset_Old" desc="" exp=""/>
-    <constraint field="origin_Old" desc="" exp=""/>
-    <constraint field="in_both" desc="" exp=""/>
-    <constraint field="geometry_adjusted" desc="" exp=""/>
-    <constraint field="cmp_modelleren_als" desc="" exp=""/>
-    <constraint field="cmp_modelleren_als_priority" desc="" exp=""/>
-    <constraint field="cmp_categorie" desc="" exp=""/>
-    <constraint field="cmp_categorie_priority" desc="" exp=""/>
-    <constraint field="number_of_info" desc="" exp=""/>
-    <constraint field="number_of_warning" desc="" exp=""/>
-    <constraint field="number_of_critical" desc="" exp=""/>
-    <constraint field="Summary_Critical" desc="" exp=""/>
-    <constraint field="Summary_Warnings" desc="" exp=""/>
+    <constraint exp="" field="fid" desc=""/>
+    <constraint exp="" field="level_0" desc=""/>
+    <constraint exp="" field="level_1" desc=""/>
+    <constraint exp="" field="code" desc=""/>
+    <constraint exp="" field="ws_categorie_New" desc=""/>
+    <constraint exp="" field="opmerkingen_New" desc=""/>
+    <constraint exp="" field="aanslagpeil_rel_New" desc=""/>
+    <constraint exp="" field="afslagpeil_rel_New" desc=""/>
+    <constraint exp="" field="moet_op_peilgrens_New" desc=""/>
+    <constraint exp="" field="geom_length_New" desc=""/>
+    <constraint exp="" field="geom_area_New" desc=""/>
+    <constraint exp="" field="dataset_New" desc=""/>
+    <constraint exp="" field="origin_New" desc=""/>
+    <constraint exp="" field="ws_categorie_Old" desc=""/>
+    <constraint exp="" field="opmerkingen_Old" desc=""/>
+    <constraint exp="" field="aanslagpeil_rel_Old" desc=""/>
+    <constraint exp="" field="afslagpeil_rel_Old" desc=""/>
+    <constraint exp="" field="moet_op_peilgrens_Old" desc=""/>
+    <constraint exp="" field="geom_type_Old" desc=""/>
+    <constraint exp="" field="geom_length_Old" desc=""/>
+    <constraint exp="" field="geom_area_Old" desc=""/>
+    <constraint exp="" field="dataset_Old" desc=""/>
+    <constraint exp="" field="origin_Old" desc=""/>
+    <constraint exp="" field="in_both" desc=""/>
+    <constraint exp="" field="geometry_adjusted" desc=""/>
+    <constraint exp="" field="cmp_modelleren_als" desc=""/>
+    <constraint exp="" field="cmp_modelleren_als_priority" desc=""/>
+    <constraint exp="" field="cmp_categorie" desc=""/>
+    <constraint exp="" field="cmp_categorie_priority" desc=""/>
+    <constraint exp="" field="number_of_info" desc=""/>
+    <constraint exp="" field="number_of_warning" desc=""/>
+    <constraint exp="" field="number_of_critical" desc=""/>
+    <constraint exp="" field="Summary_Critical" desc=""/>
+    <constraint exp="" field="Summary_Warnings" desc=""/>
   </constraintExpressions>
   <expressionfields/>
   <attributeactions>
-    <defaultAction key="Canvas" value="{00000000-0000-0000-0000-000000000000}"/>
+    <defaultAction value="{00000000-0000-0000-0000-000000000000}" key="Canvas"/>
   </attributeactions>
-  <attributetableconfig actionWidgetStyle="dropDown" sortOrder="1" sortExpression="&quot;number_of_critical&quot;">
+  <attributetableconfig actionWidgetStyle="dropDown" sortExpression="&quot;number_of_critical&quot;" sortOrder="1">
     <columns>
       <column type="field" width="-1" name="fid" hidden="0"/>
       <column type="field" width="-1" name="code" hidden="0"/>
@@ -1373,261 +1370,261 @@ def my_form_open(dialog, layer, feature):
   <featformsuppress>0</featformsuppress>
   <editorlayout>tablayout</editorlayout>
   <attributeEditorForm>
-    <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
-      <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+    <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+      <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
     </labelStyle>
-    <attributeEditorContainer type="GroupBox" collapsedExpression="" verticalStretch="0" groupBox="1" horizontalStretch="0" visibilityExpression="" name="Report" columnCount="1" collapsed="0" collapsedExpressionEnabled="0" showLabel="1" visibilityExpressionEnabled="0">
-      <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
-        <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+    <attributeEditorContainer verticalStretch="0" groupBox="1" collapsedExpression="" collapsed="0" type="GroupBox" visibilityExpressionEnabled="0" visibilityExpression="" horizontalStretch="0" name="Report" showLabel="1" columnCount="1" collapsedExpressionEnabled="0">
+      <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+        <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
       </labelStyle>
-      <attributeEditorField verticalStretch="0" horizontalStretch="0" name="Summary_Critical" showLabel="1" index="32">
-        <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
-          <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+      <attributeEditorField verticalStretch="0" index="32" horizontalStretch="0" name="Summary_Critical" showLabel="1">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
         </labelStyle>
       </attributeEditorField>
-      <attributeEditorField verticalStretch="0" horizontalStretch="0" name="Summary_Warnings" showLabel="1" index="33">
-        <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
-          <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+      <attributeEditorField verticalStretch="0" index="33" horizontalStretch="0" name="Summary_Warnings" showLabel="1">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
         </labelStyle>
       </attributeEditorField>
     </attributeEditorContainer>
-    <attributeEditorContainer type="Tab" collapsedExpression="" verticalStretch="0" groupBox="0" horizontalStretch="0" visibilityExpression="" name="ID" columnCount="1" collapsed="0" collapsedExpressionEnabled="0" showLabel="1" visibilityExpressionEnabled="0">
-      <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="1">
-        <labelFont style="" bold="1" description="MS Shell Dlg 2,8.25,-1,5,75,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+    <attributeEditorContainer verticalStretch="0" groupBox="0" collapsedExpression="" collapsed="0" type="Tab" visibilityExpressionEnabled="0" visibilityExpression="" horizontalStretch="0" name="ID" showLabel="1" columnCount="1" collapsedExpressionEnabled="0">
+      <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="1">
+        <labelFont bold="1" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,75,0,0,0,0,0" style=""/>
       </labelStyle>
-      <attributeEditorField verticalStretch="0" horizontalStretch="0" name="fid" showLabel="1" index="0">
-        <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
-          <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+      <attributeEditorField verticalStretch="0" index="0" horizontalStretch="0" name="fid" showLabel="1">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
         </labelStyle>
       </attributeEditorField>
-      <attributeEditorField verticalStretch="0" horizontalStretch="0" name="code" showLabel="1" index="3">
-        <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
-          <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+      <attributeEditorField verticalStretch="0" index="3" horizontalStretch="0" name="code" showLabel="1">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
         </labelStyle>
       </attributeEditorField>
-      <attributeEditorField verticalStretch="0" horizontalStretch="0" name="naam_New" showLabel="1" index="-1">
-        <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
-          <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+      <attributeEditorField verticalStretch="0" index="-1" horizontalStretch="0" name="naam_New" showLabel="1">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
         </labelStyle>
       </attributeEditorField>
-      <attributeEditorField verticalStretch="0" horizontalStretch="0" name="naam_Old" showLabel="1" index="-1">
-        <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
-          <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+      <attributeEditorField verticalStretch="0" index="-1" horizontalStretch="0" name="naam_Old" showLabel="1">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
         </labelStyle>
       </attributeEditorField>
-      <attributeEditorField verticalStretch="0" horizontalStretch="0" name="cmp_ID" showLabel="1" index="-1">
-        <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
-          <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+      <attributeEditorField verticalStretch="0" index="-1" horizontalStretch="0" name="cmp_ID" showLabel="1">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
         </labelStyle>
       </attributeEditorField>
-      <attributeEditorField verticalStretch="0" horizontalStretch="0" name="cmp_ID_priority" showLabel="1" index="-1">
-        <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
-          <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+      <attributeEditorField verticalStretch="0" index="-1" horizontalStretch="0" name="cmp_ID_priority" showLabel="1">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
         </labelStyle>
       </attributeEditorField>
     </attributeEditorContainer>
-    <attributeEditorContainer type="Tab" collapsedExpression="" verticalStretch="0" groupBox="0" horizontalStretch="0" visibilityExpression="" name="Category" columnCount="1" collapsed="0" collapsedExpressionEnabled="0" showLabel="1" visibilityExpressionEnabled="0">
-      <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="1">
-        <labelFont style="" bold="1" description="MS Shell Dlg 2,8.25,-1,5,75,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+    <attributeEditorContainer verticalStretch="0" groupBox="0" collapsedExpression="" collapsed="0" type="Tab" visibilityExpressionEnabled="0" visibilityExpression="" horizontalStretch="0" name="Category" showLabel="1" columnCount="1" collapsedExpressionEnabled="0">
+      <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="1">
+        <labelFont bold="1" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,75,0,0,0,0,0" style=""/>
       </labelStyle>
-      <attributeEditorField verticalStretch="0" horizontalStretch="0" name="ws_categorie_New" showLabel="1" index="4">
-        <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
-          <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+      <attributeEditorField verticalStretch="0" index="4" horizontalStretch="0" name="ws_categorie_New" showLabel="1">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
         </labelStyle>
       </attributeEditorField>
-      <attributeEditorField verticalStretch="0" horizontalStretch="0" name="ws_categorie_Old" showLabel="1" index="14">
-        <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
-          <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+      <attributeEditorField verticalStretch="0" index="13" horizontalStretch="0" name="ws_categorie_Old" showLabel="1">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
         </labelStyle>
       </attributeEditorField>
-      <attributeEditorField verticalStretch="0" horizontalStretch="0" name="cmp_categorie" showLabel="1" index="27">
-        <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
-          <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+      <attributeEditorField verticalStretch="0" index="27" horizontalStretch="0" name="cmp_categorie" showLabel="1">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
         </labelStyle>
       </attributeEditorField>
-      <attributeEditorField verticalStretch="0" horizontalStretch="0" name="cmp_categorie_priority" showLabel="1" index="28">
-        <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
-          <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+      <attributeEditorField verticalStretch="0" index="28" horizontalStretch="0" name="cmp_categorie_priority" showLabel="1">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
         </labelStyle>
       </attributeEditorField>
     </attributeEditorContainer>
-    <attributeEditorContainer type="Tab" collapsedExpression="" verticalStretch="0" groupBox="0" horizontalStretch="0" visibilityExpression="" name="Capacity" columnCount="1" collapsed="0" collapsedExpressionEnabled="0" showLabel="1" visibilityExpressionEnabled="0">
-      <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="1">
-        <labelFont style="" bold="1" description="MS Shell Dlg 2,8.25,-1,5,75,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+    <attributeEditorContainer verticalStretch="0" groupBox="0" collapsedExpression="" collapsed="0" type="Tab" visibilityExpressionEnabled="0" visibilityExpression="" horizontalStretch="0" name="Capacity" showLabel="1" columnCount="1" collapsedExpressionEnabled="0">
+      <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="1">
+        <labelFont bold="1" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,75,0,0,0,0,0" style=""/>
       </labelStyle>
-      <attributeEditorField verticalStretch="0" horizontalStretch="0" name="maximalecapaciteit_New" showLabel="1" index="-1">
-        <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
-          <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+      <attributeEditorField verticalStretch="0" index="-1" horizontalStretch="0" name="maximalecapaciteit_New" showLabel="1">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
         </labelStyle>
       </attributeEditorField>
-      <attributeEditorField verticalStretch="0" horizontalStretch="0" name="maximalecapaciteit_Old" showLabel="1" index="-1">
-        <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
-          <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+      <attributeEditorField verticalStretch="0" index="-1" horizontalStretch="0" name="maximalecapaciteit_Old" showLabel="1">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
         </labelStyle>
       </attributeEditorField>
-      <attributeEditorField verticalStretch="0" horizontalStretch="0" name="cmp_maximalecapaciteit" showLabel="1" index="-1">
-        <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
-          <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+      <attributeEditorField verticalStretch="0" index="-1" horizontalStretch="0" name="cmp_maximalecapaciteit" showLabel="1">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
         </labelStyle>
       </attributeEditorField>
-      <attributeEditorField verticalStretch="0" horizontalStretch="0" name="cmp_maximalecapaciteit_change_NaN" showLabel="1" index="-1">
-        <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
-          <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+      <attributeEditorField verticalStretch="0" index="-1" horizontalStretch="0" name="cmp_maximalecapaciteit_change_NaN" showLabel="1">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
         </labelStyle>
       </attributeEditorField>
-      <attributeEditorField verticalStretch="0" horizontalStretch="0" name="cmp_maximalecapaciteit_priority" showLabel="1" index="-1">
-        <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
-          <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+      <attributeEditorField verticalStretch="0" index="-1" horizontalStretch="0" name="cmp_maximalecapaciteit_priority" showLabel="1">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
         </labelStyle>
       </attributeEditorField>
     </attributeEditorContainer>
-    <attributeEditorContainer type="Tab" collapsedExpression="" verticalStretch="0" groupBox="0" horizontalStretch="0" visibilityExpression="" name="Dataset_Origin" columnCount="1" collapsed="0" collapsedExpressionEnabled="0" showLabel="1" visibilityExpressionEnabled="0">
-      <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="1">
-        <labelFont style="" bold="1" description="MS Shell Dlg 2,8.25,-1,5,75,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+    <attributeEditorContainer verticalStretch="0" groupBox="0" collapsedExpression="" collapsed="0" type="Tab" visibilityExpressionEnabled="0" visibilityExpression="" horizontalStretch="0" name="Dataset_Origin" showLabel="1" columnCount="1" collapsedExpressionEnabled="0">
+      <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="1">
+        <labelFont bold="1" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,75,0,0,0,0,0" style=""/>
       </labelStyle>
-      <attributeEditorContainer type="GroupBox" collapsedExpression="" verticalStretch="0" groupBox="1" horizontalStretch="0" visibilityExpression="" name="Dataset" columnCount="1" collapsed="0" collapsedExpressionEnabled="0" showLabel="1" visibilityExpressionEnabled="0">
-        <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
-          <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+      <attributeEditorContainer verticalStretch="0" groupBox="1" collapsedExpression="" collapsed="0" type="GroupBox" visibilityExpressionEnabled="0" visibilityExpression="" horizontalStretch="0" name="Dataset" showLabel="1" columnCount="1" collapsedExpressionEnabled="0">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
         </labelStyle>
-        <attributeEditorField verticalStretch="0" horizontalStretch="0" name="dataset_New" showLabel="1" index="12">
-          <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
-            <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+        <attributeEditorField verticalStretch="0" index="11" horizontalStretch="0" name="dataset_New" showLabel="1">
+          <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+            <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
           </labelStyle>
         </attributeEditorField>
-        <attributeEditorField verticalStretch="0" horizontalStretch="0" name="dataset_Old" showLabel="1" index="21">
-          <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
-            <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+        <attributeEditorField verticalStretch="0" index="21" horizontalStretch="0" name="dataset_Old" showLabel="1">
+          <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+            <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
           </labelStyle>
         </attributeEditorField>
       </attributeEditorContainer>
-      <attributeEditorContainer type="GroupBox" collapsedExpression="" verticalStretch="0" groupBox="1" horizontalStretch="0" visibilityExpression="" name="Origin" columnCount="1" collapsed="0" collapsedExpressionEnabled="0" showLabel="1" visibilityExpressionEnabled="0">
-        <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
-          <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+      <attributeEditorContainer verticalStretch="0" groupBox="1" collapsedExpression="" collapsed="0" type="GroupBox" visibilityExpressionEnabled="0" visibilityExpression="" horizontalStretch="0" name="Origin" showLabel="1" columnCount="1" collapsedExpressionEnabled="0">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
         </labelStyle>
-        <attributeEditorField verticalStretch="0" horizontalStretch="0" name="origin_New" showLabel="1" index="13">
-          <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
-            <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+        <attributeEditorField verticalStretch="0" index="12" horizontalStretch="0" name="origin_New" showLabel="1">
+          <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+            <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
           </labelStyle>
         </attributeEditorField>
-        <attributeEditorField verticalStretch="0" horizontalStretch="0" name="origin_Old" showLabel="1" index="22">
-          <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
-            <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+        <attributeEditorField verticalStretch="0" index="22" horizontalStretch="0" name="origin_Old" showLabel="1">
+          <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+            <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
           </labelStyle>
         </attributeEditorField>
       </attributeEditorContainer>
-      <attributeEditorField verticalStretch="0" horizontalStretch="0" name="in_both" showLabel="1" index="23">
-        <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
-          <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+      <attributeEditorField verticalStretch="0" index="23" horizontalStretch="0" name="in_both" showLabel="1">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
         </labelStyle>
       </attributeEditorField>
     </attributeEditorContainer>
-    <attributeEditorContainer type="Tab" collapsedExpression="" verticalStretch="0" groupBox="0" horizontalStretch="0" visibilityExpression="" name="Function" columnCount="1" collapsed="0" collapsedExpressionEnabled="0" showLabel="1" visibilityExpressionEnabled="0">
-      <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="1">
-        <labelFont style="" bold="1" description="MS Shell Dlg 2,8.25,-1,5,75,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+    <attributeEditorContainer verticalStretch="0" groupBox="0" collapsedExpression="" collapsed="0" type="Tab" visibilityExpressionEnabled="0" visibilityExpression="" horizontalStretch="0" name="Function" showLabel="1" columnCount="1" collapsedExpressionEnabled="0">
+      <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="1">
+        <labelFont bold="1" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,75,0,0,0,0,0" style=""/>
       </labelStyle>
-      <attributeEditorField verticalStretch="0" horizontalStretch="0" name="functiegemaal_New" showLabel="1" index="-1">
-        <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
-          <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+      <attributeEditorField verticalStretch="0" index="-1" horizontalStretch="0" name="functiegemaal_New" showLabel="1">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
         </labelStyle>
       </attributeEditorField>
-      <attributeEditorField verticalStretch="0" horizontalStretch="0" name="functiegemaal_Old" showLabel="1" index="-1">
-        <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
-          <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+      <attributeEditorField verticalStretch="0" index="-1" horizontalStretch="0" name="functiegemaal_Old" showLabel="1">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
         </labelStyle>
       </attributeEditorField>
-      <attributeEditorField verticalStretch="0" horizontalStretch="0" name="cmp_functiegemaal" showLabel="1" index="-1">
-        <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
-          <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+      <attributeEditorField verticalStretch="0" index="-1" horizontalStretch="0" name="cmp_functiegemaal" showLabel="1">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
         </labelStyle>
       </attributeEditorField>
-      <attributeEditorField verticalStretch="0" horizontalStretch="0" name="cmp_functiegemaal_priority" showLabel="1" index="-1">
-        <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
-          <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+      <attributeEditorField verticalStretch="0" index="-1" horizontalStretch="0" name="cmp_functiegemaal_priority" showLabel="1">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
         </labelStyle>
       </attributeEditorField>
     </attributeEditorContainer>
-    <attributeEditorContainer type="Tab" collapsedExpression="" verticalStretch="0" groupBox="0" horizontalStretch="0" visibilityExpression="" name="Geometry" columnCount="1" collapsed="0" collapsedExpressionEnabled="0" showLabel="1" visibilityExpressionEnabled="0">
-      <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="1">
-        <labelFont style="" bold="1" description="MS Shell Dlg 2,8.25,-1,5,75,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+    <attributeEditorContainer verticalStretch="0" groupBox="0" collapsedExpression="" collapsed="0" type="Tab" visibilityExpressionEnabled="0" visibilityExpression="" horizontalStretch="0" name="Geometry" showLabel="1" columnCount="1" collapsedExpressionEnabled="0">
+      <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="1">
+        <labelFont bold="1" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,75,0,0,0,0,0" style=""/>
       </labelStyle>
-      <attributeEditorContainer type="GroupBox" collapsedExpression="" verticalStretch="0" groupBox="1" horizontalStretch="0" visibilityExpression="" name="Area" columnCount="1" collapsed="0" collapsedExpressionEnabled="0" showLabel="1" visibilityExpressionEnabled="0">
-        <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
-          <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+      <attributeEditorContainer verticalStretch="0" groupBox="1" collapsedExpression="" collapsed="0" type="GroupBox" visibilityExpressionEnabled="0" visibilityExpression="" horizontalStretch="0" name="Area" showLabel="1" columnCount="1" collapsedExpressionEnabled="0">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
         </labelStyle>
-        <attributeEditorField verticalStretch="0" horizontalStretch="0" name="geom_area_New" showLabel="1" index="11">
-          <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
-            <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+        <attributeEditorField verticalStretch="0" index="10" horizontalStretch="0" name="geom_area_New" showLabel="1">
+          <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+            <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
           </labelStyle>
         </attributeEditorField>
-        <attributeEditorField verticalStretch="0" horizontalStretch="0" name="geom_area_Old" showLabel="1" index="20">
-          <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
-            <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+        <attributeEditorField verticalStretch="0" index="20" horizontalStretch="0" name="geom_area_Old" showLabel="1">
+          <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+            <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
           </labelStyle>
         </attributeEditorField>
       </attributeEditorContainer>
-      <attributeEditorContainer type="GroupBox" collapsedExpression="" verticalStretch="0" groupBox="1" horizontalStretch="0" visibilityExpression="" name="Length" columnCount="1" collapsed="0" collapsedExpressionEnabled="0" showLabel="1" visibilityExpressionEnabled="0">
-        <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
-          <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+      <attributeEditorContainer verticalStretch="0" groupBox="1" collapsedExpression="" collapsed="0" type="GroupBox" visibilityExpressionEnabled="0" visibilityExpression="" horizontalStretch="0" name="Length" showLabel="1" columnCount="1" collapsedExpressionEnabled="0">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
         </labelStyle>
-        <attributeEditorField verticalStretch="0" horizontalStretch="0" name="geom_length_New" showLabel="1" index="10">
-          <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
-            <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+        <attributeEditorField verticalStretch="0" index="9" horizontalStretch="0" name="geom_length_New" showLabel="1">
+          <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+            <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
           </labelStyle>
         </attributeEditorField>
-        <attributeEditorField verticalStretch="0" horizontalStretch="0" name="geom_length_Old" showLabel="1" index="19">
-          <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
-            <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+        <attributeEditorField verticalStretch="0" index="19" horizontalStretch="0" name="geom_length_Old" showLabel="1">
+          <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+            <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
           </labelStyle>
         </attributeEditorField>
       </attributeEditorContainer>
-      <attributeEditorContainer type="GroupBox" collapsedExpression="" verticalStretch="0" groupBox="1" horizontalStretch="0" visibilityExpression="" name="Type" columnCount="1" collapsed="0" collapsedExpressionEnabled="0" showLabel="1" visibilityExpressionEnabled="0">
-        <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
-          <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+      <attributeEditorContainer verticalStretch="0" groupBox="1" collapsedExpression="" collapsed="0" type="GroupBox" visibilityExpressionEnabled="0" visibilityExpression="" horizontalStretch="0" name="Type" showLabel="1" columnCount="1" collapsedExpressionEnabled="0">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
         </labelStyle>
-        <attributeEditorField verticalStretch="0" horizontalStretch="0" name="geom_type_New" showLabel="1" index="9">
-          <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
-            <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+        <attributeEditorField verticalStretch="0" index="-1" horizontalStretch="0" name="geom_type_New" showLabel="1">
+          <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+            <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
           </labelStyle>
         </attributeEditorField>
-        <attributeEditorField verticalStretch="0" horizontalStretch="0" name="geom_type_Old" showLabel="1" index="-1">
-          <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
-            <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+        <attributeEditorField verticalStretch="0" index="18" horizontalStretch="0" name="geom_type_Old" showLabel="1">
+          <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+            <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
           </labelStyle>
         </attributeEditorField>
-        <attributeEditorField verticalStretch="0" horizontalStretch="0" name="cmp_geom_type" showLabel="1" index="-1">
-          <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
-            <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+        <attributeEditorField verticalStretch="0" index="-1" horizontalStretch="0" name="cmp_geom_type" showLabel="1">
+          <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+            <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
           </labelStyle>
         </attributeEditorField>
-        <attributeEditorField verticalStretch="0" horizontalStretch="0" name="cmp_geom_type_priority" showLabel="1" index="-1">
-          <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
-            <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+        <attributeEditorField verticalStretch="0" index="-1" horizontalStretch="0" name="cmp_geom_type_priority" showLabel="1">
+          <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+            <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
           </labelStyle>
         </attributeEditorField>
       </attributeEditorContainer>
-      <attributeEditorField verticalStretch="0" horizontalStretch="0" name="geometry_adjusted" showLabel="1" index="24">
-        <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
-          <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+      <attributeEditorField verticalStretch="0" index="24" horizontalStretch="0" name="geometry_adjusted" showLabel="1">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
         </labelStyle>
       </attributeEditorField>
     </attributeEditorContainer>
-    <attributeEditorContainer type="Tab" collapsedExpression="" verticalStretch="0" groupBox="0" horizontalStretch="0" visibilityExpression="" name="Vergelijken_Resultaten" columnCount="1" collapsed="0" collapsedExpressionEnabled="0" showLabel="1" visibilityExpressionEnabled="0">
-      <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="1">
-        <labelFont style="" bold="1" description="MS Shell Dlg 2,8.25,-1,5,75,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+    <attributeEditorContainer verticalStretch="0" groupBox="0" collapsedExpression="" collapsed="0" type="Tab" visibilityExpressionEnabled="0" visibilityExpression="" horizontalStretch="0" name="Vergelijken_Resultaten" showLabel="1" columnCount="1" collapsedExpressionEnabled="0">
+      <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="1">
+        <labelFont bold="1" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,75,0,0,0,0,0" style=""/>
       </labelStyle>
-      <attributeEditorField verticalStretch="0" horizontalStretch="0" name="number_of_info" showLabel="1" index="29">
-        <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
-          <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+      <attributeEditorField verticalStretch="0" index="29" horizontalStretch="0" name="number_of_info" showLabel="1">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
         </labelStyle>
       </attributeEditorField>
-      <attributeEditorField verticalStretch="0" horizontalStretch="0" name="number_of_warning" showLabel="1" index="30">
-        <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
-          <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+      <attributeEditorField verticalStretch="0" index="30" horizontalStretch="0" name="number_of_warning" showLabel="1">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
         </labelStyle>
       </attributeEditorField>
-      <attributeEditorField verticalStretch="0" horizontalStretch="0" name="number_of_critical" showLabel="1" index="31">
-        <labelStyle overrideLabelColor="0" labelColor="0,0,0,255" overrideLabelFont="0">
-          <labelFont style="" bold="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" strikethrough="0" italic="0" underline="0"/>
+      <attributeEditorField verticalStretch="0" index="31" horizontalStretch="0" name="number_of_critical" showLabel="1">
+        <labelStyle labelColor="0,0,0,255" overrideLabelColor="0" overrideLabelFont="0">
+          <labelFont bold="0" strikethrough="0" italic="0" underline="0" description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
         </labelStyle>
       </attributeEditorField>
     </attributeEditorContainer>
@@ -1869,122 +1866,122 @@ def my_form_open(dialog, layer, feature):
     <field labelOnTop="0" name="ws_kruinvorm_B"/>
   </labelOnTop>
   <reuseLastValue>
-    <field name="Naam_verschil" reuseLastValue="0"/>
-    <field name="Naam_verschil_priority" reuseLastValue="0"/>
-    <field name="Summary_Critical" reuseLastValue="0"/>
-    <field name="Summary_Warnings" reuseLastValue="0"/>
-    <field name="Width Verschil" reuseLastValue="0"/>
-    <field name="Width Verschil_change_NaN" reuseLastValue="0"/>
-    <field name="Width Verschil_priority" reuseLastValue="0"/>
-    <field name="aanslagpeil_rel_New" reuseLastValue="0"/>
-    <field name="aanslagpeil_rel_Old" reuseLastValue="0"/>
-    <field name="aantal_doorstroomopeningen_A" reuseLastValue="0"/>
-    <field name="aantal_doorstroomopeningen_B" reuseLastValue="0"/>
-    <field name="afslagpeil_rel_New" reuseLastValue="0"/>
-    <field name="afslagpeil_rel_Old" reuseLastValue="0"/>
-    <field name="brug_id_A" reuseLastValue="0"/>
-    <field name="brug_id_B" reuseLastValue="0"/>
-    <field name="cmp_ID" reuseLastValue="0"/>
-    <field name="cmp_ID_priority" reuseLastValue="0"/>
-    <field name="cmp_aantal_doorstroomopeningen" reuseLastValue="0"/>
-    <field name="cmp_aantal_doorstroomopeningen_change_NaN" reuseLastValue="0"/>
-    <field name="cmp_aantal_doorstroomopeningen_priority" reuseLastValue="0"/>
-    <field name="cmp_categorie" reuseLastValue="0"/>
-    <field name="cmp_categorie_priority" reuseLastValue="0"/>
-    <field name="cmp_doorvaarbreedte" reuseLastValue="0"/>
-    <field name="cmp_doorvaarbreedte_change_NaN" reuseLastValue="0"/>
-    <field name="cmp_doorvaarbreedte_priority" reuseLastValue="0"/>
-    <field name="cmp_functiegemaal" reuseLastValue="0"/>
-    <field name="cmp_functiegemaal_priority" reuseLastValue="0"/>
-    <field name="cmp_geom_type" reuseLastValue="0"/>
-    <field name="cmp_geom_type_priority" reuseLastValue="0"/>
-    <field name="cmp_hoogteonderzijde" reuseLastValue="0"/>
-    <field name="cmp_hoogteonderzijde_change_NaN" reuseLastValue="0"/>
-    <field name="cmp_hoogteonderzijde_priority" reuseLastValue="0"/>
-    <field name="cmp_maximalecapaciteit" reuseLastValue="0"/>
-    <field name="cmp_maximalecapaciteit_change_NaN" reuseLastValue="0"/>
-    <field name="cmp_maximalecapaciteit_priority" reuseLastValue="0"/>
-    <field name="cmp_modelleren_als" reuseLastValue="0"/>
-    <field name="cmp_modelleren_als_priority" reuseLastValue="0"/>
-    <field name="cmp_ws_categorie" reuseLastValue="0"/>
-    <field name="cmp_ws_categorie_priority" reuseLastValue="0"/>
-    <field name="code" reuseLastValue="0"/>
-    <field name="dataset_A" reuseLastValue="0"/>
-    <field name="dataset_B" reuseLastValue="0"/>
-    <field name="dataset_New" reuseLastValue="0"/>
-    <field name="dataset_Old" reuseLastValue="0"/>
-    <field name="doorstroombreedte_A" reuseLastValue="0"/>
-    <field name="doorstroombreedte_B" reuseLastValue="0"/>
-    <field name="doorvaartbreedte_A" reuseLastValue="0"/>
-    <field name="doorvaartbreedte_B" reuseLastValue="0"/>
-    <field name="fid" reuseLastValue="0"/>
-    <field name="functie_A" reuseLastValue="0"/>
-    <field name="functie_B" reuseLastValue="0"/>
-    <field name="functiegemaal_New" reuseLastValue="0"/>
-    <field name="functiegemaal_Old" reuseLastValue="0"/>
-    <field name="geom_area_A" reuseLastValue="0"/>
-    <field name="geom_area_B" reuseLastValue="0"/>
-    <field name="geom_area_New" reuseLastValue="0"/>
-    <field name="geom_area_Old" reuseLastValue="0"/>
-    <field name="geom_length_A" reuseLastValue="0"/>
-    <field name="geom_length_B" reuseLastValue="0"/>
-    <field name="geom_length_New" reuseLastValue="0"/>
-    <field name="geom_length_Old" reuseLastValue="0"/>
-    <field name="geom_type_A" reuseLastValue="0"/>
-    <field name="geom_type_B" reuseLastValue="0"/>
-    <field name="geom_type_New" reuseLastValue="0"/>
-    <field name="geom_type_Old" reuseLastValue="0"/>
-    <field name="geometry_adjusted" reuseLastValue="0"/>
-    <field name="hoogstedoorstroomhoogte_A" reuseLastValue="0"/>
-    <field name="hoogstedoorstroomhoogte_B" reuseLastValue="0"/>
-    <field name="hoogteonderzijde_A" reuseLastValue="0"/>
-    <field name="hoogteonderzijde_B" reuseLastValue="0"/>
-    <field name="in_both" reuseLastValue="0"/>
-    <field name="kruinbreedte_A" reuseLastValue="0"/>
-    <field name="kruinbreedte_B" reuseLastValue="0"/>
-    <field name="kruinhoogte_hdb_A" reuseLastValue="0"/>
-    <field name="kruinhoogte_hdb_B" reuseLastValue="0"/>
-    <field name="laagstedoorstroomhoogte_A" reuseLastValue="0"/>
-    <field name="laagstedoorstroomhoogte_B" reuseLastValue="0"/>
-    <field name="level_0" reuseLastValue="0"/>
-    <field name="level_1" reuseLastValue="0"/>
-    <field name="maximalecapaciteit_New" reuseLastValue="0"/>
-    <field name="maximalecapaciteit_Old" reuseLastValue="0"/>
-    <field name="moet_op_peilgrens_A" reuseLastValue="0"/>
-    <field name="moet_op_peilgrens_B" reuseLastValue="0"/>
-    <field name="moet_op_peilgrens_New" reuseLastValue="0"/>
-    <field name="moet_op_peilgrens_Old" reuseLastValue="0"/>
-    <field name="naam_A" reuseLastValue="0"/>
-    <field name="naam_B" reuseLastValue="0"/>
-    <field name="naam_New" reuseLastValue="0"/>
-    <field name="naam_Old" reuseLastValue="0"/>
-    <field name="number_of_critical" reuseLastValue="0"/>
-    <field name="number_of_info" reuseLastValue="0"/>
-    <field name="number_of_warning" reuseLastValue="0"/>
-    <field name="opmerkingen_A" reuseLastValue="0"/>
-    <field name="opmerkingen_B" reuseLastValue="0"/>
-    <field name="opmerkingen_New" reuseLastValue="0"/>
-    <field name="opmerkingen_Old" reuseLastValue="0"/>
-    <field name="origin_A" reuseLastValue="0"/>
-    <field name="origin_B" reuseLastValue="0"/>
-    <field name="origin_New" reuseLastValue="0"/>
-    <field name="origin_Old" reuseLastValue="0"/>
-    <field name="point_x_A" reuseLastValue="0"/>
-    <field name="point_x_B" reuseLastValue="0"/>
-    <field name="point_y_A" reuseLastValue="0"/>
-    <field name="point_y_B" reuseLastValue="0"/>
-    <field name="som_doorstroombreedte_A" reuseLastValue="0"/>
-    <field name="som_doorstroombreedte_B" reuseLastValue="0"/>
-    <field name="soortregelbaarheid_A" reuseLastValue="0"/>
-    <field name="soortregelbaarheid_B" reuseLastValue="0"/>
-    <field name="ws_categorie_A" reuseLastValue="0"/>
-    <field name="ws_categorie_B" reuseLastValue="0"/>
-    <field name="ws_categorie_New" reuseLastValue="0"/>
-    <field name="ws_categorie_Old" reuseLastValue="0"/>
-    <field name="ws_functiestuw_A" reuseLastValue="0"/>
-    <field name="ws_functiestuw_B" reuseLastValue="0"/>
-    <field name="ws_kruinvorm_A" reuseLastValue="0"/>
-    <field name="ws_kruinvorm_B" reuseLastValue="0"/>
+    <field reuseLastValue="0" name="Naam_verschil"/>
+    <field reuseLastValue="0" name="Naam_verschil_priority"/>
+    <field reuseLastValue="0" name="Summary_Critical"/>
+    <field reuseLastValue="0" name="Summary_Warnings"/>
+    <field reuseLastValue="0" name="Width Verschil"/>
+    <field reuseLastValue="0" name="Width Verschil_change_NaN"/>
+    <field reuseLastValue="0" name="Width Verschil_priority"/>
+    <field reuseLastValue="0" name="aanslagpeil_rel_New"/>
+    <field reuseLastValue="0" name="aanslagpeil_rel_Old"/>
+    <field reuseLastValue="0" name="aantal_doorstroomopeningen_A"/>
+    <field reuseLastValue="0" name="aantal_doorstroomopeningen_B"/>
+    <field reuseLastValue="0" name="afslagpeil_rel_New"/>
+    <field reuseLastValue="0" name="afslagpeil_rel_Old"/>
+    <field reuseLastValue="0" name="brug_id_A"/>
+    <field reuseLastValue="0" name="brug_id_B"/>
+    <field reuseLastValue="0" name="cmp_ID"/>
+    <field reuseLastValue="0" name="cmp_ID_priority"/>
+    <field reuseLastValue="0" name="cmp_aantal_doorstroomopeningen"/>
+    <field reuseLastValue="0" name="cmp_aantal_doorstroomopeningen_change_NaN"/>
+    <field reuseLastValue="0" name="cmp_aantal_doorstroomopeningen_priority"/>
+    <field reuseLastValue="0" name="cmp_categorie"/>
+    <field reuseLastValue="0" name="cmp_categorie_priority"/>
+    <field reuseLastValue="0" name="cmp_doorvaarbreedte"/>
+    <field reuseLastValue="0" name="cmp_doorvaarbreedte_change_NaN"/>
+    <field reuseLastValue="0" name="cmp_doorvaarbreedte_priority"/>
+    <field reuseLastValue="0" name="cmp_functiegemaal"/>
+    <field reuseLastValue="0" name="cmp_functiegemaal_priority"/>
+    <field reuseLastValue="0" name="cmp_geom_type"/>
+    <field reuseLastValue="0" name="cmp_geom_type_priority"/>
+    <field reuseLastValue="0" name="cmp_hoogteonderzijde"/>
+    <field reuseLastValue="0" name="cmp_hoogteonderzijde_change_NaN"/>
+    <field reuseLastValue="0" name="cmp_hoogteonderzijde_priority"/>
+    <field reuseLastValue="0" name="cmp_maximalecapaciteit"/>
+    <field reuseLastValue="0" name="cmp_maximalecapaciteit_change_NaN"/>
+    <field reuseLastValue="0" name="cmp_maximalecapaciteit_priority"/>
+    <field reuseLastValue="0" name="cmp_modelleren_als"/>
+    <field reuseLastValue="0" name="cmp_modelleren_als_priority"/>
+    <field reuseLastValue="0" name="cmp_ws_categorie"/>
+    <field reuseLastValue="0" name="cmp_ws_categorie_priority"/>
+    <field reuseLastValue="0" name="code"/>
+    <field reuseLastValue="0" name="dataset_A"/>
+    <field reuseLastValue="0" name="dataset_B"/>
+    <field reuseLastValue="0" name="dataset_New"/>
+    <field reuseLastValue="0" name="dataset_Old"/>
+    <field reuseLastValue="0" name="doorstroombreedte_A"/>
+    <field reuseLastValue="0" name="doorstroombreedte_B"/>
+    <field reuseLastValue="0" name="doorvaartbreedte_A"/>
+    <field reuseLastValue="0" name="doorvaartbreedte_B"/>
+    <field reuseLastValue="0" name="fid"/>
+    <field reuseLastValue="0" name="functie_A"/>
+    <field reuseLastValue="0" name="functie_B"/>
+    <field reuseLastValue="0" name="functiegemaal_New"/>
+    <field reuseLastValue="0" name="functiegemaal_Old"/>
+    <field reuseLastValue="0" name="geom_area_A"/>
+    <field reuseLastValue="0" name="geom_area_B"/>
+    <field reuseLastValue="0" name="geom_area_New"/>
+    <field reuseLastValue="0" name="geom_area_Old"/>
+    <field reuseLastValue="0" name="geom_length_A"/>
+    <field reuseLastValue="0" name="geom_length_B"/>
+    <field reuseLastValue="0" name="geom_length_New"/>
+    <field reuseLastValue="0" name="geom_length_Old"/>
+    <field reuseLastValue="0" name="geom_type_A"/>
+    <field reuseLastValue="0" name="geom_type_B"/>
+    <field reuseLastValue="0" name="geom_type_New"/>
+    <field reuseLastValue="0" name="geom_type_Old"/>
+    <field reuseLastValue="0" name="geometry_adjusted"/>
+    <field reuseLastValue="0" name="hoogstedoorstroomhoogte_A"/>
+    <field reuseLastValue="0" name="hoogstedoorstroomhoogte_B"/>
+    <field reuseLastValue="0" name="hoogteonderzijde_A"/>
+    <field reuseLastValue="0" name="hoogteonderzijde_B"/>
+    <field reuseLastValue="0" name="in_both"/>
+    <field reuseLastValue="0" name="kruinbreedte_A"/>
+    <field reuseLastValue="0" name="kruinbreedte_B"/>
+    <field reuseLastValue="0" name="kruinhoogte_hdb_A"/>
+    <field reuseLastValue="0" name="kruinhoogte_hdb_B"/>
+    <field reuseLastValue="0" name="laagstedoorstroomhoogte_A"/>
+    <field reuseLastValue="0" name="laagstedoorstroomhoogte_B"/>
+    <field reuseLastValue="0" name="level_0"/>
+    <field reuseLastValue="0" name="level_1"/>
+    <field reuseLastValue="0" name="maximalecapaciteit_New"/>
+    <field reuseLastValue="0" name="maximalecapaciteit_Old"/>
+    <field reuseLastValue="0" name="moet_op_peilgrens_A"/>
+    <field reuseLastValue="0" name="moet_op_peilgrens_B"/>
+    <field reuseLastValue="0" name="moet_op_peilgrens_New"/>
+    <field reuseLastValue="0" name="moet_op_peilgrens_Old"/>
+    <field reuseLastValue="0" name="naam_A"/>
+    <field reuseLastValue="0" name="naam_B"/>
+    <field reuseLastValue="0" name="naam_New"/>
+    <field reuseLastValue="0" name="naam_Old"/>
+    <field reuseLastValue="0" name="number_of_critical"/>
+    <field reuseLastValue="0" name="number_of_info"/>
+    <field reuseLastValue="0" name="number_of_warning"/>
+    <field reuseLastValue="0" name="opmerkingen_A"/>
+    <field reuseLastValue="0" name="opmerkingen_B"/>
+    <field reuseLastValue="0" name="opmerkingen_New"/>
+    <field reuseLastValue="0" name="opmerkingen_Old"/>
+    <field reuseLastValue="0" name="origin_A"/>
+    <field reuseLastValue="0" name="origin_B"/>
+    <field reuseLastValue="0" name="origin_New"/>
+    <field reuseLastValue="0" name="origin_Old"/>
+    <field reuseLastValue="0" name="point_x_A"/>
+    <field reuseLastValue="0" name="point_x_B"/>
+    <field reuseLastValue="0" name="point_y_A"/>
+    <field reuseLastValue="0" name="point_y_B"/>
+    <field reuseLastValue="0" name="som_doorstroombreedte_A"/>
+    <field reuseLastValue="0" name="som_doorstroombreedte_B"/>
+    <field reuseLastValue="0" name="soortregelbaarheid_A"/>
+    <field reuseLastValue="0" name="soortregelbaarheid_B"/>
+    <field reuseLastValue="0" name="ws_categorie_A"/>
+    <field reuseLastValue="0" name="ws_categorie_B"/>
+    <field reuseLastValue="0" name="ws_categorie_New"/>
+    <field reuseLastValue="0" name="ws_categorie_Old"/>
+    <field reuseLastValue="0" name="ws_functiestuw_A"/>
+    <field reuseLastValue="0" name="ws_functiestuw_B"/>
+    <field reuseLastValue="0" name="ws_kruinvorm_A"/>
+    <field reuseLastValue="0" name="ws_kruinvorm_B"/>
   </reuseLastValue>
   <dataDefinedFieldProperties/>
   <widgets/>

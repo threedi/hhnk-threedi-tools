@@ -147,15 +147,15 @@
   <renderer-v2 referencescale="-1" symbollevels="0" type="RuleRenderer" forceraster="0" enableorderby="0">
     <rules key="{55e35520-7748-4c51-be6e-504f9631408b}">
       <rule filter=" &quot;ws_categorie_New&quot;  = 1 OR  &quot;ws_categorie_Old&quot;  = 1" key="{25cd74e8-9c05-4019-b9ec-f7d9456bbed3}" label="Pimaire watersysteem">
-        <rule filter=" &quot;in_both&quot;  LIKE  '%old' " key="{e10e995c-155e-4a90-b489-8c36f9721e05}" label="Bestaat niet meer in DAMO nieuw" symbol="0"/>
-        <rule filter=" &quot;in_both&quot;  LIKE  '%new' " key="{6af62301-4150-4f59-97ef-43a297e807b6}" label="Bestond nog niet in DAMO oud" symbol="1"/>
+        <rule filter=" &quot;in_both&quot;  LIKE  '%old' " key="{e10e995c-155e-4a90-b489-8c36f9721e05}" label="Bestaat in DAMO old - niet meer in DAMO nieuw" symbol="0"/>
+        <rule filter=" &quot;in_both&quot;  LIKE  '%new' " key="{6af62301-4150-4f59-97ef-43a297e807b6}" label="Bestaat in DAMO nieuw - niet meer in DAMO oud" symbol="1"/>
         <rule filter=" &quot;in_both&quot;   LIKE  '%both' AND  &quot;number_of_critical&quot; > 0" key="{2b7144fe-e044-4f09-8bb1-24f666d4f468}" label="Kritiek verschil tussen beide datasets" symbol="2"/>
         <rule filter=" &quot;in_both&quot;   LIKE  '%both' AND  &quot;number_of_critical&quot; = 0 AND ( &quot;number_of_info&quot;  +  &quot;number_of_warning&quot; ) > 0" key="{b2db38fb-38c9-4149-aa28-962a969d3d09}" label="Klein verschillen gevonden" symbol="3"/>
         <rule filter="ELSE" key="{7c029e2c-b2a5-47b0-b8bd-a7193005556b}" label="Geen verschillen gevonden" symbol="4"/>
       </rule>
       <rule filter=" &quot;ws_categorie_New&quot;  != 1 OR  &quot;ws_categorie_Old&quot; != 1" key="{768a9da6-a936-42a4-8b0c-70467ba2cab4}" label="Niet-primaire watersysteem">
-        <rule filter=" &quot;in_both&quot;  LIKE  '%old' " key="{0a48c200-58df-4e3f-967a-9686fb24b127}" label="Bestaat niet meer in DAMO nieuw" symbol="5"/>
-        <rule filter=" &quot;in_both&quot;  LIKE  '%new' " key="{1128bab2-d6af-4660-9fda-bdf09f2acfc8}" label="Bestond nog niet in DAMO oud" symbol="6"/>
+        <rule filter=" &quot;in_both&quot;  LIKE  '%old' " key="{0a48c200-58df-4e3f-967a-9686fb24b127}" label="Bestaat in DAMO old - niet meer in DAMO nieuw" symbol="5"/>
+        <rule filter=" &quot;in_both&quot;  LIKE  '%new' " key="{1128bab2-d6af-4660-9fda-bdf09f2acfc8}" label="Bestaat in DAMO nieuw - niet meer in DAMO oud" symbol="6"/>
         <rule filter=" &quot;in_both&quot;   LIKE  '%both' AND  &quot;number_of_critical&quot; > 0" key="{006a251d-5485-4caa-b5bf-77db4f4f74a5}" label="Kritiek verschil tussen beide datasets" symbol="7"/>
         <rule filter=" &quot;in_both&quot;   LIKE  '%both' AND  &quot;number_of_critical&quot; = 0 AND ( &quot;number_of_info&quot;  +  &quot;number_of_warning&quot; ) > 0" key="{7de2f25f-c4ff-4b72-ac55-dbc99de51ead}" label="Klein verschillen gevonden" symbol="8"/>
         <rule filter="ELSE" key="{e2af2abc-67ae-4932-ad0d-0e79068717f5}" label="Geen verschillen gevonden" symbol="9"/>
