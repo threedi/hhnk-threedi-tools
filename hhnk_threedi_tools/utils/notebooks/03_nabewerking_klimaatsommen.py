@@ -535,7 +535,11 @@ def calculate_schade_per_peilgebied(output_dir: Folders) -> gpd.GeoDataFrame:
     labels_raster = output_dir.temp.peilgebieden_damage
     labels_index = schade_gdf["index"].values
     # get the raster attibutes from the bacht output and loop to calculate totals.
-    for schade_raster in output_dir.path.glob("schade_*.tif"):
+    for schade_path in output_dir.path.glob("schade_*.tif"):
+        # # glob() returns only the file path as a WindowsPath; convert it to an hrt.Raster
+        # object so raster-specific methods such as sum_labels() can be used.
+        schade_raster = hrt.Raster(schade_path)
+
         # calculate the total damage per peilgebied
         accum = schade_raster.sum_labels(label_raster=labels_raster, label_idx=labels_index)
         # map the total damge and save it.
