@@ -89,7 +89,7 @@ Hiermee wordt JupyterLab geopend en wordt de notebook van de Vergelijkingstool a
 
 Klik vervolgens op **Run** om de notebook uit te voeren. Na enkele seconden wordt de grafische interface van de Vergelijkingstool weergegeven.
 
-![Step One Run Jupiter Notebook](../../images/4_gebruik_plugin/f_vergelijkingstool/step_1_run_notebook.png)
+![Step One Run Jupiter](../../images/4_gebruik_plugin/f_vergelijkingstool/step_1_run_notebook.png)
 
 ---
 
