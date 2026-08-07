@@ -23,5 +23,11 @@
         "columns": {
            "cul_code": "code"
         }
+    },
+    "pumpstation": {
+        "name": "pumpstation",
+        "columns": {
+           "capacity": "capacity[l/s]"
+        }
     }
 }

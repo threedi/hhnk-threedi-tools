@@ -130,7 +130,7 @@
 			}
 		},
 		{
-			"name": "cmp_capaciteit",
+			"name": "cmp_capaciteit[m3/minuut]",
 			"table": "KGM",
 			"type": "numeric",
 			"description": "Verschil tussen gemaalcapaciteit in DAMO en het model (met omrekenfactor)",
@@ -140,7 +140,7 @@
 					"left": "maximalecapaciteit_damo",
 					"right": {
 						"multiply": {
-							"left": "capacity_model",
+							"left": "capacity[l/s]_model",
 							"right": 0.06
 						}
 					}

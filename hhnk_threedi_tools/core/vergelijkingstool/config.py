@@ -84,4 +84,4 @@ STRUCTURE_CODES: List[str] = [
 GEOMETRICAL_COMPARISON_LAYERS: List[str] = ["PeilafwijkingGebied", "PeilgebiedPraktijk", "Waterdeel"]
 
 # Default numeric threshold for numeric comparisons
-COMPARISON_GENERAL_THRESHOLD: float = 0.00001
+COMPARISON_GENERAL_THRESHOLD: float = 0.001
