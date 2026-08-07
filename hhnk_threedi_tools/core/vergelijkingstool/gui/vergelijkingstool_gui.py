@@ -1,3 +1,5 @@
+import os
+import webbrowser
 from pathlib import Path
 from typing import Any
 
@@ -17,6 +19,15 @@ class VergelijkingstoolGUI:
         text_w = "95%"
 
         self.output_box = widgets.Output()
+
+        # User guide
+        self.user_guide_button = Button(
+            description="User Guide",
+            icon="book",
+            button_style="info",
+        )
+
+        self.user_guide_button.on_click(self._open_user_guide)
 
         # Model folder
         self.model_base_path_input = Text(
@@ -75,6 +86,14 @@ class VergelijkingstoolGUI:
         # run button
         self.run_button = Button(description="Run Comparison", button_style="success")
 
+        self.open_output_button = Button(
+            description="Open Output Folder",
+            icon="folder-open",
+            button_style="",
+            disabled=True,
+        )
+
+        self.open_output_button.on_click(self._open_output_folder)
         # Layout
         output_section = VBox(
             [
@@ -86,9 +105,11 @@ class VergelijkingstoolGUI:
         )
         self.main_box = VBox(
             [
+                self.user_guide_button,
                 self.model_base_path_input,
                 self.compare_title,
                 self.compare_buttons,
+                self.open_output_button,
                 output_section,
                 self.output_box,
             ]
@@ -130,6 +151,27 @@ class VergelijkingstoolGUI:
             self.output_file_path.value = str(folder / name)
         except Exception:
             self.output_file_path.value = ""
+
+    def _open_output_folder(self, _):
+        output_path = Path(self.output_file_path.value)
+
+        if not output_path.exists():
+            with self.output_box:
+                print(f"Output file not found: {output_path}")
+            return
+
+        import subprocess
+
+        subprocess.Popen(["explorer", "/select,", str(output_path)])
+
+    def _open_user_guide(self, _):
+        url = (
+            "https://github.com/threedi/hhnk-threedi-tools/"
+            "blob/26057-Vergelijkingstool/"
+            "hhnk_threedi_tools/core/vergelijkingstool/docs/vergelijkingstool.md"
+        )
+
+        webbrowser.open(url)
 
     #  UI logic
     def _on_compare_change(self, change: Any):
@@ -235,6 +277,7 @@ class VergelijkingstoolGUI:
                 structure_codes=[],
             )
             print("Finished.")
+            self.open_output_button.disabled = False
 
     def _run_damo_selected(self, _):
         with self.output_box:
@@ -264,6 +307,7 @@ class VergelijkingstoolGUI:
                 structure_codes=[],
             )
             print("Finished.")
+            self.open_output_button.disabled = False
 
     #  3Di branch
     def _on_3di_checkbox_change(self, change: Any):
@@ -334,6 +378,7 @@ class VergelijkingstoolGUI:
                 structure_codes=config.STRUCTURE_CODES,
             )
             print("Finished.")
+            self.open_output_button.disabled = False
 
     def _run_3di_selected(self, _):
         with self.output_box:
@@ -366,6 +411,7 @@ class VergelijkingstoolGUI:
                 structure_codes=sel_codes,
             )
             print("Finished.")
+            self.open_output_button.disabled = False
 
     #  Both
     def _run_both_all(self, _):
