@@ -165,11 +165,7 @@ class VergelijkingstoolGUI:
         subprocess.Popen(["explorer", "/select,", str(output_path)])
 
     def _open_user_guide(self, _):
-        url = (
-            "https://github.com/threedi/hhnk-threedi-tools/"
-            "blob/26057-Vergelijkingstool/"
-            "hhnk_threedi_tools/core/vergelijkingstool/docs/vergelijkingstool.md"
-        )
+        url = "https://github.com/threedi/hhnk-threedi-tools/blob/26057-Vergelijkingstool/hhnk_threedi_tools/core/vergelijkingstool/docs/vergelijkingstool_guide.md"
 
         webbrowser.open(url)
 
