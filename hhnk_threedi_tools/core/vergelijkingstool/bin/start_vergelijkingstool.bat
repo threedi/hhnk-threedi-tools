@@ -1,8 +1,12 @@
 @echo off
 setlocal
 
-cd /d "%~dp0"
-set "PIXI_CACHE_DIR=%~dp0.pixi-cache"
+set "APP_DIR=D:\vergelijkingstool"
+
+cd /d "%APP_DIR%"
+if errorlevel 1 goto error
+
+set "PIXI_CACHE_DIR=%APP_DIR%\.pixi\cache"
 
 pixi install
 if errorlevel 1 goto error
