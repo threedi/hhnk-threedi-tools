@@ -2,11 +2,17 @@
 setlocal
 
 set "APP_DIR=D:\vergelijkingstool"
+set "USER_APP_DIR=%USERPROFILE%\vergelijkingstool"
+set "PIXI_CONFIG_FILE=%USER_APP_DIR%\pixi-config.toml"
+
+if not exist "%USER_APP_DIR%" mkdir "%USER_APP_DIR%"
+
+(
+echo detached-environments = "%USERPROFILE:\=/%/vergelijkingstool/.pixi"
+) > "%PIXI_CONFIG_FILE%"
 
 cd /d "%APP_DIR%"
 if errorlevel 1 goto error
-
-set "PIXI_CACHE_DIR=%APP_DIR%\.pixi\cache"
 
 pixi install
 if errorlevel 1 goto error
