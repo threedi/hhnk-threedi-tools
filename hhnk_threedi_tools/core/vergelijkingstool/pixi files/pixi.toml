@@ -71,8 +71,5 @@ threedigrid-builder = ">=1.24.3"
 threedidepth = "==0.6.3"
 lazy_loader = "*"
 dotenv = "*"
- 
-hhnk-research-tools = { git = "https://github.com/hhnk/hhnk-research-tools.git", rev = "main" }
 
-[activation.env]
-PYTHONPATH = "D:/vergelijkingstool/packages/hhnk-threedi-tools"
+hhnk-research-tools = { git = "https://github.com/hhnk/hhnk-research-tools.git", rev = "main" }
