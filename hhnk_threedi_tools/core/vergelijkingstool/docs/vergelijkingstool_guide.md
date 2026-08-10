@@ -27,7 +27,7 @@ Op basis van de vergelijking kan worden beoordeeld of het bestaande model nog ge
 
 Het onderstaande stroomschema toont de algemene workflow en de bijbehorende besluitvorming. Het jaar 2014 wordt hierin alleen gebruikt als voorbeeld van een oudere brondata-export. Het diagram laat zien hoe de resultaten van de vergelijkingstool kunnen worden gebruikt om een onderbouwde keuze te maken tussen hergebruik, aanpassing of nieuwbouw van het model.
 
-![Workflow](../../images/4_gebruik_plugin/f_vergelijkingstool//workflow_vergelijkingstool.png)
+![Workflow](../../vergelijkingstool/assets//workflow_vergelijkingstool.png)
 
 ## Benodigde input
 
@@ -93,13 +93,13 @@ D:\vergelijkingstool
 
 Start de Vergelijkingstool door te dubbelklikken op **start_vergelijkingstool**.
 
-![Step One Run bat file](../../images/4_gebruik_plugin/f_vergelijkingstool/step_1.png)
+![Step One Run bat file](../../vergelijkingstool/assets/step_1.png)
 
 Hiermee wordt JupyterLab geopend en wordt de notebook van de Vergelijkingstool automatisch geladen.
 
 Klik vervolgens op **Run** om de notebook uit te voeren. Na enkele seconden wordt de grafische interface van de Vergelijkingstool weergegeven.
 
-![Step One Run Jupiter](../../images/4_gebruik_plugin/f_vergelijkingstool/step_1_run_notebook.png)
+![Step One Run Jupiter](../../vergelijkingstool/assets/step_1_run_notebook.png)
 
 ---
 
@@ -169,7 +169,7 @@ Na afloop van de vergelijking kan het gegenereerde bestand worden geopend via **
 
 De map met het `.gpkg`-bestand wordt geopend. Het resultaat kan vervolgens in QGIS worden geladen om de gevonden verschillen inhoudelijk te beoordelen.
 
-![Workflow_vergelijkingstool](../../images/4_gebruik_plugin/f_vergelijkingstool/workflow_notebook.png)
+![Workflow_vergelijkingstool](../../vergelijkingstool/assets/workflow_notebook.png)
 
 ## Interpretatie van de resultaten
 
