@@ -481,15 +481,17 @@ class GridToWaterDepth:
 
 # %%
 if __name__ == "__main__":
-    from hhnk_threedi_tools import Folders
-
     import os
+
+    from hhnk_threedi_tools import Folders
 
     # from hhnk_threedi_tools import Folders
 
     folder_path = Folders(r"H:\02.modellen\bergen_noord_huidig_situatie_JA")
-    
-    dem_path = r"H:\02.modellen\bergen_noord_huidig_situatie_JA\02_schematisation\1d2d_ghg\rasters\dem_bergen_noord.tif"
+
+    dem_path = (
+        r"H:\02.modellen\bergen_noord_huidig_situatie_JA\02_schematisation\1d2d_ghg\rasters\dem_bergen_noord.tif"
+    )
     output_folder = Path(
         r"H:\02.modellen\bergen_noord_huidig_situatie_JA\03_3di_results\batch_results\huidig_piek\02_output_rasters"
     )
@@ -514,10 +516,11 @@ if __name__ == "__main__":
             self.run(output_file=output_file_wlvl, chunksize=chunksize, overwrite=True)
 
         with GridToWaterDepth(
-                dem_path=dem_path,
-                wlvl_path=output_file_wlvl,
-            ) as raster_calc:
-                wdepth_raster = raster_calc.run(
-                    output_file=output_file_wdepth,
-                    overwrite=True,)
+            dem_path=dem_path,
+            wlvl_path=output_file_wlvl,
+        ) as raster_calc:
+            wdepth_raster = raster_calc.run(
+                output_file=output_file_wdepth,
+                overwrite=True,
+            )
 # %%
