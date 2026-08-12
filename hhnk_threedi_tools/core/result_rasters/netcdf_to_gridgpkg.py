@@ -484,17 +484,36 @@ class NetcdfToGPKG:
 # %%
 if __name__ == "__main__":
     from hhnk_threedi_tools import Folders
-
-    folder_path = r"E:\02.modellen\HKC23010_Eijerland_WP"
+    import os
+    folder_path = r"\\corp.hhnk.nl\data\Hydrologen_data\Data\02.modellen\bergen_noord_huidig_situatie_JA"
     folder = Folders(folder_path)
 
-    threedi_result = folder.threedi_results.batch["bwn_gxg"].downloads.piek_ghg_T10
+    threedi_downloads = folder.threedi_results.batch["huidig_piek"].downloads.path
+    outuput = folder.threedi_results.batch["huidig_piek"].path / "02_output_rasters"
+    scenario = os.listdir(threedi_downloads)
+    damo = folder.source_data.damo.path
+    panden = folder.source_data.panden.path
+    damo_layer = "Waterdeel"
+    panden_layer = "panden"
+    for scenario in scenario: 
+        threedi_result = threedi_downloads / scenario
+        scenario_name = scenario.split("#")[-1][:-5]
+        output_folder  = outuput / scenario_name 
+        os.makedirs(output_folder, exist_ok=True)
+        output_file = output_folder / 'grid_corrected.gpkg'
+        wlvl_correction = True
+        overwrite = True
+        threedi_result = threedi_downloads / scenario
+        self = NetcdfToGPKG(threedi_result=hrt.ThreediResult(threedi_result),
+                            waterdeel_path=damo, 
+                            waterdeel_layer=damo_layer,
+                            panden_path=panden, 
+                            panden_layer=panden_layer, 
+                            use_aggregate=False)
+        timesteps_seconds = ["max"]
+        self.run(output_file=output_file, 
+                 timesteps_seconds=timesteps_seconds, 
+                 wlvl_correction=wlvl_correction)
 
-    output_file = None
-    wlvl_correction = False
-    overwrite = True
-    self = NetcdfToGPKG(threedi_result=threedi_result.netcdf, use_aggregate=True)
-    timesteps_seconds = ["max"]
-    self.run(wlvl_correction=wlvl_correction)
 
 # %%

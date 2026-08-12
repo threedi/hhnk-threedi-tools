@@ -483,75 +483,41 @@ class GridToWaterDepth:
 if __name__ == "__main__":
     from hhnk_threedi_tools import Folders
 
-    OVERWRITE = True
+    import os
 
-    folder_path = r"H:\02.modelrepos\00_DPRA_stresstest_1d2d_modellen\katvoed"
-    folder = Folders(folder_path)
-    threedi_result = folder.threedi_results.one_d_two_d["katvoed_1d2d_dpra_120 (403700)"]
+    # from hhnk_threedi_tools import Folders
 
-    # grid_gdf = gpd.read_file(threedi_result.path/"grid_raw.gpkg", driver="GPKG")
-    grid_gdf = threedi_result.full_path("grid_raw.gpkg").load()
-
-    chunksize = 1024  # adjust based on available memory; None for no chunking (may cause MemoryError)
-    calculator_kwargs = {
-        "dem_path": folder.model.schema_base.rasters.dem.base,
-        "grid_gdf": grid_gdf,
-        "wlvl_column": "wlvl_max",
-        "interpolator_type": "idw",  # change to "linear"  to use original Delaunay otherwise use "idw"
-    }
-
-    # Init calculator
-    with GridToWaterLevel(**calculator_kwargs) as self:
-        self.run(output_file=threedi_result.full_path("wlvl_orig_idw.tif"), chunksize=chunksize, overwrite=OVERWRITE)
-
-    with GridToWaterDepth(
-        dem_path=folder.model.schema_base.rasters.dem.base,
-        wlvl_path=threedi_result.full_path("wlvl_orig_idw.tif"),
-    ) as raster_calc:
-        wdepth_raster = raster_calc.run(
-            output_file=threedi_result.full_path("wdepth_orig_idw.tif"),
-            overwrite=True,
-        )
-    print("Done.")
-# %%
-# from hhnk_threedi_tools import Folders
-import os
-
-OVERWRITE = True
-
-folder_path = r"H:\03.resultaten\Normering Regionale Keringen\output\IPO_SBHZ_JA_WIP_DONE\IPO_SBHZ_72_JA\02_WSS"
-# folder = Folders(folder_path)
-threedi_result = os.path.join(folder_path, "grid_raw_test.gpkg")
-
-# grid_gdf = gpd.read_file(threedi_result.path/"grid_raw.gpkg", driver="GPKG")
-grid_gdf = gpd.read_file(threedi_result, driver="GPKG")
-volume_column = "vol_max"
-
-if "vol_max" not in grid_gdf.columns:
-    volume_column = "vol_netcdf_m3"
-
-gdf = grid_gdf[grid_gdf[volume_column] > 0]
-dem_path = r"H:\03.resultaten\Normering Regionale Keringen\output\IPO_SBHZ_JA_WIP_DONE\IPO_SBHZ_72_JA\02_WSS\IPO_SBHZ_72_JA_dem_clip.tif"
-chunksize = 1024  # adjust based on available memory; None for no chunking (may cause MemoryError)
-calculator_kwargs = {
-    "dem_path": dem_path,
-    "grid_gdf": gdf,
-    "wlvl_column": "wlvl_max",
-    "interpolator_type": "linear",  # change to "linear"  to use original Delaunay otherwise use "idw"
-}
-
-# Init calculator
-with GridToWaterLevel(**calculator_kwargs) as self:
-    self.run(output_file=os.path.join(folder_path, ("wlvl_orig_linear.tif")), chunksize=chunksize, overwrite=OVERWRITE)
-
-with GridToWaterDepth(
-    dem_path=dem_path,
-    wlvl_path=os.path.join(folder_path, "wlvl_orig_linear.tif"),
-) as raster_calc:
-    wdepth_raster = raster_calc.run(
-        output_file=os.path.join(folder_path, "wdepth_orig_linear.tif"),
-        overwrite=True,
+    folder_path = Folders(r"H:\02.modellen\bergen_noord_huidig_situatie_JA")
+    
+    dem_path = r"H:\02.modellen\bergen_noord_huidig_situatie_JA\02_schematisation\1d2d_ghg\rasters\dem_bergen_noord.tif"
+    output_folder = Path(
+        r"H:\02.modellen\bergen_noord_huidig_situatie_JA\03_3di_results\batch_results\huidig_piek\02_output_rasters"
     )
-print("Done.")
+    scenarios = os.listdir(output_folder)
+    for scenario in scenarios:
+        netcdf_folder = output_folder / scenario
+        # scenario_name = scenario.split("#")[-1][:-5]
+        grid_gdf = output_folder / scenario / "grid_corrected.gpkg"
+        grid_gdf = gpd.read_file(grid_gdf)
+        wlvl_column = "wlvl_corr_max"
+        chunksize = 1024  # adjust based on available memory; None for no chunking (may cause MemoryError)
+        calculator_kwargs = {
+            "dem_path": dem_path,
+            "grid_gdf": grid_gdf,
+            "wlvl_column": wlvl_column,
+            "interpolator_type": "idw",  # change to "linear"  to use original Delaunay otherwise use "idw"
+        }
+        # Init calculator
+        output_file_wlvl = output_folder / scenario / "max_wlvl_corr_v2.tif"
+        output_file_wdepth = output_folder / scenario / "max_wdepth_corr_idw.tif"
+        with GridToWaterLevel(**calculator_kwargs) as self:
+            self.run(output_file=output_file_wlvl, chunksize=chunksize, overwrite=True)
 
+        with GridToWaterDepth(
+                dem_path=dem_path,
+                wlvl_path=output_file_wlvl,
+            ) as raster_calc:
+                wdepth_raster = raster_calc.run(
+                    output_file=output_file_wdepth,
+                    overwrite=True,)
 # %%
