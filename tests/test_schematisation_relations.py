@@ -1,6 +1,9 @@
 # %%
+import sys
+
 import geopandas as gpd
 import pandas as pd
+import pytest
 
 from hhnk_threedi_tools.core.folders import Folders
 from hhnk_threedi_tools.core.schematisation.relations import ChannelRelations, StructureRelations

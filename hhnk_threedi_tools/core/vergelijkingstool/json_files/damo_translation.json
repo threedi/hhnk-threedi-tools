@@ -1,20 +1,49 @@
 {
-	"GW_PRO": {
-		"name": "GW_PRO",
+	"duikersifonhevel": {
+		"name": "duikersifonhevel",
+		"columns": {
+			"CODE": "code"
+			
+		}
+	},
+	"stuw": {
+		"name": "stuw",
+		"columns": {
+			"CODE": "code"
+		}
+	},
+	"gemaal": {
+		"name": "gemaal",
+		"columns": {
+			"CODE": "code"
+		}
+	},
+	"gw_pro": {
+		"name": "gw_pro",
 		"columns": {
 			"PROIDENT": "code"
 		}
 	},
-	"Waterdeel": {
-		"name": "Waterdeel",
+	"hydroobject": {
+		"name": "hydroobject",
 		"columns": {
-			"identificatie": "code"
+			"bodemhoogteNAP": "bodemhoogte_nap",
+			"WS_BODEMBREEDTE": "WS_BODEMBREEDTE",
+			"ws_in_peilgebied": "WS_IN_PEILGEBIED",  
+			"BREEDTE": "breedte_getabuleerd",
+			"Diepte": "hoogte_getabuleerd"
+		}
+  	},
+	"polderclusters": {
+		"name": "polderclusters",
+		"columns": {
+			"OBJECTID": "code"
 		}
 	},
-	"GW_PRW": {
-		"name": "GW_PRW",
+	"iws_geo_beschr_profielpunten": {
+		"name": "iws_geo_beschr_profielpunten",
 		"columns": {
-			"PRW_ID": "code"
+			"PBP_PBP_ID": "code"
 		}
 	}
 }
