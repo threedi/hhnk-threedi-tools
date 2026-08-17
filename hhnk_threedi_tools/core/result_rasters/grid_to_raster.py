@@ -485,42 +485,55 @@ if __name__ == "__main__":
 
     from hhnk_threedi_tools import Folders
 
-    # from hhnk_threedi_tools import Folders
+    paths = [
+        r"H:\02.modellen\bergen_noord_huidig_situatie_JA",
+        r"H:\02.modellen\bergen_noord_variant_1_JA",
+        r"H:\02.modellen\bergen_noord_variant_2_JA",
+        r"H:\02.modellen\bergen_noord_variant_3_JA",
+    ]
 
-    folder_path = Folders(r"H:\02.modellen\bergen_noord_huidig_situatie_JA")
+    for folder in paths:
+        folder = Folders(folder)
+        dem_path = folder.model.schema_base.rasters.dem.path
 
-    dem_path = (
-        r"H:\02.modellen\bergen_noord_huidig_situatie_JA\02_schematisation\1d2d_ghg\rasters\dem_bergen_noord.tif"
-    )
-    output_folder = Path(
-        r"H:\02.modellen\bergen_noord_huidig_situatie_JA\03_3di_results\batch_results\huidig_piek\02_output_rasters"
-    )
-    scenarios = os.listdir(output_folder)
-    for scenario in scenarios:
-        netcdf_folder = output_folder / scenario
-        # scenario_name = scenario.split("#")[-1][:-5]
-        grid_gdf = output_folder / scenario / "grid_corrected.gpkg"
-        grid_gdf = gpd.read_file(grid_gdf)
-        wlvl_column = "wlvl_corr_max"
-        chunksize = 1024  # adjust based on available memory; None for no chunking (may cause MemoryError)
-        calculator_kwargs = {
-            "dem_path": dem_path,
-            "grid_gdf": grid_gdf,
-            "wlvl_column": wlvl_column,
-            "interpolator_type": "idw",  # change to "linear"  to use original Delaunay otherwise use "idw"
-        }
-        # Init calculator
-        output_file_wlvl = output_folder / scenario / "max_wlvl_corr_v2.tif"
-        output_file_wdepth = output_folder / scenario / "max_wdepth_corr_idw.tif"
-        with GridToWaterLevel(**calculator_kwargs) as self:
-            self.run(output_file=output_file_wlvl, chunksize=chunksize, overwrite=True)
+        batch_path = folder.threedi_results.batch.path
+        batch_folders = os.listdir(batch_path)
 
-        with GridToWaterDepth(
-            dem_path=dem_path,
-            wlvl_path=output_file_wlvl,
-        ) as raster_calc:
-            wdepth_raster = raster_calc.run(
-                output_file=output_file_wdepth,
-                overwrite=True,
-            )
-# %%
+        for results in batch_folders:
+            output_raster_path = batch_path / results / "02_output_rasters"
+            output_raster_scenarios = os.listdir(output_raster_path)
+            for scenario in output_raster_scenarios:
+                scenario_result_path = output_raster_path / scenario
+                grid_gdf_path = output_raster_path / scenario / "grid_corrected.gpkg"
+                output_file_wlvl = output_raster_path / scenario / "max_wlvl_corr.tif"
+                output_file_wdepth = output_raster_path / scenario / "max_wdepth_corr_idw.tif"
+                if not os.path.isdir(scenario_result_path):
+                    continue
+                if os.path.exists(output_file_wdepth):
+                    continue
+                wlvl_column = "wlvl_corr_max"
+
+                chunksize = 1024  # adjust based on available memory; None for no chunking (may cause MemoryError)
+
+                calculator_kwargs = {
+                    "dem_path": dem_path,
+                    "grid_gdf": grid_gdf,
+                    "wlvl_column": wlvl_column,
+                    "interpolator_type": "idw",  # change to "linear"  to use original Delaunay otherwise use "idw"
+                }
+                if not grid_gdf_path.exists():
+                    print(f"grid_gdf does not exist for model: {folder.name} scenario: {scenario}")
+
+                grid_gdf = gpd.read_file(grid_gdf_path)
+
+                with GridToWaterLevel(**calculator_kwargs) as self:
+                    self.run(output_file=output_file_wlvl, chunksize=chunksize, overwrite=True)
+
+                with GridToWaterDepth(
+                    dem_path=dem_path,
+                    wlvl_path=output_file_wlvl,
+                ) as raster_calc:
+                    wdepth_raster = raster_calc.run(
+                        output_file=output_file_wdepth,
+                        overwrite=True,
+                    )
