@@ -519,57 +519,6 @@ class WaterBalance:
             }
         )
 
-    def plot(self, balance=None, components=None):
-        """Plot water balance flow rates [m³/s]."""
-
-        if balance is None:
-            balance = self.calculate()
-
-        if components is None:
-            components = [
-                "rain",
-                "infiltration_rate_simple",
-                "1d_in",
-                "1d_out",
-                "2d_in",
-                "2d_out",
-                "2d__1d_2d_flow_out",
-                "d_2d_vol",
-                "d_1d_vol",
-            ]
-
-        data = balance[components].copy()
-
-        # Remove components that are completely zero
-        data = data.loc[:, (data != 0).any(axis=0)]
-
-        # Seconds -> hours
-        time_hours = data.index.to_numpy() / 3600
-
-        fig, ax = plt.subplots(figsize=(12, 6))
-
-        for column in data.columns:
-            ax.plot(
-                time_hours,
-                data[column],
-                label=column,
-            )
-
-        ax.axhline(0, linewidth=0.8)
-
-        ax.set_xlabel("Time [h]")
-        ax.set_ylabel("Flow [m³/s]")
-        ax.set_title("Water balance")
-
-        ax.legend(
-            loc="upper left",
-            bbox_to_anchor=(1.02, 1),
-        )
-
-        fig.tight_layout()
-
-        return fig, ax
-
     def export(self, output_folder):
         """Export water balance time series and total volumes to CSV."""
 
