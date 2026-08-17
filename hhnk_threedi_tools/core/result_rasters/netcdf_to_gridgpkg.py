@@ -508,8 +508,8 @@ if __name__ == "__main__":
             output_raster_path = batch_path / results / "02_output_rasters"
             downloads = os.listdir(downloads_path)
             for download in downloads:
-                scenario_result_path =(downloads_path / download)
-                output_path = output_raster_path / download /"grid_corrected.gpkg"
+                scenario_result_path = downloads_path / download
+                output_path = output_raster_path / download / "grid_corrected.gpkg"
                 if not os.path.isdir(scenario_result_path):
                     continue
                 if os.path.exists(output_path):
@@ -525,7 +525,7 @@ if __name__ == "__main__":
                 )
 
                 timesteps_seconds = ["max"]
-                os.makedirs(output_path.parent, exist_ok= True)
+                os.makedirs(output_path.parent, exist_ok=True)
                 self.run(output_file=output_path, timesteps_seconds=timesteps_seconds, wlvl_correction=wlvl_correction)
 
 # %%

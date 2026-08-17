@@ -1042,14 +1042,13 @@ for path, waterbergin_polygon in paths.items():
         output_raster_path = batch_path / results / "02_output_rasters"
         downloads = os.listdir(downloads_path)
         for download in downloads:
-            scenario_result_path =(downloads_path / download)
-            output_path = output_raster_path / download /f'waterbalance_{download}'
+            scenario_result_path = downloads_path / download
+            output_path = output_raster_path / download / f"waterbalance_{download}"
             if not os.path.isdir(scenario_result_path):
                 continue
             if os.path.exists(output_path):
                 continue
-            self = WaterBalance(threedi_result=hrt.ThreediResult(scenario_result_path), polygon_gdf= polygon_gdf)
+            self = WaterBalance(threedi_result=hrt.ThreediResult(scenario_result_path), polygon_gdf=polygon_gdf)
             self.export(output_path)
-            print(f'scenario {folder.name} / {download} done')
+            print(f"scenario {folder.name} / {download} done")
 # %%
-
