@@ -1,4 +1,23 @@
 # %%
+"""
+Standalone water balance calculation for 3Di simulation results.
+
+This module is adapted from the WaterBalanceCalculation implementation
+in 3Di Results Analysis:
+
+https://github.com/nens/threedi-results-analysis/blob/master/tool_water_balance/calculation.py
+
+The original implementation depends on QGIS. This adaptation replaces
+the QGIS-specific spatial selection with threedigrid, GeoPandas, Pandas,
+and NumPy so that the water balance can be calculated standalone.
+
+The implementation has also been adapted to include
+LINE_2D_OBSTACLE flowlines when calculating 2D boundary flows.
+
+Original project:
+https://github.com/nens/threedi-results-analysis
+"""
+
 from pathlib import Path
 
 import geopandas as gpd
@@ -6,91 +25,9 @@ import hhnk_research_tools as hrt
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from threedigrid_builder.constants import LineType, NodeType
 
-NODE_TYPES_1D = {
-    NodeType.NODE_1D_NO_STORAGE,
-    NodeType.NODE_1D_STORAGE,
-    NodeType.NODE_1D_BOUNDARIES,
-}
-
-NODE_TYPES_2D = {
-    NodeType.NODE_2D_OPEN_WATER,
-    NodeType.NODE_2D_BOUNDARIES,
-}
-
-NODE_TYPES_2D_GROUNDWATER = {
-    NodeType.NODE_2D_GROUNDWATER_BOUNDARIES,
-    NodeType.NODE_2D_GROUNDWATER,
-}
-
-NO_ENDPOINT_ID = -9999
-
-LINE_TYPES_1D = {
-    LineType.LINE_1D_EMBEDDED,
-    LineType.LINE_1D_ISOLATED,
-    LineType.LINE_1D_CONNECTED,
-    LineType.LINE_1D_LONG_CRESTED,
-    LineType.LINE_1D_SHORT_CRESTED,
-    LineType.LINE_1D_DOUBLE_CONNECTED,
-}
-
-LINE_TYPES_1D2D = {
-    LineType.LINE_1D2D_SINGLE_CONNECTED_CLOSED,
-    LineType.LINE_1D2D_SINGLE_CONNECTED_OPEN_WATER,
-    LineType.LINE_1D2D_DOUBLE_CONNECTED_CLOSED,
-    LineType.LINE_1D2D_DOUBLE_CONNECTED_OPEN_WATER,
-    LineType.LINE_1D2D_POSSIBLE_BREACH,
-    LineType.LINE_1D2D_ACTIVE_BREACH,
-    LineType.LINE_1D2D_GROUNDWATER,
-    58,
-}
-
-NODE_TYPES_BOUNDARIES = {
-    NodeType.NODE_1D_BOUNDARIES,
-    NodeType.NODE_2D_BOUNDARIES,
-}
-
-INPUT_SERIES = [
-    ("2d_in", 0),
-    ("2d_out", 1),
-    ("1d_in", 2),
-    ("1d_out", 3),
-    ("2d_bound_in", 4),
-    ("2d_bound_out", 5),
-    ("1d_bound_in", 6),
-    ("1d_bound_out", 7),
-    ("1d__1d_2d_flow_in", 8),
-    ("1d__1d_2d_flow_out", 9),
-    ("1d__1d_2d_exch_in", 10),
-    ("1d__1d_2d_exch_out", 11),
-    ("pump_in", 12),
-    ("pump_out", 13),
-    ("rain", 14),
-    ("infiltration_rate_simple", 15),
-    ("lat_2d", 16),
-    ("lat_1d", 17),
-    ("d_2d_vol", 18),
-    ("d_1d_vol", 19),
-    ("error_2d", 20),
-    ("error_1d", 21),
-    ("error_1d_2d", 22),
-    ("2d_groundwater_in", 23),
-    ("2d_groundwater_out", 24),
-    ("d_2d_groundwater_vol", 25),
-    ("leak", 26),
-    ("inflow", 27),
-    ("2d_vertical_infiltration_pos", 28),
-    ("2d_vertical_infiltration_neg", 29),
-    ("2d__1d_2d_flow_in", 30),
-    ("2d__1d_2d_flow_out", 31),
-    ("2d__1d_2d_exch_in", 32),
-    ("2d__1d_2d_exch_out", 33),
-    ("intercepted_volume", 34),
-    ("q_sss", 35),
-]
-
-SERIES_INDEX = dict(INPUT_SERIES)
+from .config import EXTERNAL_COMPONENTS, INPUT_SERIES, SERIES_INDEX, STORAGE_COMPONENTS
+from .selection import select_lines_and_pumps, select_points
 
 
 class WaterBalance:
@@ -98,29 +35,44 @@ class WaterBalance:
         self.threedi_result = threedi_result
         self.polygon_gdf = polygon_gdf
 
+        self._polygon = polygon_gdf.to_crs(28992).geometry.union_all()
+        self._grid = threedi_result.grid
+        self._aggregate_grid = threedi_result.aggregate_grid
+        self._admin = threedi_result.admin
+
         self._set_2d_line_ranges()
 
-        # First select nodes
-        self.node_ids = self._select_points()
+        # Spatial selections
+        self.node_ids = select_points(
+            aggregate_grid=self.aggregate_grid,
+            polygon=self.polygon,
+        )
 
-        # Then use those nodes to select lines/pumps
-        self.flowline_ids, self.pump_ids = self._select_lines_and_pumps()
+        self.flowline_ids, self.pump_ids = select_lines_and_pumps(
+            aggregate_grid=self.aggregate_grid,
+            grid=self.grid,
+            polygon=self.polygon,
+            node_ids=self.node_ids,
+            x2d_surf_range=self.x2d_surf_range,
+            y2d_surf_range=self.y2d_surf_range,
+            vert_flow_range=self.vert_flow_range,
+        )
 
     @property
     def polygon(self):
-        return self.polygon_gdf.to_crs(28992).geometry.union_all()
+        return self._polygon
 
     @property
     def grid(self):
-        return self.threedi_result.grid
+        return self._grid
 
     @property
     def aggregate_grid(self):
-        return self.threedi_result.aggregate_grid
+        return self._aggregate_grid
 
     @property
     def admin(self):
-        return self.threedi_result.admin
+        return self._admin
 
     def _set_2d_line_ranges(self):
         nr_2d_x = self.admin.get_from_meta("liutot")
@@ -141,346 +93,6 @@ class WaterBalance:
             nr_2d_x + nr_2d_y + 1,
             nr_2d_x + nr_2d_y + nr_2d + 1,
         )
-
-    def _select_points(self):
-        """Select calculation nodes inside the water balance polygon."""
-
-        nodes = self.aggregate_grid.nodes
-
-        point_selection = {
-            "1d": [],
-            "2d": [],
-            "2d_groundwater": [],
-        }
-
-        node_type_map = {}
-
-        node_type_map.update({n.value: "1d" for n in NODE_TYPES_1D})
-
-        node_type_map.update({n.value: "2d" for n in NODE_TYPES_2D})
-
-        node_type_map.update({n.value: "2d_groundwater" for n in NODE_TYPES_2D_GROUNDWATER})
-
-        nodes_gdf = gpd.GeoDataFrame(
-            {
-                "id": nodes.id,
-                "node_type": nodes.node_type,
-            },
-            geometry=gpd.points_from_xy(
-                nodes.coordinates[0],
-                nodes.coordinates[1],
-            ),
-            crs=28992,
-        )
-
-        # Same node-type filter as official WaterBalanceCalculation
-        nodes_gdf = nodes_gdf[nodes_gdf["node_type"].isin(node_type_map)]
-
-        # QGIS original:
-        # self.polygon.contains(point.geometry())
-        #
-        # GeoPandas/Shapely equivalent for points:
-        nodes_gdf = nodes_gdf[nodes_gdf.geometry.within(self.polygon)]
-
-        for node_type, category in node_type_map.items():
-            ids = nodes_gdf.loc[
-                nodes_gdf["node_type"] == node_type,
-                "id",
-            ].tolist()
-
-            point_selection[category].extend(ids)
-
-        return point_selection
-
-    def _select_lines_and_pumps(self):
-
-        lines = self.aggregate_grid.lines
-
-        valid = lines.id != 0
-
-        line_ids = lines.id[valid]
-        line_types = lines.kcu[valid]
-
-        node_ids_inside = np.concatenate(
-            [
-                np.asarray(self.node_ids["1d"], dtype=int),
-                np.asarray(self.node_ids["2d"], dtype=int),
-                np.asarray(self.node_ids["2d_groundwater"], dtype=int),
-            ]
-        )
-
-        node_ids_inside = np.concatenate(
-            [
-                np.asarray(self.node_ids["1d"], dtype=int),
-                np.asarray(self.node_ids["2d"], dtype=int),
-                np.asarray(self.node_ids["2d_groundwater"], dtype=int),
-            ]
-        )
-
-        # Nodes already selected inside polygon
-        node_ids_inside = np.concatenate(
-            [
-                self.node_ids["1d"],
-                self.node_ids["2d"],
-                self.node_ids["2d_groundwater"],
-            ]
-        )
-
-        start_nodes = lines.line[0, valid]
-        end_nodes = lines.line[1, valid]
-
-        start_inside = np.isin(
-            start_nodes,
-            node_ids_inside,
-        )
-
-        end_inside = np.isin(
-            end_nodes,
-            node_ids_inside,
-        )
-
-        crosses = start_inside ^ end_inside
-        internal = start_inside & end_inside
-
-        lines_df = pd.DataFrame(
-            {
-                "id": line_ids,
-                "line_type": line_types,
-                "start_inside": start_inside,
-                "end_inside": end_inside,
-                "crosses": crosses,
-                "internal": internal,
-            }
-        )
-
-        line_selection = {
-            "1d_in": [],
-            "1d_out": [],
-            "1d_bound_in": [],
-            "1d_bound_out": [],
-            "2d_in": [],
-            "2d_out": [],
-            "2d_bound_in": [],
-            "2d_bound_out": [],
-            "1d__1d_2d_flow": [],
-            "2d__1d_2d_flow": [],
-            "1d_2d_exch": [],
-            "2d_groundwater_in": [],
-            "2d_groundwater_out": [],
-            "2d_vertical_infiltration": [],
-        }
-
-        # Same spatial tests as the official QGIS implementation
-        # Lines crossing the polygon boundary
-        crossing_lines = lines_df[lines_df["crosses"]]
-
-        # --------------------------------------------------
-        # 2D vertical infiltration
-        # --------------------------------------------------
-
-        mask = (lines_df["line_type"] == LineType.LINE_2D_VERTICAL.value) & lines_df["start_inside"]
-
-        line_selection["2d_vertical_infiltration"] = lines_df.loc[mask, "id"].tolist()
-
-        # --------------------------------------------------
-        # Lines crossing polygon
-        # --------------------------------------------------
-
-        crossing_lines = lines_df[crosses]
-
-        is_1d = crossing_lines["line_type"].isin([line_type.value for line_type in LINE_TYPES_1D])
-
-        is_1d2d = crossing_lines["line_type"].isin(
-            [line_type.value if hasattr(line_type, "value") else line_type for line_type in LINE_TYPES_1D2D]
-        )
-
-        outgoing = crossing_lines["start_inside"]
-        incoming = crossing_lines["end_inside"]
-
-        # 1D
-        line_selection["1d_out"] = crossing_lines.loc[
-            outgoing & is_1d,
-            "id",
-        ].tolist()
-
-        line_selection["1d_in"] = crossing_lines.loc[
-            incoming & is_1d,
-            "id",
-        ].tolist()
-
-        # 1D-2D crossing polygon
-        line_selection["2d__1d_2d_flow"] = crossing_lines.loc[
-            outgoing & is_1d2d,
-            "id",
-        ].tolist()
-
-        line_selection["1d__1d_2d_flow"] = crossing_lines.loc[
-            incoming & is_1d2d,
-            "id",
-        ].tolist()
-
-        # --------------------------------------------------
-        # 1D-2D exchange completely inside polygon
-        # --------------------------------------------------
-
-        all_is_1d2d = lines_df["line_type"].isin(
-            [line_type.value if hasattr(line_type, "value") else line_type for line_type in LINE_TYPES_1D2D]
-        )
-
-        all_is_1d2d = lines_df["line_type"].isin(
-            [line_type.value if hasattr(line_type, "value") else line_type for line_type in LINE_TYPES_1D2D]
-        )
-
-        line_selection["1d_2d_exch"] = lines_df.loc[
-            lines_df["internal"] & all_is_1d2d,
-            "id",
-        ].tolist()
-
-        # --------------------------------------------------
-        # Surface 2D flow
-        # --------------------------------------------------
-
-        crossing_2d = crossing_lines[
-            crossing_lines["line_type"].isin(
-                [
-                    LineType.LINE_2D.value,
-                    LineType.LINE_2D_OBSTACLE.value,
-                ]
-            )
-        ].copy()
-
-        # Coordinates are needed because official 3Di code
-        # distinguishes horizontal and vertical link direction.
-        crossing_2d["start_x"] = lines.line_coords[0, crossing_2d["id"].to_numpy()]
-        crossing_2d["start_y"] = lines.line_coords[1, crossing_2d["id"].to_numpy()]
-        crossing_2d["end_x"] = lines.line_coords[2, crossing_2d["id"].to_numpy()]
-        crossing_2d["end_y"] = lines.line_coords[3, crossing_2d["id"].to_numpy()]
-
-        is_x = (crossing_2d["id"] >= self.x2d_surf_range.start) & (crossing_2d["id"] < self.x2d_surf_range.stop)
-
-        is_y = (crossing_2d["id"] >= self.y2d_surf_range.start) & (crossing_2d["id"] < self.y2d_surf_range.stop)
-
-        eastward = crossing_2d["end_x"] > crossing_2d["start_x"]
-        northward = crossing_2d["end_y"] > crossing_2d["start_y"]
-
-        start_inside = crossing_2d["start_inside"]
-        end_inside = crossing_2d["end_inside"]
-
-        # Horizontal 2D links
-        mask = is_x & ((start_inside & ~eastward) | (end_inside & eastward))
-        line_selection["2d_in"].extend(crossing_2d.loc[mask, "id"].tolist())
-
-        mask = is_x & ((start_inside & eastward) | (end_inside & ~eastward))
-        line_selection["2d_out"].extend(crossing_2d.loc[mask, "id"].tolist())
-
-        # Vertical 2D links
-        mask = is_y & ((start_inside & ~northward) | (end_inside & northward))
-        line_selection["2d_in"].extend(crossing_2d.loc[mask, "id"].tolist())
-
-        mask = is_y & ((start_inside & northward) | (end_inside & ~northward))
-        line_selection["2d_out"].extend(crossing_2d.loc[mask, "id"].tolist())
-
-        # --------------------------------------------------
-        # --------------------------------------------------
-        # Boundary nodes
-        # --------------------------------------------------
-
-        nodes = self.aggregate_grid.nodes
-
-        nodes_gdf = gpd.GeoDataFrame(
-            {
-                "id": nodes.id,
-                "node_type": nodes.node_type,
-            },
-            geometry=gpd.points_from_xy(
-                nodes.coordinates[0],
-                nodes.coordinates[1],
-            ),
-            crs=28992,
-        )
-
-        boundary_nodes = nodes_gdf[
-            nodes_gdf["node_type"].isin([node_type.value for node_type in NODE_TYPES_BOUNDARIES])
-        ]
-
-        boundary_nodes = boundary_nodes[boundary_nodes.geometry.within(self.polygon)]
-
-        line_start_node = lines.line[0]
-        line_end_node = lines.line[1]
-
-        for _, boundary in boundary_nodes.iterrows():
-            boundary_id = boundary["id"]
-            boundary_type = boundary["node_type"]
-
-            connected_indices = np.where((line_start_node == boundary_id) | (line_end_node == boundary_id))[0]
-
-            for line_id in connected_indices:
-                # Same convention as official WaterBalanceCalculation:
-                # boundary is start node -> boundary inflow
-                if line_start_node[line_id] == boundary_id:
-                    if boundary_type == NodeType.NODE_1D_BOUNDARIES.value:
-                        line_selection["1d_bound_in"].append(int(line_id))
-
-                    else:
-                        line_selection["2d_bound_in"].append(int(line_id))
-
-                # boundary is end node -> boundary outflow
-                else:
-                    if boundary_type == NodeType.NODE_1D_BOUNDARIES.value:
-                        line_selection["1d_bound_out"].append(int(line_id))
-
-                    else:
-                        line_selection["2d_bound_out"].append(int(line_id))
-        pump_selection = {
-            "in": [],
-            "out": [],
-        }
-
-        # --------------------------------------------------
-        # Pumps
-        # --------------------------------------------------
-
-        pumps = self.aggregate_grid.pumps
-
-        # Nodes inside polygon
-        nodes = self.aggregate_grid.nodes
-
-        # Ignore dummy pump id 0
-        valid_pumps = pumps.id != 0
-
-        pump_ids = pumps.id[valid_pumps]
-        pump_start = pumps.node1_id[valid_pumps]
-        pump_end = pumps.node2_id[valid_pumps]
-
-        start_inside = np.isin(
-            pump_start,
-            node_ids_inside,
-        )
-
-        end_inside = np.isin(
-            pump_end,
-            node_ids_inside,
-        )
-
-        has_endpoint = pump_end != NO_ENDPOINT_ID
-
-        # Line pump: outside -> inside
-        mask = has_endpoint & ~start_inside & end_inside
-
-        pump_selection["in"] = pump_ids[mask].tolist()
-
-        # Line pump: inside -> outside
-        mask = has_endpoint & start_inside & ~end_inside
-
-        pump_selection["out"] = pump_ids[mask].tolist()
-
-        # 0D pump:
-        # no end node and start node inside polygon.
-        # Official Water Balance always treats this as outflow.
-        mask = ~has_endpoint & start_inside
-
-        pump_selection["out"].extend(pump_ids[mask].tolist())
-        return line_selection, pump_selection
 
     def _get_aggregated_flows(self):
 
@@ -836,7 +448,7 @@ class WaterBalance:
                 0.0,
             ).sum(axis=1)
 
-            all_flows[SERIES_INDEX["d_2d_groundwater_vol"]] = (
+            all_flows[:, SERIES_INDEX["d_2d_groundwater_vol"]] = (
                 np.diff(
                     volume_groundwater,
                     prepend=volume_groundwater[0],
@@ -861,10 +473,11 @@ class WaterBalance:
 
         return balance
 
-    def calculate_volumes(self):
+    def calculate_volumes(self, balance=None):
         """Return total volume [m³] per water balance component."""
 
-        balance = self.calculate()
+        if balance is None:
+            balance = self.calculate()
 
         times = balance.index.to_numpy()
 
@@ -881,38 +494,14 @@ class WaterBalance:
 
         return volumes
 
-    def check_balance(self):
+    def check_balance(self, volumes=None):
         """Check closure of the water balance."""
 
-        volumes = self.calculate_volumes()
+        if volumes is None:
+            volumes = self.calculate_volumes()
 
-        external_components = [
-            "2d_in",
-            "2d_out",
-            "1d_in",
-            "1d_out",
-            "2d_bound_in",
-            "2d_bound_out",
-            "1d_bound_in",
-            "1d_bound_out",
-            "pump_in",
-            "pump_out",
-            "rain",
-            "infiltration_rate_simple",
-            "lat_2d",
-            "lat_1d",
-            "inflow",
-            "1d__1d_2d_flow_in",
-            "1d__1d_2d_flow_out",
-            "2d__1d_2d_flow_in",
-            "2d__1d_2d_flow_out",
-            "2d_groundwater_in",
-            "2d_groundwater_out",
-        ]
-
-        external_net = volumes[external_components].sum()
-
-        storage_change = volumes["d_2d_vol"] + volumes["d_1d_vol"] + volumes["d_2d_groundwater_vol"]
+        external_net = volumes[list(EXTERNAL_COMPONENTS)].sum()
+        storage_change = volumes[list(STORAGE_COMPONENTS)].sum()
 
         balance_error = external_net - storage_change
 
@@ -997,7 +586,7 @@ class WaterBalance:
         )
 
         # Total volume per component [m³]
-        volumes = self.calculate_volumes()
+        volumes = self.calculate_volumes(balance)
 
         volumes.rename("volume_m3").to_csv(
             output_folder / "water_balance_volumes.csv",
@@ -1005,7 +594,7 @@ class WaterBalance:
             index_label="component",
         )
 
-        check = self.check_balance()
+        check = self.check_balance(volumes)
 
         check.rename("value").to_csv(
             output_folder / "water_balance_check.csv",
