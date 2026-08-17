@@ -511,7 +511,7 @@ if __name__ == "__main__":
                     continue
                 if os.path.exists(output_file_wdepth):
                     continue
-                
+
                 wlvl_column = "wlvl_corr_max"
 
                 chunksize = 1024  # adjust based on available memory; None for no chunking (may cause MemoryError)

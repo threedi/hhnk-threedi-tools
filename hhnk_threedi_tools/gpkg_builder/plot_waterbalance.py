@@ -1,6 +1,6 @@
-#%%
-import pandas as pd
+# %%
 import matplotlib.pyplot as plt
+import pandas as pd
 
 
 def plot_water_balance(csv_path, output_path):
@@ -59,9 +59,8 @@ def plot_water_balance(csv_path, output_path):
     plt.close(fig)
 
 
-
 csv_path = r"H:\02.modellen\bergen_noord_variant_1_JA\03_3di_results\batch_results\results_variant_1_piek\02_output_rasters\piek_ghg_T100\waterbalance_piek_ghg_T100\water_balance_timeseries.csv"
-output_path =  r"H:\02.modellen\bergen_noord_variant_1_JA\03_3di_results\batch_results\results_variant_1_piek\02_output_rasters\piek_ghg_T100\waterbalance_piek_ghg_T100\water_balance_timeseries.png"
-#%%
+output_path = r"H:\02.modellen\bergen_noord_variant_1_JA\03_3di_results\batch_results\results_variant_1_piek\02_output_rasters\piek_ghg_T100\waterbalance_piek_ghg_T100\water_balance_timeseries.png"
+# %%
 plot_water_balance(csv_path, output_path)
 # %%
