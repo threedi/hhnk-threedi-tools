@@ -505,6 +505,7 @@ if __name__ == "__main__":
             for scenario in output_raster_scenarios:
                 scenario_result_path = output_raster_path / scenario
                 grid_gdf_path = output_raster_path / scenario / "grid_corrected.gpkg"
+                grid_gdf = gpd.read_file(grid_gdf_path)
                 output_file_wlvl = output_raster_path / scenario / "max_wlvl_corr.tif"
                 output_file_wdepth = output_raster_path / scenario / "max_wdepth_corr_idw.tif"
                 if not os.path.isdir(scenario_result_path):
@@ -538,3 +539,5 @@ if __name__ == "__main__":
                         output_file=output_file_wdepth,
                         overwrite=True,
                     )
+
+# %%
