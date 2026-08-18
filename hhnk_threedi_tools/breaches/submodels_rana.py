@@ -1,4 +1,4 @@
-#%%
+# %%
 """
 submodels.py
 ------------
@@ -124,7 +124,7 @@ class Submodels:
         ):
             self._clip(subarea)
 
-    #helpers
+    # helpers
 
     def _find_file(self, pattern: str, error_cls: type[Exception]) -> Path:
         """Return the first file matching *pattern* in the schematisation directory."""
@@ -229,7 +229,7 @@ class Submodels:
         joined = gpd.sjoin(layer, mask, how=how, predicate=predicate, rsuffix="_mask")
         return joined[original_columns]
 
-    #clip raster
+    # clip raster
 
     def _clip_raster(
         self,
@@ -298,7 +298,7 @@ class Submodels:
             except OSError:
                 pass
 
-    #clip layers per subarea
+    # clip layers per subarea
 
     def _clip(self, subarea: pd.Series) -> None:
         """Clip all schematisation data for a single sub-area."""
@@ -348,7 +348,7 @@ class Submodels:
         # Sub-area as single-row GeoDataFrame
         subarea_gdf = gpd.GeoDataFrame(subarea.to_frame().T, geometry="geometry", crs=self.subareas.crs)
 
-        #Select connection nodes inside the sub-area 
+        # Select connection nodes inside the sub-area
         filtered_cn = self._spatial_join(connection_node, subarea_gdf, how="inner", predicate="intersects")
         valid_cn_ids = set(filtered_cn["id"])
 
@@ -376,7 +376,7 @@ class Submodels:
         ]
         filtered_cross_section_loc = cross_section_loc[cross_section_loc["channel_id"].isin(filtered_channel["id"])]
 
-        # Rebuild connection-node set from connected structures only 
+        # Rebuild connection-node set from connected structures only
         # Removes 'floating' nodes not actually connected to any element.
         connected_cn_ids: set = set()
         for structure in (
@@ -442,7 +442,7 @@ class Submodels:
             filtered_surface_map = surface_map
 
         # print(filtered_channel[["id", "connection_node_id_start", "connection_node_id_end"]].head(10))
-        # Write filtered layers to the output GeoPackage 
+        # Write filtered layers to the output GeoPackage
         # _write_layer() drops the helper 'id' column and skips empty layers
         # to preserve the original GeoPackage schema from shutil.copy().
         write_pairs = [
@@ -543,13 +543,16 @@ def run(
         schematisation_type=schematisation_type,
     )
 
-#%%
+
+# %%
 if __name__ == "__main__":
-    run (schematisation_directory=r'H:\02.modellen\RegionalFloodModel\work in progress\schematisation',
-    subareas_path=r"H:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\deelgebieden\ROR PRI - dijktrajecten 13-8 en 13-9 - Stroom_NO.gpkg",
-    field_name="Deelgebied",
-    calculation_grid_cells_path=r"H:\02.modellen\RegionalFloodModel\work in progress\regional_calculation_grid.gpkg",
-    subareas_layer_name=None,
-    calculation_grid_cells_layer_name='cell',
-    isolate_1d=True,
-    schematisation_type=SchematisationType.THREEDI,)
+    run(
+        schematisation_directory=r"H:\02.modellen\RegionalFloodModel\work in progress\schematisation",
+        subareas_path=r"H:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\deelgebieden\ROR PRI - dijktrajecten 13-8 en 13-9 - Stroom_NO.gpkg",
+        field_name="Deelgebied",
+        calculation_grid_cells_path=r"H:\02.modellen\RegionalFloodModel\work in progress\regional_calculation_grid.gpkg",
+        subareas_layer_name=None,
+        calculation_grid_cells_layer_name="cell",
+        isolate_1d=True,
+        schematisation_type=SchematisationType.THREEDI,
+    )
