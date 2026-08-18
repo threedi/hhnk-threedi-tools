@@ -445,9 +445,11 @@ class DAMO(DataSet):
                         # table_merged = table_merged[table_merged.geometry_diff.geom_type == 'Polygon']
 
                         table_merged["geometry_diff"] = table_merged.apply(
-                            lambda x: self.get_significant_geometry(x["in_both"], x["geometry_A"], x["geometry_B"])
-                            if (x["geometry_diff"] is None)
-                            else x["geometry_diff"],
+                            lambda x: (
+                                self.get_significant_geometry(x["in_both"], x["geometry_A"], x["geometry_B"])
+                                if (x["geometry_diff"] is None)
+                                else x["geometry_diff"]
+                            ),
                             axis=1,
                         )
                         table_merged["origin"].fillna(table_merged["in_both"], inplace=True)
