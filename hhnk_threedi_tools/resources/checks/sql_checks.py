@@ -240,4 +240,20 @@ table_control.id as id,
 'ERROR: action_table has more than 1000 characters (model will crash)' as error
 FROM table_control
 WHERE length(table_control.action_table) > 1000
+UNION ALL
+SELECT
+'table_control' as table_name,
+table_control.id as id,
+'ERROR: structure control does not work for culverts' as error 
+FROM table_control
+WHERE action_table IS NOT NULL 
+AND target_type LIKE 'culvert%'
+UNION ALL
+SELECT 'impervious_surface_map' AS impervious_surface_map,
+0 AS id,
+'ERROR: impervious_surface_map is empty' AS message
+WHERE (
+SELECT COUNT(*)
+FROM impervious_surface_map
+) = 0;
 """

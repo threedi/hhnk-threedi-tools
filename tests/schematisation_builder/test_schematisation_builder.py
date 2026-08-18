@@ -1,6 +1,7 @@
 # %%
 import json
 import os
+import shutil
 from pathlib import Path
 
 import dotenv
@@ -47,6 +48,14 @@ def test_main():
     builder = SchematisationBuilder(
         project_folder=temp_project_folder, default_polder_polygon_path=default_polder_polygon_path
     )
+
+    # Copy hdb.gpkg from test data to the temporary project folder
+    hdb_test_data = TEST_DIRECTORY / "schematisation_builder" / "hdb.gpkg"
+    hdb_dest = temp_project_folder / "01_source_data" / "hdb.gpkg"
+    if hdb_test_data.exists():
+        hdb_dest.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(hdb_test_data, hdb_dest)
+        logger.info(f"Copied hdb.gpkg from {hdb_test_data} to {hdb_dest}")
 
     # Part 1: Make DAMO and HyDAMO package
     builder.make_hydamo_package()

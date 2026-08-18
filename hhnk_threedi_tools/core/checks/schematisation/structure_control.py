@@ -18,6 +18,7 @@ class StructureControl:
     Parameters
     ----------
     model: hrt.SpatialDatabase
+
         SpatialDatabase object that is your model (gpkg), i.e. folder.model.schema_base.database
     hdb_control_layer: hrt.SpatialDatabaseLayer
         SpatialDatabase object that referes to the control table overview in the HDB, i.e. folder.source_data.hdb.layers.sturing_kunstwerken
@@ -31,11 +32,15 @@ class StructureControl:
     #### TODO there is no check on the control logic in this class...
     """
 
-    def __init__(self, model: hrt.SpatialDatabase, hdb_control_layer: hrt.SpatialDatabaseLayer, output_file: str):
+    def __init__(
+        self,
+        model: hrt.SpatialDatabase,
+        hdb_control_layer: hrt.SpatialDatabaseLayer,
+        output_file: str,
+    ):
         self.model = model
         self.hdb_control_layer = hdb_control_layer
         self.output_file = Path(output_file)
-
         self.layers = self.Layers()
 
     class Layers:
@@ -226,6 +231,7 @@ class StructureControl:
             self.control_gdf = self.append_hdb_layer()
 
             self.save()
+
             return self.control_gdf
 
 

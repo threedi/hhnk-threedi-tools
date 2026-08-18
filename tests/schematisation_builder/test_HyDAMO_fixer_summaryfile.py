@@ -39,7 +39,7 @@ def test_creation_validation_fixes_summary():
     fixer.create_validation_fix_reports()
 
     # assert
-    report_gpkg_path = validation_directory_path / "fix_phase" / "summary_val_fix.gpkg"
+    report_gpkg_path = validation_directory_path / "fix_phase" / "validaton_fix_overview.gpkg"
     assert report_gpkg_path.exists()
 
     # check if expected layers are in report gpkg
