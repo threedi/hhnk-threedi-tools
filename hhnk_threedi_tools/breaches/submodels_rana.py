@@ -1,3 +1,4 @@
+#%%
 """
 submodels.py
 ------------
@@ -123,9 +124,7 @@ class Submodels:
         ):
             self._clip(subarea)
 
-    # ------------------------------------------------------------------
-    # Private helpers
-    # ------------------------------------------------------------------
+    #helpers
 
     def _find_file(self, pattern: str, error_cls: type[Exception]) -> Path:
         """Return the first file matching *pattern* in the schematisation directory."""
@@ -230,9 +229,7 @@ class Submodels:
         joined = gpd.sjoin(layer, mask, how=how, predicate=predicate, rsuffix="_mask")
         return joined[original_columns]
 
-    # ------------------------------------------------------------------
-    # Raster clipping
-    # ------------------------------------------------------------------
+    #clip raster
 
     def _clip_raster(
         self,
@@ -301,9 +298,7 @@ class Submodels:
             except OSError:
                 pass
 
-    # ------------------------------------------------------------------
-    # Core clip logic
-    # ------------------------------------------------------------------
+    #clip layers per subarea
 
     def _clip(self, subarea: pd.Series) -> None:
         """Clip all schematisation data for a single sub-area."""
@@ -353,11 +348,11 @@ class Submodels:
         # Sub-area as single-row GeoDataFrame
         subarea_gdf = gpd.GeoDataFrame(subarea.to_frame().T, geometry="geometry", crs=self.subareas.crs)
 
-        # ---- Step 1: Select connection nodes inside the sub-area ----
+        #Select connection nodes inside the sub-area 
         filtered_cn = self._spatial_join(connection_node, subarea_gdf, how="inner", predicate="intersects")
         valid_cn_ids = set(filtered_cn["id"])
 
-        # ---- Step 2: Filter 1-D structures by their endpoint connection nodes ----
+        # Step 2: Filter 1-D structures by their endpoint connection nodes
         filtered_pump = pump[pump["connection_node_id"].isin(valid_cn_ids)]
 
         filtered_pipe = pipe[
@@ -381,7 +376,7 @@ class Submodels:
         ]
         filtered_cross_section_loc = cross_section_loc[cross_section_loc["channel_id"].isin(filtered_channel["id"])]
 
-        # ---- Step 3: Rebuild connection-node set from connected structures only ----
+        # Rebuild connection-node set from connected structures only 
         # Removes 'floating' nodes not actually connected to any element.
         connected_cn_ids: set = set()
         for structure in (
@@ -399,13 +394,13 @@ class Submodels:
         filtered_cn = connection_node[connection_node["id"].isin(connected_cn_ids)]
         valid_cn_ids = set(filtered_cn["id"])
 
-        # ---- Step 4: Filter remaining 1-D elements ----
+        # Step 4: Filter remaining 1-D elements
         filtered_bc_1d = bc_1d[bc_1d["connection_node_id"].isin(valid_cn_ids)]
         filtered_lateral_1d = lateral_1d[lateral_1d["connection_node_id"].isin(valid_cn_ids)]
         filtered_surface_map = surface_map[surface_map["connection_node_id"].isin(valid_cn_ids)]
         filtered_surface = surface[surface["id"].isin(filtered_surface_map["surface_id"])]
 
-        # ---- Step 5: Filter 2-D / spatial elements ----
+        # Filter 2-D / spatial elements
         # Exchange lines: channel must exist AND geometry must intersect sub-area
         temp_exchange_line = exchange_line[exchange_line["channel_id"].isin(filtered_channel["id"])]
         filtered_exchange_line = self._spatial_join(
@@ -421,7 +416,7 @@ class Submodels:
         filtered_grid_ref_line = self._spatial_join(grid_ref_line, subarea_gdf, how="inner", predicate="intersects")
         filtered_grid_ref_area = self._spatial_join(grid_ref_area, subarea_gdf, how="inner", predicate="intersects")
 
-        # ---- Step 6 (optional): Isolate 1-D elements outside sub-area ----
+        # Isolate 1-D elements outside sub-area
         if self.isolate_1d:
             isolated_pipe = pipe[~pipe["id"].isin(filtered_pipe["id"])].copy()
             isolated_culvert = culvert[~culvert["id"].isin(filtered_culvert["id"])].copy()
@@ -447,7 +442,7 @@ class Submodels:
             filtered_surface_map = surface_map
 
         # print(filtered_channel[["id", "connection_node_id_start", "connection_node_id_end"]].head(10))
-        # ---- Step 7: Write filtered layers to the output GeoPackage ----
+        # Write filtered layers to the output GeoPackage 
         # _write_layer() drops the helper 'id' column and skips empty layers
         # to preserve the original GeoPackage schema from shutil.copy().
         write_pairs = [
@@ -476,7 +471,7 @@ class Submodels:
         for gdf, layer_name in write_pairs:
             self._write_layer(gdf, output_gpkg, layer_name)
 
-        # ---- Step 8: Clip rasters (if present) ----
+        # Clip rasters (if present)
         if self.rasters_directory is None:
             return
 
@@ -501,9 +496,7 @@ class Submodels:
             self._clip_raster(tif_path, dissolved_mask, output_rasters_dir / tif_path.name)
 
 
-# ---------------------------------------------------------------------------
 # Public API
-# ---------------------------------------------------------------------------
 
 
 def run(
@@ -549,3 +542,14 @@ def run(
         isolate_1d=isolate_1d,
         schematisation_type=schematisation_type,
     )
+
+#%%
+if __name__ == "__main__":
+    run (schematisation_directory=r'H:\02.modellen\RegionalFloodModel\work in progress\schematisation',
+    subareas_path=r"H:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\deelgebieden\ROR PRI - dijktrajecten 13-8 en 13-9 - Stroom_NO.gpkg",
+    field_name="Deelgebied",
+    calculation_grid_cells_path=r"H:\02.modellen\RegionalFloodModel\work in progress\regional_calculation_grid.gpkg",
+    subareas_layer_name=None,
+    calculation_grid_cells_layer_name='cell',
+    isolate_1d=True,
+    schematisation_type=SchematisationType.THREEDI,)
