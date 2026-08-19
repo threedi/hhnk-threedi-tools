@@ -1,7 +1,7 @@
 # %%
 """
 submodels.py
-------------
+
 Clips a 3Di schematisation (GeoPackage + SQLite + rasters) into spatial
 sub-models based on a set of polygon sub-areas.
 
@@ -10,7 +10,7 @@ Supports two schematisation formats via the `schematisation_type` parameter:
 - SchematisationType.THREEDI — classic 3Di schematisation builder format
 
 Usage
------
+-
     from hhnk_threedi_tools.breaches.submodels import run
     from hhnk_threedi_tools.breaches.constants import SchematisationType
 
@@ -51,8 +51,9 @@ from hhnk_threedi_tools.breaches.exceptions import (
     SubareaLayerEmptyError,
     SubareaNamesNotUniqueError,
 )
-from hhnk_threedi_tools.breaches.submodel_constants import LAYER_NAMES, SchematisationType
+from hhnk_threedi_tools.breaches.submodel_constants import COLUMNS_NAMES, LAYER_NAMES, SchematisationType
 
+# %%
 warnings.filterwarnings(
     "ignore",
     category=UserWarning,
@@ -62,9 +63,9 @@ warnings.filterwarnings(
 gdal.UseExceptions()
 
 
-# ---------------------------------------------------------------------------
+# ---
 # Main class
-# ---------------------------------------------------------------------------
+# ---
 
 
 class Submodels:
@@ -89,6 +90,7 @@ class Submodels:
         self.calculation_grid_cells_layer_name = calculation_grid_cells_layer_name
         self.isolate_1d = isolate_1d
         self.layer_names = LAYER_NAMES[schematisation_type]
+        self.columns_names = COLUMNS_NAMES[schematisation_type]
 
         # Locate required files / directories
         self.schematisation_gpkg = self._find_file("*.gpkg", GeoPackageFileNotFoundError)
@@ -115,14 +117,14 @@ class Submodels:
         ):
             self.calculation_grid_cells = self.calculation_grid_cells.to_crs(self.subareas.crs)
 
-        # Process each sub-area
-        for _, subarea in tqdm(
-            self.subareas.iterrows(),
-            total=len(self.subareas),
-            desc="Clipping sub-areas",
-            unit="subarea",
-        ):
-            self._clip(subarea)
+        # # Process each sub-area
+        # for _, subarea in tqdm(
+        #     self.subareas.iterrows(),
+        #     total=len(self.subareas),
+        #     desc="Clipping sub-areas",
+        #     unit="subarea",
+        # ):
+        #     self._clip(subarea)
 
     # helpers
 
@@ -159,9 +161,9 @@ class Submodels:
         if self.subareas[self.field_name].duplicated().any():
             raise SubareaNamesNotUniqueError(f"Values in field '{self.field_name}' are not unique.")
 
-    # ------------------------------------------------------------------
+    # --
     # GeoPackage reading (via Fiona — preserves model IDs)
-    # ------------------------------------------------------------------
+    # --
 
     def _read_geopackage_layers(self, gpkg_path: Path) -> dict[str, gpd.GeoDataFrame]:
         """Read all layers from a GeoPackage using Fiona to preserve feature IDs.
@@ -300,13 +302,13 @@ class Submodels:
 
     # clip layers per subarea
 
-    def _clip(self, subarea: pd.Series) -> None:
+    def _clip(self, subarea: pd.Series, schematisation_type) -> None:
         """Clip all schematisation data for a single sub-area."""
 
         ln = self.layer_names
         name: str = subarea[self.field_name]
 
-        # ---- Output directories ----
+        #  Output directories
         output_directory = self.schematisation_directory / name
         output_directory.mkdir(parents=True, exist_ok=True)
 
@@ -321,7 +323,7 @@ class Submodels:
         shutil.copy(self.schematisation_gpkg, output_gpkg)
         shutil.copy(self.schematisation_sqlite, output_sqlite)
 
-        # ---- Read all layers from the copied GeoPackage ----
+        #  Read all layers from the copied GeoPackage
         layers = self._read_geopackage_layers(output_gpkg)
 
         connection_node = layers[ln["connection_node"]]
@@ -348,31 +350,36 @@ class Submodels:
         # Sub-area as single-row GeoDataFrame
         subarea_gdf = gpd.GeoDataFrame(subarea.to_frame().T, geometry="geometry", crs=self.subareas.crs)
 
+        # column name
+        cn = self.columns_names
+
         # Select connection nodes inside the sub-area
         filtered_cn = self._spatial_join(connection_node, subarea_gdf, how="inner", predicate="intersects")
         valid_cn_ids = set(filtered_cn["id"])
 
-        # Step 2: Filter 1-D structures by their endpoint connection nodes
+        # Filter 1-D structures by their endpoint connection nodes
         filtered_pump = pump[pump["connection_node_id"].isin(valid_cn_ids)]
 
         filtered_pipe = pipe[
-            pipe["connection_node_id_start"].isin(valid_cn_ids) & pipe["connection_node_id_end"].isin(valid_cn_ids)
+            pipe[cn["connection_node_id_start"]].isin(valid_cn_ids)
+            & pipe[cn["connection_node_id_end"]].isin(valid_cn_ids)
         ]
         filtered_weir = weir[
-            weir["connection_node_id_start"].isin(valid_cn_ids) & weir["connection_node_id_end"].isin(valid_cn_ids)
+            weir[cn["connection_node_id_start"]].isin(valid_cn_ids)
+            & weir[cn["connection_node_id_end"]].isin(valid_cn_ids)
         ]
         filtered_orifice = orifice[
-            orifice["connection_node_id_start"].isin(valid_cn_ids)
-            & orifice["connection_node_id_end"].isin(valid_cn_ids)
+            orifice[cn["connection_node_id_start"]].isin(valid_cn_ids)
+            & orifice[cn["connection_node_id_end"]].isin(valid_cn_ids)
         ]
         filtered_culvert = culvert[
-            culvert["connection_node_id_start"].isin(valid_cn_ids)
-            & culvert["connection_node_id_end"].isin(valid_cn_ids)
+            culvert[cn["connection_node_id_start"]].isin(valid_cn_ids)
+            & culvert[cn["connection_node_id_end"]].isin(valid_cn_ids)
         ]
-        filtered_pump_map = pump_map[pump_map["connection_node_id_end"].isin(valid_cn_ids)]
+        filtered_pump_map = pump_map[pump_map[cn["connection_node_id_end"]].isin(valid_cn_ids)]
         filtered_channel = channel[
-            channel["connection_node_id_start"].isin(valid_cn_ids)
-            & channel["connection_node_id_end"].isin(valid_cn_ids)
+            channel[cn["connection_node_id_start"]].isin(valid_cn_ids)
+            & channel[cn["connection_node_id_end"]].isin(valid_cn_ids)
         ]
         filtered_cross_section_loc = cross_section_loc[cross_section_loc["channel_id"].isin(filtered_channel["id"])]
 
@@ -387,20 +394,32 @@ class Submodels:
             filtered_weir,
             filtered_pump,
         ):
-            for col in ("connection_node_id", "connection_node_id_start", "connection_node_id_end"):
+            for col in ("connection_node_id", cn["connection_node_id_start"], cn["connection_node_id_end"]):
                 if col in structure.columns:
                     connected_cn_ids.update(structure[col].dropna())
 
         filtered_cn = connection_node[connection_node["id"].isin(connected_cn_ids)]
         valid_cn_ids = set(filtered_cn["id"])
 
-        # Step 4: Filter remaining 1-D elements
+        # Filter remaining 1-D elements
         filtered_bc_1d = bc_1d[bc_1d["connection_node_id"].isin(valid_cn_ids)]
         filtered_lateral_1d = lateral_1d[lateral_1d["connection_node_id"].isin(valid_cn_ids)]
+
         filtered_surface_map = surface_map[surface_map["connection_node_id"].isin(valid_cn_ids)]
         filtered_surface = surface[surface["id"].isin(filtered_surface_map["surface_id"])]
 
-        # Filter 2-D / spatial elements
+        if schematisation_type == SchematisationType.THREEDI:
+            impervious_surface_map = layers["impervious_surface_map"]
+            impervious_surface = layers["impervious_surface"]
+
+            filtered_impervious_surface_map = impervious_surface_map[
+                impervious_surface_map["connection_node_id"].isin(valid_cn_ids)
+            ]
+
+            filtered_impervious_surface = impervious_surface[
+                impervious_surface["id"].isin(filtered_impervious_surface_map["impervious_surface_id"])
+            ]
+
         # Exchange lines: channel must exist AND geometry must intersect sub-area
         temp_exchange_line = exchange_line[exchange_line["channel_id"].isin(filtered_channel["id"])]
         filtered_exchange_line = self._spatial_join(
@@ -440,8 +459,11 @@ class Submodels:
             filtered_bc_1d = bc_1d
             filtered_lateral_1d = lateral_1d
             filtered_surface_map = surface_map
+            if schematisation_type == SchematisationType.THREEDI:
+                filtered_impervious_surface_map = impervious_surface_map
+                filtered_impervious_surface = impervious_surface
 
-        # print(filtered_channel[["id", "connection_node_id_start", "connection_node_id_end"]].head(10))
+        # print(filtered_channel[["id", cn["connection_node_id_start"], cn["connection_node_id_end"]]].head(10))
         # Write filtered layers to the output GeoPackage
         # _write_layer() drops the helper 'id' column and skips empty layers
         # to preserve the original GeoPackage schema from shutil.copy().
@@ -467,6 +489,14 @@ class Submodels:
             (filtered_grid_ref_line, ln["grid_refinement_line"]),
             (filtered_grid_ref_area, ln["grid_refinement_area"]),
         ]
+
+        if schematisation_type == SchematisationType.THREEDI:
+            write_pairs.extend(
+                [
+                    (filtered_impervious_surface_map, "impervious_surface_map"),
+                    (filtered_impervious_surface, "impervious_surface"),
+                ]
+            )
 
         for gdf, layer_name in write_pairs:
             self._write_layer(gdf, output_gpkg, layer_name)
@@ -512,7 +542,7 @@ def run(
     """Entry point for creating sub-models from a 3Di schematisation.
 
     Parameters
-    ----------
+    --
     schematisation_directory:
         Folder containing the .gpkg, .sqlite and optional rasters/ sub-folder.
     subareas_path:
@@ -547,7 +577,7 @@ def run(
 # %%
 if __name__ == "__main__":
     run(
-        schematisation_directory=r"H:\02.modellen\RegionalFloodModel\work in progress\schematisation",
+        schematisation_directory=Path(r"H:\02.modellen\RegionalFloodModel\work in progress\schematisation"),
         subareas_path=r"H:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\deelgebieden\ROR PRI - dijktrajecten 13-8 en 13-9 - Stroom_NO.gpkg",
         field_name="Deelgebied",
         calculation_grid_cells_path=r"H:\02.modellen\RegionalFloodModel\work in progress\regional_calculation_grid.gpkg",
@@ -556,3 +586,5 @@ if __name__ == "__main__":
         isolate_1d=True,
         schematisation_type=SchematisationType.THREEDI,
     )
+
+# %%

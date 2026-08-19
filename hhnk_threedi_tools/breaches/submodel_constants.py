@@ -14,9 +14,8 @@ class SchematisationType(Enum):
     THREEDI = "threedi"
 
 
-# ---------------------------------------------------------------------------
 # RANA layer names
-# ---------------------------------------------------------------------------
+
 
 LAYER_NAMES_RANA: dict[str, str] = {
     "connection_node": "connection_node",
@@ -41,9 +40,7 @@ LAYER_NAMES_RANA: dict[str, str] = {
     "grid_refinement_area": "grid_refinement_area",
 }
 
-# ---------------------------------------------------------------------------
 # 3Di (classic) layer names
-# ---------------------------------------------------------------------------
 
 LAYER_NAMES_THREEDI: dict[str, str] = {
     "connection_node": "connection_node",
@@ -59,8 +56,8 @@ LAYER_NAMES_THREEDI: dict[str, str] = {
     "boundary_condition_2d": "2d_boundary_condition",
     "lateral_1d": "1d_lateral",
     "lateral_2d": "2d_lateral",
-    "surface_map": "impervious_surface_map",
-    "surface": "impervious_surface",
+    "surface_map": "surface_map",
+    "surface": "surface",
     "obstacle": "linear_obstacle",
     "potential_breach": "potential_breach",
     "exchange_line": "exchange_line",
@@ -68,11 +65,23 @@ LAYER_NAMES_THREEDI: dict[str, str] = {
     "grid_refinement_area": "grid_refinement_area",
 }
 
-# ---------------------------------------------------------------------------
+COLUMNS_RANA: dict[str, str] = {
+    "connection_node_id_start": "connection_node_id_start",
+    "connection_node_id_end": "connection_node_id_end",
+}
+
+COLUMNS_THREEDI: dict[str, str] = {
+    "connection_node_id_start": "connection_node_start_id",
+    "connection_node_id_end": "connection_node_end_id",
+}
 # Lookup by SchematisationType
-# ---------------------------------------------------------------------------
 
 LAYER_NAMES: dict[SchematisationType, dict[str, str]] = {
     SchematisationType.RANA: LAYER_NAMES_RANA,
     SchematisationType.THREEDI: LAYER_NAMES_THREEDI,
+}
+
+COLUMNS_NAMES: dict[SchematisationType, dict[str, str]] = {
+    SchematisationType.RANA: COLUMNS_RANA,
+    SchematisationType.THREEDI: COLUMNS_THREEDI,
 }
