@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from hhnk_threedi_tools.breaches.submodels_rana import Submodels
 from hhnk_threedi_tools.breaches.submodel_constants import SchematisationType
+from hhnk_threedi_tools.breaches.submodels_rana import Submodels
 
 
 def create_submodels_for_debug() -> Submodels:
@@ -17,7 +17,9 @@ def create_submodels_for_debug() -> Submodels:
             r"H:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\deelgebieden\ROR PRI - dijktrajecten 13-8 en 13-9 - Stroom_NO.gpkg"
         ),
         field_name="Deelgebied",
-        calculation_grid_cells_path=Path(r"H:\02.modellen\RegionalFloodModel\work in progress\regional_calculation_grid.gpkg"),
+        calculation_grid_cells_path=Path(
+            r"H:\02.modellen\RegionalFloodModel\work in progress\regional_calculation_grid.gpkg"
+        ),
         subareas_layer_name=None,
         calculation_grid_cells_layer_name="cell",
         isolate_1d=True,
@@ -26,6 +28,4 @@ def create_submodels_for_debug() -> Submodels:
 
 
 if __name__ == "__main__":
-    print(
-        "Module provides `create_submodels_for_debug()` — import and call it from the debugger."
-    )
+    print("Module provides `create_submodels_for_debug()` — import and call it from the debugger.")
