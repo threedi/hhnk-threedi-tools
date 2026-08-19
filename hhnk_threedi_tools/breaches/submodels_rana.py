@@ -608,9 +608,11 @@ if __name__ == "__main__":
 
 # %%
 
-gpkg_path = r"H:\02.modellen\RegionalFloodModel\work in progress\schematisation\ROR PRI - dijktrajecten 13-8 en 13-9 - Stroom_NO\test_v1.gpkg"
+gpkg_path = r"H:\02.modellen\RegionalFloodModel\work in progress\schematisation\ROR PRI - dijktrajecten 13-8 en 13-9 - Stroom_NO\RegionalFloodModel_ROR PRI - dijktrajecten 13-8 en 13-9 - Stroom_NO.gpkg"
 polygon_path = r"H:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\deelgebieden\ROR PRI - dijktrajecten 13-8 en 13-9 - Stroom_NO.gpkg"
 from hhnk_threedi_tools.breaches.submodel_constants import COLUMNS_NAMES, LAYER_NAMES, SchematisationType
+
+list_layers = ["connection_node", "1d_boundary_condition", "orifice", "cross_section_location", "channel"]
 
 
 def read_geopackage_layers(
@@ -663,7 +665,6 @@ def read_geopackage_layers(
 
 
 # %%
-list_layers = ["connection_node", "1d_boundary_condition", "orifice", "cross_section_location", "channel"]
 
 
 def clean_geopackge(polygon_path):
@@ -727,14 +728,18 @@ def clean_geopackge(polygon_path):
         how="intersection",
     )
 
-    channel_concatenated = pd.concat(
-        [channel_orifice, channel_bc],
-        ignore_index=True,
-    )
-
     # Recover original channel records
     channel_selected = channel.loc[
         channel["id"].isin(channel_orifice_overlay["id"]) | channel["id"].isin(channel_bc_overlay["id"])
+    ].copy()
+
+    connection_node_channel_start = channel_selected[cn["connection_node_id_start"]].to_list()
+    connection_node_channel_end = channel_selected[cn["connection_node_id_end"]].to_list()
+    connection_node_bc = bc_out_of_intersection["connection_node_id"].to_list()
+    connection_node_selected = connection_node.loc[
+        connection_node["id"].isin(connection_node_channel_start)
+        | connection_node["id"].isin(connection_node_channel_end)
+        | connection_node["id"].isin(connection_node_bc)
     ].copy()
 
     channel_buffer = channel_selected.copy()
@@ -751,5 +756,52 @@ def clean_geopackge(polygon_path):
         cross_section_location["id"].isin(crosssection_overlay["id"])
     ].copy()
 
-    
+    return {
+        "1d_boundary_condition": bc_out_of_intersection["id"].tolist(),
+        "orifice": orifice_out_of_intersection["id"].tolist(),
+        "connection_node": connection_node_selected["id"].tolist(),
+        "channel": channel_selected["id"].tolist(),
+        "cross_section_location": crosssection_selection["id"].tolist(),
+    }
+
+
+def remove_selection(
+    gpkg_path,
+    layer_name,
+    ids_to_remove,
+    schematisation_type,
+):
+    ds = ogr.Open(str(gpkg_path), update=1)
+    layer = ds.GetLayerByName(layer_name)
+
+    fids_to_remove = []
+
+    for feature in layer:
+        if schematisation_type == SchematisationType.RANA:
+            feature_id = feature.GetFID()
+        else:
+            feature_id = feature.GetField("id")
+
+        if feature_id in ids_to_remove:
+            fids_to_remove.append(feature.GetFID())
+
+    # Close/reset the active read cursor before deleting
+    layer.ResetReading()
+
+    for fid in fids_to_remove:
+        layer.DeleteFeature(fid)
+
+    layer = None
+    ds = None
+
+
+remove_dict = clean_geopackge(polygon_path)
+
+for layer_name, ids in remove_dict.items():
+    remove_selection(
+        gpkg_path,
+        layer_name,
+        ids,
+        SchematisationType.THREEDI,
+    )
 # %%
