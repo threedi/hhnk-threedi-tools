@@ -643,55 +643,56 @@ def update_model_geopackage(
 
 def run(model_path_gpkg, datacheker_path, polder_polygon_path, hdb_path, sure_update):
     # Get connection nodes assigned to FDLA polygons
-        nodes_fdla, fdla = get_nodes_within_fdla(
-            model_path_gpkg=model_path_gpkg,
-            datacheker_path=datacheker_path,
-            polder_polygon_path=polder_polygon_path,
-        )
-    
-        # Create Voronoi polygons
-        voronoi_cells, rows = createa_voronoi_polygons(
-            nodes_fdla=nodes_fdla,
-            fdla=fdla,
-        )
-    
-        # Correct orphan Voronoi polygons and create final subcatchments
-        subcatchments = correct_voronoi_polygons(
-            voronoi_cells=voronoi_cells,
-            rows=rows,
-        )
-    
-        # Transform subcatchments into the format expected by 3Di
-        surfaces = create_surface_layer(
-            subcatchments=subcatchments,
-            impervious_out_polygon_gpkg=model_path_gpkg,
-        )
-    
-        # Calculate afvoernorm percentage per surface
-        percentage_by_surface = get_percentage_afvoernorm(
-            hdb_path=hdb_path,
-            surfaces=surfaces,
-        )
-    
-        # Create surface map lines
-        surface_map = create_surface_map_layer(
-            model_path_gpkg=model_path_gpkg,
-            surfaces=surfaces,
-            percentage_by_surface=percentage_by_surface,
-            impervious_out_line_gpkg=model_path_gpkg,
-        )
-    
-        # Write impervious_surface and impervious_surface_map to the GeoPackage
-        update_model_geopackage(
-            model_path_gpkg=model_path_gpkg,
-            surfaces=surfaces,
-            surface_map=surface_map,
-            output_model_path=model_path_gpkg,
-            sure_update=sure_update,
-        )
+    nodes_fdla, fdla = get_nodes_within_fdla(
+        model_path_gpkg=model_path_gpkg,
+        datacheker_path=datacheker_path,
+        polder_polygon_path=polder_polygon_path,
+    )
+
+    # Create Voronoi polygons
+    voronoi_cells, rows = createa_voronoi_polygons(
+        nodes_fdla=nodes_fdla,
+        fdla=fdla,
+    )
+
+    # Correct orphan Voronoi polygons and create final subcatchments
+    subcatchments = correct_voronoi_polygons(
+        voronoi_cells=voronoi_cells,
+        rows=rows,
+    )
+
+    # Transform subcatchments into the format expected by 3Di
+    surfaces = create_surface_layer(
+        subcatchments=subcatchments,
+        impervious_out_polygon_gpkg=model_path_gpkg,
+    )
+
+    # Calculate afvoernorm percentage per surface
+    percentage_by_surface = get_percentage_afvoernorm(
+        hdb_path=hdb_path,
+        surfaces=surfaces,
+    )
+
+    # Create surface map lines
+    surface_map = create_surface_map_layer(
+        model_path_gpkg=model_path_gpkg,
+        surfaces=surfaces,
+        percentage_by_surface=percentage_by_surface,
+        impervious_out_line_gpkg=model_path_gpkg,
+    )
+
+    # Write impervious_surface and impervious_surface_map to the GeoPackage
+    update_model_geopackage(
+        model_path_gpkg=model_path_gpkg,
+        surfaces=surfaces,
+        surface_map=surface_map,
+        output_model_path=model_path_gpkg,
+        sure_update=sure_update,
+    )
+
 
 # inputs
-#%%
+# %%
 hdb_path = r"H:\01.basisgegevens\00.HDB\Hydro_database.gpkg"
 folder = Path(r"H:\personen\jacosta\update_3di_model_test\Zijpe_West_2026_MR")
 source_data = folder / "01_source_data"

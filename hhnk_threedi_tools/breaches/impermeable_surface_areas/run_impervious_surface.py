@@ -3,19 +3,11 @@ import importlib
 import sqlite3
 import sys
 from pathlib import Path
+
 import create_impervious_surface
+
 # Force 3Di/QGIS plugin paths
-QGIS_PLUGIN_DIR = (
-    Path.home()
-    / "AppData"
-    / "Roaming"
-    / "3Di"
-    / "QGIS3"
-    / "profiles"
-    / "default"
-    / "python"
-    / "plugins"
-)
+QGIS_PLUGIN_DIR = Path.home() / "AppData" / "Roaming" / "3Di" / "QGIS3" / "profiles" / "default" / "python" / "plugins"
 
 THREEDI_DEPS = QGIS_PLUGIN_DIR / "threedi_results_analysis" / "deps"
 
@@ -75,22 +67,18 @@ def clear_existing_impervious_layers_in_sqlite(sqlite_path: Path) -> None:
             "v2_impervious_surface",
         ]:
             # Get the count of records before deletion
-            count_before = conn.execute(
-                f'SELECT COUNT(*) FROM "{table_name}"'
-            ).fetchone()[0]
+            count_before = conn.execute(f'SELECT COUNT(*) FROM "{table_name}"').fetchone()[0]
 
             print(f"{table_name}: {count_before} records before delete")
-            
+
             # Execute the delete statement
             conn.execute(f'DELETE FROM "{table_name}";')
-            
+
             # Get the count of records after deletion
-            count_after = conn.execute(
-                f'SELECT COUNT(*) FROM "{table_name}"'
-            ).fetchone()[0]
+            count_after = conn.execute(f'SELECT COUNT(*) FROM "{table_name}"').fetchone()[0]
 
             print(f"{table_name}: {count_after} records after delete")
-        
+
         # Commit the changes to the database
         conn.commit()
 
@@ -148,6 +136,7 @@ def sqlite_to_gpkg_219(sqlite_path: Path) -> Path:
     print(gpkg_path)
 
     return gpkg_path
+
 
 # Create impervious layers in GeoPackage
 def create_impervious_layers_in_gpkg(
@@ -241,7 +230,6 @@ def export_impervious_layers_to_sqlite(sqlite_path: Path, gpkg_path: Path) -> No
     print("Impervious layers exported back to SQLite.")
 
 
-
 # Main
 def main():
     data_path = Path(__file__).resolve().parents[4].joinpath("data")
@@ -268,11 +256,12 @@ def main():
 
 
 if __name__ == "__main__":
-    #This block help to cath any error in the script and print it to the log. Very Helpfull.
+    # This block help to cath any error in the script and print it to the log. Very Helpfull.
     try:
         main()
     except BaseException:
         import traceback
+
         print("\nERROR IN run_impervious_surface.py")
         traceback.print_exc(file=sys.stdout)
         sys.exit(1)
