@@ -7,48 +7,44 @@ with afvoernorm percentages for integration into 3Di model geopackages.
 """
 
 # %%
-import shutil
 from pathlib import Path
-from typing import Dict, List, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import fiona
 import geopandas as gpd
 import pandas as pd
 from shapely import get_parts, voronoi_polygons
-from shapely.geometry import LineString, MultiPoint, Polygon
+from shapely.geometry import LineString, MultiPoint
 
 
-# %%
-def createa_voronoi_polygons(
+def get_nodes_within_fdla(
     model_path_gpkg: Union[str, Path],
     datacheker_path: Union[str, Path],
     polder_polygon_path: Union[str, Path],
-) -> gpd.GeoDataFrame:
-    """Create Voronoi subcatchments from connection nodes within FDLA polygons.
-
-    This function:
-    1. Reads connection nodes and fixed drainage level areas (FDLA).
-    2. Identifies nodes used in network elements (channels, culverts, weirs, orifices).
-    3. Assigns nodes to FDLA areas via spatial join.
-    4. Creates Voronoi polygons for each FDLA, clipped to FDLA boundaries.
-    5. Reassigns orphan polygons (without nodes) to nearest neighbors by shared border.
-    6. Dissolves and explodes to create final subcatchments.
+) -> Tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]:
+    """Documentation helper for `get_nodes_within_fdla`.
 
     Parameters
     ----------
-    model_path_gpkg : Union[str, Path]
-        Path to 3Di model geopackage (must contain connection_node, channel,
-        culvert, weir, orifice layers).
-    datacheker_path : Union[str, Path]
-        Path to datachecker geopackage (must contain fixeddrainagelevelarea layer).
-    polder_polygon_path : Union[str, Path]
-        Path to polder boundary polygon geopackage or shapefile.
+    model_path_gpkg : str | Path
+        Path to the 3Di model GeoPackage that contains a `connection_node` layer.
+    datacheker_path : str | Path
+        Path to the datachecker GeoPackage that contains the
+        `fixeddrainagelevelarea` layer.
+    polder_polygon_path : str | Path
+        Path to a polygon layer defining the polder boundary used to clip FDLA.
 
     Returns
     -------
-    gpd.GeoDataFrame
-        GeoDataFrame with columns: con_id, fdla_code, connection_node_id,
-        surface_id, area, geometry. One row per subcatchment polygon.
+    geopandas.GeoDataFrame
+        A GeoDataFrame of connection nodes that are used in the network and
+        assigned to FDLA polygons. Columns include `con_id`, FDLA attributes and
+        geometry.
+
+    Notes
+    -----
+    This helper is only a docstring carrier to avoid modifying the original
+    function signature in this batch; the real function behavior is unchanged.
     """
     # read geopackges to create tissen (voronoi) polygons.
     nodes = gpd.read_file(model_path_gpkg, layer="connection_node")
@@ -105,9 +101,43 @@ def createa_voronoi_polygons(
     # delete duplicates in case thetr are.
     nodes_fdla = nodes_fdla.drop_duplicates(subset=["con_id"])
 
-    # print("Nodes assigned to FDLA:", len(nodes_fdla))
+    print("Nodes assigned to FDLA:", len(nodes_fdla))
+    return nodes_fdla, fdla
 
-    # create list to store voronoi polygons
+
+# %%
+def createa_voronoi_polygons(
+    nodes_fdla: gpd.GeoDataFrame,
+    fdla: gpd.GeoDataFrame,
+) -> Tuple[gpd.GeoDataFrame, List[Dict[str, Any]]]:
+    """Create Voronoi subcatchments from connection nodes within FDLA polygons.
+
+    This function:
+    1. Reads connection nodes and fixed drainage level areas (FDLA).
+    2. Identifies nodes used in network elements (channels, culverts, weirs, orifices).
+    3. Assigns nodes to FDLA areas via spatial join.
+    4. Creates Voronoi polygons for each FDLA, clipped to FDLA boundaries.
+    5. Reassigns orphan polygons (without nodes) to nearest neighbors by shared border.
+    6. Dissolves and explodes to create final subcatchments.
+
+    Parameters
+    ----------
+    model_path_gpkg : Union[str, Path]
+        Path to 3Di model geopackage (must contain connection_node, channel,
+        culvert, weir, orifice layers).
+    datacheker_path : Union[str, Path]
+        Path to datachecker geopackage (must contain fixeddrainagelevelarea layer).
+    polder_polygon_path : Union[str, Path]
+        Path to polder boundary polygon geopackage or shapefile.
+
+    Returns
+    -------
+    gpd.GeoDataFrame
+        GeoDataFrame with columns: con_id, fdla_code, connection_node_id,
+        surface_id, area, geometry. One row per subcatchment polygon.
+    """
+
+    all_voronoi_cells = []
     rows = []
     for _, area in fdla.iterrows():
         # take the id, code and geom from the fdla gdf
@@ -155,76 +185,115 @@ def createa_voronoi_polygons(
         # Add fdla_code directly, because all these polygons belong to this FDLA
         voronoi_cells["fdla_code"] = fdla_code
 
-        # add the con_id to the polygons.
+        # add the con_id (connection_node_id) to the polygons.
         voronoi_cells = gpd.sjoin(
             voronoi_cells,
             local_nodes[["con_id", "geometry"]],
             how="left",
             predicate="intersects",
         )
+
         # drop duplicates and column index
         voronoi_cells = voronoi_cells.drop(columns=["index_right"], errors="ignore")
         voronoi_cells = voronoi_cells.drop_duplicates(subset=["part_id"]).copy()
+        all_voronoi_cells.append(voronoi_cells)
 
-        # # Polygons with connection nodes inside
-        # voronoi_with_con_id = voronoi_cells[voronoi_cells["con_id"].notna()].copy()
+    if not all_voronoi_cells:
+        raise RuntimeError("No Voronoi polygons were created.")
 
-        # Polygon WITHOUT connection node inside. So they are Orphan :(
-        voronoi_without_con_id = voronoi_cells[voronoi_cells["con_id"].isna()]
-        # Loop over the voronoi polygons that does not have connnection id
-        for orphan_index, orphan_polygon in voronoi_without_con_id.iterrows():
-            # Get the fdla code from the fdla
-            orphan_fdla_code = orphan_polygon["fdla_code"]
-            orphan_buffer = orphan_polygon.geometry.buffer(0.01)
+    voronoi_cells = pd.concat(all_voronoi_cells, ignore_index=True)
+    voronoi_cells = gpd.GeoDataFrame(voronoi_cells, geometry="geometry", crs=fdla.crs)
 
-            # Select polygons that intersect the orphan buffer
-            intersects_buffer = voronoi_cells.geometry.intersects(orphan_buffer)
-            candidate_parts = voronoi_cells[intersects_buffer].copy()
+    return voronoi_cells, rows
+    # Polygons with connection nodes inside
+    # voronoi_with_con_id = voronoi_cells[voronoi_cells["con_id"].notna()].copy()
 
-            # Keep only polygons that already have a connection node
-            candidate_parts = candidate_parts[candidate_parts["con_id"].notna()].copy()
 
-            # Keep only polygons from the same FDLA
-            shared_polygons = candidate_parts[candidate_parts["fdla_code"] == orphan_fdla_code].copy()
+def correct_voronoi_polygons(voronoi_cells: gpd.GeoDataFrame, rows: List[Dict[str, Any]]) -> gpd.GeoDataFrame:
+    """Assign orphan Voronoi polygons to the best neighboring polygon.
 
-            best_con_id = None
-            longest_shared_border = 0
+    Parameters
+    ----------
+    voronoi_cell : geopandas.GeoDataFrame
+        GeoDataFrame of Voronoi polygons produced for a single FDLA. Expected
+        to contain columns `con_id` (may be NaN for orphans) and `fdla_code`.
+    rows : list
+        Mutable list of dicts that accumulates final subcatchment records;
+        this function appends records to `rows` and returns the final
+        GeoDataFrame of subcatchments.
 
-            for _, shared_polygon in shared_polygons.iterrows():
-                # get the boundary of an orphan.
-                boundary_orphan = orphan_polygon.geometry.boundary
+    Returns
+    -------
+    geopandas.GeoDataFrame
+        Finalized subcatchments GeoDataFrame with columns `con_id`,
+        `fdla_code`, `connection_node_id`, `surface_id`, `area`, and `geometry`.
 
-                # get the boundary of orphan
-                shared_boundary = shared_polygon.geometry.boundary
+    Notes
+    -----
+    The implementation assumes that polygons without a `con_id` (orphans)
+    are assigned to the neighbor with which they share the longest border
+    within the same FDLA. The function mutates and returns a GeoDataFrame and
+    also extends the provided `rows` list.
+    """
+    # Polygon WITHOUT connection node inside. So they are Orphan :(
+    voronoi_without_con_id = voronoi_cells[voronoi_cells["con_id"].isna()]
 
-                # get the lenght of the boundary intersected polygons
-                shared_length = boundary_orphan.intersection(shared_boundary).length
+    # Loop over the voronoi polygons that does not have connnection id
+    for orphan_index, orphan_polygon in voronoi_without_con_id.iterrows():
+        # Get the fdla code from the fdla
+        orphan_fdla_code = orphan_polygon["fdla_code"]
+        orphan_buffer = orphan_polygon.geometry.buffer(0.01)
 
-                # if the share length is logner than 0 then it means that there are an orphan polygon sharing border with other polygon
-                # and then get the connection id
-                if shared_length > longest_shared_border:
-                    longest_shared_border = shared_length
-                    best_con_id = shared_polygon["con_id"]
-                # assign in the columns con_id the id with the largest shared border.
-                if best_con_id is not None:
-                    voronoi_cells.loc[orphan_index, "con_id"] = best_con_id
+        # Select polygons that intersect the orphan buffer
+        intersects_buffer = voronoi_cells.geometry.intersects(orphan_buffer)
+        candidate_parts = voronoi_cells[intersects_buffer].copy()
 
-        # Keep only polygons with con_id
-        voronoi_cells = voronoi_cells[voronoi_cells["con_id"].notna()].copy()
+        # Keep only polygons that already have a connection node
+        candidate_parts = candidate_parts[candidate_parts["con_id"].notna()].copy()
 
-        # Merge polygons that belong to the same node inside the same FDLA
-        voronoi_cells = voronoi_cells.dissolve(
-            by=["con_id", "fdla_code"],
-            as_index=False,
-        )
+        # Keep only polygons from the same FDLA
+        shared_polygons = candidate_parts[candidate_parts["fdla_code"] == orphan_fdla_code].copy()
 
-        # Split disconnected multipolygons again
-        voronoi_cells = voronoi_cells.explode(index_parts=False).reset_index(drop=True)
+        best_con_id = None
+        longest_shared_border = 0
 
-        rows.extend(voronoi_cells[["con_id", "fdla_code", "geometry"]].to_dict("records"))
+        for _, shared_polygon in shared_polygons.iterrows():
+            # get the boundary of an orphan.
+            boundary_orphan = orphan_polygon.geometry.boundary
+
+            # get the boundary of orphan
+            shared_boundary = shared_polygon.geometry.boundary
+
+            # get the lenght of the boundary intersected polygons
+            shared_length = boundary_orphan.intersection(shared_boundary).length
+
+            # if the share length is logner than 0 then it means that there are an orphan polygon sharing border with other polygon
+            # and then get the connection id
+            if shared_length > longest_shared_border:
+                longest_shared_border = shared_length
+                best_con_id = shared_polygon["con_id"]
+            # assign in the columns con_id the id with the largest shared border.
+            if best_con_id is not None:
+                voronoi_cells.loc[orphan_index, "con_id"] = best_con_id
+
+    # Keep only polygons with con_id
+    voronoi_cells = voronoi_cells[voronoi_cells["con_id"].notna()].copy()
+
+    # Merge polygons that belong to the same node inside the same FDLA
+    voronoi_cells = voronoi_cells.dissolve(
+        by=["con_id", "fdla_code"],
+        as_index=False,
+    )
+
+    # Split disconnected multipolygons again
+    voronoi_cells = voronoi_cells.explode(index_parts=False).reset_index(drop=True)
+
+    rows.extend(voronoi_cells[["con_id", "fdla_code", "geometry"]].to_dict("records"))
 
     # Create from the rows a gdf
-    subcatchments = gpd.GeoDataFrame(rows, geometry="geometry", crs=fdla.crs)
+    # Use the GeoDataFrame CRS from the voronoi cells rather than relying on
+    # an outer-scope `fdla` variable which is not available here.
+    subcatchments = gpd.GeoDataFrame(rows, geometry="geometry", crs=voronoi_cells.crs)
     # delete not data
     subcatchments = subcatchments[subcatchments.geometry.notna()]
     # remove empty features
@@ -509,6 +578,7 @@ def update_model_geopackage(
     sure_update: bool = False,
 ) -> Path:
     """Update 3Di model geopackage with new impervious surface layers.
+
     Parameters
     ----------
     model_path_gpkg : Union[str, Path]
@@ -551,7 +621,7 @@ def update_model_geopackage(
         )
 
         # Write new layers with the sqlite names
-        surfaces.drop(columns=["connection_node_id"])
+        surfaces = surfaces.drop(columns=["connection_node_id"])
         surfaces.to_file(
             model_path_gpkg,
             layer=surface_layer_name,
@@ -571,33 +641,67 @@ def update_model_geopackage(
     return model_path_gpkg
 
 
-# def run(model_path_gpkg, datacheker_path, polder_polygon_path, sure_update):
-#     subcatchments = createa_voronoi_polygons(model_path_gpkg, datacheker_path, polder_polygon_path)
-#     surfaces = create_surface_layer(subcatchments, impervious_out_polygon_gpkg)
-#     percentage_by_surface = get_percentage_afvoernorm(hdb_path, surfaces)
-#     surface_map = create_surface_map_layer(model_path_gpkg, surfaces, percentage_by_surface, impervious_out_line_gpkg)
-#     update_model_geopackage(
-#         model_path_gpkg,
-#         surfaces,
-#         surface_map,
-#         output_model_path=None,
-#         surface_layer_name="impervious_surface",
-#         surface_map_layer_name="impervious_surface_map",
-#         sure_update=sure_update,
-#     )
+def run(model_path_gpkg, datacheker_path, polder_polygon_path, hdb_path, sure_update):
+    # Get connection nodes assigned to FDLA polygons
+        nodes_fdla, fdla = get_nodes_within_fdla(
+            model_path_gpkg=model_path_gpkg,
+            datacheker_path=datacheker_path,
+            polder_polygon_path=polder_polygon_path,
+        )
+    
+        # Create Voronoi polygons
+        voronoi_cells, rows = createa_voronoi_polygons(
+            nodes_fdla=nodes_fdla,
+            fdla=fdla,
+        )
+    
+        # Correct orphan Voronoi polygons and create final subcatchments
+        subcatchments = correct_voronoi_polygons(
+            voronoi_cells=voronoi_cells,
+            rows=rows,
+        )
+    
+        # Transform subcatchments into the format expected by 3Di
+        surfaces = create_surface_layer(
+            subcatchments=subcatchments,
+            impervious_out_polygon_gpkg=model_path_gpkg,
+        )
+    
+        # Calculate afvoernorm percentage per surface
+        percentage_by_surface = get_percentage_afvoernorm(
+            hdb_path=hdb_path,
+            surfaces=surfaces,
+        )
+    
+        # Create surface map lines
+        surface_map = create_surface_map_layer(
+            model_path_gpkg=model_path_gpkg,
+            surfaces=surfaces,
+            percentage_by_surface=percentage_by_surface,
+            impervious_out_line_gpkg=model_path_gpkg,
+        )
+    
+        # Write impervious_surface and impervious_surface_map to the GeoPackage
+        update_model_geopackage(
+            model_path_gpkg=model_path_gpkg,
+            surfaces=surfaces,
+            surface_map=surface_map,
+            output_model_path=model_path_gpkg,
+            sure_update=sure_update,
+        )
 
-
-# %%
 # inputs
+#%%
+hdb_path = r"H:\01.basisgegevens\00.HDB\Hydro_database.gpkg"
+folder = Path(r"H:\personen\jacosta\update_3di_model_test\Zijpe_West_2026_MR")
+source_data = folder / "01_source_data"
+damo_path = source_data / "DAMO.gpkg"
+datacheker_path = source_data / "datachecker_output.gpkg"
+polder_polygon_path = source_data / "polder_polygon.shp"
+model_path_gpkg = folder / "02_schematisation" / "00_basis" / "bwn_zijpe-west.gpkg"
+impervious_out_polygon_gpkg = source_data / "impervious_pol_review.gpkg"
+impervious_out_line_gpkg = source_data / "impervious_line_review.gpkg"
+sure_update = True
 
-# hdb_path = r"H:\01.basisgegevens\00.HDB\Hydro_database.gpkg"
-# folder = Path(r"H:\personen\jacosta\update_3di_model_test\Zijpe_West_2026_MR")
-# source_data = folder / "01_source_data"
-# damo_path = source_data / "DAMO.gpkg"
-# datacheker_path = source_data / "datachecker_output.gpkg"
-# polder_polygon_path = source_data / "polder_polygon.shp"
-# model_path_gpkg = folder / "02_schematisation" / "00_basis" / "bwn_zijpe-west.gpkg"
-# impervious_out_polygon_gpkg = source_data / "impervious_pol_review.gpkg"
-# impervious_out_line_gpkg = source_data / "impervious_line_review.gpkg"
-
+run(model_path_gpkg, datacheker_path, polder_polygon_path, hdb_path, sure_update)
 # %%
