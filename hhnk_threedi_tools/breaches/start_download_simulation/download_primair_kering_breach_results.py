@@ -17,8 +17,10 @@ import hhnk_research_tools as hrt
 import numpy as np
 import pandas as pd
 from breaches import Breaches
+from breaches.start_download_simulation.download_results_from_3di import download_results_from_3di
 from create_breach_graph import create_breach_graph
 from download_results_from_3di import download_results_from_3di
+from hhnk_threedi_tools.breaches.create_breach_graph import create_breach_graph
 from threedi_api_client.api import ThreediApi
 from threedi_api_client.openapi import ApiException
 from threedi_api_client.versions import V3Api
@@ -26,8 +28,6 @@ from threedi_scenario_downloader import downloader as dl
 from threedigrid.admin.gridresultadmin import GridH5AggregateResultAdmin, GridH5ResultAdmin
 
 from hhnk_threedi_tools.breaches.breaches import Breaches
-from hhnk_threedi_tools.breaches.create_breach_graph import create_breach_graph
-from breaches.start_download_simulation.download_results_from_3di import download_results_from_3di
 
 # %%
 

@@ -92,7 +92,6 @@ class Submodels:
         self.schematisation_type = schematisation_type
         self.layer_names = LAYER_NAMES[self.schematisation_type]
         self.columns_names = COLUMNS_NAMES[self.schematisation_type]
-        
 
         # Locate required files / directories
         self.schematisation_gpkg = self._find_file("*.gpkg", GeoPackageFileNotFoundError)

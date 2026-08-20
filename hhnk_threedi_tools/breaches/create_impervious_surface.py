@@ -6,7 +6,6 @@ import pandas as pd
 from shapely import get_parts, voronoi_polygons
 from shapely.geometry import MultiPoint
 
-
 gpkg_path = Path(r"D:\path\to\your_model.gpkg")
 
 out_gpkg = gpkg_path.with_name(gpkg_path.stem + "_impervious_review.gpkg")
@@ -26,7 +25,7 @@ nodes = nodes.to_crs(fdla.crs)
 polder = polder.to_crs(fdla.crs)
 
 
-#connecntion nodes
+# connecntion nodes
 
 available_layers = fiona.listlayers(gpkg_path)
 
@@ -56,7 +55,6 @@ for layer in network_layers:
             used_node_ids.update(df[connection_node_col].dropna().astype(int).tolist())
 
 
-
 boundary_node_ids = set()
 
 if "v2_1d_boundary_conditions" in available_layers:
@@ -75,11 +73,8 @@ nodes = nodes[~nodes["con_id"].isin(boundary_node_ids)].copy()
 print("Valid nodes:", len(nodes))
 
 
-
 fdla = gpd.clip(fdla, polder)
 fdla["geometry"] = fdla.geometry.make_valid()
-
-
 
 
 nodes_fdla = gpd.sjoin(
@@ -147,7 +142,6 @@ subcatchments["area"] = subcatchments.geometry.area
 print("Subcatchments:", len(subcatchments))
 
 
-
 # MAKE v2_impervious_surface_new
 
 
@@ -181,7 +175,6 @@ surfaces = surfaces[
 ]
 
 
-
 # MAKE v2_impervious_surface_map_new
 
 
@@ -193,7 +186,6 @@ surface_map = pd.DataFrame(
         "percentage": 100.0,
     }
 )
-
 
 
 # WRITE OUTPUTS

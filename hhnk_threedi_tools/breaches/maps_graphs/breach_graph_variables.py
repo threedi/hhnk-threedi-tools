@@ -1,5 +1,4 @@
-
-#%%
+# %%
 from pathlib import Path
 
 import numpy as np
@@ -7,16 +6,17 @@ import pandas as pd
 from create_breach_graph import create_breach_graph
 from threedigrid.admin.gridresultadmin import GridH5AggregateResultAdmin, GridH5ResultAdmin
 
+
 def graph_breach_variables(
-    x_name: str, #Breach name or Scenario name
-    resulth5:Path,
-    resultnc:Path,
-    aggregated_result:Path,
-    csv_result:Path,
-    csv_result_agg:Path,
-    fig_path_name:Path,
-    fig_path_name_agg:Path,
-    csv_result_simulation_data:Path,
+    x_name: str,  # Breach name or Scenario name
+    resulth5: Path,
+    resultnc: Path,
+    aggregated_result: Path,
+    csv_result: Path,
+    csv_result_agg: Path,
+    fig_path_name: Path,
+    fig_path_name_agg: Path,
+    csv_result_simulation_data: Path,
 ):
     """
     Generate breach-variable CSV summaries and plots from 3Di grid results.
@@ -92,37 +92,29 @@ def graph_breach_variables(
     # locate breach id
     breach_id = gr.lines.content_pk[breach_line]
 
-    breach_width = gr.lines.timeseries(start_time=0, end_time=gr.lines.timestamps[-1]).breach_width[
-        :, breach_mask
-    ][:, 0]
+    breach_width = gr.lines.timeseries(start_time=0, end_time=gr.lines.timestamps[-1]).breach_width[:, breach_mask][
+        :, 0
+    ]
     breach_width[breach_width <= -999] = np.nan
     max_breach_width = np.nanmax(breach_width)
 
-    breach_depth = gr.lines.timeseries(start_time=0, end_time=gr.lines.timestamps[-1]).breach_depth[
-        :, breach_mask
-    ][:, 0]
+    breach_depth = gr.lines.timeseries(start_time=0, end_time=gr.lines.timestamps[-1]).breach_depth[:, breach_mask][
+        :, 0
+    ]
     max_breach_depth = np.amax(breach_depth)
 
-    breach_q = (
-        gr.lines.filter(id__eq=breach_line).timeseries(start_time=0, end_time=gr.lines.timestamps[-1]).q[:, 0]
-    )
+    breach_q = gr.lines.filter(id__eq=breach_line).timeseries(start_time=0, end_time=gr.lines.timestamps[-1]).q[:, 0]
 
     breach_q_agg = (
-        ga.lines.filter(id__eq=breach_line)
-        .timeseries(start_time=0, end_time=gr.lines.timestamps[-1])
-        .q_avg[:, 0]
+        ga.lines.filter(id__eq=breach_line).timeseries(start_time=0, end_time=gr.lines.timestamps[-1]).q_avg[:, 0]
     )
     breach_q_agg[breach_q_agg < 0] = 0
     max_breach_q_agg = np.amax(breach_q_agg)
 
-    breach_u = (
-        gr.lines.filter(id__eq=breach_line).timeseries(start_time=0, end_time=gr.lines.timestamps[-1]).u1[:, 0]
-    )
+    breach_u = gr.lines.filter(id__eq=breach_line).timeseries(start_time=0, end_time=gr.lines.timestamps[-1]).u1[:, 0]
 
     breach_u_agg = (
-        ga.lines.filter(id__eq=breach_line)
-        .timeseries(start_time=0, end_time=gr.lines.timestamps[-1])
-        .u1_avg[:, 0]
+        ga.lines.filter(id__eq=breach_line).timeseries(start_time=0, end_time=gr.lines.timestamps[-1]).u1_avg[:, 0]
     )
     breach_u_agg[breach_u_agg <= -999] = 0
     breach_u_agg = np.abs(breach_u_agg)
@@ -211,7 +203,7 @@ def graph_breach_variables(
             "y": y,
             "breach_line": breach_line[0],
             "breach_id": breach_id[0],
-            'timestamps':timestamps,
+            "timestamps": timestamps,
             "time_sec": time_sec_agg,
             "breach_width": width_interp_agg,
             "breach_depth": breach_depth_agg,
@@ -291,24 +283,27 @@ def graph_breach_variables(
 
     # save to csv file
     df_simulation_data.to_csv(csv_result_simulation_data, sep=";", decimal=",")
-#%%
+
+
+# %%
 if __name__ == "__main__":
-    from pathlib import Path
     import os
-    breach_folder = (r'E:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\output\texel_overstroming_bressen\ROR-PRI-DUINEN_TEXEL_40-T100000')
-    breach_netcdf = os.path.join(breach_folder, '01_NetCDF')
-    breach_jpeg = os.path.join(breach_folder, '04_JPEG')
-    breach_name = Path(breach_folder).name + '_v2'
+    from pathlib import Path
+
+    breach_folder = r"E:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\output\texel_overstroming_bressen\ROR-PRI-DUINEN_TEXEL_40-T100000"
+    breach_netcdf = os.path.join(breach_folder, "01_NetCDF")
+    breach_jpeg = os.path.join(breach_folder, "04_JPEG")
+    breach_name = Path(breach_folder).name + "_v2"
     # Example usage
     graph_breach_variables(
-        x_name= breach_name,
-        resulth5= os.path.join(breach_netcdf,'gridadmin.h5'),
-        resultnc= os.path.join(breach_netcdf, 'results_3di.nc'),
-        aggregated_result= os.path.join(breach_netcdf, 'aggregate_results_3di.nc'),
-        csv_result= os.path.join(breach_folder, f'{breach_name}_breach_data.csv'),
-        csv_result_agg=  os.path.join(breach_folder, f'{breach_name}_breach_data_agg.csv'),
-        fig_path_name= os.path.join(breach_jpeg, f'{breach_name}.png'),
-        fig_path_name_agg= os.path.join(breach_jpeg, f'{breach_name}_agg.png'),
-        csv_result_simulation_data= os.path.join(breach_folder,f'{breach_name}_simulation_data.csv'),
+        x_name=breach_name,
+        resulth5=os.path.join(breach_netcdf, "gridadmin.h5"),
+        resultnc=os.path.join(breach_netcdf, "results_3di.nc"),
+        aggregated_result=os.path.join(breach_netcdf, "aggregate_results_3di.nc"),
+        csv_result=os.path.join(breach_folder, f"{breach_name}_breach_data.csv"),
+        csv_result_agg=os.path.join(breach_folder, f"{breach_name}_breach_data_agg.csv"),
+        fig_path_name=os.path.join(breach_jpeg, f"{breach_name}.png"),
+        fig_path_name_agg=os.path.join(breach_jpeg, f"{breach_name}_agg.png"),
+        csv_result_simulation_data=os.path.join(breach_folder, f"{breach_name}_simulation_data.csv"),
     )
 # %%
