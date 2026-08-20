@@ -27,7 +27,7 @@ from threedigrid.admin.gridresultadmin import GridH5AggregateResultAdmin, GridH5
 
 from hhnk_threedi_tools.breaches.breaches import Breaches
 from hhnk_threedi_tools.breaches.create_breach_graph import create_breach_graph
-from hhnk_threedi_tools.breaches.download_results_from_3di import download_results_from_3di
+from breaches.start_download_simulation.download_results_from_3di import download_results_from_3di
 
 # %%
 

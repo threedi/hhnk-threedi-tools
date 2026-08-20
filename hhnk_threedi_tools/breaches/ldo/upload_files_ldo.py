@@ -64,7 +64,7 @@ import hhnk_research_tools as hrt
 import pandas as pd
 import requests
 
-from hhnk_threedi_tools.breaches import breach_wdepth_damage
+from breaches.rasters import breach_wdepth_damage
 from hhnk_threedi_tools.breaches.breaches import Breaches
 
 LDO_API_URL = "https://ldo.overstromingsinformatie.nl/api/v1/"

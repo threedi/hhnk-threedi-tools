@@ -6,19 +6,12 @@ import pandas as pd
 from shapely import get_parts, voronoi_polygons
 from shapely.geometry import MultiPoint
 
-# ------------------------------------------------------------
-# INPUTS
-# ------------------------------------------------------------
 
 gpkg_path = Path(r"D:\path\to\your_model.gpkg")
 
 out_gpkg = gpkg_path.with_name(gpkg_path.stem + "_impervious_review.gpkg")
 out_csv = gpkg_path.with_name("v2_impervious_surface_map_new.csv")
 
-
-# ------------------------------------------------------------
-# READ LAYERS
-# ------------------------------------------------------------
 
 print(fiona.listlayers(gpkg_path))
 
@@ -33,9 +26,7 @@ nodes = nodes.to_crs(fdla.crs)
 polder = polder.to_crs(fdla.crs)
 
 
-# ------------------------------------------------------------
-# GET USED CONNECTION NODES
-# ------------------------------------------------------------
+#connecntion nodes
 
 available_layers = fiona.listlayers(gpkg_path)
 
@@ -65,9 +56,6 @@ for layer in network_layers:
             used_node_ids.update(df[connection_node_col].dropna().astype(int).tolist())
 
 
-# ------------------------------------------------------------
-# REMOVE BOUNDARY NODES
-# ------------------------------------------------------------
 
 boundary_node_ids = set()
 
@@ -87,17 +75,12 @@ nodes = nodes[~nodes["con_id"].isin(boundary_node_ids)].copy()
 print("Valid nodes:", len(nodes))
 
 
-# ------------------------------------------------------------
-# CLIP FDLA WITH POLDER
-# ------------------------------------------------------------
 
 fdla = gpd.clip(fdla, polder)
 fdla["geometry"] = fdla.geometry.make_valid()
 
 
-# ------------------------------------------------------------
-# ASSIGN NODES TO FDLA
-# ------------------------------------------------------------
+
 
 nodes_fdla = gpd.sjoin(
     nodes[["con_id", "geometry"]],
@@ -111,10 +94,6 @@ nodes_fdla = nodes_fdla.drop_duplicates(subset=["con_id"])
 
 print("Nodes assigned to FDLA:", len(nodes_fdla))
 
-
-# ------------------------------------------------------------
-# CREATE VORONOI POLYGONS PER FDLA
-# ------------------------------------------------------------
 
 rows = []
 
@@ -155,10 +134,8 @@ subcatchments = subcatchments[subcatchments.geometry.notna()]
 subcatchments = subcatchments[~subcatchments.geometry.is_empty]
 subcatchments["geometry"] = subcatchments.geometry.make_valid()
 
-
-# ------------------------------------------------------------
 # DISSOLVE BY CONNECTION NODE
-# ------------------------------------------------------------
+
 
 subcatchments = subcatchments.dissolve(
     by=["con_id", "fdla_code"],
@@ -170,9 +147,9 @@ subcatchments["area"] = subcatchments.geometry.area
 print("Subcatchments:", len(subcatchments))
 
 
-# ------------------------------------------------------------
+
 # MAKE v2_impervious_surface_new
-# ------------------------------------------------------------
+
 
 surfaces = subcatchments.copy()
 
@@ -204,9 +181,9 @@ surfaces = surfaces[
 ]
 
 
-# ------------------------------------------------------------
+
 # MAKE v2_impervious_surface_map_new
-# ------------------------------------------------------------
+
 
 surface_map = pd.DataFrame(
     {
@@ -218,9 +195,9 @@ surface_map = pd.DataFrame(
 )
 
 
-# ------------------------------------------------------------
+
 # WRITE OUTPUTS
-# ------------------------------------------------------------
+
 
 if out_gpkg.exists():
     out_gpkg.unlink()
