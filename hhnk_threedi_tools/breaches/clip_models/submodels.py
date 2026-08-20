@@ -41,7 +41,7 @@ from osgeo import gdal, ogr, osr
 from shapely import unary_union
 from tqdm import tqdm
 
-from hhnk_threedi_tools.breaches.exceptions import (
+from hhnk_threedi_tools.breaches.clip_models.exceptions import (
     FieldNameNotFoundError,
     GeoPackageFileNotFoundError,
     LayerNotFoundError,
@@ -51,7 +51,7 @@ from hhnk_threedi_tools.breaches.exceptions import (
     SubareaLayerEmptyError,
     SubareaNamesNotUniqueError,
 )
-from hhnk_threedi_tools.breaches.submodel_constants import COLUMNS_NAMES, LAYER_NAMES, SchematisationType
+from hhnk_threedi_tools.breaches.clip_models.submodel_constants import COLUMNS_NAMES, LAYER_NAMES, SchematisationType
 
 # %%
 warnings.filterwarnings(
@@ -118,6 +118,7 @@ class Submodels:
         ):
             self.calculation_grid_cells = self.calculation_grid_cells.to_crs(self.subareas.crs)
 
+        self.output_gpkgs = []
         # Process each sub-area
         for _, subarea in tqdm(
             self.subareas.iterrows(),
@@ -125,7 +126,8 @@ class Submodels:
             desc="Clipping sub-areas",
             unit="subarea",
         ):
-            self._clip(subarea, schematisation_type)
+            output_gpkg = self._clip(subarea, schematisation_type)
+            self.output_gpkgs.append(output_gpkg)
 
     # helpers
 
@@ -162,20 +164,12 @@ class Submodels:
         if self.subareas[self.field_name].duplicated().any():
             raise SubareaNamesNotUniqueError(f"Values in field '{self.field_name}' are not unique.")
 
-    # --
     # GeoPackage reading (via Fiona — preserves model IDs)
-    # --
 
     def _read_geopackage_layers(
         self,
         gpkg_path: Path,
     ) -> dict[str, gpd.GeoDataFrame]:
-        """Read all layers from a GeoPackage using Fiona.
-
-        The 'id' column is always the ID used for filtering and relations:
-        - RANA: Fiona feature ID
-        - THREEDI: model 'id' property
-        """
 
         layers_dict: dict[str, gpd.GeoDataFrame] = {}
 
@@ -187,15 +181,8 @@ class Submodels:
             if records:
                 gdf = gpd.GeoDataFrame.from_features(records, crs=crs)
 
-                if self.schematisation_type == SchematisationType.RANA:
-                    # RANA: use Fiona FID as id
-                    gdf["id"] = [int(feat["id"]) for feat in records]
-
-                elif self.schematisation_type == SchematisationType.THREEDI:
-                    # THREEDI: keep properties["id"] from from_features()
-                    # Only fallback to Fiona FID if the layer has no id property
-                    if "id" not in gdf.columns:
-                        gdf["id"] = [int(feat["id"]) for feat in records]
+                # ALWAYS use Fiona FID
+                gdf["id"] = [int(feat["id"]) for feat in records]
 
             else:
                 gdf = gpd.read_file(
@@ -217,14 +204,12 @@ class Submodels:
         gpkg_path: Path,
         layer_name: str,
     ) -> None:
-        if gdf.empty:
-            return
 
         # IDs a mantener
         valid_ids = set(gdf["id"].astype(int))
 
-        # Abrir con GDAL y eliminar features que no están en valid_ids
-        ds = ogr.Open(str(gpkg_path), update=1)  # update=1 → escritura
+        # Open gedal and delete what it not good.
+        ds = ogr.Open(str(gpkg_path), update=1)  # update=1 → write
         layer = ds.GetLayerByName(layer_name)
 
         ids_to_delete = []
@@ -232,8 +217,14 @@ class Submodels:
             if feature.GetFID() not in valid_ids:
                 ids_to_delete.append(feature.GetFID())
 
+        layer.ResetReading()
+        print(layer_name, "delete:", len(ids_to_delete))
+        layer.StartTransaction()
+
         for fid in ids_to_delete:
             layer.DeleteFeature(fid)
+
+        layer.CommitTransaction()
 
         ds = None  # cerrar
 
@@ -322,7 +313,7 @@ class Submodels:
 
     # clip layers per subarea
 
-    def _clip(self, subarea: pd.Series, schematisation_type) -> None:
+    def _clip(self, subarea: pd.Series, schematisation_type) -> Path:
         """Clip all schematisation data for a single sub-area."""
 
         ln = self.layer_names
@@ -523,13 +514,13 @@ class Submodels:
 
         # Clip rasters (if present)
         if self.rasters_directory is None:
-            return
+            return output_gpkg
 
         tif_files = [
             f for f in self.rasters_directory.iterdir() if f.is_file() and f.suffix.lower() in {".tif", ".tiff"}
         ]
         if not tif_files:
-            return
+            return output_gpkg
 
         intersecting_cells = self.calculation_grid_cells[self.calculation_grid_cells.intersects(subarea.geometry)]
         if intersecting_cells.empty:
@@ -541,15 +532,16 @@ class Submodels:
 
         output_rasters_dir = output_directory / "rasters"
         output_rasters_dir.mkdir(parents=True, exist_ok=True)
-
+        print("I am in the raster creation")
         for tif_path in tif_files:
             self._clip_raster(tif_path, dissolved_mask, output_rasters_dir / tif_path.name)
+        return output_gpkg
 
 
 # Public API
 
 
-def run(
+def run_submodel(
     schematisation_directory: str | Path,
     subareas_path: str | Path,
     field_name: str,
@@ -558,7 +550,7 @@ def run(
     calculation_grid_cells_layer_name: str | None = None,
     isolate_1d: bool = False,
     schematisation_type: SchematisationType = SchematisationType.RANA,
-) -> None:
+) -> list[Path]:
     """Entry point for creating sub-models from a 3Di schematisation.
 
     Parameters
@@ -592,11 +584,12 @@ def run(
         isolate_1d=isolate_1d,
         schematisation_type=schematisation_type,
     )
+    return submodels.output_gpkgs
 
 
 # %%
 if __name__ == "__main__":
-    run(
+    run_submodel(
         schematisation_directory=Path(r"H:\02.modellen\RegionalFloodModel\work in progress\schematisation"),
         subareas_path=r"H:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\deelgebieden\ROR PRI - dijktrajecten 13-8 en 13-9 - Stroom_NO.gpkg",
         field_name="Deelgebied",
@@ -605,213 +598,5 @@ if __name__ == "__main__":
         calculation_grid_cells_layer_name="cell",
         isolate_1d=True,
         schematisation_type=SchematisationType.THREEDI,
-    )
-
-# %%
-
-gpkg_path = r"H:\02.modellen\RegionalFloodModel\work in progress\schematisation\ROR PRI - dijktrajecten 13-8 en 13-9 - Stroom_NO\RegionalFloodModel_ROR PRI - dijktrajecten 13-8 en 13-9 - Stroom_NO.gpkg"
-polygon_path = r"H:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\deelgebieden\ROR PRI - dijktrajecten 13-8 en 13-9 - Stroom_NO.gpkg"
-from hhnk_threedi_tools.breaches.submodel_constants import COLUMNS_NAMES, LAYER_NAMES, SchematisationType
-
-list_layers = [
-    "connection_node",
-    "1d_boundary_condition",
-    "orifice",
-    "cross_section_location",
-    "channel",
-    "potential_breach",
-]
-
-
-def read_geopackage_layers(
-    gpkg_path: Path,
-    schematisation_type: SchematisationType,
-    selected_layers: bool = False,
-    list_layers: list | None = None,
-) -> dict[str, gpd.GeoDataFrame]:
-
-    layers_dict: dict[str, gpd.GeoDataFrame] = {}
-
-    if selected_layers:
-        if list_layers is None:
-            raise ValueError("list_layers must be provided when selected_layers=True")
-        layer_names = list_layers
-    else:
-        layer_names = fiona.listlayers(gpkg_path)
-
-    for layer_name in layer_names:
-        with fiona.open(gpkg_path, layer=layer_name) as src:
-            records = list(src)
-            crs = src.crs
-
-        if records:
-            gdf = gpd.GeoDataFrame.from_features(records, crs=crs)
-
-            if schematisation_type == SchematisationType.RANA:
-                # RANA: use Fiona feature ID
-                gdf["id"] = [int(feat["id"]) for feat in records]
-
-            elif schematisation_type == SchematisationType.THREEDI:
-                # THREEDI: from_features() already reads properties["id"]
-                # Only use Fiona ID if the layer has no 'id' property
-                if "id" not in gdf.columns:
-                    gdf["id"] = [int(feat["id"]) for feat in records]
-
-        else:
-            gdf = gpd.read_file(
-                gpkg_path,
-                layer=layer_name,
-                engine="fiona",
-            )
-
-            if "id" not in gdf.columns:
-                gdf["id"] = pd.array([], dtype="int64")
-
-        layers_dict[layer_name] = gdf
-
-    return layers_dict
-
-
-# %%
-
-
-def clean_geopackge(polygon_path):
-
-    cn = COLUMNS_NAMES[SchematisationType.THREEDI]
-
-    polygon_gdf = gpd.read_file(polygon_path)
-
-    layers_dict = read_geopackage_layers(
-        gpkg_path=gpkg_path,
-        schematisation_type=SchematisationType.THREEDI,
-        selected_layers=True,
-        list_layers=list_layers,
-    )
-
-    boundary_condition = layers_dict["1d_boundary_condition"]
-    connection_node = layers_dict["connection_node"]
-    orifice = layers_dict["orifice"]
-    cross_section_location = layers_dict["cross_section_location"]
-    channel = layers_dict["channel"]
-    pontential_breach = layers_dict["potential_breach"]
-
-    # Boundary conditions outside polygon
-    boundary_condition_overlay = gpd.overlay(
-        boundary_condition,
-        polygon_gdf[["geometry"]],
-        how="intersection",
-    )
-
-    bc_out_of_intersection = boundary_condition.loc[
-        ~boundary_condition["id"].isin(boundary_condition_overlay["id"])
-    ].copy()
-
-    bc_condition_connection_node_id = bc_out_of_intersection["connection_node_id"].tolist()
-
-    # Orifices connected to those BC connection nodes
-    orifice_out_of_intersection = orifice.loc[
-        orifice[cn["connection_node_id_end"]].isin(bc_condition_connection_node_id)
-    ].copy()
-
-    orifice_connection_node_start = orifice_out_of_intersection[cn["connection_node_id_start"]].tolist()
-
-    # Connection nodes Start of those orifices
-    connection_node_selected = connection_node.loc[connection_node["id"].isin(orifice_connection_node_start)].copy()
-
-    # Buffer around them
-    connection_node_buffer = connection_node_selected.copy()
-    connection_node_buffer["geometry"] = connection_node_buffer.geometry.buffer(0.1)
-
-    bc_out_of_intersection_buffer = bc_out_of_intersection.copy()
-    bc_out_of_intersection_buffer["geometry"] = bc_out_of_intersection_buffer.geometry.buffer(0.1)
-
-    channel_orifice_overlay = gpd.overlay(
-        channel,
-        connection_node_buffer[["geometry"]],
-        how="intersection",
-    )
-
-    channel_bc_overlay = gpd.overlay(
-        channel,
-        bc_out_of_intersection_buffer[["geometry"]],
-        how="intersection",
-    )
-
-    # Recover original channel records
-    channel_selected = channel.loc[
-        channel["id"].isin(channel_orifice_overlay["id"]) | channel["id"].isin(channel_bc_overlay["id"])
-    ].copy()
-
-    connection_node_channel_start = channel_selected[cn["connection_node_id_start"]].to_list()
-    connection_node_channel_end = channel_selected[cn["connection_node_id_end"]].to_list()
-    connection_node_bc = bc_out_of_intersection["connection_node_id"].to_list()
-    connection_node_selected = connection_node.loc[
-        connection_node["id"].isin(connection_node_channel_start)
-        | connection_node["id"].isin(connection_node_channel_end)
-        | connection_node["id"].isin(connection_node_bc)
-    ].copy()
-
-    channel_buffer = channel_selected.copy()
-    channel_buffer = channel_buffer.set_geometry(channel_buffer.geometry.buffer(0.1))
-    crosssection_selection = cross_section_location.overlay(channel_buffer[["geometry"]])
-
-    crosssection_overlay = gpd.overlay(
-        cross_section_location,
-        channel_buffer[["geometry"]],
-        how="intersection",
-    )
-    # Recover original cross-section records
-    crosssection_selection = cross_section_location.loc[
-        cross_section_location["id"].isin(crosssection_overlay["id"])
-    ].copy()
-
-    pontential_breach_id = pontential_breach.loc[pontential_breach["channel_id"].isin(channel_selected["id"].tolist())]
-    return {
-        "1d_boundary_condition": bc_out_of_intersection["id"].tolist(),
-        "orifice": orifice_out_of_intersection["id"].tolist(),
-        "connection_node": connection_node_selected["id"].tolist(),
-        "channel": channel_selected["id"].tolist(),
-        "cross_section_location": crosssection_selection["id"].tolist(),
-    }
-
-
-def remove_selection(
-    gpkg_path,
-    layer_name,
-    ids_to_remove,
-    schematisation_type,
-):
-    ds = ogr.Open(str(gpkg_path), update=1)
-    layer = ds.GetLayerByName(layer_name)
-
-    fids_to_remove = []
-
-    for feature in layer:
-        if schematisation_type == SchematisationType.RANA:
-            feature_id = feature.GetFID()
-        else:
-            feature_id = feature.GetField("id")
-
-        if feature_id in ids_to_remove:
-            fids_to_remove.append(feature.GetFID())
-
-    # Close/reset the active read cursor before deleting
-    layer.ResetReading()
-
-    for fid in fids_to_remove:
-        layer.DeleteFeature(fid)
-
-    layer = None
-    ds = None
-
-
-remove_dict = clean_geopackge(polygon_path)
-
-for layer_name, ids in remove_dict.items():
-    remove_selection(
-        gpkg_path,
-        layer_name,
-        ids,
-        SchematisationType.THREEDI,
     )
 # %%

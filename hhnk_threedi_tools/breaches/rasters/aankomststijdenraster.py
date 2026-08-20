@@ -45,9 +45,10 @@ from pathlib import Path
 import numpy as np
 import rasterio
 
-# Carpeta raíz donde están todas las regiones
+# raster path location
 input_dir = Path(r"Y:\personen\jacosta\kaarten_20cm\Aankomsttijdenrasters HHNK\Resultaat")
 
+# list with max water depth raster and time step
 raster_files = [
     ("waterdiepte_max_t02h.tif", 2),
     ("waterdiepte_max_t04h.tif", 4),
