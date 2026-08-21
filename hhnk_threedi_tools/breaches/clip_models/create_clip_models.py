@@ -1,3 +1,5 @@
+# %%
+
 """Create and clean clipped 3Di submodels.
 
 This module provides the main entry point for the submodel clipping workflow.
@@ -46,6 +48,31 @@ def run(
             model_gpkg_path=model_gpkg_path,
             polygon_path=subareas_path,
             field_name=field_name,
+            isolate_1d=isolate_1d,
             schematisation_type=schematisation_type,
         )
     return model_gpkg_paths
+
+
+# %%
+if __name__ == "__main__":
+    schematisation_directory = Path(r"H:\02.modellen\RegionalFloodModel\work in progress\schematisation")
+    subareas_path = r"H:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\deelgebieden\ROR PRI - dijktrajecten 13-8 en 13-9 - Stroom_NO.gpkg"
+    field_name = "Deelgebied"
+    calculation_grid_cells_path = r"H:\02.modellen\RegionalFloodModel\work in progress\regional_calculation_grid.gpkg"
+    subareas_layer_name = None
+    calculation_grid_cells_layer_name = "cell"
+    isolate_1d = True
+    schematisation_type = SchematisationType.THREEDI
+
+    run(
+        schematisation_directory=schematisation_directory,
+        subareas_path=subareas_path,
+        field_name="Deelgebied",
+        calculation_grid_cells_path=calculation_grid_cells_path,
+        subareas_layer_name=None,
+        calculation_grid_cells_layer_name=calculation_grid_cells_layer_name,
+        isolate_1d=isolate_1d,
+        schematisation_type=schematisation_type,
+    )
+# %%

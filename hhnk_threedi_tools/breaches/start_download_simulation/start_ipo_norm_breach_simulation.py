@@ -38,8 +38,6 @@ def start_ipo_norm_breach_simulation(
     # Loggin code.
     config = {
         "THREEDI_API_HOST": "https://api.3di.live",
-        # "THREEDI_API_USERNAME": "j.acostabarragan",
-        # "THREEDI_API_PASSWORD": getpass(),
         "THREEDI_API_PERSONAL_API_TOKEN": api_keys["threedi"],
     }
     # api_client = ThreediApiClient(config=config)

@@ -1,11 +1,12 @@
 from pathlib import Path
+from typing import Dict, List, Union
 
 import fiona
 import geopandas as gpd
 import pandas as pd
 from osgeo import ogr
 
-from hhnk_threedi_tools.breaches.clip_models.submodel_constants import COLUMNS_NAMES, SchematisationType
+from hhnk_threedi_tools.breaches.clip_models.submodel_constants import COLUMNS_NAMES, LAYER_NAMES, SchematisationType
 
 list_layers = [
     # "potential_breach",
@@ -14,6 +15,7 @@ list_layers = [
     "orifice",
     "cross_section_location",
     "channel",
+    "exchange_line",
 ]
 
 
@@ -23,6 +25,11 @@ def read_geopackage_layers(
     selected_layers: bool = False,
     list_layers: list | None = None,
 ) -> dict[str, gpd.GeoDataFrame]:
+    """Read layers from a GeoPackage and return a dict of GeoDataFrames.
+
+    Parameters: model_path_gpkg (Path), schematisation_type (SchematisationType).
+    Returns: mapping layer name -> GeoDataFrame with an `id` column present.
+    """
 
     layers_dict: dict[str, gpd.GeoDataFrame] = {}
 
@@ -69,7 +76,15 @@ def read_geopackage_layers(
 # %%
 
 
-def clean_geopackage(model_path_gpkg, polygon_path, schematisation_type):
+def clean_submodel_boundary(
+    model_path_gpkg: Union[str, Path],
+    polygon_path: Union[str, Path],
+    schematisation_type: SchematisationType,
+) -> Dict[str, List[int]]:
+    """Identify features to remove outside a submodel polygon.
+
+    Returns a dict mapping layer names to lists of feature ids to remove.
+    """
 
     cn = COLUMNS_NAMES[schematisation_type]
 
@@ -87,7 +102,19 @@ def clean_geopackage(model_path_gpkg, polygon_path, schematisation_type):
     orifice = layers_dict["orifice"]
     cross_section_location = layers_dict["cross_section_location"]
     channel = layers_dict["channel"]
+    exchange_line = layers_dict["exchange_line"]
     # potential_breach = layers_dict["potential_breach"]
+
+    # select channels crosses polygons boundaries
+    channel_crossing_boundary = gpd.sjoin(
+        channel,
+        gpd.GeoDataFrame(geometry=polygon_gdf.boundary, crs=polygon_gdf.crs),
+        how="inner",
+        predicate="intersects",
+    )
+
+    # Select exchange lines from channels that are in the border.
+    exchange_line_selected = exchange_line[exchange_line["channel_id"].isin(channel_crossing_boundary["id"])]
 
     # Boundary conditions over the  polygon
     boundary_condition_overlay = gpd.overlay(
@@ -171,16 +198,21 @@ def clean_geopackage(model_path_gpkg, polygon_path, schematisation_type):
         "connection_node": connection_node_selected["id"].tolist(),
         "channel": channel_selected["id"].tolist(),
         "cross_section_location": crosssection_selection["id"].tolist(),
+        "exchange_line": exchange_line_selected["id"].tolist(),
     }
 
 
 # %%
 def remove_selection(
-    model_path_gpkg,
-    layer_name,
-    ids_to_remove,
-    schematisation_type,
-):
+    model_path_gpkg: Union[str, Path],
+    layer_name: str,
+    ids_to_remove: List[int],
+    schematisation_type: SchematisationType,
+) -> None:
+    """Remove features with given ids from a layer inside a GeoPackage.
+
+    Uses OGR to delete features by FID or `id` field depending on schematisation.
+    """
     ds = ogr.Open(str(model_path_gpkg), update=1)
     layer = ds.GetLayerByName(layer_name)
 
@@ -207,34 +239,164 @@ def remove_selection(
     ds = None
 
 
-def run(
-    model_gpkg_path,
-    polygon_path,
-    field_name,
-    schematisation_type,
+def set_isolated_1d(
+    model_gpkg_path: str | Path,
+    layer_name: str,
+    ids_to_isolate: list[int],
+    schematisation_type: SchematisationType,
+    isolated_value: int,
 ) -> None:
+    """Set the calculation type to isolated for selected 1D elements.
+
+    The value used for the isolated calculation type depends on the layer:
+    - channel, pipe and culvert: calculation_type = 101
+    - manhole: calculation_type = 1
+    """
+
+    # Open the GeoPackage in update mode.
+    ds = ogr.Open(str(model_gpkg_path), update=1)
+    layer = ds.GetLayerByName(layer_name)
+
+    print(f"Isolating {len(ids_to_isolate)} features in layer {layer_name}")
+
+    # Use a transaction to make updating many features considerably faster.
+    layer.StartTransaction()
+
+    for feature in layer:
+        # RANA uses the GeoPackage feature ID (FID) as identifier.
+        # 3Di uses the value stored in the 'id' field.
+        if schematisation_type == SchematisationType.RANA:
+            feature_id = feature.GetFID()
+        else:
+            feature_id = feature.GetField("id")
+
+        # Only update features selected for isolation.
+        if feature_id in ids_to_isolate:
+            feature.SetField("calculation_type", isolated_value)
+            layer.SetFeature(feature)
+
+    layer.CommitTransaction()
+
+    # Close the layer and GeoPackage.
+    layer = None
+    ds = None
+
+
+def isolate_1d_elements(
+    model_gpkg_path: str | Path,
+    polygon_gdf: gpd.GeoDataFrame,
+    schematisation_type: SchematisationType,
+) -> None:
+    """Isolate 1D elements that are not fully within the submodel area.
+
+    Channels, pipes and culverts are isolated when their geometry is not
+    completely within the submodel polygon.
+
+    Manholes are also isolated for 3Di schematisations. RANA does not
+    contain a manhole layer.
+
+    The isolated calculation type is:
+    - 101 for channels, pipes and culverts
+    - 1 for manholes
+    """
+
+    # Get the layer-name mapping for the selected schematisation type.
+    ln = LAYER_NAMES[schematisation_type]
+
+    # These 1D layers are available in both RANA and 3Di.
+    list_layers = [
+        ln["channel"],
+        ln["pipe"],
+        ln["culvert"],
+    ]
+
+    # Manholes only exist in the 3Di schematisation.
+    if schematisation_type == SchematisationType.THREEDI:
+        list_layers.append(ln["manhole"])
+
+    # Read only the layers needed for the isolation step.
+    layers = read_geopackage_layers(
+        model_path_gpkg=Path(model_gpkg_path),
+        schematisation_type=schematisation_type,
+        selected_layers=True,
+        list_layers=list_layers,
+    )
+
+    # Process every 1D layer using the same spatial selection logic.
+    for layer_name in layers:
+        layer = layers[layer_name]
+
+        # Select features that are completely within the submodel polygon.
+        #
+        # 'within' is intentionally used instead of 'intersects':
+        # a line that crosses or partially lies outside the polygon should
+        # also be isolated.
+        layer_inside = gpd.sjoin(
+            layer,
+            polygon_gdf[["geometry"]],
+            how="inner",
+            predicate="within",
+        )
+
+        # Everything that is not fully within the polygon must be isolated.
+        layer_to_isolate = layer.loc[~layer["id"].isin(layer_inside["id"])]
+
+        # Manholes use a different calculation type value for isolation.
+        if layer_name == "manhole":
+            isolated_value = 1
+        else:
+            isolated_value = 101
+
+        # Update the selected features directly in the GeoPackage.
+        set_isolated_1d(
+            model_gpkg_path=model_gpkg_path,
+            layer_name=layer_name,
+            ids_to_isolate=layer_to_isolate["id"].tolist(),
+            schematisation_type=schematisation_type,
+            isolated_value=isolated_value,
+        )
+
+
+# %%
+def run(
+    model_gpkg_path: str | Path,
+    polygon_path: str | Path,
+    field_name: str,
+    schematisation_type: SchematisationType,
+    isolate_1d: bool = False,
+) -> None:
+    """Run cleanup: remove out-of-bound features and optionally isolate 1D.
+
+    Selects the polygon matching the model name, computes features to remove,
+    and applies deletions; optionally isolates 1D elements by setting flags.
+    """
     polygon_gdf = gpd.read_file(polygon_path)
 
-    model_name = Path(model_gpkg_path).stem
+    model_name = Path(model_gpkg_path).parent.name
 
     polygon_gdf = polygon_gdf.loc[polygon_gdf[field_name] == model_name].copy()
 
-    remove_dict = clean_geopackage(
-        gpkg_path=model_gpkg_path,
+    remove_dict = clean_submodel_boundary(
+        model_path_gpkg=model_gpkg_path,
         polygon_path=polygon_path,
         schematisation_type=schematisation_type,
     )
 
     for layer_name, ids_to_remove in remove_dict.items():
         remove_selection(
-            gpkg_path=model_gpkg_path,
+            model_path_gpkg=model_gpkg_path,
             layer_name=layer_name,
             ids_to_remove=ids_to_remove,
             schematisation_type=schematisation_type,
         )
 
+    if isolate_1d:
+        isolate_1d_elements(
+            model_gpkg_path=model_gpkg_path,
+            polygon_gdf=polygon_gdf,
+            schematisation_type=schematisation_type,
+        )
 
-# %%
 
 # model_gpkg_path = r"H:\02.modellen\RegionalFloodModel\work in progress\schematisation\ROR PRI - dijktrajecten 13-8 en 13-9 - Stroom_NO\RegionalFloodModel_ROR PRI - dijktrajecten 13-8 en 13-9 - Stroom_NO.gpkg"
 # polygon_path = r"H:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\deelgebieden\ROR PRI - dijktrajecten 13-8 en 13-9 - Stroom_NO.gpkg"

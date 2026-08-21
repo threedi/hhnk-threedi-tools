@@ -1,10 +1,22 @@
 # %%
+"""
+Runner for the Datachecker ModelBuilder workflow.
+
+This script:
+1. Initializes the 3Di/QGIS dependencies.
+2. Converts the 3Di SQLite to a GeoPackage.
+3. Creates impervious_surface and impervious_surface_map layers.
+4. Exports those layers back to the original SQLite.
+
+For direct 3Di tooling, use create_impervious_surface.run() instead.
+"""
+
 import importlib
 import sqlite3
 import sys
 from pathlib import Path
 
-import create_impervious_surface
+from hhnk_threedi_tools.breaches.impermeable_surface_areas import create_impervious_surface
 
 # Force 3Di/QGIS plugin paths
 QGIS_PLUGIN_DIR = Path.home() / "AppData" / "Roaming" / "3Di" / "QGIS3" / "profiles" / "default" / "python" / "plugins"

@@ -431,11 +431,22 @@ class Submodels:
                 impervious_surface["id"].isin(filtered_impervious_surface_map["impervious_surface_id"])
             ]
 
-        # Exchange lines: channel must exist AND geometry must intersect sub-area
-        temp_exchange_line = exchange_line[exchange_line["channel_id"].isin(filtered_channel["id"])]
-        filtered_exchange_line = self._spatial_join(
-            temp_exchange_line, subarea_gdf, how="inner", predicate="intersects"
-        )
+        if self.isolate_1d:
+            filtered_exchange_line = self._spatial_join(
+                exchange_line,
+                subarea_gdf,
+                how="inner",
+                predicate="intersects",
+            )
+        else:
+            filtered_exchange_line = exchange_line[exchange_line["channel_id"].isin(filtered_channel["id"])]
+
+            filtered_exchange_line = self._spatial_join(
+                filtered_exchange_line,
+                subarea_gdf,
+                how="inner",
+                predicate="intersects",
+            )
 
         filtered_lateral_2d = self._spatial_join(lateral_2d, subarea_gdf, how="inner", predicate="within")
         filtered_bc_2d = self._spatial_join(bc_2d, subarea_gdf, how="inner", predicate="within")
@@ -448,20 +459,11 @@ class Submodels:
 
         # Isolate 1-D elements outside sub-area
         if self.isolate_1d:
-            isolated_pipe = pipe[~pipe["id"].isin(filtered_pipe["id"])].copy()
-            isolated_culvert = culvert[~culvert["id"].isin(filtered_culvert["id"])].copy()
-            isolated_channel = channel[~channel["id"].isin(filtered_channel["id"])].copy()
-
-            isolated_pipe["exchange_type"] = 101
-            isolated_culvert["exchange_type"] = 101
-            isolated_channel["exchange_type"] = 101
-
-            filtered_pipe = gpd.GeoDataFrame(pd.concat([filtered_pipe, isolated_pipe], ignore_index=True))
-            filtered_culvert = gpd.GeoDataFrame(pd.concat([filtered_culvert, isolated_culvert], ignore_index=True))
-            filtered_channel = gpd.GeoDataFrame(pd.concat([filtered_channel, isolated_channel], ignore_index=True))
-
-            # Restore all other 1-D elements to the full original set
+            # Restore complete 1-D network
             filtered_cn = connection_node
+            filtered_pipe = pipe
+            filtered_culvert = culvert
+            filtered_channel = channel
             filtered_pump = pump
             filtered_weir = weir
             filtered_orifice = orifice
@@ -470,9 +472,6 @@ class Submodels:
             filtered_bc_1d = bc_1d
             filtered_lateral_1d = lateral_1d
             filtered_surface_map = surface_map
-            if schematisation_type == SchematisationType.THREEDI:
-                filtered_impervious_surface_map = impervious_surface_map
-                filtered_impervious_surface = impervious_surface
 
         # print(filtered_channel[["id", cn["connection_node_id_start"], cn["connection_node_id_end"]]].head(10))
         # Write filtered layers to the output GeoPackage
@@ -574,7 +573,7 @@ def run_submodel(
         SchematisationType.RANA (default) or SchematisationType.THREEDI.
         Controls which GeoPackage layer names are used for reading and writing.
     """
-    Submodels(
+    submodels = Submodels(
         schematisation_directory=schematisation_directory,
         subareas_path=subareas_path,
         field_name=field_name,

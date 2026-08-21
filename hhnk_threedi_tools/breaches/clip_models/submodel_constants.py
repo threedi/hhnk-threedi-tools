@@ -75,12 +75,17 @@ COLUMNS_THREEDI: dict[str, str] = {
     "connection_node_id_end": "connection_node_end_id",
 }
 # Lookup by SchematisationType
-
+# Maps each `SchematisationType` to a mapping of logical layer keys
+# (e.g. 'pump', 'channel') to the actual layer name used in the GeoPackage.
+# Usage: LAYER_NAMES[SchematisationType.THREEDI]['pump'] -> 'pumpstation_map'
 LAYER_NAMES: dict[SchematisationType, dict[str, str]] = {
     SchematisationType.RANA: LAYER_NAMES_RANA,
     SchematisationType.THREEDI: LAYER_NAMES_THREEDI,
 }
 
+# Maps each `SchematisationType` to a mapping of logical column keys
+# (e.g. 'connection_node_id_start') to the actual column name in that schema.
+# Usage: COLUMNS_NAMES[SchematisationType.THREEDI]['connection_node_id_start'] -> 'connection_node_start_id'
 COLUMNS_NAMES: dict[SchematisationType, dict[str, str]] = {
     SchematisationType.RANA: COLUMNS_RANA,
     SchematisationType.THREEDI: COLUMNS_THREEDI,
