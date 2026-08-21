@@ -63,6 +63,7 @@ LAYER_NAMES_THREEDI: dict[str, str] = {
     "exchange_line": "exchange_line",
     "grid_refinement_line": "grid_refinement",
     "grid_refinement_area": "grid_refinement_area",
+    "manhole": "manhole",
 }
 
 COLUMNS_RANA: dict[str, str] = {
