@@ -25,6 +25,7 @@ from typing import TYPE_CHECKING
 
 import geopandas as gpd
 import hhnk_research_tools as hrt
+
 # import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -34,7 +35,12 @@ if TYPE_CHECKING:
     from threedigrid.admin.gridadmin import GridH5Admin
     from threedigrid.admin.gridresultadmin import GridH5AggregateResultAdmin, GridH5ResultAdmin
 
-from hhnk_threedi_tools.waterbalance_calculation.config import EXTERNAL_COMPONENTS, INPUT_SERIES, SERIES_INDEX, STORAGE_COMPONENTS
+from hhnk_threedi_tools.waterbalance_calculation.config import (
+    EXTERNAL_COMPONENTS,
+    INPUT_SERIES,
+    SERIES_INDEX,
+    STORAGE_COMPONENTS,
+)
 from hhnk_threedi_tools.waterbalance_calculation.selection import select_lines_and_pumps, select_points
 
 
