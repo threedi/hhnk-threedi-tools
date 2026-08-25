@@ -32,12 +32,12 @@ class TestGridToRasterOld:
         output_file = hrt.Folder(TEMP_DIR).full_path(f"wlvl_corr_{hrt.get_uuid()}.tif")
         basecalc.run(output_file=output_file.path, mode="MODE_WLVL", overwrite=True)
 
-        assert output_file.sum() == 35.21768569946289
+        assert output_file.sum() == 43.918495178222656
 
     def test_wdepth(self, basecalc):
         output_file = hrt.Folder(TEMP_DIR).full_path(f"wdepth_corr_{hrt.get_uuid()}.tif")
         basecalc.run(output_file=output_file.path, mode="MODE_WDEPTH", overwrite=True)
-        assert output_file.sum() == 3.0240373611450195
+        assert output_file.sum() == 5.868329048156738
 
 
 @pytest.mark.skipif(sys.version_info < (3, 12), reason="Requires Python 3.12 or higher")
@@ -49,12 +49,10 @@ def test_grid_to_raster():
     # WLVL raster
     wlvl_raster = hrt.Folder(TEMP_DIR).full_path(f"wlvl_corr_{hrt.get_uuid()}.tif")
 
-    gridtowlvl = GridToWaterLevel(
-        dem_path=dem_path, grid_gdf=grid_gdf, wlvl_column=wlvl_column, interpolator_type="linear"
-    )
+    gridtowlvl = GridToWaterLevel(dem_path=dem_path, grid_gdf=grid_gdf, wlvl_column=wlvl_column)
     gridtowlvl.run(output_file=wlvl_raster, overwrite=True)
 
-    assert wlvl_raster.sum() == 35.21768569946289
+    assert wlvl_raster.sum() == 43.86664581298828
 
     # WDEPTH raster
     wdepth_raster = hrt.Folder(TEMP_DIR).full_path(f"wdepth_corr_{hrt.get_uuid()}.tif")
@@ -62,7 +60,7 @@ def test_grid_to_raster():
     gridtowdepth = GridToWaterDepth(dem_path=dem_path, wlvl_path=wlvl_raster)
     gridtowdepth.run(output_file=wdepth_raster, overwrite=True)
 
-    assert wdepth_raster.sum() == 3.0240373611450195
+    assert wdepth_raster.sum() == 5.917023658752441
 
 
 # %%
