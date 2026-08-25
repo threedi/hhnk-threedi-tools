@@ -1,0 +1,1 @@
+copy de file start_vergelijkingstool.bat inside bin to make the app work D:\vergelijkingstool. The short cut should point to D:\vergelijkingstool\start_vergelijkingstool.bat

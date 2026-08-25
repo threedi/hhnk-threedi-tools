@@ -3,6 +3,7 @@ from pathlib import Path
 
 import geopandas as gpd
 import hhnk_research_tools as hrt
+import pytest
 
 from hhnk_threedi_tools.core.schematisation_builder.raw_export_to_DAMO_converter import RawExportToDAMOConverter
 from hhnk_threedi_tools.core.schematisation_builder.raw_export_to_DAMO_converters import peilgebied_converter
@@ -242,6 +243,7 @@ def _validate_no_overlapping_segments(output_file: Path, logger):
         logger.info(f"✓ No overlapping segments found (checked {len(waterkering)} segments)")
 
 
+@pytest.mark.skip(reason="On Github tests take 6h. Disabled.")
 def test_peilgebied_converter():
     """Test PeilgebiedConverter with all validations in a single run."""
     logger = hrt.logging.get_logger(__name__)

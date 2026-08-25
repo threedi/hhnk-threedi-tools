@@ -58,18 +58,41 @@ def export_validation_rules_overview():
                         "beschrijving": rule["description"],
                     }
                 )
+
+        if obj.get("fix_rules"):
+            for func in obj["fix_rules"]:
+                rule_set = "hhnk"
+                # check if func["fix_description"] exists
+                try:
+                    func["fix_description"]
+                except KeyError:
+                    func["fix_description"] = ""
+
+                rows.append(
+                    {
+                        "id": int(func["fix_id"]),
+                        "bron": rule_set,
+                        "laag": obj["object"],
+                        "type_functie": "fix rules",
+                        "naam": func["attribute_name"],
+                        "beschrijving": func["fix_description"],
+                    }
+                )
     # construct and sort dataframe
     df = pd.DataFrame(rows, columns=["bron", "laag", "id", "type_functie", "naam", "beschrijving"])
     df = df.sort_values(by=["type_functie", "bron"]).reset_index(drop=True)
 
     val_df = df[df["type_functie"] == "validation rules"].reset_index(drop=True)
     fun_df = df[df["type_functie"] == "general rules"].reset_index(drop=True)
+    fix_df = df[df["type_functie"] == "fix rules"].reset_index(drop=True)
 
     val_fp = hrt.get_pkg_resource_path(sb_resources, "validation_rules.csv")
     fun_fp = hrt.get_pkg_resource_path(sb_resources, "general_rules.csv")
+    fix_fp = hrt.get_pkg_resource_path(sb_resources, "fix_rules.csv")
 
     val_df.to_csv(val_fp, index=True)
     fun_df.to_csv(fun_fp, index=True)
+    fix_df.to_csv(fix_fp, index=True)
 
 
 # %%
