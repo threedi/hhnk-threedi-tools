@@ -214,9 +214,7 @@ def plot_water_balance_volumes(
 
     # Total change in storage inside the selected area
     change_in_storage = (
-        values.get("d_2d_vol", 0.0)
-        + values.get("d_1d_vol", 0.0)
-        + values.get("d_2d_groundwater_vol", 0.0)
+        values.get("d_2d_vol", 0.0) + values.get("d_1d_vol", 0.0) + values.get("d_2d_groundwater_vol", 0.0)
     )
 
     labels: list[str] = []
