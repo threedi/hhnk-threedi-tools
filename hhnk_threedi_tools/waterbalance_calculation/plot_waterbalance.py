@@ -1,25 +1,24 @@
 # %%
+"""Create water balance plots from exported 3Di water balance CSV files."""
+
 import os
 from pathlib import Path
-from typing import Dict, Optional, Sequence, Tuple, Union
 
 import matplotlib.pyplot as plt
 import pandas as pd
 
 from hhnk_threedi_tools import Folders
 
-# --------------------------------------------------
-# Plot configuration
-# --------------------------------------------------
+# Colors used in the volume plot
+COLOR_IN: str = "royalblue"
+COLOR_OUT: str = "firebrick"
+COLOR_LOSS: str = "sienna"
+COLOR_LATERAL: str = "seagreen"
+COLOR_MIXED: str = "slategray"
+COLOR_STORAGE: str = "darkorange"
 
-COLOR_IN = "royalblue"
-COLOR_OUT = "firebrick"
-COLOR_LOSS = "sienna"
-COLOR_LATERAL = "seagreen"
-COLOR_MIXED = "slategray"
-COLOR_STORAGE = "darkorange"
-
-PAIR_COMPONENTS: Sequence[Tuple[str, str, str]] = [
+# Components that belong together as inflow and outflow pairs
+PAIR_COMPONENTS: list[tuple[str, str, str]] = [
     (
         "1D",
         "1d_in",
@@ -74,8 +73,14 @@ PAIR_COMPONENTS: Sequence[Tuple[str, str, str]] = [
 
 
 def _format_volume(value: float) -> str:
-    """Format volume labels depending on magnitude."""
+    """Format a volume value for the labels above the bars.
 
+    Args:
+        value: Volume in cubic metres.
+
+    Returns:
+        Formatted value as a string.
+    """
     value_abs = abs(value)
 
     if value_abs >= 1000:
@@ -87,7 +92,7 @@ def _format_volume(value: float) -> str:
     return f"{value:,.2f}"
 
 
-labels: Dict[str, str] = {
+labels: dict[str, str] = {
     "1d_in": "1D\nin",
     "1d_out": "1D\nout",
     "2d_in": "2D\nin",
@@ -108,13 +113,27 @@ labels: Dict[str, str] = {
 }
 
 
-def plot_water_balance(csv_path: Union[str, os.PathLike], output_path: Union[str, os.PathLike]) -> None:
+def plot_water_balance(
+    csv_path: str | os.PathLike[str],
+    output_path: str | os.PathLike[str],
+) -> None:
+    """Plot the water balance through time.
+
+    The input CSV contains the water balance components in m³/s for each
+    timestep. Components that are zero during the complete simulation are not
+    shown in the plot.
+
+    Args:
+        csv_path: Path to ``water_balance_timeseries.csv``.
+        output_path: Path where the PNG figure will be saved.
+    """
     balance = pd.read_csv(
         csv_path,
         index_col="time_s",
     )
 
-    components = [
+    # Components shown in the time-series plot
+    components: list[str] = [
         "rain",
         "infiltration_rate_simple",
         "1d_in",
@@ -128,13 +147,15 @@ def plot_water_balance(csv_path: Union[str, os.PathLike], output_path: Union[str
 
     data = balance[components]
 
-    # Remove components that are completely zero
+    # Do not plot components that are zero for the complete simulation
     data = data.loc[:, (data != 0).any(axis=0)]
 
+    # Convert simulation time from seconds to hours
     time_hours = data.index.to_numpy() / 3600
 
     fig, ax = plt.subplots(figsize=(12, 6))
 
+    # Plot every water balance component as a separate line
     for column in data.columns:
         ax.plot(
             time_hours,
@@ -143,7 +164,6 @@ def plot_water_balance(csv_path: Union[str, os.PathLike], output_path: Union[str
         )
 
     ax.axhline(0, linewidth=0.8)
-
     ax.set_xlabel("Time [h]")
     ax.set_ylabel("Flow [m³/s]")
     ax.set_title("Water balance")
@@ -154,7 +174,6 @@ def plot_water_balance(csv_path: Union[str, os.PathLike], output_path: Union[str
     )
 
     fig.tight_layout()
-
     fig.savefig(
         output_path,
         dpi=150,
@@ -165,11 +184,19 @@ def plot_water_balance(csv_path: Union[str, os.PathLike], output_path: Union[str
 
 
 def plot_water_balance_volumes(
-    csv_path: Union[str, os.PathLike],
-    output_path: Union[str, os.PathLike],
+    csv_path: str | os.PathLike[str],
+    output_path: str | os.PathLike[str],
 ) -> None:
-    """Plot net water balance volumes [m³]."""
+    """Plot the total water balance volumes as a bar chart.
 
+    Inflow and outflow components are shown next to each other. Components
+    that are zero are skipped. Change in storage is calculated from the 1D,
+    2D, and groundwater storage components and is always shown.
+
+    Args:
+        csv_path: Path to ``water_balance_volumes.csv``.
+        output_path: Path where the PNG figure will be saved.
+    """
     csv_path = Path(csv_path)
     output_path = Path(output_path)
 
@@ -178,52 +205,37 @@ def plot_water_balance_volumes(
         exist_ok=True,
     )
 
-    # --------------------------------------------------
-    # Read volumes
-    # --------------------------------------------------
-
+    # Read total volume per water balance component
     volumes = pd.read_csv(
         csv_path,
         index_col="component",
     )
-
     values = volumes["volume_m3"]
 
-    # --------------------------------------------------
-    # Change in storage
-    # --------------------------------------------------
-
+    # Total change in storage inside the selected area
     change_in_storage = (
-        values.get("d_2d_vol", 0.0) + values.get("d_1d_vol", 0.0) + values.get("d_2d_groundwater_vol", 0.0)
+        values.get("d_2d_vol", 0.0)
+        + values.get("d_1d_vol", 0.0)
+        + values.get("d_2d_groundwater_vol", 0.0)
     )
 
-    # --------------------------------------------------
-    # Build plot data
-    # --------------------------------------------------
+    labels: list[str] = []
+    plot_values: list[float] = []
+    colors: list[str] = []
+    separators: list[float] = []
 
-    labels = []
-    plot_values = []
-    colors = []
-
-    # Positions where a dotted line is added
-    separators = []
-
-    # ------------------------------
-    # IN / OUT pairs
-    # ------------------------------
-
+    # Add inflow and outflow pairs first
     for group_name, component_in, component_out in PAIR_COMPONENTS:
         value_in = values.get(
             component_in,
             0.0,
         )
-
         value_out = values.get(
             component_out,
             0.0,
         )
 
-        # Skip complete zero pairs
+        # Skip a pair when both values are zero
         if value_in == 0 and value_out == 0:
             continue
 
@@ -233,14 +245,12 @@ def plot_water_balance_volumes(
                 f"{group_name}\nout",
             ]
         )
-
         plot_values.extend(
             [
                 value_in,
                 value_out,
             ]
         )
-
         colors.extend(
             [
                 COLOR_IN,
@@ -248,14 +258,11 @@ def plot_water_balance_volumes(
             ]
         )
 
-        # Separator after every pair
+        # Save the position used to separate each pair in the plot
         separators.append(len(plot_values) - 0.5)
 
-    # --------------------------------------------------
-    # Other components
-    # --------------------------------------------------
-
-    other_components = [
+    # Add components that do not belong to an inflow/outflow pair
+    other_components: list[tuple[str, float, str | None]] = [
         (
             "Rain on 2D",
             values.get("rain", 0.0),
@@ -295,7 +302,7 @@ def plot_water_balance_volumes(
         if value == 0:
             continue
 
-        # Signed components get color based on direction
+        # For lateral flow, use the sign to choose the color
         if color is None:
             if value >= 0:
                 color = COLOR_LATERAL
@@ -306,21 +313,12 @@ def plot_water_balance_volumes(
         plot_values.append(value)
         colors.append(color)
 
-    # Storage is always shown
+    # Storage is always added as the final bar
     labels.append("Change in\nstorage")
-
     plot_values.append(change_in_storage)
-
     colors.append(COLOR_STORAGE)
 
-    # --------------------------------------------------
-    # Create plot
-    # --------------------------------------------------
-
-    fig, ax = plt.subplots(
-        figsize=(16, 8),
-    )
-
+    fig, ax = plt.subplots(figsize=(16, 8))
     x = range(len(plot_values))
 
     bars = ax.bar(
@@ -332,22 +330,14 @@ def plot_water_balance_volumes(
         width=0.75,
     )
 
-    # --------------------------------------------------
-    # Zero line
-    # --------------------------------------------------
-
+    # Horizontal line at zero makes inflow and outflow easier to compare
     ax.axhline(
         0,
         color="black",
         linewidth=1.0,
     )
 
-    # --------------------------------------------------
-    # Pair separators
-    # --------------------------------------------------
-
-    # Do not draw separator after the final pair
-    # if other components follow immediately.
+    # Dotted lines separate the inflow/outflow pairs
     for position in separators:
         ax.axvline(
             position,
@@ -357,70 +347,49 @@ def plot_water_balance_volumes(
             alpha=0.5,
         )
 
-    # --------------------------------------------------
-    # Axis labels
-    # --------------------------------------------------
-
     ax.set_xticks(range(len(labels)))
-
     ax.set_xticklabels(
         labels,
         rotation=25,
         ha="right",
     )
-
     ax.set_ylabel("Volume [m³]")
-
     ax.set_xlabel("")
-
     ax.set_title(
         "Net water balance",
         fontsize=14,
     )
 
-    # --------------------------------------------------
-    # Grid
-    # --------------------------------------------------
-
+    # Add a light horizontal grid to make values easier to read
     ax.grid(
         axis="y",
         linestyle="--",
         linewidth=0.7,
         alpha=0.3,
     )
-
     ax.set_axisbelow(True)
 
-    # --------------------------------------------------
-    # Y limits
-    # --------------------------------------------------
-
+    # Add some space above and below the largest bars
     min_value = min(
         min(plot_values),
         0,
     )
-
     max_value = max(
         max(plot_values),
         0,
     )
-
     data_range = max_value - min_value
 
     if data_range == 0:
         data_range = 1
 
     margin = data_range * 0.12
-
     ax.set_ylim(
         min_value - margin,
         max_value + margin,
     )
 
-    # --------------------------------------------------
-    # Value labels
-    # --------------------------------------------------
-
+    # Write the volume value above or below every bar
     label_offset = margin * 0.08
 
     for bar, value in zip(
@@ -431,12 +400,9 @@ def plot_water_balance_volumes(
 
         if value >= 0:
             y_position = value + label_offset
-
             vertical_alignment = "bottom"
-
         else:
             y_position = value - label_offset
-
             vertical_alignment = "top"
 
         ax.text(
@@ -449,12 +415,7 @@ def plot_water_balance_volumes(
             fontweight="bold",
         )
 
-    # --------------------------------------------------
-    # Save
-    # --------------------------------------------------
-
     fig.tight_layout()
-
     fig.savefig(
         output_path,
         dpi=150,
