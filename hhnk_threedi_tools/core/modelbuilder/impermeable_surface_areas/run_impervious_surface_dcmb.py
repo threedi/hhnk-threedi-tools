@@ -16,7 +16,7 @@ import sqlite3
 import sys
 from pathlib import Path
 
-from hhnk_threedi_tools.breaches.impermeable_surface_areas import create_impervious_surface
+from core.modelbuilder.impermeable_surface_areas import create_impervious_surface
 
 # Force 3Di/QGIS plugin paths
 QGIS_PLUGIN_DIR = Path.home() / "AppData" / "Roaming" / "3Di" / "QGIS3" / "profiles" / "default" / "python" / "plugins"
