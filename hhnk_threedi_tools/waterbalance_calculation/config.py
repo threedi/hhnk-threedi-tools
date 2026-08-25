@@ -1,30 +1,33 @@
+"""Constants and configuration for the standalone 3Di water balance."""
+
 from threedigrid_builder.constants import LineType, NodeType
 
-NO_ENDPOINT_ID = -9999
+NO_ENDPOINT_ID: int = -9999
 
-NODE_TYPES_1D = {
+
+NODE_TYPES_1D: set[NodeType] = {
     NodeType.NODE_1D_NO_STORAGE,
     NodeType.NODE_1D_STORAGE,
     NodeType.NODE_1D_BOUNDARIES,
 }
 
-NODE_TYPES_2D = {
+NODE_TYPES_2D: set[NodeType] = {
     NodeType.NODE_2D_OPEN_WATER,
     NodeType.NODE_2D_BOUNDARIES,
 }
 
-NODE_TYPES_2D_GROUNDWATER = {
+NODE_TYPES_2D_GROUNDWATER: set[NodeType] = {
     NodeType.NODE_2D_GROUNDWATER_BOUNDARIES,
     NodeType.NODE_2D_GROUNDWATER,
 }
 
-NODE_TYPES_BOUNDARIES = {
+NODE_TYPES_BOUNDARIES: set[NodeType] = {
     NodeType.NODE_1D_BOUNDARIES,
     NodeType.NODE_2D_BOUNDARIES,
 }
 
 
-LINE_TYPES_1D = {
+LINE_TYPES_1D: set[LineType] = {
     LineType.LINE_1D_EMBEDDED,
     LineType.LINE_1D_ISOLATED,
     LineType.LINE_1D_CONNECTED,
@@ -33,7 +36,7 @@ LINE_TYPES_1D = {
     LineType.LINE_1D_DOUBLE_CONNECTED,
 }
 
-LINE_TYPES_1D2D = {
+LINE_TYPES_1D2D: set[LineType | int] = {
     LineType.LINE_1D2D_SINGLE_CONNECTED_CLOSED,
     LineType.LINE_1D2D_SINGLE_CONNECTED_OPEN_WATER,
     LineType.LINE_1D2D_DOUBLE_CONNECTED_CLOSED,
@@ -44,11 +47,12 @@ LINE_TYPES_1D2D = {
     58,
 }
 
-NODE_TYPE_1D_BOUNDARY = NodeType.NODE_1D_BOUNDARIES.value
-NODE_TYPE_2D_BOUNDARY = NodeType.NODE_2D_BOUNDARIES.value
+
+NODE_TYPE_1D_BOUNDARY: int = NodeType.NODE_1D_BOUNDARIES.value
+NODE_TYPE_2D_BOUNDARY: int = NodeType.NODE_2D_BOUNDARIES.value
 
 
-INPUT_SERIES = [
+INPUT_SERIES: list[tuple[str, int]] = [
     ("2d_in", 0),
     ("2d_out", 1),
     ("1d_in", 2),
@@ -87,10 +91,10 @@ INPUT_SERIES = [
     ("q_sss", 35),
 ]
 
-SERIES_INDEX = dict(INPUT_SERIES)
+SERIES_INDEX: dict[str, int] = dict(INPUT_SERIES)
 
 
-EXTERNAL_COMPONENTS = (
+EXTERNAL_COMPONENTS: tuple[str, ...] = (
     "2d_in",
     "2d_out",
     "1d_in",
@@ -114,7 +118,8 @@ EXTERNAL_COMPONENTS = (
     "2d_groundwater_out",
 )
 
-STORAGE_COMPONENTS = (
+
+STORAGE_COMPONENTS: tuple[str, ...] = (
     "d_2d_vol",
     "d_1d_vol",
     "d_2d_groundwater_vol",

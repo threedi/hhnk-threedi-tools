@@ -1,8 +1,12 @@
 """Spatial selection functions for the 3Di water balance."""
 
+from typing import Any, Dict, List, Tuple
+
 import geopandas as gpd
+import hhnk_research_tools as hrt
 import numpy as np
 import pandas as pd
+from shapely.geometry.base import BaseGeometry
 from threedigrid_builder.constants import LineType
 
 from .config import (
@@ -17,18 +21,41 @@ from .config import (
 )
 
 
-def select_points(aggregate_grid, polygon):
-    """Select calculation nodes inside the water balance polygon."""
+def select_points(
+    aggregate_grid: Any,
+    polygon: BaseGeometry,
+) -> Dict[str, List[int]]:
+    """Select calculation nodes inside the water balance polygon.
+
+    Parameters
+    ----------
+    aggregate_grid : Any
+        Aggregate 3Di result grid exposing node IDs, node types, and
+        node coordinates.
+    polygon : BaseGeometry
+        Water balance polygon used to select nodes. The polygon must use
+        the same CRS as the calculation nodes.
+
+    Returns
+    -------
+    Dict[str, List[int]]
+        Node IDs grouped into ``1d``, ``2d``, and ``2d_groundwater``.
+
+    Notes
+    -----
+    Node-type filtering and the spatial ``within`` test mirror the
+    selection logic used by the official 3Di WaterBalanceCalculation.
+    """
 
     nodes = aggregate_grid.nodes
 
-    point_selection = {
+    point_selection: Dict[str, List[int]] = {
         "1d": [],
         "2d": [],
         "2d_groundwater": [],
     }
 
-    node_type_map = {}
+    node_type_map: Dict[int, str] = {}
 
     node_type_map.update({n.value: "1d" for n in NODE_TYPES_1D})
 
@@ -68,7 +95,47 @@ def select_points(aggregate_grid, polygon):
     return point_selection
 
 
-def select_lines_and_pumps(aggregate_grid, grid, polygon, node_ids, x2d_surf_range, y2d_surf_range, vert_flow_range):
+def select_lines_and_pumps(
+    aggregate_grid: Any,
+    polygon: BaseGeometry,
+    node_ids: Dict[str, List[int]],
+    x2d_surf_range: range,
+    y2d_surf_range: range,
+) -> Tuple[Dict[str, List[int]], Dict[str, List[int]]]:
+    """Select flowlines and pumps relevant to the water balance polygon.
+
+    Parameters
+    ----------
+    aggregate_grid : Any
+        Aggregate 3Di result grid exposing lines, nodes, and pumps.
+    grid : Any
+        3Di result grid passed together with the aggregate grid. It is
+        currently retained as part of the function interface.
+    polygon : BaseGeometry
+        Water balance polygon used for spatial node and boundary
+        selection.
+    node_ids : Dict[str, List[int]]
+        Node IDs inside the polygon, grouped into ``1d``, ``2d``, and
+        ``2d_groundwater``.
+    x2d_surf_range : range
+        Flowline ID range for horizontal 2D surface links.
+    y2d_surf_range : range
+        Flowline ID range for vertical 2D surface links.
+    vert_flow_range : range
+        Flowline ID range for vertical 2D links.
+
+    Returns
+    -------
+    Tuple[Dict[str, List[int]], Dict[str, List[int]]]
+        Two mappings containing the selected flowline IDs and pump IDs
+        grouped by water-balance role.
+
+    Notes
+    -----
+    The function classifies 1D, 2D, 1D-2D, boundary, groundwater, and
+    pump exchanges using the same directional conventions as the
+    standalone 3Di water-balance implementation.
+    """
 
     lines = aggregate_grid.lines
 
@@ -129,7 +196,7 @@ def select_lines_and_pumps(aggregate_grid, grid, polygon, node_ids, x2d_surf_ran
         }
     )
 
-    line_selection = {
+    line_selection: Dict[str, List[int]] = {
         "1d_in": [],
         "1d_out": [],
         "1d_bound_in": [],
@@ -305,7 +372,7 @@ def select_lines_and_pumps(aggregate_grid, grid, polygon, node_ids, x2d_surf_ran
 
                 else:
                     line_selection["2d_bound_out"].append(int(line_id))
-    pump_selection = {
+    pump_selection: Dict[str, List[int]] = {
         "in": [],
         "out": [],
     }

@@ -1,6 +1,7 @@
 # %%
 import os
 from pathlib import Path
+from typing import Dict, Optional, Sequence, Tuple, Union
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -18,7 +19,7 @@ COLOR_LATERAL = "seagreen"
 COLOR_MIXED = "slategray"
 COLOR_STORAGE = "darkorange"
 
-PAIR_COMPONENTS = [
+PAIR_COMPONENTS: Sequence[Tuple[str, str, str]] = [
     (
         "1D",
         "1d_in",
@@ -72,7 +73,7 @@ PAIR_COMPONENTS = [
 ]
 
 
-def _format_volume(value):
+def _format_volume(value: float) -> str:
     """Format volume labels depending on magnitude."""
 
     value_abs = abs(value)
@@ -86,7 +87,7 @@ def _format_volume(value):
     return f"{value:,.2f}"
 
 
-labels = {
+labels: Dict[str, str] = {
     "1d_in": "1D\nin",
     "1d_out": "1D\nout",
     "2d_in": "2D\nin",
@@ -107,7 +108,7 @@ labels = {
 }
 
 
-def plot_water_balance(csv_path, output_path):
+def plot_water_balance(csv_path: Union[str, os.PathLike], output_path: Union[str, os.PathLike]) -> None:
     balance = pd.read_csv(
         csv_path,
         index_col="time_s",
@@ -164,9 +165,9 @@ def plot_water_balance(csv_path, output_path):
 
 
 def plot_water_balance_volumes(
-    csv_path,
-    output_path,
-):
+    csv_path: Union[str, os.PathLike],
+    output_path: Union[str, os.PathLike],
+) -> None:
     """Plot net water balance volumes [m³]."""
 
     csv_path = Path(csv_path)
@@ -465,28 +466,28 @@ def plot_water_balance_volumes(
 
 # %%
 
+if __name__ == "main":
+    paths = [
+        r"H:\02.modellen\bergen_noord_huidig_situatie_JA",
+        r"H:\02.modellen\bergen_noord_variant_1_JA",
+        r"H:\02.modellen\bergen_noord_variant_2_JA",
+        r"H:\02.modellen\bergen_noord_variant_3_JA",
+    ]
 
-paths = (
-    r"H:\02.modellen\bergen_noord_huidig_situatie_JA",
-    r"H:\02.modellen\bergen_noord_variant_1_JA",
-    r"H:\02.modellen\bergen_noord_variant_2_JA",
-    r"H:\02.modellen\bergen_noord_variant_3_JA",
-)
-
-for model in paths:
-    folder = Folders(model)
-    batch_path = folder.threedi_results.batch.path
-    batch_folders = os.listdir(batch_path)
-    for results in batch_folders:
-        output_raster_path = batch_path / results / "02_output_rasters"
-        downloads = os.listdir(output_raster_path)
-        for download in downloads:
-            plot_water_balance_folder = output_raster_path / download / f"waterbalance_{download}"
-            csv_water_balance_timeseries = plot_water_balance_folder / "water_balance_timeseries.csv"
-            csv_water_balance_volumen = plot_water_balance_folder / "water_balance_volumes.csv"
-            output_path_timeseries = plot_water_balance_folder / "water_balance_timeseries.png"
-            output_path_net = plot_water_balance_folder / "water_balance_volume.png"
-            # if os.path.exists(output_path_timeseries):
-            #     continue
-            plot_water_balance(csv_water_balance_timeseries, output_path_timeseries)
-            plot_water_balance_volumes(csv_water_balance_volumen, output_path_net)
+    for model in paths:
+        folder = Folders(model)
+        batch_path = folder.threedi_results.batch.path
+        batch_folders = os.listdir(batch_path)
+        for results in batch_folders:
+            output_raster_path = batch_path / results / "02_output_rasters"
+            downloads = os.listdir(output_raster_path)
+            for download in downloads:
+                plot_water_balance_folder = output_raster_path / download / f"waterbalance_{download}"
+                csv_water_balance_timeseries = plot_water_balance_folder / "water_balance_timeseries.csv"
+                csv_water_balance_volumen = plot_water_balance_folder / "water_balance_volumes.csv"
+                output_path_timeseries = plot_water_balance_folder / "water_balance_timeseries.png"
+                output_path_net = plot_water_balance_folder / "water_balance_volume.png"
+                # if os.path.exists(output_path_timeseries):
+                #     continue
+                plot_water_balance(csv_water_balance_timeseries, output_path_timeseries)
+                plot_water_balance_volumes(csv_water_balance_volumen, output_path_net)
