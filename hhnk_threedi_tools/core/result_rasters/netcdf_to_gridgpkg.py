@@ -34,8 +34,6 @@ class NetcdfTimeSeries:
         self._wlvl_all = None
         self._vol_all = None
         self._max_index = None
-        self._wlvl_1d_all = None
-        self._max_index_1d = None
 
         self.aggregate: bool = self.typecheck_aggregate()
 
@@ -63,21 +61,6 @@ class NetcdfTimeSeries:
             self._max_index = self.wlvl_2d_all.argmax(axis=0)
         return self._max_index
 
-    @property
-    def wlvl_1d_all(self):
-        if self._wlvl_1d_all is None:
-            if not self.aggregate:
-                self._wlvl_1d_all = self.get_timerseries_all_1d(param="s1")
-            else:
-                self._wlvl_1d_all = self.get_timerseries_all_1d(param="s1_max")
-        return self._wlvl_1d_all
-
-    @property
-    def max_index_1d(self):
-        if self._max_index_1d is None:
-            self._max_index_1d = self.wlvl_1d_all.argmax(axis=0)
-        return self._max_index_1d
-
     def typecheck_aggregate(self) -> bool:
         """Check if we have a normal or aggregated netcdf"""
         return str(type(self.grid)) == "<class 'threedigrid.admin.gridresultadmin.GridH5AggregateResultAdmin'>"
@@ -95,18 +78,6 @@ class NetcdfTimeSeries:
             """Aggregated results return a dict on self.timestamps"""
             return getattr(
                 self.grid.nodes.subset("2D_open_water").timeseries(indexes=slice(0, len(self.timestamps[param]))),
-                param,
-            )
-
-    def get_timerseries_all_1d(self, param):
-        """Get all timeseries for all 1D nodes.
-        it is taking the same structure as get_timerseries_all but using subset('1D_all').
-        """
-        if not self.aggregate:
-            return getattr(self.grid.nodes.subset("1D_all").timeseries(indexes=slice(0, len(self.timestamps))), param)
-        else:
-            return getattr(
-                self.grid.nodes.subset("1D_all").timeseries(indexes=slice(0, len(self.timestamps[param]))),
                 param,
             )
 
@@ -143,31 +114,6 @@ Debug by checking available timeseries through the (.ts) timeseries attributes""
         ts.replace(-9999, np.nan, inplace=True)
         return ts
 
-    def get_timeseries_timestamp_1d(self, time_seconds: Union[int, str]):
-        """Retrieve 1D node waterlevels at given timestamp.
-
-        Parameters
-        ----------
-        time_seconds : Union[int, str]
-            time in seconds since start of calculation.
-            use "max" to get the max of all timesteps.
-        """
-        if time_seconds == "max":
-            ts = np.round([row[self.max_index_1d[enum]] for enum, row in enumerate(self.wlvl_1d_all.T)], 5)
-        else:
-            abs_diff = np.abs(self.timestamps - time_seconds)
-            idx = np.argmin(abs_diff)
-            if np.min(abs_diff) > 30:
-                raise ValueError(
-                    f"""Provided time_seconds {time_seconds} not found in netcdf timeseries.
-Closest timestep is {self.timestamps[idx]} seconds at index {idx}."""
-                )
-            ts = np.round([row[idx] for row in self.wlvl_1d_all.T], 5)
-
-            ts = pd.Series(ts)
-            ts.replace(-9999, np.nan, inplace=True)
-        return ts
-
     def create_column_base(self, time_seconds):
         """Return a base column name with hours and minutes."""
         # time_seconds = self.timestamps[np.argmin(np.abs(self.timestamps - time_seconds))]
@@ -184,23 +130,6 @@ Closest timestep is {self.timestamps[idx]} seconds at index {idx}."""
                 else:
                     col_base = f"{int(np.floor(timestep_h))}h{int((timestep_h % 1) * 60)}min"
         return col_base
-
-    def get_wlvl_1d_gdf(self, timesteps_seconds: list) -> gpd.GeoDataFrame:
-        """Get GeoDataFrame with 1D node points and waterlevels per timestep.
-        Same structure as get_waterlevels but for 1D nodes, using get_timeseries_timestamp_1d.
-        """
-        coords = self.grid.nodes.subset("1D_all").coordinates  # shape (2, N) -> x, y
-
-        gdf_1d = gpd.GeoDataFrame(
-            geometry=gpd.points_from_xy(coords[0], coords[1]),
-            crs="EPSG:28992",
-        )
-
-        for timestep in timesteps_seconds:
-            col_base = self.create_column_base(time_seconds=timestep)
-            gdf_1d[f"wlvl_{col_base}"] = self.get_timeseries_timestamp_1d(time_seconds=timestep)
-
-        return gdf_1d
 
 
 @dataclass
@@ -333,8 +262,7 @@ class NetcdfToGPKG:
         if (layer_path is not None) and (layer_path.exists()):
             gdf = gpd.read_file(str(layer_path), layer=layer_name)
         else:
-            if layer_path is not None:
-                print(f"Couldn't load {layer_path.name}. Ignoring it in correction.")
+            print(f"Couldn't load {layer_path.name}. Ignoring it in correction.")
 
         if gdf is not None:
             area_col = "area"  # area in m2
@@ -493,24 +421,6 @@ class NetcdfToGPKG:
             )
         return grid_gdf_local
 
-    def get_wlvl_1d_gdf(self, timesteps_seconds: list) -> gpd.GeoDataFrame:
-        """Get GeoDataFrame with 1D node points and waterlevels per timestep.
-        Same structure as get_waterlevels but for 1D nodes.
-        """
-        logger.debug("Retrieving 1D node waterlevels.")
-
-        coords = self.ts.grid.nodes.subset("1D_all").coordinates
-        gdf_1d = gpd.GeoDataFrame(
-            geometry=gpd.points_from_xy(coords[0], coords[1]),
-            crs="EPSG:28992",
-        )
-
-        for timestep in timesteps_seconds:
-            col_base = self.ts.create_column_base(time_seconds=timestep)
-            gdf_1d[f"wlvl_{col_base}"] = self.ts.get_timeseries_timestamp_1d(time_seconds=timestep)
-
-        return gdf_1d
-
     def run(
         self,
         output_file=None,
@@ -519,7 +429,6 @@ class NetcdfToGPKG:
         replace_water_above_perc: float = 95,
         replace_pand_above_perc: float = 99,
         wlvl_correction: bool = True,
-        wlvl_correct_1d: bool = False,
         overwrite: bool = False,
     ):
         """Transform netcdf into a grid gpkg.
@@ -570,11 +479,6 @@ class NetcdfToGPKG:
             # Save to file
             logger.debug(f"Saving grid gdf to {output_file.path}.")
             grid_gdf.to_file(output_file.path, engine="pyogrio")
-
-            if wlvl_correct_1d:
-                gdf_1d = self.get_wlvl_1d_gdf(timesteps_seconds=timesteps_seconds)
-                logger.debug(f"Saving 1D nodes gdf to {output_file.path}.")
-                gdf_1d.to_file(output_file.path, layer="node_1d", engine="pyogrio")
 
 
 # %%
