@@ -35,13 +35,13 @@ if TYPE_CHECKING:
     from threedigrid.admin.gridadmin import GridH5Admin
     from threedigrid.admin.gridresultadmin import GridH5AggregateResultAdmin, GridH5ResultAdmin
 
-from hhnk_threedi_tools.waterbalance_calculation.config import (
+from hhnk_threedi_tools.core.waterbalance_calculation.config import (
     EXTERNAL_COMPONENTS,
     INPUT_SERIES,
     SERIES_INDEX,
     STORAGE_COMPONENTS,
 )
-from hhnk_threedi_tools.waterbalance_calculation.selection import select_lines_and_pumps, select_points
+from hhnk_threedi_tools.core.waterbalance_calculation.selection import select_lines_and_pumps, select_points
 
 
 class WaterBalance:
