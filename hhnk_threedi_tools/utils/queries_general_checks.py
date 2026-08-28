@@ -32,6 +32,7 @@ from hhnk_threedi_tools.variables.database_variables import (
     reference_level_col,
     shape_col,
     start_level_col,
+    storage_area_col,
     surface_id_col,
     surface_layer,
     surface_map_layer,
@@ -79,6 +80,8 @@ msg_imp_surface_perc = "WARNING: percentage = 100 and should be 14.4 or 11.5"
 msg_control_table_too_many_chars = "ERROR: action_table has more than 1000 characters (model will crash)"
 msg_structure_control_culvert = "ERROR: structure control does not work for culverts"
 msg_impervious_surface_map_empty = "ERROR: impervious_surface_map is empty"
+
+msg_pumpstation_start_node_no_storage_area = "ERROR: pumpstation start node without storage_area"
 
 
 def constr_in_clause(innotin, sel=False, frm=False, where=None):
@@ -492,6 +495,18 @@ model_checks = {
         f"{impervious_surface_map_layer}.{percentage_col}",
     ),
     ######################################################################################
+    "pumpstation_start_node_no_storage_area": construct_sel_from_where_query(
+        left_join={"{}": "{} = {}"}, where="{} IS NULL OR {} = 0"
+    ).format(
+        construct_query_head(pump_station_layer, msg_pumpstation_start_node_no_storage_area),
+        pump_station_layer,
+        connection_nodes_layer,
+        f"{pump_station_layer}.{conn_node_start_id_col}",
+        f"{connection_nodes_layer}.{id_col}",
+        f"{connection_nodes_layer}.{storage_area_col}",
+        f"{connection_nodes_layer}.{storage_area_col}",
+    ),
+    ######################################################################################
     "structure_control_for_culvert": construct_sel_from_where_query(where="{} IS NOT NULL AND {} LIKE '{}'").format(
         construct_query_head(control_table_layer, msg_structure_control_culvert),
         control_table_layer,
@@ -507,6 +522,12 @@ model_checks = {
     ).format(
         f"'{impervious_surface_map_layer}' as table_name,\n0 as id,\n'{msg_impervious_surface_map_empty}' as error",
         impervious_surface_map_layer,
+    ),
+    ######################################################################################
+    "action_table_char_count": construct_sel_from_where_query(where="length({}) > 1000").format(
+        construct_query_head(control_table_layer, msg_control_table_too_many_chars),
+        control_table_layer,
+        f"{control_table_layer}.{action_col}",
     ),
     ######################################################################################
     "action_table_char_count": construct_sel_from_where_query(where="length({}) > 1000").format(
@@ -550,6 +571,7 @@ class ModelCheck:
         self.orifice_strt_end_not_same_init_waterlvl = model_checks["orifice_strt_end_not_same_init_waterlvl"]
         self.culvert_strt_end_not_same_init_waterlvl = model_checks["culvert_strt_end_not_same_init_waterlvl"]
         self.impervious_surface_perc = model_checks["imp_surface_perc"]
+        self.pumpstation_start_node_no_storage_area = model_checks["pumpstation_start_node_no_storage_area"]
         self.structure_control_for_culvert = model_checks["structure_control_for_culvert"]
         self.impervious_surface_map_empty = model_checks["impervious_surface_map_empty"]
         self.action_table_too_many_chars = model_checks["action_table_char_count"]
