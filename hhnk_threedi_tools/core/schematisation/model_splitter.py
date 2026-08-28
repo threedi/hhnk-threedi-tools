@@ -99,7 +99,8 @@ class ModelSchematisations:
     def create_schematisation(self, name):
         """Create a schematisation based on the modelsettings.
         Some schematisations (0d1d_test) have some extra changed that are not
-        only the globalsettings"""
+        only the globalsettings
+        """
         row = self.settings_df.loc[name].copy()
 
         self.folder.model._add_modelpath(name)  # JK aangepast tbv raamcontract
@@ -202,10 +203,7 @@ or do not use this run in the modelsplitter.
         if name == "0d1d_test":
             # Set every channel to isolated
             database_new.execute_sql_changes(query="UPDATE v2_channel SET calculation_type=101")
-            # hrt.execute_sql_changes(
-            #     query="UPDATE v2_channel SET calculation_type=101",
-            #     database=database_path_new,
-            # )
+            database_new.execute_sql_changes(query="UPDATE v2_manhole SET calculation_type=1")
 
             # Set controlled weirs to 10x width because we dont use controlled strcutures in hyd test.
             # To get the weir with we use the base database, so we cant accidentally run this twice.
