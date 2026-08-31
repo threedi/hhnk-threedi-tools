@@ -412,39 +412,3 @@ if __name__ == "__main__":
             time.sleep(sleeptime)
 
 # %%
-excel_path = id_scenarios
-check_excel = pd.read_excel(excel_path, sheet_name="Sheet1")
-# scenario_id = check_excel["Scenario ID"].values
-scenario_id = check_excel.loc[check_excel["Totaalschade"].isnull(), "Scenario ID"].to_list()
-ldo_api = LDO_API(api_key=LDO_API_KEY)
-sleeptime = 10
-for scenario in scenario_id:
-    try:
-        scenario
-        data_schade = ldo_api.get_external_processings(scenario)
-        items = data_schade.get("items", [])
-        if not items:
-            print(f"No external processing found for scenario {scenario}")
-            continue
-        else:
-            Totaal_getroffenen = data_schade["items"][0]["meta_data"]["Totaal getroffenen"]
-            Totaalschade = data_schade["items"][0]["meta_data"]["Totaalschade"]
-            Totaal_slachtoffers = data_schade["items"][0]["meta_data"]["Totaal slachtoffers"]
-            processing_type = data_schade["items"][0]["type"]
-
-            check_excel.loc[check_excel["Scenario ID"] == scenario, "Totaal getroffenen"] = Totaal_getroffenen
-            check_excel.loc[check_excel["Scenario ID"] == scenario, "Totaalschade"] = Totaalschade
-            check_excel.loc[check_excel["Scenario ID"] == scenario, "Totaal slachtoffers"] = Totaal_slachtoffers
-            check_excel.loc[check_excel["Scenario ID"] == scenario, "Type"] = processing_type
-            print(f"Processed scenario {scenario}")
-
-    except Exception as e:
-        logger.error(f"Error processing scenario {scenario}: {e}")
-    time.sleep(sleeptime)
-
-# Save once at the end
-with pd.ExcelWriter(excel_path, engine="openpyxl", mode="w") as writer:
-    check_excel.to_excel(writer, index=False, sheet_name="Blad2")
-
-
-# %%
