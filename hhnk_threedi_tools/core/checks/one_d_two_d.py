@@ -240,4 +240,8 @@ if __name__ == "__main__":
     folder = Folders(TEST_MODEL)
     self = OneDTwoDCheck.from_path(TEST_MODEL)
 
+    overwrite = True
+
+    output = self.run_wlvl_depth_at_timesteps()
+
 # %%
