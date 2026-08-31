@@ -14,5 +14,6 @@ if %errorlevel% neq 0 exit /b %errorlevel%
 
 REM Voer het commando uit
 REM voeg directory toe vanuit waar de script wordt aangeroepen
-call "%~dp0\..\python.bat" "%~dp0\..\..\install_hooks.py" "%user_dir%"
+call "D:\github\00_modellen_db\hhnk-threedi-tools\hhnk_threedi_tools\git_model_repo\bin\python.bat" "D:\github\00_modellen_db\hhnk-threedi-tools\hhnk_threedi_tools\git_model_repo\install_hooks.py" "%user_dir%"
+
 
