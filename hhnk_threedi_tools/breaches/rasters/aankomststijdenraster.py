@@ -1,46 +1,7 @@
 # %%
-from pathlib import Path
-
-import numpy as np
-import rasterio
-
-input_dir = Path(
-    r"Y:\personen\jacosta\kaarten_20cm\Aankomsttijdenrasters HHNK\Resultaat\Noord-Holland Zuid-Oost, Doorbraak dijktraject 1306, 13-7, 13-8 en 13-9\output_merged"
-)
-
-raster_files = [
-    "waterdiepte_max_t02h.tif",
-    "waterdiepte_max_t04h.tif",
-    "waterdiepte_max_t08h.tif",
-    "waterdiepte_max_t12h.tif",
-    "waterdiepte_max_t24h.tif",
-    "waterdiepte_max_t36h.tif",
-    "waterdiepte_max_t48h.tif",
-]
-
-prev_valid = None
-prev_name = None
-
-for fname in raster_files:
-    path = input_dir / fname
-    with rasterio.open(path) as src:
-        data = src.read(1)
-        if src.nodata is not None:
-            valid = data != src.nodata
-        else:
-            valid = ~np.isnan(data)
-
-    if prev_valid is not None:
-        inconsistent = prev_valid & (~valid)
-        n_inconsistent = inconsistent.sum()
-        print(f"{prev_name} -> {fname}: {n_inconsistent} wrong pixels")
-
-    prev_valid = valid
-    prev_name = fname
-# %%
-
 import os
 from pathlib import Path
+from typing import Sequence, Tuple, Union
 
 import numpy as np
 import rasterio
@@ -59,53 +20,72 @@ raster_files = [
     ("waterdiepte_max_t48h.tif", 48),
 ]
 
-regions = os.listdir(input_dir)
 
-for region in regions:
-    region_path = input_dir / region / "output_merged"
+def aankmoststijden_raster(
+    input_dir: Union[str, Path],
+    raster_files: Sequence[Tuple[str, int]],
+) -> None:
+    """Create arrival-time rasters from depth rasters.
 
-    if not region_path.is_dir():
-        print(f" for the region  {region}: there is no  output_merged")
-        continue
+    For each region in input_dir/*/output_merged, writes a raster where each
+    pixel value is the first hour (from raster_files) where depth >= 0.20.
+    Parameters: input_dir (Path|str), raster_files (Sequence[(filename, hour)]).
+    """
 
-    print(f"\n doing region: {region}")
+    # list all region folders inside the provided input directory
+    regions = os.listdir(input_dir)
 
-    first_raster = region_path / raster_files[0][0]
+    for region in regions:
+        # build the path to the merged output folder for this region
+        region_path = Path(input_dir) / region / "output_merged"
 
-    if not first_raster.exists():
-        print(f" raster not found ({first_raster}), skipping region.")
-        continue
+        if not region_path.is_dir():
+            print(f" for the region  {region}: there is no  output_merged")
+            continue
 
-    with rasterio.open(first_raster) as src0:
-        profile = src0.profile.copy()
-        shape = (src0.height, src0.width)
+        print(f"\n doing region: {region}")
 
-    arrival = np.zeros(shape, dtype=np.uint8)
+        # use the first raster from the provided list to read profile/shape
+        first_raster = region_path / raster_files[0][0]
 
-    for fname, hour in raster_files:
-        path = region_path / fname
+        if not first_raster.exists():
+            print(f" raster not found ({first_raster}), skipping region.")
+            continue
 
-        if not path.exists():
-            arrival = None
-            break
+        with rasterio.open(first_raster) as src0:
+            profile = src0.profile.copy()
+            shape = (src0.height, src0.width)
 
-        with rasterio.open(path) as src:
-            data = src.read(1).astype("float32")
+        # integer array to hold the arrival hour for each pixel (0 = unknown)
+        arrival = np.zeros(shape, dtype=np.uint8)
 
-            valid = np.isfinite(data) & (data >= 0.20)
+        # loop rasters in the order given; first matching depth sets the hour
+        for fname, hour in raster_files:
+            path = region_path / fname
 
-            # update pixel with no time yet, but valid, to the current hour
-            arrival[(arrival == 0) & valid] = hour
+            if not path.exists():
+                arrival = None
+                break
 
-    if arrival is None:
-        continue
+            with rasterio.open(path) as src:
+                # read the first band and convert to float for comparison
+                data = src.read(1).astype("float32")
 
-    output_file = region_path / "aankomsttijd_20cm.tif"
+                # valid pixels: finite numbers and depth >= 0.20
+                valid = np.isfinite(data) & (data >= 0.20)
 
-    profile.update(dtype=rasterio.uint8, count=1, nodata=0, compress="lzw")
+                # set hour for pixels that are still 0 (unset) and valid now
+                arrival[(arrival == 0) & valid] = hour
 
-    with rasterio.open(output_file, "w", **profile) as dst:
-        dst.write(arrival, 1)
+        if arrival is None:
+            continue
 
+        # write the resulting arrival raster back to disk
+        output_file = region_path / "aankomsttijd_20cm.tif"
 
-# %%
+        profile.update(dtype=rasterio.uint8, count=1, nodata=0, compress="lzw")
+
+        with rasterio.open(output_file, "w", **profile) as dst:
+            dst.write(arrival, 1)
+
+    # %%
