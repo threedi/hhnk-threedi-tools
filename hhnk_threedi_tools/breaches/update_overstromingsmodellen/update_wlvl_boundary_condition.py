@@ -3,23 +3,33 @@ import geopandas as gpd
 
 
 # change time series of boundary condtions with new max water levels. Keep the same gradient.
-def update_waterlevel(time_series_old, new_max_waterlevel):
+def update_waterlevel(time_series_old: str, new_max_waterlevel: float) -> str:
+    """Return a timeseries string with its peak adjusted to a new max.
+
+    `time_series_old` should be lines of `time,waterlevel`. The function
+    preserves the relative differences (gradient) and shifts values so the
+    original maximum becomes `new_max_waterlevel`. Returns a formatted
+    timeseries string with six-decimal waterlevels.
+    """
     rows = []
-    # change the format so it can be better processed.
+
+    # convert the input multiline string into a list of lines
     time_series = time_series_old.strip().splitlines()
-    # get maximum water level from old time series
+
+    # read the original maximum water level from the first line
     max_waterlevel_old = float(time_series[0].split(",")[1])
-    # calculate the difference between the old and new maximum water level
+
+    # how much we must shift all values to reach the requested maximum
     delta = max_waterlevel_old - new_max_waterlevel
-    # loop through the old time series and update the water level values
+
+    # update every line: parse time and old level, compute shifted level
     for value in time_series:
-        # split the time series value into time and water level
         time = float(value.split(",")[0])
-        # get the old water level value
         waterlevel_old = float(value.split(",")[1])
-        # caculate the new waterlevel  value.
         new_waterlevel = waterlevel_old - delta
         rows.append((time, new_waterlevel))
+
+    # return as newline-separated time,waterlevel with 6 decimals
     format_3di = "\n".join(f"{time:g},{wl:.6f}" for time, wl in rows)
     return format_3di
 
