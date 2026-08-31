@@ -483,49 +483,17 @@ class NetcdfToGPKG:
 
 # %%
 if __name__ == "__main__":
-    import os
-
     from hhnk_threedi_tools import Folders
 
-    paths = [
-        r"H:\02.modellen\bergen_noord_huidig_situatie_JA",
-        r"H:\02.modellen\bergen_noord_variant_1_JA",
-        r"H:\02.modellen\bergen_noord_variant_2_JA",
-        r"H:\02.modellen\bergen_noord_variant_3_JA",
-    ]
+    folder_path = r"E:\02.modellen\HKC23010_Eijerland_WP"
+    folder = Folders(folder_path)
 
-    for folder in paths:
-        folder = Folders(folder)
-        batch_path = folder.threedi_results.batch.path
-        batch_folders = os.listdir(batch_path)
-        damo = folder.source_data.damo.path
-        panden = folder.source_data.panden.path
-        damo_layer = "Waterdeel"
-        panden_layer = "panden"
-        wlvl_correction = True
-        for results in batch_folders:
-            downloads_path = batch_path / results / "01_downloads"
-            output_raster_path = batch_path / results / "02_output_rasters"
-            downloads = os.listdir(downloads_path)
-            for download in downloads:
-                scenario_result_path = downloads_path / download
-                output_path = output_raster_path / download / "grid_corrected.gpkg"
-                if not os.path.isdir(scenario_result_path):
-                    continue
-                if os.path.exists(output_path):
-                    continue
+    threedi_result = folder.threedi_results.batch["bwn_gxg"].downloads.piek_ghg_T10
 
-                self = NetcdfToGPKG(
-                    threedi_result=hrt.ThreediResult(scenario_result_path),
-                    waterdeel_path=damo,
-                    waterdeel_layer=damo_layer,
-                    panden_path=panden,
-                    panden_layer=panden_layer,
-                    use_aggregate=False,
-                )
-
-                timesteps_seconds = ["max"]
-                os.makedirs(output_path.parent, exist_ok=True)
-                self.run(output_file=output_path, timesteps_seconds=timesteps_seconds, wlvl_correction=wlvl_correction)
-
+    output_file = None
+    wlvl_correction = False
+    overwrite = True
+    self = NetcdfToGPKG(threedi_result=threedi_result.netcdf, use_aggregate=True)
+    timesteps_seconds = ["max"]
+    self.run(wlvl_correction=wlvl_correction)
 # %%
