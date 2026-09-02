@@ -46,6 +46,9 @@ try to check after it upload the information to ensure that the data is correctl
 Dem is aggregated to 5x5 results created at 0.5x0.5m
 
 It is important to set a sleep time so the API wil not be overloaded
+
+IMPORTANT: Sometimes you will need to donwload a certificate package to be able to upload the information. If you get an error related to the certificate, try to install the package certifi using pip install certifi. After installing the package, try to upload the information again.
+You should run pixi run python -m pip install -U certifi pip-system-certs in the pixi environment to ensure that the certificate is correctly installed.
 """
 
 # %%
@@ -53,37 +56,53 @@ import json
 import os
 import shutil
 import time
+import warnings
 import zipfile
 from pathlib import Path
 
 import hhnk_research_tools as hrt
 import pandas as pd
 import requests
-from breaches import Breaches
+from breaches.rasters import breach_wdepth_damage
 
-LDO_API_URL = "https://www.overstromingsinformatie.nl/api/v1/"
+from hhnk_threedi_tools.breaches.breaches import Breaches
+
+LDO_API_URL = "https://ldo.overstromingsinformatie.nl/api/v1/"
 
 # Generate api key on de LDO_API_URL website. And place it in api_ldo_key.txt
-LDO_API_KEY = Path("api_ldo_key.txt").read_text("utf8")
+
+raw = Path("api_ldo_key.txt").read_text("utf8")
+LDO_API_KEY = json.loads(raw)
 
 logger = hrt.logging.get_logger(__name__)
 
 # %%
 # FOR ADMINISTRATION PERMISSION USE THE FOLLOWING. Otherwise you will get a permission feedback
 # at the moment you will try to upload the excel file.
-# You will need to copy your own data in the webiste *https://www.overstromingsinformatie.nl/auth/)
+# You will need to copy your own data in the webiste *https://ldo.overstromingsinformatie.nl/api/)
 # 1. Open the website
 # 2. Provide credential to log in
-# 3. On the website in the box auth/v1/personalapikeys/ copy your own information as below (line 78 to 83)
-# 4. Store the API KEY
+# 3. On the website in the box auth/v1/personalapikeys/ copy your own information as below (line 91 to 96)
+# 4. In the same website in the box auth/v1/token/ use the tenant 4 to get the access token and refresh token.
+# 5. Place the information in the api_ldo_key.txt file as below:
 
-# This one I leave it to copy and paste the information in the website
+# Note: the following information is not real, it is just an example of how the information should be
+# placed in the api_ldo_key.txt file (structure).
+
+# You need to copy your own information from the website.
+# {
+#     "key": "olkHtC3EOu1zaDg",
+#     "refresh": "eDOuz1fxdMyYN2eyLjqUWd9c_FuDyWebaIg",
+#     "access": "eyJ5uxCRCpFq6hA"
+# }
+
+# The following information I leave it to copy and paste the information in the website
 
 parameters = {
     "scope": "admin",
-    "name": "Juan_Test_12",
-    "expiry_date": "2025-01-18T10:22:48.008Z",
-    "revoked": False,
+    "name": "Juan_Test_12",  # Change the name to your own name
+    "expiry_date": "2025-01-18T10:22:48.008Z",  # Change the expiry date to a future date, otherwise you will not be able to use the API key
+    "revoked": False,  # lowercase, otherwise you will not be able to use the API key
 }
 
 
@@ -91,19 +110,19 @@ parameters = {
 class LDO_API:
     def __init__(self, api_key=LDO_API_KEY, tenant=4, url=LDO_API_URL):
         self.url = url
-        self.api_key = api_key
+        self.api_key = LDO_API_KEY["key"]
         self.tenant = tenant  # organisation, 4=hhnk.
 
         # Authorisation goes through the auth endpoint
         self.url_auth = self.url.replace("/api/", "/auth/")
 
-        self._refresh_token = None  # set on calling self.access_token
-        self._access_token = None  # Property
+        self._refresh_token = LDO_API_KEY["refresh"]  # set on calling self.access_token
+        self._access_token = LDO_API_KEY["access"]  # Property
 
         # TODO FROM LDO_API_UPLOAD
         self.headers_excel = {
             "accept": "application/json",
-            "authorization": f"Bearer {self.access_token}",
+            "authorization": f"Bearer {self._access_token}",
         }
 
     @property
@@ -118,7 +137,8 @@ class LDO_API:
             ).json()
             self._refresh_token = r["refresh"]
             self._access_token = r["access"]
-        return self._access_token
+        else:
+            return self._access_token
 
     def get_tenants(self):
         """Tenant / organisation which has an id and name.
@@ -153,7 +173,7 @@ class LDO_API:
             excel_response = requests.post(url=url_excel_import, headers=self.headers_excel, files=excel_files)
         response_json = json.loads(excel_response.content.decode("utf-8"))
         if response_json.__contains__("message"):
-            msg = response_json["detail"][0]["msg"]
+            msg = response_json["message"]
             logger.error("The excel file has an error")
             raise ValueError(msg)
 
@@ -181,6 +201,39 @@ class LDO_API:
         logger.info(f"status code: {r.status_code}")
         logger.info(f"reason: {r.reason}")
         logger.info(f"Finished uploading {zip_path.name}")
+
+    def get_external_processings(self, scenario_id):
+        """Retrieve external processing information for a scenario."""
+        url = self.url + f"scenarios/{scenario_id}/external-processings"
+        response = requests.get(url=url, headers=self.headers_excel, timeout=30)
+        response.raise_for_status()
+        data = response.json()
+        logger.info(f"Retrieved external processings for scenario_id={scenario_id}")
+        return data
+
+    def save_external_processings_json(self, scenario_id, output_folder):
+        """Save external processing response as JSON."""
+        output_folder = Path(output_folder)
+        output_folder.mkdir(parents=True, exist_ok=True)
+
+        data = self.get_external_processings(scenario_id)
+        json_path = output_folder / f"external_processings_{scenario_id}.json"
+
+        with open(json_path, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2, ensure_ascii=False)
+
+        logger.info(f"Saved external processing JSON to {json_path}")
+        return json_path, data
+
+    def delete_scenario(self, scenario_id):
+        """Delete a scenario from LDO."""
+
+        delete_url = self.url + f"scenarios/{scenario_id}"
+        response = requests.delete(delete_url, headers=self.headers_excel, timeout=30)
+        response.raise_for_status()
+        logger.info(f"Scenario_id={scenario_id} deleted successfully.")
+        data = response.json()
+        return data
 
 
 # %%
@@ -211,18 +264,41 @@ class LdoUploadFolder(hrt.Folder):
         self.zip_path = None
 
     def _find_scenario_folder(self):
-        """Get Path to scenario results"""
-        scenario_paths = [j for i in self.scenario_results_path.glob("*/") for j in list(i.glob("*/"))]
-        for scenario_path in scenario_paths:
-            if scenario_path.name == self.name:
-                return scenario_path
-        raise FileNotFoundError(f"{self.name} not found in {self.scenario_results_path}")
+        """Get Path to scenario results."""
+        if self.scenario_results_path.parent.name != "Normering Regionale Keringen":
+            for scenario_path in self.scenario_results_path.rglob(f"*{self.name}"):
+                if scenario_path.is_dir():
+                    return scenario_path
+        else:
+            for scenario_path in self.scenario_results_path.glob(f"*/{self.name}*"):
+                if scenario_path.is_dir():
+                    return scenario_path
+
+        raise FileNotFoundError(f"Scenario folder '{self.name}' was not found in {self.scenario_results_path}")
 
     def copy_files(self):
         """Copy NetCDF and DEM to the upload folder"""
         scenario_folder = self._find_scenario_folder()
+        if scenario_folder is None:
+            return
+
         breach = Breaches(scenario_folder)
-        raster_compress_path = breach.wss.path.joinpath("dem_clip.tif")
+        raster_compress_path = breach.wss.path.joinpath("dem.tif")
+        if not raster_compress_path.exists():
+            raster_vrt = breach.wss.path.joinpath("dem_clip.vrt")
+            mask = breach.wss.path.joinpath("mask_flood.gpkg")
+            resolution = 5
+            projection = "EPSG:28992"
+            raster_format = "GTiff"
+            breach_wdepth_damage.clip_DEM(
+                raster_vrt,
+                raster_compress_path,
+                projection,
+                mask,
+                resolution,
+                raster_format,
+            )
+
         netcdf_path = breach.netcdf.path.joinpath("results_3di.nc")
 
         shutil.copy2(raster_compress_path, self.path)
@@ -241,7 +317,8 @@ class LdoUploadFolder(hrt.Folder):
         with zipfile.ZipFile(self.zip_path, "w") as zipf:
             for file in self.path.glob("*"):
                 if file.name != zip_name:
-                    zipf.write(file, arcname=file.name)
+                    arcname = file.relative_to(self.path)
+                    zipf.write(file, arcname=arcname)
 
         self.zip_size = round(self.zip_path.stat().st_size / 1024, 0)  # KB
         logger.info(f"Zip {zip_name} created with size {self.zip_size / 1024} MB")
@@ -249,14 +326,11 @@ class LdoUploadFolder(hrt.Folder):
 
 
 # %%
-
-
-# %%
 if __name__ == "__main__":
     # Set Paths from the data to be uploaded
 
+    base_path = Path(r"H:\03.resultaten\IPO_Overstromingsberekeningen_compartimentering")
     # Excel files per scenario.
-    base_path = Path(r"E:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024")
     metadata_folder = base_path.joinpath(r"ldo_structuur\metadata_per_scenario")
 
     # Excel file where the ID and size of the upload is going to be stored
@@ -272,30 +346,47 @@ if __name__ == "__main__":
     pd_scenarios = pd.read_excel(id_scenarios)
 
     # Select scenarios ids that area already uploaded to be skiped
-    scenarios_done = pd_scenarios.loc[pd_scenarios["ID_SCENARIO"] > 0, "Naam van het scenario"].to_list()
+    scenarios_done = pd_scenarios.loc[pd_scenarios["Scenario ID"] > 0, "Naam van het scenario"].to_list()
 
     # Sleep time to not burn out the API
-    sleeptime = 420  # FIXME 7 minutes seems alot?
+    sleeptime = 200  # FIXME 7 minutes seems alot?
 
     # Set API key
     ldo_api = LDO_API(api_key=LDO_API_KEY)
 
     # Loop over al the scenarios
     scenarios = list(metadata_folder.glob("*.xlsx"))
+    # %%
     for metadata_xlsx in scenarios:
         # Set Scenario Name
         scenario_name = metadata_xlsx.stem
-        # %%
+
         # If the scenario is done the continue
         if scenario_name in scenarios_done:
             continue
         else:
+            print(f"Processing scenario {scenario_name}")
+
+            # Add scenario name to the dataframe if it is not there yet
+            if scenario_name not in pd_scenarios["Naam van het scenario"].values:
+                pd_scenarios = pd.concat(
+                    [
+                        pd_scenarios,
+                        pd.DataFrame([{"Naam van het scenario": scenario_name, "Scenario ID": None, "SIZE_KB": None}]),
+                    ],
+                    ignore_index=True,
+                )
+
             # Set folder with scenario name to be uploaded to LDO
             scenario_path = ldo_structuur_path.joinpath(scenario_name)
 
             # Create folder with data to upload.
             ldo_structuur = LdoUploadFolder(scenario_path, scenario_results_path=scenario_results_path)
-            ldo_structuur.copy_files()
+
+            copied = ldo_structuur.copy_files()
+            # if not copied:
+            #     continue
+
             zip_path = ldo_structuur.zip_files()
 
             # Upload excel file from the scenario, and retrieve json infomration
@@ -305,7 +396,7 @@ if __name__ == "__main__":
             ldo_api.upload_zip_file(zip_path=zip_path, excel_id=excel_id)
 
             # Save the id of upload from the scenario
-            pd_scenarios.loc[pd_scenarios["Naam van het scenario"] == scenario_name, "ID_SCENARIO"] = scenario_id
+            pd_scenarios.loc[pd_scenarios["Naam van het scenario"] == scenario_name, "Scenario ID"] = scenario_id
 
             # Save the size of the scenario in the metdata dataframe
             pd_scenarios.loc[pd_scenarios["Naam van het scenario"] == scenario_name, "SIZE_KB"] = (
@@ -320,4 +411,4 @@ if __name__ == "__main__":
             logger.info(f"Finished processing {scenario_name}")
             time.sleep(sleeptime)
 
-    # %%
+# %%

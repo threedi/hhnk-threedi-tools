@@ -243,3 +243,5 @@ if __name__ == "__main__":
     overwrite = True
 
     output = self.run_wlvl_depth_at_timesteps()
+
+# %%
