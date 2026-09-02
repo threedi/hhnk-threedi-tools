@@ -244,13 +244,15 @@ def create_sorted_actiontable_queries(database: hrt.SpatialDatabase) -> list[str
     Sommige modellen hebben een sturing die niet door de validatie van 3Di komt.
     Hier is ergens een keer de action_table verkeerd gesorteerd.
 
+    Met dit script kan de sortering goed gezet worden in de sqlite.
 
+    For discharge coefficient controls, malformed action tables are corrected
     before sorting.
 
     Parameters
     ----------
         path to the database. This can be retrieved from htt.Folders with:
-    database : hrt.Sqlite
+    database : hrt.SpatialDatabase
         SQLite database containing the 3Di model. This can be retrieved from
         folder.model.schema_base.database
 
