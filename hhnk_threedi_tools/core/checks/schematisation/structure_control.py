@@ -1,4 +1,6 @@
 # %%
+import os
+import sys
 from pathlib import Path
 
 import geopandas as gpd
@@ -237,15 +239,19 @@ class StructureControl:
 
 def create_sorted_actiontable_queries(database: hrt.SpatialDatabase) -> list[str]:
     """
+    Create SQL queries to sort action tables in a 3Di model.
+
     Sommige modellen hebben een sturing die niet door de validatie van 3Di komt.
     Hier is ergens een keer de action_table verkeerd gesorteerd.
 
-    Met dit script kan de sortering goed gezet worden in het model.
+
+    before sorting.
 
     Parameters
     ----------
-    database : hrt.SpatialDatabase
         path to the database. This can be retrieved from htt.Folders with:
+    database : hrt.Sqlite
+        SQLite database containing the 3Di model. This can be retrieved from
         folder.model.schema_base.database
 
     Returns
@@ -253,48 +259,140 @@ def create_sorted_actiontable_queries(database: hrt.SpatialDatabase) -> list[str
     queries : list[str]
         list of sql queries of all controls in the provided model. This list should be
     """
-
+    # open control table
     control_df = database.load("table_control", index_column="id")
     queries = []
 
-    # Voor elke sturings regel de actiontable sorteren
     for index, row in control_df.iterrows():
+        # get the action table as string
         action_table_string = row["action_table"]
+        # get the action table type
+        action_type = row["action_type"]
 
+        # initialize lists to store corrected and organized measuerement and actions
         measure_list = []
         action_list = []
 
-        action_type = row["action_type"]
-        for entry in action_table_string.split("\n"):
-            try:
-                measurement = [float(entry.split(",")[0])]
-                measure_list.append(measurement[0])
-            except ValueError as e:
-                # Problem with action table
-                logger.error(f"""Problem with '{entry}' at index {action_table_string.index(entry)} of the action_table_string for
-    {row}
-    """)
-                raise e
+        # check first action table with action type discharge coefficientes
+        if action_type == "set_discharge_coefficients":
+            # check if the action is wrong (ex: -0.091;0.775,0.775-0.09;0.75,0.75)
+            action_table_string = correct_action_table_discharge_coeficiente(action_table_string)
 
-            if action_type in ["set_crest_level", "set_pump_capacity"]:
-                action = [float(entry.split(",")[1])]
-                action_list.append(action[0])
+            # loop over the entries by spliting the string by the separtor #
+            for entry in action_table_string.split("#"):
+                # transform into a float the first part of the string
+                measurement = float(entry.split(";")[0])
 
-            order = np.argsort(measure_list)
+                # save the positive and negative coeficiente discharges values as a tuple of floats
+                action_positive, action_negative = entry.split(";")[1].split(",")
+                action = (
+                    float(action_positive),
+                    float(action_negative),
+                )
 
-            measure_order = np.array(measure_list)[order]
-            action_order = np.array(action_list)[order]
+                # append the values into the lists to be sorted later.
+                measure_list.append(measurement)
+                action_list.append(action)
 
-            action_string = ""
-            for nr, (m, a) in enumerate(zip(measure_order, action_order)):
-                action_string += f"{m},{a}"
-                if nr != len(measure_order) - 1:
-                    action_string += "\n"
+        # Now check the action type for crest level and set pump capacity
+        elif action_type in ["set_crest_level", "set_pump_capacity"]:
+            for entry in action_table_string.split("#"):
+                if not entry:
+                    continue
 
-        update_str = f"UPDATE table_control SET action_table='{action_string}' WHERE id={index}"
+                # split the first and second entry by the separator ; and transforma them into floats
+                measurement = float(entry.split(";")[0])
+                action = float(entry.split(";")[1])
 
+                # append the values to be sorted later
+                measure_list.append(measurement)
+                action_list.append(action)
+
+        else:
+            continue
+
+        # assing an order to the measurements values according to their magnitud (ascending order)
+        order = np.argsort(measure_list)
+
+        # Organize measurements and actions according to the same order, keeping each pair together
+        measure_order = np.array(measure_list)[order]
+        action_order = np.array(action_list)[order]
+
+        # initalized entries values.
+        entries = []
+
+        # depending on the action type create the new action table.
+        if action_type == "set_discharge_coefficients":
+            # save entries as a string with the format measurement;positive,negative otherwise as measurement;action
+            for measurement, action in zip(measure_order, action_order):
+                positive, negative = action
+                entries.append(f"{measurement};{positive},{negative}")
+
+        else:
+            for measurement, action in zip(measure_order, action_order):
+                entries.append(f"{measurement};{action}")
+
+        # create the new action table string by joining the entries with the separator #
+        action_string = "#".join(entries)
+
+        update_str = f"UPDATE control_table SET action_table='{action_string}' WHERE id={index}"
         queries.append(update_str)
+
     return queries
+
+
+def correct_action_table_discharge_coeficiente(
+    action_table_string: str,
+) -> str:
+    """
+    Correct a discharge coefficient action table when two entries are joined.
+
+    Parameters
+    ----------
+    action_table_string : str
+        Action table as one string.
+
+    Returns
+    -------
+    str
+        Corrected action table.
+    """
+    # Store the corrected actions
+    action_table_corrected = []
+
+    # Split the table into separate actions
+    action_table_string = action_table_string.split("#")
+
+    for action in action_table_string:
+        # Skip empty actions
+        if len(action) == 0:
+            continue
+
+        # check how many parts the action has
+        number_of_parts = len((action.split(";")))
+        # correct actions
+        if number_of_parts == 2:
+            # check if there is space between discharge coefficeintes
+            if "," not in action.split(";")[1]:
+                # replace space with comma
+                action = action.replace(" ", ",")
+            # append correction
+            action_table_corrected.append(action)
+
+        # fix the error. Two actions joined together.
+        elif action.count("-") > 1:
+            print("we are here")
+            first, second = action.rsplit("-", 1)
+            action_table_corrected.append(first)
+            action_table_corrected.append("-" + second)
+
+        # check the action table.
+        else:
+            print(f"check the table manually {action}")
+
+    corrected_action_table = "#".join(action_table_corrected)
+
+    return corrected_action_table
 
 
 def update_sorted_actiontable(database: hrt.SpatialDatabase, queries: list[str]) -> None:
