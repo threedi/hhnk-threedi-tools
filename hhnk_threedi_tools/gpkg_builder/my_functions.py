@@ -364,7 +364,7 @@ model = r"H:\02.modellen\grootslag_leggertool"
 folder = Folders(model)
 # %%
 dem_path = Path(folder.model.base) / "00_basis" / "rasters" / "dem_grootslag.tif"
-waterdeel_gdf = gpd.read_file(folder.source_data.damo.path, layer='Waterdeel')
+waterdeel_gdf = gpd.read_file(folder.source_data.damo.path, layer="Waterdeel")
 waterdeel_gdf = gpd.read_file(r"H:\02.modellen\grootslag_leggertool\01_source_data\DAMO_waterdeel_backup.gpkg")
 greppels = r"H:\02.modellen\grootslag_leggertool\01_source_data\greppels_from_geoweb_wss_clipped.gpkg"
 greppels_gdf = gpd.read_file(greppels)
@@ -372,7 +372,9 @@ points_gdf = points_along_lines(lines=greppels_gdf, space=10, code_column="CODE"
 # width = 5
 # perpendicular_line = draw_perpendicular_lines(width, points_gdf, test_greppel)
 width = 5
-cross_section = sample_elevation_per_profile_point(width, points_gdf, greppels_gdf, dem_path, code_column="code", waterdeel_gdf=waterdeel_gdf)
+cross_section = sample_elevation_per_profile_point(
+    width, points_gdf, greppels_gdf, dem_path, code_column="code", waterdeel_gdf=waterdeel_gdf
+)
 # %%
 cross_section.to_file(
     r"H:\02.modellen\grootslag_leggertool\cross_section_points_function.gpkg",
