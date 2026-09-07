@@ -1,7 +1,9 @@
-#%%
-from shapely.ops import nearest_points
-from shapely import line_interpolate_point
+# %%
 import rasterio
+from shapely import line_interpolate_point
+from shapely.ops import nearest_points
+
+
 def nearest_intersect(boundary_geom, line_geom, point_geom):
     """
     Find intersection between line and boundary that is closest
@@ -177,6 +179,7 @@ def get_min_value_in_polygon(rioxarray_raster, polygon, mode="min"):
         result = np.nanmean(data)
     return result
 
+
 def full_perpendicular_line(p1, p2, width):
     if p1[0] == p2[0] and p1[1] == p2[1]:
         raise ValueError("p1 and p2 should be differents")
@@ -186,11 +189,14 @@ def full_perpendicular_line(p1, p2, width):
     line_a = perpendicular_lines(p1, p2, half_width, "left")
     line_b = perpendicular_lines(p1, p2, half_width, "right")
 
-    return LineString([
-        line_a.coords[-1],
-        p1,
-        line_b.coords[-1],
-    ])
+    return LineString(
+        [
+            line_a.coords[-1],
+            p1,
+            line_b.coords[-1],
+        ]
+    )
+
 
 def points_along_lines(lines, space=10, code_column="code"):
     points = []
@@ -205,9 +211,7 @@ def points_along_lines(lines, space=10, code_column="code"):
                 "point_id": len(points),
                 "code": line[code_column],
                 "distance": distance,
-                "geometry": line_interpolate_point(
-                    line.geometry, distance
-                ),
+                "geometry": line_interpolate_point(line.geometry, distance),
             }
 
             if "point_id" in lines.columns:
@@ -220,25 +224,27 @@ def points_along_lines(lines, space=10, code_column="code"):
         geometry="geometry",
         crs=lines.crs,
     )
-#%%
+
+
+# %%
 import geopandas as gpd
 
 greppels = gpd.read_file(r"H:\02.modellen\NZK_leggertool\01_source_data\greppels_nzk.shp")
 points_gdf = points_along_lines(lines=greppels, space=10)
-#%%
+# %%
 
-width = 5 
+width = 5
+
 
 def draw_perpendicular_lines(width, points_gdf, greppels):
-    profiles =[]
-    codes = points_gdf.groupby('code')
+    profiles = []
+    codes = points_gdf.groupby("code")
     for code, group in codes:
         line = greppels.loc[greppels["code"] == code, "geometry"].iloc[0]
         # print(code)
         # print(group)
         for index, point in group.iterrows():
-            
-            p1 = point['geometry']
+            p1 = point["geometry"]
             distance = point["distance"]
 
             if distance < line.length:
@@ -250,23 +256,25 @@ def draw_perpendicular_lines(width, points_gdf, greppels):
 
             profile_line = full_perpendicular_line((p1.x, p1.y), (p2.x, p2.y), width)
 
-            profiles.append({
-                "code": code,
-                "point_id": point["point_id"],
-                "distance": distance,
-                "geometry": profile_line,
-            })
+            profiles.append(
+                {
+                    "code": code,
+                    "point_id": point["point_id"],
+                    "distance": distance,
+                    "geometry": profile_line,
+                }
+            )
 
     profiles_gdf = gpd.GeoDataFrame(
         profiles,
         geometry="geometry",
         crs=greppels.crs,
     )
-    return(profiles_gdf)
+    return profiles_gdf
+
 
 def sample_elevation_per_profile_point(width, points_gdf, greppels, dem_path):
-
-    space = 0.30 
+    space = 0.30
     coords = []
     elevations = []
 
@@ -277,7 +285,7 @@ def sample_elevation_per_profile_point(width, points_gdf, greppels, dem_path):
         point_x = point.x
         point_y = point.y
         coords.append((point_x, point_y))
-    
+
     with rasterio.open(dem_path) as dem:
         samples = dem.sample(coords, indexes=1)
         for value in samples:
@@ -285,7 +293,7 @@ def sample_elevation_per_profile_point(width, points_gdf, greppels, dem_path):
 
     profile_points_gdf["elevation"] = elevations
 
-    return(profile_points_gdf)
-    
+    return profile_points_gdf
+
 
 # %%
