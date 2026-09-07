@@ -198,13 +198,16 @@ def full_perpendicular_line(p1, p2, width):
     )
 
 
-def points_along_lines(lines, space=10, code_column="code"):
+def points_along_lines(lines, space=10, code_column="code", include_endpoints=True):
     points = []
 
     for idx, line in lines.iterrows():
         length = line.geometry.length
-        distances = np.arange(0, length, space)
-        distances = np.append(distances, length)
+        if include_endpoints:
+            distances = np.arange(0, length, space)
+            distances = np.append(distances, length)
+        else:
+            distances = np.arange(space, length, space)
 
         for distance in distances:
             point_data = {
@@ -229,18 +232,16 @@ def points_along_lines(lines, space=10, code_column="code"):
 # %%
 import geopandas as gpd
 
-greppels = gpd.read_file(r"H:\02.modellen\NZK_leggertool\01_source_data\greppels_nzk.shp")
-points_gdf = points_along_lines(lines=greppels, space=10)
+# greppels = gpd.read_file(r"H:\02.modellen\NZK_leggertool\01_source_data\greppels_nzk.shp")
+# points_gdf = points_along_lines(lines=greppels, space=10)
 # %%
-
-width = 5
 
 
 def draw_perpendicular_lines(width, points_gdf, greppels):
     profiles = []
     codes = points_gdf.groupby("code")
     for code, group in codes:
-        line = greppels.loc[greppels["code"] == code, "geometry"].iloc[0]
+        line = greppels.loc[greppels["CODE"] == code, "geometry"].iloc[0]
         # print(code)
         # print(group)
         for index, point in group.iterrows():
@@ -273,13 +274,19 @@ def draw_perpendicular_lines(width, points_gdf, greppels):
     return profiles_gdf
 
 
-def sample_elevation_per_profile_point(width, points_gdf, greppels, dem_path):
+def sample_elevation_per_profile_point(width, points_gdf, greppels, dem_path, code_column, waterdeel_gdf):
     space = 0.30
     coords = []
     elevations = []
 
     profile_lines = draw_perpendicular_lines(width, points_gdf, greppels)
-    profile_points_gdf = points_along_lines(profile_lines, space=space)
+    profile_lines = gpd.sjoin(profile_lines, waterdeel_gdf[["geometry"]], how="inner", predicate="intersects")
+
+    profile_lines = profile_lines.drop(columns="index_right")
+
+    profile_lines = profile_lines.drop_duplicates(subset="point_id")
+
+    profile_points_gdf = points_along_lines(profile_lines, space=space, code_column=code_column)
 
     for point in profile_points_gdf.geometry:
         point_x = point.x
@@ -287,13 +294,89 @@ def sample_elevation_per_profile_point(width, points_gdf, greppels, dem_path):
         coords.append((point_x, point_y))
 
     with rasterio.open(dem_path) as dem:
-        samples = dem.sample(coords, indexes=1)
-        for value in samples:
+        for coord in coords:
+            samples = dem.sample([coord], indexes=1)
+            value = next(samples)
             elevations.append(value[0])
 
     profile_points_gdf["elevation"] = elevations
 
+    invalid_profile_ids = profile_points_gdf.loc[
+        profile_points_gdf["elevation"] == 10,
+        "profile_id",
+    ].unique()
+
+    profile_points_gdf = profile_points_gdf.loc[~profile_points_gdf["profile_id"].isin(invalid_profile_ids)].copy()
+
     return profile_points_gdf
 
 
+import matplotlib
+
+matplotlib.use("Agg")
+
+import matplotlib.pyplot as plt
+
+
+def plot_profile(gpkg_path, code, output_path):
+    import geopandas as gpd
+    import matplotlib
+
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    points = gpd.read_file(gpkg_path)
+
+    greppel_profiles = points.loc[points["code"] == code]
+
+    if greppel_profiles.empty:
+        raise ValueError(f"No profiles found for greppel {code}.")
+
+    fig, ax = plt.subplots(figsize=(10, 5))
+
+    for profile_id, profile in greppel_profiles.groupby("profile_id"):
+        profile = profile.sort_values("distance")
+
+        ax.plot(
+            profile["distance"],
+            profile["elevation"],
+            alpha=0.5,
+        )
+
+    ax.set_xlabel("Distance along cross-section (m)")
+    ax.set_ylabel("Elevation (m)")
+    ax.set_title(f"Cross-section profiles — {code}")
+    ax.grid(True)
+
+    fig.tight_layout()
+    fig.savefig(output_path, dpi=150)
+    plt.close(fig)
+
+    print(f"Figure saved: {output_path}", flush=True)
+
+
 # %%
+from pathlib import Path
+
+from hhnk_threedi_tools import Folders
+
+model = r"H:\02.modellen\grootslag_leggertool"
+folder = Folders(model)
+# %%
+dem_path = Path(folder.model.base) / "00_basis" / "rasters" / "dem_grootslag.tif"
+waterdeel_gdf = gpd.read_file(folder.source_data.damo.path, layer='Waterdeel')
+waterdeel_gdf = gpd.read_file(r"H:\02.modellen\grootslag_leggertool\01_source_data\DAMO_waterdeel_backup.gpkg")
+greppels = r"H:\02.modellen\grootslag_leggertool\01_source_data\greppels_from_geoweb_wss_clipped.gpkg"
+greppels_gdf = gpd.read_file(greppels)
+points_gdf = points_along_lines(lines=greppels_gdf, space=10, code_column="CODE", include_endpoints=False)
+# width = 5
+# perpendicular_line = draw_perpendicular_lines(width, points_gdf, test_greppel)
+width = 5
+cross_section = sample_elevation_per_profile_point(width, points_gdf, greppels_gdf, dem_path, code_column="code", waterdeel_gdf=waterdeel_gdf)
+# %%
+cross_section.to_file(
+    r"H:\02.modellen\grootslag_leggertool\cross_section_points_function.gpkg",
+    driver="GPKG",
+)
+# %%
+# pixi run python -X faulthandler -c "from hhnk_threedi_tools.gpkg_builder.my_functions import plot_profile; plot_profile(r'H:\02.modellen\grootslag_leggertool\cross_section_points_function.gpkg', 'OAF-A-13135', r'H:\02.modellen\grootslag_leggertool\greppel_profiles.png')"

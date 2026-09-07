@@ -4,7 +4,7 @@
 import geopandas as gpd
 import hhnk_research_tools as hrt
 import numpy as np
-
+#%%
 import hhnk_threedi_tools.core.raster_creation.storage_lookup as storage_lookup
 from tests.config import FOLDER_TEST, TEMP_DIR
 
