@@ -506,6 +506,7 @@ def get_bank_level(profile_points_with_heights, waterdeel_gdf):
     )
     bank_level_per_profile = points_in_waterdeel.groupby(["channel_id", "profile_id"])[["elevation", "distance"]]
     keys = list(bank_level_per_profile.groups.keys())
+
     for key in keys:
         channel_id, profile_id = key
         distance_sort = bank_level_per_profile.get_group(key).sort_values("distance")
@@ -515,8 +516,18 @@ def get_bank_level(profile_points_with_heights, waterdeel_gdf):
         profile_points_with_heights.loc[
             (profile_points_with_heights["channel_id"] == channel_id)
             & (profile_points_with_heights["profile_id"] == profile_id),
-            "bank_level",
+            "bank_level_section",
         ] = bank_level
+
+    bank_level_per_channel = (
+        profile_points_with_heights.groupby(["channel_id"])["bank_level_section"].median().round(3)
+    )
+    for key in list(bank_level_per_channel.keys()):
+        bank_level_median = bank_level_per_channel.get(key)
+        profile_points_with_heights.loc[(profile_points_with_heights["channel_id"] == key), "bank_level"] = (
+            bank_level_median
+        )
+
     return profile_points_with_heights
 
 
@@ -555,6 +566,8 @@ profile_points_with_heights = get_height_and_reference_level(
     profile_lines_gdf=profile_lines_gdf,
     profile_points_gdf=profile_points_gdf,
 )
+
+cross_section_banklevels = get_bank_level(profile_points_with_heights, waterdeel_gdf)
 # %%
 profile_points_with_heights.to_file(
     r"H:\02.modellen\grootslag_leggertool\cross_section_points_with_heights.gpkg",
@@ -566,6 +579,11 @@ profile_points_gdf.to_file(
 )
 profile_lines_gdf.to_file(
     r"H:\02.modellen\grootslag_leggertool\cross_section_lines_function.gpkg",
+    driver="GPKG",
+)
+
+cross_section_banklevels.to_file(
+    r"H:\02.modellen\grootslag_leggertool\cross_section_lines_banklevel.gpkg",
     driver="GPKG",
 )
 # %%
