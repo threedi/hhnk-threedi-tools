@@ -2,6 +2,7 @@
 from pathlib import Path
 
 import geopandas as gpd
+import pandas as pd
 import rasterio
 from shapely import line_interpolate_point
 from shapely.ops import nearest_points
@@ -420,7 +421,72 @@ def get_height_and_reference_level(greppels_gdf, channel_gdf, profile_lines_gdf,
         validate="many_to_one",
     )
 
-    return profile_points_with_heights
+    #group by channels and keep columns distance and height
+    groups = profile_points_with_heights.groupby("channel_id")[["distance", "height"]]
+    # apply function to get cross_section_tables
+    cross_section_tables = groups.apply(get_cross_section_table, height_step=0.10)
+
+    #merge results.
+    profile_points_with_heights = profile_points_with_heights.merge(
+        cross_section_tables,
+        on="channel_id",
+        how="left",
+        validate="many_to_one",
+    )
+    return cross_section_tables
+
+
+def get_cross_section_table(
+    profile,
+    height_step=0.10,
+):
+    channel_id = profile.name
+
+    profile = profile[["distance", "height"]]
+    profile = profile.drop_duplicates().sort_values("distance")
+
+    distances = profile["distance"].to_numpy()
+    profile_heights = profile["height"].to_numpy()
+
+    # Stop at the lower endpoint to avoid extending beyond the profile.
+    max_height = min(profile_heights[0], profile_heights[-1])
+
+    heights = np.arange(0, max_height, height_step)
+    heights = np.append(heights, max_height)
+
+    cross_section_rows = []
+
+    for height in heights:
+        width = 0.0
+
+        for index in range(len(distances) - 1):
+            x1 = distances[index]
+            x2 = distances[index + 1]
+
+            h1 = profile_heights[index]
+            h2 = profile_heights[index + 1]
+
+            # Include the entire segment when both ends are below the cut.
+            if h1 <= height and h2 <= height:
+                width += x2 - x1
+
+            # Include only the portion below the horizontal cut.
+            elif min(h1, h2) < height < max(h1, h2):
+                crossing = x1 + ((height - h1) / (h2 - h1)) * (x2 - x1)
+
+                if h1 < height:
+                    width += crossing - x1
+                else:
+                    width += x2 - crossing
+
+        cross_section_rows.append(f"{height:.3f},{width:.3f}")
+
+    return pd.DataFrame(
+        {
+            "channel_id": [channel_id],
+            "cross_section_table": ["\n".join(cross_section_rows)],
+        }
+    )
 
 
 result.to_file(
