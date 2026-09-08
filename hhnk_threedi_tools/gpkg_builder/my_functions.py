@@ -1,7 +1,12 @@
 # %%
+from pathlib import Path
+
+import geopandas as gpd
 import rasterio
 from shapely import line_interpolate_point
 from shapely.ops import nearest_points
+
+from hhnk_threedi_tools import Folders
 
 
 def nearest_intersect(boundary_geom, line_geom, point_geom):
@@ -357,9 +362,71 @@ def plot_profile(gpkg_path, code, output_path):
 
 
 # %%
-from pathlib import Path
+def get_height_and_reference_level(greppels_gdf, channel_gdf, profile_lines_gdf, profile_points_gdf):
+    # buffer and dissolve greppels.
+    greppels_buffer = greppels_gdf.buffer(1).union_all()
+    greppels_buffer_gdf = gpd.GeoDataFrame(
+        geometry=[greppels_buffer],
+        crs=greppels_gdf.crs,
+    )
 
-from hhnk_threedi_tools import Folders
+    # Select channels that intersects with greppels.
+    channel_join = channel_gdf.sjoin(greppels_buffer_gdf, how="inner", predicate="intersects")
+    channel_join = channel_join.drop(columns="index_right")
+    channel_join = channel_join.drop_duplicates()
+    channel_join = channel_join[["id", "geometry"]].rename(columns={"id": "channel_id"})
+
+    # Select the profile lines to the joined channels.
+    profile_lines_intersect = profile_lines_gdf.sjoin(channel_join, how="inner", predicate="intersects")
+    profile_lines_intersect = profile_lines_intersect.drop_duplicates()
+
+    # asing channel id to the points.
+    profile_lines_id_channel = (
+        profile_lines_intersect[["point_id", "channel_id"]]
+        .drop_duplicates()
+        .rename(columns={"point_id": "profile_id"})
+    )
+
+    new_profile_points = profile_points_gdf.merge(
+        profile_lines_id_channel, how="inner", on="profile_id", validate="many_to_one"
+    )
+    # Round distances before averaging matching positions.
+    new_profile_points["distance"] = new_profile_points["distance"].round(3)
+
+    profile_point_mean_elevation = (
+        new_profile_points.groupby(
+            ["channel_id", "distance"],
+            as_index=False,
+        )["elevation"]
+        .mean()
+        .round(3)
+    )
+    reference_level = profile_point_mean_elevation.groupby(
+        ["channel_id"],
+        as_index=False,
+    )["elevation"].min()
+
+    mean_profiles = profile_point_mean_elevation.merge(
+        reference_level.rename(columns={"elevation": "reference_level"}), how="inner", on="channel_id"
+    )
+
+    mean_profiles["height"] = mean_profiles["elevation"] - mean_profiles["reference_level"]
+    mean_profiles = mean_profiles.rename(columns={"elevation": "mean_elevation"})
+
+    profile_points_with_heights = new_profile_points.merge(
+        mean_profiles,
+        on=["channel_id", "distance"],
+        how="left",
+        validate="many_to_one",
+    )
+
+    return profile_points_with_heights
+
+
+result.to_file(
+    r"H:\02.modellen\grootslag_leggertool\new_cross_section_points_function_v2.gpkg",
+    driver="GPKG",
+)
 
 model = r"H:\02.modellen\grootslag_leggertool"
 folder = Folders(model)
@@ -387,3 +454,6 @@ profile_lines_gdf.to_file(
 )
 # %%
 # pixi run python -X faulthandler -c "from hhnk_threedi_tools.gpkg_builder.my_functions import plot_profile; plot_profile(r'H:\02.modellen\grootslag_leggertool\cross_section_points_function.gpkg', 'OAF-A-13135', r'H:\02.modellen\grootslag_leggertool\greppel_profiles.png')"
+model_path = r"H:\02.modellen\grootslag_leggertool\02_schematisation\greppels\bwn_grootslag.gpkg"
+channel_gdf = gpd.read_file(model_path, layer="channel")
+# %%
