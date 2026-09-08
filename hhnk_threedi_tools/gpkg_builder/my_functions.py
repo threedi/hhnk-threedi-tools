@@ -307,8 +307,9 @@ def sample_elevation_per_profile_point(width, points_gdf, greppels, dem_path, co
     ].unique()
 
     profile_points_gdf = profile_points_gdf.loc[~profile_points_gdf["profile_id"].isin(invalid_profile_ids)].copy()
+    profile_lines_gdf = profile_lines.loc[~profile_lines["point_id"].isin(invalid_profile_ids)].copy()
 
-    return profile_points_gdf
+    return profile_points_gdf, profile_lines_gdf
 
 
 import matplotlib
@@ -372,12 +373,16 @@ points_gdf = points_along_lines(lines=greppels_gdf, space=10, code_column="CODE"
 # width = 5
 # perpendicular_line = draw_perpendicular_lines(width, points_gdf, test_greppel)
 width = 5
-cross_section = sample_elevation_per_profile_point(
+profile_points_gdf, profile_lines_gdf = sample_elevation_per_profile_point(
     width, points_gdf, greppels_gdf, dem_path, code_column="code", waterdeel_gdf=waterdeel_gdf
 )
 # %%
-cross_section.to_file(
+profile_points_gdf.to_file(
     r"H:\02.modellen\grootslag_leggertool\cross_section_points_function.gpkg",
+    driver="GPKG",
+)
+profile_lines_gdf.to_file(
+    r"H:\02.modellen\grootslag_leggertool\cross_section_lines_function.gpkg",
     driver="GPKG",
 )
 # %%
