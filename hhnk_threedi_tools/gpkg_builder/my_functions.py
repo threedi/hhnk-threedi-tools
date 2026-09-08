@@ -421,19 +421,20 @@ def get_height_and_reference_level(greppels_gdf, channel_gdf, profile_lines_gdf,
         validate="many_to_one",
     )
 
-    #group by channels and keep columns distance and height
+    # group by channels and keep columns distance and height
     groups = profile_points_with_heights.groupby("channel_id")[["distance", "height"]]
     # apply function to get cross_section_tables
     cross_section_tables = groups.apply(get_cross_section_table, height_step=0.10)
+    cross_section_tables = cross_section_tables.reset_index(drop=True)
 
-    #merge results.
+    # merge results.
     profile_points_with_heights = profile_points_with_heights.merge(
         cross_section_tables,
         on="channel_id",
         how="left",
         validate="many_to_one",
     )
-    return cross_section_tables
+    return profile_points_with_heights
 
 
 def get_cross_section_table(
@@ -481,6 +482,14 @@ def get_cross_section_table(
 
         cross_section_rows.append(f"{height:.3f},{width:.3f}")
 
+    # Replace a zero bottom width with the width at the next height.
+    if len(cross_section_rows) >= 2:
+        first_height, first_width = cross_section_rows[0].split(",")
+        next_height, next_width = cross_section_rows[1].split(",")
+
+        if float(first_width) == 0:
+            cross_section_rows[0] = f"{first_height},{next_width}"
+
     return pd.DataFrame(
         {
             "channel_id": [channel_id],
@@ -489,27 +498,45 @@ def get_cross_section_table(
     )
 
 
-result.to_file(
-    r"H:\02.modellen\grootslag_leggertool\new_cross_section_points_function_v2.gpkg",
-    driver="GPKG",
-)
+# result.to_file(
+#     r"H:\02.modellen\grootslag_leggertool\new_cross_section_points_function_v2.gpkg",
+#     driver="GPKG",
+# )
+# path
+model = Path(r"H:\02.modellen\grootslag_leggertool\02_schematisation\greppels")
+model_path = model / "bwn_grootslag.gpkg"
+folder = Folders(Path(r"H:\02.modellen\grootslag_leggertool"))
+dem_path = (model) / "rasters" / "dem_grootslag.tif"
+greppels = r"H:\02.modellen\grootslag_leggertool\01_source_data\greppels_from_geoweb_wss_clipped.gpkg"
 
-model = r"H:\02.modellen\grootslag_leggertool"
-folder = Folders(model)
-# %%
-dem_path = Path(folder.model.base) / "00_basis" / "rasters" / "dem_grootslag.tif"
+# read geodataframes
 waterdeel_gdf = gpd.read_file(folder.source_data.damo.path, layer="Waterdeel")
 waterdeel_gdf = gpd.read_file(r"H:\02.modellen\grootslag_leggertool\01_source_data\DAMO_waterdeel_backup.gpkg")
-greppels = r"H:\02.modellen\grootslag_leggertool\01_source_data\greppels_from_geoweb_wss_clipped.gpkg"
 greppels_gdf = gpd.read_file(greppels)
+
+# draw points along  greppels
 points_gdf = points_along_lines(lines=greppels_gdf, space=10, code_column="CODE", include_endpoints=False)
-# width = 5
-# perpendicular_line = draw_perpendicular_lines(width, points_gdf, test_greppel)
+
 width = 5
 profile_points_gdf, profile_lines_gdf = sample_elevation_per_profile_point(
     width, points_gdf, greppels_gdf, dem_path, code_column="code", waterdeel_gdf=waterdeel_gdf
 )
 # %%
+# pixi run python -X faulthandler -c "from hhnk_threedi_tools.gpkg_builder.my_functions import plot_profile; plot_profile(r'H:\02.modellen\grootslag_leggertool\cross_section_points_function.gpkg', 'OAF-A-13135', r'H:\02.modellen\grootslag_leggertool\greppel_profiles.png')"
+channel_gdf = gpd.read_file(model_path, layer="channel")
+
+# %%
+profile_points_with_heights = get_height_and_reference_level(
+    greppels_gdf=greppels_gdf,
+    channel_gdf=channel_gdf,
+    profile_lines_gdf=profile_lines_gdf,
+    profile_points_gdf=profile_points_gdf,
+)
+# %%
+profile_points_with_heights.to_file(
+    r"H:\02.modellen\grootslag_leggertool\cross_section_points_with_heights.gpkg",
+    driver="GPKG",
+)
 profile_points_gdf.to_file(
     r"H:\02.modellen\grootslag_leggertool\cross_section_points_function.gpkg",
     driver="GPKG",
@@ -518,8 +545,4 @@ profile_lines_gdf.to_file(
     r"H:\02.modellen\grootslag_leggertool\cross_section_lines_function.gpkg",
     driver="GPKG",
 )
-# %%
-# pixi run python -X faulthandler -c "from hhnk_threedi_tools.gpkg_builder.my_functions import plot_profile; plot_profile(r'H:\02.modellen\grootslag_leggertool\cross_section_points_function.gpkg', 'OAF-A-13135', r'H:\02.modellen\grootslag_leggertool\greppel_profiles.png')"
-model_path = r"H:\02.modellen\grootslag_leggertool\02_schematisation\greppels\bwn_grootslag.gpkg"
-channel_gdf = gpd.read_file(model_path, layer="channel")
 # %%
