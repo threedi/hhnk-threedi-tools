@@ -490,14 +490,37 @@ def get_cross_section_table(
         if float(first_width) == 0:
             cross_section_rows[0] = f"{first_height},{next_width}"
 
-    return pd.DataFrame(
+    cross_section = pd.DataFrame(
         {
             "channel_id": [channel_id],
             "cross_section_table": ["\n".join(cross_section_rows)],
         }
     )
 
+    return cross_section
 
+
+def get_bank_level(profile_points_with_heights, waterdeel_gdf):
+    points_in_waterdeel = profile_points_with_heights.sjoin(
+        waterdeel_gdf[["geometry"]], how="inner", predicate="intersects"
+    )
+    bank_level_per_profile = points_in_waterdeel.groupby(["channel_id", "profile_id"])[["elevation", "distance"]]
+    keys = list(bank_level_per_profile.groups.keys())
+    for key in keys:
+        channel_id, profile_id = key
+        distance_sort = bank_level_per_profile.get_group(key).sort_values("distance")
+        first = round(distance_sort["elevation"].values.tolist()[0], 3)
+        last = round(distance_sort["elevation"].values.tolist()[-1], 3)
+        bank_level = min(first, last)
+        profile_points_with_heights.loc[
+            (profile_points_with_heights["channel_id"] == channel_id)
+            & (profile_points_with_heights["profile_id"] == profile_id),
+            "bank_level",
+        ] = bank_level
+    return profile_points_with_heights
+
+
+# %%
 # result.to_file(
 #     r"H:\02.modellen\grootslag_leggertool\new_cross_section_points_function_v2.gpkg",
 #     driver="GPKG",
