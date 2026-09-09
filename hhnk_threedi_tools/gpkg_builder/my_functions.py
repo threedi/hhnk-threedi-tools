@@ -571,60 +571,71 @@ def update_cross_sections(profile_points_with_heights, cross_section_locations):
 
 # %%
 
-channel_id = cross_section_locations_updated.loc[
-    cross_section_locations_updated["updated"] == True
-].channel_id.to_list()
-connection_node_start_id = channel_gdf.loc[channel_gdf["id"].isin(channel_id)].connection_node_start_id.to_list()
-connection_node_end_id = channel_gdf.loc[channel_gdf["id"].isin(channel_id)].connection_node_end_id.to_list()
-connection_nodes_set = set()
-connection_nodes_set.update(connection_node_end_id)
-connection_nodes_set.update(connection_node_start_id)
-channels_updated = channel_gdf.loc[channel_gdf["id"].isin(channel_id)]
-secundary_terciary_buffer = hydroobject.loc[hydroobject["CATEGORIEOPPWATERLICHAAM"] != 1].copy()
-secundary_terciary_buffer["geometry"] = secundary_terciary_buffer.geometry.buffer(1)
 
-orifice_filter = orifice_gdf.sjoin(secundary_terciary_buffer, how="inner", predicate="within")
-orifice_greppels = orifice_filter.loc[orifice_filter["connection_node_end_id"].isin(list(connection_nodes_set))]
-for idx, orifice in orifice_greppels.iterrows():
-    orifice_start = orifice.connection_node_start_id
-    orifice_end = orifice.connection_node_end_id
-    connected_channel_ids = channels_updated.loc[
-        channels_updated["connection_node_start_id"].isin([orifice_start, orifice_end])
-        | channels_updated["connection_node_end_id"].isin([orifice_start, orifice_end]),
-        "id",
-    ]
+def update_orifice_connection_nodes(
+    cross_section_locations_updated, channel_gdf, hydroobject, orifice_gdf, connection_node_gdf
+):
+    channel_id = cross_section_locations_updated.loc[
+        cross_section_locations_updated["updated"] == True
+    ].channel_id.to_list()
+    connection_node_start_id = channel_gdf.loc[channel_gdf["id"].isin(channel_id)].connection_node_start_id.to_list()
+    connection_node_end_id = channel_gdf.loc[channel_gdf["id"].isin(channel_id)].connection_node_end_id.to_list()
+    connection_nodes_set = set()
+    connection_nodes_set.update(connection_node_end_id)
+    connection_nodes_set.update(connection_node_start_id)
+    channels_updated = channel_gdf.loc[channel_gdf["id"].isin(channel_id)]
+    secundary_terciary_buffer = hydroobject.loc[hydroobject["CATEGORIEOPPWATERLICHAAM"] != 1].copy()
+    secundary_terciary_buffer["geometry"] = secundary_terciary_buffer.geometry.buffer(1)
 
-    reference_levels = (
-        cross_section_locations_updated.loc[
-            cross_section_locations_updated["channel_id"].isin(connected_channel_ids),
-            "reference_level",
+    orifice_filter = orifice_gdf.sjoin(secundary_terciary_buffer, how="inner", predicate="within")
+    orifice_greppels = orifice_filter.loc[orifice_filter["connection_node_end_id"].isin(list(connection_nodes_set))]
+    for idx, orifice in orifice_greppels.iterrows():
+        orifice_start = orifice.connection_node_start_id
+        orifice_end = orifice.connection_node_end_id
+        connected_channel_ids = channels_updated.loc[
+            channels_updated["connection_node_start_id"].isin([orifice_start, orifice_end])
+            | channels_updated["connection_node_end_id"].isin([orifice_start, orifice_end]),
+            "id",
         ]
-        .dropna()
-        .unique()
-    )
-    target_crest_level = round(min(reference_levels) + 0.10, 3)
 
-    if orifice["crest_level"] > target_crest_level:
-        orifice_gdf.loc[idx, "crest_level"] = target_crest_level
+        reference_levels = (
+            cross_section_locations_updated.loc[
+                cross_section_locations_updated["channel_id"].isin(connected_channel_ids),
+                "reference_level",
+            ]
+            .dropna()
+            .unique()
+        )
+        target_crest_level = round(min(reference_levels) + 0.10, 3)
 
-cross_section_updated = cross_section_locations_updated.loc[cross_section_locations_updated['updated']== True]
-share_connection_nodes = []
-for idx, connection_node in cross_section_updated.iterrows():
+        if orifice["crest_level"] > target_crest_level:
+            orifice_gdf.loc[idx, "crest_level"] = target_crest_level
+        else:
+            continue
+    orifice_gdf.to_file(model_path, layer="orifice", driver="GPKG")
 
-    channel_id = connection_node.channel_id
-    bank_level = connection_node.bank_level
+    cross_section_updated = cross_section_locations_updated.loc[cross_section_locations_updated["updated"] == True]
+    for idx, connection_node in cross_section_updated.iterrows():
+        channel_id = connection_node.channel_id
+        bank_level = connection_node.bank_level
 
+        connection_node_start_id = channel_gdf.loc[
+            channel_gdf["id"] == channel_id, "connection_node_start_id"
+        ].values.tolist()[0]
+        connection_node_end_id = channel_gdf.loc[
+            channel_gdf["id"] == channel_id, "connection_node_end_id"
+        ].values.tolist()[0]
 
-    connection_node_start_id = channel_gdf.loc[channel_gdf['id']== channel_id, 'connection_node_start_id'].values.tolist()[0]
-    connection_node_end_id = channel_gdf.loc[channel_gdf['id']== channel_id, 'connection_node_end_id'].values.tolist()[0]
+        connection_node_gdf.loc[connection_node_gdf["id"] == connection_node_start_id, "initial_water_level"] = (
+            bank_level - 0.10
+        )
+        connection_node_gdf.loc[connection_node_gdf["id"] == connection_node_end_id, "initial_water_level"] = (
+            bank_level - 0.10
+        )
 
-    connection_node_gdf.loc[connection_node_gdf['id']== connection_node_start_id, 'initial_water_level']=bank_level - 0.10
-    connection_node_gdf.loc[connection_node_gdf['id']== connection_node_end_id, 'initial_water_level']=bank_level - 0.10
+        # print(channel_id, bank_level)
+    connection_node_gdf.to_file(model_path, layer="connection_node", driver="GPKG")
 
-
-    print(channel_id, bank_level)
-
-# return(orifice_gdf)
 
 # %%
 # result.to_file(
