@@ -644,15 +644,22 @@ def update_model(
         # print(channel_id, bank_level)
     connection_node_gdf.to_file(model_path, layer="connection_node", driver="GPKG")
 
-    cross_section_ids = cross_section_locations_updated['id']
+    cross_section_ids = cross_section_locations_updated["id"]
     for id in cross_section_ids:
-        bank_level = cross_section_locations_updated.loc[cross_section_locations_updated['id']== id, 'bank_level'].values.tolist()[0]
-        cross_section_table = cross_section_locations_updated.loc[cross_section_locations_updated['id']== id, 'cross_section_table'].values.tolist()[0]
-        reference_level = cross_section_locations_updated.loc[cross_section_locations_updated['id']== id, 'reference_level'].values.tolist()[0]
-        cross_section_locations.loc[cross_section_locations['id']== id, 'bank_level'] = bank_level
-        cross_section_locations.loc[cross_section_locations['id']== id, 'cross_section_table'] = cross_section_table
-        cross_section_locations.loc[cross_section_locations['id']== id, 'reference_level'] = reference_level
+        bank_level = cross_section_locations_updated.loc[
+            cross_section_locations_updated["id"] == id, "bank_level"
+        ].values.tolist()[0]
+        cross_section_table = cross_section_locations_updated.loc[
+            cross_section_locations_updated["id"] == id, "cross_section_table"
+        ].values.tolist()[0]
+        reference_level = cross_section_locations_updated.loc[
+            cross_section_locations_updated["id"] == id, "reference_level"
+        ].values.tolist()[0]
+        cross_section_locations.loc[cross_section_locations["id"] == id, "bank_level"] = bank_level
+        cross_section_locations.loc[cross_section_locations["id"] == id, "cross_section_table"] = cross_section_table
+        cross_section_locations.loc[cross_section_locations["id"] == id, "reference_level"] = reference_level
     cross_section_locations.to_file(model_path, layer="cross_section_location", driver="GPKG")
+
 
 # %%
 # result.to_file(
