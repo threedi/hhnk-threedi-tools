@@ -515,29 +515,25 @@ def get_bank_level(profile_points_with_heights):
         profile = profile.reset_index(drop=True).copy()
 
         profile["slope"] = profile["mean_elevation"].diff() / profile["distance"].diff()
-        profile["slope_change_abs"] = profile["slope"].abs().diff().abs()
+        slope_abs = profile["slope"].abs()
+
+        # Positive values indicate flattening toward the outside.
+        profile["flattening_right"] = slope_abs.shift(-1) - slope_abs
+        profile["flattening_left"] = slope_abs - slope_abs.shift(-1)
 
         half = len(profile) // 2
 
         right = profile.iloc[:half]
         left = profile.iloc[half:]
 
-        first_slope_right = right.sort_values("slope_change_abs", ascending=False).iloc[0].distance
+        right_candidates = right.loc[right["flattening_right"] > 0]
+        left_candidates = left.loc[left["flattening_left"] > 0]
 
-        first_slope_left = left.sort_values("slope_change_abs", ascending=False).iloc[0].distance
+        right_index = right_candidates["flattening_right"].idxmax()
+        left_index = left_candidates["flattening_left"].idxmax()
 
-        second_next_right = round(first_slope_right - 0.3, 2)
-        second_next_left = round(first_slope_left + 0.3, 2)
-
-        if second_next_left > left["distance"].max():
-            second_next_left = left["distance"].max()
-
-        if second_next_right < right["distance"].min():
-            second_next_right = right["distance"].min()
-
-        first_max = profile.loc[profile["distance"] == second_next_right, "mean_elevation"].values.tolist()[0]
-
-        second_max = profile.loc[profile["distance"] == second_next_left, "mean_elevation"].values.tolist()[0]
+        first_max = profile.loc[right_index, "mean_elevation"]
+        second_max = profile.loc[left_index, "mean_elevation"]
 
         bank_level = min(first_max, second_max)
 
