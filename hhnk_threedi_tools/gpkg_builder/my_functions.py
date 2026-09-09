@@ -521,21 +521,32 @@ def get_bank_level(profile_points_with_heights):
         profile["flattening_right"] = slope_abs.shift(-1) - slope_abs
         profile["flattening_left"] = slope_abs - slope_abs.shift(-1)
 
-        half = len(profile) // 2
+        bottom_distance = profile.loc[profile["mean_elevation"].idxmin(), "distance"]
 
-        right = profile.iloc[:half]
-        left = profile.iloc[half:]
+        right = profile.loc[profile["distance"] < bottom_distance]
+        left = profile.loc[profile["distance"] > bottom_distance]
 
         right_candidates = right.loc[right["flattening_right"] > 0]
         left_candidates = left.loc[left["flattening_left"] > 0]
+        bank_levels = []
 
-        right_index = right_candidates["flattening_right"].idxmax()
-        left_index = left_candidates["flattening_left"].idxmax()
+        if not right_candidates.empty:
+            right_index = right_candidates["flattening_right"].idxmax()
+            bank_levels.append(profile.loc[right_index, "mean_elevation"])
 
-        first_max = profile.loc[right_index, "mean_elevation"]
-        second_max = profile.loc[left_index, "mean_elevation"]
+        if not left_candidates.empty:
+            left_index = left_candidates["flattening_left"].idxmax()
+            bank_levels.append(profile.loc[left_index, "mean_elevation"])
 
-        bank_level = min(first_max, second_max)
+        if not bank_levels:
+            print(f"No bank candidates: channel {channel_id}")
+            profile_points_with_heights.loc[
+                profile_points_with_heights["channel_id"] == channel_id,
+                "bank_level",
+            ] = float("nan")
+            continue
+
+        bank_level = min(bank_levels)
 
         profile_points_with_heights.loc[
             profile_points_with_heights["channel_id"] == channel_id,
@@ -551,12 +562,69 @@ def update_cross_sections(profile_points_with_heights, cross_section_locations):
     ].drop_duplicates()
     for index, channel in channel_cross_sections_banklelvel.iterrows():
         selection = cross_section_locations["channel_id"] == channel["channel_id"]
-
+        cross_section_locations.loc[selection, "updated"] = True
         cross_section_locations.loc[selection, "reference_level"] = round(channel["reference_level"], 3)
         cross_section_locations.loc[selection, "bank_level"] = channel["bank_level"]
         cross_section_locations.loc[selection, "cross_section_table"] = channel["cross_section_table"]
     return cross_section_locations
 
+
+# %%
+
+channel_id = cross_section_locations_updated.loc[
+    cross_section_locations_updated["updated"] == True
+].channel_id.to_list()
+connection_node_start_id = channel_gdf.loc[channel_gdf["id"].isin(channel_id)].connection_node_start_id.to_list()
+connection_node_end_id = channel_gdf.loc[channel_gdf["id"].isin(channel_id)].connection_node_end_id.to_list()
+connection_nodes_set = set()
+connection_nodes_set.update(connection_node_end_id)
+connection_nodes_set.update(connection_node_start_id)
+channels_updated = channel_gdf.loc[channel_gdf["id"].isin(channel_id)]
+secundary_terciary_buffer = hydroobject.loc[hydroobject["CATEGORIEOPPWATERLICHAAM"] != 1].copy()
+secundary_terciary_buffer["geometry"] = secundary_terciary_buffer.geometry.buffer(1)
+
+orifice_filter = orifice_gdf.sjoin(secundary_terciary_buffer, how="inner", predicate="within")
+orifice_greppels = orifice_filter.loc[orifice_filter["connection_node_end_id"].isin(list(connection_nodes_set))]
+for idx, orifice in orifice_greppels.iterrows():
+    orifice_start = orifice.connection_node_start_id
+    orifice_end = orifice.connection_node_end_id
+    connected_channel_ids = channels_updated.loc[
+        channels_updated["connection_node_start_id"].isin([orifice_start, orifice_end])
+        | channels_updated["connection_node_end_id"].isin([orifice_start, orifice_end]),
+        "id",
+    ]
+
+    reference_levels = (
+        cross_section_locations_updated.loc[
+            cross_section_locations_updated["channel_id"].isin(connected_channel_ids),
+            "reference_level",
+        ]
+        .dropna()
+        .unique()
+    )
+    target_crest_level = round(min(reference_levels) + 0.10, 3)
+
+    if orifice["crest_level"] > target_crest_level:
+        orifice_gdf.loc[idx, "crest_level"] = target_crest_level
+
+cross_section_updated = cross_section_locations_updated.loc[cross_section_locations_updated['updated']== True]
+share_connection_nodes = []
+for idx, connection_node in cross_section_updated.iterrows():
+
+    channel_id = connection_node.channel_id
+    bank_level = connection_node.bank_level
+
+
+    connection_node_start_id = channel_gdf.loc[channel_gdf['id']== channel_id, 'connection_node_start_id'].values.tolist()[0]
+    connection_node_end_id = channel_gdf.loc[channel_gdf['id']== channel_id, 'connection_node_end_id'].values.tolist()[0]
+
+    connection_node_gdf.loc[connection_node_gdf['id']== connection_node_start_id, 'initial_water_level']=bank_level - 0.10
+    connection_node_gdf.loc[connection_node_gdf['id']== connection_node_end_id, 'initial_water_level']=bank_level - 0.10
+
+
+    print(channel_id, bank_level)
+
+# return(orifice_gdf)
 
 # %%
 # result.to_file(
@@ -570,13 +638,16 @@ folder = Folders(Path(r"H:\02.modellen\grootslag_leggertool"))
 dem_path = (model) / "rasters" / "dem_grootslag.tif"
 greppels = r"H:\02.modellen\grootslag_leggertool\01_source_data\greppels_from_geoweb_wss_clipped.gpkg"
 
+damo_path = r"H:\02.modellen\grootslag_leggertool\01_source_data\version_1_DCMB\DAMO.gpkg"
 # read geodataframes
-waterdeel_gdf = gpd.read_file(folder.source_data.damo.path, layer="Waterdeel")
+hydroobject = gpd.read_file(damo_path, layer="HydroObject")
 waterdeel_gdf = gpd.read_file(r"H:\02.modellen\grootslag_leggertool\01_source_data\DAMO_waterdeel_backup.gpkg")
 greppels_gdf = gpd.read_file(greppels)
 channel_gdf = gpd.read_file(model_path, layer="channel")
 cross_section_locations = gpd.read_file(model_path, layer="cross_section_location")
-
+orifice_gdf = gpd.read_file(model_path, layer="orifice")
+culver_gdf = gpd.read_file(model_path, layer="culvert")
+connection_node_gdf = gpd.read_file(model_path, layer="connection_node")
 # draw points along  greppels
 points_gdf = points_along_lines(lines=greppels_gdf, space=10, code_column="CODE", include_endpoints=False)
 
@@ -613,6 +684,7 @@ profile_lines_gdf.to_file(
     driver="GPKG",
 )
 
+# %%
 cross_section_banklevels.to_file(
     r"H:\02.modellen\grootslag_leggertool\cross_section_lines_banklevel.gpkg",
     driver="GPKG",
