@@ -500,35 +500,66 @@ def get_cross_section_table(
     return cross_section
 
 
-def get_bank_level(profile_points_with_heights, waterdeel_gdf):
-    points_in_waterdeel = profile_points_with_heights.sjoin(
-        waterdeel_gdf[["geometry"]], how="inner", predicate="intersects"
+def get_bank_level(profile_points_with_heights):
+    mean_profiles = (
+        profile_points_with_heights[["channel_id", "distance", "mean_elevation"]]
+        .drop_duplicates()
+        .sort_values(["channel_id", "distance"])
     )
-    bank_level_per_profile = points_in_waterdeel.groupby(["channel_id", "profile_id"])[["elevation", "distance"]]
-    keys = list(bank_level_per_profile.groups.keys())
 
-    for key in keys:
-        channel_id, profile_id = key
-        distance_sort = bank_level_per_profile.get_group(key).sort_values("distance")
-        first = round(distance_sort["elevation"].values.tolist()[0], 3)
-        last = round(distance_sort["elevation"].values.tolist()[-1], 3)
-        bank_level = min(first, last)
+    profile_points_with_heights["bank_level"] = float("nan")
+
+    groups = mean_profiles.groupby("channel_id")
+
+    for channel_id, profile in groups:
+        profile = profile.reset_index(drop=True).copy()
+
+        profile["slope"] = profile["mean_elevation"].diff() / profile["distance"].diff()
+        profile["slope_change_abs"] = profile["slope"].abs().diff().abs()
+
+        half = len(profile) // 2
+
+        right = profile.iloc[:half]
+        left = profile.iloc[half:]
+        
+        first_slope_right = right.sort_values("slope_change_abs", ascending=False).iloc[0].distance
+
+        first_slope_left = left.sort_values("slope_change_abs", ascending=False).iloc[0].distance
+
+        second_next_right = round(first_slope_right - 0.3, 2)
+        second_next_left = round(first_slope_left + 0.3, 2)
+
+        if second_next_left > left["distance"].max():
+            second_next_left = left["distance"].max()
+
+        if second_next_right < right["distance"].min():
+            second_next_right = right["distance"].min()
+
+        first_max = profile.loc[profile["distance"] == second_next_right, "mean_elevation"].values.tolist()[0]
+
+        second_max = profile.loc[profile["distance"] == second_next_left, "mean_elevation"].values.tolist()[0]
+
+        bank_level = min(first_max, second_max)
+
         profile_points_with_heights.loc[
-            (profile_points_with_heights["channel_id"] == channel_id)
-            & (profile_points_with_heights["profile_id"] == profile_id),
-            "bank_level_section",
-        ] = bank_level
-
-    bank_level_per_channel = (
-        profile_points_with_heights.groupby(["channel_id"])["bank_level_section"].median().round(3)
-    )
-    for key in list(bank_level_per_channel.keys()):
-        bank_level_median = bank_level_per_channel.get(key)
-        profile_points_with_heights.loc[(profile_points_with_heights["channel_id"] == key), "bank_level"] = (
-            bank_level_median
-        )
+            profile_points_with_heights["channel_id"] == channel_id,
+            "bank_level",
+        ] = round(bank_level, 3)
 
     return profile_points_with_heights
+
+
+def update_cross_sections(profile_points_with_heights, cross_section_locations):
+    channel_cross_sections_banklelvel = profile_points_with_heights[
+        ["channel_id", "reference_level", "bank_level", "cross_section_table"]
+    ].drop_duplicates()
+    for index, channel in channel_cross_sections_banklelvel.iterrows():
+        selection = cross_section_locations["channel_id"] == channel["channel_id"]
+
+        cross_section_locations.loc[selection, "reference_level"] = round(channel["reference_level"], 3)
+        cross_section_locations.loc[selection, "bank_level"] = channel["bank_level"]
+        cross_section_locations.loc[selection, "cross_section_table"] = channel["cross_section_table"]
+    return cross_section_locations
 
 
 # %%
@@ -547,6 +578,8 @@ greppels = r"H:\02.modellen\grootslag_leggertool\01_source_data\greppels_from_ge
 waterdeel_gdf = gpd.read_file(folder.source_data.damo.path, layer="Waterdeel")
 waterdeel_gdf = gpd.read_file(r"H:\02.modellen\grootslag_leggertool\01_source_data\DAMO_waterdeel_backup.gpkg")
 greppels_gdf = gpd.read_file(greppels)
+channel_gdf = gpd.read_file(model_path, layer="channel")
+cross_section_locations = gpd.read_file(model_path, layer="cross_section_location")
 
 # draw points along  greppels
 points_gdf = points_along_lines(lines=greppels_gdf, space=10, code_column="CODE", include_endpoints=False)
@@ -555,9 +588,6 @@ width = 5
 profile_points_gdf, profile_lines_gdf = sample_elevation_per_profile_point(
     width, points_gdf, greppels_gdf, dem_path, code_column="code", waterdeel_gdf=waterdeel_gdf
 )
-# %%
-# pixi run python -X faulthandler -c "from hhnk_threedi_tools.gpkg_builder.my_functions import plot_profile; plot_profile(r'H:\02.modellen\grootslag_leggertool\cross_section_points_function.gpkg', 'OAF-A-13135', r'H:\02.modellen\grootslag_leggertool\greppel_profiles.png')"
-channel_gdf = gpd.read_file(model_path, layer="channel")
 
 # %%
 profile_points_with_heights = get_height_and_reference_level(
@@ -566,8 +596,13 @@ profile_points_with_heights = get_height_and_reference_level(
     profile_lines_gdf=profile_lines_gdf,
     profile_points_gdf=profile_points_gdf,
 )
+# %%
+cross_section_banklevels = get_bank_level(profile_points_with_heights)
 
-cross_section_banklevels = get_bank_level(profile_points_with_heights, waterdeel_gdf)
+cross_section_locations_updated = update_cross_sections(
+    profile_points_with_heights,
+    cross_section_locations.copy(),
+)
 # %%
 profile_points_with_heights.to_file(
     r"H:\02.modellen\grootslag_leggertool\cross_section_points_with_heights.gpkg",
@@ -584,6 +619,11 @@ profile_lines_gdf.to_file(
 
 cross_section_banklevels.to_file(
     r"H:\02.modellen\grootslag_leggertool\cross_section_lines_banklevel.gpkg",
+    driver="GPKG",
+)
+
+cross_section_locations_updated.to_file(
+    r"H:\02.modellen\grootslag_leggertool\cross_section_updated.gpkg",
     driver="GPKG",
 )
 # %%
