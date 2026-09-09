@@ -572,8 +572,14 @@ def update_cross_sections(profile_points_with_heights, cross_section_locations):
 # %%
 
 
-def update_orifice_connection_nodes(
-    cross_section_locations_updated, channel_gdf, hydroobject, orifice_gdf, connection_node_gdf
+def update_model(
+    cross_section_locations_updated,
+    channel_gdf,
+    hydroobject,
+    orifice_gdf,
+    connection_node_gdf,
+    model_path,
+    cross_section_locations,
 ):
     channel_id = cross_section_locations_updated.loc[
         cross_section_locations_updated["updated"] == True
@@ -588,7 +594,10 @@ def update_orifice_connection_nodes(
     secundary_terciary_buffer["geometry"] = secundary_terciary_buffer.geometry.buffer(1)
 
     orifice_filter = orifice_gdf.sjoin(secundary_terciary_buffer, how="inner", predicate="within")
-    orifice_greppels = orifice_filter.loc[orifice_filter["connection_node_end_id"].isin(list(connection_nodes_set))]
+    orifice_greppels = orifice_filter.loc[
+        orifice_filter["connection_node_start_id"].isin(connection_nodes_set)
+        | orifice_filter["connection_node_end_id"].isin(connection_nodes_set)
+    ]
     for idx, orifice in orifice_greppels.iterrows():
         orifice_start = orifice.connection_node_start_id
         orifice_end = orifice.connection_node_end_id
@@ -610,8 +619,7 @@ def update_orifice_connection_nodes(
 
         if orifice["crest_level"] > target_crest_level:
             orifice_gdf.loc[idx, "crest_level"] = target_crest_level
-        else:
-            continue
+
     orifice_gdf.to_file(model_path, layer="orifice", driver="GPKG")
 
     cross_section_updated = cross_section_locations_updated.loc[cross_section_locations_updated["updated"] == True]
@@ -636,6 +644,15 @@ def update_orifice_connection_nodes(
         # print(channel_id, bank_level)
     connection_node_gdf.to_file(model_path, layer="connection_node", driver="GPKG")
 
+    cross_section_ids = cross_section_locations_updated['id']
+    for id in cross_section_ids:
+        bank_level = cross_section_locations_updated.loc[cross_section_locations_updated['id']== id, 'bank_level'].values.tolist()[0]
+        cross_section_table = cross_section_locations_updated.loc[cross_section_locations_updated['id']== id, 'cross_section_table'].values.tolist()[0]
+        reference_level = cross_section_locations_updated.loc[cross_section_locations_updated['id']== id, 'reference_level'].values.tolist()[0]
+        cross_section_locations.loc[cross_section_locations['id']== id, 'bank_level'] = bank_level
+        cross_section_locations.loc[cross_section_locations['id']== id, 'cross_section_table'] = cross_section_table
+        cross_section_locations.loc[cross_section_locations['id']== id, 'reference_level'] = reference_level
+    cross_section_locations.to_file(model_path, layer="cross_section_location", driver="GPKG")
 
 # %%
 # result.to_file(
