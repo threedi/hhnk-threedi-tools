@@ -521,7 +521,7 @@ def get_bank_level(profile_points_with_heights):
 
         right = profile.iloc[:half]
         left = profile.iloc[half:]
-        
+
         first_slope_right = right.sort_values("slope_change_abs", ascending=False).iloc[0].distance
 
         first_slope_left = left.sort_values("slope_change_abs", ascending=False).iloc[0].distance
