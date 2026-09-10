@@ -714,7 +714,7 @@ update_model(
     cross_section_locations,
 )
 # %%
-    
+
 # # %%
 # profile_points_with_heights.to_file(
 #     r"H:\02.modellen\grootslag_leggertool\cross_section_points_with_heights.gpkg",
