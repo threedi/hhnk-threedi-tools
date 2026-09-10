@@ -307,13 +307,13 @@ def sample_elevation_per_profile_point(
     dem_path: Path,
     code_column: str,
     waterdeel_gdf: gpd.GeoDataFrame,
-    space:float,
+    space: float,
 ) -> Tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]:
     """
     Sample DEM elevations along profile cross-section lines and return points and lines GeoDataFrames.
     Returns (profile_points_gdf, profile_lines_gdf).
     """
-    
+
     coords = []
     elevations = []
 
@@ -713,7 +713,7 @@ def update_model(
             channel_gdf["id"] == channel_id, "connection_node_end_id"
         ].values.tolist()[0]
 
-            # Update only nodes not shared with channels outside the selection.
+        # Update only nodes not shared with channels outside the selection.
         if connection_node_start_id not in connection_id_no_greppels:
             connection_node_gdf.loc[
                 connection_node_gdf["id"] == connection_node_start_id,
@@ -774,10 +774,10 @@ if __name__ == "__main__":
     # draw points along  greppels
     points_gdf = points_along_lines(lines=greppels_gdf, space=10, code_column="CODE", include_endpoints=False)
 
-    width = 5   #profile line width
-    space = 0.30 #space between points
+    width = 5  # profile line width
+    space = 0.30  # space between points
     profile_points_gdf, profile_lines_gdf = sample_elevation_per_profile_point(
-        width, points_gdf, greppels_gdf, dem_path, code_column="code", waterdeel_gdf=waterdeel_gdf, space
+        width, points_gdf, greppels_gdf, dem_path, code_column="code", waterdeel_gdf=waterdeel_gdf, space=space
     )
 
     # %%
