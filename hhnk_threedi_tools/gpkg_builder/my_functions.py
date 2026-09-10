@@ -570,8 +570,6 @@ def update_cross_sections(profile_points_with_heights, cross_section_locations):
 
 
 # %%
-
-
 def update_model(
     cross_section_locations_updated,
     channel_gdf,
@@ -705,28 +703,40 @@ cross_section_locations_updated = update_cross_sections(
     profile_points_with_heights,
     cross_section_locations.copy(),
 )
-# %%
-profile_points_with_heights.to_file(
-    r"H:\02.modellen\grootslag_leggertool\cross_section_points_with_heights.gpkg",
-    driver="GPKG",
-)
-profile_points_gdf.to_file(
-    r"H:\02.modellen\grootslag_leggertool\cross_section_points_function.gpkg",
-    driver="GPKG",
-)
-profile_lines_gdf.to_file(
-    r"H:\02.modellen\grootslag_leggertool\cross_section_lines_function.gpkg",
-    driver="GPKG",
-)
 
-# %%
-cross_section_banklevels.to_file(
-    r"H:\02.modellen\grootslag_leggertool\cross_section_lines_banklevel.gpkg",
-    driver="GPKG",
+update_model(
+    cross_section_locations_updated,
+    channel_gdf,
+    hydroobject,
+    orifice_gdf,
+    connection_node_gdf,
+    model_path,
+    cross_section_locations,
 )
+# %%
+    
+# # %%
+# profile_points_with_heights.to_file(
+#     r"H:\02.modellen\grootslag_leggertool\cross_section_points_with_heights.gpkg",
+#     driver="GPKG",
+# )
+# profile_points_gdf.to_file(
+#     r"H:\02.modellen\grootslag_leggertool\cross_section_points_function.gpkg",
+#     driver="GPKG",
+# )
+# profile_lines_gdf.to_file(
+#     r"H:\02.modellen\grootslag_leggertool\cross_section_lines_function.gpkg",
+#     driver="GPKG",
+# )
 
-cross_section_locations_updated.to_file(
-    r"H:\02.modellen\grootslag_leggertool\cross_section_updated.gpkg",
-    driver="GPKG",
-)
-# %%
+# # %%
+# cross_section_banklevels.to_file(
+#     r"H:\02.modellen\grootslag_leggertool\cross_section_lines_banklevel.gpkg",
+#     driver="GPKG",
+# )
+
+# cross_section_locations_updated.to_file(
+#     r"H:\02.modellen\grootslag_leggertool\cross_section_updated.gpkg",
+#     driver="GPKG",
+# )
+# # %%
