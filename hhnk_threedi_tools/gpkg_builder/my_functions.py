@@ -255,7 +255,9 @@ def points_along_lines(
 # %%
 
 
-def draw_perpendicular_lines(width: float, points_gdf: gpd.GeoDataFrame, greppels: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
+def draw_perpendicular_lines(
+    width: float, points_gdf: gpd.GeoDataFrame, greppels: gpd.GeoDataFrame
+) -> gpd.GeoDataFrame:
     """
     For each point and its greppel line, draw a perpendicular cross-section of given width.
     Returns a GeoDataFrame of profile lines with code, point_id and distance.
@@ -297,11 +299,18 @@ def draw_perpendicular_lines(width: float, points_gdf: gpd.GeoDataFrame, greppel
     return profiles_gdf
 
 
-def sample_elevation_per_profile_point(width: float, points_gdf: gpd.GeoDataFrame, greppels: gpd.GeoDataFrame, dem_path: Path, code_column: str, waterdeel_gdf: gpd.GeoDataFrame) -> Tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]:
+def sample_elevation_per_profile_point(
+    width: float,
+    points_gdf: gpd.GeoDataFrame,
+    greppels: gpd.GeoDataFrame,
+    dem_path: Path,
+    code_column: str,
+    waterdeel_gdf: gpd.GeoDataFrame,
+) -> Tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]:
     """
     Sample DEM elevations along profile cross-section lines and return points and lines GeoDataFrames.
-    Returns
-    """"
+    Returns (profile_points_gdf, profile_lines_gdf).
+    """
     space = 0.30
     coords = []
     elevations = []
@@ -337,7 +346,6 @@ def sample_elevation_per_profile_point(width: float, points_gdf: gpd.GeoDataFram
     profile_lines_gdf = profile_lines.loc[~profile_lines["point_id"].isin(invalid_profile_ids)].copy()
 
     return profile_points_gdf, profile_lines_gdf
-
 
 
 def plot_profile(gpkg_path: Path, code: Any, output_path: Path) -> None:
@@ -378,7 +386,12 @@ def plot_profile(gpkg_path: Path, code: Any, output_path: Path) -> None:
 
 
 # %%
-def get_height_and_reference_level(greppels_gdf: gpd.GeoDataFrame, channel_gdf: gpd.GeoDataFrame, profile_lines_gdf: gpd.GeoDataFrame, profile_points_gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
+def get_height_and_reference_level(
+    greppels_gdf: gpd.GeoDataFrame,
+    channel_gdf: gpd.GeoDataFrame,
+    profile_lines_gdf: gpd.GeoDataFrame,
+    profile_points_gdf: gpd.GeoDataFrame,
+) -> gpd.GeoDataFrame:
     """
     Compute mean elevations per channel, derive reference level and heights, and build cross-section tables.
     Returns profile points GeoDataFrame enriched with reference_level, mean_elevation, height and cross_section_table.
@@ -583,7 +596,9 @@ def get_bank_level(profile_points_with_heights: gpd.GeoDataFrame) -> gpd.GeoData
     return profile_points_with_heights
 
 
-def update_cross_sections(profile_points_with_heights: gpd.GeoDataFrame, cross_section_locations: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
+def update_cross_sections(
+    profile_points_with_heights: gpd.GeoDataFrame, cross_section_locations: gpd.GeoDataFrame
+) -> gpd.GeoDataFrame:
     """
     Update cross_section_locations with computed reference_level, bank_level and cross_section_table.
     Returns the updated cross_section_locations GeoDataFrame.
@@ -700,8 +715,7 @@ def update_model(
 #     driver="GPKG",
 # )
 # path
-if __name__ == "__main__": 
-        
+if __name__ == "__main__":
     model = Path(r"H:\02.modellen\grootslag_leggertool\02_schematisation\greppels")
     model_path = model / "bwn_grootslag.gpkg"
     folder = Folders(Path(r"H:\02.modellen\grootslag_leggertool"))
