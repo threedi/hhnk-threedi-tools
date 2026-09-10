@@ -1,5 +1,6 @@
 # %%
 from pathlib import Path
+from typing import Any, Tuple
 
 import geopandas as gpd
 import matplotlib
@@ -306,12 +307,13 @@ def sample_elevation_per_profile_point(
     dem_path: Path,
     code_column: str,
     waterdeel_gdf: gpd.GeoDataFrame,
+    space:float,
 ) -> Tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]:
     """
     Sample DEM elevations along profile cross-section lines and return points and lines GeoDataFrames.
     Returns (profile_points_gdf, profile_lines_gdf).
     """
-    space = 0.30
+    
     coords = []
     elevations = []
 
@@ -691,6 +693,13 @@ def update_model(
     # Here start the porcess to update initial waterlevels
     # filter cross section updates
     cross_section_updated = cross_section_locations_updated.loc[cross_section_locations_updated["updated"] == True]
+    greppel_channel_ids = cross_section_updated["channel_id"].to_list()
+
+    channels_no_greppels = channel_gdf.loc[~channel_gdf["id"].isin(greppel_channel_ids)]
+
+    connection_id_no_greppels = set(channels_no_greppels["connection_node_start_id"])
+    connection_id_no_greppels.update(channels_no_greppels["connection_node_end_id"])
+
     for idx, connection_node in cross_section_updated.iterrows():
         # get channels ID and bank levels from cross section updated.
         channel_id = connection_node.channel_id
@@ -704,12 +713,18 @@ def update_model(
             channel_gdf["id"] == channel_id, "connection_node_end_id"
         ].values.tolist()[0]
 
-        connection_node_gdf.loc[connection_node_gdf["id"] == connection_node_start_id, "initial_water_level"] = (
-            bank_level - 0.10
-        )
-        connection_node_gdf.loc[connection_node_gdf["id"] == connection_node_end_id, "initial_water_level"] = (
-            bank_level - 0.10
-        )
+            # Update only nodes not shared with channels outside the selection.
+        if connection_node_start_id not in connection_id_no_greppels:
+            connection_node_gdf.loc[
+                connection_node_gdf["id"] == connection_node_start_id,
+                "initial_waterlevel",
+            ] = round(bank_level - 0.10, 2)
+
+        if connection_node_end_id not in connection_id_no_greppels:
+            connection_node_gdf.loc[
+                connection_node_gdf["id"] == connection_node_end_id,
+                "initial_waterlevel",
+            ] = round(bank_level - 0.10, 2)
 
     # update connectio node.
     connection_node_gdf.to_file(model_path, layer="connection_node", driver="GPKG")
@@ -759,9 +774,10 @@ if __name__ == "__main__":
     # draw points along  greppels
     points_gdf = points_along_lines(lines=greppels_gdf, space=10, code_column="CODE", include_endpoints=False)
 
-    width = 5
+    width = 5   #profile line width
+    space = 0.30 #space between points
     profile_points_gdf, profile_lines_gdf = sample_elevation_per_profile_point(
-        width, points_gdf, greppels_gdf, dem_path, code_column="code", waterdeel_gdf=waterdeel_gdf
+        width, points_gdf, greppels_gdf, dem_path, code_column="code", waterdeel_gdf=waterdeel_gdf, space
     )
 
     # %%
