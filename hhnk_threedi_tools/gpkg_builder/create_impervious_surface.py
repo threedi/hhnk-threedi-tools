@@ -16,7 +16,7 @@ import geopandas as gpd
 import pandas as pd
 from shapely import get_parts, voronoi_polygons
 from shapely.geometry import LineString, MultiPoint, Polygon
-
+from hhnk_threedi_tools import Folders
 
 # %%
 def createa_voronoi_polygons(
@@ -599,39 +599,27 @@ def run(model_path_gpkg, datacheker_path, polder_polygon_path, sure_update):
 # %%
 # inputs
 
-hdb_path = r"H:\02.modellen\bergen_noord_huidig_situatie_JA\01_source_data\HDB.gpkg"
-folder = Path(r"H:\02.modellen\bergen_noord_huidig_situatie_JA")
-source_data = folder / "01_source_data"
-damo_path = source_data / "DAMO.gpkg"
-datacheker_path = source_data / "datachecker_output.gpkg"
-polder_polygon_path = source_data / "polder_polygon.shp"
-model_path_gpkg = folder / "02_schematisation" / "00_basis" / "bwn_bergen_noord.gpkg"
-impervious_out_polygon_gpkg = source_data / "impervious_pol_review.gpkg"
-impervious_out_line_gpkg = source_data / "impervious_line_review.gpkg"
-# %%
-subcatchments = createa_voronoi_polygons(model_path_gpkg, datacheker_path, polder_polygon_path)
-surfaces = create_surface_layer(subcatchments, impervious_out_polygon_gpkg)
-percentage_by_surface = get_percentage_afvoernorm(hdb_path, surfaces)
-surface_map = create_surface_map_layer(model_path_gpkg, surfaces, percentage_by_surface, impervious_out_line_gpkg)
-update_model_geopackage(
-    model_path_gpkg,
-    surfaces,
-    surface_map,
-    output_model_path=None,
-    surface_layer_name="impervious_surface",
-    surface_map_layer_name="impervious_surface_map",
-    sure_update=True,
-)
-# %%
-
 if __name__ == "__main__":
     hdb_path = r"H:\01.basisgegevens\00.HDB\Hydro_database.gpkg"
-    folder = Path(r"H:\02.modellen\grootslag_leggertool")
-    source_data = folder / "source_data"
-    damo_path = source_data / "DAMO.gpkg"
-    datacheker_path = source_data / "datachecker_output.gpkg"
-    polder_polygon_path = source_data / "polder_polygon.shp"
-    model_path_gpkg = folder / "02_schematisation" / "00_basis" / "bwn_grootslag.gpkg"
+    folder = Folders(r"H:\02.modellen\grootslag_leggertool")
+    source_data = folder / "01_source_data"
+    damo_path = folder.source_data.damo.path
+    datacheker_path = folder.source_data.datachecker.path
+    polder_polygon_path = folder.source_data.polder_polygon.path
+    model_path_gpkg = folder.model.path / "00_basis" / "bwn_grootslag.gpkg"
     impervious_out_polygon_gpkg = source_data / "impervious_pol_review.gpkg"
     impervious_out_line_gpkg = source_data / "impervious_line_review.gpkg"
+    subcatchments = createa_voronoi_polygons(model_path_gpkg, datacheker_path, polder_polygon_path)
+    surfaces = create_surface_layer(subcatchments, impervious_out_polygon_gpkg)
+    percentage_by_surface = get_percentage_afvoernorm(hdb_path, surfaces)
+    surface_map = create_surface_map_layer(model_path_gpkg, surfaces, percentage_by_surface, impervious_out_line_gpkg)
+    update_model_geopackage(
+        model_path_gpkg,
+        surfaces,
+        surface_map,
+        output_model_path=None,
+        surface_layer_name="impervious_surface",
+        surface_map_layer_name="impervious_surface_map",
+        sure_update=True,
+    )
 # %%
