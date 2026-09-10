@@ -629,26 +629,41 @@ def update_model(
     Apply updated cross-section and bank levels to model layers (orifice, connection_node, cross_section_location).
     Writes changes to the provided model_path (GeoPackage).
     """
+    # filter channels id base on the updated filter
     channel_id = cross_section_locations_updated.loc[
         cross_section_locations_updated["updated"] == True
     ].channel_id.to_list()
+
+    # Create a set of connection nodes.
     connection_node_start_id = channel_gdf.loc[channel_gdf["id"].isin(channel_id)].connection_node_start_id.to_list()
     connection_node_end_id = channel_gdf.loc[channel_gdf["id"].isin(channel_id)].connection_node_end_id.to_list()
     connection_nodes_set = set()
     connection_nodes_set.update(connection_node_end_id)
     connection_nodes_set.update(connection_node_start_id)
+
+    # select channels to be modify base on channels id filter
     channels_updated = channel_gdf.loc[channel_gdf["id"].isin(channel_id)]
+
+    # Create a copy and buffer all the hydroobjects that has a different category than 1
     secundary_terciary_buffer = hydroobject.loc[hydroobject["CATEGORIEOPPWATERLICHAAM"] != 1].copy()
     secundary_terciary_buffer["geometry"] = secundary_terciary_buffer.geometry.buffer(1)
 
+    # Join the orifices that are within the secundary and terciary buffer
     orifice_filter = orifice_gdf.sjoin(secundary_terciary_buffer, how="inner", predicate="within")
+
+    # filter them to select only the greppels orifices
     orifice_greppels = orifice_filter.loc[
         orifice_filter["connection_node_start_id"].isin(connection_nodes_set)
         | orifice_filter["connection_node_end_id"].isin(connection_nodes_set)
     ]
+
+    # loop over the orifice to update crest level.
     for idx, orifice in orifice_greppels.iterrows():
+        # select connectionn nodes from orifices.
         orifice_start = orifice.connection_node_start_id
         orifice_end = orifice.connection_node_end_id
+
+        # selec channels base on orifices coonnection nodes to get reference levels from orifices
         connected_channel_ids = channels_updated.loc[
             channels_updated["connection_node_start_id"].isin([orifice_start, orifice_end])
             | channels_updated["connection_node_end_id"].isin([orifice_start, orifice_end]),
@@ -663,18 +678,25 @@ def update_model(
             .dropna()
             .unique()
         )
+
+        # compare crest level against reference. It wil  change if reference is higher than crest level
         target_crest_level = round(min(reference_levels) + 0.10, 3)
 
         if orifice["crest_level"] > target_crest_level:
             orifice_gdf.loc[idx, "crest_level"] = target_crest_level
 
+    # update model.
     orifice_gdf.to_file(model_path, layer="orifice", driver="GPKG")
 
+    # Here start the porcess to update initial waterlevels
+    # filter cross section updates
     cross_section_updated = cross_section_locations_updated.loc[cross_section_locations_updated["updated"] == True]
     for idx, connection_node in cross_section_updated.iterrows():
+        # get channels ID and bank levels from cross section updated.
         channel_id = connection_node.channel_id
         bank_level = connection_node.bank_level
 
+        # get connection nodes id to update initial water level field (10 below bank level)
         connection_node_start_id = channel_gdf.loc[
             channel_gdf["id"] == channel_id, "connection_node_start_id"
         ].values.tolist()[0]
@@ -689,32 +711,34 @@ def update_model(
             bank_level - 0.10
         )
 
-        # print(channel_id, bank_level)
+    # update connectio node.
     connection_node_gdf.to_file(model_path, layer="connection_node", driver="GPKG")
 
+    # update cross section attributes base on updated ids.
     cross_section_ids = cross_section_locations_updated["id"]
     for id in cross_section_ids:
+        # update banklevel
         bank_level = cross_section_locations_updated.loc[
             cross_section_locations_updated["id"] == id, "bank_level"
         ].values.tolist()[0]
+        cross_section_locations.loc[cross_section_locations["id"] == id, "bank_level"] = bank_level
+
+        # update cross section table.
         cross_section_table = cross_section_locations_updated.loc[
             cross_section_locations_updated["id"] == id, "cross_section_table"
         ].values.tolist()[0]
+        cross_section_locations.loc[cross_section_locations["id"] == id, "cross_section_table"] = cross_section_table
+
+        # update reference level
         reference_level = cross_section_locations_updated.loc[
             cross_section_locations_updated["id"] == id, "reference_level"
         ].values.tolist()[0]
-        cross_section_locations.loc[cross_section_locations["id"] == id, "bank_level"] = bank_level
-        cross_section_locations.loc[cross_section_locations["id"] == id, "cross_section_table"] = cross_section_table
         cross_section_locations.loc[cross_section_locations["id"] == id, "reference_level"] = reference_level
+
     cross_section_locations.to_file(model_path, layer="cross_section_location", driver="GPKG")
 
 
 # %%
-# result.to_file(
-#     r"H:\02.modellen\grootslag_leggertool\new_cross_section_points_function_v2.gpkg",
-#     driver="GPKG",
-# )
-# path
 if __name__ == "__main__":
     model = Path(r"H:\02.modellen\grootslag_leggertool\02_schematisation\greppels")
     model_path = model / "bwn_grootslag.gpkg"
