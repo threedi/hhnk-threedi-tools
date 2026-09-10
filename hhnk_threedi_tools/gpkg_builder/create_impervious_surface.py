@@ -623,13 +623,15 @@ update_model_geopackage(
     sure_update=True,
 )
 # %%
-# hdb_path = r"H:\01.basisgegevens\00.HDB\Hydro_database.gpkg"
-# folder = Path(r"D:\01.modelrepos\Martine\Zijpe_West_2026_MR")
-# source_data = folder / 'source_data'
-# damo_path = source_data  / "DAMO.gpkg"
-# datacheker_path = source_data / "datachecker_output.gpkg"
-# polder_polygon_path = source_data / "polder_polygon.shp"
-# model_path_gpkg = folder / "02_schematisation" / "00_basis" / "bwn_zijpe-west.gpkg"
-# impervious_out_polygon_gpkg = source_data / "impervious_pol_review.gpkg"
-# impervious_out_line_gpkg = source_data / "impervious_line_review.gpkg"
+
+if __name__ == "__main__":
+    hdb_path = r"H:\01.basisgegevens\00.HDB\Hydro_database.gpkg"
+    folder = Path(r"H:\02.modellen\grootslag_leggertool")
+    source_data = folder / "source_data"
+    damo_path = source_data / "DAMO.gpkg"
+    datacheker_path = source_data / "datachecker_output.gpkg"
+    polder_polygon_path = source_data / "polder_polygon.shp"
+    model_path_gpkg = folder / "02_schematisation" / "00_basis" / "bwn_grootslag.gpkg"
+    impervious_out_polygon_gpkg = source_data / "impervious_pol_review.gpkg"
+    impervious_out_line_gpkg = source_data / "impervious_line_review.gpkg"
 # %%
