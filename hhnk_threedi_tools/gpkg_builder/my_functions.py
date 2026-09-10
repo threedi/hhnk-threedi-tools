@@ -2,6 +2,8 @@
 from pathlib import Path
 
 import geopandas as gpd
+import matplotlib
+import matplotlib.pyplot as plt
 import pandas as pd
 import rasterio
 from shapely import line_interpolate_point
@@ -186,7 +188,11 @@ def get_min_value_in_polygon(rioxarray_raster, polygon, mode="min"):
     return result
 
 
-def full_perpendicular_line(p1, p2, width):
+def full_perpendicular_line(p1: Tuple[float, float], p2: Tuple[float, float], width: float) -> LineString:
+    """
+    Build a full cross-section LineString centered at p1, perpendicular to p1->p2.
+    width is the total width; returns a LineString of three points.
+    """
     if p1[0] == p2[0] and p1[1] == p2[1]:
         raise ValueError("p1 and p2 should be differents")
 
@@ -204,7 +210,13 @@ def full_perpendicular_line(p1, p2, width):
     )
 
 
-def points_along_lines(lines, space=10, code_column="code", include_endpoints=True):
+def points_along_lines(
+    lines: gpd.GeoDataFrame, space: float = 10, code_column: str = "code", include_endpoints: bool = True
+) -> gpd.GeoDataFrame:
+    """
+    Create points along each line at interval `space`. Returns GeoDataFrame of points.
+    Columns include point_id, code, distance and geometry (and profile_id if present).
+    """
     points = []
 
     for idx, line in lines.iterrows():
@@ -236,14 +248,19 @@ def points_along_lines(lines, space=10, code_column="code", include_endpoints=Tr
 
 
 # %%
-import geopandas as gpd
+
 
 # greppels = gpd.read_file(r"H:\02.modellen\NZK_leggertool\01_source_data\greppels_nzk.shp")
 # points_gdf = points_along_lines(lines=greppels, space=10)
 # %%
 
 
-def draw_perpendicular_lines(width, points_gdf, greppels):
+def draw_perpendicular_lines(width: float, points_gdf: gpd.GeoDataFrame, greppels: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
+    """
+    For each point and its greppel line, draw a perpendicular cross-section of given width.
+    Returns a GeoDataFrame of profile lines with code, point_id and distance.
+    """
+
     profiles = []
     codes = points_gdf.groupby("code")
     for code, group in codes:
@@ -280,7 +297,11 @@ def draw_perpendicular_lines(width, points_gdf, greppels):
     return profiles_gdf
 
 
-def sample_elevation_per_profile_point(width, points_gdf, greppels, dem_path, code_column, waterdeel_gdf):
+def sample_elevation_per_profile_point(width: float, points_gdf: gpd.GeoDataFrame, greppels: gpd.GeoDataFrame, dem_path: Path, code_column: str, waterdeel_gdf: gpd.GeoDataFrame) -> Tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]:
+    """
+    Sample DEM elevations along profile cross-section lines and return points and lines GeoDataFrames.
+    Returns
+    """"
     space = 0.30
     coords = []
     elevations = []
@@ -318,19 +339,13 @@ def sample_elevation_per_profile_point(width, points_gdf, greppels, dem_path, co
     return profile_points_gdf, profile_lines_gdf
 
 
-import matplotlib
 
-matplotlib.use("Agg")
-
-import matplotlib.pyplot as plt
-
-
-def plot_profile(gpkg_path, code, output_path):
-    import geopandas as gpd
-    import matplotlib
-
+def plot_profile(gpkg_path: Path, code: Any, output_path: Path) -> None:
+    """
+    Plot elevation profiles for a given code from a GeoPackage and save as image.
+    Raises ValueError if no profiles are found.
+    """
     matplotlib.use("Agg")
-    import matplotlib.pyplot as plt
 
     points = gpd.read_file(gpkg_path)
 
@@ -363,7 +378,11 @@ def plot_profile(gpkg_path, code, output_path):
 
 
 # %%
-def get_height_and_reference_level(greppels_gdf, channel_gdf, profile_lines_gdf, profile_points_gdf):
+def get_height_and_reference_level(greppels_gdf: gpd.GeoDataFrame, channel_gdf: gpd.GeoDataFrame, profile_lines_gdf: gpd.GeoDataFrame, profile_points_gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
+    """
+    Compute mean elevations per channel, derive reference level and heights, and build cross-section tables.
+    Returns profile points GeoDataFrame enriched with reference_level, mean_elevation, height and cross_section_table.
+    """
     # buffer and dissolve greppels.
     greppels_buffer = greppels_gdf.buffer(1).union_all()
     greppels_buffer_gdf = gpd.GeoDataFrame(
@@ -438,9 +457,13 @@ def get_height_and_reference_level(greppels_gdf, channel_gdf, profile_lines_gdf,
 
 
 def get_cross_section_table(
-    profile,
-    height_step=0.10,
-):
+    profile: pd.DataFrame,
+    height_step: float = 0.10,
+) -> pd.DataFrame:
+    """
+    Build a cross-section table for a channel profile: for a sequence of heights compute widths.
+    Returns a DataFrame with channel_id and cross_section_table text.
+    """
     channel_id = profile.name
 
     profile = profile[["distance", "height"]]
@@ -500,7 +523,11 @@ def get_cross_section_table(
     return cross_section
 
 
-def get_bank_level(profile_points_with_heights):
+def get_bank_level(profile_points_with_heights: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
+    """
+    Estimate bank level per channel by detecting flattening points on both banks.
+    Returns the input GeoDataFrame with a new 'bank_level' column.
+    """
     mean_profiles = (
         profile_points_with_heights[["channel_id", "distance", "mean_elevation"]]
         .drop_duplicates()
@@ -556,7 +583,11 @@ def get_bank_level(profile_points_with_heights):
     return profile_points_with_heights
 
 
-def update_cross_sections(profile_points_with_heights, cross_section_locations):
+def update_cross_sections(profile_points_with_heights: gpd.GeoDataFrame, cross_section_locations: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
+    """
+    Update cross_section_locations with computed reference_level, bank_level and cross_section_table.
+    Returns the updated cross_section_locations GeoDataFrame.
+    """
     channel_cross_sections_banklelvel = profile_points_with_heights[
         ["channel_id", "reference_level", "bank_level", "cross_section_table"]
     ].drop_duplicates()
@@ -571,14 +602,18 @@ def update_cross_sections(profile_points_with_heights, cross_section_locations):
 
 # %%
 def update_model(
-    cross_section_locations_updated,
-    channel_gdf,
-    hydroobject,
-    orifice_gdf,
-    connection_node_gdf,
-    model_path,
-    cross_section_locations,
-):
+    cross_section_locations_updated: gpd.GeoDataFrame,
+    channel_gdf: gpd.GeoDataFrame,
+    hydroobject: gpd.GeoDataFrame,
+    orifice_gdf: gpd.GeoDataFrame,
+    connection_node_gdf: gpd.GeoDataFrame,
+    model_path: Path,
+    cross_section_locations: gpd.GeoDataFrame,
+) -> None:
+    """
+    Apply updated cross-section and bank levels to model layers (orifice, connection_node, cross_section_location).
+    Writes changes to the provided model_path (GeoPackage).
+    """
     channel_id = cross_section_locations_updated.loc[
         cross_section_locations_updated["updated"] == True
     ].channel_id.to_list()
@@ -665,54 +700,56 @@ def update_model(
 #     driver="GPKG",
 # )
 # path
-model = Path(r"H:\02.modellen\grootslag_leggertool\02_schematisation\greppels")
-model_path = model / "bwn_grootslag.gpkg"
-folder = Folders(Path(r"H:\02.modellen\grootslag_leggertool"))
-dem_path = (model) / "rasters" / "dem_grootslag.tif"
-greppels = r"H:\02.modellen\grootslag_leggertool\01_source_data\greppels_from_geoweb_wss_clipped.gpkg"
+if __name__ == "__main__": 
+        
+    model = Path(r"H:\02.modellen\grootslag_leggertool\02_schematisation\greppels")
+    model_path = model / "bwn_grootslag.gpkg"
+    folder = Folders(Path(r"H:\02.modellen\grootslag_leggertool"))
+    dem_path = (model) / "rasters" / "dem_grootslag.tif"
+    greppels = r"H:\02.modellen\grootslag_leggertool\01_source_data\greppels_from_geoweb_wss_clipped.gpkg"
 
-damo_path = r"H:\02.modellen\grootslag_leggertool\01_source_data\version_1_DCMB\DAMO.gpkg"
-# read geodataframes
-hydroobject = gpd.read_file(damo_path, layer="HydroObject")
-waterdeel_gdf = gpd.read_file(r"H:\02.modellen\grootslag_leggertool\01_source_data\DAMO_waterdeel_backup.gpkg")
-greppels_gdf = gpd.read_file(greppels)
-channel_gdf = gpd.read_file(model_path, layer="channel")
-cross_section_locations = gpd.read_file(model_path, layer="cross_section_location")
-orifice_gdf = gpd.read_file(model_path, layer="orifice")
-culver_gdf = gpd.read_file(model_path, layer="culvert")
-connection_node_gdf = gpd.read_file(model_path, layer="connection_node")
-# draw points along  greppels
-points_gdf = points_along_lines(lines=greppels_gdf, space=10, code_column="CODE", include_endpoints=False)
+    damo_path = r"H:\02.modellen\grootslag_leggertool\01_source_data\version_1_DCMB\DAMO.gpkg"
+    # read geodataframes
+    hydroobject = gpd.read_file(damo_path, layer="HydroObject")
+    waterdeel_gdf = gpd.read_file(r"H:\02.modellen\grootslag_leggertool\01_source_data\DAMO_waterdeel_backup.gpkg")
+    greppels_gdf = gpd.read_file(greppels)
+    channel_gdf = gpd.read_file(model_path, layer="channel")
+    cross_section_locations = gpd.read_file(model_path, layer="cross_section_location")
+    orifice_gdf = gpd.read_file(model_path, layer="orifice")
+    culver_gdf = gpd.read_file(model_path, layer="culvert")
+    connection_node_gdf = gpd.read_file(model_path, layer="connection_node")
+    # draw points along  greppels
+    points_gdf = points_along_lines(lines=greppels_gdf, space=10, code_column="CODE", include_endpoints=False)
 
-width = 5
-profile_points_gdf, profile_lines_gdf = sample_elevation_per_profile_point(
-    width, points_gdf, greppels_gdf, dem_path, code_column="code", waterdeel_gdf=waterdeel_gdf
-)
+    width = 5
+    profile_points_gdf, profile_lines_gdf = sample_elevation_per_profile_point(
+        width, points_gdf, greppels_gdf, dem_path, code_column="code", waterdeel_gdf=waterdeel_gdf
+    )
 
-# %%
-profile_points_with_heights = get_height_and_reference_level(
-    greppels_gdf=greppels_gdf,
-    channel_gdf=channel_gdf,
-    profile_lines_gdf=profile_lines_gdf,
-    profile_points_gdf=profile_points_gdf,
-)
-# %%
-cross_section_banklevels = get_bank_level(profile_points_with_heights)
+    # %%
+    profile_points_with_heights = get_height_and_reference_level(
+        greppels_gdf=greppels_gdf,
+        channel_gdf=channel_gdf,
+        profile_lines_gdf=profile_lines_gdf,
+        profile_points_gdf=profile_points_gdf,
+    )
+    # %%
+    cross_section_banklevels = get_bank_level(profile_points_with_heights)
 
-cross_section_locations_updated = update_cross_sections(
-    profile_points_with_heights,
-    cross_section_locations.copy(),
-)
+    cross_section_locations_updated = update_cross_sections(
+        profile_points_with_heights,
+        cross_section_locations.copy(),
+    )
 
-update_model(
-    cross_section_locations_updated,
-    channel_gdf,
-    hydroobject,
-    orifice_gdf,
-    connection_node_gdf,
-    model_path,
-    cross_section_locations,
-)
+    update_model(
+        cross_section_locations_updated,
+        channel_gdf,
+        hydroobject,
+        orifice_gdf,
+        connection_node_gdf,
+        model_path,
+        cross_section_locations,
+    )
 # %%
 
 # # %%
