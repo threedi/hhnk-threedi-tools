@@ -604,7 +604,7 @@ def run(model_path_gpkg, datacheker_path, polder_polygon_path, sure_update):
 if __name__ == "__main__":
     hdb_path = r"H:\01.basisgegevens\00.HDB\Hydro_database.gpkg"
     folder = Folders(r"H:\02.modellen\grootslag_leggertool")
-    source_data = folder / "01_source_data"
+    source_data = folder.path / "01_source_data"
     damo_path = folder.source_data.damo.path
     datacheker_path = folder.source_data.datachecker.path
     polder_polygon_path = folder.source_data.polder_polygon.path
