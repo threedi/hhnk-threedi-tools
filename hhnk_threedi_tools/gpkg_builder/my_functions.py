@@ -755,39 +755,43 @@ def update_model(
 
 # %%
 if __name__ == "__main__":
+    # paths
     model = Path(r"H:\02.modellen\grootslag_leggertool\02_schematisation\greppels")
     model_path = model / "bwn_grootslag.gpkg"
     folder = Folders(Path(r"H:\02.modellen\grootslag_leggertool"))
     dem_path = (model) / "rasters" / "dem_grootslag.tif"
     greppels = r"H:\02.modellen\grootslag_leggertool\01_source_data\greppels_from_geoweb_wss_clipped.gpkg"
-
-    damo_path = r"H:\02.modellen\grootslag_leggertool\01_source_data\version_1_DCMB\DAMO.gpkg"
-    # read geodataframes
-    hydroobject = gpd.read_file(damo_path, layer="HydroObject")
     waterdeel_gdf = gpd.read_file(r"H:\02.modellen\grootslag_leggertool\01_source_data\DAMO_waterdeel_backup.gpkg")
+    damo_path = r"H:\02.modellen\grootslag_leggertool\01_source_data\version_1_DCMB\DAMO.gpkg"
+
+    # Inputs(read geodataframes)
+    hydroobject = gpd.read_file(damo_path, layer="HydroObject")
     greppels_gdf = gpd.read_file(greppels)
     channel_gdf = gpd.read_file(model_path, layer="channel")
     cross_section_locations = gpd.read_file(model_path, layer="cross_section_location")
     orifice_gdf = gpd.read_file(model_path, layer="orifice")
     culver_gdf = gpd.read_file(model_path, layer="culvert")
     connection_node_gdf = gpd.read_file(model_path, layer="connection_node")
-    # draw points along  greppels
+    width = 5  # profile line width (meters)
+    space = 0.30  # space between points (meters)
+
+    # fucntions.
+    # draw profile lines and points along  greppels
     points_gdf = points_along_lines(lines=greppels_gdf, space=10, code_column="CODE", include_endpoints=False)
 
-    width = 5  # profile line width
-    space = 0.30  # space between points
+    #Sample profile points using dem
     profile_points_gdf, profile_lines_gdf = sample_elevation_per_profile_point(
         width, points_gdf, greppels_gdf, dem_path, code_column="code", waterdeel_gdf=waterdeel_gdf, space=space
     )
-
-    # %%
+    #built cross section table base on: channel code and point location on the profile lines
     profile_points_with_heights = get_height_and_reference_level(
         greppels_gdf=greppels_gdf,
         channel_gdf=channel_gdf,
         profile_lines_gdf=profile_lines_gdf,
         profile_points_gdf=profile_points_gdf,
     )
-    # %%
+
+    # get bank level base on the flattering from the banks. (minimum from both side banks.)
     cross_section_banklevels = get_bank_level(profile_points_with_heights)
 
     cross_section_locations_updated = update_cross_sections(
