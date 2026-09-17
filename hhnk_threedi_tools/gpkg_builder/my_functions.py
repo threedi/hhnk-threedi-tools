@@ -779,11 +779,11 @@ if __name__ == "__main__":
     # draw profile lines and points along  greppels
     points_gdf = points_along_lines(lines=greppels_gdf, space=10, code_column="CODE", include_endpoints=False)
 
-    #Sample profile points using dem
+    # Sample profile points using dem
     profile_points_gdf, profile_lines_gdf = sample_elevation_per_profile_point(
         width, points_gdf, greppels_gdf, dem_path, code_column="code", waterdeel_gdf=waterdeel_gdf, space=space
     )
-    #built cross section table base on: channel code and point location on the profile lines
+    # built cross section table base on: channel code and point location on the profile lines
     profile_points_with_heights = get_height_and_reference_level(
         greppels_gdf=greppels_gdf,
         channel_gdf=channel_gdf,
