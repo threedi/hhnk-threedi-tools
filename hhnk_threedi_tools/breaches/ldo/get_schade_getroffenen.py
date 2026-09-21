@@ -1,17 +1,12 @@
 import json
-import os
 import time
-import warnings
-import zipfile
+
 from pathlib import Path
 from typing import Union
 
 import hhnk_research_tools as hrt
 import pandas as pd
 import requests
-from breaches.rasters import breach_wdepth_damage
-
-from hhnk_threedi_tools.breaches.breaches import Breaches
 from hhnk_threedi_tools.breaches.ldo import upload_files_ldo
 
 
@@ -52,7 +47,7 @@ def get_schade_getroffen(excel_path: Union[str, Path]) -> None:
     raw = Path("api_ldo_key.txt").read_text("utf8")
     LDO_API_KEY = json.loads(raw)
     check_excel = pd.read_excel(excel_path, sheet_name="Sheet1")
-
+    logger = hrt.logging.get_logger(__name__)
     # scenario_id = check_excel["Scenario ID"].values
     scenario_id = check_excel.loc[check_excel["Totaalschade"].isnull(), "Scenario ID"].to_list()
     ldo_api = upload_files_ldo.LDO_API(api_key=LDO_API_KEY)
@@ -87,4 +82,8 @@ def get_schade_getroffen(excel_path: Union[str, Path]) -> None:
         check_excel.to_excel(writer, index=False, sheet_name="Blad2")
 
 
+# %%
+if __name__ == "__main__":
+    excel_path = Path(r"\\corp.hhnk.nl\data\Hydrologen_data\Data\03.resultaten\IPO_Overstromingsberekeningen_compartimentering\schade_ldo.xlsx")
+    get_schade_getroffen(excel_path)
 # %%

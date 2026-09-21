@@ -98,12 +98,12 @@ logger = hrt.logging.get_logger(__name__)
 
 # The following information I leave it to copy and paste the information in the website
 
-parameters = {
-    "scope": "admin",
-    "name": "Juan_Test_12",  # Change the name to your own name
-    "expiry_date": "2025-01-18T10:22:48.008Z",  # Change the expiry date to a future date, otherwise you will not be able to use the API key
-    "revoked": False,  # lowercase, otherwise you will not be able to use the API key
-}
+# parameters = {
+#     "scope": "admin",
+#     "name": "Juan_Test_12",  # Change the name to your own name
+#     "expiry_date": "2025-01-18T10:22:48.008Z",  # Change the expiry date to a future date, otherwise you will not be able to use the API key
+#     "revoked": False,  # lowercase, otherwise you will not be able to use the API key
+# }
 
 
 # %%
