@@ -1,12 +1,12 @@
 import json
 import time
-
 from pathlib import Path
 from typing import Union
 
 import hhnk_research_tools as hrt
 import pandas as pd
 import requests
+
 from hhnk_threedi_tools.breaches.ldo import upload_files_ldo
 
 
@@ -84,6 +84,8 @@ def get_schade_getroffen(excel_path: Union[str, Path]) -> None:
 
 # %%
 if __name__ == "__main__":
-    excel_path = Path(r"\\corp.hhnk.nl\data\Hydrologen_data\Data\03.resultaten\IPO_Overstromingsberekeningen_compartimentering\schade_ldo.xlsx")
+    excel_path = Path(
+        r"\\corp.hhnk.nl\data\Hydrologen_data\Data\03.resultaten\IPO_Overstromingsberekeningen_compartimentering\schade_ldo.xlsx"
+    )
     get_schade_getroffen(excel_path)
 # %%
