@@ -83,6 +83,10 @@ msg_impervious_surface_map_empty = "ERROR: impervious_surface_map is empty"
 
 msg_pumpstation_start_node_no_storage_area = "ERROR: pumpstation start node without storage_area"
 
+msg_one_d_boundary_cond_timeseries_empty = "ERROR: timeseries is empty or contains empty rows"
+msg_one_d_boundary_cond_timeseries_format = "ERROR: timeseries contains spaces"
+msg_one_d_boundary_cond_timeseries_commas = "ERROR: timeseries does not contains commas"
+
 
 def constr_in_clause(innotin, sel=False, frm=False, where=None):
     """
@@ -535,6 +539,39 @@ model_checks = {
         control_table_layer,
         f"{control_table_layer}.{action_col}",
     ),
+    ######################################################################################
+    "one_d_boundary_cond_timeseries_empty": construct_sel_from_where_query(
+        where="""timeseries IS NULL
+OR timeseries LIKE '
+%'
+OR timeseries LIKE '%
+'
+OR timeseries LIKE '%
+
+%'"""
+    ).format(
+        construct_query_head(
+            one_d_boundary_cond_layer,
+            msg_one_d_boundary_cond_timeseries_empty,
+        ),
+        one_d_boundary_cond_layer,
+    ),
+    ######################################################################################
+    "one_d_boundary_cond_timeseries_format": construct_sel_from_where_query(where="timeseries LIKE '% %'").format(
+        construct_query_head(
+            one_d_boundary_cond_layer,
+            msg_one_d_boundary_cond_timeseries_format,
+        ),
+        one_d_boundary_cond_layer,
+    ),
+    ######################################################################################
+    "one_d_boundary_cond_timeseries_commas": construct_sel_from_where_query(where="timeseries NOT LIKE '%,%'").format(
+        construct_query_head(
+            one_d_boundary_cond_layer,
+            msg_one_d_boundary_cond_timeseries_commas,
+        ),
+        one_d_boundary_cond_layer,
+    ),
 }
 
 
@@ -575,6 +612,9 @@ class ModelCheck:
         self.structure_control_for_culvert = model_checks["structure_control_for_culvert"]
         self.impervious_surface_map_empty = model_checks["impervious_surface_map_empty"]
         self.action_table_too_many_chars = model_checks["action_table_char_count"]
+        self.one_d_boundary_cond_timeseries_empty = model_checks["one_d_boundary_cond_timeseries_empty"]
+        self.one_d_boundary_cond_timeseries_format = model_checks["one_d_boundary_cond_timeseries_format"]
+        self.one_d_boundary_cond_timeseries_commas = model_checks["one_d_boundary_cond_timeseries_commas"]
 
     @classmethod
     def get_query(cls):
