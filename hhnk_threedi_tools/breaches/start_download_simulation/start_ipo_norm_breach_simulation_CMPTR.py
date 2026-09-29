@@ -22,7 +22,7 @@ class ModelFolder(hrt.Folder):
 
 
 def start_ipo_norm_breach_simulation(
-    structures_info,
+    structures_info: None,
     organisation_name,
     simulation_name,
     modeller_initial,
@@ -52,7 +52,7 @@ def start_ipo_norm_breach_simulation(
     else:
         print(f"Successfully logged in as {user.username}!")
 
-    sim_duration = 4  # days
+    sim_duration = 30  # days
     start_datetime = datetime.datetime(2000, 1, 1, 0, 0)
     output_timestep = 900  # s
     sleeptime = 20
@@ -138,7 +138,7 @@ def start_ipo_norm_breach_simulation(
             breach_id.append(id)
             specific_breaches.append(pnt_id)
 
-    metadata_gdf = gpd.read_file(metadata_path, driver="Shapefile")
+    # metadata_gdf = gpd.read_file(metadata_path, driver="Shapefile")
     # Start simulations in a loop
     for x in specific_breaches:
         # Select breaches
@@ -208,19 +208,19 @@ def start_ipo_norm_breach_simulation(
         )
         time.sleep(sleeptime)
 
-        for id in structures_info:
-            # structures to close
-            api_client.simulations_events_structure_control_timed_create(
-                simulation.id,
-                data={
-                    "offset": 43200,
-                    "duration": sim_duration * 3600 * 24,
-                    "value": [0, 0],
-                    "type": "set_discharge_coefficients",
-                    "structure_id": id,
-                    "structure_type": structures_info[id],
-                },
-            )
+        # for id in structures_info:
+        #     # structures to close
+        #     api_client.simulations_events_structure_control_timed_create(
+        #         simulation.id,
+        #         data={
+        #             "offset": 43200,
+        #             "duration": sim_duration * 3600 * 24,
+        #             "value": [0, 0],
+        #             "type": "set_discharge_coefficients",
+        #             "structure_id": id,
+        #             "structure_type": structures_info[id],
+        #         },
+        #     )
 
         time.sleep(sleeptime)
 
@@ -250,17 +250,17 @@ if __name__ == "__main__":
     modeller_initial = "_JA"
 
     # Define a simulation name prefix for all simulation
-    simulation_name = "IPO_SBMZ_CMPTR"
+    simulation_name = "IPO_SBHZ_EQ_1314"
 
     # Use organisation_name 'BWN HHNK' for standard simulation. Use the other one for very specific cases
-    organisation_name = "Hoogheemraadschap Hollands Noorderkwartier"
-
+    # organisation_name = "Hoogheemraadschap Hollands Noorderkwartier"
+    organisation_name ='BWN HHNK'
     # Set the model name as it is either in 3di or in the local folder.
     base_folder = r"E:\02.modellen"
 
     # Define model name to set up its location
     # model_name = "RegionalFloodModel - deelmodel Schermer Midden Noord"
-    model_name = "RegionalFloodModel - deelmodel Schermer Midden ZUID"
+    model_name = "RegionalFloodModel - deelmodel Schermer Hoog_Zuid_Oost"
 
     model_folder = ModelFolder(rf"{base_folder}\{model_name}")
 
@@ -269,23 +269,23 @@ if __name__ == "__main__":
     # SBMN
     # filter_id = [23]
     # SBMZ
-    filter_id = [92]
+    filter_id = [64]
 
     # location of the metadata file. Important to have at least 2 version: One for uploading and run model and the other one for downloading.
-    metadata_path = Path(
-        r"\\corp.hhnk.nl\data\Hydrologen_data\Data\03.resultaten\IPO_Overstromingsberekeningen_compartimentering\metadata\breach_sbmn_cmptr.shp"
-    )
+    # metadata_path = Path(
+    #     r"\\corp.hhnk.nl\data\Hydrologen_data\Data\03.resultaten\IPO_Overstromingsberekeningen_compartimentering\metadata\breach_sbmn_cmptr.shp"
+    # )
 
     # Time (in seconds) to wait until the script tries again to upload a model. We use it to not overload the API.
     wait_time = 3600  # 1  hour
-
+    # %%
     # Structure to be close after 12 hours of compartimetering.
     # structures_info_sbmn = {632: "v2_weir", 19: "v2_orifice", 316: "v2_orifice", 641: "v2_orifice", 203: "v2_orifice"}
     # structures_info_sbmz = {79: "v2_orifice", 317: "v2_orifice", 216: "v2_orifice", 184: "v2_orifice",} -> breach id 75
     # structures_info_sbmz = {140: "v2_orifice", 144: "v2_orifice", 107: "v2_orifice", 646: "v2_orifice", 857: "v2_orifice"} -> breach id 92
-    structures_info = {140: "v2_orifice", 144: "v2_orifice", 107: "v2_orifice", 646: "v2_orifice", 857: "v2_orifice"}
+    # structures_info = {140: "v2_orifice", 144: "v2_orifice", 107: "v2_orifice", 646: "v2_orifice", 857: "v2_orifice"}
     start_ipo_norm_breach_simulation(
-        structures_info,
+        None,
         organisation_name,
         simulation_name,
         modeller_initial,
