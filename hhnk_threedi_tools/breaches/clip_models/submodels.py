@@ -118,8 +118,6 @@ class Submodels:
         ):
             self.calculation_grid_cells = self.calculation_grid_cells.to_crs(self.subareas.crs)
 
-        
-
     # helpers
 
     def _find_file(self, pattern: str, error_cls: type[Exception]) -> Path:
@@ -160,20 +158,22 @@ class Submodels:
     def _read_geopackage_layers(
         self,
         gpkg_path: Path,
+        schematisation_type,
     ) -> dict[str, gpd.GeoDataFrame]:
 
         layers_dict: dict[str, gpd.GeoDataFrame] = {}
 
         for layer_name in fiona.listlayers(gpkg_path):
+            # layer_name = "connection_node"
             with fiona.open(gpkg_path, layer=layer_name) as src:
                 records = list(src)
                 crs = src.crs
 
             if records:
                 gdf = gpd.GeoDataFrame.from_features(records, crs=crs)
-
-                # ALWAYS use Fiona FID
-                gdf["id"] = [int(feat["id"]) for feat in records]
+                # RANA uses the Fiona feature ID (FID).
+                if self.schematisation_type == SchematisationType.RANA:
+                    gdf["id"] = [int(feat["id"]) for feat in records]
 
             else:
                 gdf = gpd.read_file(
@@ -328,7 +328,7 @@ class Submodels:
         shutil.copy(self.schematisation_sqlite, output_sqlite)
 
         #  Read all layers from the copied GeoPackage
-        layers = self._read_geopackage_layers(output_gpkg)
+        layers = self._read_geopackage_layers(output_gpkg, schematisation_type)
 
         connection_node = layers[ln["connection_node"]]
         pipe = layers[ln["pipe"]]
@@ -529,7 +529,6 @@ class Submodels:
             self._clip_raster(tif_path, dissolved_mask, output_rasters_dir / tif_path.name)
         return output_gpkg
 
-
     def run(self) -> list[Path]:
         """Create a submodel for each sub-area."""
 
@@ -582,42 +581,33 @@ class Submodels:
 #     schematisation_type:
 #         SchematisationType.RANA (default) or SchematisationType.THREEDI.
 #         Controls which GeoPackage layer names are used for reading and writing.
-    # """
+# """
 
-    # return submodels.output_gpkgs
+# return submodels.output_gpkgs
 
 
 # %%
 if __name__ == "__main__":
-    
-    schematisation_directory=Path(r"H:\02.modellen\grootslag_greppels_test\02_schematisation\00_basis")
-    subareas_path=r"H:\02.modellen\grootslag_greppels_test\grootslag_deelgebied_test.shp"
-    field_name="Deelgebied"
-    calculation_grid_cells_path=r"H:/02.modellen/grootslag_greppels_test/01_source_data/calculation_grid.gpkg"
-    subareas_layer_name=None
-    calculation_grid_cells_layer_name="cell"
-    isolate_1d=False
-    schematisation_type=SchematisationType.THREEDI
-    
+    schematisation_directory = Path(r"H:\02.modellen\grootslag_greppels_test\02_schematisation\00_basis")
+    subareas_path = r"H:\02.modellen\grootslag_greppels_test\grootslag_deelgebied_test.shp"
+    field_name = "Deelgebied"
+    calculation_grid_cells_path = r"H:/02.modellen/grootslag_greppels_test/01_source_data/calculation_grid.gpkg"
+    subareas_layer_name = None
+    calculation_grid_cells_layer_name = "cell"
+    isolate_1d = False
+    schematisation_type = SchematisationType.THREEDI
+
     submodels = Submodels(
-    schematisation_directory=schematisation_directory,
-    subareas_path=subareas_path,
-    field_name=field_name,
-    calculation_grid_cells_path=calculation_grid_cells_path,
-    subareas_layer_name=subareas_layer_name,
-    calculation_grid_cells_layer_name=calculation_grid_cells_layer_name,
-    isolate_1d=isolate_1d,
-    schematisation_type=schematisation_type,
+        schematisation_directory=schematisation_directory,
+        subareas_path=subareas_path,
+        field_name=field_name,
+        calculation_grid_cells_path=calculation_grid_cells_path,
+        subareas_layer_name=subareas_layer_name,
+        calculation_grid_cells_layer_name=calculation_grid_cells_layer_name,
+        isolate_1d=isolate_1d,
+        schematisation_type=schematisation_type,
     )
 
     submodels.run()
-# # %%
-# schematisation_directory=Path(r"H:\02.modellen\grootslag_greppels_test\02_schematisation\00_basis")
-# subareas_path=r"H:\02.modellen\grootslag_greppels_test\grootslag_deelgebied_test.shp"
-# field_name="Deelgebied"
-# calculation_grid_cells_path=r"H:/02.modellen/grootslag_greppels_test/01_source_data/calculation_grid.gpkg"
-# subareas_layer_name=None
-# calculation_grid_cells_layer_name="cell"
-# isolate_1d=True
-schematisation_type=SchematisationType.THREEDI
+
 # %%
