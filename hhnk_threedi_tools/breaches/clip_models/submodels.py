@@ -118,16 +118,7 @@ class Submodels:
         ):
             self.calculation_grid_cells = self.calculation_grid_cells.to_crs(self.subareas.crs)
 
-        self.output_gpkgs = []
-        # Process each sub-area
-        for _, subarea in tqdm(
-            self.subareas.iterrows(),
-            total=len(self.subareas),
-            desc="Clipping sub-areas",
-            unit="subarea",
-        ):
-            output_gpkg = self._clip(subarea, schematisation_type)
-            self.output_gpkgs.append(output_gpkg)
+        
 
     # helpers
 
@@ -239,7 +230,9 @@ class Submodels:
     ) -> gpd.GeoDataFrame:
         """Spatial join that returns only the original columns (no join artefacts)."""
         original_columns = layer.columns.tolist()
-        joined = gpd.sjoin(layer, mask, how=how, predicate=predicate, rsuffix="_mask")
+
+        # use only the geometry mask[["geometry"]] to avoid future errors with  id or code that coud have the layer and the mask
+        joined = gpd.sjoin(layer, mask[["geometry"]], how=how, predicate=predicate, rsuffix="_mask")
         return joined[original_columns]
 
     # clip raster
@@ -537,65 +530,94 @@ class Submodels:
         return output_gpkg
 
 
-# Public API
+    def run(self) -> list[Path]:
+        """Create a submodel for each sub-area."""
+
+        self.output_gpkgs = []
+
+        for _, subarea in tqdm(
+            self.subareas.iterrows(),
+            total=len(self.subareas),
+            desc="Clipping sub-areas",
+            unit="subarea",
+        ):
+            output_gpkg = self._clip(
+                subarea,
+                self.schematisation_type,
+            )
+            self.output_gpkgs.append(output_gpkg)
+
+        return self.output_gpkgs
 
 
-def run_submodel(
-    schematisation_directory: str | Path,
-    subareas_path: str | Path,
-    field_name: str,
-    calculation_grid_cells_path: str | Path,
-    subareas_layer_name: str | None = None,
-    calculation_grid_cells_layer_name: str | None = None,
-    isolate_1d: bool = False,
-    schematisation_type: SchematisationType = SchematisationType.RANA,
-) -> list[Path]:
-    """Entry point for creating sub-models from a 3Di schematisation.
+# def run_submodel(
+#     schematisation_directory: str | Path,
+#     subareas_path: str | Path,
+#     field_name: str,
+#     calculation_grid_cells_path: str | Path,
+#     subareas_layer_name: str | None = None,
+#     calculation_grid_cells_layer_name: str | None = None,
+#     isolate_1d: bool = False,
+#     schematisation_type: SchematisationType = SchematisationType.RANA,
+# ) -> list[Path]:
+#     """Entry point for creating sub-models from a 3Di schematisation.
 
-    Parameters
-    --
-    schematisation_directory:
-        Folder containing the .gpkg, .sqlite and optional rasters/ sub-folder.
-    subareas_path:
-        Vector file with sub-area polygons.
-    field_name:
-        Column in *subareas_path* with unique sub-area names.
-    calculation_grid_cells_path:
-        Vector file with 3Di calculation-grid cells.
-    subareas_layer_name:
-        Layer name inside *subareas_path* (GeoPackage only).
-    calculation_grid_cells_layer_name:
-        Layer name inside *calculation_grid_cells_path* (GeoPackage only).
-    isolate_1d:
-        If True, 1-D elements outside the sub-area are kept but their
-        exchange_type is set to 101 (isolated) instead of being removed.
-    schematisation_type:
-        SchematisationType.RANA (default) or SchematisationType.THREEDI.
-        Controls which GeoPackage layer names are used for reading and writing.
-    """
-    submodels = Submodels(
-        schematisation_directory=schematisation_directory,
-        subareas_path=subareas_path,
-        field_name=field_name,
-        calculation_grid_cells_path=calculation_grid_cells_path,
-        subareas_layer_name=subareas_layer_name,
-        calculation_grid_cells_layer_name=calculation_grid_cells_layer_name,
-        isolate_1d=isolate_1d,
-        schematisation_type=schematisation_type,
-    )
-    return submodels.output_gpkgs
+#     Parameters
+#     --
+#     schematisation_directory:
+#         Folder containing the .gpkg, .sqlite and optional rasters/ sub-folder.
+#     subareas_path:
+#         Vector file with sub-area polygons.
+#     field_name:
+#         Column in *subareas_path* with unique sub-area names.
+#     calculation_grid_cells_path:
+#         Vector file with 3Di calculation-grid cells.
+#     subareas_layer_name:
+#         Layer name inside *subareas_path* (GeoPackage only).
+#     calculation_grid_cells_layer_name:
+#         Layer name inside *calculation_grid_cells_path* (GeoPackage only).
+#     isolate_1d:
+#         If True, 1-D elements outside the sub-area are kept but their
+#         exchange_type is set to 101 (isolated) instead of being removed.
+#     schematisation_type:
+#         SchematisationType.RANA (default) or SchematisationType.THREEDI.
+#         Controls which GeoPackage layer names are used for reading and writing.
+    # """
+
+    # return submodels.output_gpkgs
 
 
 # %%
 if __name__ == "__main__":
-    run_submodel(
-        schematisation_directory=Path(r"H:\02.modellen\RegionalFloodModel\work in progress\schematisation"),
-        subareas_path=r"H:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\deelgebieden\ROR PRI - dijktrajecten 13-8 en 13-9 - Stroom_NO.gpkg",
-        field_name="Deelgebied",
-        calculation_grid_cells_path=r"H:\02.modellen\RegionalFloodModel\work in progress\regional_calculation_grid.gpkg",
-        subareas_layer_name=None,
-        calculation_grid_cells_layer_name="cell",
-        isolate_1d=True,
-        schematisation_type=SchematisationType.THREEDI,
+    
+    schematisation_directory=Path(r"H:\02.modellen\grootslag_greppels_test\02_schematisation\00_basis")
+    subareas_path=r"H:\02.modellen\grootslag_greppels_test\grootslag_deelgebied_test.shp"
+    field_name="Deelgebied"
+    calculation_grid_cells_path=r"H:/02.modellen/grootslag_greppels_test/01_source_data/calculation_grid.gpkg"
+    subareas_layer_name=None
+    calculation_grid_cells_layer_name="cell"
+    isolate_1d=False
+    schematisation_type=SchematisationType.THREEDI
+    
+    submodels = Submodels(
+    schematisation_directory=schematisation_directory,
+    subareas_path=subareas_path,
+    field_name=field_name,
+    calculation_grid_cells_path=calculation_grid_cells_path,
+    subareas_layer_name=subareas_layer_name,
+    calculation_grid_cells_layer_name=calculation_grid_cells_layer_name,
+    isolate_1d=isolate_1d,
+    schematisation_type=schematisation_type,
     )
+
+    submodels.run()
+# # %%
+# schematisation_directory=Path(r"H:\02.modellen\grootslag_greppels_test\02_schematisation\00_basis")
+# subareas_path=r"H:\02.modellen\grootslag_greppels_test\grootslag_deelgebied_test.shp"
+# field_name="Deelgebied"
+# calculation_grid_cells_path=r"H:/02.modellen/grootslag_greppels_test/01_source_data/calculation_grid.gpkg"
+# subareas_layer_name=None
+# calculation_grid_cells_layer_name="cell"
+# isolate_1d=True
+schematisation_type=SchematisationType.THREEDI
 # %%
