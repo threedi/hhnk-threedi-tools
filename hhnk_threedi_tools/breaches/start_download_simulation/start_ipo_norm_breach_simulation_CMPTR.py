@@ -254,7 +254,7 @@ if __name__ == "__main__":
 
     # Use organisation_name 'BWN HHNK' for standard simulation. Use the other one for very specific cases
     # organisation_name = "Hoogheemraadschap Hollands Noorderkwartier"
-    organisation_name ='BWN HHNK'
+    organisation_name = "BWN HHNK"
     # Set the model name as it is either in 3di or in the local folder.
     base_folder = r"E:\02.modellen"
 
