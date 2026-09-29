@@ -17,7 +17,7 @@ model GeoPackage stem and the values in ``field_name``.
 from pathlib import Path
 
 from hhnk_threedi_tools.breaches.clip_models.submodel_constants import SchematisationType
-from hhnk_threedi_tools.breaches.clip_models.submodels import run_submodel as create_submodels
+from hhnk_threedi_tools.breaches.clip_models.submodels import Submodels as create_submodels
 from hhnk_threedi_tools.breaches.clip_models.submodels_clean import run as clean_submodel
 
 
@@ -32,7 +32,7 @@ def run(
     schematisation_type: SchematisationType = SchematisationType.RANA,
 ) -> list[Path]:
 
-    model_gpkg_paths = create_submodels(
+    submodels = create_submodels(
         schematisation_directory=schematisation_directory,
         subareas_path=subareas_path,
         field_name=field_name,
@@ -42,6 +42,9 @@ def run(
         isolate_1d=isolate_1d,
         schematisation_type=schematisation_type,
     )
+
+    # Create the clipped submodels.
+    model_gpkg_paths = submodels.run()
 
     for model_gpkg_path in model_gpkg_paths:
         clean_submodel(
