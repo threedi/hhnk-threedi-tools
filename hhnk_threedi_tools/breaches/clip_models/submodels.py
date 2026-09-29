@@ -158,7 +158,6 @@ class Submodels:
     def _read_geopackage_layers(
         self,
         gpkg_path: Path,
-        schematisation_type,
     ) -> dict[str, gpd.GeoDataFrame]:
 
         layers_dict: dict[str, gpd.GeoDataFrame] = {}
@@ -189,35 +188,49 @@ class Submodels:
 
         return layers_dict
 
-    @staticmethod
     def _write_layer(
+        self,
         gdf: gpd.GeoDataFrame,
         gpkg_path: Path,
         layer_name: str,
     ) -> None:
 
-        # IDs a mantener
+        # IDs to keep
         valid_ids = set(gdf["id"].astype(int))
 
-        # Open gedal and delete what it not good.
-        ds = ogr.Open(str(gpkg_path), update=1)  # update=1 → write
+        # Open GeoPackage in update mode
+        ds = ogr.Open(str(gpkg_path), update=1)
         layer = ds.GetLayerByName(layer_name)
 
         ids_to_delete = []
+
         for feature in layer:
-            if feature.GetFID() not in valid_ids:
+            # RANA uses the Fiona/OGR feature ID (FID).
+            if self.schematisation_type == SchematisationType.RANA:
+                feature_id = feature.GetFID()
+
+            # THREEDI uses the logical 'id' field.
+            else:
+                feature_id = feature.GetField("id")
+
+            # Delete the feature if its ID is not part of the filtered selection.
+            if feature_id not in valid_ids:
                 ids_to_delete.append(feature.GetFID())
 
         layer.ResetReading()
+
         print(layer_name, "delete:", len(ids_to_delete))
+
         layer.StartTransaction()
 
+        # DeleteFeature always requires the OGR FID,
+        # even when the selection was based on the logical THREEDI id.
         for fid in ids_to_delete:
             layer.DeleteFeature(fid)
 
         layer.CommitTransaction()
 
-        ds = None  # cerrar
+        ds = None
 
     # Spatial helpers
 
@@ -328,7 +341,7 @@ class Submodels:
         shutil.copy(self.schematisation_sqlite, output_sqlite)
 
         #  Read all layers from the copied GeoPackage
-        layers = self._read_geopackage_layers(output_gpkg, schematisation_type)
+        layers = self._read_geopackage_layers(output_gpkg)
 
         connection_node = layers[ln["connection_node"]]
         pipe = layers[ln["pipe"]]
@@ -385,6 +398,8 @@ class Submodels:
             channel[cn["connection_node_id_start"]].isin(valid_cn_ids)
             & channel[cn["connection_node_id_end"]].isin(valid_cn_ids)
         ]
+        print(f"selected channels {len(filtered_channel)}")
+
         filtered_cross_section_loc = cross_section_loc[cross_section_loc["channel_id"].isin(filtered_channel["id"])]
 
         # Rebuild connection-node set from connected structures only
