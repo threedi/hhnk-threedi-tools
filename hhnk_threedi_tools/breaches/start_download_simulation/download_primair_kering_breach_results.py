@@ -331,6 +331,27 @@ def download_breach_scenario(base_folder, model_name, metadata_path, new_metadat
             max_breach_depth_list.append(max_breach_depth)
             max_breach_width_list.append(max_breach_width)
 
+             # Select maximum and mimimum data per breach.
+            df_simulation_data = pd.DataFrame(
+                {
+                    "name": x_name_list,
+                    "x": x_list,
+                    "y": y_list,
+                    "breach_id": breach_id_list,
+                    "Maximum Breach Discharge": max_breach_q_list,
+                    "Maximum Breach Width": max_breach_width_list,
+                    "Maximum Breach Flow Velocity": max_breach_u_list,
+                    "Maximum Upstream Water Level": max_breach_wlev_upstream_list,
+                    "Minimum Upstream Water Level": min_breach_wlev_upstream_list,
+                    "Maximum Downstream Water Lev": max_breach_wlev_downstream_list,
+                    "Minimum Downstream Water Level": min_breach_wlev_downstream_list,
+                    "Maximum Breach Depth": max_breach_depth_list,
+                }
+            )
+
+            # save to csv file
+            df_simulation_data.to_csv(csv_result_simulation_data, sep=";", decimal=",")
+
             # figuur maken
             create_breach_graph(
                 x_name,
@@ -363,26 +384,7 @@ def download_breach_scenario(base_folder, model_name, metadata_path, new_metadat
                 fig_path_name_agg,
             )
 
-            # Select maximum and mimimum data per breach.
-            df_simulation_data = pd.DataFrame(
-                {
-                    "name": x_name_list,
-                    "x": x_list,
-                    "y": y_list,
-                    "breach_id": breach_id_list,
-                    "Maximum Breach Discharge": max_breach_q_list,
-                    "Maximum Breach Width": max_breach_width_list,
-                    "Maximum Breach Flow Velocity": max_breach_u_list,
-                    "Maximum Upstream Water Level": max_breach_wlev_upstream_list,
-                    "Minimum Upstream Water Level": min_breach_wlev_upstream_list,
-                    "Maximum Downstream Water Lev": max_breach_wlev_downstream_list,
-                    "Minimum Downstream Water Level": min_breach_wlev_downstream_list,
-                    "Maximum Breach Depth": max_breach_depth_list,
-                }
-            )
-
-            # save to csv file
-            df_simulation_data.to_csv(csv_result_simulation_data, sep=";", decimal=",")
+           
 
             # relative_path = (os.path.relpath(resultnc))[3:]
 
@@ -398,7 +400,7 @@ if __name__ == "__main__":
     # filter_names = filter_id_gdf["display_name"].tolist()
 
     filter_names = [
-        "IPO_SBHZ_EQ_1314_64_JA",
+        "IPO_SBHZ_EQ_1314_JA",
     ]
 
     download_breach_scenario(base_folder, model_name, metadata_path, None, filter_names)
