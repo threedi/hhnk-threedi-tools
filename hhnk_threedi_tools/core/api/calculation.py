@@ -106,13 +106,17 @@ class NumericalSettings:
             "time_integration_method": 0,
         }
 
-        self.settings_df = hrt.sqlite_table_to_df(database_path=database_path, table_name="v2_numerical_settings")
+        self.settings_df = hrt.sqlite_table_to_df(
+            database_path=database_path, table_name="v2_numerical_settings"
+        )
         self.settings_df.set_index("id", inplace=True)
 
         self.settings = self.settings_df.loc[settings_id].to_dict()
 
         self.settings = update_dict_keys(
-            mydict=self.settings, translate_dict=self.translate_dict_numerical, remove_keys=["id"]
+            mydict=self.settings,
+            translate_dict=self.translate_dict_numerical,
+            remove_keys=["id"],
         )
 
         self.settings["flooding_threshold"] = 1e-5  # FIXME Not in sqlite?
@@ -162,7 +166,9 @@ class SimulationData:
         self.global_setting_df = hrt.sqlite_table_to_df(
             database_path=self.sqlite_path, table_name="v2_global_settings"
         )
-        self.global_setting = self.global_setting_df.iloc[0].to_dict()  # only take first row
+        self.global_setting = self.global_setting_df.iloc[
+            0
+        ].to_dict()  # only take first row
         self.boundary_1d_settings_df = hrt.sqlite_table_to_df(
             database_path=self.sqlite_path, table_name="v2_1d_boundary_conditions"
         )
@@ -171,13 +177,17 @@ class SimulationData:
         if type(self.rain) == dict:
             self.rain = [self.rain]
 
-        self.structure_control = self._get_control_from_sqlite(sim_duration=sim_duration)
+        self.structure_control = self._get_control_from_sqlite(
+            sim_duration=sim_duration
+        )
         self.laterals = self._get_laterals_from_sqlite(sim_duration=sim_duration)
         self.aggregation = self._get_aggregation_from_sqlite()
         self.boundaries = self._get_boundary_data()
 
         if iwlvl_raster_id is not None:
-            self.iwlvl_rasters_available = self.get_iwlvl_rasters_dict(threedi_api=threedi_api, model_id=model_id)
+            self.iwlvl_rasters_available = self.get_iwlvl_rasters_dict(
+                threedi_api=threedi_api, model_id=model_id
+            )
             self.iwlvl_raster = self.iwlvl_rasters_available[iwlvl_raster_id]
             self.iwlvl_raster_aggmethod = self.get_iwlvl_raster_aggmethod_from_sqlite()
         else:
@@ -187,7 +197,8 @@ class SimulationData:
     @property
     def _numerical_settings_raw(self):
         return NumericalSettings(
-            database_path=self.sqlite_path, settings_id=self.global_setting["numerical_settings_id"]
+            database_path=self.sqlite_path,
+            settings_id=self.global_setting["numerical_settings_id"],
         )
 
     @property
@@ -227,7 +238,9 @@ class SimulationData:
 
             v2_control = []
             v2_control_df = hrt.execute_sql_selection(
-                query="SELECT * FROM v2_control WHERE control_group_id = {}".format(control_group_id),
+                query="SELECT * FROM v2_control WHERE control_group_id = {}".format(
+                    control_group_id
+                ),
                 database_path=self.sqlite_path,
             )
             for index, row in v2_control_df.iterrows():
@@ -276,14 +289,16 @@ class SimulationData:
                         action = [float(entry.split(";")[1])]
                     elif action_type == "set_discharge_coefficients":
                         action = [
-                            float(entry.split(";")[1].split(" ")[0]),
-                            float(entry.split(";")[1].split(" ")[0]),
+                            float(entry.split(";")[1].split(",")[0]),
+                            float(entry.split(";")[1].split(",")[0]),
                         ]
                     else:
                         print("ACTION TYPE NOT SUPPORTED")
 
                     # TODO after bugfix control structures
-                    measure_operator = ">"  # remove this hardcoded work-around after bugfix
+                    measure_operator = (
+                        ">"  # remove this hardcoded work-around after bugfix
+                    )
                     # measure_operator = row[1]  # Uncomment this line after bugfix
 
                     if measure_operator in ["<", "<="]:
@@ -316,7 +331,10 @@ class SimulationData:
             values = None
 
             for control_measure_map in v2_control_measure_map:
-                if control_measure_map["measure_group_id"] == control["measure_group_id"]:
+                if (
+                    control_measure_map["measure_group_id"]
+                    == control["measure_group_id"]
+                ):
                     if control_measure_map["object_type"] == "v2_connection_nodes":
                         connection_node = control_measure_map["object_id"]
 
@@ -420,7 +438,12 @@ class SimulationData:
         return aggregation_data
 
     def _get_boundary_data(self):
-        boundary_types = {1: "water_level", 2: "velocity", 3: "discharge", 5: "sommerfeldt"}
+        boundary_types = {
+            1: "water_level",
+            2: "velocity",
+            3: "discharge",
+            5: "sommerfeldt",
+        }
 
         # 1d boundary conditions
         data = []
@@ -429,7 +452,12 @@ class SimulationData:
             rows = [i for i in row["timeseries"].split("\n")]
             for i in rows:
                 values.append([float(j) for j in i.split(",")])
-            data_singleboundary = {"id": row["id"], "type": "1D", "interpolate": True, "values": values}
+            data_singleboundary = {
+                "id": row["id"],
+                "type": "1D",
+                "interpolate": True,
+                "values": values,
+            }
             data.append(data_singleboundary)
         return data
 
@@ -440,7 +468,9 @@ class SimulationData:
         https://api.3di.live/v3/threedimodels/{model_id}/initial_waterlevels/
         """
         # Get iwlvl rasters
-        iwlvl_rasters_all = threedi_api.threedimodels_initial_waterlevels_list(threedimodel_pk=model_id).results
+        iwlvl_rasters_all = threedi_api.threedimodels_initial_waterlevels_list(
+            threedimodel_pk=model_id
+        ).results
 
         iwlvl_rasters = {}
         for iwlvl in iwlvl_rasters_all:
@@ -455,7 +485,9 @@ class SimulationData:
         multiple values are found for the initial waterlevel.
         """
         translate_dict_agg = {0: "max", 1: "min", 2: "mean"}
-        global_df = hrt.sqlite_table_to_df(database_path=self.sqlite_path, table_name="v2_global_settings")
+        global_df = hrt.sqlite_table_to_df(
+            database_path=self.sqlite_path, table_name="v2_global_settings"
+        )
         return translate_dict_agg[global_df.iloc[0]["water_level_ini_type"]]
 
     @property
@@ -471,7 +503,9 @@ class SimulationData:
 
     @property
     def arrival_processing(self):
-        return {"arrival_time": True}  # TODO check if works? was: {"basic_post_processing": True}
+        return {
+            "arrival_time": True
+        }  # TODO check if works? was: {"basic_post_processing": True}
 
 
 class SimulationTracker:
@@ -672,8 +706,10 @@ class Simulation:
 
         while (valid is False) or (i < max_retries):
             i += 1
-            structure_control_list = self.threedi_api.simulations_events_structure_control_table_list(
-                simulation_pk=self.id
+            structure_control_list = (
+                self.threedi_api.simulations_events_structure_control_table_list(
+                    simulation_pk=self.id
+                )
             )
 
             valid = True
@@ -683,14 +719,18 @@ class Simulation:
                         valid = False
 
             if not valid:
-                print(f"waiting for structure control to become valid ({i}/{max_retries})")
+                print(
+                    f"waiting for structure control to become valid ({i}/{max_retries})"
+                )
                 time.sleep(10)
 
         if valid:
             print("structure control is valid")
             return True
         elif i > max_retries:
-            print("max_retries exceeded (100 sec) for structure control to become valid, simulation did not start")
+            print(
+                "max_retries exceeded (100 sec) for structure control to become valid, simulation did not start"
+            )
             return False
         else:
             print("this shouldnt happen..")
@@ -759,7 +799,10 @@ class Simulation:
                     print("\nUpload success")
                     break
                 else:
-                    print(f"Uploading {filename} ({ti}/{int(UPLOAD_TIMEOUT // 2)})", end="\r")
+                    print(
+                        f"Uploading {filename} ({ti}/{int(UPLOAD_TIMEOUT // 2)})",
+                        end="\r",
+                    )
                     time.sleep(2)
 
     def add_basic_post_processing(self):
@@ -790,7 +833,9 @@ class Simulation:
         """If  empty wont add."""
         for aggregation in self.data.aggregation:
             self._add_to_simulation(
-                self.threedi_api.simulations_settings_aggregation_create, simulation_pk=self.id, data=aggregation
+                self.threedi_api.simulations_settings_aggregation_create,
+                simulation_pk=self.id,
+                data=aggregation,
             )
         self.tracker.aggregation = True
 
@@ -818,7 +863,9 @@ class Simulation:
                     continue
 
     def _api_result(
-        self, result: tac.openapi.models.inline_response20062.InlineResponse20062, message: str
+        self,
+        result: tac.openapi.models.inline_response20062.InlineResponse20062,
+        message: str,
     ) -> tac.openapi.models.threedi_model.ThreediModel:
         """Raises an error if no results"""
         if len(result.results) == 0:
@@ -826,7 +873,13 @@ class Simulation:
         return result.results[0]
 
     def create(
-        self, output_folder, simulation_name, model_id, organisation_uuid, sim_duration, output_folder_sqlite=None
+        self,
+        output_folder,
+        simulation_name,
+        model_id,
+        organisation_uuid,
+        sim_duration,
+        output_folder_sqlite=None,
     ):
         # data = {
         #     "template": self.template.id,
@@ -845,7 +898,9 @@ class Simulation:
         self.set_model(model_id=model_id)
 
         # Download the sqlite so we can retrieve some settings
-        self.sqlite_path = self.download_sqlite(output_folder_sqlite=output_folder_sqlite)
+        self.sqlite_path = self.download_sqlite(
+            output_folder_sqlite=output_folder_sqlite
+        )
 
         # Create simulation on API
         data = {
@@ -857,7 +912,9 @@ class Simulation:
             "store_results": True,
         }
 
-        self.simulation = self._add_to_simulation(self.threedi_api.simulations_create, data=data)
+        self.simulation = self._add_to_simulation(
+            self.threedi_api.simulations_create, data=data
+        )
         self.simulation_created = True
 
     def download_sqlite(self, output_folder_sqlite=None):
@@ -871,7 +928,9 @@ class Simulation:
         if self.model is None:
             return "define self.model_id first"
 
-        output_path = Path(output_folder_sqlite).joinpath("tempfiles", f"model_{self.model_id}.zip")
+        output_path = Path(output_folder_sqlite).joinpath(
+            "tempfiles", f"model_{self.model_id}.zip"
+        )
         output_path.parent.mkdir(parents=True, exist_ok=True)  # Create parent folder
 
         if not output_path.with_suffix("").exists():
@@ -908,7 +967,9 @@ class Simulation:
         self.structure_control_valid = self.check_structure_control()
         if self.structure_control_valid:
             self.start_feedback = self._add_to_simulation(
-                self.threedi_api.simulations_actions_create, simulation_pk=self.id, data={"name": "queue"}
+                self.threedi_api.simulations_actions_create,
+                simulation_pk=self.id,
+                data={"name": "queue"},
             )
 
             # Create APIcall.txt file
@@ -919,14 +980,20 @@ class Simulation:
             with open(apicall_txt, "a") as t:
                 t.write(self.simulation_info(str_type="text"))
         else:
-            self.start_feedback = "Simulation_did not start (structure control not valid)"
+            self.start_feedback = (
+                "Simulation_did not start (structure control not valid)"
+            )
 
     def shutdown(self, simulation_pk):
         """stop simulation"""
-        self.threedi_api.simulations_actions_create(simulation_pk, data={"name": "shutdown"})
+        self.threedi_api.simulations_actions_create(
+            simulation_pk, data={"name": "shutdown"}
+        )
 
     def simulation_info(self, str_type="text"):
-        from IPython.core.display import HTML  # Import here to prevent IPython dep on tests
+        from IPython.core.display import (
+            HTML,
+        )  # Import here to prevent IPython dep on tests
 
         sim = self.simulation
         if str_type == "text":
@@ -971,7 +1038,11 @@ class Simulation:
             )
 
     def example_use(
-        self, basic_processing=False, damage_processing=False, arrival_processing=False, aggregation=False
+        self,
+        basic_processing=False,
+        damage_processing=False,
+        arrival_processing=False,
+        aggregation=False,
     ):
         if self.data is not None:
             self.add_default_settings()
@@ -1003,7 +1074,14 @@ if __name__ == "__main__":
     # sim.model = "BWN Schermer interflow referentie #2"
     # self.set_model(49484)
 
-    rain_data = [{"offset": 3600, "duration": 7200, "value": 4.930555555555556e-06, "units": "m/s"}]
+    rain_data = [
+        {
+            "offset": 3600,
+            "duration": 7200,
+            "value": 4.930555555555556e-06,
+            "units": "m/s",
+        }
+    ]
 
     # self.download_sqlite(output_folder='E:\\02.modellen\\model_test_v2\\03_3di_results\\0d1d_results\\hub_0d1d #6 1d2d_test')
     # self.create(output_folder='E:\\02.modellen\\model_test_v2\\03_3di_results\\0d1d_results\\hub_0d1d #6 1d2d_test',
