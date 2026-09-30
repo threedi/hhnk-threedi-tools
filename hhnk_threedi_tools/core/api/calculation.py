@@ -112,7 +112,9 @@ class NumericalSettings:
         self.settings = self.settings_df.loc[settings_id].to_dict()
 
         self.settings = update_dict_keys(
-            mydict=self.settings, translate_dict=self.translate_dict_numerical, remove_keys=["id"]
+            mydict=self.settings,
+            translate_dict=self.translate_dict_numerical,
+            remove_keys=["id"],
         )
 
         self.settings["flooding_threshold"] = 1e-5  # FIXME Not in sqlite?
@@ -187,7 +189,8 @@ class SimulationData:
     @property
     def _numerical_settings_raw(self):
         return NumericalSettings(
-            database_path=self.sqlite_path, settings_id=self.global_setting["numerical_settings_id"]
+            database_path=self.sqlite_path,
+            settings_id=self.global_setting["numerical_settings_id"],
         )
 
     @property
@@ -276,8 +279,8 @@ class SimulationData:
                         action = [float(entry.split(";")[1])]
                     elif action_type == "set_discharge_coefficients":
                         action = [
-                            float(entry.split(";")[1].split(" ")[0]),
-                            float(entry.split(";")[1].split(" ")[0]),
+                            float(entry.split(";")[1].split(",")[0]),
+                            float(entry.split(";")[1].split(",")[0]),
                         ]
                     else:
                         print("ACTION TYPE NOT SUPPORTED")
@@ -420,7 +423,12 @@ class SimulationData:
         return aggregation_data
 
     def _get_boundary_data(self):
-        boundary_types = {1: "water_level", 2: "velocity", 3: "discharge", 5: "sommerfeldt"}
+        boundary_types = {
+            1: "water_level",
+            2: "velocity",
+            3: "discharge",
+            5: "sommerfeldt",
+        }
 
         # 1d boundary conditions
         data = []
@@ -429,7 +437,12 @@ class SimulationData:
             rows = [i for i in row["timeseries"].split("\n")]
             for i in rows:
                 values.append([float(j) for j in i.split(",")])
-            data_singleboundary = {"id": row["id"], "type": "1D", "interpolate": True, "values": values}
+            data_singleboundary = {
+                "id": row["id"],
+                "type": "1D",
+                "interpolate": True,
+                "values": values,
+            }
             data.append(data_singleboundary)
         return data
 
@@ -759,7 +772,10 @@ class Simulation:
                     print("\nUpload success")
                     break
                 else:
-                    print(f"Uploading {filename} ({ti}/{int(UPLOAD_TIMEOUT // 2)})", end="\r")
+                    print(
+                        f"Uploading {filename} ({ti}/{int(UPLOAD_TIMEOUT // 2)})",
+                        end="\r",
+                    )
                     time.sleep(2)
 
     def add_basic_post_processing(self):
@@ -790,7 +806,9 @@ class Simulation:
         """If  empty wont add."""
         for aggregation in self.data.aggregation:
             self._add_to_simulation(
-                self.threedi_api.simulations_settings_aggregation_create, simulation_pk=self.id, data=aggregation
+                self.threedi_api.simulations_settings_aggregation_create,
+                simulation_pk=self.id,
+                data=aggregation,
             )
         self.tracker.aggregation = True
 
@@ -818,7 +836,9 @@ class Simulation:
                     continue
 
     def _api_result(
-        self, result: tac.openapi.models.inline_response20062.InlineResponse20062, message: str
+        self,
+        result: tac.openapi.models.inline_response20062.InlineResponse20062,
+        message: str,
     ) -> tac.openapi.models.threedi_model.ThreediModel:
         """Raises an error if no results"""
         if len(result.results) == 0:
@@ -826,7 +846,13 @@ class Simulation:
         return result.results[0]
 
     def create(
-        self, output_folder, simulation_name, model_id, organisation_uuid, sim_duration, output_folder_sqlite=None
+        self,
+        output_folder,
+        simulation_name,
+        model_id,
+        organisation_uuid,
+        sim_duration,
+        output_folder_sqlite=None,
     ):
         # data = {
         #     "template": self.template.id,
@@ -908,7 +934,9 @@ class Simulation:
         self.structure_control_valid = self.check_structure_control()
         if self.structure_control_valid:
             self.start_feedback = self._add_to_simulation(
-                self.threedi_api.simulations_actions_create, simulation_pk=self.id, data={"name": "queue"}
+                self.threedi_api.simulations_actions_create,
+                simulation_pk=self.id,
+                data={"name": "queue"},
             )
 
             # Create APIcall.txt file
@@ -926,7 +954,9 @@ class Simulation:
         self.threedi_api.simulations_actions_create(simulation_pk, data={"name": "shutdown"})
 
     def simulation_info(self, str_type="text"):
-        from IPython.core.display import HTML  # Import here to prevent IPython dep on tests
+        from IPython.core.display import (
+            HTML,
+        )  # Import here to prevent IPython dep on tests
 
         sim = self.simulation
         if str_type == "text":
@@ -971,7 +1001,11 @@ class Simulation:
             )
 
     def example_use(
-        self, basic_processing=False, damage_processing=False, arrival_processing=False, aggregation=False
+        self,
+        basic_processing=False,
+        damage_processing=False,
+        arrival_processing=False,
+        aggregation=False,
     ):
         if self.data is not None:
             self.add_default_settings()
@@ -1003,7 +1037,14 @@ if __name__ == "__main__":
     # sim.model = "BWN Schermer interflow referentie #2"
     # self.set_model(49484)
 
-    rain_data = [{"offset": 3600, "duration": 7200, "value": 4.930555555555556e-06, "units": "m/s"}]
+    rain_data = [
+        {
+            "offset": 3600,
+            "duration": 7200,
+            "value": 4.930555555555556e-06,
+            "units": "m/s",
+        }
+    ]
 
     # self.download_sqlite(output_folder='E:\\02.modellen\\model_test_v2\\03_3di_results\\0d1d_results\\hub_0d1d #6 1d2d_test')
     # self.create(output_folder='E:\\02.modellen\\model_test_v2\\03_3di_results\\0d1d_results\\hub_0d1d #6 1d2d_test',
