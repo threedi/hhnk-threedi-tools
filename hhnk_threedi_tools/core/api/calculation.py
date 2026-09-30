@@ -106,9 +106,7 @@ class NumericalSettings:
             "time_integration_method": 0,
         }
 
-        self.settings_df = hrt.sqlite_table_to_df(
-            database_path=database_path, table_name="v2_numerical_settings"
-        )
+        self.settings_df = hrt.sqlite_table_to_df(database_path=database_path, table_name="v2_numerical_settings")
         self.settings_df.set_index("id", inplace=True)
 
         self.settings = self.settings_df.loc[settings_id].to_dict()
@@ -166,9 +164,7 @@ class SimulationData:
         self.global_setting_df = hrt.sqlite_table_to_df(
             database_path=self.sqlite_path, table_name="v2_global_settings"
         )
-        self.global_setting = self.global_setting_df.iloc[
-            0
-        ].to_dict()  # only take first row
+        self.global_setting = self.global_setting_df.iloc[0].to_dict()  # only take first row
         self.boundary_1d_settings_df = hrt.sqlite_table_to_df(
             database_path=self.sqlite_path, table_name="v2_1d_boundary_conditions"
         )
@@ -177,17 +173,13 @@ class SimulationData:
         if type(self.rain) == dict:
             self.rain = [self.rain]
 
-        self.structure_control = self._get_control_from_sqlite(
-            sim_duration=sim_duration
-        )
+        self.structure_control = self._get_control_from_sqlite(sim_duration=sim_duration)
         self.laterals = self._get_laterals_from_sqlite(sim_duration=sim_duration)
         self.aggregation = self._get_aggregation_from_sqlite()
         self.boundaries = self._get_boundary_data()
 
         if iwlvl_raster_id is not None:
-            self.iwlvl_rasters_available = self.get_iwlvl_rasters_dict(
-                threedi_api=threedi_api, model_id=model_id
-            )
+            self.iwlvl_rasters_available = self.get_iwlvl_rasters_dict(threedi_api=threedi_api, model_id=model_id)
             self.iwlvl_raster = self.iwlvl_rasters_available[iwlvl_raster_id]
             self.iwlvl_raster_aggmethod = self.get_iwlvl_raster_aggmethod_from_sqlite()
         else:
@@ -238,9 +230,7 @@ class SimulationData:
 
             v2_control = []
             v2_control_df = hrt.execute_sql_selection(
-                query="SELECT * FROM v2_control WHERE control_group_id = {}".format(
-                    control_group_id
-                ),
+                query="SELECT * FROM v2_control WHERE control_group_id = {}".format(control_group_id),
                 database_path=self.sqlite_path,
             )
             for index, row in v2_control_df.iterrows():
@@ -296,9 +286,7 @@ class SimulationData:
                         print("ACTION TYPE NOT SUPPORTED")
 
                     # TODO after bugfix control structures
-                    measure_operator = (
-                        ">"  # remove this hardcoded work-around after bugfix
-                    )
+                    measure_operator = ">"  # remove this hardcoded work-around after bugfix
                     # measure_operator = row[1]  # Uncomment this line after bugfix
 
                     if measure_operator in ["<", "<="]:
@@ -331,10 +319,7 @@ class SimulationData:
             values = None
 
             for control_measure_map in v2_control_measure_map:
-                if (
-                    control_measure_map["measure_group_id"]
-                    == control["measure_group_id"]
-                ):
+                if control_measure_map["measure_group_id"] == control["measure_group_id"]:
                     if control_measure_map["object_type"] == "v2_connection_nodes":
                         connection_node = control_measure_map["object_id"]
 
@@ -468,9 +453,7 @@ class SimulationData:
         https://api.3di.live/v3/threedimodels/{model_id}/initial_waterlevels/
         """
         # Get iwlvl rasters
-        iwlvl_rasters_all = threedi_api.threedimodels_initial_waterlevels_list(
-            threedimodel_pk=model_id
-        ).results
+        iwlvl_rasters_all = threedi_api.threedimodels_initial_waterlevels_list(threedimodel_pk=model_id).results
 
         iwlvl_rasters = {}
         for iwlvl in iwlvl_rasters_all:
@@ -485,9 +468,7 @@ class SimulationData:
         multiple values are found for the initial waterlevel.
         """
         translate_dict_agg = {0: "max", 1: "min", 2: "mean"}
-        global_df = hrt.sqlite_table_to_df(
-            database_path=self.sqlite_path, table_name="v2_global_settings"
-        )
+        global_df = hrt.sqlite_table_to_df(database_path=self.sqlite_path, table_name="v2_global_settings")
         return translate_dict_agg[global_df.iloc[0]["water_level_ini_type"]]
 
     @property
@@ -503,9 +484,7 @@ class SimulationData:
 
     @property
     def arrival_processing(self):
-        return {
-            "arrival_time": True
-        }  # TODO check if works? was: {"basic_post_processing": True}
+        return {"arrival_time": True}  # TODO check if works? was: {"basic_post_processing": True}
 
 
 class SimulationTracker:
@@ -706,10 +685,8 @@ class Simulation:
 
         while (valid is False) or (i < max_retries):
             i += 1
-            structure_control_list = (
-                self.threedi_api.simulations_events_structure_control_table_list(
-                    simulation_pk=self.id
-                )
+            structure_control_list = self.threedi_api.simulations_events_structure_control_table_list(
+                simulation_pk=self.id
             )
 
             valid = True
@@ -719,18 +696,14 @@ class Simulation:
                         valid = False
 
             if not valid:
-                print(
-                    f"waiting for structure control to become valid ({i}/{max_retries})"
-                )
+                print(f"waiting for structure control to become valid ({i}/{max_retries})")
                 time.sleep(10)
 
         if valid:
             print("structure control is valid")
             return True
         elif i > max_retries:
-            print(
-                "max_retries exceeded (100 sec) for structure control to become valid, simulation did not start"
-            )
+            print("max_retries exceeded (100 sec) for structure control to become valid, simulation did not start")
             return False
         else:
             print("this shouldnt happen..")
@@ -898,9 +871,7 @@ class Simulation:
         self.set_model(model_id=model_id)
 
         # Download the sqlite so we can retrieve some settings
-        self.sqlite_path = self.download_sqlite(
-            output_folder_sqlite=output_folder_sqlite
-        )
+        self.sqlite_path = self.download_sqlite(output_folder_sqlite=output_folder_sqlite)
 
         # Create simulation on API
         data = {
@@ -912,9 +883,7 @@ class Simulation:
             "store_results": True,
         }
 
-        self.simulation = self._add_to_simulation(
-            self.threedi_api.simulations_create, data=data
-        )
+        self.simulation = self._add_to_simulation(self.threedi_api.simulations_create, data=data)
         self.simulation_created = True
 
     def download_sqlite(self, output_folder_sqlite=None):
@@ -928,9 +897,7 @@ class Simulation:
         if self.model is None:
             return "define self.model_id first"
 
-        output_path = Path(output_folder_sqlite).joinpath(
-            "tempfiles", f"model_{self.model_id}.zip"
-        )
+        output_path = Path(output_folder_sqlite).joinpath("tempfiles", f"model_{self.model_id}.zip")
         output_path.parent.mkdir(parents=True, exist_ok=True)  # Create parent folder
 
         if not output_path.with_suffix("").exists():
@@ -980,15 +947,11 @@ class Simulation:
             with open(apicall_txt, "a") as t:
                 t.write(self.simulation_info(str_type="text"))
         else:
-            self.start_feedback = (
-                "Simulation_did not start (structure control not valid)"
-            )
+            self.start_feedback = "Simulation_did not start (structure control not valid)"
 
     def shutdown(self, simulation_pk):
         """stop simulation"""
-        self.threedi_api.simulations_actions_create(
-            simulation_pk, data={"name": "shutdown"}
-        )
+        self.threedi_api.simulations_actions_create(simulation_pk, data={"name": "shutdown"})
 
     def simulation_info(self, str_type="text"):
         from IPython.core.display import (
