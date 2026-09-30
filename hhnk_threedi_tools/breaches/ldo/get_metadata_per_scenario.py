@@ -50,8 +50,10 @@ def _get_breach_info(
     metadata_df_ns: pd.DataFrame,
     bresen_df: gpd.GeoDataFrame,
 ) -> dict:
+    
     simulations_data = os.listdir(region_path)
-
+    if simulation_name.split('_')[-1] == 'JA':
+        simulation_name = simulation_name[:-3]
     coordinate_x = bresen_df.loc[bresen_df["SC_NAAM"] == simulation_name, "LOC_X"].to_numpy()[0]
     coordinate_y = bresen_df.loc[bresen_df["SC_NAAM"] == simulation_name, "LOC_Y"].to_numpy()[0]
     naam_waterkering = bresen_df.loc[bresen_df["SC_NAAM"] == simulation_name, "LOC_BUITEN"].to_numpy()[0]
@@ -418,12 +420,12 @@ def generate_ldo_metadata_per_scenario(
 
 # %%
 result = generate_ldo_metadata_per_scenario(
-    bresen_path=r"H:\03.resultaten\IPO_Overstromingsberekeningen_compartimentering\metadata\metadata_cmp.gpkg",
+    bresen_path=r"H:\03.resultaten\Normering Regionale Keringen\metadata\bress_location_eq.shp",
     metadata_template_path=r"h:\03.resultaten\Normering Regionale Keringen\ipo_ldo_sctructuur\import_scenarios.xlsx",
-    metadata_nzk_path=r"H:\03.resultaten\IPO_Overstromingsberekeningen_compartimentering\metadata\metadata_cmp.gpkg",
-    base_folder=r"H:\03.resultaten\IPO_Overstromingsberekeningen_compartimentering\output",
-    metadata_per_scenario_folder=r"Y:\03.resultaten\Normering Regionale Keringen\output\scenarios_output\N&S\ldo_structuur\metadata_per_scenario",
-    scenario_id_path=r"Y:\03.resultaten\Normering Regionale Keringen\output\scenarios_output\N&S\ldo_structuur\scenarios_ids.xlsx",
+    metadata_nzk_path=r"H:\03.resultaten\Normering Regionale Keringen\metadata\bress_location_eq.shp",
+    base_folder=r"H:\03.resultaten\compartimentering_ns\SBHZ_EQ",
+    metadata_per_scenario_folder=r"h:\03.resultaten\Normering Regionale Keringen\output\scenarios_output\N&S\ldo_structuur\metadata_per_scenario",
+    scenario_id_path=r"h:\03.resultaten\Normering Regionale Keringen\output\scenarios_output\N&S\ldo_structuur\scenarios_ids.xlsx",
     skip_scenarios=[
         "IPO_SBLN_CMPTR_24_JA",
         "IPO_SBLN_CMPTR_5_JA",
