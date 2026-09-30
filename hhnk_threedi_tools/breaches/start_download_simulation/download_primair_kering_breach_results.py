@@ -16,11 +16,6 @@ import geopandas as gpd
 import hhnk_research_tools as hrt
 import numpy as np
 import pandas as pd
-from breaches import Breaches
-from breaches.start_download_simulation.download_results_from_3di import download_results_from_3di
-from create_breach_graph import create_breach_graph
-from download_results_from_3di import download_results_from_3di
-from hhnk_threedi_tools.breaches.create_breach_graph import create_breach_graph
 from threedi_api_client.api import ThreediApi
 from threedi_api_client.openapi import ApiException
 from threedi_api_client.versions import V3Api
@@ -28,6 +23,8 @@ from threedi_scenario_downloader import downloader as dl
 from threedigrid.admin.gridresultadmin import GridH5AggregateResultAdmin, GridH5ResultAdmin
 
 from hhnk_threedi_tools.breaches.breaches import Breaches
+from hhnk_threedi_tools.breaches.maps_graphs.create_breach_graph import create_breach_graph
+from hhnk_threedi_tools.breaches.start_download_simulation.download_results_from_3di import download_results_from_3di
 
 # %%
 
@@ -54,7 +51,7 @@ def download_breach_scenario(base_folder, model_name, metadata_path, new_metadat
         print(f"Successfully logged in as {user.username}!")
 
     # SET API KEY
-    dl.set_api_key(api_keys["lizard"])
+    dl.set_api_key(api_keys["threedi"])
 
     # Create list of available scenarios
     name = []
@@ -392,25 +389,16 @@ def download_breach_scenario(base_folder, model_name, metadata_path, new_metadat
 
 # %%
 if __name__ == "__main__":
-    base_folder = r"\\corp.hhnk.nl\data\Hydrologen_data\Data\03.resultaten\Normering Regionale Keringen\output\scenarios_output\N&S"
-    model_name = "skb_v2"
-    metadata_path = r"y:\03.resultaten\IPO_Overstromingsberekeningen_compartimentering\metadata\metadata.gpkg"
+    base_folder = r"H:\03.resultaten\compartimentering_ns"
+    model_name = "SBHZ_EQ"
+    metadata_path = r"H:\03.resultaten\IPO_Overstromingsberekeningen_compartimentering\metadata\metadata.gpkg"
     # new_metadata_path = r"y:\03.resultaten\IPO_Overstromingsberekeningen_compartimentering\metadata\metadata.gpkg"
     # filter_id_path = r"Y:\03.resultaten\Normering Regionale Keringen\output\scenarios_output\N&S\breach_SBMN_redo.gpkg"
     # filter_id_gdf = gpd.read_file(filter_id_path)
     # filter_names = filter_id_gdf["display_name"].tolist()
 
     filter_names = [
-        "IPO_SKB_EQ_67",
-        "IPO_SKB_EQ_6632",
-        "IPO_SKB_TP05_EQ_291",
-        "IPO_SKB_TP05_EQ_292",
-        "IPO_SKB_EQ_3937",
-        "IPO_SKB_EQ_3828",
-        "IPO_SKB_EQ_3734",
-        "IPO_SKB_EQ_686",
-        "IPO_SKB_EQ_655",
-        "IPO_SKB_EQ_476",
+        "IPO_SBHZ_EQ_1314_64_JA",
     ]
 
     download_breach_scenario(base_folder, model_name, metadata_path, None, filter_names)
