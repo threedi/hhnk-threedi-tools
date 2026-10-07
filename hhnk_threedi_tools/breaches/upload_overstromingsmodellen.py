@@ -1,4 +1,3 @@
-
 # swagger: https://docs.ranawaterintelligence.com/a_releasenotes_rana_hcc_api.html
 # This script uses as base the script that is here:
 # https://api.3di.live/v3/docs/examples/python_cookbook/

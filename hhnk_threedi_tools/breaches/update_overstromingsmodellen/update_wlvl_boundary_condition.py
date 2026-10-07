@@ -47,13 +47,13 @@ def breach_data_to_timeseries(breach_data_pd: pd.DataFrame) -> str:
 
     # Start the timeseries at 0 minutes
     time_min = (data["time_sec"] - data["time_sec"].iloc[0]) / 60
-    #Add last value to the timeseries to ensure it reaches the last time step
-    last_time = round(data["time_sec"].iloc[-1]/60, 2)
+    # Add last value to the timeseries to ensure it reaches the last time step
+    last_time = round(data["time_sec"].iloc[-1] / 60, 2)
     time_min.loc[len(time_min)] = last_time
 
-    #Star de waterlevel
+    # Star de waterlevel
     waterlevel = round(data["breach_wlev_upstream"], 2)
-    #Add last value to the timeseries to ensure it reaches the last waterlevel value
+    # Add last value to the timeseries to ensure it reaches the last waterlevel value
     last_waterlevel = round(data["breach_wlev_upstream"].iloc[-1], 2)
     waterlevel.loc[len(waterlevel)] = last_waterlevel
 
@@ -106,7 +106,7 @@ def update_waterlevel(
     last_time_series = last_time_series * 24 * 60
     if time != last_time_series:
         if time < last_time_series:
-              # Convert days to minutes
+            # Convert days to minutes
             rows.append((last_time_series, new_waterlevel))
 
     return "\n".join(f"{time:g},{waterlevel:.6f}" for time, waterlevel in rows)

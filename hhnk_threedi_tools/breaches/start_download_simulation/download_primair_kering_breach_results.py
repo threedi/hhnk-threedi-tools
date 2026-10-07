@@ -57,7 +57,6 @@ def download_breach_scenario(base_folder, simulation_metadata_df):
     # Create list of available scenarios
     filter_names = simulation_metadata_df["scenario_name"].tolist()
     id_simulations = simulation_metadata_df["scenario_id"].tolist()
-        
 
     # Set up lists
     x_name_list = []
@@ -74,15 +73,15 @@ def download_breach_scenario(base_folder, simulation_metadata_df):
     max_breach_width_list = []
 
     for x_name in filter_names:
-
         print(x_name)
         scenario_id = api_client.usage_list(simulation__name=x_name).results[0].simulation.id
-        
+
         if float(scenario_id) in id_simulations:
-            
             print(f"downloading scenario: {x_name}")
 
-            model_name = simulation_metadata_df.loc[simulation_metadata_df["scenario_name"] == x_name, "schematitation_name"].iloc[0]
+            model_name = simulation_metadata_df.loc[
+                simulation_metadata_df["scenario_name"] == x_name, "schematitation_name"
+            ].iloc[0]
             # set main output folder for the scenario with name x_name
             breach_folder = Path(os.path.join(base_folder, model_name, x_name))
             if not breach_folder.exists():
@@ -154,7 +153,9 @@ def download_breach_scenario(base_folder, simulation_metadata_df):
                 max_breach_depth = np.amax(breach_depth)
 
                 breach_q = (
-                    gr.lines.filter(id__eq=breach_line).timeseries(start_time=0, end_time=gr.lines.timestamps[-1]).q[:, 0]
+                    gr.lines.filter(id__eq=breach_line)
+                    .timeseries(start_time=0, end_time=gr.lines.timestamps[-1])
+                    .q[:, 0]
                 )
 
                 breach_q_agg = (
@@ -166,7 +167,9 @@ def download_breach_scenario(base_folder, simulation_metadata_df):
                 max_breach_q_agg = np.amax(breach_q_agg)
 
                 breach_u = (
-                    gr.lines.filter(id__eq=breach_line).timeseries(start_time=0, end_time=gr.lines.timestamps[-1]).u1[:, 0]
+                    gr.lines.filter(id__eq=breach_line)
+                    .timeseries(start_time=0, end_time=gr.lines.timestamps[-1])
+                    .u1[:, 0]
                 )
 
                 breach_u_agg = (
@@ -360,7 +363,6 @@ def download_breach_scenario(base_folder, simulation_metadata_df):
 
         else:
             print(f"{x_name} is still running")
-        
 
 
 # %%

@@ -185,7 +185,7 @@ def start_simulation_breaches(model_folder, organisation_name, scenarios, filter
             layer="potential_breach",
         ) as src:
             breach_row = next(feature for feature in src if int(feature["id"]) == breach.connected_pnt_id)
-        
+
         # Set scenario name according to active breach
         breach_code_split = breach_row["properties"]["code"].split("-")
         if breach_code_split[0][-2:] == "_1":
