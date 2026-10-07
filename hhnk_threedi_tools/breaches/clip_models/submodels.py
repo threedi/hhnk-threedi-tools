@@ -94,8 +94,22 @@ class Submodels:
         self.columns_names = COLUMNS_NAMES[self.schematisation_type]
 
         # Locate required files / directories
-        self.schematisation_gpkg = self._find_file("*.gpkg", GeoPackageFileNotFoundError)
-        self.schematisation_sqlite = self._find_file("*.sqlite", SQLiteFileNotFoundError)
+        if self.schematisation_type == SchematisationType.RANA:
+            self.schematisation_gpkg = self._find_file(
+                "*.gpkg",
+                GeoPackageFileNotFoundError,
+            )
+            self.schematisation_sqlite = None
+        else:
+            self.schematisation_gpkg = self._find_file(
+                "*.gpkg",
+                GeoPackageFileNotFoundError,
+            )
+            self.schematisation_sqlite = self._find_file(
+                "*.sqlite",
+                SQLiteFileNotFoundError,
+            )
+
         self.rasters_directory = self._find_rasters_directory()
 
         # Load and validate sub-areas
@@ -329,16 +343,18 @@ class Submodels:
         output_directory = self.schematisation_directory / name
         output_directory.mkdir(parents=True, exist_ok=True)
 
-        output_gpkg = output_directory / (self.schematisation_gpkg.stem + "_" + name + self.schematisation_gpkg.suffix)
-        output_sqlite = output_directory / (
-            self.schematisation_sqlite.stem + "_" + name + self.schematisation_sqlite.suffix
-        )
-
         # Copy base schematisation files.
         # This preserves the original GeoPackage schema (including primary keys,
         # column types and empty layers) for all layers before any filtering.
+
+        output_gpkg = output_directory / (self.schematisation_gpkg.stem + "_" + name + self.schematisation_gpkg.suffix)
         shutil.copy(self.schematisation_gpkg, output_gpkg)
-        shutil.copy(self.schematisation_sqlite, output_sqlite)
+
+        if schematisation_type == SchematisationType.THREEDI:
+            output_sqlite = output_directory / (
+                self.schematisation_sqlite.stem + "_" + name + self.schematisation_sqlite.suffix
+            )
+            shutil.copy(self.schematisation_sqlite, output_sqlite)
 
         #  Read all layers from the copied GeoPackage
         layers = self._read_geopackage_layers(output_gpkg)
@@ -603,14 +619,16 @@ class Submodels:
 
 # %%
 if __name__ == "__main__":
-    schematisation_directory = Path(r"H:\02.modellen\grootslag_greppels_test\02_schematisation\00_basis")
-    subareas_path = r"H:\02.modellen\grootslag_greppels_test\grootslag_deelgebied_test.shp"
+    schematisation_directory = Path(
+        r"H:\02.modellen\ROR PRI - dijktrajecten 13-8 en 13-9 - Stroom_NO\work in progress\schematisation"
+    )
+    subareas_path = r"H:\02.modellen\ROR PRI - dijktrajecten 13-8 en 13-9 - Stroom_NO\ROR PRI - dijktrajecten 13-8 en 13-9 - Stroom_NO_test.gpkg"
     field_name = "Deelgebied"
-    calculation_grid_cells_path = r"H:/02.modellen/grootslag_greppels_test/01_source_data/calculation_grid.gpkg"
+    calculation_grid_cells_path = r"H:\02.modellen\RegionalFloodModel\work in progress\regional_calculation_grid.gpkg"
     subareas_layer_name = None
     calculation_grid_cells_layer_name = "cell"
-    isolate_1d = False
-    schematisation_type = SchematisationType.THREEDI
+    isolate_1d = True
+    schematisation_type = SchematisationType.RANA
 
     submodels = Submodels(
         schematisation_directory=schematisation_directory,

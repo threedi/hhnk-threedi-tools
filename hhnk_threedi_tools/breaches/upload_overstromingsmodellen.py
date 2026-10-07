@@ -1,3 +1,4 @@
+
 # swagger: https://docs.ranawaterintelligence.com/a_releasenotes_rana_hcc_api.html
 # This script uses as base the script that is here:
 # https://api.3di.live/v3/docs/examples/python_cookbook/
@@ -120,17 +121,21 @@ def upload_rasters(sqlite_path):
 
         elif "frictie" in raster.lower():
             raster_names["frict_coef_file"] = raster_dir / raster
+
+        elif "ini" in raster.lower():
+            raster_names["initial_waterlevel_file"] = raster_dir / raster
+
     return raster_names
 
 
 # %%
 sqlite_path = Path(
-    r"H:\02.modellen\RegionalFloodModel - deelmodel VRNK WEST\work in progress\schematisation\RegionalFloodModel - deelmodel VRNK WEST.gpkg"
+    r"H:\02.modellen\ROR PRI - dijktrajecten 13-8 en 13-9 - Stroom_NO\work in progress\schematisation\ROR PRI - dijktrajecten 13-8 en 13-9 - Stroom_NO.gpkg"
 )
 
-COMMIT_MESSAGE = "test Upload through Python"
-organisation_name = "Hoogheemraadschap Hollands Noorderkwartier"
-# organisation_name = "BWN HHNK"
+COMMIT_MESSAGE = "Fix Initial waterlevel and boundary condition for breach: Drechterland"
+# organisation_name = "Hoogheemraadschap Hollands Noorderkwartier"
+organisation_name = "BWN HHNK"
 
 
 uploader = SchematisationUploader(

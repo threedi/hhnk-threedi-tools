@@ -425,16 +425,16 @@ def create_pgn_dagame(region_paths):
 # %%
 if __name__ == "__main__":
     # Set the paths for the DEM, landuse file, base folder and configuration file
-    dem_path = r"Y:\02.modellen\RegionalFloodModel\work in progress\schematisation\rasters\dem_1_met_amstelmeer.tif"
-    landuse_file = r"Y:\01.basisgegevens\rasters\landgebruik\landuse2021_tiles\combined_rasters.vrt"
-    base_folder = r"H:\03.resultaten\IPO_Overstromingsberekeningen_compartimentering\output"
+    dem_path = r"H:\02.modellen\RegionalFloodModel\work in progress\schematisation\rasters\dem_1_met_amstelmeer.tif"
+    landuse_file = r"H:\01.basisgegevens\rasters\landgebruik\landuse2021_tiles\combined_rasters.vrt"
+    base_folder = r"H:\03.resultaten\compartimentering_ns\SBHZ_EQ"
     cfg_file = schadeschatter_path / "01_data/cfg/cfg_lizard.cfg"
     # ipo_paths_path = r"E:\03.resultaten\Normering Regionale Keringen\output\ipo_scenarios_paths.csv"
     # region_paths = [r"Y:\03.resultaten\Normering Regionale Keringen\output\IPO_SBLN_JA_WIP_DONE\IPO_SBLN_968_JA"]
     # Set the parameters for the calculation
     OVERWRITE = True
     EPSG = "EPSG:28992"
-    scenario_name = ["Starnmeer_SBLN_135", "Beemster_SBLN_527", "BM_SBMZ_1492", "HW_SBMZ_1182"]
+    scenario_name = ["IPO_SBHZ_EQ_1314_JA"]
     spatialResolution = 5
 
     # Define scenarios to skip

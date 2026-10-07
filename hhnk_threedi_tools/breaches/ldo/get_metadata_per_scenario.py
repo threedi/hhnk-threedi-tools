@@ -14,6 +14,9 @@ from threedi_api_client.versions import V3Api
 from threedi_scenario_downloader import downloader as dl
 from threedigrid.admin.gridresultadmin import GridH5ResultAdmin
 
+from hhnk_threedi_tools.breaches.breaches import Breaches
+from hhnk_threedi_tools.breaches.ldo.metadata_class import COLUMNS_NAMES, metadata_template, metadata_type
+
 
 # %%
 def _get_api_client() -> V3Api:
@@ -46,54 +49,29 @@ def _get_scalar(series: pd.Series, column_name: str, simulation_name: str):
 
 def _get_breach_info(
     simulation_name: str,
-    region_path: Path,
+    breach: Breaches,
     metadata_df_ns: pd.DataFrame,
     bresen_df: gpd.GeoDataFrame,
 ) -> dict:
-    
-    simulations_data = os.listdir(region_path)
-    if simulation_name.split('_')[-1] == 'JA':
+
+    simulations_data = breach.csv.simulation_data
+    if simulation_name.split("_")[-1] == "JA":
         simulation_name = simulation_name[:-3]
+
     coordinate_x = bresen_df.loc[bresen_df["SC_NAAM"] == simulation_name, "LOC_X"].to_numpy()[0]
     coordinate_y = bresen_df.loc[bresen_df["SC_NAAM"] == simulation_name, "LOC_Y"].to_numpy()[0]
     naam_waterkering = bresen_df.loc[bresen_df["SC_NAAM"] == simulation_name, "LOC_BUITEN"].to_numpy()[0]
     initial_crest_level = bresen_df.loc[bresen_df["SC_NAAM"] == simulation_name, "DBR_BR_INI"].to_numpy()[0]
     material = bresen_df.loc[bresen_df["SC_NAAM"] == simulation_name, "DRB_MAT"].to_numpy()[0]
 
-    # coordinate_x = _get_scalar(
-    #     bresen_df.loc[bresen_df["SC_NAAM"] == simulation_name, "LOC_X"],
-    #     "x-coordina",
-    #     simulation_name,
-    # )
-    # coordinate_y = _get_scalar(
-    #     bresen_df.loc[bresen_df["SC_NAAM"] == simulation_name, "LOC_Y"],
-    #     "y-coordina",
-    #     simulation_name,
-    # )
-    # naam_waterkering = _get_scalar(
-    #     bresen_df.loc[bresen_df["SC_NAAM"] == simulation_name, "LOC_BUITEN"],
-    #     "Naam water",
-    #     simulation_name,
-    # )
-    # initial_crest_level = _get_scalar(
-    #     bresen_df.loc[bresen_df["SC_NAAM"] == simulation_name, "DBR_BR_INI"],
-    #     "In_Cr_lvl",
-    #     simulation_name,
-    # )
-    # material = _get_scalar(
-    #     bresen_df.loc[bresen_df["SC_NAAM"] == simulation_name, "DBR_MAT"],
-    #     "levee_mate",
-    #     simulation_name,
-    # )
+    if simulations_data.exists():
+        csv_simulation_data = pd.read_csv(simulations_data, sep=";")
+        simulation_data = csv_simulation_data.iloc[-1]
 
-    if "simulation_data.csv" in simulations_data:
-        csv_simulation_data = pd.read_csv(region_path / "simulation_data.csv", sep=";")
-        breach_data = csv_simulation_data.iloc[-1]
-
-        bresdiepte = float(str(breach_data["Maximum Breach Depth"]).replace(",", "."))
-        maximale_bresbreedte = np.round(float(str(breach_data["Maximum Breach Width"]).replace(",", ".")), 0)
-        maximaal_bresdebiet = float(str(breach_data["Maximum Breach Discharge"]).replace(",", "."))
-        maximale_buitenwaterstand = float(str(breach_data["Maximum Upstream Water Level"]).replace(",", "."))
+        bresdiepte = float(str(simulation_data["Maximum Breach Depth"]).replace(",", "."))
+        maximale_bresbreedte = np.round(float(str(simulation_data["Maximum Breach Width"]).replace(",", ".")), 0)
+        maximaal_bresdebiet = float(str(simulation_data["Maximum Breach Discharge"]).replace(",", "."))
+        maximale_buitenwaterstand = float(str(simulation_data["Maximum Upstream Water Level"]).replace(",", "."))
     else:
         bresdiepte = _get_scalar(
             metadata_df_ns.loc[metadata_df_ns["SC_NAAM"] == simulation_name, "Bresdiepte"],
@@ -133,85 +111,92 @@ def _get_simulation_info(
     api_client: V3Api,
     simulation_name: str,
     metadata_df_ns: pd.DataFrame,
-    fallback_model_id: int = 75909,
+    fallback_model_id: int,
 ) -> dict:
     simulation = api_client.usage_list(simulation__name=simulation_name)
 
-    if len(simulation.results) != 0:
-        simulation_last = simulation.results[0]
-        model_id = simulation_last.simulation.threedimodel_id
-        model_result = api_client.threedimodels_list(id=model_id)
+    try:
+        if len(simulation.results) != 0:
+            simulation_last = simulation.results[0]
+            model_id = simulation_last.simulation.threedimodel_id
+            model_result = api_client.threedimodels_list(id=model_id)
 
-        schematisation_id = model_result.results[0].schematisation_id
-        revision_number = model_result.results[0].revision_number
-        model_versie = f"Schematisation id {schematisation_id} - Revision #{revision_number}"
+            schematisation_id = model_result.results[0].schematisation_id
+            revision_number = model_result.results[0].revision_number
+            model_versie = f"Schematisation id {schematisation_id} - Revision #{revision_number}"
 
-        simulation_started_raw = simulation_last.started
-        scenariodatum = simulation_started_raw.strftime("%Y-%m-%d")
+            simulation_started_raw = simulation_last.started
+            scenariodatum = simulation_started_raw.strftime("%Y-%m-%d")
 
-        simulation_start_raw = simulation_last.simulation.start_datetime
-        simulation_start = simulation_start_raw.strftime("%d-%m-%y %H:%M %S")
+            simulation_start_raw = simulation_last.simulation.start_datetime
+            simulation_start = simulation_start_raw.strftime("%d-%m-%y %H:%M %S")
 
-        mod_date_raw = model_result.results[0].revision_commit_date
-        mod_date = mod_date_raw.split("T")[0]
+            mod_date_raw = model_result.results[0].revision_commit_date
+            mod_date = mod_date_raw.split("T")[0]
 
-        simulation_end_raw = simulation_last.simulation.end_datetime
-        simulation_end = simulation_end_raw.strftime("%d-%m-%y %H:%M %S")
+            simulation_end_raw = simulation_last.simulation.end_datetime
+            simulation_end = simulation_end_raw.strftime("%d-%m-%y %H:%M %S")
 
-        simulation_duur = simulation_end_raw - simulation_start_raw
-        sim_duur = f"{simulation_duur.days} d 00:00"
+            simulation_duur = simulation_end_raw - simulation_start_raw
+            sim_duur = f"{simulation_duur.days} d 00:00"
 
-        log_start_datum = simulation_last.started.strftime("%d-%m-%Y %H:%M:%S")
-        log_total_time_raw = timedelta(seconds=int(simulation_last.total_time))
-        log_total_time_format = datetime(1, 1, 1) + log_total_time_raw
-        log_total_time = "0 d " + log_total_time_format.strftime("%H:%M")
-        log_end_datum = simulation_last.finished.strftime("%d-%m-%Y %H:%M:%S")
+            log_start_datum = simulation_last.started.strftime("%d-%m-%Y %H:%M:%S")
+            log_total_time_raw = timedelta(seconds=int(simulation_last.total_time))
+            log_total_time_format = datetime(1, 1, 1) + log_total_time_raw
+            log_total_time = "0 d " + log_total_time_format.strftime("%H:%M")
+            log_end_datum = simulation_last.finished.strftime("%d-%m-%Y %H:%M:%S")
 
-    else:
-        model_result = api_client.threedimodels_list(id=fallback_model_id)
-        mod_date_raw = model_result.results[0].revision_commit_date
-        mod_date = mod_date_raw.split("T")[0]
+        elif fallback_model_id is None:
+            print(f'No simulation results found for the scenario. Use fallback_model_id for scenario: {simulation_name}')
+        
+        else:
+            model_result = api_client.threedimodels_list(id=fallback_model_id)
+            mod_date_raw = model_result.results[0].revision_commit_date
+            mod_date = mod_date_raw.split("T")[0]
 
-        model_versie = _get_scalar(
-            metadata_df_ns.loc[metadata_df_ns["SC_NAAM"] == simulation_name, "MOD_VERSIE"],
-            "MOD_VERSIE",
-            simulation_name,
-        )
-        scenariodatum = _get_scalar(
-            metadata_df_ns.loc[metadata_df_ns["SC_NAAM"] == simulation_name, "MOD_DATE"],
-            "MOD_DATE",
-            simulation_name,
-        )
-        log_start_datum = _get_scalar(
-            metadata_df_ns.loc[metadata_df_ns["SC_NAAM"] == simulation_name, "MOD_SIM_ST"],
-            "Start berekening",
-            simulation_name,
-        )
-        log_end_datum = _get_scalar(
-            metadata_df_ns.loc[metadata_df_ns["SC_NAAM"] == simulation_name, "MOD_SIM_EI"],
-            "Einde berekening",
-            simulation_name,
-        )
-        log_total_time = _get_scalar(
-            metadata_df_ns.loc[metadata_df_ns["SC_NAAM"] == simulation_name, "MOD_SIM_DU"],
-            "Rekenduur",
-            simulation_name,
-        )
-        # simulation_start = _get_scalar(
-        #     metadata_df_ns.loc[metadata_df_ns["SC_NAAM"] == simulation_name, "Start simulatie"],
-        #     "Start simulatie",
-        #     simulation_name,
-        # )
-        # simulation_end = _get_scalar(
-        #     metadata_df_ns.loc[metadata_df_ns["SC_NAAM"] == simulation_name, "Einde simulatie"],
-        #     "Einde simulatie",
-        #     simulation_name,
-        # )
-        # sim_duur = _get_scalar(
-        #     metadata_df_ns.loc[metadata_df_ns["SC_NAAM"] == simulation_name, "Duur"],
-        #     "Duur",
-        #     simulation_name,
-        # )
+            model_versie = _get_scalar(
+                metadata_df_ns.loc[metadata_df_ns["SC_NAAM"] == simulation_name, "MOD_VERSIE"],
+                "MOD_VERSIE",
+                simulation_name,
+            )
+            scenariodatum = _get_scalar(
+                metadata_df_ns.loc[metadata_df_ns["SC_NAAM"] == simulation_name, "MOD_DATE"],
+                "MOD_DATE",
+                simulation_name,
+            )
+            log_start_datum = _get_scalar(
+                metadata_df_ns.loc[metadata_df_ns["SC_NAAM"] == simulation_name, "MOD_SIM_ST"],
+                "Start berekening",
+                simulation_name,
+            )
+            log_end_datum = _get_scalar(
+                metadata_df_ns.loc[metadata_df_ns["SC_NAAM"] == simulation_name, "MOD_SIM_EI"],
+                "Einde berekening",
+                simulation_name,
+            )
+            log_total_time = _get_scalar(
+                metadata_df_ns.loc[metadata_df_ns["SC_NAAM"] == simulation_name, "MOD_SIM_DU"],
+                "Rekenduur",
+                simulation_name,
+            )
+            simulation_start = _get_scalar(
+                metadata_df_ns.loc[metadata_df_ns["SC_NAAM"] == simulation_name, "Start simulatie"],
+                "Start simulatie",
+                simulation_name,
+            )
+            simulation_end = _get_scalar(
+                metadata_df_ns.loc[metadata_df_ns["SC_NAAM"] == simulation_name, "Einde simulatie"],
+                "Einde simulatie",
+                simulation_name,
+            )
+            sim_duur = _get_scalar(
+                metadata_df_ns.loc[metadata_df_ns["SC_NAAM"] == simulation_name, "Duur"],
+                "Duur",
+                simulation_name,
+            )
+
+    except Exception as error:
+        print(f"Error occurred while retrieving simulation info for {simulation_name}: {error}" )
 
     return {
         "model_versie": model_versie,
@@ -231,7 +216,9 @@ def _fill_metadata_row(
     simulation_name: str,
     breach_info: dict,
     simulation_info: dict,
+    columns_type: dict,
 ) -> pd.DataFrame:
+    
     initiele_bresbreedte = 10
     duur_verticale_richting = "00 d 00:10"
     methode_bresgroei = 1
@@ -241,6 +228,11 @@ def _fill_metadata_row(
     f1 = 1.79
     f2 = 0.04
     ce = 1
+
+    if metadata_type.REGIONAAL: 
+        return_period = simulation_name.split('T')[1]
+    else: 
+        return_period = 1000
     lowest_crest_level = breach_info["initial_crest_level"] - breach_info["bresdiepte"]
 
     relative_path = "results_3di.nc"
@@ -279,32 +271,29 @@ def _fill_metadata_row(
     metadata_temp.loc[mask, "3Di simulatie resultaat"] = relative_path
     metadata_temp.loc[mask, "Bathymetrie"] = relative_path_dem
     metadata_temp.loc[mask, "Scenario Identificatie"] = simulation_name
-    metadata_temp.loc[mask, "Scenariotype"] = "C"
+    metadata_temp.loc[mask, "Scenariotype"] = columns_type['Scenariotype']
     metadata_temp.loc[mask, "Modelversie"] = simulation_info["model_versie"]
     metadata_temp.loc[mask, "Overschrijdingsfrequentie"] = -9999
-    metadata_temp.loc[mask, "Modelleersoftware"] = "3di"
-    metadata_temp.loc[mask, "Projectnaam"] = "Overstromingsberekeningen primaire doorbraken 2024."
+    metadata_temp.loc[mask, "Modelleersoftware"] = "RANA"
+    metadata_temp.loc[mask, "Projectnaam"] = columns_type['Projectnaam']
     metadata_temp.loc[mask, "Eigenaar overstromingsinformatie"] = 3
-    metadata_temp.loc[mask, "Versie resultaat"] = 1
-    metadata_temp.loc[mask, "Varianttype"] = "Bres"
-    metadata_temp.loc[mask, "Motivatie rekenmethode"] = (
-        "Actualisatie maaiveldmodel, berekening mogelijk op hoge resolutie. "
-        "Boezemsysteem in 1D gemodelleerd t.b.v. verspreiding regionaal systeem."
-    )
+    metadata_temp.loc[mask, "Versie resultaat"] = columns_type['Versie resultaat']
+    metadata_temp.loc[mask, "Varianttype"] = columns_type['Varianttype']
+    metadata_temp.loc[mask, "Motivatie rekenmethode"] = columns_type['Motivatie rekenmethode']
     metadata_temp.loc[mask, "Houdbaarheid scenario"] = "5 tot 10 jaar"
     metadata_temp.loc[mask, "x-coordinaten doorbraaklocatie"] = int(breach_info["coordinate_x"])
     metadata_temp.loc[mask, "y-coordinaten doorbraaklocatie"] = int(breach_info["coordinate_y"])
     metadata_temp.loc[mask, "Naam waterkering"] = breach_info["naam_waterkering"]
     metadata_temp.loc[mask, "Buitenwatertype"] = "boezemwater"
     metadata_temp.loc[mask, "Maximale buitenwaterstand"] = breach_info["maximale_buitenwaterstand"]
-    metadata_temp.loc[mask, "Herhalingstijd buitenwater"] = -9999
+    metadata_temp.loc[mask, "Herhalingstijd buitenwater"] = return_period
     metadata_temp.loc[mask, "Modelresolutie"] = "5"
     metadata_temp.loc[mask, "Regionale keringen of hoge lijnelementen standzeker"] = "ja"
     metadata_temp.loc[mask, "Berekeningsmethode"] = "2d model"
-    metadata_temp.loc[mask, "Doel"] = "Evenwichtsberekening bij regionale keringen"
-    metadata_temp.loc[mask, "Beschrijving scenario"] = "Doorbraak primaire waterkering."
+    metadata_temp.loc[mask, "Doel"] = columns_type['Doel']
+    metadata_temp.loc[mask, "Beschrijving scenario"] = columns_type['Beschrijving scenario']
     metadata_temp.loc[mask, "MOD_VERSIE"] = simulation_info["model_versie"]
-    metadata_temp.loc[mask, "Compartimentering van de boezem"] = "nee"
+    metadata_temp.loc[mask, "Compartimentering van de boezem"] = columns_type['Compartimentering van de boezem']
     metadata_temp.loc[mask, "Gebiedsnaam"] = (
         "gebieden beschermd door genormeerde regionale keringen, langs rivieren, meren, kanalen en boezemwateren"
     )
@@ -317,10 +306,11 @@ def generate_ldo_metadata_per_scenario(
     metadata_template_path: str,
     metadata_nzk_path: str,
     base_folder: str,
-    metadata_per_scenario_folder: str,
+    # metadata_per_scenario_folder: str,
     scenario_id_path: str,
     skip_scenarios: list[str] | None = None,
-    fallback_model_id: int = 75909,
+    columns_type: dict[str, str | int] = COLUMNS_NAMES[metadata_type.REGIONAAL],
+    fallback_model_id: int | None = None,
 ) -> dict:
     if skip_scenarios is None:
         skip_scenarios = []
@@ -346,10 +336,11 @@ def generate_ldo_metadata_per_scenario(
     already_done = []
     failed = []
 
-    Path(metadata_per_scenario_folder).mkdir(parents=True, exist_ok=True)
+    # Path(metadata_per_scenario_folder).mkdir(parents=True, exist_ok=True)
 
-    for region_path in scenario_paths:
-        simulation_name = region_path.name
+    for scenario_path in scenario_paths:
+        breach = Breaches(scenario_path)
+        simulation_name = breach.name
 
         if simulation_name in skip_scenarios_set:
             print(f"Skipping {simulation_name}")
@@ -368,7 +359,7 @@ def generate_ldo_metadata_per_scenario(
 
             breach_info = _get_breach_info(
                 simulation_name=simulation_name,
-                region_path=region_path,
+                breach=breach,
                 metadata_df_ns=metadata_df_ns,
                 bresen_df=bresen_df,
             )
@@ -380,7 +371,7 @@ def generate_ldo_metadata_per_scenario(
                 fallback_model_id=fallback_model_id,
             )
 
-            netcdf_folder = region_path / "01_NetCDF"
+            netcdf_folder = breach.netcdf.path
             resultnc = netcdf_folder / "results_3di.nc"
             resulth5 = netcdf_folder / "gridadmin.h5"
             GridH5ResultAdmin(str(resulth5), resultnc)
@@ -393,7 +384,9 @@ def generate_ldo_metadata_per_scenario(
             )
 
             row0_aligned = row0.iloc[:, : len(metadata_temp.columns)]
-            metadata_output_path = Path(metadata_per_scenario_folder) / f"{simulation_name}.xlsx"
+
+            metadata_output_path = breach.path / f"{breach.name}.xlsx"
+            # metadata_output_path = Path(metadata_per_scenario_folder) / f"{simulation_name}.xlsx"
 
             with pd.ExcelWriter(metadata_output_path, engine="openpyxl", mode="w") as writer:
                 row0_aligned.to_excel(writer, index=False, header=False, startrow=0)
@@ -419,23 +412,16 @@ def generate_ldo_metadata_per_scenario(
 
 
 # %%
+columns_type = COLUMNS_NAMES[metadata_type.REGIONAAL]
 result = generate_ldo_metadata_per_scenario(
     bresen_path=r"H:\03.resultaten\Normering Regionale Keringen\metadata\bress_location_eq.shp",
-    metadata_template_path=r"h:\03.resultaten\Normering Regionale Keringen\ipo_ldo_sctructuur\import_scenarios.xlsx",
+    metadata_template_path=metadata_template["primaire_kering"],
     metadata_nzk_path=r"H:\03.resultaten\Normering Regionale Keringen\metadata\bress_location_eq.shp",
-    base_folder=r"H:\03.resultaten\compartimentering_ns\SBHZ_EQ",
-    metadata_per_scenario_folder=r"h:\03.resultaten\Normering Regionale Keringen\output\scenarios_output\N&S\ldo_structuur\metadata_per_scenario",
-    scenario_id_path=r"h:\03.resultaten\Normering Regionale Keringen\output\scenarios_output\N&S\ldo_structuur\scenarios_ids.xlsx",
-    skip_scenarios=[
-        "IPO_SBLN_CMPTR_24_JA",
-        "IPO_SBLN_CMPTR_5_JA",
-        "IPO_SBLZ_CMPTR_25_JA",
-        "IPO_SBLZ_CMPTR_40_JA",
-        "IPO_SBMN_CMPTR_23_JA",
-        "IPO_SBMZ_CMPTR_75_JA",
-        "IPO_SBMZ_CMPTR_92_JA",
-        "IPO_VRNK_W_CMPTR_5_JA",
-    ],
+    base_folder=r"H:\03.resultaten\RWS_Test",
+    # metadata_per_scenario_folder=r"h:\03.resultaten\Normering Regionale Keringen\output\scenarios_output\N&S\ldo_structuur\metadata_per_scenario",
+    scenario_id_path=r"H:\03.resultaten\RWS_Test\simulations_id.xlsx",
+    columns_type = columns_type
+    skip_scenarios=[],
 )
 print(result)
 

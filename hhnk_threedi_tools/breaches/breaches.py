@@ -34,6 +34,9 @@ FOLDER_STRUCTURE = """
         │ ├── overstroming.png
         │ ├── breach.name.png
         │ └── agg.png
+        ├── breach_data.csv
+        ├── breach_data_agg.csv
+        ├── simulation_data.csv
         
 
     """
@@ -94,6 +97,9 @@ class Breaches(Folder):
         # water depth and gridraw
         self.wss = WSS(self.base, create=create)
 
+        # water depth and gridraw
+        self.csv = csv(self.base)
+
     @property
     def structure(self):
         return f"""  
@@ -135,6 +141,10 @@ class Breaches(Folder):
             "max_rate_of_rise_5m": self.ssm.max_rate_of_rise_5m.hhnk_schematisation_checks.path_if_exists,
             "max_waterdepth_5m": self.ssm.max_waterdepth_5m.path_if_exists,
             "max_waterlevel_5m": self.ssm.max_waterlevel_5m.path_if_exists,
+            # breach data
+            "breach_data": self.base / "breach_data.csv",
+            "breach_data_agg": self.base / "breach_data_agg.csv",
+            "simulation_data": self.base / "simulation_data.csv",
         }
 
     @classmethod
@@ -142,6 +152,29 @@ class Breaches(Folder):
         """Check if folder stucture is available in input folder."""
         SUB_FOLDERS = ["01_NetCDF", "02_WSS", "03_SSM", "04_JPEG"]
         return all([Path(folderpath).joinpath(i).exists() for i in SUB_FOLDERS])
+
+
+class csv(Folder):
+    def __init__(self, base):
+
+        super().__init__(str(base), create=False)
+        self.base_path = Path(base)
+
+        self.breach_data = self._find_csv("breach_data.csv")
+        self.breach_data_agg = self._find_csv("breach_data_agg.csv")
+        self.simulation_data = self._find_csv("simulation_data.csv")
+
+    def _find_csv(self, filename: str):
+        matches = sorted(self.base_path.glob(f"*{filename}"))
+        return matches[0] if matches else None
+
+    @property
+    def as_dict(self):
+        return {
+            "breach_data": self.breach_data,
+            "breach_data_agg": self.breach_data_agg,
+            "simulation_data": self.simulation_data,
+        }
 
 
 class NetCDF(Folder):
