@@ -147,8 +147,10 @@ def _get_simulation_info(
             log_end_datum = simulation_last.finished.strftime("%d-%m-%Y %H:%M:%S")
 
         elif fallback_model_id is None:
-            print(f'No simulation results found for the scenario. Use fallback_model_id for scenario: {simulation_name}')
-        
+            print(
+                f"No simulation results found for the scenario. Use fallback_model_id for scenario: {simulation_name}"
+            )
+
         else:
             model_result = api_client.threedimodels_list(id=fallback_model_id)
             mod_date_raw = model_result.results[0].revision_commit_date
@@ -196,7 +198,7 @@ def _get_simulation_info(
             )
 
     except Exception as error:
-        print(f"Error occurred while retrieving simulation info for {simulation_name}: {error}" )
+        print(f"Error occurred while retrieving simulation info for {simulation_name}: {error}")
 
     return {
         "model_versie": model_versie,
@@ -218,7 +220,7 @@ def _fill_metadata_row(
     simulation_info: dict,
     columns_type: dict,
 ) -> pd.DataFrame:
-    
+
     initiele_bresbreedte = 10
     duur_verticale_richting = "00 d 00:10"
     methode_bresgroei = 1
@@ -229,9 +231,9 @@ def _fill_metadata_row(
     f2 = 0.04
     ce = 1
 
-    if metadata_type.REGIONAAL: 
-        return_period = simulation_name.split('T')[1]
-    else: 
+    if metadata_type.REGIONAAL:
+        return_period = simulation_name.split("T")[1]
+    else:
         return_period = 1000
     lowest_crest_level = breach_info["initial_crest_level"] - breach_info["bresdiepte"]
 
@@ -271,15 +273,15 @@ def _fill_metadata_row(
     metadata_temp.loc[mask, "3Di simulatie resultaat"] = relative_path
     metadata_temp.loc[mask, "Bathymetrie"] = relative_path_dem
     metadata_temp.loc[mask, "Scenario Identificatie"] = simulation_name
-    metadata_temp.loc[mask, "Scenariotype"] = columns_type['Scenariotype']
+    metadata_temp.loc[mask, "Scenariotype"] = columns_type["Scenariotype"]
     metadata_temp.loc[mask, "Modelversie"] = simulation_info["model_versie"]
     metadata_temp.loc[mask, "Overschrijdingsfrequentie"] = -9999
     metadata_temp.loc[mask, "Modelleersoftware"] = "RANA"
-    metadata_temp.loc[mask, "Projectnaam"] = columns_type['Projectnaam']
+    metadata_temp.loc[mask, "Projectnaam"] = columns_type["Projectnaam"]
     metadata_temp.loc[mask, "Eigenaar overstromingsinformatie"] = 3
-    metadata_temp.loc[mask, "Versie resultaat"] = columns_type['Versie resultaat']
-    metadata_temp.loc[mask, "Varianttype"] = columns_type['Varianttype']
-    metadata_temp.loc[mask, "Motivatie rekenmethode"] = columns_type['Motivatie rekenmethode']
+    metadata_temp.loc[mask, "Versie resultaat"] = columns_type["Versie resultaat"]
+    metadata_temp.loc[mask, "Varianttype"] = columns_type["Varianttype"]
+    metadata_temp.loc[mask, "Motivatie rekenmethode"] = columns_type["Motivatie rekenmethode"]
     metadata_temp.loc[mask, "Houdbaarheid scenario"] = "5 tot 10 jaar"
     metadata_temp.loc[mask, "x-coordinaten doorbraaklocatie"] = int(breach_info["coordinate_x"])
     metadata_temp.loc[mask, "y-coordinaten doorbraaklocatie"] = int(breach_info["coordinate_y"])
@@ -290,10 +292,10 @@ def _fill_metadata_row(
     metadata_temp.loc[mask, "Modelresolutie"] = "5"
     metadata_temp.loc[mask, "Regionale keringen of hoge lijnelementen standzeker"] = "ja"
     metadata_temp.loc[mask, "Berekeningsmethode"] = "2d model"
-    metadata_temp.loc[mask, "Doel"] = columns_type['Doel']
-    metadata_temp.loc[mask, "Beschrijving scenario"] = columns_type['Beschrijving scenario']
+    metadata_temp.loc[mask, "Doel"] = columns_type["Doel"]
+    metadata_temp.loc[mask, "Beschrijving scenario"] = columns_type["Beschrijving scenario"]
     metadata_temp.loc[mask, "MOD_VERSIE"] = simulation_info["model_versie"]
-    metadata_temp.loc[mask, "Compartimentering van de boezem"] = columns_type['Compartimentering van de boezem']
+    metadata_temp.loc[mask, "Compartimentering van de boezem"] = columns_type["Compartimentering van de boezem"]
     metadata_temp.loc[mask, "Gebiedsnaam"] = (
         "gebieden beschermd door genormeerde regionale keringen, langs rivieren, meren, kanalen en boezemwateren"
     )
@@ -413,6 +415,7 @@ def generate_ldo_metadata_per_scenario(
 
 # %%
 columns_type = COLUMNS_NAMES[metadata_type.REGIONAAL]
+skip_scenarios = []
 result = generate_ldo_metadata_per_scenario(
     bresen_path=r"H:\03.resultaten\Normering Regionale Keringen\metadata\bress_location_eq.shp",
     metadata_template_path=metadata_template["primaire_kering"],
@@ -420,8 +423,8 @@ result = generate_ldo_metadata_per_scenario(
     base_folder=r"H:\03.resultaten\RWS_Test",
     # metadata_per_scenario_folder=r"h:\03.resultaten\Normering Regionale Keringen\output\scenarios_output\N&S\ldo_structuur\metadata_per_scenario",
     scenario_id_path=r"H:\03.resultaten\RWS_Test\simulations_id.xlsx",
-    columns_type = columns_type
-    skip_scenarios=[],
+    columns_type=columns_type,
+    skip_scenarios=skip_scenarios,
 )
 print(result)
 
