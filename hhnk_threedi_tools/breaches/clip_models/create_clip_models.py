@@ -60,9 +60,9 @@ def run(
 # %%
 if __name__ == "__main__":
     schematisation_directory = Path(
-        r"H:\02.modellen\ROR PRI - dijktrajecten 13-8 en 13-9 - Stroom_NO\work in progress\schematisation"
+        r"H:\02.modellen\RegionalFloodModel\work in progress\schematisation"
     )
-    subareas_path = r"H:\02.modellen\ROR PRI - dijktrajecten 13-8 en 13-9 - Stroom_NO\ROR PRI - dijktrajecten 13-8 en 13-9 - Stroom_NO_test.gpkg"
+    subareas_path = r"\\corp.hhnk.nl\data\Hydrologen_data\Data\02.modellen\RegionalFloodModel\ROR PRI - dijktrajecten 13-8 en 13-9 - Stroom_NO.gpkg"
     field_name = "Deelgebied"
     calculation_grid_cells_path = r"H:\02.modellen\RegionalFloodModel\work in progress\regional_calculation_grid.gpkg"
     subareas_layer_name = None
