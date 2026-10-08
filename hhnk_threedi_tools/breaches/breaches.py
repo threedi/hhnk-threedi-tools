@@ -163,6 +163,7 @@ class csv(Folder):
         self.breach_data = self._find_csv("breach_data.csv")
         self.breach_data_agg = self._find_csv("breach_data_agg.csv")
         self.simulation_data = self._find_csv("simulation_data.csv")
+        self.ldo_metadata = self._find_csv(f"{self.base_path.name}.xlsx")
 
     def _find_csv(self, filename: str):
         matches = sorted(self.base_path.glob(f"*{filename}"))
@@ -174,6 +175,7 @@ class csv(Folder):
             "breach_data": self.breach_data,
             "breach_data_agg": self.breach_data_agg,
             "simulation_data": self.simulation_data,
+            "ldo_metadata": self.ldo_metadata,
         }
 
 

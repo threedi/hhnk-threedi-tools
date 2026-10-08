@@ -4,16 +4,21 @@ from pathlib import Path
 
 # %%
 class metadata_type(Enum):
-    IPO = "regionale_kering"
     PRIMAIRE = "primaire_kering"
     REGIONAAL = "regionale_kering"
     STRESSTEST = "stresstest"
 
 
 metadata_template: dict[str, Path] = {
-    metadata_type.IPO.value: Path(__file__).parent / f"metadata_template_{metadata_type.IPO.value}.xlsx",
-    metadata_type.REGIONAAL.value: Path(__file__).parent / f"metadata_template_{metadata_type.REGIONAAL.value}.xlsx",
-    metadata_type.STRESSTEST.value: Path(__file__).parent / f"metadata_template_{metadata_type.STRESSTEST.value}.xlsx",
+    metadata_type.PRIMAIRE.value: Path(__file__).parent
+    / "metadata_template"
+    / f"metadata_template_{metadata_type.PRIMAIRE.value}.xlsx",
+    metadata_type.REGIONAAL.value: Path(__file__).parent
+    / "metadata_template"
+    / f"metadata_template_{metadata_type.REGIONAAL.value}.xlsx",
+    metadata_type.STRESSTEST.value: Path(__file__).parent
+    / "metadata_template"
+    / f"metadata_template_{metadata_type.STRESSTEST.value}.xlsx",
 }
 
 columns_metadata_primaire: dict[str, str | int] = {
@@ -24,7 +29,7 @@ columns_metadata_primaire: dict[str, str | int] = {
     "Varianttype": "Bres",
     "Motivatie rekenmethode": "Actualisatie maaiveldmodel, berekening mogelijk op hoge resolutie. Boezemsysteem in 1D gemodelleerd t.b.v. verspreiding regionaal systeem."
     "Boezemsysteem in 1D gemodelleerd t.b.v. verspreiding regionaal systeem.",
-    #    "Overschrijdingsfrequentie": f"{{variable}}",
+    #"Overschrijdingsfrequentie": f"{{variable}}",
     "Doel": "Actualisatie aanlevering ROR.",
     "Beschrijving scenario": "Doorbraak primaire waterkering.",
     "Compartimentering van de boezem": "nee",

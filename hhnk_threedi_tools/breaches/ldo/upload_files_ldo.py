@@ -276,14 +276,15 @@ class LdoUploadFolder(hrt.Folder):
 
         raise FileNotFoundError(f"Scenario folder '{self.name}' was not found in {self.scenario_results_path}")
 
-    def copy_files(self):
+    def copy_files(self, breach):
         """Copy NetCDF and DEM to the upload folder"""
-        scenario_folder = self._find_scenario_folder()
+        # scenario_folder = self._find_scenario_folder()
+        scenario_folder = breach
         if scenario_folder is None:
             return
 
         breach = Breaches(scenario_folder)
-        raster_compress_path = breach.wss.path.joinpath("dem.tif")
+        raster_compress_path = breach.wss.path.joinpath("dem_clip.tif")
         if not raster_compress_path.exists():
             raster_vrt = breach.wss.path.joinpath("dem_clip.vrt")
             mask = breach.wss.path.joinpath("mask_flood.gpkg")
@@ -329,12 +330,12 @@ class LdoUploadFolder(hrt.Folder):
 if __name__ == "__main__":
     # Set Paths from the data to be uploaded
 
-    base_path = Path(r"H:\03.resultaten\IPO_Overstromingsberekeningen_compartimentering")
+    base_path = Path(r"H:\03.resultaten\RWS_Test")
     # Excel files per scenario.
     metadata_folder = base_path.joinpath(r"ldo_structuur\metadata_per_scenario")
 
     # Excel file where the ID and size of the upload is going to be stored
-    id_scenarios = base_path.joinpath(r"ldo_structuur\scenarios_ids.xlsx")
+    id_scenarios = base_path.joinpath(r"ldo_structuur\simulations_id.xlsx")
 
     # Folder location where the scenarios are going to be copied
     ldo_structuur_path = base_path.joinpath("ldo_structuur")
@@ -346,7 +347,7 @@ if __name__ == "__main__":
     pd_scenarios = pd.read_excel(id_scenarios)
 
     # Select scenarios ids that area already uploaded to be skiped
-    scenarios_done = pd_scenarios.loc[pd_scenarios["Scenario ID"] > 0, "Naam van het scenario"].to_list()
+    scenarios_done = pd_scenarios.loc[pd_scenarios["scenario_id_ldo"] > 0, "scenario_name"].to_list()
 
     # Sleep time to not burn out the API
     sleeptime = 200  # FIXME 7 minutes seems alot?
@@ -354,12 +355,15 @@ if __name__ == "__main__":
     # Set API key
     ldo_api = LDO_API(api_key=LDO_API_KEY)
 
-    # Loop over al the scenarios
-    scenarios = list(metadata_folder.glob("*.xlsx"))
+    scenario_paths = list(
+        Path(base_path) / "results_ouput" / pd_scenarios["schematitation_name"] / pd_scenarios["scenario_name"]
+    )
+
     # %%
-    for metadata_xlsx in scenarios:
+    for scenario_path in scenario_paths:
         # Set Scenario Name
-        scenario_name = metadata_xlsx.stem
+        breach = Breaches(scenario_path)
+        scenario_name = breach.name
 
         # If the scenario is done the continue
         if scenario_name in scenarios_done:
@@ -368,11 +372,11 @@ if __name__ == "__main__":
             print(f"Processing scenario {scenario_name}")
 
             # Add scenario name to the dataframe if it is not there yet
-            if scenario_name not in pd_scenarios["Naam van het scenario"].values:
+            if scenario_name not in pd_scenarios["scenario_name"].values:
                 pd_scenarios = pd.concat(
                     [
                         pd_scenarios,
-                        pd.DataFrame([{"Naam van het scenario": scenario_name, "Scenario ID": None, "SIZE_KB": None}]),
+                        pd.DataFrame([{"scenario_name": scenario_name, "scenariod_id_ldo": None, "SIZE_KB": None}]),
                     ],
                     ignore_index=True,
                 )
@@ -383,25 +387,23 @@ if __name__ == "__main__":
             # Create folder with data to upload.
             ldo_structuur = LdoUploadFolder(scenario_path, scenario_results_path=scenario_results_path)
 
-            copied = ldo_structuur.copy_files()
+            copied = ldo_structuur.copy_files(breach)
             # if not copied:
             #     continue
 
             zip_path = ldo_structuur.zip_files()
 
             # Upload excel file from the scenario, and retrieve json infomration
-            excel_id, scenario_id = ldo_api.upload_excel(metadata_xlsx=metadata_xlsx)
+            excel_id, scenario_id = ldo_api.upload_excel(metadata_xlsx=breach.csv.ldo_metadata)
 
             # Upload zip file
             ldo_api.upload_zip_file(zip_path=zip_path, excel_id=excel_id)
 
             # Save the id of upload from the scenario
-            pd_scenarios.loc[pd_scenarios["Naam van het scenario"] == scenario_name, "Scenario ID"] = scenario_id
+            pd_scenarios.loc[pd_scenarios["scenario_name"] == scenario_name, "scenario_id_ldo"] = scenario_id
 
             # Save the size of the scenario in the metdata dataframe
-            pd_scenarios.loc[pd_scenarios["Naam van het scenario"] == scenario_name, "SIZE_KB"] = (
-                ldo_structuur.zip_size
-            )
+            pd_scenarios.loc[pd_scenarios["scenario_name"] == scenario_name, "SIZE_KB"] = ldo_structuur.zip_size
 
             # Clear outputs
             shutil.rmtree(ldo_structuur.path)
@@ -410,5 +412,6 @@ if __name__ == "__main__":
             pd_scenarios.to_excel(id_scenarios, index=False, engine="openpyxl")
             logger.info(f"Finished processing {scenario_name}")
             time.sleep(sleeptime)
+
 
 # %%

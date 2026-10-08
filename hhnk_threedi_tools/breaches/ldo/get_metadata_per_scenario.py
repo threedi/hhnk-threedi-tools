@@ -54,13 +54,14 @@ def _get_breach_info(
     bresen_df: gpd.GeoDataFrame,
 ) -> dict:
 
+    simulation_name = simulation_name.replace(" ", "_")
     simulations_data = breach.csv.simulation_data
     if simulation_name.split("_")[-1] == "JA":
         simulation_name = simulation_name[:-3]
 
     coordinate_x = bresen_df.loc[bresen_df["SC_NAAM"] == simulation_name, "LOC_X"].to_numpy()[0]
     coordinate_y = bresen_df.loc[bresen_df["SC_NAAM"] == simulation_name, "LOC_Y"].to_numpy()[0]
-    naam_waterkering = bresen_df.loc[bresen_df["SC_NAAM"] == simulation_name, "LOC_BUITEN"].to_numpy()[0]
+    naam_waterkering = bresen_df.loc[bresen_df["SC_NAAM"] == simulation_name, "LOC_NAAM_w"]
     initial_crest_level = bresen_df.loc[bresen_df["SC_NAAM"] == simulation_name, "DBR_BR_INI"].to_numpy()[0]
     material = bresen_df.loc[bresen_df["SC_NAAM"] == simulation_name, "DRB_MAT"].to_numpy()[0]
 
@@ -275,7 +276,7 @@ def _fill_metadata_row(
     metadata_temp.loc[mask, "Scenario Identificatie"] = simulation_name
     metadata_temp.loc[mask, "Scenariotype"] = columns_type["Scenariotype"]
     metadata_temp.loc[mask, "Modelversie"] = simulation_info["model_versie"]
-    metadata_temp.loc[mask, "Overschrijdingsfrequentie"] = -9999
+    metadata_temp.loc[mask, "Overschrijdingsfrequentie"] = return_period
     metadata_temp.loc[mask, "Modelleersoftware"] = "RANA"
     metadata_temp.loc[mask, "Projectnaam"] = columns_type["Projectnaam"]
     metadata_temp.loc[mask, "Eigenaar overstromingsinformatie"] = 3
@@ -310,14 +311,9 @@ def generate_ldo_metadata_per_scenario(
     base_folder: str,
     # metadata_per_scenario_folder: str,
     scenario_id_path: str,
-    skip_scenarios: list[str] | None = None,
     columns_type: dict[str, str | int] = COLUMNS_NAMES[metadata_type.REGIONAAL],
     fallback_model_id: int | None = None,
 ) -> dict:
-    if skip_scenarios is None:
-        skip_scenarios = []
-
-    skip_scenarios_set = set(skip_scenarios)
 
     row0 = pd.read_excel(metadata_template_path, header=None, nrows=1)
     # metadata_df_ns = pd.read_excel(metadata_nzk_path, sheet_name="Scenario data", header=1)
@@ -326,12 +322,16 @@ def generate_ldo_metadata_per_scenario(
     bresen_df = gpd.read_file(bresen_path)
     scenario_id_df = pd.read_excel(scenario_id_path)
 
-    processed_done = set(scenario_id_df["Naam van het scenario"].dropna().astype(str).tolist())
+    scenario_done_mask = scenario_id_df["metadata_collected"] == 1
+    processed_done = set(scenario_id_df.loc[scenario_done_mask, "scenario_name"].dropna().astype(str))
+
+    selected_scenarios_mask = scenario_id_df["metadata_collected"].isna()
+    scenario_id_df = scenario_id_df[selected_scenarios_mask]
 
     api_client = _get_api_client()
     dl.set_api_key(api_client)
 
-    scenario_paths = [p for p in Path(base_folder).iterdir() if p.is_dir()]
+    scenario_paths = list(Path(base_folder) / scenario_id_df["schematitation_name"] / scenario_id_df["scenario_name"])
 
     processed = []
     skipped = []
@@ -344,10 +344,10 @@ def generate_ldo_metadata_per_scenario(
         breach = Breaches(scenario_path)
         simulation_name = breach.name
 
-        if simulation_name in skip_scenarios_set:
-            print(f"Skipping {simulation_name}")
-            skipped.append(simulation_name)
-            continue
+        # if simulation_name in skip_scenarios_set:
+        #     print(f"Skipping {simulation_name}")
+        #     skipped.append(simulation_name)
+        #     continue
 
         if simulation_name in processed_done:
             print(f"Scenario {simulation_name} already done")
@@ -383,6 +383,7 @@ def generate_ldo_metadata_per_scenario(
                 simulation_name=simulation_name,
                 breach_info=breach_info,
                 simulation_info=simulation_info,
+                columns_type=columns_type,
             )
 
             row0_aligned = row0.iloc[:, : len(metadata_temp.columns)]
@@ -394,7 +395,7 @@ def generate_ldo_metadata_per_scenario(
                 row0_aligned.to_excel(writer, index=False, header=False, startrow=0)
                 metadata_temp.to_excel(writer, index=False, header=True, startrow=1)
 
-            scenario_id_df.loc[len(scenario_id_df), "Naam van het scenario"] = simulation_name
+            scenario_id_df.loc[(scenario_id_df["scenario_name"] == simulation_name), "metadata_collected"] = 1
             scenario_id_df.to_excel(scenario_id_path, index=False)
 
             processed_done.add(simulation_name)
@@ -414,18 +415,28 @@ def generate_ldo_metadata_per_scenario(
 
 
 # %%
-columns_type = COLUMNS_NAMES[metadata_type.REGIONAAL]
+column_class = metadata_type.PRIMAIRE
+columns_type = COLUMNS_NAMES[column_class]
 skip_scenarios = []
 result = generate_ldo_metadata_per_scenario(
-    bresen_path=r"H:\03.resultaten\Normering Regionale Keringen\metadata\bress_location_eq.shp",
-    metadata_template_path=metadata_template["primaire_kering"],
+    # bresen_path=r"H:\03.resultaten\Normering Regionale Keringen\metadata\bress_location_eq.shp",
+    bresen_path=r"H:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\metadata\bresslocaties.gpkg",
+    metadata_template_path=metadata_template[column_class.value],
     metadata_nzk_path=r"H:\03.resultaten\Normering Regionale Keringen\metadata\bress_location_eq.shp",
     base_folder=r"H:\03.resultaten\RWS_Test",
     # metadata_per_scenario_folder=r"h:\03.resultaten\Normering Regionale Keringen\output\scenarios_output\N&S\ldo_structuur\metadata_per_scenario",
     scenario_id_path=r"H:\03.resultaten\RWS_Test\simulations_id.xlsx",
     columns_type=columns_type,
-    skip_scenarios=skip_scenarios,
+    fallback_model_id=None,
 )
 print(result)
 
+# %%
+bresen_path = r"H:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\metadata\bresslocaties.gpkg"
+metadata_template_path = metadata_template[column_class.value]
+metadata_nzk_path = r"H:\03.resultaten\Normering Regionale Keringen\metadata\bress_location_eq.shp"
+base_folder = r"H:\03.resultaten\RWS_Test"
+# metadata_per_scenario_folder=r"h:\03.resultaten\Normering Regionale Keringen\output\scenarios_output\N&S\ldo_structuur\metadata_per_scenario",
+scenario_id_path = r"H:\03.resultaten\RWS_Test\simulations_id.xlsx"
+columns_type = columns_type
 # %%

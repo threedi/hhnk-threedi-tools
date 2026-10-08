@@ -11,7 +11,7 @@ import pandas as pd
 from osgeo import gdal
 
 from hhnk_threedi_tools.breaches.breaches import Breaches
-from hhnk_threedi_tools.core.result_rasters.grid_to_raster import (
+from hhnk_threedi_tools.core.result_rasters.grid_to_raster_idw import (
     GridToWaterDepth,
     GridToWaterLevel,
 )
@@ -161,7 +161,11 @@ def calculate_depth_raster(region_paths, dem_path, OVERWRITE, EPSG, spatialResol
             # Set the parameters for the calculator
 
             with GridToWaterLevel(
-                dem_path=dem_clip_output, grid_gdf=new_grid_gdf, wlvl_column="wlvl_max", interpolator_type="idw"
+                # dem_path=dem_clip_output, grid_gdf=new_grid_gdf, wlvl_column="wlvl_max", interpolator_type="idw"
+                dem_path=dem_clip_output,
+                grid_gdf=new_grid_gdf,
+                wlvl_column="wlvl_max",
+                interpolator_type="idw",
             ) as raster_calc:
                 wlvl_raster = raster_calc.run(
                     output_file=output_waterlevel_raster,
@@ -427,14 +431,20 @@ if __name__ == "__main__":
     # Set the paths for the DEM, landuse file, base folder and configuration file
     dem_path = r"H:\02.modellen\RegionalFloodModel\work in progress\schematisation\rasters\dem_1_met_amstelmeer.tif"
     landuse_file = r"H:\01.basisgegevens\rasters\landgebruik\landuse2021_tiles\combined_rasters.vrt"
-    base_folder = r"H:\03.resultaten\compartimentering_ns\SBHZ_EQ"
+    base_folder = Path(r"H:\03.resultaten\RWS_Test")
     cfg_file = schadeschatter_path / "01_data/cfg/cfg_lizard.cfg"
+    id_scenarios = base_folder.joinpath(r"ldo_structuur\simulations_id.xlsx")
+    pd_scenarios = pd.read_excel(id_scenarios)
+    region_paths = list(
+        Path(base_folder) / "results_ouput" / pd_scenarios["schematitation_name"] / pd_scenarios["scenario_name"]
+    )
+
     # ipo_paths_path = r"E:\03.resultaten\Normering Regionale Keringen\output\ipo_scenarios_paths.csv"
     # region_paths = [r"Y:\03.resultaten\Normering Regionale Keringen\output\IPO_SBLN_JA_WIP_DONE\IPO_SBLN_968_JA"]
     # Set the parameters for the calculation
     OVERWRITE = True
     EPSG = "EPSG:28992"
-    scenario_name = ["IPO_SBHZ_EQ_1314_JA"]
+    # scenario_name = ["IPO_SBHZ_EQ_1314_JA"]
     spatialResolution = 5
 
     # Define scenarios to skip
@@ -442,7 +452,7 @@ if __name__ == "__main__":
     # I have to structure better this code, the idea is that it finish everything in one go.
     # So frist: calculate damage, second csv, and the create pgn. This process needs to be done by scenario
     specific_scenario = True
-    region_paths = get_paths(base_folder, scenario_name=scenario_name, specific_scenario=specific_scenario, skip=skip)
+    # region_paths = get_paths(base_folder, scenario_name=scenario_name, specific_scenario=specific_scenario, skip=skip)
 
     calculate_depth_raster(region_paths, dem_path, OVERWRITE, EPSG, spatialResolution)
     calculate_damage_raster(region_paths, landuse_file, cfg_file, EPSG)
@@ -453,4 +463,33 @@ import sys
 
 print(sys.executable)
 
+# %%
+# # %%
+# import sys
+
+# sys.path.append(r"D:\github\jacostabarragan\hhnk-hydro-core\src\hhnk_hydro_core")
+# from pathlib import Path
+
+# import geopandas as gpd
+# import hhnk_hydro_core as hhc
+# import numpy as np
+
+# grid_gdf = gpd.read_file(
+#     Path(
+#         r"H:\03.resultaten\RWS_Test\results_ouput\ROR PRI - dijktrajecten 13-8 en 13-9 - Stroom_NO\ROR-PRI-ZEEVANGSZEEDIJK_3.5-T100000\02_WSS\grid_raw.gpkg"
+#     )
+# )#%%
+# dem_path = r"H:\02.modellen\RegionalFloodModel\work in progress\schematisation\rasters\dem_1_met_amstelmeer.tif"
+# water_level_raster = hhc.raster.workflows.grid_to_water_level(
+#     dem_path=Path(dem_path),
+#     grid_gdf=grid_gdf,
+#     wlvl_column="wlvl_max",
+#     raster_out=Path(
+#         r"H:\03.resultaten\RWS_Test\results_output\ROR PRI - dijktrajecten 12-1, 12-2, 13-6 en 13-7 - Deel 1105\ROR-PRI-Wieringermeer_v2.tif"
+#     ),
+#     chunksize=1024,
+#     grid_nodata_value=np.nan,
+#     reorder=True,
+#     overwrite=False,
+# )
 # %%

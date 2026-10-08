@@ -191,6 +191,7 @@ def start_simulation_breaches(model_folder, organisation_name, scenarios, filter
         if breach_code_split[0][-2:] == "_1":
             # All codes have _1 at the end of name. We dont know why this is here, but remove it.
             scenario_name = f"ROR-PRI-{breach_code_split[0][:-2]}-T{breach_code_split[1]}"
+            scenario_name = scenario_name.replace(" ", "_")
         elif breach_code_split[0].__contains__("test"):
             scenario_name = breach_row["properties"]["code"]
 
@@ -235,7 +236,7 @@ def start_simulation_breaches(model_folder, organisation_name, scenarios, filter
                 "potential_breach": breach.id,
                 "duration_till_max_depth": 600,
                 "maximum_breach_depth": 100,
-                "initial_width": 50,
+                "initial_width": 10,
                 "offset": 0,
             },
         )

@@ -315,7 +315,10 @@ class Submodels:
                 cutlineLayer=cutline_layer_name,
                 cropToCutline=True,
                 dstSRS=input_crs.ExportToWkt(),
-                creationOptions=["COMPRESS=DEFLATE"],
+                creationOptions=["COMPRESS=DEFLATE",
+                                #  "PREDICTOR=2",
+                                 "TILED=YES",
+                                 "BIGTIFF=YES",],
             )
 
             clipped_ds = gdal.Warp(str(output_path), src_ds, options=options)
