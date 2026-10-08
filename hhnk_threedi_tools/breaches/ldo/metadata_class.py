@@ -29,7 +29,7 @@ columns_metadata_primaire: dict[str, str | int] = {
     "Varianttype": "Bres",
     "Motivatie rekenmethode": "Actualisatie maaiveldmodel, berekening mogelijk op hoge resolutie. Boezemsysteem in 1D gemodelleerd t.b.v. verspreiding regionaal systeem."
     "Boezemsysteem in 1D gemodelleerd t.b.v. verspreiding regionaal systeem.",
-    #"Overschrijdingsfrequentie": f"{{variable}}",
+    # "Overschrijdingsfrequentie": f"{{variable}}",
     "Doel": "Actualisatie aanlevering ROR.",
     "Beschrijving scenario": "Doorbraak primaire waterkering.",
     "Compartimentering van de boezem": "nee",
