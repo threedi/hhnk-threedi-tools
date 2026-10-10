@@ -1,7 +1,11 @@
 import logging
+from os import path
 from pathlib import Path
 
+from hhnk_threedi_tools.git_model_repo.utils.setup_logging import setup_logging
+
 logger = logging.getLogger(__name__)
+setup_logging(logging.INFO)
 
 
 def run(repo_root: Path, commit_msg_rel_file_path: str = None):
@@ -30,13 +34,16 @@ def run(repo_root: Path, commit_msg_rel_file_path: str = None):
     SystemExit
         If the commit message is shorter than 8 characters.
     """
-    if not commit_msg_rel_file_path:
-        file_path = repo_root / ".git/COMMIT_EDITMSG"
-    else:
-        file_path = repo_root / commit_msg_rel_file_path
 
-    commit_msg = file_path.open("r").read()
+    # if not commit_msg_rel_file_path:
+    #     file_path = repo_root / ".git/COMMIT_EDITMSG"
+    # else:
+    #     file_path = repo_root / commit_msg_rel_file_path
 
-    if len(commit_msg) < 8:
-        print("commit message is too short")
+    file_path = repo_root / ".git/COMMIT_EDITMSG"
+    commit_msg = path.getsize(file_path)
+    logger.info(f"commit message length is {commit_msg} characters")
+
+    if commit_msg < 10:
+        logger.info("commit message is too short, minimum of 10 characters required")
         exit(1)

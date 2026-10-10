@@ -22,7 +22,5 @@ def run(repo_root: str, commit_msg_rel_file_path: str):
     None
     """
     # todo: implement this function
-    print("prepare-commit-msg called, please implement", commit_msg_rel_file_path)
-    exit(1)  # Exit immediately to prevent any further processing
-
-    pass
+    logger.debug("prepare-commit-msg called (placeholder): %s", commit_msg_rel_file_path)
+    return None
