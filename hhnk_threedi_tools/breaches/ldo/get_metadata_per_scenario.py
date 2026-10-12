@@ -415,28 +415,29 @@ def generate_ldo_metadata_per_scenario(
 
 
 # %%
-column_class = metadata_type.PRIMAIRE
-columns_type = COLUMNS_NAMES[column_class]
-skip_scenarios = []
-result = generate_ldo_metadata_per_scenario(
-    # bresen_path=r"H:\03.resultaten\Normering Regionale Keringen\metadata\bress_location_eq.shp",
-    bresen_path=r"H:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\metadata\bresslocaties.gpkg",
-    metadata_template_path=metadata_template[column_class.value],
-    metadata_nzk_path=r"H:\03.resultaten\Normering Regionale Keringen\metadata\bress_location_eq.shp",
-    base_folder=r"H:\03.resultaten\RWS_Test",
-    # metadata_per_scenario_folder=r"h:\03.resultaten\Normering Regionale Keringen\output\scenarios_output\N&S\ldo_structuur\metadata_per_scenario",
-    scenario_id_path=r"H:\03.resultaten\RWS_Test\simulations_id.xlsx",
-    columns_type=columns_type,
-    fallback_model_id=None,
-)
-print(result)
+if __name__ == "__main__":
+    column_class = metadata_type.PRIMAIRE
+    columns_type = COLUMNS_NAMES[column_class]
+    skip_scenarios = []
+    result = generate_ldo_metadata_per_scenario(
+        # bresen_path=r"H:\03.resultaten\Normering Regionale Keringen\metadata\bress_location_eq.shp",
+        bresen_path=r"H:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\metadata\bresslocaties.gpkg",
+        metadata_template_path=metadata_template[column_class.value],
+        metadata_nzk_path=r"H:\03.resultaten\Normering Regionale Keringen\metadata\bress_location_eq.shp",
+        base_folder=r"H:\03.resultaten\RWS_Test",
+        # metadata_per_scenario_folder=r"h:\03.resultaten\Normering Regionale Keringen\output\scenarios_output\N&S\ldo_structuur\metadata_per_scenario",
+        scenario_id_path=r"H:\03.resultaten\RWS_Test\simulations_id.xlsx",
+        columns_type=columns_type,
+        fallback_model_id=None,
+    )
+    print(result)
 
-# %%
-bresen_path = r"H:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\metadata\bresslocaties.gpkg"
-metadata_template_path = metadata_template[column_class.value]
-metadata_nzk_path = r"H:\03.resultaten\Normering Regionale Keringen\metadata\bress_location_eq.shp"
-base_folder = r"H:\03.resultaten\RWS_Test"
-# metadata_per_scenario_folder=r"h:\03.resultaten\Normering Regionale Keringen\output\scenarios_output\N&S\ldo_structuur\metadata_per_scenario",
-scenario_id_path = r"H:\03.resultaten\RWS_Test\simulations_id.xlsx"
-columns_type = columns_type
+# # %%
+# bresen_path = r"H:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\metadata\bresslocaties.gpkg"
+# metadata_template_path = metadata_template[column_class.value]
+# metadata_nzk_path = r"H:\03.resultaten\Normering Regionale Keringen\metadata\bress_location_eq.shp"
+# base_folder = r"H:\03.resultaten\RWS_Test"
+# # metadata_per_scenario_folder=r"h:\03.resultaten\Normering Regionale Keringen\output\scenarios_output\N&S\ldo_structuur\metadata_per_scenario",
+# scenario_id_path = r"H:\03.resultaten\RWS_Test\simulations_id.xlsx"
+# columns_type = columns_type
 # %%

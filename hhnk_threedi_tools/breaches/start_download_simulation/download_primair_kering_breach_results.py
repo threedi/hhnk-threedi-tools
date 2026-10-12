@@ -23,7 +23,6 @@ from threedi_scenario_downloader import downloader as dl
 from threedigrid.admin.gridresultadmin import GridH5AggregateResultAdmin, GridH5ResultAdmin
 
 from hhnk_threedi_tools.breaches.breaches import Breaches
-from hhnk_threedi_tools.breaches.ldo.metadata_class import COLUMNS_NAMES, metadata_template, metadata_type
 from hhnk_threedi_tools.breaches.maps_graphs.create_breach_graph import create_breach_graph
 from hhnk_threedi_tools.breaches.start_download_simulation.download_results_from_3di import download_results_from_3di
 
