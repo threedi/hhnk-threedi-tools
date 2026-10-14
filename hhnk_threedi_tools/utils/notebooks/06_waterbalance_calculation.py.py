@@ -50,6 +50,10 @@
 # - Calculate the water balance for all timesteps.
 # - Generate water balance tables and results.
 # - Save the output in a new folder within the batch directo
+
+# %%
+
+
 try:
     from hhnk_threedi_tools.utils.notebooks.notebook_setup import setup_notebook
 except:
@@ -66,10 +70,6 @@ from IPython.display import HTML, display
 from hhnk_threedi_tools import Folders
 from hhnk_threedi_tools.core.waterbalance_calculation import plot_waterbalance
 from hhnk_threedi_tools.core.waterbalance_calculation.waterbalance import WaterBalance
-
-# %matplotlib inline
-
-# %%
 
 folder = Folders(notebook_data["polder_folder"])
 
