@@ -106,8 +106,6 @@ def get_waterbalance(paths):
 
 
 get_waterbalance(paths)
-# %%
-
 # %% [markdown]
 ## Water Balance Plot
 # Create water balance plots from exported 3Di water balance CSV files.

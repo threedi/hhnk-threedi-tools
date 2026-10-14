@@ -184,8 +184,8 @@ def plot_water_balance(
 
 
 def plot_water_balance_volumes(
-    csv_path: str | os.PathLike[str],
-    output_path: str | os.PathLike[str],
+    csv_path,
+    output_path,
 ) -> None:
     """Plot the total water balance volumes as a bar chart.
 
@@ -260,7 +260,7 @@ def plot_water_balance_volumes(
         separators.append(len(plot_values) - 0.5)
 
     # Add components that do not belong to an inflow/outflow pair
-    other_components: list[tuple[str, float, str | None]] = [
+    other_components = [
         (
             "Rain on 2D",
             values.get("rain", 0.0),
