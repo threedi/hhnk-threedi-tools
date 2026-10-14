@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 
 from hhnk_threedi_tools import Folders
@@ -159,7 +160,7 @@ def plot_water_balance(
     for column in data.columns:
         ax.plot(
             time_hours,
-            data[column],
+            data[column].to_numpy(),
             label=column,
         )
 
