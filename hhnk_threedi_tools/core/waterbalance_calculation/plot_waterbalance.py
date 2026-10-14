@@ -114,8 +114,8 @@ labels: dict[str, str] = {
 
 
 def plot_water_balance(
-    csv_path: str | os.PathLike[str],
-    output_path: str | os.PathLike[str],
+    csv_path,
+    output_path,
 ) -> None:
     """Plot the water balance through time.
 
