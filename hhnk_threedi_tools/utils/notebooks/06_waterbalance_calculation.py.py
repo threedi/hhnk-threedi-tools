@@ -107,8 +107,9 @@ def get_waterbalance(paths, batch_folder_name):
 
 # %% [markdown]
 ## Inputs **get_waterbalance()*
+# In the path dictionary, add the name of the polygon GeoPackage that defines the area for which the water balance should be calculated.
+# Add the batch folder name to the list if you want to calculate the water balance for a specific batch folder. If you want to calculate the water balance for all batch folders, leave the list empty.
 # %%
-
 paths = {folder.path: "water_berging_JA.gpkg"}
 batch_folder_name = ["huidig_blok"]
 get_waterbalance(paths, batch_folder_name)
@@ -116,10 +117,10 @@ get_waterbalance(paths, batch_folder_name)
 # %% [markdown]
 ## Water Balance Plot
 # Create water balance plots from exported 3Di water balance CSV files.
+# %%
 
 
 def get_waterbalance_plot(batch_path, batch_folder_name):
-
     batch_folders = os.listdir(batch_path)
     if batch_folder_name:
         batch_folders = batch_folder_name
@@ -141,6 +142,7 @@ def get_waterbalance_plot(batch_path, batch_folder_name):
 
 # %% [markdown]
 ## Inputs **get_waterbalance_plot()**
+# add the batch folder name to the list if you want to create water balance plots for a specific batch folder. If you want to create water balance plots for all batch folders, leave the list empty.
 # %%
 
 batch_path = folder.threedi_results.batch.path
