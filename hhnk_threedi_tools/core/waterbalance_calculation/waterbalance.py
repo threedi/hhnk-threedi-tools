@@ -64,7 +64,7 @@ class WaterBalance:
         self.threedi_result = threedi_result
         self.polygon_gdf = polygon_gdf
 
-        self._polygon = polygon_gdf.to_crs(28992).geometry.union_all()
+        self._polygon = polygon_gdf.to_crs(28992).geometry.unary_union
         self._grid = threedi_result.grid
         self._aggregate_grid = threedi_result.aggregate_grid
         self._admin = threedi_result.admin
