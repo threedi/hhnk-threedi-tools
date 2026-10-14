@@ -80,9 +80,6 @@ folder = Folders(notebook_data["polder_folder"])
 #     r"H:\02.modellen\bergen_noord_variant_3_JA": "waterberging_v3.shp",
 # }
 
-paths = {folder.path: "water_berging_JA.gpkg"}
-batch_folder_name = ["huidig_blok"]
-
 
 def get_waterbalance(paths, batch_folder_name):
     for path, waterbergin_polygon in paths.items():
@@ -108,24 +105,44 @@ def get_waterbalance(paths, batch_folder_name):
                 print(f"scenario {folder.name} / {download} done")
 
 
+# %% [markdown]
+## Inputs **get_waterbalance()*
+# %%
+
+paths = {folder.path: "water_berging_JA.gpkg"}
+batch_folder_name = ["huidig_blok"]
 get_waterbalance(paths, batch_folder_name)
+
 # %% [markdown]
 ## Water Balance Plot
 # Create water balance plots from exported 3Di water balance CSV files.
+
+
+def get_waterbalance_plot(batch_path, batch_folder_name):
+
+    batch_folders = os.listdir(batch_path)
+    if batch_folder_name:
+        batch_folders = batch_folder_name
+    for results in batch_folders:
+        output_raster_path = batch_path / results / "02_output_rasters"
+        downloads = os.listdir(output_raster_path)
+        for download in downloads:
+            plot_water_balance_folder = output_raster_path / download / f"waterbalance_{download}"
+            csv_water_balance_timeseries = plot_water_balance_folder / "water_balance_timeseries.csv"
+            csv_water_balance_volumen = plot_water_balance_folder / "water_balance_volumes.csv"
+            output_path_timeseries = plot_water_balance_folder / "water_balance_timeseries.png"
+            output_path_net = plot_water_balance_folder / "water_balance_volume.png"
+            # if os.path.exists(output_path_timeseries):
+            #     continue
+            plot_waterbalance.plot_water_balance(csv_water_balance_timeseries, output_path_timeseries)
+            plot_waterbalance.plot_water_balance_volumes(csv_water_balance_volumen, output_path_net)
+            print(f"Water balance plots created successfully.\nOutput folder: {plot_water_balance_folder}")
+
+
+# %% [markdown]
+## Inputs **get_waterbalance_plot()**
 # %%
 
 batch_path = folder.threedi_results.batch.path
-batch_folders = os.listdir(batch_path)
-for results in batch_folders:
-    output_raster_path = batch_path / results / "02_output_rasters"
-    downloads = os.listdir(output_raster_path)
-    for download in downloads:
-        plot_water_balance_folder = output_raster_path / download / f"waterbalance_{download}"
-        csv_water_balance_timeseries = plot_water_balance_folder / "water_balance_timeseries.csv"
-        csv_water_balance_volumen = plot_water_balance_folder / "water_balance_volumes.csv"
-        output_path_timeseries = plot_water_balance_folder / "water_balance_timeseries.png"
-        output_path_net = plot_water_balance_folder / "water_balance_volume.png"
-        # if os.path.exists(output_path_timeseries):
-        #     continue
-        plot_waterbalance.plot_water_balance(csv_water_balance_timeseries, output_path_timeseries)
-        plot_waterbalance.plot_water_balance_volumes(csv_water_balance_volumen, output_path_net)
+batch_folder_name = ["huidig_blok"]
+get_waterbalance_plot(batch_path, batch_folder_name)
