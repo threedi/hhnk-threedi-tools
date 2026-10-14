@@ -27,7 +27,9 @@ class ModelFolder(hrt.Folder):
         self.add_file("schema", rf"work in progress/schematisation/{self.name}.gpkg")
 
 
-def start_simulation_breaches(model_folder, organisation_name, scenarios, filter_id, metadata_path, wait_time):
+def start_simulation_breaches(
+    model_folder, organisation_name, scenarios, filter_id, initial_width, metadata_path, wait_time
+):
     api_keys_path = (
         rf"{os.getenv('APPDATA')}\3Di\QGIS3\profiles\default\python\plugins\hhnk_threedi_plugin\api_key.txt"
     )
@@ -236,7 +238,7 @@ def start_simulation_breaches(model_folder, organisation_name, scenarios, filter
                 "potential_breach": breach.id,
                 "duration_till_max_depth": 600,
                 "maximum_breach_depth": 100,
-                "initial_width": 10,
+                "initial_width": initial_width,
                 "offset": 0,
             },
         )
@@ -286,12 +288,14 @@ def start_simulation_breaches(model_folder, organisation_name, scenarios, filter
 # %%
 if __name__ == "__main__":
     # Use organisation_name 'BWN HHNK' for standard simulation. Use the other one for very specific cases
-    organisation_name = "BWN HHNK"
-    # organisation_name = 'Hoogheemraadschap Hollands Noorderkwartier'
+    # organisation_name = "BWN HHNK"
+    organisation_name = "Hoogheemraadschap Hollands Noorderkwartier"
 
     # Set the model name as it is either in 3di or in the local folder.
     base_folder = r"H:\02.modellen"
     model_name = "ROR PRI - dijktrajecten 13-8 en 13-9 - Stroom_NO"
+    # model_name = "ROR PRI - dijktrajecten 12-1, 12-2, 13-6 en 13-7 - Deel 1105"
+
     model_folder = ModelFolder(rf"{base_folder}\{model_name}")
     model_folder.schema.base
     # Select the return periods you want to start with. If you want to use all of them keep it.
@@ -300,6 +304,8 @@ if __name__ == "__main__":
     # id_filter corresponds to the column 'id' of the potential breach table of the model we are working with.
     # In case of willing to run all the potential breach, leave the list empty  --> filter_id = []
     filter_id = [100048, 100021]
+    # filter_id = [100042]
+
     # location of the metadata file. Important to have at least 2 version: One for uploading and run model and the other one for downloading.
     metadata_path = Path(
         r"H:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\metadata\v7\metadata_shapefile.shp"
@@ -307,6 +313,9 @@ if __name__ == "__main__":
 
     # Time (in seconds) to wait until the script tries again to upload a model. We use it to not overload the API.
     wait_time = 3600  # 1  hour
-    # %%
-    start_simulation_breaches(model_folder, organisation_name, scenarios, filter_id, metadata_path, wait_time)
+    initial_width = 10  # m
+
+    start_simulation_breaches(
+        model_folder, organisation_name, scenarios, filter_id, initial_width, metadata_path, wait_time
+    )
     # %%
