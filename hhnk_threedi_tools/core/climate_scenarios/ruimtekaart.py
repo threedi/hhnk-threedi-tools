@@ -54,7 +54,8 @@ def create_ruimtekaart(pgb_file, output_path, batch_fd):
     """Calcualtion of ruimtekaart. Calculates the total volume
     and damage per region for multiple calculations and calculates
     an indicator whether it is relatively cheap the store extra
-    water in that region."""
+    water in that region.
+    """
     pgb_gdf = pgb_file.load()
     num_regions = len(pgb_gdf)
 
@@ -73,7 +74,7 @@ def create_ruimtekaart(pgb_file, output_path, batch_fd):
         logger.info("Aggregating '{}'".format(input_raster.base))
 
         # calculate sum per region.
-        volumes_m3[:, i] = input_raster.sum_labels(label_raster=labels_raster, label_idx=labels_index)
+        volumes_m3[:, i] = list(input_raster.sum_labels(label_raster=labels_raster, label_idx=labels_index).values())
         volumes_m3[:, i] *= input_raster.pixelarea  # take pixelsize into account.
 
     # DAMAGE
@@ -85,7 +86,7 @@ def create_ruimtekaart(pgb_file, output_path, batch_fd):
         logger.info("Aggregating '{}'".format(input_raster.base))
 
         # calculate sum per region.
-        damages_euro[:, i] = input_raster.sum_labels(label_raster=labels_raster, labels_idx=labels_index)
+        damages_euro[:, i] = list(input_raster.sum_labels(label_raster=labels_raster, label_idx=labels_index).values())
 
     # add the total sum per raster to the last row
     m3 = np.concatenate([volumes_m3, np.sum(volumes_m3, axis=0)[np.newaxis]], axis=0)
