@@ -69,6 +69,7 @@ from hhnk_threedi_tools.core.waterbalance_calculation.waterbalance import WaterB
 
 # %matplotlib inline
 
+# %%
 
 folder = Folders(notebook_data["polder_folder"])
 
@@ -110,6 +111,7 @@ get_waterbalance(paths)
 # %% [markdown]
 ## Water Balance Plot
 # Create water balance plots from exported 3Di water balance CSV files.
+# %%
 
 batch_path = folder.threedi_results.batch.path
 batch_folders = os.listdir(batch_path)
