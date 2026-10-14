@@ -81,14 +81,17 @@ folder = Folders(notebook_data["polder_folder"])
 # }
 
 paths = {folder.path: "water_berging_JA.gpkg"}
+batch_folder_name = ["huidig_blok"]
 
 
-def get_waterbalance(paths):
+def get_waterbalance(paths, batch_folder_name):
     for path, waterbergin_polygon in paths.items():
         folder = Folders(path)
         polygon_gdf = gpd.read_file(folder.source_data.path / waterbergin_polygon)
         batch_path = folder.threedi_results.batch.path
         batch_folders = os.listdir(batch_path)
+        if batch_folder_name:
+            batch_folders = batch_folder_name
         for results in batch_folders:
             downloads_path = batch_path / results / "01_downloads"
             output_raster_path = batch_path / results / "02_output_rasters"
@@ -105,7 +108,7 @@ def get_waterbalance(paths):
                 print(f"scenario {folder.name} / {download} done")
 
 
-get_waterbalance(paths)
+get_waterbalance(paths, batch_folder_name)
 # %% [markdown]
 ## Water Balance Plot
 # Create water balance plots from exported 3Di water balance CSV files.
