@@ -106,7 +106,7 @@ def get_waterbalance(paths, batch_folder_name):
 
 
 # %% [markdown]
-## Inputs **get_waterbalance()*
+## Inputs **get_waterbalance()**
 # In the path dictionary, add the name of the polygon GeoPackage that defines the area for which the water balance should be calculated.
 # Add the batch folder name to the list if you want to calculate the water balance for a specific batch folder. If you want to calculate the water balance for all batch folders, leave the list empty.
 # %%
