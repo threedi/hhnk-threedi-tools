@@ -36,9 +36,7 @@ FOLDER_STRUCTURE = """
         │ └── agg.png
         ├── breach_data.csv
         ├── breach_data_agg.csv
-        ├── simulation_data.csv
-        
-
+        ├── simulation_data.csv     
     """
 
 

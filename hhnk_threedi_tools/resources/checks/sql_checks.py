@@ -255,5 +255,36 @@ SELECT 'impervious_surface_map' AS impervious_surface_map,
 WHERE (
 SELECT COUNT(*)
 FROM impervious_surface_map
-) = 0;
+) = 0
+UNION ALL
+SELECT 'boundary_condition_1d' as table_name,
+boundary_condition_1d.id as id,
+'ERROR: timeseries is empty' as error
+FROM boundary_condition_1d
+WHERE timeseries IS NULL
+OR TRIM(timeseries) = ''
+UNION ALL
+SELECT 'boundary_condition_1d' as table_name,
+boundary_condition_1d.id as id,
+'ERROR: timeseries contains an empty row' as error
+FROM boundary_condition_1d
+WHERE timeseries LIKE '
+%'
+OR timeseries LIKE '%
+'
+OR timeseries LIKE '%
+
+%'
+UNION ALL
+SELECT 'boundary_condition_1d' as table_name,
+boundary_condition_1d.id as id,
+'ERROR: timeseries contains spaces' as error
+FROM boundary_condition_1d
+WHERE timeseries LIKE '% %'
+UNION ALL
+SELECT 'boundary_condition_1d' as table_name,
+boundary_condition_1d.id as id,
+'ERROR: timeseries contains no comma' as error
+FROM boundary_condition_1d
+WHERE timeseries NOT LIKE '%,%';
 """

@@ -496,5 +496,4 @@ if __name__ == "__main__":
     self = NetcdfToGPKG(threedi_result=threedi_result.netcdf, use_aggregate=True)
     timesteps_seconds = ["max"]
     self.run(wlvl_correction=wlvl_correction)
-
 # %%
