@@ -10,6 +10,7 @@ import os
 import time
 from pathlib import Path
 
+import fiona
 import geopandas as gpd
 import hhnk_research_tools as hrt
 from threedi_api_client.api import ThreediApi
@@ -26,7 +27,9 @@ class ModelFolder(hrt.Folder):
         self.add_file("schema", rf"work in progress/schematisation/{self.name}.gpkg")
 
 
-def start_simulation_breaches(model_folder, organisation_name, scenarios, filter_id, metadata_path, wait_time):
+def start_simulation_breaches(
+    model_folder, organisation_name, scenarios, filter_id, initial_width, metadata_path, wait_time
+):
     api_keys_path = (
         rf"{os.getenv('APPDATA')}\3Di\QGIS3\profiles\default\python\plugins\hhnk_threedi_plugin\api_key.txt"
     )
@@ -118,16 +121,19 @@ def start_simulation_breaches(model_folder, organisation_name, scenarios, filter
 
     # Find the breaches in the model
     potential_breaches = api_client.threedimodels_potentialbreaches_list(my_model_id, limit=9999)
-    potential_breach_gdf = gpd.read_file(model_folder.schema.path, layer="potential_breach")
-
-    display_names = potential_breach_gdf.display_name.values
     breach_ids_scenario = []
-    for display_name in display_names:
-        for scenario in scenarios:
-            if display_name.split("-")[-1] == str(scenario):
-                active_breach = potential_breach_gdf[potential_breach_gdf["display_name"] == display_name]
-                breach_ids_scenario.append(active_breach.id.values[0])
 
+    with fiona.open(
+        model_folder.schema.path,
+        layer="potential_breach",
+    ) as src:
+        for feature in src:
+            display_name = feature["properties"]["display_name"]
+            breach_id = int(feature["id"])
+
+            for scenario in scenarios:
+                if display_name.split("-")[-1] == str(scenario):
+                    breach_ids_scenario.append(breach_id)
     # Select the breach id from de geopackge to be use later to select the connected_point
     id_filter = []
     if not filter_id:
@@ -176,13 +182,21 @@ def start_simulation_breaches(model_folder, organisation_name, scenarios, filter
         # datum_str = datetime.datetime.now().date().strftime("%y-%m-%d")
 
         # select active breach according to connected point id from API
-        breach_row = potential_breach_gdf[potential_breach_gdf["id"] == breach.connected_pnt_id].iloc[0]
+        with fiona.open(
+            model_folder.schema.path,
+            layer="potential_breach",
+        ) as src:
+            breach_row = next(feature for feature in src if int(feature["id"]) == breach.connected_pnt_id)
 
         # Set scenario name according to active breach
-        breach_code_split = breach_row.code.split("-")
+        breach_code_split = breach_row["properties"]["code"].split("-")
         if breach_code_split[0][-2:] == "_1":
             # All codes have _1 at the end of name. We dont know why this is here, but remove it.
             scenario_name = f"ROR-PRI-{breach_code_split[0][:-2]}-T{breach_code_split[1]}"
+            scenario_name = scenario_name.replace(" ", "_")
+        elif breach_code_split[0].__contains__("test"):
+            scenario_name = breach_row["properties"]["code"]
+
         else:
             raise ValueError("A scenario_name may have been used for the wrong breach in the past. Please check this.")
 
@@ -224,7 +238,7 @@ def start_simulation_breaches(model_folder, organisation_name, scenarios, filter
                 "potential_breach": breach.id,
                 "duration_till_max_depth": 600,
                 "maximum_breach_depth": 100,
-                "initial_width": 50,
+                "initial_width": initial_width,
                 "offset": 0,
             },
         )
@@ -245,13 +259,13 @@ def start_simulation_breaches(model_folder, organisation_name, scenarios, filter
         #                     simulation_pk=simulation.id, data={})
         # time.sleep(sleeptime)
 
-        # update metadata
-        metadata_gdf.loc[metadata_gdf["SC_NAAM"] == scenario_name, "SC_IDENT"] = simulation.id
-        metadata_gdf.loc[metadata_gdf["SC_NAAM"] == scenario_name, "ID"] = breach.line_id
-        metadata_gdf.loc[metadata_gdf["SC_NAAM"] == scenario_name, "SC_DATE"] = datum_str
-        metadata_gdf.loc[metadata_gdf["SC_NAAM"] == scenario_name, "MOD_VERSIE"] = model_versie
+        # # update metadata
+        # metadata_gdf.loc[metadata_gdf["SC_NAAM"] == scenario_name, "SC_IDENT"] = simulation.id
+        # metadata_gdf.loc[metadata_gdf["SC_NAAM"] == scenario_name, "ID"] = breach.line_id
+        # metadata_gdf.loc[metadata_gdf["SC_NAAM"] == scenario_name, "SC_DATE"] = datum_str
+        # metadata_gdf.loc[metadata_gdf["SC_NAAM"] == scenario_name, "MOD_VERSIE"] = model_versie
 
-        metadata_gdf.to_file(metadata_path, driver="Shapefile")
+        # metadata_gdf.to_file(metadata_path, driver="Shapefile")
 
         # Start simulation
         queue_jam_bwn = True
@@ -274,27 +288,34 @@ def start_simulation_breaches(model_folder, organisation_name, scenarios, filter
 # %%
 if __name__ == "__main__":
     # Use organisation_name 'BWN HHNK' for standard simulation. Use the other one for very specific cases
-    organisation_name = "BWN HHNK"
-    # organisation_name = 'Hoogheemraadschap Hollands Noorderkwartier'
+    # organisation_name = "BWN HHNK"
+    organisation_name = "Hoogheemraadschap Hollands Noorderkwartier"
 
     # Set the model name as it is either in 3di or in the local folder.
-    base_folder = r"E:\02.modellen"
-    model_name = "ROR PRI - dijktraject 13-5"
+    base_folder = r"H:\02.modellen"
+    model_name = "ROR PRI - dijktrajecten 13-8 en 13-9 - Stroom_NO"
+    # model_name = "ROR PRI - dijktrajecten 12-1, 12-2, 13-6 en 13-7 - Deel 1105"
+
     model_folder = ModelFolder(rf"{base_folder}\{model_name}")
     model_folder.schema.base
     # Select the return periods you want to start with. If you want to use all of them keep it.
-    scenarios = [1000]
+    scenarios = [100000]
 
     # id_filter corresponds to the column 'id' of the potential breach table of the model we are working with.
     # In case of willing to run all the potential breach, leave the list empty  --> filter_id = []
-    filter_id = []
+    filter_id = [100048, 100021]
+    # filter_id = [100042]
+
     # location of the metadata file. Important to have at least 2 version: One for uploading and run model and the other one for downloading.
     metadata_path = Path(
-        r"E:\03.resultaten\Overstromingsberekeningen primaire doorbraken 2024\metadata\v6\metadata_shapefile.shp"
+        r"H:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\metadata\v7\metadata_shapefile.shp"
     )
 
     # Time (in seconds) to wait until the script tries again to upload a model. We use it to not overload the API.
     wait_time = 3600  # 1  hour
+    initial_width = 10  # m
 
-    start_simulation_breaches(model_folder, organisation_name, scenarios, filter_id, metadata_path, wait_time)
+    start_simulation_breaches(
+        model_folder, organisation_name, scenarios, filter_id, initial_width, metadata_path, wait_time
+    )
     # %%

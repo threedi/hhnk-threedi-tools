@@ -94,8 +94,22 @@ class Submodels:
         self.columns_names = COLUMNS_NAMES[self.schematisation_type]
 
         # Locate required files / directories
-        self.schematisation_gpkg = self._find_file("*.gpkg", GeoPackageFileNotFoundError)
-        self.schematisation_sqlite = self._find_file("*.sqlite", SQLiteFileNotFoundError)
+        if self.schematisation_type == SchematisationType.RANA:
+            self.schematisation_gpkg = self._find_file(
+                "*.gpkg",
+                GeoPackageFileNotFoundError,
+            )
+            self.schematisation_sqlite = None
+        else:
+            self.schematisation_gpkg = self._find_file(
+                "*.gpkg",
+                GeoPackageFileNotFoundError,
+            )
+            self.schematisation_sqlite = self._find_file(
+                "*.sqlite",
+                SQLiteFileNotFoundError,
+            )
+
         self.rasters_directory = self._find_rasters_directory()
 
         # Load and validate sub-areas
@@ -117,17 +131,6 @@ class Submodels:
             and self.calculation_grid_cells.crs != self.subareas.crs
         ):
             self.calculation_grid_cells = self.calculation_grid_cells.to_crs(self.subareas.crs)
-
-        self.output_gpkgs = []
-        # Process each sub-area
-        for _, subarea in tqdm(
-            self.subareas.iterrows(),
-            total=len(self.subareas),
-            desc="Clipping sub-areas",
-            unit="subarea",
-        ):
-            output_gpkg = self._clip(subarea, schematisation_type)
-            self.output_gpkgs.append(output_gpkg)
 
     # helpers
 
@@ -174,15 +177,16 @@ class Submodels:
         layers_dict: dict[str, gpd.GeoDataFrame] = {}
 
         for layer_name in fiona.listlayers(gpkg_path):
+            # layer_name = "connection_node"
             with fiona.open(gpkg_path, layer=layer_name) as src:
                 records = list(src)
                 crs = src.crs
 
             if records:
                 gdf = gpd.GeoDataFrame.from_features(records, crs=crs)
-
-                # ALWAYS use Fiona FID
-                gdf["id"] = [int(feat["id"]) for feat in records]
+                # RANA uses the Fiona feature ID (FID).
+                if self.schematisation_type == SchematisationType.RANA:
+                    gdf["id"] = [int(feat["id"]) for feat in records]
 
             else:
                 gdf = gpd.read_file(
@@ -198,35 +202,49 @@ class Submodels:
 
         return layers_dict
 
-    @staticmethod
     def _write_layer(
+        self,
         gdf: gpd.GeoDataFrame,
         gpkg_path: Path,
         layer_name: str,
     ) -> None:
 
-        # IDs a mantener
+        # IDs to keep
         valid_ids = set(gdf["id"].astype(int))
 
-        # Open gedal and delete what it not good.
-        ds = ogr.Open(str(gpkg_path), update=1)  # update=1 → write
+        # Open GeoPackage in update mode
+        ds = ogr.Open(str(gpkg_path), update=1)
         layer = ds.GetLayerByName(layer_name)
 
         ids_to_delete = []
+
         for feature in layer:
-            if feature.GetFID() not in valid_ids:
+            # RANA uses the Fiona/OGR feature ID (FID).
+            if self.schematisation_type == SchematisationType.RANA:
+                feature_id = feature.GetFID()
+
+            # THREEDI uses the logical 'id' field.
+            else:
+                feature_id = feature.GetField("id")
+
+            # Delete the feature if its ID is not part of the filtered selection.
+            if feature_id not in valid_ids:
                 ids_to_delete.append(feature.GetFID())
 
         layer.ResetReading()
+
         print(layer_name, "delete:", len(ids_to_delete))
+
         layer.StartTransaction()
 
+        # DeleteFeature always requires the OGR FID,
+        # even when the selection was based on the logical THREEDI id.
         for fid in ids_to_delete:
             layer.DeleteFeature(fid)
 
         layer.CommitTransaction()
 
-        ds = None  # cerrar
+        ds = None
 
     # Spatial helpers
 
@@ -239,7 +257,9 @@ class Submodels:
     ) -> gpd.GeoDataFrame:
         """Spatial join that returns only the original columns (no join artefacts)."""
         original_columns = layer.columns.tolist()
-        joined = gpd.sjoin(layer, mask, how=how, predicate=predicate, rsuffix="_mask")
+
+        # use only the geometry mask[["geometry"]] to avoid future errors with  id or code that coud have the layer and the mask
+        joined = gpd.sjoin(layer, mask[["geometry"]], how=how, predicate=predicate, rsuffix="_mask")
         return joined[original_columns]
 
     # clip raster
@@ -295,7 +315,12 @@ class Submodels:
                 cutlineLayer=cutline_layer_name,
                 cropToCutline=True,
                 dstSRS=input_crs.ExportToWkt(),
-                creationOptions=["COMPRESS=DEFLATE"],
+                creationOptions=[
+                    "COMPRESS=DEFLATE",
+                    #  "PREDICTOR=2",
+                    "TILED=YES",
+                    "BIGTIFF=YES",
+                ],
             )
 
             clipped_ds = gdal.Warp(str(output_path), src_ds, options=options)
@@ -323,16 +348,18 @@ class Submodels:
         output_directory = self.schematisation_directory / name
         output_directory.mkdir(parents=True, exist_ok=True)
 
-        output_gpkg = output_directory / (self.schematisation_gpkg.stem + "_" + name + self.schematisation_gpkg.suffix)
-        output_sqlite = output_directory / (
-            self.schematisation_sqlite.stem + "_" + name + self.schematisation_sqlite.suffix
-        )
-
         # Copy base schematisation files.
         # This preserves the original GeoPackage schema (including primary keys,
         # column types and empty layers) for all layers before any filtering.
+
+        output_gpkg = output_directory / (self.schematisation_gpkg.stem + "_" + name + self.schematisation_gpkg.suffix)
         shutil.copy(self.schematisation_gpkg, output_gpkg)
-        shutil.copy(self.schematisation_sqlite, output_sqlite)
+
+        if schematisation_type == SchematisationType.THREEDI:
+            output_sqlite = output_directory / (
+                self.schematisation_sqlite.stem + "_" + name + self.schematisation_sqlite.suffix
+            )
+            shutil.copy(self.schematisation_sqlite, output_sqlite)
 
         #  Read all layers from the copied GeoPackage
         layers = self._read_geopackage_layers(output_gpkg)
@@ -392,6 +419,8 @@ class Submodels:
             channel[cn["connection_node_id_start"]].isin(valid_cn_ids)
             & channel[cn["connection_node_id_end"]].isin(valid_cn_ids)
         ]
+        print(f"selected channels {len(filtered_channel)}")
+
         filtered_cross_section_loc = cross_section_loc[cross_section_loc["channel_id"].isin(filtered_channel["id"])]
 
         # Rebuild connection-node set from connected structures only
@@ -536,43 +565,76 @@ class Submodels:
             self._clip_raster(tif_path, dissolved_mask, output_rasters_dir / tif_path.name)
         return output_gpkg
 
+    def run(self) -> list[Path]:
+        """Create a submodel for each sub-area."""
 
-# Public API
+        self.output_gpkgs = []
+
+        for _, subarea in tqdm(
+            self.subareas.iterrows(),
+            total=len(self.subareas),
+            desc="Clipping sub-areas",
+            unit="subarea",
+        ):
+            output_gpkg = self._clip(
+                subarea,
+                self.schematisation_type,
+            )
+            self.output_gpkgs.append(output_gpkg)
+
+        return self.output_gpkgs
 
 
-def run_submodel(
-    schematisation_directory: str | Path,
-    subareas_path: str | Path,
-    field_name: str,
-    calculation_grid_cells_path: str | Path,
-    subareas_layer_name: str | None = None,
-    calculation_grid_cells_layer_name: str | None = None,
-    isolate_1d: bool = False,
-    schematisation_type: SchematisationType = SchematisationType.RANA,
-) -> list[Path]:
-    """Entry point for creating sub-models from a 3Di schematisation.
+# def run_submodel(
+#     schematisation_directory: str | Path,
+#     subareas_path: str | Path,
+#     field_name: str,
+#     calculation_grid_cells_path: str | Path,
+#     subareas_layer_name: str | None = None,
+#     calculation_grid_cells_layer_name: str | None = None,
+#     isolate_1d: bool = False,
+#     schematisation_type: SchematisationType = SchematisationType.RANA,
+# ) -> list[Path]:
+#     """Entry point for creating sub-models from a 3Di schematisation.
 
-    Parameters
-    --
-    schematisation_directory:
-        Folder containing the .gpkg, .sqlite and optional rasters/ sub-folder.
-    subareas_path:
-        Vector file with sub-area polygons.
-    field_name:
-        Column in *subareas_path* with unique sub-area names.
-    calculation_grid_cells_path:
-        Vector file with 3Di calculation-grid cells.
-    subareas_layer_name:
-        Layer name inside *subareas_path* (GeoPackage only).
-    calculation_grid_cells_layer_name:
-        Layer name inside *calculation_grid_cells_path* (GeoPackage only).
-    isolate_1d:
-        If True, 1-D elements outside the sub-area are kept but their
-        exchange_type is set to 101 (isolated) instead of being removed.
-    schematisation_type:
-        SchematisationType.RANA (default) or SchematisationType.THREEDI.
-        Controls which GeoPackage layer names are used for reading and writing.
-    """
+#     Parameters
+#     --
+#     schematisation_directory:
+#         Folder containing the .gpkg, .sqlite and optional rasters/ sub-folder.
+#     subareas_path:
+#         Vector file with sub-area polygons.
+#     field_name:
+#         Column in *subareas_path* with unique sub-area names.
+#     calculation_grid_cells_path:
+#         Vector file with 3Di calculation-grid cells.
+#     subareas_layer_name:
+#         Layer name inside *subareas_path* (GeoPackage only).
+#     calculation_grid_cells_layer_name:
+#         Layer name inside *calculation_grid_cells_path* (GeoPackage only).
+#     isolate_1d:
+#         If True, 1-D elements outside the sub-area are kept but their
+#         exchange_type is set to 101 (isolated) instead of being removed.
+#     schematisation_type:
+#         SchematisationType.RANA (default) or SchematisationType.THREEDI.
+#         Controls which GeoPackage layer names are used for reading and writing.
+# """
+
+# return submodels.output_gpkgs
+
+
+# %%
+if __name__ == "__main__":
+    schematisation_directory = Path(
+        r"H:\02.modellen\ROR PRI - dijktrajecten 13-8 en 13-9 - Stroom_NO\work in progress\schematisation"
+    )
+    subareas_path = r"H:\02.modellen\ROR PRI - dijktrajecten 13-8 en 13-9 - Stroom_NO\ROR PRI - dijktrajecten 13-8 en 13-9 - Stroom_NO_test.gpkg"
+    field_name = "Deelgebied"
+    calculation_grid_cells_path = r"H:\02.modellen\RegionalFloodModel\work in progress\regional_calculation_grid.gpkg"
+    subareas_layer_name = None
+    calculation_grid_cells_layer_name = "cell"
+    isolate_1d = True
+    schematisation_type = SchematisationType.RANA
+
     submodels = Submodels(
         schematisation_directory=schematisation_directory,
         subareas_path=subareas_path,
@@ -583,19 +645,7 @@ def run_submodel(
         isolate_1d=isolate_1d,
         schematisation_type=schematisation_type,
     )
-    return submodels.output_gpkgs
 
+    submodels.run()
 
-# %%
-if __name__ == "__main__":
-    run_submodel(
-        schematisation_directory=Path(r"H:\02.modellen\RegionalFloodModel\work in progress\schematisation"),
-        subareas_path=r"H:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\deelgebieden\ROR PRI - dijktrajecten 13-8 en 13-9 - Stroom_NO.gpkg",
-        field_name="Deelgebied",
-        calculation_grid_cells_path=r"H:\02.modellen\RegionalFloodModel\work in progress\regional_calculation_grid.gpkg",
-        subareas_layer_name=None,
-        calculation_grid_cells_layer_name="cell",
-        isolate_1d=True,
-        schematisation_type=SchematisationType.THREEDI,
-    )
 # %%

@@ -8,15 +8,15 @@ from osgeo import ogr
 
 from hhnk_threedi_tools.breaches.clip_models.submodel_constants import COLUMNS_NAMES, LAYER_NAMES, SchematisationType
 
-list_layers = [
-    # "potential_breach",
-    "connection_node",
-    "1d_boundary_condition",
-    "orifice",
-    "cross_section_location",
-    "channel",
-    "exchange_line",
-]
+# list_layers = [
+#     # "potential_breach",
+#     "connection_node",
+#     "1d_boundary_condition",
+#     "orifice",
+#     "cross_section_location",
+#     "channel",
+#     "exchange_line",
+# ]
 
 
 def read_geopackage_layers(
@@ -90,6 +90,18 @@ def clean_submodel_boundary(
 
     polygon_gdf = gpd.read_file(polygon_path)
 
+    cn = COLUMNS_NAMES[schematisation_type]
+    ln = LAYER_NAMES[schematisation_type]
+
+    list_layers = [
+        ln["connection_node"],
+        ln["boundary_condition_1d"],
+        ln["orifice"],
+        ln["cross_section_location"],
+        ln["channel"],
+        ln["exchange_line"],
+    ]
+
     layers_dict = read_geopackage_layers(
         model_path_gpkg=model_path_gpkg,
         schematisation_type=schematisation_type,
@@ -97,13 +109,12 @@ def clean_submodel_boundary(
         list_layers=list_layers,
     )
 
-    boundary_condition = layers_dict["1d_boundary_condition"]
-    connection_node = layers_dict["connection_node"]
-    orifice = layers_dict["orifice"]
-    cross_section_location = layers_dict["cross_section_location"]
-    channel = layers_dict["channel"]
-    exchange_line = layers_dict["exchange_line"]
-    # potential_breach = layers_dict["potential_breach"]
+    boundary_condition = layers_dict[ln["boundary_condition_1d"]]
+    connection_node = layers_dict[ln["connection_node"]]
+    orifice = layers_dict[ln["orifice"]]
+    cross_section_location = layers_dict[ln["cross_section_location"]]
+    channel = layers_dict[ln["channel"]]
+    exchange_line = layers_dict[ln["exchange_line"]]
 
     # select channels crosses polygons boundaries
     channel_crossing_boundary = gpd.sjoin(
@@ -192,13 +203,13 @@ def clean_submodel_boundary(
     #     potential_breach["channel_id"].isin(channel_selected["id"].tolist())
     # ]
     return {
-        # "potential_breach": potential_breach_selected["id"].tolist(),
-        "1d_boundary_condition": bc_out_of_intersection["id"].tolist(),
-        "orifice": orifice_out_of_intersection["id"].tolist(),
-        "connection_node": connection_node_selected["id"].tolist(),
-        "channel": channel_selected["id"].tolist(),
-        "cross_section_location": crosssection_selection["id"].tolist(),
-        "exchange_line": exchange_line_selected["id"].tolist(),
+        # ln["potential_breach"]: potential_breach_selected["id"].tolist(),
+        ln["boundary_condition_1d"]: bc_out_of_intersection["id"].tolist(),
+        ln["orifice"]: orifice_out_of_intersection["id"].tolist(),
+        ln["connection_node"]: connection_node_selected["id"].tolist(),
+        ln["channel"]: channel_selected["id"].tolist(),
+        ln["cross_section_location"]: crosssection_selection["id"].tolist(),
+        ln["exchange_line"]: exchange_line_selected["id"].tolist(),
     }
 
 
@@ -267,12 +278,13 @@ def set_isolated_1d(
         # 3Di uses the value stored in the 'id' field.
         if schematisation_type == SchematisationType.RANA:
             feature_id = feature.GetFID()
+            field_name = "exchange_type"
         else:
             feature_id = feature.GetField("id")
-
+            field_name = "calculation_type"
         # Only update features selected for isolation.
         if feature_id in ids_to_isolate:
-            feature.SetField("calculation_type", isolated_value)
+            feature.SetField(field_name, isolated_value)
             layer.SetFeature(feature)
 
     layer.CommitTransaction()
@@ -400,3 +412,5 @@ def run(
 
 # model_gpkg_path = r"H:\02.modellen\RegionalFloodModel\work in progress\schematisation\ROR PRI - dijktrajecten 13-8 en 13-9 - Stroom_NO\RegionalFloodModel_ROR PRI - dijktrajecten 13-8 en 13-9 - Stroom_NO.gpkg"
 # polygon_path = r"H:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\deelgebieden\ROR PRI - dijktrajecten 13-8 en 13-9 - Stroom_NO.gpkg"
+
+# %%
