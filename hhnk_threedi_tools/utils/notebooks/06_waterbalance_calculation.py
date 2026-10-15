@@ -80,7 +80,6 @@ folder = Folders(notebook_data["polder_folder"])
 # }
 
 
-
 def get_waterbalance(paths, batch_folder_name):
     for path, waterbergin_polygon in paths.items():
         folder = Folders(path)
