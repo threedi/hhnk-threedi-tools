@@ -83,8 +83,6 @@ class GridadminFromSchematisation:
             logger.info(f"Saved computational grid to {self.gpkg_output}")
         return self.gridadmin
 
-   
-   
 
 # %%columns={"A": "a", "B": "c"}
 if True:
