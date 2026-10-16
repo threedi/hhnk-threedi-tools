@@ -8,6 +8,7 @@ import geopandas as gpd
 sys.path.append(r"D:\github\jacostabarragan\hhnk-hydro-core\src")
 
 from hhnk_hydro_core.files_and_folders.utils import check_create_new_file
+from threedigrid.admin.exporters.geopackage import GeopackageExporter
 from threedigrid_builder import make_gridadmin
 
 logger = logging.getLogger(__name__)
@@ -36,23 +37,26 @@ class GridadminFromSchematisation:
         output_fp: Path = None,
         overwrite: bool = True,
     ):
-        self.gridadmin_fp = Path(schematisation_fp)
+        self.schematisation_fp = Path(schematisation_fp)
         self.dem_fp = Path(dem_fp)
+
         if output_fp is None:
             basepath = schematisation_fp.parents[1]
-            self.output_fp = basepath / "gridadmin.gpkg"  # TODO where to put this file?
+            self.gpkg_output = basepath / "computation_grid.gpkg"
         else:
-            self.output_fp = Path(output_fp)
+            self.gridadmin = Path(output_fp)
+
+        self.gridadmin = self.gpkg_output.with_suffix(".h5")
         self.overwrite = overwrite
 
     @property
     def create(self) -> bool:
-        can_create, message = check_create_new_file(path=self.output_fp, overwrite=self.overwrite)
+        can_create, message = check_create_new_file(path=self.gridadmin, overwrite=self.overwrite)
         if can_create:
             logger.info(message)
             return can_create
         else:
-            raise FileExistsError(f"{self.gridadmin_fp} already exists.")
+            raise FileExistsError(f"{self.schematisation_fp} already exists.")
 
     def run_make_gridadmin(self):
         """
@@ -61,56 +65,27 @@ class GridadminFromSchematisation:
         """
 
         if self.create:
-            gridadmin = make_gridadmin(sqlite_path=self.gridadmin_fp, dem_path=self.dem_fp, out_path=self.output_fp)
-            logger.info(f"Saved grid, nodes and lines to {self.output_fp}")
+            make_gridadmin(
+                sqlite_path=self.schematisation_fp,
+                dem_path=self.dem_fp,
+                out_path=self.gridadmin,
+            )
 
-            # TODO add metadata user and time result modified utils function
-            # TODO test with breach lines? Seperate layer?
-        return self.output_fp
+            logger.info(f"Saved gridadmin to {self.gridadmin}")
 
-    def transform_columns_values(self):
-        replace_data_nodes = {
-            "NODE_2D_OPEN_WATER": 1,
-            "NODE_1D_NO_STORAGE": 3,
-            "NODE_1D_BOUNDARIES": 7,
-            "NODE_1D_STORAGE": 4,
-        }
+            exporter = GeopackageExporter(
+                self.gridadmin,
+                self.gpkg_output,
+            )
 
-        replace_data_lines = {
-            "LINE_1D2D_DOUBLE_CONNECTED_CLOSED": 53,
-            "LINE_1D2D_DOUBLE_CONNECTED_OPEN_WATER": 54,
-            "LINE_1D2D_SINGLE_CONNECTED_CLOSED": 51,
-            "LINE_1D2D_SINGLE_CONNECTED_OPEN_WATER": 52,
-            "LINE_1D_CONNECTED": 2,
-            "LINE_1D_DOUBLE_CONNECTED": 5,
-            "LINE_1D_EMBEDDED": 0,
-            "LINE_1D_ISOLATED": 1,
-            "LINE_1D_LONG_CRESTED": 3,
-            "LINE_1D_SHORT_CRESTED": 4,
-            "LINE_2D_OBSTACLE_U": 101,
-            "LINE_2D_OBSTACLE_V": 101,
-            "LINE_2D_U": 100,
-            "LINE_2D_V": 100,
-        }
+            exporter.export()
 
-        #fix nodes
-        grid_gdf_nodes = gpd.read_file(self.output_fp, layer="nodes")
+            logger.info(f"Saved computational grid to {self.gpkg_output}")
+        return self.gridadmin
 
-        grid_gdf_nodes["node_type"] = grid_gdf_nodes["node_type"].replace(replace_data_nodes)
+   
+   
 
-        grid_gdf_nodes.to_file(filename=self.output_fp, driver="GPKG", layer="nodes", engine="pyogrio")
-
-        #fix lines
-        grid_gdf_lines = gpd.read_file(self.output_fp, layer="lines")
-
-        grid_gdf_lines.rename(columns={"kcu": "line_type"})
-
-        grid_gdf_lines["line_type"] = grid_gdf_lines["line_type"].replace(replace_data_lines)
-
-    def get_obstacles_lines(self):
-
-
-        
 # %%columns={"A": "a", "B": "c"}
 if True:
     import logging
@@ -127,9 +102,8 @@ if True:
     dem_fp = Path(
         r"H:\02.modellen\ROR PRI - dijktrajecten 13-8 en 13-9 - Stroom_NO\work in progress\schematisation\rasters\dem_1_met_amstelmeer_2m.tif"
     )
-    self = GridadminFromSchematisation(path, dem_fp)
-    self.create
+    output_gpkg_path = r"H:\02.modellen\ROR PRI - dijktrajecten 13-8 en 13-9 - Stroom_NO\work in progress\tests\gridadmin_test_V2.gpkg"
     self.run_make_gridadmin()
-    self.transform_columns_values()
+
 
 # %%
