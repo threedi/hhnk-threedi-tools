@@ -13,8 +13,10 @@ def stack_raster_arrays(raster_classes, window):
         raster_array[np.isnan(raster_array)] = 0.0
 
         stacked_array.append(raster_array)
+        del raster_array
 
-    return np.stack(stacked_array)
+    stacked_array = np.stack(stacked_array)
+    return stacked_array
 
 
 def bereken_contante_schade_window(idx, window, raster_classes, frequencies, cw_factor):
