@@ -9,17 +9,12 @@ def stack_raster_arrays(raster_classes, window):
         raster_array = raster._read_array(window=window)
 
         raster_array[raster_array < 0] = 0.0
-        if np.isnan(raster.nodata):
-            raster_array[np.isnan(raster_array)] = 0.0
-        else:
-            raster_array[raster_array == raster.nodata] = 0.0
+        raster_array[raster_array == raster.nodata] = 0.0
+        raster_array[np.isnan(raster_array)] = 0.0
 
         stacked_array.append(raster_array)
-        del raster_array
 
-    # Stack the arrays in a 3D array.
-    stacked_array = np.stack(stacked_array)
-    return stacked_array
+    return np.stack(stacked_array)
 
 
 def bereken_contante_schade_window(idx, window, raster_classes, frequencies, cw_factor):
