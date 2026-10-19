@@ -15,6 +15,7 @@ def stack_raster_arrays(raster_classes, window):
         stacked_array.append(raster_array)
         del raster_array
 
+    # Stack the arrays in a 3D array.
     stacked_array = np.stack(stacked_array)
     return stacked_array
 
