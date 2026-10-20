@@ -32,5 +32,6 @@
         "/dist": true,
     },
     "jupyter.interactiveWindow.textEditor.executeSelection": true,
-    "jupyter.notebookFileRoot": "${workspaceFolder}"
+    "jupyter.notebookFileRoot": "${workspaceFolder}",
+    "python-envs.defaultEnvManager": "ms-python.python:system"
 }

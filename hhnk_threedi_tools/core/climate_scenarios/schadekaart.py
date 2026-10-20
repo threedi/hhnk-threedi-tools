@@ -9,10 +9,8 @@ def stack_raster_arrays(raster_classes, window):
         raster_array = raster._read_array(window=window)
 
         raster_array[raster_array < 0] = 0.0
-        if np.isnan(raster.nodata):
-            raster_array[np.isnan(raster_array)] = 0.0
-        else:
-            raster_array[raster_array == raster.nodata] = 0.0
+        raster_array[raster_array == raster.nodata] = 0.0
+        raster_array[np.isnan(raster_array)] = 0.0
 
         stacked_array.append(raster_array)
         del raster_array
