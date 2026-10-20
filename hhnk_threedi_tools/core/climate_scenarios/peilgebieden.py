@@ -47,7 +47,7 @@ def rasterize_peilgebieden(
         hrt.save_raster_array_to_tiff(
             output_file=output_file.path,
             raster_array=labels_array,
-            nodata=input_raster.nodata,
+            nodata=labels_nodata,
             metadata=input_raster.metadata,
         )
 
