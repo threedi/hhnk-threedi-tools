@@ -70,10 +70,10 @@ def download_breach_scenario(base_folder, simulation_metadata_df):
     min_breach_wlev_downstream_list = []
     max_breach_depth_list = []
     max_breach_width_list = []
-    
+
     for x_name in filter_names:
         print(x_name)
-        x_name= x_name.replace(" ", "_")
+        x_name = x_name.replace(" ", "_")
         scenario_id = api_client.usage_list(simulation__name=x_name).results[0].simulation.id
 
         if float(scenario_id) in id_simulations:
