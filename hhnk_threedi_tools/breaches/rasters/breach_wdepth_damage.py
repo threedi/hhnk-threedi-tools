@@ -436,7 +436,7 @@ if __name__ == "__main__":
     id_scenarios = base_folder.joinpath(r"ldo_structuur\simulations_id.xlsx")
     pd_scenarios = pd.read_excel(id_scenarios)
     region_paths = list(
-        Path(base_folder) / "results_ouput" / pd_scenarios["schematitation_name"] / pd_scenarios["scenario_name"]
+        Path(base_folder) / "results_output" / pd_scenarios["schematitation_name"] / pd_scenarios["scenario_name"]
     )
 
     # ipo_paths_path = r"E:\03.resultaten\Normering Regionale Keringen\output\ipo_scenarios_paths.csv"

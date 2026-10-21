@@ -30,7 +30,7 @@ FOLDER_STRUCTURE = """
         │ └── max_raste_of_rise.tif
         │ └── max_waterdepth.tif
         │ └── max_waterlevel.tif
-         ├── 04_JPEG
+        ├── 04_JPEG
         │ ├── overstroming.png
         │ ├── breach.name.png
         │ └── agg.png

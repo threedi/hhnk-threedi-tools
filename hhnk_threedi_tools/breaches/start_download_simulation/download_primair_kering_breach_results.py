@@ -55,7 +55,7 @@ def download_breach_scenario(base_folder, simulation_metadata_df):
 
     # Create list of available scenarios
     filter_names = simulation_metadata_df["scenario_name"].tolist()
-    id_simulations = simulation_metadata_df["scenario_id"].tolist()
+    id_simulations = simulation_metadata_df["scenario_id_rana"].tolist()
 
     # Set up lists
     x_name_list = []
@@ -70,9 +70,10 @@ def download_breach_scenario(base_folder, simulation_metadata_df):
     min_breach_wlev_downstream_list = []
     max_breach_depth_list = []
     max_breach_width_list = []
-
+    
     for x_name in filter_names:
         print(x_name)
+        x_name= x_name.replace(" ", "_")
         scenario_id = api_client.usage_list(simulation__name=x_name).results[0].simulation.id
 
         if float(scenario_id) in id_simulations:
@@ -326,37 +327,37 @@ def download_breach_scenario(base_folder, simulation_metadata_df):
                 # save to csv file
                 df_simulation_data.to_csv(csv_result_simulation_data, sep=";", decimal=",")
 
-                # # figuur maken
-                # create_breach_graph(
-                #     x_name,
-                #     time_sec,
-                #     model_name,
-                #     model_revision,
-                #     breach_id_list,
-                #     breach_depth,
-                #     breach_wlev_upstream,
-                #     breach_wlev_downstream,
-                #     breach_q,
-                #     breach_u,
-                #     breach_width,
-                #     fig_path_name,
-                # )
+                # figuur maken
+                create_breach_graph(
+                    x_name,
+                    time_sec,
+                    model_name,
+                    model_revision,
+                    breach_id_list,
+                    breach_depth,
+                    breach_wlev_upstream,
+                    breach_wlev_downstream,
+                    breach_q,
+                    breach_u,
+                    breach_width,
+                    fig_path_name,
+                )
 
-                # # figuur aggregated maken
-                # create_breach_graph(
-                #     x_name,
-                #     time_sec_agg,
-                #     model_name,
-                #     model_revision,
-                #     breach_id_list,
-                #     breach_depth,
-                #     breach_wlev_upstream_agg,
-                #     breach_wlev_downstream_agg,
-                #     breach_q_agg,
-                #     breach_u_agg,
-                #     breach_width,
-                #     fig_path_name_agg,
-                # )
+                # figuur aggregated maken
+                create_breach_graph(
+                    x_name,
+                    time_sec_agg,
+                    model_name,
+                    model_revision,
+                    breach_id_list,
+                    breach_depth,
+                    breach_wlev_upstream_agg,
+                    breach_wlev_downstream_agg,
+                    breach_q_agg,
+                    breach_u_agg,
+                    breach_width,
+                    fig_path_name_agg,
+                )
 
                 # relative_path = (os.path.relpath(resultnc))[3:]
 
@@ -366,8 +367,8 @@ def download_breach_scenario(base_folder, simulation_metadata_df):
 
 # %%
 if __name__ == "__main__":
-    base_folder = Path(r"H:\03.resultaten\RWS_Test")
-    simulation_metadata = base_folder / "simulations_id.xlsx"
+    base_folder = Path(r"H:\03.resultaten\RWS_Test\results_output")
+    simulation_metadata = base_folder.parent / "ldo_structuur" / "simulations_id.xlsx"
     simulation_metadata_df = pd.read_excel(simulation_metadata, sheet_name="Sheet1")
     # new_metadata_path = r"y:\03.resultaten\IPO_Overstromingsberekeningen_compartimentering\metadata\metadata.gpkg"
     # filter_id_path = r"Y:\03.resultaten\Normering Regionale Keringen\output\scenarios_output\N&S\breach_SBMN_redo.gpkg"

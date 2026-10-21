@@ -356,7 +356,7 @@ if __name__ == "__main__":
     ldo_api = LDO_API(api_key=LDO_API_KEY)
 
     scenario_paths = list(
-        Path(base_path) / "results_ouput" / pd_scenarios["schematitation_name"] / pd_scenarios["scenario_name"]
+        Path(base_path) / "results_output" / pd_scenarios["schematitation_name"] / pd_scenarios["scenario_name"]
     )
 
     # %%
@@ -367,6 +367,7 @@ if __name__ == "__main__":
 
         # If the scenario is done the continue
         if scenario_name in scenarios_done:
+            print(f'check if ldo id for the scenario {scenario_name}  is alreayd uploded or is a new one.')
             continue
         else:
             print(f"Processing scenario {scenario_name}")
