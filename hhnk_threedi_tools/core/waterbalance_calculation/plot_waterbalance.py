@@ -427,9 +427,9 @@ def plot_water_balance_volumes(
 
 if __name__ == "main":
     paths = [
-        r"H:\02.modellen\bergen_noord_huidig_situatie_JA",
-        r"H:\02.modellen\bergen_noord_variant_1_JA",
-        r"H:\02.modellen\bergen_noord_variant_2_JA",
+        # r"H:\02.modellen\bergen_noord_huidig_situatie_JA",
+        # r"H:\02.modellen\bergen_noord_variant_1_JA",
+        # r"H:\02.modellen\bergen_noord_variant_2_JA",
         r"H:\02.modellen\bergen_noord_variant_3_JA",
     ]
 
@@ -441,6 +441,8 @@ if __name__ == "main":
             output_raster_path = batch_path / results / "02_output_rasters"
             downloads = os.listdir(output_raster_path)
             for download in downloads:
+                if download == 'temp':
+                    continue
                 plot_water_balance_folder = output_raster_path / download / f"waterbalance_{download}"
                 csv_water_balance_timeseries = plot_water_balance_folder / "water_balance_timeseries.csv"
                 csv_water_balance_volumen = plot_water_balance_folder / "water_balance_volumes.csv"
@@ -450,3 +452,5 @@ if __name__ == "main":
                 #     continue
                 plot_water_balance(csv_water_balance_timeseries, output_path_timeseries)
                 plot_water_balance_volumes(csv_water_balance_volumen, output_path_net)
+
+# %%

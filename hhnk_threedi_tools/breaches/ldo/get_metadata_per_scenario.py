@@ -61,7 +61,7 @@ def _get_breach_info(
 
     coordinate_x = bresen_df.loc[bresen_df["SC_NAAM"] == simulation_name, "LOC_X"].to_numpy()[0]
     coordinate_y = bresen_df.loc[bresen_df["SC_NAAM"] == simulation_name, "LOC_Y"].to_numpy()[0]
-    naam_waterkering = bresen_df.loc[bresen_df["SC_NAAM"] == simulation_name, "LOC_NAAM_w"]
+    naam_waterkering = bresen_df.loc[bresen_df["SC_NAAM"] == simulation_name, "LOC_NAAM_W"]
     initial_crest_level = bresen_df.loc[bresen_df["SC_NAAM"] == simulation_name, "DBR_BR_INI"].to_numpy()[0]
     material = bresen_df.loc[bresen_df["SC_NAAM"] == simulation_name, "DRB_MAT"].to_numpy()[0]
 
@@ -424,9 +424,9 @@ if __name__ == "__main__":
         bresen_path=r"H:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\metadata\bresslocaties.gpkg",
         metadata_template_path=metadata_template[column_class.value],
         metadata_nzk_path=r"H:\03.resultaten\Normering Regionale Keringen\metadata\bress_location_eq.shp",
-        base_folder=r"H:\03.resultaten\RWS_Test",
+        base_folder=r"H:\03.resultaten\RWS_Test\results_output",
         # metadata_per_scenario_folder=r"h:\03.resultaten\Normering Regionale Keringen\output\scenarios_output\N&S\ldo_structuur\metadata_per_scenario",
-        scenario_id_path=r"H:\03.resultaten\RWS_Test\simulations_id.xlsx",
+        scenario_id_path=r"H:\03.resultaten\RWS_Test\ldo_structuur\simulations_id.xlsx",
         columns_type=columns_type,
         fallback_model_id=None,
     )

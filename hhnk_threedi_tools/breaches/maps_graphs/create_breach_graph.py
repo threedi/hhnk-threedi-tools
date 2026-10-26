@@ -224,7 +224,7 @@ if __name__ == "__main__":
         for scenario in scenarios:
             scenario_path = os.path.join(schema_path, scenario)
             breach = Breaches(scenario_path)
-            breach_data_gdf = pd.read_csv(breach.csv.breach_data, sep=";", decimal=",")
+            breach_data_gdf = pd.read_csv(breach.csv.breach_data_agg, sep=";", decimal=",")
             scenarioname = breach_data_gdf.name[0]
             model_name = schema
             breach_id = breach_data_gdf.breach_id
@@ -236,9 +236,11 @@ if __name__ == "__main__":
             breach_u = breach_data_gdf.breach_u.tolist()
             breach_wlev_upstream = breach_data_gdf.breach_wlev_upstream.tolist()
             breach_wlev_downstream = breach_data_gdf.breach_wlev_downstream.tolist()
-            jpeg_name = breach.name + ".png"
+            jpeg_name = breach.name + "agg.png"
             fig_path_name = os.path.join(breach.jpeg.path / jpeg_name)
             initial_breedte = 10
+            if os.path.exists(fig_path_name):
+                continue
             create_breach_graph(
                 scenarioname,
                 np.array(time_sec),
