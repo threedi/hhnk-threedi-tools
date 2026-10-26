@@ -27,7 +27,7 @@ def raster_difference(reference_path, variant_path, output_path):
         var = src_var.read(1, masked=True)
 
         # NoData is treated as zero (dry cells).
-        difference = var.filled(0                                                                                                                                                                                   ) - ref.filled(0)
+        difference = var.filled(0) - ref.filled(0)
 
         profile = src_var.profile.copy()
         profile.update(dtype="float32", nodata=-9999, compress="lzw")
@@ -56,7 +56,7 @@ for variant in [2, 3]:
 
         for rainfall in rainfall_names:
             variant_raster = variant_downloads / rainfall / raster_name
-            huidig_raster = huidig_outputs / rainfall / 'max_wdepth_corr_idw.tif'
+            huidig_raster = huidig_outputs / rainfall / "max_wdepth_corr_idw.tif"
 
             output_name = f"DIFF_wdepth__V{variant}_MINUS_HUIDIG__{rainfall.upper()}.tif"
 

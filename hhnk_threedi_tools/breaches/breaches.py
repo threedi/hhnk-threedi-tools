@@ -40,7 +40,13 @@ FOLDER_STRUCTURE = """
     """
 
 
-class Breaches(Folder):
+class BreachFolder(Folder):
+    def _find_files(self, filename):
+        matches = sorted(Path(self.base).glob(f"*{filename}"))
+        return matches[0] if matches else None
+
+
+class Breaches(BreachFolder):
     __doc__ = f"""
         
         --------------------------------------------------------------------------
@@ -116,33 +122,36 @@ class Breaches(Folder):
                     polder_path (string: path to project folder (highest level))
                 )
         """
+
         return {
-            "aggregate_results_3di": self.netcdf.aggregate_results_3di.path_if_exists,
-            "gridadmin": self.netcdf.gridadmin.path_if_exists,
-            "gridadmin": self.netcdf.gridadmin.path_if_exists,
-            "results_3di": self.netcdf.results_3di.path_if_exists,
-            # "channels_shapefile": self.source_data.modelbuilder.channel_from_profiles.path_if_exists,
+            "aggregate_results_3di": self.netcdf.aggregate_results_3di,
+            "gridadmin": self.netcdf.gridadmin,
+            "results_3di": self.netcdf.results_3di,
             # jpeg
-            "graph": self.jpeg.graph.path_if_exists,
-            "agg_graph": self.jpeg.agg_graph.path_if_exists,
-            "overstroming": self.jpeg.overstroming.path_if_exists,
+            "graph": self.jpeg.graph,
+            "agg_graph": self.jpeg.agg_graph,
+            "bar_graph": self.jpeg.bar_graph,
             # wss
-            "dem_clip": self.wss.dem_clip.path_if_exists,
-            "grid_raw": self.wss.grid_raw.path_if_exists,
-            "mask_flood": self.wss.mask_flood.path_if_exists,
-            "max_wdepth_orig": self.wss.max_wdepth_orig.path_if_exists,
-            "new_grid": self.wss.new_grid.path_if_exists,
-            "nodeid": self.wss.nodeid.path_if_exists,
-            "landuse_2021_clip": self.wss.landuse_2021_clip.path_if_exists,
+            "dem_clip": self.wss.dem_clip,
+            "grid_raw": self.wss.grid_raw,
+            "mask_flood": self.wss.mask_flood,
+            "max_wdepth_orig": self.wss.max_wdepth_orig,
+            "new_grid": self.wss.new_grid,
+            "max_waterlevel_orig": self.wss.max_waterlevel_orig,
+            "landuse_2021_clip": self.wss.landuse_2021_clip,
+            "damage_orig_lizard": self.wss.damage_orig_lizard,
+            "direct_cost_damage": self.wss.direct_cost_damage,
+            "indirect_cost_damage": self.wss.indirect_cost_damage,
+            "total_costs_area": self.wss.total_costs_area,
             # ssm
-            "max_flow_velocity_5m": self.ssm.max_flow_velocity_5m.path_if_exists,
-            "max_rate_of_rise_5m": self.ssm.max_rate_of_rise_5m.hhnk_schematisation_checks.path_if_exists,
-            "max_waterdepth_5m": self.ssm.max_waterdepth_5m.path_if_exists,
-            "max_waterlevel_5m": self.ssm.max_waterlevel_5m.path_if_exists,
+            # "max_flow_velocity_5m": self.ssm.max_flow_velocity_5m.path_if_exists,
+            # "max_rate_of_rise_5m": self.ssm.max_rate_of_rise_5m.hhnk_schematisation_checks.path_if_exists,
+            # "max_waterdepth_5m": self.ssm.max_waterdepth_5m.path_if_exists,
+            # "max_waterlevel_5m": self.ssm.max_waterlevel_5m.path_if_exists,
             # breach data
-            "breach_data": self.base / "breach_data.csv",
-            "breach_data_agg": self.base / "breach_data_agg.csv",
-            "simulation_data": self.base / "simulation_data.csv",
+            "breach_data": self.csv.breach_data,
+            "breach_data_agg": self.csv.breach_data_agg,
+            "simulation_data": self.csv.simulation_data,
         }
 
     @classmethod
@@ -152,20 +161,16 @@ class Breaches(Folder):
         return all([Path(folderpath).joinpath(i).exists() for i in SUB_FOLDERS])
 
 
-class csv(Folder):
+class csv(BreachFolder):
     def __init__(self, base):
 
         super().__init__(str(base), create=False)
         self.base_path = Path(base)
 
-        self.breach_data = self._find_csv("breach_data.csv")
-        self.breach_data_agg = self._find_csv("breach_data_agg.csv")
-        self.simulation_data = self._find_csv("simulation_data.csv")
-        self.ldo_metadata = self._find_csv(f"{self.base_path.name}.xlsx")
-
-    def _find_csv(self, filename: str):
-        matches = sorted(self.base_path.glob(f"*{filename}"))
-        return matches[0] if matches else None
+        self.breach_data = self._find_files("breach_data.csv")
+        self.breach_data_agg = self._find_files("breach_data_agg.csv")
+        self.simulation_data = self._find_files("simulation_data.csv")
+        self.ldo_metadata = self._find_files(f"{self.base_path.name}.xlsx")
 
     @property
     def as_dict(self):
@@ -177,12 +182,14 @@ class csv(Folder):
         }
 
 
-class NetCDF(Folder):
+class NetCDF(BreachFolder):
     """Path to netcdf data (aggregate_results_3di, gridadmin, results_3di)"""
 
     def __init__(self, base, create):
         super().__init__(os.path.join(base, "01_NetCDF"), create)
-
+        self.aggregate_results_3di = self._find_files("aggregate_results_3di.nc")
+        self.results_3di = self._find_files("results_3di.nc")
+        self.gridadmin = self._find_files("gridadmin.h5")
         # Folders
 
         if create:
@@ -212,14 +219,16 @@ class NetCDF(Folder):
                """
 
 
-class JPEG(Folder):
+class JPEG(BreachFolder):
     """Parent folder with all the images created for the final product. They included:
     breach graph and it aggregation, and also all the maps that can be generated.
     """
 
     def __init__(self, base, create):
         super().__init__(os.path.join(base, "04_JPEG"), create)
-
+        self.graph = self._find_files(f"{Path(base).name}.png")
+        self.agg_graph = self._find_files(f"{Path(base).name}_agg.png")
+        self.bar_graph = self._find_files(f"{Path(base).name}_bar_graph.png")
         if create:
             self.create_readme()
 
@@ -239,7 +248,7 @@ class JPEG(Folder):
                 """
 
 
-class SSM(Folder):
+class SSM(BreachFolder):
     """
     Folder in which rasters from lizard can be saved
 
@@ -263,7 +272,7 @@ class SSM(Folder):
             f.write(readme_txt)
 
 
-class WSS(Folder):
+class WSS(BreachFolder):
     """
     Folder where the the water depth raster are going to be created. Also all the files used to create it,
     are going to be store in this folder.
@@ -271,6 +280,17 @@ class WSS(Folder):
 
     def __init__(self, base, create):
         super().__init__(os.path.join(base, "02_WSS"), create)
+        self.dem_clip = self._find_files("dem_clip.vrt")
+        self.grid_raw = self._find_files("grid_raw.gpkg")
+        self.mask_flood = self._find_files("mask_flood.gpkg")
+        self.max_wdepth_orig = self._find_files("max_wdepth_orig.tif")
+        self.new_grid = self._find_files("new_grid.gpkg")
+        self.landuse_2021_clip = self._find_files("landuse_2021_clip.vrt")
+        self.max_waterlevel_orig = self._find_files("max_waterlevel_orig.tif")
+        self.damage_orig_lizard = self._find_files("damage_orig_lizard.tif")
+        self.direct_cost_damage = self._find_files("direct_cost_damage.tif")
+        self.indirect_cost_damage = self._find_files("indirect_cost_damage.tif")
+        self.total_costs_area = self._find_files("total_costs_area.csv")
 
         if create:
             self.create_readme()

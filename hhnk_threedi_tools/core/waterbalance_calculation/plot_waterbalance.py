@@ -441,7 +441,7 @@ if __name__ == "main":
             output_raster_path = batch_path / results / "02_output_rasters"
             downloads = os.listdir(output_raster_path)
             for download in downloads:
-                if download == 'temp':
+                if download == "temp":
                     continue
                 plot_water_balance_folder = output_raster_path / download / f"waterbalance_{download}"
                 csv_water_balance_timeseries = plot_water_balance_folder / "water_balance_timeseries.csv"
