@@ -152,6 +152,7 @@ class Breaches(BreachFolder):
             "breach_data": self.csv.breach_data,
             "breach_data_agg": self.csv.breach_data_agg,
             "simulation_data": self.csv.simulation_data,
+            "ldo_metadata": self.csv.ldo_metadata,
         }
 
     @classmethod
