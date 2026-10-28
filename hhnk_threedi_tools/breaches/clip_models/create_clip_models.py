@@ -18,7 +18,6 @@ from pathlib import Path
 
 from hhnk_threedi_tools.breaches.clip_models.submodel_constants import SchematisationType
 from hhnk_threedi_tools.breaches.clip_models.submodels import Submodels as create_submodels
-from hhnk_threedi_tools.breaches.clip_models.submodels import run_submodel as create_submodels
 from hhnk_threedi_tools.breaches.clip_models.submodels_clean import run as clean_submodel
 
 
@@ -42,10 +41,7 @@ def run(
         calculation_grid_cells_layer_name=calculation_grid_cells_layer_name,
         isolate_1d=isolate_1d,
         schematisation_type=schematisation_type,
-    )
-
-    # Create the clipped submodels.
-    model_gpkg_paths = submodels.run()
+    ).run_submodel()
 
     for model_gpkg_path in model_gpkg_paths:
         clean_submodel(
@@ -61,15 +57,14 @@ def run(
 # %%
 if __name__ == "__main__":
     schematisation_directory = Path(r"H:\02.modellen\RegionalFloodModel\work in progress\schematisation")
-    subareas_path = r"\\corp.hhnk.nl\data\Hydrologen_data\Data\02.modellen\RegionalFloodModel\ROR PRI - dijktrajecten 13-8 en 13-9 - Stroom_NO.gpkg"
-    subareas_path = r"H:\03.resultaten\Overstromingsberekeningenprimairedoorbraken2024\deelgebieden\ROR PRI - dijktrajecten 13-8 en 13-9 - Stroom_NO.gpkg"
+    subareas_path = r"H:\02.modellen\RegionalFloodModel\test_clip.gpkg"
     field_name = "Deelgebied"
     calculation_grid_cells_path = r"H:\02.modellen\RegionalFloodModel\work in progress\regional_calculation_grid.gpkg"
     subareas_layer_name = None
     calculation_grid_cells_layer_name = "cell"
     isolate_1d = True
     schematisation_type = SchematisationType.RANA
-    schematisation_type = SchematisationType.THREEDI
+    # schematisation_type = SchematisationType.THREEDI
 
     run(
         schematisation_directory=schematisation_directory,

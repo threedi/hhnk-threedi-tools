@@ -316,7 +316,7 @@ def isolate_1d_elements(
     ln = LAYER_NAMES[schematisation_type]
 
     # These 1D layers are available in both RANA and 3Di.
-    list_layers = [
+    isolate_layers = [
         ln["channel"],
         ln["pipe"],
         ln["culvert"],
@@ -324,7 +324,12 @@ def isolate_1d_elements(
 
     # Manholes only exist in the 3Di schematisation.
     if schematisation_type == SchematisationType.THREEDI:
-        list_layers.append(ln["manhole"])
+        isolate_layers.append(ln["manhole"])
+    if schematisation_type == SchematisationType.RANA:
+        isolate_layers.append(ln["connection_node"])
+    # Also read exchange lines because they must be removed
+    # when their channel is isolated.
+    list_layers = isolate_layers + [ln["exchange_line"]]
 
     # Read only the layers needed for the isolation step.
     layers = read_geopackage_layers(
@@ -335,8 +340,12 @@ def isolate_1d_elements(
     )
 
     # Process every 1D layer using the same spatial selection logic.
-    for layer_name in layers:
+    for layer_name in isolate_layers:
         layer = layers[layer_name]
+
+        # In RANA, manholes are connection nodes with visualisation = 0.
+        if schematisation_type == SchematisationType.RANA and layer_name == ln["connection_node"]:
+            layer = layer[layer["visualisation"] == 0]
 
         # Select features that are completely within the submodel polygon.
         #
@@ -356,6 +365,10 @@ def isolate_1d_elements(
         # Manholes use a different calculation type value for isolation.
         if layer_name == "manhole":
             isolated_value = 1
+
+        elif schematisation_type == SchematisationType.RANA and layer_name == ln["connection_node"]:
+            isolated_value = 1
+
         else:
             isolated_value = 101
 
@@ -367,6 +380,22 @@ def isolate_1d_elements(
             schematisation_type=schematisation_type,
             isolated_value=isolated_value,
         )
+
+        # Save isolated channel IDs to remove their exchange lines.
+        if layer_name == ln["channel"]:
+            isolated_channel_ids = layer_to_isolate["id"].tolist()
+
+    # Remove exchange lines connected to isolated channels.
+    exchange_line = layers[ln["exchange_line"]]
+
+    exchange_lines_to_remove = exchange_line[exchange_line["channel_id"].isin(isolated_channel_ids)]
+
+    remove_selection(
+        model_path_gpkg=model_gpkg_path,
+        layer_name=ln["exchange_line"],
+        ids_to_remove=exchange_lines_to_remove["id"].tolist(),
+        schematisation_type=schematisation_type,
+    )
 
 
 # %%

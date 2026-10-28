@@ -565,7 +565,7 @@ class Submodels:
             self._clip_raster(tif_path, dissolved_mask, output_rasters_dir / tif_path.name)
         return output_gpkg
 
-    def run(self) -> list[Path]:
+    def run_submodel(self) -> list[Path]:
         """Create a submodel for each sub-area."""
 
         self.output_gpkgs = []
@@ -583,43 +583,6 @@ class Submodels:
             self.output_gpkgs.append(output_gpkg)
 
         return self.output_gpkgs
-
-
-# def run_submodel(
-#     schematisation_directory: str | Path,
-#     subareas_path: str | Path,
-#     field_name: str,
-#     calculation_grid_cells_path: str | Path,
-#     subareas_layer_name: str | None = None,
-#     calculation_grid_cells_layer_name: str | None = None,
-#     isolate_1d: bool = False,
-#     schematisation_type: SchematisationType = SchematisationType.RANA,
-# ) -> list[Path]:
-#     """Entry point for creating sub-models from a 3Di schematisation.
-
-#     Parameters
-#     --
-#     schematisation_directory:
-#         Folder containing the .gpkg, .sqlite and optional rasters/ sub-folder.
-#     subareas_path:
-#         Vector file with sub-area polygons.
-#     field_name:
-#         Column in *subareas_path* with unique sub-area names.
-#     calculation_grid_cells_path:
-#         Vector file with 3Di calculation-grid cells.
-#     subareas_layer_name:
-#         Layer name inside *subareas_path* (GeoPackage only).
-#     calculation_grid_cells_layer_name:
-#         Layer name inside *calculation_grid_cells_path* (GeoPackage only).
-#     isolate_1d:
-#         If True, 1-D elements outside the sub-area are kept but their
-#         exchange_type is set to 101 (isolated) instead of being removed.
-#     schematisation_type:
-#         SchematisationType.RANA (default) or SchematisationType.THREEDI.
-#         Controls which GeoPackage layer names are used for reading and writing.
-# """
-
-# return submodels.output_gpkgs
 
 
 # %%
@@ -646,6 +609,6 @@ if __name__ == "__main__":
         schematisation_type=schematisation_type,
     )
 
-    submodels.run()
+    submodels.run_submodel()
 
 # %%
