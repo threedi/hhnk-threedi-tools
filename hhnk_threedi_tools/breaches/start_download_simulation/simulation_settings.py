@@ -1,16 +1,32 @@
-"""
-Standard HHNK settings for 3Di breach simulations.
+"""Default HHNK settings for 3Di breach simulations.
 
-Project-specific settings, such as simulation duration,
-are defined in ProjectConfig.
+This module contains the standard configuration values used when setting up a
+breach simulation. These defaults are intentionally centralized so that project
+scripts can reuse the same solver behaviour, time stepping, and output
+aggregation for comparable analyses.
+
+The values are split into clear groups: general timing, numerical stability,
+physical process activation, time-step controls, and output aggregation. The
+project-specific values such as simulation duration and selected breach IDs are
+kept in ProjectConfig and merged with these defaults at runtime.
+
+Keeping this file declarative makes it easier to review, update, and explain the
+simulation setup to other project members or downstream tools that depend on the
+same operational defaults.
 """
 
 import datetime
 
-# General simulation settings
+# Start time of the simulation window. This is kept fixed so all scripts use the
+# same baseline reference time when preparing result files and metadata.
 START_DATETIME = datetime.datetime(2000, 1, 1, 0, 0)
+
+# Output interval for exported time series. The 3Di API expects this in seconds.
 OUTPUT_TIMESTEP = 900  # seconds
 
+# Numerical solver settings: these are the stability and convergence controls used
+# for the 1D/2D flow calculation. They tune Newton iterations, CFL checks, and
+# limiter behaviour to keep the breach simulation numerically stable.
 NUMERICAL_SETTING = {
     "pump_implicit_ratio": 1,
     "cfl_strictness_factor_1d": 1,
@@ -37,9 +53,11 @@ NUMERICAL_SETTING = {
     "flooding_threshold": 1e-5,
 }
 
+# Physical process switches for advection in the 1D and 2D domains.
 PHYSICAL_SETTINGS = {"use_advection_1d": 1, "use_advection_2d": 1}
 
-
+# Adaptive time-step configuration for the flow model. The values define the
+# minimum and maximum allowable step size as well as the output cadence.
 TIME_STEP_SETTINGS = {
     "time_step": 5,
     "min_time_step": 0.01,
@@ -49,9 +67,11 @@ TIME_STEP_SETTINGS = {
 }
 
 
-# Aggregation settings
+# Aggregation definitions for model outputs. These determine which variables are
+# exported and how values are summarised (average, maximum, cumulative, etc.)
+# over the configured output interval.
 AGGREGATION_SETTINGS = [
-    # Standard HHNK aggregations
+    # Standard HHNK aggregations used for common hydrodynamic diagnostics.
     {"name": "", "flow_variable": "discharge", "method": "avg", "interval": OUTPUT_TIMESTEP},
     {"name": "", "flow_variable": "water_level", "method": "avg", "interval": OUTPUT_TIMESTEP},
     {"name": "", "flow_variable": "water_level", "method": "max", "interval": OUTPUT_TIMESTEP},
