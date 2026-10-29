@@ -51,6 +51,7 @@ def run(
             isolate_1d=isolate_1d,
             schematisation_type=schematisation_type,
         )
+    print("Process Finished. Model Clipped.")
     return model_gpkg_paths
 
 

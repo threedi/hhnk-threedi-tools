@@ -560,8 +560,9 @@ class Submodels:
 
         output_rasters_dir = output_directory / "rasters"
         output_rasters_dir.mkdir(parents=True, exist_ok=True)
-        print("I am in the raster creation")
+
         for tif_path in tif_files:
+            print(f"Clipping Raster: {tif_path.name}")
             self._clip_raster(tif_path, dissolved_mask, output_rasters_dir / tif_path.name)
         return output_gpkg
 

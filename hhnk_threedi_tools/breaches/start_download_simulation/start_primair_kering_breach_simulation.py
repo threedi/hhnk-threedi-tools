@@ -27,6 +27,30 @@ class ModelFolder(hrt.Folder):
         self.add_file("schema", rf"work in progress/schematisation/{self.name}.gpkg")
 
 
+def check_initial_waterlevels(api_client, template_sim_id, simulation_id):
+    """Verify that initial water levels are inherited from the template."""
+
+    methods = {
+        "1D": api_client.simulations_initial1d_water_level_file_list,
+        "2D": api_client.simulations_initial2d_water_level_raster_list,
+    }
+
+    for dimension, method in methods.items():
+        template = method(simulation_pk=template_sim_id)
+        simulation = method(simulation_pk=simulation_id)
+
+        template_ids = [result.initial_waterlevel_id for result in template.results]
+
+        simulation_ids = [result.initial_waterlevel_id for result in simulation.results]
+
+        if template_ids != simulation_ids:
+            raise ValueError(f"{dimension} initial water levels do not match the template!")
+
+        print(f"{dimension} initial water levels verified: {simulation_ids}")
+
+    print("Initial water levels validation successful!")
+
+
 def start_simulation_breaches(
     model_folder, organisation_name, scenarios, filter_id, initial_width, metadata_path, wait_time
 ):
@@ -213,6 +237,12 @@ def start_simulation_breaches(
                 "duration": sim_duration * 3600 * 24,  # in seconds
             }
         )
+        check_initial_waterlevels(
+            api_client=api_client,
+            template_sim_id=simulation_template.simulation.id,
+            simulation_id=simulation.id,
+        )
+        
         time.sleep(sleeptime)
 
         api_client.simulations_settings_time_step_delete(simulation_pk=simulation.id)
@@ -226,6 +256,16 @@ def start_simulation_breaches(
         api_client.simulations_settings_physical_delete(simulation_pk=simulation.id)
         api_client.simulations_settings_physical_create(simulation_pk=simulation.id, data=physical_settings)
         time.sleep(sleeptime)
+
+        # api_client.simulations_initial1d_water_level_predefined_create(simulation_pk=simulation.id, data={})
+
+        # api_client.simulations_initial2d_water_level_raster_create(
+        #     simulation_pk=simulation.id,
+        #     data={
+        #         "initial_waterlevel": raster_id,
+        #         "aggregation_method": "mean",
+        #     },
+        # )
 
         for a in aggregation_settings:
             api_client.simulations_settings_aggregation_create(simulation_pk=simulation.id, data=a)
@@ -288,8 +328,8 @@ def start_simulation_breaches(
 # %%
 if __name__ == "__main__":
     # Use organisation_name 'BWN HHNK' for standard simulation. Use the other one for very specific cases
-    # organisation_name = "BWN HHNK"
-    organisation_name = "Hoogheemraadschap Hollands Noorderkwartier"
+    organisation_name = "BWN HHNK"
+    # organisation_name = "Hoogheemraadschap Hollands Noorderkwartier"
 
     # Set the model name as it is either in 3di or in the local folder.
     base_folder = r"H:\02.modellen"
@@ -303,7 +343,7 @@ if __name__ == "__main__":
 
     # id_filter corresponds to the column 'id' of the potential breach table of the model we are working with.
     # In case of willing to run all the potential breach, leave the list empty  --> filter_id = []
-    filter_id = [100048, 100021]
+    filter_id = [100048]
     # filter_id = [100042]
 
     # location of the metadata file. Important to have at least 2 version: One for uploading and run model and the other one for downloading.
