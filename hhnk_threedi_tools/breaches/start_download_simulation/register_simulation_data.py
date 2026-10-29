@@ -44,4 +44,3 @@ class SimulationRegistry:
         df.to_excel(self.excel_path, index=False)
 
         print(f"Simulation {scenario_name} ({scenario_id_rana}) saved.")
-
