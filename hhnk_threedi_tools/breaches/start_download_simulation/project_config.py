@@ -13,13 +13,15 @@ consistent configuration object for yearly or project-specific runs.
 The example at the bottom shows a typical regionale breach setup with
 cmp enabled.
 """
-#%%
+
+# %%
+import os
+import shutil
 from pathlib import Path
 from typing import Any, Sequence
-import shutil
-import os
 
-#%%
+
+# %%
 class ProjectConfig:
     """Configuration for a 3Di breach simulation project."""
 
@@ -54,7 +56,7 @@ class ProjectConfig:
         if not self.excel_path.exists():
             excel_template = Path(__file__).parent / "simulations_id.xlsx"
             shutil.copy2(excel_template, self.excel_path)
-            
+
         # Simulation configuration
         self.organisation_name: str = organisation_name
         self.filter_id: list[int] = list(filter_id)
@@ -118,32 +120,33 @@ class ProjectConfig:
         self.closure_time_seconds: int | None = (
             round(self.closure_time * 3600) if self.closure_time is not None else None
         )
-#%%
+
+
+# %%
 if __name__ == "__main__":
+    project_folder = r"H:\03.resultaten\RWS_Test_v2"
+    model_folder = r"H:\02.modellen\RegionalFloodModel - deelmodel Schermer Laag Zuid"
 
-    project_folder=r"H:\03.resultaten\RWS_Test_v2"
-    model_folder=r"H:\02.modellen\RegionalFloodModel - deelmodel Schermer Laag Zuid"
-
-    #options: "Hoogheemraadschap Hollands Noorderkwartier" OR "BWN HHNK"
-    organisation_name="BWN HHNK" 
+    # options: "Hoogheemraadschap Hollands Noorderkwartier" OR "BWN HHNK"
+    organisation_name = "BWN HHNK"
 
     # Breach id
-    filter_id=[100048, 100021]
+    filter_id = [100048, 100021]
 
-    #options: regionalee, primaire
-    kering_type="regionale" 
+    # options: regionalee, primaire
+    kering_type = "regionale"
 
-    #days
-    simulation_duration=20 
+    # days
+    simulation_duration = 20
 
     # options: cmp, None, upstream
-    closure_method="cmp"
+    closure_method = "cmp"
 
-    #hours
-    closure_time=12 
+    # hours
+    closure_time = 12
 
-    #structure info
-    structures_info={
+    # structure info
+    structures_info = {
         632: "v2_weir",
         19: "v2_orifice",
         316: "v2_orifice",
@@ -154,7 +157,7 @@ if __name__ == "__main__":
         model_folder=model_folder,
         organisation_name=organisation_name,
         filter_id=[100048, 100021],
-        kering_type="regionale", 
+        kering_type="regionale",
         simulation_duration=20,
         closure_method="cmp",
         closure_time=12,
