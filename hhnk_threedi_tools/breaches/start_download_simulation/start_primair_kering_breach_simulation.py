@@ -242,7 +242,7 @@ def start_simulation_breaches(
             template_sim_id=simulation_template.simulation.id,
             simulation_id=simulation.id,
         )
-        
+
         time.sleep(sleeptime)
 
         api_client.simulations_settings_time_step_delete(simulation_pk=simulation.id)
