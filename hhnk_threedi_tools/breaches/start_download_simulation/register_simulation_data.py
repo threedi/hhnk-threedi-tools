@@ -21,6 +21,7 @@ class SimulationRegistry:
         revision_number,
         model_id,
         scenario_id_rana,
+        initial_width,
     ):
         # Read Excel
         df = pd.read_excel(self.excel_path)
@@ -36,6 +37,7 @@ class SimulationRegistry:
             "schematisation_id": schematisation_id,
             "revision_number": revision_number,
             "model_id": model_id,
+            "initial_width": initial_width,
             "scenario_id_rana": scenario_id_rana,
             "date_simulation_created": datetime.now(),
         }
