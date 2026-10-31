@@ -47,8 +47,8 @@ def install_git_hook(repo_path: Path, hook_name: str, script_path: Path, windows
     else:
         with hook_path.open("w") as hook_file:
             print(f"create {hook_path}")
-            hook_file.write("#!/bin/sh\n\n")
-            hook_file.write("# created by hhnk_threedi_tools/git_model_repo/install_hooks.py\n")
+            # hook_file.write("#!/bin/sh\n\n")
+            # hook_file.write("# created by hhnk_threedi_tools/git_model_repo/install_hooks.py\n")
             hook_file.write(f'hook_dir=$(realpath "$0")\n"{script_path}" {hook_name} "$hook_dir" "$(pwd)"\n')
             if not windows:
                 hook_path.chmod(0o775)
@@ -108,15 +108,41 @@ def install_hooks(git_root_dir: Path):
     else:
         lines = []
 
+    # Git ignore patterns for model repositories
     ignores = [
-        "*_backup.gpkg",
-        "*_backup.xlsx",
-        "_backup\\",
+        # Essential files to keep (negations)
+        "!.gitignore",
+        "!.gpkg",
+        # Common file types to ignore
+        "*.sqlite",
+        "*.txt",
         "*.zip",
-        "*_",
+        # Backup files
+        "*_backup.xlsx",
+        "*_backup/",
+        "*.tif.aux.xml",
+        "*_backup.gpkg",
+        # Schematisation directory structure
+        "02_schematisation/*",
+        "!02_schematisation/model_settings.xlsx",
+        "!02_schematisation/model_settings_default.xlsx",
+        "!02_schematisation/00_basis/bwn_*.gpkg",
+        "!02_schematisation/00_basis*",
+        # 3Di results
+        "03_3di_results/*/*",
+        "!03_3di_results/*",
+        # Test results
+        "04_test_results/*/*",
+        "!04_test_results/*",
+        # Notebooks
+        "/Notebooks",
+        "Notebooks/.*",
+        # logfiles
+        "!log*.txt",
     ]
+
     for ignore in ignores:
-        if not any([l.startswith(ignore) for l in lines]):
+        if not any(line.startswith(ignore) for line in lines):
             lines.append(f"{ignore}\n")
 
     with ignore_file.open("w") as f:
