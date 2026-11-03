@@ -1,4 +1,4 @@
-#%% 
+# %%
 import os
 import time
 from pathlib import Path
@@ -402,7 +402,8 @@ def start_simulation_breaches(
 
         print(f"Simulation registered: {simulation.id}")
 
-#%%
+
+# %%
 if __name__ == "__main__":
     # Project configuration
     project = ProjectConfig(
