@@ -1,13 +1,16 @@
 # %%
+from math import atan2, cos, sin
 from pathlib import Path
 from typing import Any, Tuple
 
 import geopandas as gpd
 import matplotlib
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 import rasterio
 from shapely import line_interpolate_point
+from shapely.geometry import LineString
 from shapely.ops import nearest_points
 
 from hhnk_threedi_tools import Folders
@@ -64,11 +67,6 @@ def nearest_intersect_exclude(boundary_geom, line_geom, point_geom, exclude_poin
     return intersection, nearest_dist
 
 
-from math import atan2, cos, sin
-
-from shapely.geometry import LineString
-
-
 def perpendicular_lines(p1, p2, distance, side):
     """
     Takes two points and calculates points perpendicular  to first point and draws line between them.
@@ -109,9 +107,6 @@ def perpendicular_lines(p1, p2, distance, side):
     perp_line = LineString([p1, perp_coords])
 
     return perp_line
-
-
-import numpy as np
 
 
 def get_nearest_non_nodata(rioxarray_raster, point_gdf, tolerance=0.5, pixelsize=0.5, mode="min"):
@@ -157,9 +152,6 @@ def get_nearest_non_nodata(rioxarray_raster, point_gdf, tolerance=0.5, pixelsize
             result = np.nanmean(data)
 
     return result
-
-
-import numpy as np
 
 
 def get_min_value_in_polygon(rioxarray_raster, polygon, mode="min"):
