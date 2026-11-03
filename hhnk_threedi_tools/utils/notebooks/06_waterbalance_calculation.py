@@ -115,7 +115,7 @@ batch_folder_name = ["huidig_blok"]
 get_waterbalance(paths, batch_folder_name)
 
 # %% [markdown]
-## Water Balance Plot   
+## Water Balance Plot
 # Create water balance plots from exported 3Di water balance CSV files.
 # %%
 
