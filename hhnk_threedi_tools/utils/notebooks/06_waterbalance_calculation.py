@@ -115,7 +115,7 @@ batch_folder_name = ["huidig_blok"]
 get_waterbalance(paths, batch_folder_name)
 
 # %% [markdown]
-## Water Balance Plot
+## Water Balance Plot   
 # Create water balance plots from exported 3Di water balance CSV files.
 # %%
 
@@ -128,6 +128,8 @@ def get_waterbalance_plot(batch_path, batch_folder_name):
         output_raster_path = batch_path / results / "02_output_rasters"
         downloads = os.listdir(output_raster_path)
         for download in downloads:
+            if download == "temp":
+                continue
             plot_water_balance_folder = output_raster_path / download / f"waterbalance_{download}"
             csv_water_balance_timeseries = plot_water_balance_folder / "water_balance_timeseries.csv"
             csv_water_balance_volumen = plot_water_balance_folder / "water_balance_volumes.csv"
@@ -144,7 +146,15 @@ def get_waterbalance_plot(batch_path, batch_folder_name):
 ## Inputs **get_waterbalance_plot()**
 # add the batch folder name to the list if you want to create water balance plots for a specific batch folder. If you want to create water balance plots for all batch folders, leave the list empty.
 # %%
+# paths = {
+#     Folders(r"H:\02.modellen\bergen_noord_huidig_situatie_JA").threedi_results.batch.path: ["huidig_blok"],
+#     Folders(r"H:\02.modellen\bergen_noord_huidig_situatie_JA").threedi_results.batch.path: ["huidig_piek"],
+#     Folders(r"H:\02.modellen\bergen_noord_variant_2_JA").threedi_results.batch.path: ["variant_2_results_block_new_dem"],
+#     Folders(r"H:\02.modellen\bergen_noord_variant_2_JA").threedi_results.batch.path: ["variant_2_results_piek_new_dem"],
+# }
 
+# for path, waterbergin_polygon in paths.items():
+#     get_waterbalance_plot(path, waterbergin_polygon)
 batch_path = folder.threedi_results.batch.path
 batch_folder_name = ["huidig_blok"]
 get_waterbalance_plot(batch_path, batch_folder_name)
