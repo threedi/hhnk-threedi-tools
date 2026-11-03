@@ -115,67 +115,42 @@ def create_simulations(api_client, project, model, simulation_template, selected
 
 
 from simulation_settings import (
+    AGGREGATION_SETTINGS,
     NUMERICAL_SETTINGS,
     PHYSICAL_SETTINGS,
     TIME_STEP_SETTINGS,
-    AGGREGATION_SETTINGS,
 )
 
 
 def apply_simulation_settings(api_client, simulation_id):
 
     # Time step settings
-    api_client.simulations_settings_time_step_delete(
-        simulation_pk=simulation_id
-    )
-    api_client.simulations_settings_time_step_create(
-        simulation_pk=simulation_id,
-        data=TIME_STEP_SETTINGS
-    )
+    api_client.simulations_settings_time_step_delete(simulation_pk=simulation_id)
+    api_client.simulations_settings_time_step_create(simulation_pk=simulation_id, data=TIME_STEP_SETTINGS)
 
     # Numerical settings
-    api_client.simulations_settings_numerical_delete(
-        simulation_pk=simulation_id
-    )
-    api_client.simulations_settings_numerical_create(
-        simulation_pk=simulation_id,
-        data=NUMERICAL_SETTINGS
-    )
+    api_client.simulations_settings_numerical_delete(simulation_pk=simulation_id)
+    api_client.simulations_settings_numerical_create(simulation_pk=simulation_id, data=NUMERICAL_SETTINGS)
 
     # Physical settings
-    api_client.simulations_settings_physical_delete(
-        simulation_pk=simulation_id
-    )
-    api_client.simulations_settings_physical_create(
-        simulation_pk=simulation_id,
-        data=PHYSICAL_SETTINGS
-    )
+    api_client.simulations_settings_physical_delete(simulation_pk=simulation_id)
+    api_client.simulations_settings_physical_create(simulation_pk=simulation_id, data=PHYSICAL_SETTINGS)
 
     # Remove existing aggregation settings
     current_aggregations = api_client.simulations_settings_aggregation_list(
-        simulation_pk=simulation_id,
-        limit=99
+        simulation_pk=simulation_id, limit=99
     ).results
 
     for aggregation in current_aggregations:
         aggregation_id = aggregation.url.split("/")[-2]
 
-        api_client.simulations_settings_aggregation_delete(
-            simulation_pk=simulation_id,
-            id=aggregation_id
-        )
+        api_client.simulations_settings_aggregation_delete(simulation_pk=simulation_id, id=aggregation_id)
 
     # Create HHNK aggregation settings
     for aggregation in AGGREGATION_SETTINGS:
-        api_client.simulations_settings_aggregation_create(
-            simulation_pk=simulation_id,
-            data=aggregation
-        )
+        api_client.simulations_settings_aggregation_create(simulation_pk=simulation_id, data=aggregation)
 
     print(f"Simulation {simulation_id}: settings configured.")
-
-
-
 
 
 model, simulation_template, selected_breaches = prepare_simulations(
@@ -192,7 +167,7 @@ create_simulations(
 )
 
 # Register simulation in Excel
-registry.add_simulation(
+SimulationRegistry(
     scenario_name=scenario_name,
     schematitation_name=project.model_folder.name,
     schematisation_id=model.schematisation_id,

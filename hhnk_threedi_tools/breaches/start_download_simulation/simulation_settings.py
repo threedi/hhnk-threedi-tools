@@ -27,7 +27,7 @@ OUTPUT_TIMESTEP = 900  # seconds
 # Numerical solver settings: these are the stability and convergence controls used
 # for the 1D/2D flow calculation. They tune Newton iterations, CFL checks, and
 # limiter behaviour to keep the breach simulation numerically stable.
-NUMERICAL_SETTING = {
+NUMERICAL_SETTINGS = {
     "pump_implicit_ratio": 1,
     "cfl_strictness_factor_1d": 1,
     "cfl_strictness_factor_2d": 1,
