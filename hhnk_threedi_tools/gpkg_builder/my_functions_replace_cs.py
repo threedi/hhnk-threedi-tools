@@ -453,8 +453,8 @@ def get_height_and_reference_level(
             profile_points_with_heights["profile_id"] == profile_id
         )
 
-        profile_points_with_heights.loc[selection, " reference_level"] = reference_level
-        profile_points_with_heights.loc[selection, " height"] = profile["height"]
+        profile_points_with_heights.loc[selection, "reference_level"] = reference_level
+        profile_points_with_heights.loc[selection, "height"] = profile["height"]
 
         cross_section_tables = get_cross_section_table(profile, height_step=0.10)
         cross_section_tables["channel_id"] = channel_id
@@ -604,10 +604,10 @@ def update_cross_sections(
     Update cross_section_locations with computed reference_level, bank_level and cross_section_table.
     Returns the updated cross_section_locations GeoDataFrame.
     """
-    channel_cross_sections_banklelvel = profile_points_with_heights[
+    channel_cross_sections_banklevel = profile_points_with_heights[
         ["channel_id", "profile_id", "reference_level", "bank_level", "cross_section_table"]
     ].drop_duplicates()
-    for index, channel in channel_cross_sections_banklelvel.iterrows():
+    for index, channel in channel_cross_sections_banklevel.iterrows():
         selection = cross_section_locations["channel_id"] == channel["channel_id"]
         cross_section_locations.loc[selection, "updated"] = True
         cross_section_locations.loc[selection, "reference_level"] = round(channel["reference_level"], 3)
