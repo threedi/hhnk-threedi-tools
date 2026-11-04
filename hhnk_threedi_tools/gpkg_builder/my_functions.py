@@ -214,12 +214,21 @@ def points_along_lines(
 
     for idx, line in lines.iterrows():
         length = line.geometry.length
-        if include_endpoints:
+
+        # create a single point at the midpoint of the line if the line is shorter than the space
+        if length < space:
+            distances = np.array([length / 2])
+
+        # Create distances along the line, including the end point
+        elif include_endpoints:
             distances = np.arange(0, length, space)
             distances = np.append(distances, length)
-        else:
+
+        # Create distances along the line, without the end point
+        elif not include_endpoints:
             distances = np.arange(space, length, space)
 
+        # Create points at each distance along the line using line_interpolate_point to get the geometry
         for distance in distances:
             point_data = {
                 "point_id": len(points),
@@ -249,7 +258,7 @@ def points_along_lines(
 
 
 def draw_perpendicular_lines(
-    width: float, points_gdf: gpd.GeoDataFrame, greppels: gpd.GeoDataFrame
+    width: float, points_gdf: gpd.GeoDataFrame, greppels: gpd.GeoDataFrame, waterdeel_gdf: gpd.GeoDataFrame
 ) -> gpd.GeoDataFrame:
     """
     For each point and its greppel line, draw a perpendicular cross-section of given width.
@@ -284,11 +293,18 @@ def draw_perpendicular_lines(
                 }
             )
 
-    profiles_gdf = gpd.GeoDataFrame(
+    profiles_lines = gpd.GeoDataFrame(
         profiles,
         geometry="geometry",
         crs=greppels.crs,
     )
+
+    # Buffer waterdeel to ensure that the extend of the profile lines is within the channel boundaries.
+    waterdeel_buffer = waterdeel_gdf.buffer(0.5)
+
+    # clip profile lines to waterdeel boundaries
+    profiles_gdf = gpd.clip(profiles_lines, waterdeel_buffer, keep_geom_type=True)
+
     return profiles_gdf
 
 
@@ -309,7 +325,7 @@ def sample_elevation_per_profile_point(
     coords = []
     elevations = []
 
-    profile_lines = draw_perpendicular_lines(width, points_gdf, greppels)
+    profile_lines = draw_perpendicular_lines(width, points_gdf, greppels, waterdeel_gdf)
     profile_lines = gpd.sjoin(profile_lines, waterdeel_gdf[["geometry"]], how="inner", predicate="intersects")
 
     profile_lines = profile_lines.drop(columns="index_right")
@@ -753,8 +769,8 @@ if __name__ == "__main__":
     folder = Folders(Path(r"H:\02.modellen\grootslag_leggertool"))
     dem_path = (model) / "rasters" / "dem_grootslag.tif"
     greppels = r"H:\02.modellen\grootslag_leggertool\01_source_data\greppels_from_geoweb_wss_clipped.gpkg"
-    waterdeel_gdf = gpd.read_file(r"H:\02.modellen\grootslag_leggertool\01_source_data\DAMO_waterdeel_backup.gpkg")
     damo_path = r"H:\02.modellen\grootslag_greppels_clip\01_source_data\DAMO.gpkg"
+
     # Inputs(read geodataframes)
     hydroobject = gpd.read_file(damo_path, layer="HydroObject")
     waterdeel_gdf = gpd.read_file(damo_path, layer="Waterdeel")
@@ -765,11 +781,14 @@ if __name__ == "__main__":
     culver_gdf = gpd.read_file(model_path, layer="culvert")
     connection_node_gdf = gpd.read_file(model_path, layer="connection_node")
     width = 5  # profile line width (meters)
-    space = 0.30  # space between points (meters)
+    space = 0.15  # space between points (meters)
+    space_points_along_lines = 20  # space between points along the greppels (meters)
 
     # fucntions.
-    # draw profile lines and points along  greppels
-    points_gdf = points_along_lines(lines=greppels_gdf, space=10, code_column="CODE", include_endpoints=False)
+    # draw profile lines and points along greppels
+    points_gdf = points_along_lines(
+        lines=greppels_gdf, space=space_points_along_lines, code_column="CODE", include_endpoints=False
+    )
 
     # Sample profile points using dem
     profile_points_gdf, profile_lines_gdf = sample_elevation_per_profile_point(
@@ -826,4 +845,17 @@ if __name__ == "__main__":
 #     r"H:\02.modellen\grootslag_leggertool\cross_section_updated.gpkg",
 #     driver="GPKG",
 # )
-# # %%
+# %%
+
+path = Path(
+    r"\\corp.hhnk.nl\data\Hydrologen_data\Data\02.modellen\grootslag_leggertool\02_schematisation\greppels\profile_graph"
+)
+profile_points_save = path / "profile_points.gpkg"
+profile_points_gdf.to_file(profile_points_save)
+codes = profile_points_gdf["code"].unique().tolist()
+
+for code in codes:
+    save_path = path / f"{code}.png"
+    plot_profile(gpkg_path=profile_points_save, code=code, output_path=save_path)
+
+# %%
