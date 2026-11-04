@@ -754,10 +754,10 @@ if __name__ == "__main__":
     dem_path = (model) / "rasters" / "dem_grootslag.tif"
     greppels = r"H:\02.modellen\grootslag_leggertool\01_source_data\greppels_from_geoweb_wss_clipped.gpkg"
     waterdeel_gdf = gpd.read_file(r"H:\02.modellen\grootslag_leggertool\01_source_data\DAMO_waterdeel_backup.gpkg")
-    damo_path = r"H:\02.modellen\grootslag_leggertool\01_source_data\version_1_DCMB\DAMO.gpkg"
-
+    damo_path = r"H:\02.modellen\grootslag_greppels_clip\01_source_data\DAMO.gpkg"
     # Inputs(read geodataframes)
     hydroobject = gpd.read_file(damo_path, layer="HydroObject")
+    waterdeel_gdf = gpd.read_file(damo_path, layer="Waterdeel")
     greppels_gdf = gpd.read_file(greppels)
     channel_gdf = gpd.read_file(model_path, layer="channel")
     cross_section_locations = gpd.read_file(model_path, layer="cross_section_location")
