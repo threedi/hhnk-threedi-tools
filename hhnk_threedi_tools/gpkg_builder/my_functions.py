@@ -674,10 +674,10 @@ def update_model(
         )
 
         # compare crest level against reference. It wil  change if reference is higher than crest level
-        target_crest_level = round(min(reference_levels) + 0.10, 3)
+        target_crest_level = round(max(reference_levels), 3)
 
-        if orifice["crest_level"] > target_crest_level:
-            orifice_gdf.loc[idx, "crest_level"] = target_crest_level
+        # if orifice["crest_level"] > target_crest_level:
+        orifice_gdf.loc[idx, "crest_level"] = target_crest_level
 
     # update model.
     orifice_gdf.to_file(model_path, layer="orifice", driver="GPKG")
