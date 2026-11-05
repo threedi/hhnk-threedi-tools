@@ -69,7 +69,7 @@ def nearest_intersect_exclude(boundary_geom, line_geom, point_geom, exclude_poin
 
 def perpendicular_lines(p1, p2, distance, side):
     """
-    Takes two points and calculates points perpendicular  to first point and draws line between them.
+    Take two points and calculate points perpendicular  to first point and draw a line between them.
 
     Parameters
     ----------
@@ -101,8 +101,10 @@ def perpendicular_lines(p1, p2, distance, side):
 
     if side == "right":
         perp_coords = [p1[0] - lx, p1[1] + ly]
-    if side == "left":
+    elif side == "left":
         perp_coords = [p1[0] + lx, p1[1] - ly]
+    else:
+        raise ValueError("side must be 'left' or 'right'")
 
     perp_line = LineString([p1, perp_coords])
 
@@ -111,7 +113,7 @@ def perpendicular_lines(p1, p2, distance, side):
 
 def get_nearest_non_nodata(rioxarray_raster, point_gdf, tolerance=0.5, pixelsize=0.5, mode="min"):
     """
-    Finds nearest (pixel interval) non-nodata pixel within tolerance.
+    Find nearest (pixel interval) non-nodata pixel within tolerance.
     Tries at exact location first (within pixelsize), then searches further.
     If multiple pixels at same distance 'mode' desides.
 
@@ -156,7 +158,7 @@ def get_nearest_non_nodata(rioxarray_raster, point_gdf, tolerance=0.5, pixelsize
 
 def get_min_value_in_polygon(rioxarray_raster, polygon, mode="min"):
     """
-    Finds non-nodata value within polygon.
+    Find non-nodata value within polygon.
     If multiple pixels whotin polygon 'mode' desides.
 
     Basic zonal statistics without rasterstats module.
@@ -225,7 +227,7 @@ def points_along_lines(
             distances = np.append(distances, length)
 
         # Create distances along the line, without the end point
-        elif not include_endpoints:
+        else:
             distances = np.arange(space, length, space)
 
         # Create points at each distance along the line using line_interpolate_point to get the geometry
@@ -335,9 +337,7 @@ def sample_elevation_per_profile_point(
     profile_points_gdf = points_along_lines(profile_lines, space=space, code_column=code_column)
 
     for point in profile_points_gdf.geometry:
-        point_x = point.x
-        point_y = point.y
-        coords.append((point_x, point_y))
+        coords.append((point.x, point.y))
 
     with rasterio.open(dem_path) as dem:
         for coord in coords:
@@ -547,7 +547,7 @@ def get_bank_level(profile_points_with_heights: gpd.GeoDataFrame) -> gpd.GeoData
 
     profile_points_with_heights["bank_level"] = float("nan")
 
-    groups = profile_points_with_heights.groupby("channel_id", "profile_id")
+    groups = profile_points_with_heights.groupby(["channel_id", "profile_id"])
 
     for key in groups.groups.keys():
         channel_id, profile_id = key
@@ -779,45 +779,18 @@ def update_model(
     # update connectio node.
     connection_node_gdf.to_file(model_path, layer="connection_node", driver="GPKG")
 
-    # update cross section attributes base on updated ids.
-    cross_section_ids = cross_section_locations_updated["id"]
-    for id in cross_section_ids:
-        # update banklevel
-        bank_level = (
-            cross_section_locations_updated.loc[cross_section_locations_updated["id"] == id, "bank_level"]
-            .to_numpy()
-            .tolist()[0]
-        )
-        cross_section_locations.loc[cross_section_locations["id"] == id, "bank_level"] = bank_level
-
-        # update cross section table.
-        cross_section_table = (
-            cross_section_locations_updated.loc[cross_section_locations_updated["id"] == id, "cross_section_table"]
-            .to_numpy()
-            .tolist()[0]
-        )
-        cross_section_locations.loc[cross_section_locations["id"] == id, "cross_section_table"] = cross_section_table
-
-        # update reference level
-        reference_level = (
-            cross_section_locations_updated.loc[cross_section_locations_updated["id"] == id, "reference_level"]
-            .to_numpy()
-            .tolist()[0]
-        )
-        cross_section_locations.loc[cross_section_locations["id"] == id, "reference_level"] = reference_level
-
-    cross_section_locations.to_file(model_path, layer="cross_section_location", driver="GPKG")
+    cross_section_locations.to_file(model_path, layer="cross_section_location", driver="GPKG", index=False)
 
 
 # %%
 if __name__ == "__main__":
     # paths
-    model = Path(r"H:\02.modellen\grootslag_leggertool\02_schematisation\greppels")
-    model_path = model / "bwn_grootslag.gpkg"
-    folder = Folders(Path(r"H:\02.modellen\grootslag_leggertool"))
-    dem_path = (model) / "rasters" / "dem_grootslag.tif"
+    model = Path(r"H:\02.modellen\grootslag_greppels_clip_add_crst\02_schematisation\00_basis")
+    model_path = model / "greppels_clip.gpkg"
+    # folder = Folders(Path(r"H:\02.modellen\grootslag_leggertool"))
+    dem_path = r"\\corp.hhnk.nl\data\Hydrologen_data\Data\02.modellen\grootslag_leggertool\02_schematisation\00_basis\rasters\dem_grootslag.tif"
     greppels = r"H:\02.modellen\grootslag_leggertool\01_source_data\greppels_from_geoweb_wss_clipped.gpkg"
-    damo_path = r"H:\02.modellen\grootslag_greppels_clip\01_source_data\DAMO.gpkg"
+    damo_path = r"H:\02.modellen\grootslag_greppels_clip_add_crst\01_source_data\DAMO.gpkg"
 
     # Inputs(read geodataframes)
     hydroobject = gpd.read_file(damo_path, layer="HydroObject")
