@@ -756,12 +756,12 @@ def update_model(
         bank_level = connection_node.bank_level
 
         # get connection nodes id to update initial water level field (10 below bank level)
-        connection_node_start_id = channel_gdf.loc[
-            channel_gdf["id"] == channel_id, "connection_node_start_id"
-        ].to_numpy().tolist()[0]
-        connection_node_end_id = channel_gdf.loc[
-            channel_gdf["id"] == channel_id, "connection_node_end_id"
-        ].to_numpy().tolist()[0]
+        connection_node_start_id = (
+            channel_gdf.loc[channel_gdf["id"] == channel_id, "connection_node_start_id"].to_numpy().tolist()[0]
+        )
+        connection_node_end_id = (
+            channel_gdf.loc[channel_gdf["id"] == channel_id, "connection_node_end_id"].to_numpy().tolist()[0]
+        )
 
         # Update only nodes not shared with channels outside the selection.
         if connection_node_start_id not in connection_id_no_greppels:
@@ -783,21 +783,27 @@ def update_model(
     cross_section_ids = cross_section_locations_updated["id"]
     for id in cross_section_ids:
         # update banklevel
-        bank_level = cross_section_locations_updated.loc[
-            cross_section_locations_updated["id"] == id, "bank_level"
-        ].to_numpy().tolist()[0]
+        bank_level = (
+            cross_section_locations_updated.loc[cross_section_locations_updated["id"] == id, "bank_level"]
+            .to_numpy()
+            .tolist()[0]
+        )
         cross_section_locations.loc[cross_section_locations["id"] == id, "bank_level"] = bank_level
 
         # update cross section table.
-        cross_section_table = cross_section_locations_updated.loc[
-            cross_section_locations_updated["id"] == id, "cross_section_table"
-        ].to_numpy().tolist()[0]
+        cross_section_table = (
+            cross_section_locations_updated.loc[cross_section_locations_updated["id"] == id, "cross_section_table"]
+            .to_numpy()
+            .tolist()[0]
+        )
         cross_section_locations.loc[cross_section_locations["id"] == id, "cross_section_table"] = cross_section_table
 
         # update reference level
-        reference_level = cross_section_locations_updated.loc[
-            cross_section_locations_updated["id"] == id, "reference_level"
-        ].to_numpy().tolist()[0]
+        reference_level = (
+            cross_section_locations_updated.loc[cross_section_locations_updated["id"] == id, "reference_level"]
+            .to_numpy()
+            .tolist()[0]
+        )
         cross_section_locations.loc[cross_section_locations["id"] == id, "reference_level"] = reference_level
 
     cross_section_locations.to_file(model_path, layer="cross_section_location", driver="GPKG")
