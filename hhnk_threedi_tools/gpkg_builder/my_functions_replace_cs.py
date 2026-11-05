@@ -614,7 +614,7 @@ def update_cross_sections(
 
     new_cross_section = []
     next_id = int(cross_section_locations["id"].max()) + 1
-    template = cross_section_locations.iloc[0].copy()
+    template = cross_section_locations.iloc[[0]].copy()
     template["cross_section_shape"] = 6
     template["friction_type"] = 2
     template["friction_value"] = 0.050
@@ -651,8 +651,8 @@ def update_cross_sections(
         new_cross_section.append(cross_section)
         next_id += 1
 
-    if not cross_section_locations.empty:
-        return cross_section_locations.copy()
+    print(new_cross_section[0].columns.tolist())
+    print(new_cross_section[0][["id", "channel_id", "updated", "cross_section_table"]])
 
     processed_channels = channel_cross_sections_banklevel["channel_id"]
 
@@ -829,7 +829,7 @@ if __name__ == "__main__":
     cross_section_locations_updated = update_cross_sections(
         profile_points_with_heights, cross_section_locations.copy(), profile_lines_gdf, channel_gdf
     )
-
+    # %%
     update_model(
         cross_section_locations_updated,
         channel_gdf,
