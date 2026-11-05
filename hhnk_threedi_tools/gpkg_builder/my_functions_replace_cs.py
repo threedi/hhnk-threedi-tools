@@ -598,21 +598,72 @@ def get_bank_level(profile_points_with_heights: gpd.GeoDataFrame) -> gpd.GeoData
 
 
 def update_cross_sections(
-    profile_points_with_heights: gpd.GeoDataFrame, cross_section_locations: gpd.GeoDataFrame
+    profile_points_with_heights: gpd.GeoDataFrame,
+    cross_section_locations: gpd.GeoDataFrame,
+    profile_lines_gdf: gpd.GeoDataFrame,
+    channel_gdf: gpd.GeoDataFrame,
 ) -> gpd.GeoDataFrame:
     """
     Update cross_section_locations with computed reference_level, bank_level and cross_section_table.
     Returns the updated cross_section_locations GeoDataFrame.
     """
+
     channel_cross_sections_banklevel = profile_points_with_heights[
         ["channel_id", "profile_id", "reference_level", "bank_level", "cross_section_table"]
     ].drop_duplicates()
+
+    new_cross_section = []
+    next_id = int(cross_section_locations["id"].max()) + 1
+    template = cross_section_locations.iloc[0].copy()
+    template["cross_section_shape"] = 6
+    template["friction_type"] = 2
+    template["friction_value"] = 0.050
+
     for index, channel in channel_cross_sections_banklevel.iterrows():
-        selection = cross_section_locations["channel_id"] == channel["channel_id"]
-        cross_section_locations.loc[selection, "updated"] = True
-        cross_section_locations.loc[selection, "reference_level"] = round(channel["reference_level"], 3)
-        cross_section_locations.loc[selection, "bank_level"] = channel["bank_level"]
-        cross_section_locations.loc[selection, "cross_section_table"] = channel["cross_section_table"]
+        # Check if the channel already has a cross-section location.
+        cross_section = template.copy()
+        cross_section["channel_id"] = channel["channel_id"]
+        # locater the cross sect ion on the channel
+        profile_line = profile_lines_gdf.loc[
+            profile_lines_gdf["point_id"] == channel["profile_id"],
+            "geometry",
+        ].iloc[0]
+
+        channel_line = channel_gdf.loc[
+            channel_gdf["id"] == channel["channel_id"],
+            "geometry",
+        ].iloc[0]
+
+        location = profile_line.intersection(channel_line)
+
+        if location.is_empty:
+            print(f"Warning: No intersection found for channel {channel['channel_id']}. Skipping.")
+            continue
+
+        cross_section["geometry"] = location
+        cross_section["code"] = f"grepple_{next_id}"
+        cross_section["id"] = next_id
+        cross_section["updated"] = True
+        cross_section["reference_level"] = round(channel["reference_level"], 3)
+        cross_section["bank_level"] = channel["bank_level"]
+        cross_section["cross_section_table"] = channel["cross_section_table"]
+
+        new_cross_section.append(cross_section)
+        next_id += 1
+
+    if not cross_section_locations.empty:
+        return cross_section_locations.copy()
+
+    processed_channels = channel_cross_sections_banklevel["channel_id"]
+
+    cross_section_locations = cross_section_locations.loc[
+        ~cross_section_locations["channel_id"].isin(processed_channels)
+    ].copy()
+
+    cross_section_concatenated = pd.concat([cross_section_locations] + new_cross_section, ignore_index=True)
+    cross_section_locations = gpd.GeoDataFrame(
+        cross_section_concatenated, geometry="geometry", crs=cross_section_locations.crs
+    )
     return cross_section_locations
 
 
@@ -707,10 +758,10 @@ def update_model(
         # get connection nodes id to update initial water level field (10 below bank level)
         connection_node_start_id = channel_gdf.loc[
             channel_gdf["id"] == channel_id, "connection_node_start_id"
-        ].values.tolist()[0]
+        ].to_numpy().tolist()[0]
         connection_node_end_id = channel_gdf.loc[
             channel_gdf["id"] == channel_id, "connection_node_end_id"
-        ].values.tolist()[0]
+        ].to_numpy().tolist()[0]
 
         # Update only nodes not shared with channels outside the selection.
         if connection_node_start_id not in connection_id_no_greppels:
@@ -734,19 +785,19 @@ def update_model(
         # update banklevel
         bank_level = cross_section_locations_updated.loc[
             cross_section_locations_updated["id"] == id, "bank_level"
-        ].values.tolist()[0]
+        ].to_numpy().tolist()[0]
         cross_section_locations.loc[cross_section_locations["id"] == id, "bank_level"] = bank_level
 
         # update cross section table.
         cross_section_table = cross_section_locations_updated.loc[
             cross_section_locations_updated["id"] == id, "cross_section_table"
-        ].values.tolist()[0]
+        ].to_numpy().tolist()[0]
         cross_section_locations.loc[cross_section_locations["id"] == id, "cross_section_table"] = cross_section_table
 
         # update reference level
         reference_level = cross_section_locations_updated.loc[
             cross_section_locations_updated["id"] == id, "reference_level"
-        ].values.tolist()[0]
+        ].to_numpy().tolist()[0]
         cross_section_locations.loc[cross_section_locations["id"] == id, "reference_level"] = reference_level
 
     cross_section_locations.to_file(model_path, layer="cross_section_location", driver="GPKG")
@@ -797,8 +848,7 @@ if __name__ == "__main__":
     cross_section_banklevels = get_bank_level(profile_points_with_heights)
 
     cross_section_locations_updated = update_cross_sections(
-        profile_points_with_heights,
-        cross_section_locations.copy(),
+        profile_points_with_heights, cross_section_locations.copy(), profile_lines_gdf, channel_gdf
     )
 
     update_model(
