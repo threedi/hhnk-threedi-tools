@@ -401,7 +401,7 @@ def get_height_and_reference_level(
     channel_gdf: gpd.GeoDataFrame,
     profile_lines_gdf: gpd.GeoDataFrame,
     profile_points_gdf: gpd.GeoDataFrame,
-) -> gpd.GeoDataFrame:
+) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]:
     """
     Compute mean elevations per channel, derive reference level and heights, and build cross-section tables.
     Returns profile points GeoDataFrame enriched with reference_level, mean_elevation, height and cross_section_table.
@@ -443,6 +443,7 @@ def get_height_and_reference_level(
 
     # loop over the groups to compute reference level, heigh and crossection table per cross section profile
     cross_section_tables_list = []
+    invalid_profiles = []
     for key in groups.groups.keys():
         channel_id, profile_id = key
         profile = groups.get_group(key).copy()
@@ -457,24 +458,46 @@ def get_height_and_reference_level(
         profile_points_with_heights.loc[selection, "height"] = profile["height"]
 
         cross_section_tables = get_cross_section_table(profile, height_step=0.10)
+        if cross_section_tables is None:
+            invalid_profiles.append(
+                {
+                    "channel_id": channel_id,
+                    "profile_id": profile_id,
+                }
+            )
+
+            print(
+                f"Warning: Channel {channel_id}, profile {profile_id}: "
+                "insuficient vertical range to build t he cross sect ion table"
+                "Che"
+                "ck alignment of Hydroobject and Waterdeel with the DEM"
+            )
+            continue
         cross_section_tables["channel_id"] = channel_id
         cross_section_tables["profile_id"] = profile_id
 
         cross_section_tables_list.append(cross_section_tables)
     # merge results.
     cross_section_tables = pd.concat(cross_section_tables_list, ignore_index=True)
-    print(cross_section_tables[["channel_id", "profile_id", "cross_section_table"]].head())
+    # print(cross_section_tables[["channel_id", "profile_id", "cross_section_table"]].head())
 
     profile_points_with_heights = profile_points_with_heights.merge(
         cross_section_tables, on=["channel_id", "profile_id"], how="left", validate="many_to_one"
     )
-    return profile_points_with_heights
+
+    if invalid_profiles:
+        invalid_profiles_df = pd.DataFrame(invalid_profiles)
+
+        invalid_profiles_gdf = profile_lines_gdf.merge(
+            invalid_profiles_df, left_on="point_id", right_on="profile_id", how="inner"
+        )
+    return profile_points_with_heights, invalid_profiles_gdf
 
 
 def get_cross_section_table(
     profile: pd.DataFrame,
     height_step: float = 0.10,
-) -> pd.DataFrame:
+) -> pd.DataFrame | None:
     """
     Build a cross-section table for a channel profile: for a sequence of heights compute widths.
     Returns a DataFrame with channel_id and cross_section_table text.
@@ -529,6 +552,8 @@ def get_cross_section_table(
 
         if float(first_width) == 0:
             cross_section_rows[0] = f"{first_height},{next_width}"
+    if len(cross_section_rows) <= 1:
+        return None
 
     cross_section = pd.DataFrame(
         {
@@ -608,9 +633,13 @@ def update_cross_sections(
     Returns the updated cross_section_locations GeoDataFrame.
     """
 
-    channel_cross_sections_banklevel = profile_points_with_heights[
-        ["channel_id", "profile_id", "reference_level", "bank_level", "cross_section_table"]
-    ].drop_duplicates()
+    channel_cross_sections_banklevel = (
+        profile_points_with_heights[
+            ["channel_id", "profile_id", "reference_level", "bank_level", "cross_section_table"]
+        ]
+        .drop_duplicates()
+        .dropna(subset=["cross_section_table"])
+    )
 
     new_cross_section = []
     next_id = int(cross_section_locations["id"].max()) + 1
@@ -779,18 +808,19 @@ def update_model(
     # update connectio node.
     connection_node_gdf.to_file(model_path, layer="connection_node", driver="GPKG")
 
-    cross_section_locations.to_file(model_path, layer="cross_section_location", driver="GPKG", index=False)
+    cross_section_locations_updated.to_file(model_path, layer="cross_section_location", driver="GPKG", index=False)
 
 
 # %%
 if __name__ == "__main__":
     # paths
-    model = Path(r"H:\02.modellen\grootslag_greppels_clip_add_crst\02_schematisation\00_basis")
-    model_path = model / "greppels_clip.gpkg"
-    # folder = Folders(Path(r"H:\02.modellen\grootslag_leggertool"))
-    dem_path = r"\\corp.hhnk.nl\data\Hydrologen_data\Data\02.modellen\grootslag_leggertool\02_schematisation\00_basis\rasters\dem_grootslag.tif"
+    folder = Folders(r"H:\02.modellen\grootslag_greppels_clip_add_crst")
+    damo_path = folder.source_data.damo.path
+    model_path = folder.model.schema_base.model_path()
+    dem_path = Path(
+        r"\\corp.hhnk.nl\data\Hydrologen_data\Data\02.modellen\grootslag_leggertool\02_schematisation\00_basis\rasters\dem_grootslag.tif"
+    )
     greppels = r"H:\02.modellen\grootslag_leggertool\01_source_data\greppels_from_geoweb_wss_clipped.gpkg"
-    damo_path = r"H:\02.modellen\grootslag_greppels_clip_add_crst\01_source_data\DAMO.gpkg"
 
     # Inputs(read geodataframes)
     hydroobject = gpd.read_file(damo_path, layer="HydroObject")
@@ -815,17 +845,23 @@ if __name__ == "__main__":
     profile_points_gdf, profile_lines_gdf = sample_elevation_per_profile_point(
         width, points_gdf, greppels_gdf, dem_path, code_column="code", waterdeel_gdf=waterdeel_gdf, space=space
     )
-    # built cross section table base on: channel code and point location on the profile lines
-    profile_points_with_heights = get_height_and_reference_level(
+    # built cross section table base on: channel code and point location on the profile lines and save invalid profile
+    # Save invalid profiles to check them later if it is needed.
+    profile_points_with_heights, invalid_profiles_gdf = get_height_and_reference_level(
         greppels_gdf=greppels_gdf,
         channel_gdf=channel_gdf,
         profile_lines_gdf=profile_lines_gdf,
         profile_points_gdf=profile_points_gdf,
     )
 
+    # save invalid profiles
+    invalid_profiles_path = folder.source_data.path / "invalid_profiles.gpkg"
+    invalid_profiles_gdf.to_file(invalid_profiles_path, driver="GPKG")
+
     # get bank level base on the flattering from the banks. (minimum from both side banks.)
     cross_section_banklevels = get_bank_level(profile_points_with_heights)
 
+    # update cross section
     cross_section_locations_updated = update_cross_sections(
         profile_points_with_heights, cross_section_locations.copy(), profile_lines_gdf, channel_gdf
     )
