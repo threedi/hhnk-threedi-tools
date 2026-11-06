@@ -408,7 +408,7 @@ def validate_profile(new_profile_points, profile_lines_gdf):
 
         reference_level = profile["elevation"].min()
         profile["height"] = profile["elevation"] - reference_level
-        max_height = min(profile["height"].iloc[0] - profile["height"].iloc[1])
+        max_height = min(profile["height"].iloc[0], profile["height"].iloc[1])
 
         if max_height == 0:
             invalid_profiles.append(
@@ -519,6 +519,7 @@ def get_height_and_reference_level(
 
         if cross_section_tables is None:
             print(f"Warning: Channel f{channel_id}: invalid averaged profile")
+            print(profile[["distance", "height"]].drop_duplicates().sort_values("distance").to_string(index=False))
             continue
 
         cross_section_tables["channel_id"] = channel_id
@@ -919,7 +920,7 @@ if __name__ == "__main__":
 # %%
 
 profile_points_folder = Path(folder.source_data.path / "profile_data")
-profile_points_folder.mkdir()
+profile_points_folder.mkdir(exist_ok=True)
 
 profile_points_save = profile_points_folder / "profile_points.gpkg"
 
