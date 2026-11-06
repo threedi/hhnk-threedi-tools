@@ -848,8 +848,8 @@ if __name__ == "__main__":
     culver_gdf = gpd.read_file(model_path, layer="culvert")
     connection_node_gdf = gpd.read_file(model_path, layer="connection_node")
     width = 5  # profile line width (meters)
-    space = 0.15  # space between points (meters)
-    space_points_along_lines = 20  # space between points along the greppels (meters)
+    space = 0.20  # space between points (meters)
+    space_points_along_lines = 15  # space between points along the greppels (meters)
     height_step = 0.1  # meters. Vertical interval between the hights at which cross section widths are calculated
     # fucntions.
     # draw profile lines and points along greppels
