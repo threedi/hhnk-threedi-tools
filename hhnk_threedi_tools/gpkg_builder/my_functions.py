@@ -395,7 +395,51 @@ def plot_profile(gpkg_path: Path, code: Any, output_path: Path) -> None:
     print(f"Figure saved: {output_path}", flush=True)
 
 
-# %%
+def validate_profile(new_profile_points, profile_lines_gdf, height_step):
+
+    valid_points = new_profile_points.copy()
+    invalid_profiles = []
+
+    groups = valid_points.groupby(["channel_id", "profile_id"])
+    for key in groups.groups.keys():
+        channel_id, profile_id = key
+        profile = groups.get_group(key).copy()
+
+        reference_level = profile["elevation"].min()
+        profile["height"] = profile["elevation"] - reference_level
+
+        cross_section_tables = get_cross_section_table(profile, height_step=height_step)
+        if cross_section_tables is None:
+            invalid_profiles.append(
+                {
+                    "channel_id": channel_id,
+                    "profile_id": profile_id,
+                }
+            )
+
+            print(
+                f"Warning: Channel {channel_id}, profile {profile_id}: "
+                "insuficient vertical range to build t he cross sect ion table"
+                "Check alignment of Hydroobject and Waterdeel with the DEM"
+            )
+
+            selection = (valid_points["channel_id"] == channel_id) & (valid_points["profile_id"] == profile_id)
+            valid_points = valid_points.loc[~selection].copy()
+
+        cross_section_tables["channel_id"] = channel_id
+        cross_section_tables["profile_id"] = profile_id
+
+    if invalid_profiles:
+        invalid_profiles_df = pd.DataFrame(invalid_profiles, columns=["channel_id", "profile_id"])
+        if invalid_profiles_df.empty:
+            invalid_profiles_gdf = profile_lines_gdf.iloc[0].copy()
+        else:
+            invalid_profiles_gdf = profile_lines_gdf.merge(
+                invalid_profiles_df, left_on="point_id", right_on="profile_id", how="inner"
+            )
+    return valid_points, invalid_profiles_gdf
+
+
 def get_height_and_reference_level(
     greppels_gdf: gpd.GeoDataFrame,
     channel_gdf: gpd.GeoDataFrame,
@@ -436,6 +480,8 @@ def get_height_and_reference_level(
     # Round distances before averaging matching positions.
     new_profile_points["distance"] = new_profile_points["distance"].round(3)
 
+    new_profile_points, invalid_profiles_gdf = validate_profile(new_profile_points, profile_lines_gdf)
+
     profile_point_mean_elevation = (
         new_profile_points.groupby(
             ["channel_id", "distance"],
@@ -466,22 +512,11 @@ def get_height_and_reference_level(
     # group by channels and keep columns distance and height
     groups = profile_points_with_heights.groupby("channel_id")[["distance", "height"]]
     # apply function to get cross_section_tables
-    invalid_profiles = []
     cross_section_table_list = []
     for channel_id in groups.groups.keys():
         profile = groups.get_group(channel_id).copy()
 
         cross_section_tables = get_cross_section_table(profile, height_step=10)
-
-        if cross_section_tables is None:
-            invalid_profiles.append(channel_id)
-
-            print(
-                f"Warning: Channel {channel_id}: "
-                "insuficient vertical range to build t he cross sect ion table"
-                "Check alignment of Hydroobject and Waterdeel with the DEM"
-            )
-            continue
 
         cross_section_tables["channel_id"] = channel_id
         cross_section_table_list.append(cross_section_tables)
@@ -496,14 +531,6 @@ def get_height_and_reference_level(
         how="left",
         validate="many_to_one",
     )
-
-    if invalid_profiles:
-        invalid_profiles_df = pd.DataFrame(invalid_profiles)
-
-        invalid_profiles_id = profile_lines_id_channel.loc[
-            profile_lines_id_channel["channel_id"].isin(invalid_profiles), "profile_id"
-        ]
-        invalid_profiles_gdf = profile_lines_gdf.loc[profile_lines_gdf["point_id"].isin(invalid_profiles_id)].copy()
 
     return profile_points_with_heights, invalid_profiles_gdf
 
