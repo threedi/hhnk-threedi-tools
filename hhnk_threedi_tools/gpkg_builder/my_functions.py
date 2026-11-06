@@ -466,17 +466,48 @@ def get_height_and_reference_level(
     # group by channels and keep columns distance and height
     groups = profile_points_with_heights.groupby("channel_id")[["distance", "height"]]
     # apply function to get cross_section_tables
-    cross_section_tables = groups.apply(get_cross_section_table, height_step=0.10)
+    invalid_profiles = []
+    cross_section_table_list = []
+    for channel_id in groups.groups.keys():
+        profile = groups.get_group(channel_id).copy()
+
+        cross_section_tables = get_cross_section_table(profile, height_step=10)
+
+        if cross_section_tables is None:
+            invalid_profiles.append(channel_id)
+
+            print(
+                f"Warning: Channel {channel_id}: "
+                "insuficient vertical range to build t he cross sect ion table"
+                "Check alignment of Hydroobject and Waterdeel with the DEM"
+            )
+            continue
+
+        cross_section_tables["channel_id"] = channel_id
+        cross_section_table_list.append(cross_section_tables)
+
     cross_section_tables = cross_section_tables.reset_index(drop=True)
 
     # merge results.
+    cross_section_tables = pd.concat(cross_section_table_list, ignore_index=True)
     profile_points_with_heights = profile_points_with_heights.merge(
         cross_section_tables,
         on="channel_id",
         how="left",
         validate="many_to_one",
     )
-    return profile_points_with_heights
+
+    if invalid_profiles:
+        invalid_profiles_df = pd.DataFrame(invalid_profiles)
+
+        invalid_profiles_id = profile_lines_id_channel.loc[
+            profile_lines_id_channel["channel_id"].isin(invalid_profiles), "profile_id"
+        ]
+        invalid_profiles_gdf = profile_lines_gdf.loc[
+            profile_lines_gdf["point_id"].isin(invalid_profiles_id)
+        ].copy()
+
+    return profile_points_with_heights, invalid_profiles_gdf
 
 
 def get_cross_section_table(
@@ -487,8 +518,6 @@ def get_cross_section_table(
     Build a cross-section table for a channel profile: for a sequence of heights compute widths.
     Returns a DataFrame with channel_id and cross_section_table text.
     """
-    channel_id = profile.name
-
     profile = profile[["distance", "height"]]
     profile = profile.drop_duplicates().sort_values("distance")
 
@@ -536,9 +565,11 @@ def get_cross_section_table(
         if float(first_width) == 0:
             cross_section_rows[0] = f"{first_height},{next_width}"
 
+    if len(cross_section_rows) <= 1:
+        return None
+
     cross_section = pd.DataFrame(
         {
-            "channel_id": [channel_id],
             "cross_section_table": ["\n".join(cross_section_rows)],
         }
     )
@@ -622,6 +653,11 @@ def update_cross_sections(
         cross_section_locations.loc[selection, "reference_level"] = round(channel["reference_level"], 3)
         cross_section_locations.loc[selection, "bank_level"] = channel["bank_level"]
         cross_section_locations.loc[selection, "cross_section_table"] = channel["cross_section_table"]
+
+        cross_section_locations.loc[selection, "code"] = "greppel_" + cross_section_locations.loc[
+            selection, "code"
+        ].astype(str)
+
     return cross_section_locations
 
 
@@ -764,12 +800,14 @@ def update_model(
 # %%
 if __name__ == "__main__":
     # paths
-    model = Path(r"H:\02.modellen\grootslag_leggertool\02_schematisation\greppels")
-    model_path = model / "bwn_grootslag.gpkg"
-    folder = Folders(Path(r"H:\02.modellen\grootslag_leggertool"))
-    dem_path = (model) / "rasters" / "dem_grootslag.tif"
+    folder = Folders(Path(r"H:\02.modellen\grootslag_greppels_clip"))
+    damo_path = folder.source_data.damo.path
+    model_path = folder.model.schema_base.model_path()
+
+    dem_path = Path(
+        r"\\corp.hhnk.nl\data\Hydrologen_data\Data\02.modellen\grootslag_leggertool\02_schematisation\00_basis\rasters\dem_grootslag.tif"
+    )
     greppels = r"H:\02.modellen\grootslag_leggertool\01_source_data\greppels_from_geoweb_wss_clipped.gpkg"
-    damo_path = r"H:\02.modellen\grootslag_greppels_clip\01_source_data\DAMO.gpkg"
 
     # Inputs(read geodataframes)
     hydroobject = gpd.read_file(damo_path, layer="HydroObject")
@@ -795,12 +833,16 @@ if __name__ == "__main__":
         width, points_gdf, greppels_gdf, dem_path, code_column="code", waterdeel_gdf=waterdeel_gdf, space=space
     )
     # built cross section table base on: channel code and point location on the profile lines
-    profile_points_with_heights = get_height_and_reference_level(
+    profile_points_with_heights, invalid_profiles_gdf = get_height_and_reference_level(
         greppels_gdf=greppels_gdf,
         channel_gdf=channel_gdf,
         profile_lines_gdf=profile_lines_gdf,
         profile_points_gdf=profile_points_gdf,
     )
+
+    # save invalid profiles
+    invalid_profiles_path = folder.source_data.path / "invalid_profiles.gpkg"
+    invalid_profiles_gdf.to_file(invalid_profiles_path, driver="GPKG")
 
     # get bank level base on the flattering from the banks. (minimum from both side banks.)
     cross_section_banklevels = get_bank_level(profile_points_with_heights)
@@ -847,10 +889,11 @@ if __name__ == "__main__":
 # )
 # %%
 
-path = Path(
-    r"\\corp.hhnk.nl\data\Hydrologen_data\Data\02.modellen\grootslag_leggertool\02_schematisation\greppels\profile_graph"
-)
-profile_points_save = path / "profile_points.gpkg"
+profile_points_folder = Path(folder.source_data.path / "profile_data")
+profile_points_folder.mkdir()
+
+profile_points_save = profile_points_folder / "profile_points.gpkg"
+
 profile_points_gdf.to_file(profile_points_save)
 codes = profile_points_gdf["code"].unique().tolist()
 
