@@ -443,12 +443,12 @@ def get_height_and_reference_level(
     profile_lines_gdf: gpd.GeoDataFrame,
     profile_points_gdf: gpd.GeoDataFrame,
     height_step: float,
-) -> gpd.GeoDataFrame:
+) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]:
     """
     Compute mean elevations per channel, derive reference level and heights, and build cross-section tables.
     Returns profile points GeoDataFrame enriched with reference_level, mean_elevation, height and cross_section_table.
     """
-    # buffer and dissolve greppels.
+    # buffer and dissolve greppels.cross_section_tables = get_cross_section_table(profile, height_step=height_step)
     greppels_buffer = greppels_gdf.buffer(1).union_all()
     greppels_buffer_gdf = gpd.GeoDataFrame(
         geometry=[greppels_buffer],
@@ -518,6 +518,10 @@ def get_height_and_reference_level(
 
         cross_section_tables = get_cross_section_table(profile, height_step=height_step)
 
+        if cross_section_tables is None:
+            print(f"Warning: Channel f{channel_id}: invalid averaged profile")
+            continue
+
         cross_section_tables["channel_id"] = channel_id
         cross_section_table_list.append(cross_section_tables)
 
@@ -538,7 +542,7 @@ def get_height_and_reference_level(
 def get_cross_section_table(
     profile: pd.DataFrame,
     height_step: float = 0.10,
-) -> pd.DataFrame:
+) -> pd.DataFrame | None:
     """
     Build a cross-section table for a channel profile: for a sequence of heights compute widths.
     Returns a DataFrame with channel_id and cross_section_table text.
