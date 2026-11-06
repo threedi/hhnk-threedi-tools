@@ -871,14 +871,13 @@ if __name__ == "__main__":
     )
 
     # save invalid profiles
-    
+
     profile_points_folder = Path(folder.source_data.path / "profile_data")
     profile_points_folder.mkdir(exist_ok=True)
     profile_points_path = profile_points_folder / "profile_points.gpkg"
     invalid_profiles_path = folder.source_data.path / "invalid_profiles.gpkg"
 
-
-    invalid_profiles_gdf.to_file(invalid_profiles_path, driver="GPKG")  
+    invalid_profiles_gdf.to_file(invalid_profiles_path, driver="GPKG")
     profile_points_gdf.to_file(profile_points_path, driver="GPKG")
 
     # get bank level base on the flattering from the banks. (minimum from both side banks.)
@@ -925,7 +924,6 @@ if __name__ == "__main__":
 #     driver="GPKG",
 # )
 # %%
-
 
 
 codes = profile_points_gdf["code"].unique().tolist()
