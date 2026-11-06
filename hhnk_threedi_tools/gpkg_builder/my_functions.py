@@ -466,9 +466,28 @@ def get_height_and_reference_level(
     profile_lines_intersect = profile_lines_gdf.sjoin(channel_join, how="inner", predicate="intersects")
     profile_lines_intersect = profile_lines_intersect.drop_duplicates()
 
-    # asing channel id to the points.
+    # Locate the cannel axis along each clipped cross section line.
+    profile_lines_intersect["axis_distance"] = np.nan
+
+    for index, profile_line in profile_lines_intersect.iterrows():
+        channel_line = channel_join.loc[channel_join["channel_id"] == profile_line["channel_id"], "geometry"].loc[0]
+        intersection = profile_line.geometry.intersection(channel_line)
+
+        # ensure unique intersection
+        if intersection.is_empty or intersection.geom_type != "Point":
+            raise ValueError(
+                f"channel {profile_line['channel_id']}, "
+                f"profile {profile_line['point_id']}: "
+                "expected a single intersection with the cahnnel."
+            )
+
+        # project mesure the distance along the profile line from its inital point until the intersection point.
+        axis_distance = profile_line.geometry.project(intersection)
+        profile_lines_intersect.loc[index, "axis_distance"] = axis_distance
+
+    # Assign the cahnnel and axis distance to each sample point
     profile_lines_id_channel = (
-        profile_lines_intersect[["point_id", "channel_id"]]
+        (profile_lines_intersect[["point", "channel_id", "axis_distance"]])
         .drop_duplicates()
         .rename(columns={"point_id": "profile_id"})
     )
@@ -476,8 +495,6 @@ def get_height_and_reference_level(
     new_profile_points = profile_points_gdf.merge(
         profile_lines_id_channel, how="inner", on="profile_id", validate="many_to_one"
     )
-    # Round distances before averaging matching positions.
-    new_profile_points["distance"] = new_profile_points["distance"].round(3)
 
     new_profile_points, invalid_profiles_gdf = validate_profile(new_profile_points, profile_lines_gdf)
 
@@ -524,8 +541,6 @@ def get_height_and_reference_level(
 
         cross_section_tables["channel_id"] = channel_id
         cross_section_table_list.append(cross_section_tables)
-
-    cross_section_tables = cross_section_tables.reset_index(drop=True)
 
     # merge results.
     cross_section_tables = pd.concat(cross_section_table_list, ignore_index=True)
@@ -929,7 +944,7 @@ if __name__ == "__main__":
 codes = profile_points_gdf["code"].unique().tolist()
 
 for code in codes:
-    save_path = profile_points_save / f"{code}.png"
-    plot_profile(gpkg_path=profile_points_save, code=code, output_path=save_path)
+    save_path = profile_points_folder / f"{code}.png"
+    plot_profile(gpkg_path=profile_points_path, code=code, output_path=save_path)
 
 # %%
