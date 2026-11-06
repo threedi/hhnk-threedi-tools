@@ -469,8 +469,7 @@ def get_height_and_reference_level(
             print(
                 f"Warning: Channel {channel_id}, profile {profile_id}: "
                 "insuficient vertical range to build t he cross sect ion table"
-                "Che"
-                "ck alignment of Hydroobject and Waterdeel with the DEM"
+                "Check alignment of Hydroobject and Waterdeel with the DEM"
             )
             continue
         cross_section_tables["channel_id"] = channel_id
@@ -704,7 +703,6 @@ def update_model(
     orifice_gdf: gpd.GeoDataFrame,
     connection_node_gdf: gpd.GeoDataFrame,
     model_path: Path,
-    cross_section_locations: gpd.GeoDataFrame,
 ) -> None:
     """
     Apply updated cross-section and bank levels to model layers (orifice, connection_node, cross_section_location).
@@ -873,7 +871,6 @@ if __name__ == "__main__":
         orifice_gdf,
         connection_node_gdf,
         model_path,
-        cross_section_locations,
     )
 # %%
 

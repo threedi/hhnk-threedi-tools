@@ -503,9 +503,7 @@ def get_height_and_reference_level(
         invalid_profiles_id = profile_lines_id_channel.loc[
             profile_lines_id_channel["channel_id"].isin(invalid_profiles), "profile_id"
         ]
-        invalid_profiles_gdf = profile_lines_gdf.loc[
-            profile_lines_gdf["point_id"].isin(invalid_profiles_id)
-        ].copy()
+        invalid_profiles_gdf = profile_lines_gdf.loc[profile_lines_gdf["point_id"].isin(invalid_profiles_id)].copy()
 
     return profile_points_with_heights, invalid_profiles_gdf
 
