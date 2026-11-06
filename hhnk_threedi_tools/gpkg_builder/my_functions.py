@@ -426,13 +426,10 @@ def validate_profile(new_profile_points, profile_lines_gdf, height_step):
             selection = (valid_points["channel_id"] == channel_id) & (valid_points["profile_id"] == profile_id)
             valid_points = valid_points.loc[~selection].copy()
 
-        cross_section_tables["channel_id"] = channel_id
-        cross_section_tables["profile_id"] = profile_id
-
     if invalid_profiles:
         invalid_profiles_df = pd.DataFrame(invalid_profiles, columns=["channel_id", "profile_id"])
         if invalid_profiles_df.empty:
-            invalid_profiles_gdf = profile_lines_gdf.iloc[0].copy()
+            invalid_profiles_gdf = profile_lines_gdf.iloc[:0].copy()
         else:
             invalid_profiles_gdf = profile_lines_gdf.merge(
                 invalid_profiles_df, left_on="point_id", right_on="profile_id", how="inner"
@@ -445,6 +442,7 @@ def get_height_and_reference_level(
     channel_gdf: gpd.GeoDataFrame,
     profile_lines_gdf: gpd.GeoDataFrame,
     profile_points_gdf: gpd.GeoDataFrame,
+    height_step: float,
 ) -> gpd.GeoDataFrame:
     """
     Compute mean elevations per channel, derive reference level and heights, and build cross-section tables.
@@ -480,7 +478,9 @@ def get_height_and_reference_level(
     # Round distances before averaging matching positions.
     new_profile_points["distance"] = new_profile_points["distance"].round(3)
 
-    new_profile_points, invalid_profiles_gdf = validate_profile(new_profile_points, profile_lines_gdf)
+    new_profile_points, invalid_profiles_gdf = validate_profile(
+        new_profile_points, profile_lines_gdf, height_step=height_step
+    )
 
     profile_point_mean_elevation = (
         new_profile_points.groupby(
@@ -516,7 +516,7 @@ def get_height_and_reference_level(
     for channel_id in groups.groups.keys():
         profile = groups.get_group(channel_id).copy()
 
-        cross_section_tables = get_cross_section_table(profile, height_step=10)
+        cross_section_tables = get_cross_section_table(profile, height_step=height_step)
 
         cross_section_tables["channel_id"] = channel_id
         cross_section_table_list.append(cross_section_tables)
@@ -846,7 +846,7 @@ if __name__ == "__main__":
     width = 5  # profile line width (meters)
     space = 0.15  # space between points (meters)
     space_points_along_lines = 20  # space between points along the greppels (meters)
-
+    height_step = 0.1  # meters. Vertical interval between the hights at which cross section widths are calculated
     # fucntions.
     # draw profile lines and points along greppels
     points_gdf = points_along_lines(
@@ -863,6 +863,7 @@ if __name__ == "__main__":
         channel_gdf=channel_gdf,
         profile_lines_gdf=profile_lines_gdf,
         profile_points_gdf=profile_points_gdf,
+        height_step=height_step,
     )
 
     # save invalid profiles
