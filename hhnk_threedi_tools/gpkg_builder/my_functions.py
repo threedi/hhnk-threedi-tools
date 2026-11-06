@@ -395,7 +395,7 @@ def plot_profile(gpkg_path: Path, code: Any, output_path: Path) -> None:
     print(f"Figure saved: {output_path}", flush=True)
 
 
-def validate_profile(new_profile_points, profile_lines_gdf, height_step):
+def validate_profile(new_profile_points, profile_lines_gdf):
 
     valid_points = new_profile_points.copy()
     invalid_profiles = []
@@ -404,12 +404,13 @@ def validate_profile(new_profile_points, profile_lines_gdf, height_step):
     for key in groups.groups.keys():
         channel_id, profile_id = key
         profile = groups.get_group(key).copy()
+        profile = profile.sort_values("distance")
 
         reference_level = profile["elevation"].min()
         profile["height"] = profile["elevation"] - reference_level
+        max_height = min(profile["height"].iloc[0] - profile["height"].iloc[1])
 
-        cross_section_tables = get_cross_section_table(profile, height_step=height_step)
-        if cross_section_tables is None:
+        if max_height == 0:
             invalid_profiles.append(
                 {
                     "channel_id": channel_id,
@@ -426,14 +427,14 @@ def validate_profile(new_profile_points, profile_lines_gdf, height_step):
             selection = (valid_points["channel_id"] == channel_id) & (valid_points["profile_id"] == profile_id)
             valid_points = valid_points.loc[~selection].copy()
 
-    if invalid_profiles:
-        invalid_profiles_df = pd.DataFrame(invalid_profiles, columns=["channel_id", "profile_id"])
-        if invalid_profiles_df.empty:
-            invalid_profiles_gdf = profile_lines_gdf.iloc[:0].copy()
-        else:
-            invalid_profiles_gdf = profile_lines_gdf.merge(
-                invalid_profiles_df, left_on="point_id", right_on="profile_id", how="inner"
-            )
+    invalid_profiles_df = pd.DataFrame(invalid_profiles, columns=["channel_id", "profile_id"])
+
+    if invalid_profiles_df.empty:
+        invalid_profiles_gdf = profile_lines_gdf.iloc[:0].copy()
+    else:
+        invalid_profiles_gdf = profile_lines_gdf.merge(
+            invalid_profiles_df, left_on="point_id", right_on="profile_id", how="inner"
+        )
     return valid_points, invalid_profiles_gdf
 
 
@@ -478,9 +479,7 @@ def get_height_and_reference_level(
     # Round distances before averaging matching positions.
     new_profile_points["distance"] = new_profile_points["distance"].round(3)
 
-    new_profile_points, invalid_profiles_gdf = validate_profile(
-        new_profile_points, profile_lines_gdf, height_step=height_step
-    )
+    new_profile_points, invalid_profiles_gdf = validate_profile(new_profile_points, profile_lines_gdf)
 
     profile_point_mean_elevation = (
         new_profile_points.groupby(
