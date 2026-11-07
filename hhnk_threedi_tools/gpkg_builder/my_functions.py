@@ -457,7 +457,10 @@ def validate_profile(new_profile_points, profile_lines_gdf):
 
         reference_level = profile["elevation"].min()
         profile["height"] = profile["elevation"] - reference_level
-        max_height = min(profile["height"].iloc[0], profile["height"].iloc[1])
+        max_height = min(
+            profile["height"].iloc[0],
+            profile["height"].iloc[-1],
+        )
 
         if max_height == 0:
             invalid_profiles.append(
