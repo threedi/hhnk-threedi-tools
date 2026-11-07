@@ -451,7 +451,7 @@ def plot_profile(gpkg_path: Path, code: Any, output_path: Path) -> None:
         bank = channel[["bank_distance", "bank_level"]].dropna().drop_duplicates()
 
         if not bank.empty:
-            bank_distance = bank["bank_distance"].i loc[0]
+            bank_distance = bank["bank_distance"].iloc[0]
             bank_level = bank["bank_level"].iloc[0]
 
             ax.scatter(
