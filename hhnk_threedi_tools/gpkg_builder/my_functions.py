@@ -423,19 +423,60 @@ def plot_profile(gpkg_path: Path, code: Any, output_path: Path) -> None:
 
     fig, ax = plt.subplots(figsize=(10, 5))
 
+    # plot individual sampled profiles
     for profile_id, profile in greppel_profiles.groupby("profile_id"):
         profile = profile.sort_values("distance")
 
         ax.plot(
             profile["distance"],
             profile["elevation"],
-            alpha=0.5,
+            color="gray",
+            alpha=0.4,
+            linewidth=1,
+        )
+    # plot mean profiles and selected ank level per channel
+    for (
+        channel_id,
+        channel,
+    ) in greppel_profiles.groupby("channel_id"):
+        mean_profile = channel[["distance", "mean_elevation"]].drop_duplicates().sort_values("distance")
+
+        (mean_line,) = ax.plot(
+            mean_profile["distance"],
+            mean_profile["mean_elevation"],
+            linewidth=2.5,
+            label=f"Mean Profile - Channel {channel_id}",
         )
 
+        bank = channel[["bank_distance", "bank_level"]].dropna().drop_duplicates()
+
+        if not bank.empty:
+            bank_distance = bank["bank_distance"].i loc[0]
+            bank_level = bank["bank_level"].iloc[0]
+
+            ax.scatter(
+                bank_distance,
+                bank_level,
+                color=mean_line.get_color(),
+                edgecolors="black",
+                s=80,
+                zorder=5,
+                label=f"Bank Level - Channel {channel_id}: {bank_level:.3f} m",
+            )
+
+    ax.axvline(
+        0,
+        color="black",
+        linestyle="--",
+        linewidth=1,
+        label="Greppel Axis",
+    )
+
     ax.set_xlabel("Distance along cross-section (m)")
-    ax.set_ylabel("Elevation (m)")
+    ax.set_ylabel("Elevation (m NAP)")
     ax.set_title(f"Cross-section profiles — {code}")
     ax.grid(True)
+    ax.legend()
 
     fig.tight_layout()
     fig.savefig(output_path, dpi=150)
@@ -748,15 +789,19 @@ def get_bank_level(profile_points_with_heights: gpd.GeoDataFrame) -> gpd.GeoData
 
         right_candidates = right.loc[right["flattening_right"] > 0]
         left_candidates = left.loc[left["flattening_left"] > 0]
+
         bank_levels = []
+        bank_distances = []
 
         if not right_candidates.empty:
             right_index = right_candidates["flattening_right"].idxmax()
             bank_levels.append(profile.loc[right_index, "mean_elevation"])
+            bank_distances.append(profile.loc[right_index, "distance"])
 
         if not left_candidates.empty:
             left_index = left_candidates["flattening_left"].idxmax()
             bank_levels.append(profile.loc[left_index, "mean_elevation"])
+            bank_distances.append(profile.loc[left_index, "distance"])
 
         if not bank_levels:
             print(f"No bank candidates: channel {channel_id}")
@@ -767,11 +812,18 @@ def get_bank_level(profile_points_with_heights: gpd.GeoDataFrame) -> gpd.GeoData
             continue
 
         bank_level = min(bank_levels)
+        selected_bank = bank_levels.index(bank_level)
+        bank_distance = bank_distances[selected_bank]
 
         profile_points_with_heights.loc[
             profile_points_with_heights["channel_id"] == channel_id,
             "bank_level",
         ] = round(bank_level, 3)
+
+        profile_points_with_heights.loc[
+            profile_points_with_heights["channel_id"] == channel_id,
+            "bank_distance",
+        ] = bank_distance
 
     return profile_points_with_heights
 
