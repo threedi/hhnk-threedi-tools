@@ -204,7 +204,11 @@ def full_perpendicular_line(p1: Tuple[float, float], p2: Tuple[float, float], wi
 
 
 def points_along_lines(
-    lines: gpd.GeoDataFrame, space: float = 10, code_column: str = "code", include_endpoints: bool = True
+    lines: gpd.GeoDataFrame,
+    space: float = 10,
+    code_column: str = "code",
+    include_endpoints: bool = True,
+    align_to_axis: bool = True,
 ) -> gpd.GeoDataFrame:
     """
     Create points along each line at interval `space`. Returns GeoDataFrame of points.
@@ -214,9 +218,32 @@ def points_along_lines(
 
     for idx, line in lines.iterrows():
         length = line.geometry.length
+        axis_distance = None
+        direction_sign = None
+        aligned_distances = None
+
+        if align_to_axis:
+            axis_distance = line["axis_distance"]
+            direction_sign = line["direction_sign"]
+
+            # express both line endpoints relative to the greppel origin
+            aligned_start = -axis_distance * direction_sign
+            aligned_end = (length - axis_distance) * direction_sign
+
+            minimum_distance = min(aligned_start, aligned_end)
+            maximum_distance = max(aligned_start, aligned_end)
+
+            # Generate common positions around zero, inside the full line.
+            first_step = int(np.ceil(minimum_distance) / space)
+            last_step = int(np.floor(maximum_distance) / space)
+
+            aligned_distances = np.arange(first_step, last_step + 1) * space
+
+            # convert to distances from the line start to locate the points
+            distances = axis_distance + aligned_distances * direction_sign
 
         # create a single point at the midpoint of the line if the line is shorter than the space
-        if length < space:
+        elif length < space:
             distances = np.array([length / 2])
 
         # Create distances along the line, including the end point
@@ -225,11 +252,11 @@ def points_along_lines(
             distances = np.append(distances, length)
 
         # Create distances along the line, without the end point
-        elif not include_endpoints:
+        else:
             distances = np.arange(space, length, space)
 
         # Create points at each distance along the line using line_interpolate_point to get the geometry
-        for distance in distances:
+        for position, distance in enumerate(distances):
             point_data = {
                 "point_id": len(points),
                 "code": line[code_column],
@@ -240,6 +267,10 @@ def points_along_lines(
             if "point_id" in lines.columns:
                 point_data["profile_id"] = line["point_id"]
 
+            if align_to_axis:
+                point_data["axis_distance"] = axis_distance
+                point_data["direction_sign"] = direction_sign
+                point_data["distance_aligned"] = aligned_distances[position]
             points.append(point_data)
 
     return gpd.GeoDataFrame(
@@ -299,13 +330,7 @@ def draw_perpendicular_lines(
         crs=greppels.crs,
     )
 
-    # Buffer waterdeel to ensure that the extend of the profile lines is within the channel boundaries.
-    waterdeel_buffer = waterdeel_gdf.buffer(0.5)
-
-    # clip profile lines to waterdeel boundaries
-    profiles_gdf = gpd.clip(profiles_lines, waterdeel_buffer, keep_geom_type=True)
-
-    return profiles_gdf
+    return profiles_lines
 
 
 def sample_elevation_per_profile_point(
@@ -332,7 +357,19 @@ def sample_elevation_per_profile_point(
 
     profile_lines = profile_lines.drop_duplicates(subset="point_id")
 
-    profile_points_gdf = points_along_lines(profile_lines, space=space, code_column=code_column)
+    profile_lines = align_profile_lines(profile_lines, points_gdf, greppels)
+
+    profile_points_gdf = points_along_lines(profile_lines, space=space, code_column=code_column, align_to_axis=True)
+
+    # filter points without change their original or aligned distance
+    waterdeel_buffer = waterdeel_gdf.geometry.buffer(0.5).union_all
+
+    profile_points_gdf = profile_points_gdf.loc[profile_points_gdf.geometry.intersects(waterdeel_buffer)].copy()
+    profile_lines = gpd.clip(
+        profile_lines,
+        waterdeel_buffer,
+        keep_geom_type=True,
+    )
 
     for point in profile_points_gdf.geometry:
         point_x = point.x
@@ -438,6 +475,64 @@ def validate_profile(new_profile_points, profile_lines_gdf):
     return valid_points, invalid_profiles_gdf
 
 
+def align_profile_lines(
+    profile_lines_gdf: gpd.GeoDataFrame,
+    points_gdf: gpd.GeoDataFrame,
+    greppels_gdf: gpd.GeoDataFrame,
+) -> gpd.GeoDataFrame:
+    """
+    Locate ach profile's original point along the clipped line and determine its orientatio
+    relative to the original greppel.
+    """
+    profile_lines_gdf = profile_lines_gdf.copy()
+
+    for index, profile_line in profile_lines_gdf.iterrows():
+        origin_point = points_gdf.loc[
+            points_gdf["point_id"] == profile_line["point_id"],
+            "geometry",
+        ].iloc[0]
+
+        axis_distance = profile_line.geometry.project(origin_point)
+
+        # Retrieve the original greppel and existing longitudinal distance
+        greppels_line = greppels_gdf.loc[
+            greppels_gdf["CODE"] == profile_line["code"],
+            "geometry",
+        ].iloc[0]
+
+        greppel_distance = profile_line["distance"]
+
+        # Determine the local greppels direction
+
+        before = greppels_line.interpolate(max(greppel_distance - 0.5, 0))
+        after = greppels_line.interpolate(min(greppel_distance + 0.5, greppels_line.length))
+
+        greppel_dx = after.x - before.x
+        greppel_dy = after.y - before.y
+
+        # Determine the direction in which profile distnace increase
+        profile_start = profile_line.geometry.coords[0]
+        profile_end = profile_line.geometry.coords[-1]
+
+        profile_dx = profile_end[0] - profile_start[0]
+        profile_dy = profile_end[1] - profile_start[1]
+
+        # Positive distance points to the left of the cannel direction
+        cross_product = greppel_dx * profile_dy - greppel_dy * profile_dx
+
+        if cross_product == 0:
+            raise ValueError(
+                f"Profile {profile_line['point_id']}: cannot determine orientation relative to the channel."
+            )
+
+        direction_sign = 1 if cross_product > 0 else -1
+
+        profile_lines_gdf.loc[index, "axis_distance"] = axis_distance
+        profile_lines_gdf.loc[index, "direction_sign"] = direction_sign
+
+    return profile_lines_gdf
+
+
 def get_height_and_reference_level(
     greppels_gdf: gpd.GeoDataFrame,
     channel_gdf: gpd.GeoDataFrame,
@@ -466,28 +561,9 @@ def get_height_and_reference_level(
     profile_lines_intersect = profile_lines_gdf.sjoin(channel_join, how="inner", predicate="intersects")
     profile_lines_intersect = profile_lines_intersect.drop_duplicates()
 
-    # Locate the cannel axis along each clipped cross section line.
-    profile_lines_intersect["axis_distance"] = np.nan
-
-    for index, profile_line in profile_lines_intersect.iterrows():
-        channel_line = channel_join.loc[channel_join["channel_id"] == profile_line["channel_id"], "geometry"].loc[0]
-        intersection = profile_line.geometry.intersection(channel_line)
-
-        # ensure unique intersection
-        if intersection.is_empty or intersection.geom_type != "Point":
-            raise ValueError(
-                f"channel {profile_line['channel_id']}, "
-                f"profile {profile_line['point_id']}: "
-                "expected a single intersection with the cahnnel."
-            )
-
-        # project mesure the distance along the profile line from its inital point until the intersection point.
-        axis_distance = profile_line.geometry.project(intersection)
-        profile_lines_intersect.loc[index, "axis_distance"] = axis_distance
-
-    # Assign the cahnnel and axis distance to each sample point
+    # asing channel id to the sampled points.
     profile_lines_id_channel = (
-        (profile_lines_intersect[["point", "channel_id", "axis_distance"]])
+        profile_lines_intersect[["point_id", "channel_id"]]
         .drop_duplicates()
         .rename(columns={"point_id": "profile_id"})
     )
@@ -495,6 +571,10 @@ def get_height_and_reference_level(
     new_profile_points = profile_points_gdf.merge(
         profile_lines_id_channel, how="inner", on="profile_id", validate="many_to_one"
     )
+
+    # preserve distance from the full line start
+    new_profile_points["distance_from_start"] = new_profile_points["distance"]
+    new_profile_points["distance"] = new_profile_points["distance_aligned"].round(3)
 
     new_profile_points, invalid_profiles_gdf = validate_profile(new_profile_points, profile_lines_gdf)
 
@@ -866,6 +946,7 @@ if __name__ == "__main__":
     space = 0.20  # space between points (meters)
     space_points_along_lines = 15  # space between points along the greppels (meters)
     height_step = 0.1  # meters. Vertical interval between the hights at which cross section widths are calculated
+
     # fucntions.
     # draw profile lines and points along greppels
     points_gdf = points_along_lines(
