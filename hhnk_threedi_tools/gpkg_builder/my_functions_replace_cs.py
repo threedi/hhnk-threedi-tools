@@ -343,7 +343,7 @@ def sample_elevation_per_profile_point(
     )
 
     profile_lines = profile_lines.loc[profile_lines["point_id"].isin(profile_points_gdf["profile_id"])].copy()
-    
+
     for point in profile_points_gdf.geometry:
         coords.append((point.x, point.y))
 
