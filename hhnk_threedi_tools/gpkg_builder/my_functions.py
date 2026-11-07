@@ -281,8 +281,6 @@ def points_along_lines(
 
 
 # %%
-
-
 # greppels = gpd.read_file(r"H:\02.modellen\NZK_leggertool\01_source_data\greppels_nzk.shp")
 # points_gdf = points_along_lines(lines=greppels, space=10)
 # %%
@@ -336,11 +334,12 @@ def draw_perpendicular_lines(
 def sample_elevation_per_profile_point(
     width: float,
     points_gdf: gpd.GeoDataFrame,
-    greppels: gpd.GeoDataFrame,
+    greppels_gdf: gpd.GeoDataFrame,
     dem_path: Path,
     code_column: str,
     waterdeel_gdf: gpd.GeoDataFrame,
     space: float,
+    buffer_waterdeel: float,
 ) -> Tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]:
     """
     Sample DEM elevations along profile cross-section lines and return points and lines GeoDataFrames.
@@ -350,19 +349,32 @@ def sample_elevation_per_profile_point(
     coords = []
     elevations = []
 
-    profile_lines = draw_perpendicular_lines(width, points_gdf, greppels, waterdeel_gdf)
+    profile_lines = draw_perpendicular_lines(
+        width=width,
+        points_gdf=points_gdf,
+        greppels=greppels_gdf,
+        waterdeel_gdf=waterdeel_gdf,
+    )
     profile_lines = gpd.sjoin(profile_lines, waterdeel_gdf[["geometry"]], how="inner", predicate="intersects")
 
     profile_lines = profile_lines.drop(columns="index_right")
-
     profile_lines = profile_lines.drop_duplicates(subset="point_id")
 
-    profile_lines = align_profile_lines(profile_lines, points_gdf, greppels)
+    profile_lines = align_profile_lines(
+        profile_lines_gdf=profile_lines,
+        points_gdf=points_gdf,
+        greppels_gdf=greppels_gdf,
+    )
 
-    profile_points_gdf = points_along_lines(profile_lines, space=space, code_column=code_column, align_to_axis=True)
+    profile_points_gdf = points_along_lines(
+        profile_lines,
+        space=space,
+        code_column=code_column,
+        align_to_axis=True,
+    )
 
     # filter points without change their original or aligned distance
-    waterdeel_buffer = waterdeel_gdf.geometry.buffer(0.5).union_all
+    waterdeel_buffer = waterdeel_gdf.geometry.buffer(buffer_waterdeel).union_all()
 
     profile_points_gdf = profile_points_gdf.loc[profile_points_gdf.geometry.intersects(waterdeel_buffer)].copy()
     profile_lines = gpd.clip(
@@ -942,20 +954,31 @@ if __name__ == "__main__":
     orifice_gdf = gpd.read_file(model_path, layer="orifice")
     culver_gdf = gpd.read_file(model_path, layer="culvert")
     connection_node_gdf = gpd.read_file(model_path, layer="connection_node")
-    width = 5  # profile line width (meters)
+    width = 7  # profile line width (meters)
     space = 0.20  # space between points (meters)
-    space_points_along_lines = 15  # space between points along the greppels (meters)
+    space_points_along_lines = 10  # space between points along the greppels (meters)
     height_step = 0.1  # meters. Vertical interval between the hights at which cross section widths are calculated
-
+    buffer_waterdeel = 0.75
     # fucntions.
-    # draw profile lines and points along greppels
+    # draw points along the grepples every points_along_lines distance. OVer those points, perpendicular lines will be drawn
     points_gdf = points_along_lines(
-        lines=greppels_gdf, space=space_points_along_lines, code_column="CODE", include_endpoints=False
+        lines=greppels_gdf,
+        space=space_points_along_lines,
+        code_column="CODE",
+        include_endpoints=False,
+        align_to_axis=False,
     )
 
     # Sample profile points using dem
     profile_points_gdf, profile_lines_gdf = sample_elevation_per_profile_point(
-        width, points_gdf, greppels_gdf, dem_path, code_column="code", waterdeel_gdf=waterdeel_gdf, space=space
+        width,
+        points_gdf,
+        greppels_gdf,
+        dem_path,
+        code_column="code",
+        waterdeel_gdf=waterdeel_gdf,
+        space=space,
+        buffer_waterdeel = buffer_waterdeel,
     )
     # built cross section table base on: channel code and point location on the profile lines
     profile_points_with_heights, invalid_profiles_gdf = get_height_and_reference_level(
@@ -974,7 +997,7 @@ if __name__ == "__main__":
     invalid_profiles_path = profile_points_folder / "invalid_profiles.gpkg"
 
     invalid_profiles_gdf.to_file(invalid_profiles_path, driver="GPKG")
-    profile_points_gdf.to_file(profile_points_path, driver="GPKG")
+    profile_points_with_heights.to_file(profile_points_path, driver="GPKG")
 
     # get bank level base on the flattering from the banks. (minimum from both side banks.)
     cross_section_banklevels = get_bank_level(profile_points_with_heights)
@@ -1019,10 +1042,7 @@ if __name__ == "__main__":
 #     r"H:\02.modellen\grootslag_leggertool\cross_section_updated.gpkg",
 #     driver="GPKG",
 # )
-# %%
-
-
-codes = profile_points_gdf["code"].unique().tolist()
+codes = profile_points_with_heights["code"].unique().tolist()
 
 for code in codes:
     save_path = profile_points_folder / f"{code}.png"
