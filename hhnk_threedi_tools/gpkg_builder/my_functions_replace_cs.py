@@ -301,7 +301,7 @@ def draw_perpendicular_lines(
         crs=greppels.crs,
     )
 
-    return profiles_gdf
+    return profiles_lines
 
 
 def sample_elevation_per_profile_point(
@@ -808,7 +808,7 @@ def update_model(
         nearest_distance = float("inf")
         nearest_bank_level = None
 
-        for _, channel in connected_channels.iterrow():
+        for _, channel in connected_channels.iterrows():
             sections = cross_section_updated.loc[cross_section_updated["channel_id"] == channel["id"]].dropna(
                 subset=["bank_level"]
             )
@@ -860,7 +860,7 @@ if __name__ == "__main__":
     width = 5  # profile line width (meters)
     space = 0.15  # space between points (meters)
     space_points_along_lines = 20  # space between points along the greppels (meters)
-
+    buffer_waterdeel = 0.75
     # fucntions.
     # draw profile lines and points along greppels
     points_gdf = points_along_lines(
@@ -869,7 +869,14 @@ if __name__ == "__main__":
 
     # Sample profile points using dem
     profile_points_gdf, profile_lines_gdf = sample_elevation_per_profile_point(
-        width, points_gdf, greppels_gdf, dem_path, code_column="code", waterdeel_gdf=waterdeel_gdf, space=space
+        width,
+        points_gdf,
+        greppels_gdf,
+        dem_path,
+        code_column="code",
+        waterdeel_gdf=waterdeel_gdf,
+        space=space,
+        buffer_waterdeel=buffer_waterdeel,
     )
     # built cross section table base on: channel code and point location on the profile lines and save invalid profile
     # Save invalid profiles to check them later if it is needed.
@@ -889,9 +896,12 @@ if __name__ == "__main__":
 
     # update cross section
     cross_section_locations_updated = update_cross_sections(
-        profile_points_with_heights, cross_section_locations.copy(), profile_lines_gdf, channel_gdf
+        profile_points_with_heights,
+        cross_section_locations.copy(),
+        profile_lines_gdf,
+        channel_gdf,
     )
-    # %%
+
     update_model(
         cross_section_locations_updated,
         channel_gdf,
