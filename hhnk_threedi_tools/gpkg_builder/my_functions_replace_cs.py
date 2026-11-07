@@ -477,7 +477,10 @@ def get_height_and_reference_level(
 
         cross_section_tables_list.append(cross_section_tables)
     # merge results.
-    cross_section_tables = pd.concat(cross_section_tables_list, ignore_index=True)
+    if cross_section_tables_list:
+        cross_section_tables = pd.concat(cross_section_tables_list, ignore_index=True)
+    else:
+        cross_section_tables = pd.DataFrame(columns=["channel_id", "profile_id", "cross_section_table"])
     # print(cross_section_tables[["channel_id", "profile_id", "cross_section_table"]].head())
 
     profile_points_with_heights = profile_points_with_heights.merge(
@@ -485,6 +488,7 @@ def get_height_and_reference_level(
     )
 
     if invalid_profiles:
+        invalid_profiles_gdf = profile_lines_gdf.iloc[0].copy()
         invalid_profiles_df = pd.DataFrame(invalid_profiles)
 
         invalid_profiles_gdf = profile_lines_gdf.merge(
@@ -604,10 +608,6 @@ def get_bank_level(profile_points_with_heights: gpd.GeoDataFrame) -> gpd.GeoData
 
         if not bank_levels:
             print(f"No bank candidates: channel {channel_id}")
-            profile_points_with_heights.loc[
-                profile_points_with_heights["channel_id"] == channel_id,
-                "bank_level",
-            ] = float("nan")
             continue
 
         bank_level = min(bank_levels)
@@ -679,8 +679,15 @@ def update_cross_sections(
         new_cross_section.append(cross_section)
         next_id += 1
 
-    print(new_cross_section[0].columns.tolist())
-    print(new_cross_section[0][["id", "channel_id", "updated", "cross_section_table"]])
+    # print(new_cross_section[0].columns.tolist())
+    # print(new_cross_section[0][["id", "channel_id", "updated", "cross_section_table"]])
+    if not new_cross_section:
+        return cross_section_locations.copy()
+
+    processed_channels = pd.concat(
+        new_cross_section,
+        ignore_index=True,
+    )["channel_id"].unique()
 
     processed_channels = channel_cross_sections_banklevel["channel_id"]
 
@@ -777,32 +784,45 @@ def update_model(
     connection_id_no_greppels = set(channels_no_greppels["connection_node_start_id"])
     connection_id_no_greppels.update(channels_no_greppels["connection_node_end_id"])
 
-    for idx, connection_node in cross_section_updated.iterrows():
-        # get channels ID and bank levels from cross section updated.
-        channel_id = connection_node.channel_id
-        bank_level = connection_node.bank_level
+    for node_id in connection_nodes_set:
+        if node_id in connection_id_no_greppels:
+            continue
+        node_geometry = connection_node_gdf.loc[
+            connection_node_gdf["id"] == node_id,
+            "geometry",
+        ].iloc[0]
 
-        # get connection nodes id to update initial water level field (10 below bank level)
-        connection_node_start_id = (
-            channel_gdf.loc[channel_gdf["id"] == channel_id, "connection_node_start_id"].to_numpy().tolist()[0]
-        )
-        connection_node_end_id = (
-            channel_gdf.loc[channel_gdf["id"] == channel_id, "connection_node_end_id"].to_numpy().tolist()[0]
-        )
+        connected_channels = channels_updated.loc[
+            (channels_updated["connection_node_start_id"] == node_id)
+            | (channels_updated["connection_node_end_id"] == node_id)
+        ]
 
-        # Update only nodes not shared with channels outside the selection.
-        if connection_node_start_id not in connection_id_no_greppels:
-            connection_node_gdf.loc[
-                connection_node_gdf["id"] == connection_node_start_id,
-                "initial_waterlevel",
-            ] = round(bank_level - 0.10, 2)
+        nearest_distance = float("inf")
+        nearest_bank_level = None
 
-        if connection_node_end_id not in connection_id_no_greppels:
-            connection_node_gdf.loc[
-                connection_node_gdf["id"] == connection_node_end_id,
-                "initial_waterlevel",
-            ] = round(bank_level - 0.10, 2)
+        for _, channel in connected_channels.iterrow():
+            sections = cross_section_updated.loc[cross_section_updated["channel_id"] == channel["id"]].dropna(
+                subset=["bank_level"]
+            )
 
+            node_distance = channel.geometry.project(node_geometry)
+
+            for _, section in sections.sort_values("id").iterrows():
+                section_distance = channel.geometry.project(section.geometry)
+
+                distance_to_node = abs(section_distance - node_distance)
+                if distance_to_node < nearest_distance:
+                    nearest_distance = distance_to_node
+                    nearest_bank_level = section["bank_level"]
+
+        if nearest_bank_level is None:
+            print(f"Warning: Node {node_id}: No valid bank level")
+            continue
+
+        connection_node_gdf.loc[
+            connection_node_gdf["id"] == node_id,
+            "initalwaterlevel",
+        ] = round(nearest_bank_level - 10, 2)
     # update connectio node.
     connection_node_gdf.to_file(model_path, layer="connection_node", driver="GPKG")
 
