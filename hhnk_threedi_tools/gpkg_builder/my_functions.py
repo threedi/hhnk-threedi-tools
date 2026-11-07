@@ -978,7 +978,7 @@ if __name__ == "__main__":
         code_column="code",
         waterdeel_gdf=waterdeel_gdf,
         space=space,
-        buffer_waterdeel = buffer_waterdeel,
+        buffer_waterdeel=buffer_waterdeel,
     )
     # built cross section table base on: channel code and point location on the profile lines
     profile_points_with_heights, invalid_profiles_gdf = get_height_and_reference_level(
