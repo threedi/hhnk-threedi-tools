@@ -301,12 +301,6 @@ def draw_perpendicular_lines(
         crs=greppels.crs,
     )
 
-    # Buffer waterdeel to ensure that the extend of the profile lines is within the channel boundaries.
-    waterdeel_buffer = waterdeel_gdf.buffer(0.5)
-
-    # clip profile lines to waterdeel boundaries
-    profiles_gdf = gpd.clip(profiles_lines, waterdeel_buffer, keep_geom_type=True)
-
     return profiles_gdf
 
 
@@ -318,6 +312,7 @@ def sample_elevation_per_profile_point(
     code_column: str,
     waterdeel_gdf: gpd.GeoDataFrame,
     space: float,
+    buffer_waterdeel: float,
 ) -> Tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]:
     """
     Sample DEM elevations along profile cross-section lines and return points and lines GeoDataFrames.
@@ -336,6 +331,19 @@ def sample_elevation_per_profile_point(
 
     profile_points_gdf = points_along_lines(profile_lines, space=space, code_column=code_column)
 
+    # filter points without change their original or aligned distance
+    waterdeel_buffer = waterdeel_gdf.geometry.buffer(buffer_waterdeel).union_all()
+
+    profile_points_gdf = profile_points_gdf.loc[profile_points_gdf.geometry.intersects(waterdeel_buffer)].copy()
+
+    profile_lines = gpd.clip(
+        profile_lines,
+        waterdeel_buffer,
+        keep_geom_type=True,
+    )
+
+    profile_lines = profile_lines.loc[profile_lines["point_id"].isin(profile_points_gdf["profile_id"])].copy()
+    
     for point in profile_points_gdf.geometry:
         coords.append((point.x, point.y))
 
