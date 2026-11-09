@@ -281,7 +281,7 @@ or do not use this run in the modelsplitter.
         }
 
         # sqlite_path = schema_new.database.base
-        sqlite_path  = r"\\corp.hhnk.nl\data\Hydrologen_data\Data\02.modellen\bergen_noord_variant_3_JA\02_schematisation\1d2d_ghg\bergen_noord_variant_3.sqlite"
+        sqlite_path = r"\\corp.hhnk.nl\data\Hydrologen_data\Data\02.modellen\bergen_noord_variant_3_JA\02_schematisation\1d2d_ghg\bergen_noord_variant_3.sqlite"
         schematisation_name = row["schematisation_name"]
         tags = [schematisation_name, self.folder.name]
         # organisation_uuid="48dac75bef8a42ebbb52e8f89bbdb9f2"
