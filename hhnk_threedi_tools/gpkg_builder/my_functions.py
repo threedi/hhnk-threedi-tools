@@ -1,3 +1,13 @@
+"""
+Process greppel cross-sections from source geometries and a DEM, then update the 3Di model. When run directly,
+it loads HydroObject and Waterdeel, greppel lines, channels, cross-section locations, orifices, and connection nodes.
+It places regularly spaced points along greppels, constructs perpendicular profiles, clips them to water features,
+and samples DEM elevations; elevation 10 marks invalid samples. Valid profiles are aggregated by channel to derive
+reference levels, bank levels, and width-height tables. The script saves profile and invalid-profile GeoPackages,
+updates model layers, and writes one plot per greppel code. Input paths and sampling parameters are configured in
+the executable block.
+"""
+
 # %%
 from math import atan2, cos, sin
 from pathlib import Path
