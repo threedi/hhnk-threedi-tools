@@ -1045,7 +1045,6 @@ if __name__ == "__main__":
     )
 
     # save invalid profiles
-
     profile_points_folder = Path(folder.source_data.path / "profile_data")
     profile_points_folder.mkdir(exist_ok=True)
     profile_points_path = profile_points_folder / "profile_points.gpkg"

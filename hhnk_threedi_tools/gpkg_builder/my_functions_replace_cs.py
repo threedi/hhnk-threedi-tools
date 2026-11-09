@@ -589,6 +589,7 @@ def get_height_and_reference_level(
         cross_section_tables, on=["channel_id", "profile_id"], how="left", validate="many_to_one"
     )
 
+    invalid_profiles_gdf = profile_lines_gdf.iloc[0:0].copy()
     if invalid_profiles:
         invalid_profiles_gdf = profile_lines_gdf.iloc[0].copy()
         invalid_profiles_df = pd.DataFrame(invalid_profiles)
@@ -1004,10 +1005,15 @@ if __name__ == "__main__":
         profile_lines_gdf=profile_lines_gdf,
         profile_points_gdf=profile_points_gdf,
     )
-
+    
     # save invalid profiles
-    invalid_profiles_path = folder.source_data.path / "invalid_profiles.gpkg"
+    profile_points_folder = Path(folder.source_data.path / "profile_data")
+    profile_points_folder.mkdir(exist_ok=True)
+    profile_points_path = profile_points_folder / "profile_points.gpkg"
+    invalid_profiles_path = profile_points_folder / "invalid_profiles.gpkg"
+
     invalid_profiles_gdf.to_file(invalid_profiles_path, driver="GPKG")
+    profile_points_with_heights.to_file(profile_points_path, driver="GPKG")
 
     # get bank level base on the flattering from the banks. (minimum from both side banks.)
     cross_section_banklevels = get_bank_level(profile_points_with_heights)
@@ -1029,6 +1035,12 @@ if __name__ == "__main__":
         model_path,
     )
 # %%
+#Plot to check profiles.
+codes = profile_points_with_heights["code"].unique().tolist()
+
+for code in codes:
+    save_path = profile_points_folder / f"{code}.png"
+    plot_profile(gpkg_path=profile_points_path, code=code, output_path=save_path)
 
 # # %%
 # profile_points_with_heights.to_file(
@@ -1054,17 +1066,6 @@ if __name__ == "__main__":
 #     r"H:\02.modellen\grootslag_leggertool\cross_section_updated.gpkg",
 #     driver="GPKG",
 # )
-# %%
 
-path = Path(
-    r"\\corp.hhnk.nl\data\Hydrologen_data\Data\02.modellen\grootslag_leggertool\02_schematisation\greppels\profile_graph"
-)
-profile_points_save = path / "profile_points.gpkg"
-profile_points_gdf.to_file(profile_points_save)
-codes = profile_points_gdf["code"].unique().tolist()
-
-for code in codes:
-    save_path = path / f"{code}.png"
-    plot_profile(gpkg_path=profile_points_save, code=code, output_path=save_path)
 
 # %%
