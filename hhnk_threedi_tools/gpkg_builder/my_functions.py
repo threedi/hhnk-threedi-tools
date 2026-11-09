@@ -1,7 +1,7 @@
 # %%
 from math import atan2, cos, sin
 from pathlib import Path
-from typing import Any, Tuple
+from typing import Any
 
 import geopandas as gpd
 import matplotlib
@@ -16,11 +16,8 @@ from shapely.ops import nearest_points
 from hhnk_threedi_tools import Folders
 
 
-def nearest_intersect(boundary_geom, line_geom, point_geom):
-    """
-    Find intersection between line and boundary that is closest
-    to given point.
-    """
+def nearest_intersect(boundary_geom: Any, line_geom: Any, point_geom: Any) -> tuple[Any | None, float | None]:
+    """Find the closest intersection between a line and a boundary segment relative to a target point. The function tests whether the boundary and line overlap; when they do, it uses the nearest point on the intersection geometry to the provided point and measures that distance. If there is no intersection, both outputs are returned as None. This helper is useful during profile analysis, especially when choosing a valid reference point while avoiding mismatches across clipped or partial line features."""
 
     if boundary_geom.intersects(line_geom):
         intersection = nearest_points(point_geom, boundary_geom.intersection(line_geom))[1]
@@ -32,11 +29,13 @@ def nearest_intersect(boundary_geom, line_geom, point_geom):
     return intersection, nearest_dist
 
 
-def nearest_intersect_exclude(boundary_geom, line_geom, point_geom, exclude_point):
-    """
-    Find intersection between line and boundary that is closest
-    to given point, but not the exclude point.
-    """
+def nearest_intersect_exclude(
+    boundary_geom: Any,
+    line_geom: Any,
+    point_geom: Any,
+    exclude_point: Any,
+) -> tuple[Any | None, float | None]:
+    """Find the closest valid intersection between a boundary and a line while excluding a known point from the result set. The function first checks whether the exclusion target is present; if so, it filters out nearby intersection candidates that fall too close to that excluded point. It then selects the nearest remaining option and returns both the geometry and its distance to the supplied reference point. This is useful when a profile crosses a boundary at multiple locations and a single point has to be rejected to keep geometry consistent during alignment."""
     intersection = None
     nearest_dist = None
     valid_points = []
@@ -67,60 +66,40 @@ def nearest_intersect_exclude(boundary_geom, line_geom, point_geom, exclude_poin
     return intersection, nearest_dist
 
 
-def perpendicular_lines(p1, p2, distance, side):
-    """
-    Takes two points and calculates points perpendicular  to first point and draws line between them.
+def perpendicular_lines(
+    p1: tuple[float, float],
+    p2: tuple[float, float],
+    distance: float,
+    side: str,
+) -> LineString:
+    """Construct a perpendicular segment from a base point using a direction vector derived from the line between two coordinates. The function computes the local angle, offsets the endpoint by the requested distance, and chooses a left or right orientation based on the provided side argument. This helper is used to build profile cross-section lines around a channel axis while preserving geometric orientation. The result is a Shapely LineString that begins at the reference point and ends at the offset endpoint, making it easy to transform later into a full profile geometry."""
 
-    Parameters
-    ----------
-    p1 = point 1 (x,y in list)
-
-    p2 = point 2 (x,y in list)
-
-    distance = distance new points from p1
-
-    side = 'left' or 'right'
-
-    Returns
-    -------
-    Perpendicular line to first point (LineString)
-    """
-
-    # # shifted coordinate gives None error
-    # if p2 is None:
-    #   perp_line = None
-    # Delta x
     dx = p2[0] - p1[0]
-    # Delta y
     dy = p2[1] - p1[1]
-    # Angle between p1 and p2 in rad
     angle = atan2(dy, dx)
-    # Displacement of points
     lx = sin(angle) * distance
     ly = cos(angle) * distance
 
     if side == "right":
         perp_coords = [p1[0] - lx, p1[1] + ly]
-    if side == "left":
+    elif side == "left":
         perp_coords = [p1[0] + lx, p1[1] - ly]
+    else:
+        raise ValueError("side must be 'left' or 'right'")
 
     perp_line = LineString([p1, perp_coords])
 
     return perp_line
 
 
-def get_nearest_non_nodata(rioxarray_raster, point_gdf, tolerance=0.5, pixelsize=0.5, mode="min"):
-    """
-    Finds nearest (pixel interval) non-nodata pixel within tolerance.
-    Tries at exact location first (within pixelsize), then searches further.
-    If multiple pixels at same distance 'mode' desides.
-
-    With high tolerance a lot of overhead as .sel is perfomed on all valid pixels
-    whitin each while loop. Could be improved by somehow storing known values in
-    dataframe, but for small tolerance this is quicker.
-
-    Output is converted to numpy.float
-    """
+def get_nearest_non_nodata(
+    rioxarray_raster: Any,
+    point_gdf: gpd.GeoDataFrame,
+    tolerance: float = 0.5,
+    pixelsize: float = 0.5,
+    mode: str = "min",
+) -> float:
+    """Find the nearest valid raster value near a point while stepping outward until a non-NA value is found or tolerance is reached. The function starts by sampling the exact coordinate and then expands a search square outward in fixed pixel increments. It supports several aggregation modes, including minimum, maximum, median, and mean, which makes it useful for filling small gaps in raster information. The method is intentionally simple for local interpolation and is most effective in small tolerances where the search space stays compact and computational overhead remains low."""
     dist = 0
     pixelsize = 0.5
     x = point_gdf.x
@@ -154,22 +133,17 @@ def get_nearest_non_nodata(rioxarray_raster, point_gdf, tolerance=0.5, pixelsize
     return result
 
 
-def get_min_value_in_polygon(rioxarray_raster, polygon, mode="min"):
+def get_min_value_in_polygon(rioxarray_raster: Any, polygon: Any, mode: str = "min") -> float:
     """
-    Finds non-nodata value within polygon.
-    If multiple pixels whotin polygon 'mode' desides.
-
-    Basic zonal statistics without rasterstats module.
-
-    Not as quick or accurate as `get_nearest_non_nodata`
+    Return a representative non-NA raster value found inside a polygon by clipping the raster to that geometry
+    and summarizing the masked cells. The function uses a simple zonal-statistics approach without external raster
+    libraries, making it lightweight and easy to reuse across local work. It can return the minimum, maximum,
+    median, or mean value depending on the selected mode. This is helpful when a polygon-based summary is needed
+    quickly, even though it is less exact than more specialized processing tools for larger or more complex rasters.
     """
-    # Mask the raster with the polygon
     masked_rioxarray_raster = rioxarray_raster.rio.clip([polygon], rioxarray_raster.rio.crs)
-    # Get the data array
     data = masked_rioxarray_raster.data
-    # Mask the data array to ignore nodata values
     data = np.ma.masked_equal(data, rioxarray_raster.rio.nodata)
-    # Return the desired value
     if mode == "min":
         result = np.nanmin(data)
     elif mode == "max":
@@ -181,10 +155,14 @@ def get_min_value_in_polygon(rioxarray_raster, polygon, mode="min"):
     return result
 
 
-def full_perpendicular_line(p1: Tuple[float, float], p2: Tuple[float, float], width: float) -> LineString:
+def full_perpendicular_line(p1: tuple[float, float], p2: tuple[float, float], width: float) -> LineString:
     """
-    Build a full cross-section LineString centered at p1, perpendicular to p1->p2.
-    width is the total width; returns a LineString of three points.
+    Build a full cross-section geometry centered on the base point and perpendicular to the segment defined by
+    the two input coordinates. The function halves the requested width and creates a line on both sides of the
+    reference point using the left and right perpendicular offsets. It then returns a three-point LineString that
+    includes the left endpoint, the original point, and the right endpoint. This geometry is useful for cross-section
+    sampling because it provides a simple, oriented profile line across a channel without requiring broader spatial
+    interpolation or extra transformation steps.
     """
     if p1[0] == p2[0] and p1[1] == p2[1]:
         raise ValueError("p1 and p2 should be differents")
@@ -211,12 +189,16 @@ def points_along_lines(
     align_to_axis: bool = True,
 ) -> gpd.GeoDataFrame:
     """
-    Create points along each line at interval `space`. Returns GeoDataFrame of points.
-    Columns include point_id, code, distance and geometry (and profile_id if present).
+    Generate a point record at regular distances along each line in a GeoDataFrame. The function supports both
+    standard linear sampling and alignment along a local axis when distance metadata is available. It produces a
+    GeoDataFrame with point identifiers, profile metadata, distance values, and geometry, while optionally carrying
+    aligned offsets for profile reconstruction. This is especially useful in channel and greppel workflows where
+    repeated cross-sections must be placed at fixed intervals and later compared against a reference axis or original
+    line direction.
     """
-    points = []
+    points: list[dict[str, Any]] = []
 
-    for idx, line in lines.iterrows():
+    for _, line in lines.iterrows():
         length = line.geometry.length
         axis_distance = None
         direction_sign = None
@@ -226,36 +208,28 @@ def points_along_lines(
             axis_distance = line["axis_distance"]
             direction_sign = line["direction_sign"]
 
-            # express both line endpoints relative to the greppel origin
             aligned_start = -axis_distance * direction_sign
             aligned_end = (length - axis_distance) * direction_sign
 
             minimum_distance = min(aligned_start, aligned_end)
             maximum_distance = max(aligned_start, aligned_end)
 
-            # Generate common positions around zero, inside the full line.
-            first_step = int(np.ceil(minimum_distance) / space)
-            last_step = int(np.floor(maximum_distance) / space)
+            first_step = int(np.ceil(minimum_distance / space))
+            last_step = int(np.floor(maximum_distance / space))
 
             aligned_distances = np.arange(first_step, last_step + 1) * space
-
-            # convert to distances from the line start to locate the points
             distances = axis_distance + aligned_distances * direction_sign
 
-        # create a single point at the midpoint of the line if the line is shorter than the space
         elif length < space:
             distances = np.array([length / 2])
 
-        # Create distances along the line, including the end point
         elif include_endpoints:
             distances = np.arange(0, length, space)
             distances = np.append(distances, length)
 
-        # Create distances along the line, without the end point
         else:
             distances = np.arange(space, length, space)
 
-        # Create points at each distance along the line using line_interpolate_point to get the geometry
         for position, distance in enumerate(distances):
             point_data = {
                 "point_id": len(points),
@@ -287,20 +261,25 @@ def points_along_lines(
 
 
 def draw_perpendicular_lines(
-    width: float, points_gdf: gpd.GeoDataFrame, greppels: gpd.GeoDataFrame, waterdeel_gdf: gpd.GeoDataFrame
+    width: float,
+    points_gdf: gpd.GeoDataFrame,
+    greppels: gpd.GeoDataFrame,
+    waterdeel_gdf: gpd.GeoDataFrame,
 ) -> gpd.GeoDataFrame:
     """
-    For each point and its greppel line, draw a perpendicular cross-section of given width.
-    Returns a GeoDataFrame of profile lines with code, point_id and distance.
+    Construct a perpendicular profile line for each sampled point along a greppel or channel geometry. The
+    function groups points by code, retrieves the matching source line, and computes a local offset at a short
+    distance ahead of the original point to determine the profile direction. Each line is then transformed into
+    a cross-section with the requested width and stored in a GeoDataFrame with the relevant metadata. This is
+    the geometric bridge between sampled points and later DEM-based elevation extraction, allowing repeated
+    profile extraction without forcing extra manual geometry operations.
     """
 
-    profiles = []
+    profiles: list[dict[str, Any]] = []
     codes = points_gdf.groupby("code")
     for code, group in codes:
         line = greppels.loc[greppels["CODE"] == code, "geometry"].iloc[0]
-        # print(code)
-        # print(group)
-        for index, point in group.iterrows():
+        for _, point in group.iterrows():
             p1 = point["geometry"]
             distance = point["distance"]
 
@@ -310,7 +289,6 @@ def draw_perpendicular_lines(
                 p2_distance = max(distance - 0.5, 0)
 
             p2 = line_interpolate_point(line, p2_distance)
-
             profile_line = full_perpendicular_line((p1.x, p1.y), (p2.x, p2.y), width)
 
             profiles.append(
@@ -322,13 +300,11 @@ def draw_perpendicular_lines(
                 }
             )
 
-    profiles_lines = gpd.GeoDataFrame(
+    return gpd.GeoDataFrame(
         profiles,
         geometry="geometry",
         crs=greppels.crs,
     )
-
-    return profiles_lines
 
 
 def sample_elevation_per_profile_point(
@@ -340,14 +316,18 @@ def sample_elevation_per_profile_point(
     waterdeel_gdf: gpd.GeoDataFrame,
     space: float,
     buffer_waterdeel: float,
-) -> Tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]:
+) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]:
     """
-    Sample DEM elevations along profile cross-section lines and return points and lines GeoDataFrames.
-    Returns (profile_points_gdf, profile_lines_gdf).
+    Sample DEM elevations along each perpendicular profile line and return both the extracted points and the
+    cleaned profile geometries. The function builds profile lines, filters them to the relevant waterbody area,
+    aligns them to the original greppel axis, and then samples the DEM at each generated point. It removes invalid
+    points and associated profiles before returning the two GeoDataFrames, which are later used for reference
+    elevation and cross-section calculations. This workflow keeps the geometry and elevation data synchronized and
+    prevents profile reconstruction from being distorted by invalid or clipped features.
     """
 
-    coords = []
-    elevations = []
+    coords: list[tuple[float, float]] = []
+    elevations: list[float] = []
 
     profile_lines = draw_perpendicular_lines(
         width=width,
@@ -373,7 +353,6 @@ def sample_elevation_per_profile_point(
         align_to_axis=True,
     )
 
-    # filter points without change their original or aligned distance
     waterdeel_buffer = waterdeel_gdf.geometry.buffer(buffer_waterdeel).union_all()
 
     profile_points_gdf = profile_points_gdf.loc[profile_points_gdf.geometry.intersects(waterdeel_buffer)].copy()
@@ -409,8 +388,12 @@ def sample_elevation_per_profile_point(
 
 def plot_profile(gpkg_path: Path, code: Any, output_path: Path) -> None:
     """
-    Plot elevation profiles for a given code from a GeoPackage and save as image.
-    Raises ValueError if no profiles are found.
+    Plot the extracted elevations for one greppel code and save them as a profile image for review. The function
+    reads the geometry data from a GeoPackage, filters the rows for the selected code, and raises a clear ValueError
+    if no profiles are present. It then draws all sampled cross-sections together, overlays the mean profile, and
+    marks the bank level per channel when sufficient data exists. The result is a clean, publication-friendly plot
+    with the axis at zero distance, making it easier to validate profile alignment and bank extraction before updating
+    the model.
     """
     matplotlib.use("Agg")
 
@@ -423,7 +406,6 @@ def plot_profile(gpkg_path: Path, code: Any, output_path: Path) -> None:
 
     fig, ax = plt.subplots(figsize=(10, 5))
 
-    # plot individual sampled profiles
     for profile_id, profile in greppel_profiles.groupby("profile_id"):
         profile = profile.sort_values("distance")
 
@@ -434,11 +416,7 @@ def plot_profile(gpkg_path: Path, code: Any, output_path: Path) -> None:
             alpha=0.4,
             linewidth=1,
         )
-    # plot mean profiles and selected ank level per channel
-    for (
-        channel_id,
-        channel,
-    ) in greppel_profiles.groupby("channel_id"):
+    for channel_id, channel in greppel_profiles.groupby("channel_id"):
         mean_profile = channel[["distance", "mean_elevation"]].drop_duplicates().sort_values("distance")
 
         (mean_line,) = ax.plot(
@@ -485,10 +463,21 @@ def plot_profile(gpkg_path: Path, code: Any, output_path: Path) -> None:
     print(f"Figure saved: {output_path}", flush=True)
 
 
-def validate_profile(new_profile_points, profile_lines_gdf):
+def validate_profile(
+    new_profile_points: gpd.GeoDataFrame,
+    profile_lines_gdf: gpd.GeoDataFrame,
+) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]:
+    """
+    Remove invalid profile groups that do not contain enough vertical range to support a meaningful cross-section
+    table. The function groups points by channel and profile, computes each profile's relative height from its minimum
+    elevation, and rejects groups whose endpoint height range collapses to zero. This safeguards subsequent interpolation
+    and table generation, since profiles with insufficient contrast cannot provide a reliable width-depth relationship.
+    In practice, the returned GeoDataFrame contains the cleaned point set and a reduced set of invalid profile lines
+    so they can be logged or inspected separately.
+    """
 
     valid_points = new_profile_points.copy()
-    invalid_profiles = []
+    invalid_profiles: list[dict[str, Any]] = []
 
     groups = valid_points.groupby(["channel_id", "profile_id"])
     for key in groups.groups.keys():
@@ -537,8 +526,12 @@ def align_profile_lines(
     greppels_gdf: gpd.GeoDataFrame,
 ) -> gpd.GeoDataFrame:
     """
-    Locate ach profile's original point along the clipped line and determine its orientatio
-    relative to the original greppel.
+    Align each clipped profile line with the original greppel geometry and determine the local orientation sign.
+    The function projects the sampled origin point onto the current profile line to get its axis distance, then
+    compares the local direction of the profile against the greppel direction to decide whether distances increase
+    to the left or right. When the cross product is zero, the profile orientation cannot be determined safely and a
+    ValueError is raised. This step is crucial because the subsequent profile sampling and distance calculations
+    depend on a consistent relative axis direction for each channel segment.
     """
     profile_lines_gdf = profile_lines_gdf.copy()
 
@@ -550,7 +543,6 @@ def align_profile_lines(
 
         axis_distance = profile_line.geometry.project(origin_point)
 
-        # Retrieve the original greppel and existing longitudinal distance
         greppels_line = greppels_gdf.loc[
             greppels_gdf["CODE"] == profile_line["code"],
             "geometry",
@@ -558,22 +550,18 @@ def align_profile_lines(
 
         greppel_distance = profile_line["distance"]
 
-        # Determine the local greppels direction
-
         before = greppels_line.interpolate(max(greppel_distance - 0.5, 0))
         after = greppels_line.interpolate(min(greppel_distance + 0.5, greppels_line.length))
 
         greppel_dx = after.x - before.x
         greppel_dy = after.y - before.y
 
-        # Determine the direction in which profile distnace increase
         profile_start = profile_line.geometry.coords[0]
         profile_end = profile_line.geometry.coords[-1]
 
         profile_dx = profile_end[0] - profile_start[0]
         profile_dy = profile_end[1] - profile_start[1]
 
-        # Positive distance points to the left of the cannel direction
         cross_product = greppel_dx * profile_dy - greppel_dy * profile_dx
 
         if cross_product == 0:
@@ -597,27 +585,27 @@ def get_height_and_reference_level(
     height_step: float,
 ) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]:
     """
-    Compute mean elevations per channel, derive reference level and heights, and build cross-section tables.
-    Returns profile points GeoDataFrame enriched with reference_level, mean_elevation, height and cross_section_table.
+    Compute channel-wise elevation summaries, reference levels, and cross-section tables from sampled profile
+    points. The function joins profiles to the relevant channel geometry, recalculates aligned distances, removes
+    invalid profiles, and aggregates mean elevations for each distance step. It then derives a reference level per
+    channel and uses that base to build relative height values and width tables for each profile. This pipeline is
+    the analytical core of the profile workflow, turning a collection of sampled cross-sections into comparable
+    channel metrics that can update model layers and bank definitions in a consistent way.
     """
-    # buffer and dissolve greppels.cross_section_tables = get_cross_section_table(profile, height_step=height_step)
     greppels_buffer = greppels_gdf.buffer(1).union_all()
     greppels_buffer_gdf = gpd.GeoDataFrame(
         geometry=[greppels_buffer],
         crs=greppels_gdf.crs,
     )
 
-    # Select channels that intersects with greppels.
     channel_join = channel_gdf.sjoin(greppels_buffer_gdf, how="inner", predicate="intersects")
     channel_join = channel_join.drop(columns="index_right")
     channel_join = channel_join.drop_duplicates()
     channel_join = channel_join[["id", "geometry"]].rename(columns={"id": "channel_id"})
 
-    # Select the profile lines to the joined channels.
     profile_lines_intersect = profile_lines_gdf.sjoin(channel_join, how="inner", predicate="intersects")
     profile_lines_intersect = profile_lines_intersect.drop_duplicates()
 
-    # asing channel id to the sampled points.
     profile_lines_id_channel = (
         profile_lines_intersect[["point_id", "channel_id"]]
         .drop_duplicates()
@@ -628,7 +616,6 @@ def get_height_and_reference_level(
         profile_lines_id_channel, how="inner", on="profile_id", validate="many_to_one"
     )
 
-    # preserve distance from the full line start
     new_profile_points["distance_from_start"] = new_profile_points["distance"]
     new_profile_points["distance"] = new_profile_points["distance_aligned"].round(3)
 
@@ -661,9 +648,7 @@ def get_height_and_reference_level(
         validate="many_to_one",
     )
 
-    # group by channels and keep columns distance and height
     groups = profile_points_with_heights.groupby("channel_id")[["distance", "height"]]
-    # apply function to get cross_section_tables
     cross_section_table_list = []
     for channel_id in groups.groups.keys():
         profile = groups.get_group(channel_id).copy()
@@ -677,8 +662,6 @@ def get_height_and_reference_level(
 
         cross_section_tables["channel_id"] = channel_id
         cross_section_table_list.append(cross_section_tables)
-
-    # merge results.
     cross_section_tables = pd.concat(cross_section_table_list, ignore_index=True)
     profile_points_with_heights = profile_points_with_heights.merge(
         cross_section_tables,
@@ -690,13 +673,14 @@ def get_height_and_reference_level(
     return profile_points_with_heights, invalid_profiles_gdf
 
 
-def get_cross_section_table(
-    profile: pd.DataFrame,
-    height_step: float = 0.10,
-) -> pd.DataFrame | None:
+def get_cross_section_table(profile: pd.DataFrame, height_step: float = 0.10) -> pd.DataFrame | None:
     """
-    Build a cross-section table for a channel profile: for a sequence of heights compute widths.
-    Returns a DataFrame with channel_id and cross_section_table text.
+    Build a width-versus-height table for a profile by slicing the cross-section at regular vertical intervals.
+    The function sorts the profile points by distance, computes the lower of the two endpoint heights as the maximum
+    cut level, and then integrates the width between neighbouring points for each height step. This yields a compact
+    text representation suitable for later use in model cross-section definitions. The logic is designed to handle
+    monotonic profile shapes, while a final correction prevents a zero width at the lowest point from propagating into
+    the table when the next interval is valid.
     """
     profile = profile[["distance", "height"]]
     profile = profile.drop_duplicates().sort_values("distance")
@@ -704,13 +688,12 @@ def get_cross_section_table(
     distances = profile["distance"].to_numpy()
     profile_heights = profile["height"].to_numpy()
 
-    # Stop at the lower endpoint to avoid extending beyond the profile.
     max_height = min(profile_heights[0], profile_heights[-1])
 
     heights = np.arange(0, max_height, height_step)
     heights = np.append(heights, max_height)
 
-    cross_section_rows = []
+    cross_section_rows: list[str] = []
 
     for height in heights:
         width = 0.0
@@ -722,11 +705,8 @@ def get_cross_section_table(
             h1 = profile_heights[index]
             h2 = profile_heights[index + 1]
 
-            # Include the entire segment when both ends are below the cut.
             if h1 <= height and h2 <= height:
                 width += x2 - x1
-
-            # Include only the portion below the horizontal cut.
             elif min(h1, h2) < height < max(h1, h2):
                 crossing = x1 + ((height - h1) / (h2 - h1)) * (x2 - x1)
 
@@ -737,7 +717,6 @@ def get_cross_section_table(
 
         cross_section_rows.append(f"{height:.3f},{width:.3f}")
 
-    # Replace a zero bottom width with the width at the next height.
     if len(cross_section_rows) >= 2:
         first_height, first_width = cross_section_rows[0].split(",")
         next_height, next_width = cross_section_rows[1].split(",")
@@ -759,8 +738,12 @@ def get_cross_section_table(
 
 def get_bank_level(profile_points_with_heights: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
     """
-    Estimate bank level per channel by detecting flattening points on both banks.
-    Returns the input GeoDataFrame with a new 'bank_level' column.
+    Estimate the bank level for each channel by examining flattening patterns on both sides of the lowest point
+    in the mean profile. The function computes slope changes across the profile, identifies the strongest flattening
+    on the left and right, and picks the minimum bank elevation as the representative bank level. This makes it easier
+    to determine the natural channel edge before updating the model with new reference levels and cross-section tables.
+    The result is the original GeoDataFrame enriched with bank information where these features are detected, enabling
+    later comparison against the final channel geometry.
     """
     mean_profiles = (
         profile_points_with_heights[["channel_id", "distance", "mean_elevation"]]
@@ -778,7 +761,6 @@ def get_bank_level(profile_points_with_heights: gpd.GeoDataFrame) -> gpd.GeoData
         profile["slope"] = profile["mean_elevation"].diff() / profile["distance"].diff()
         slope_abs = profile["slope"].abs()
 
-        # Positive values indicate flattening toward the outside.
         profile["flattening_right"] = slope_abs.shift(-1) - slope_abs
         profile["flattening_left"] = slope_abs - slope_abs.shift(-1)
 
@@ -829,16 +811,21 @@ def get_bank_level(profile_points_with_heights: gpd.GeoDataFrame) -> gpd.GeoData
 
 
 def update_cross_sections(
-    profile_points_with_heights: gpd.GeoDataFrame, cross_section_locations: gpd.GeoDataFrame
+    profile_points_with_heights: gpd.GeoDataFrame,
+    cross_section_locations: gpd.GeoDataFrame,
 ) -> gpd.GeoDataFrame:
     """
-    Update cross_section_locations with computed reference_level, bank_level and cross_section_table.
-    Returns the updated cross_section_locations GeoDataFrame.
+    Update channel cross-section rows with the calculated reference level, bank level, and cross-section table
+    values. The function groups the derived channel summaries by unique channel identifier, applies the new
+    attributes to matching rows, and renames the code field to keep the greppel naming scheme consistent. This makes
+    the model-ready data structure reflect the reprocessed profile results without losing original location metadata.
+    The returned GeoDataFrame is ready to be written back to the source model, where it can be consumed by later update
+    routines and quality checks.
     """
     channel_cross_sections_banklelvel = profile_points_with_heights[
         ["channel_id", "reference_level", "bank_level", "cross_section_table"]
     ].drop_duplicates()
-    for index, channel in channel_cross_sections_banklelvel.iterrows():
+    for _, channel in channel_cross_sections_banklelvel.iterrows():
         selection = cross_section_locations["channel_id"] == channel["channel_id"]
         cross_section_locations.loc[selection, "updated"] = True
         cross_section_locations.loc[selection, "reference_level"] = round(channel["reference_level"], 3)
@@ -862,45 +849,33 @@ def update_model(
     model_path: Path,
     cross_section_locations: gpd.GeoDataFrame,
 ) -> None:
-    """
-    Apply updated cross-section and bank levels to model layers (orifice, connection_node, cross_section_location).
-    Writes changes to the provided model_path (GeoPackage).
-    """
-    # filter channels id base on the updated filter
+    """Apply updated cross-section properties to the model layers for orifices, connection nodes, and channel locations. The function selects affected channels, updates crest levels for matching greppel orifices, and writes the modified orifice layer back to the GeoPackage. It then adjusts initial water levels for channel connection nodes that are part of the updated set and finalizes the cross-section location attributes with the newly computed reference and bank values. This completes the model update loop by ensuring the stored geometry and metadata remain consistent with the recalculated profile results."""
     channel_id = cross_section_locations_updated.loc[
         cross_section_locations_updated["updated"] == True
     ].channel_id.to_list()
 
-    # Create a set of connection nodes.
     connection_node_start_id = channel_gdf.loc[channel_gdf["id"].isin(channel_id)].connection_node_start_id.to_list()
     connection_node_end_id = channel_gdf.loc[channel_gdf["id"].isin(channel_id)].connection_node_end_id.to_list()
     connection_nodes_set = set()
     connection_nodes_set.update(connection_node_end_id)
     connection_nodes_set.update(connection_node_start_id)
 
-    # select channels to be modify base on channels id filter
     channels_updated = channel_gdf.loc[channel_gdf["id"].isin(channel_id)]
 
-    # Create a copy and buffer all the hydroobjects that has a different category than 1
     secundary_terciary_buffer = hydroobject.loc[hydroobject["CATEGORIEOPPWATERLICHAAM"] != 1].copy()
     secundary_terciary_buffer["geometry"] = secundary_terciary_buffer.geometry.buffer(1)
 
-    # Join the orifices that are within the secundary and terciary buffer
     orifice_filter = orifice_gdf.sjoin(secundary_terciary_buffer, how="inner", predicate="within")
 
-    # filter them to select only the greppels orifices
     orifice_greppels = orifice_filter.loc[
         orifice_filter["connection_node_start_id"].isin(connection_nodes_set)
         | orifice_filter["connection_node_end_id"].isin(connection_nodes_set)
     ]
 
-    # loop over the orifice to update crest level.
     for idx, orifice in orifice_greppels.iterrows():
-        # select connectionn nodes from orifices.
         orifice_start = orifice.connection_node_start_id
         orifice_end = orifice.connection_node_end_id
 
-        # selec channels base on orifices coonnection nodes to get reference levels from orifices
         connected_channel_ids = channels_updated.loc[
             channels_updated["connection_node_start_id"].isin([orifice_start, orifice_end])
             | channels_updated["connection_node_end_id"].isin([orifice_start, orifice_end]),
@@ -916,17 +891,11 @@ def update_model(
             .unique()
         )
 
-        # compare crest level against reference. It wil  change if reference is higher than crest level
         target_crest_level = round(max(reference_levels), 3)
-
-        # if orifice["crest_level"] > target_crest_level:
         orifice_gdf.loc[idx, "crest_level"] = target_crest_level
 
-    # update model.
     orifice_gdf.to_file(model_path, layer="orifice", driver="GPKG")
 
-    # Here start the porcess to update initial waterlevels
-    # filter cross section updates
     cross_section_updated = cross_section_locations_updated.loc[cross_section_locations_updated["updated"] == True]
     greppel_channel_ids = cross_section_updated["channel_id"].to_list()
 
@@ -935,12 +904,10 @@ def update_model(
     connection_id_no_greppels = set(channels_no_greppels["connection_node_start_id"])
     connection_id_no_greppels.update(channels_no_greppels["connection_node_end_id"])
 
-    for idx, connection_node in cross_section_updated.iterrows():
-        # get channels ID and bank levels from cross section updated.
+    for _, connection_node in cross_section_updated.iterrows():
         channel_id = connection_node.channel_id
         bank_level = connection_node.bank_level
 
-        # get connection nodes id to update initial water level field (10 below bank level)
         connection_node_start_id = channel_gdf.loc[
             channel_gdf["id"] == channel_id, "connection_node_start_id"
         ].values.tolist()[0]
@@ -948,7 +915,6 @@ def update_model(
             channel_gdf["id"] == channel_id, "connection_node_end_id"
         ].values.tolist()[0]
 
-        # Update only nodes not shared with channels outside the selection.
         if connection_node_start_id not in connection_id_no_greppels:
             connection_node_gdf.loc[
                 connection_node_gdf["id"] == connection_node_start_id,
@@ -961,29 +927,26 @@ def update_model(
                 "initial_waterlevel",
             ] = round(bank_level - 0.10, 2)
 
-    # update connectio node.
     connection_node_gdf.to_file(model_path, layer="connection_node", driver="GPKG")
 
-    # update cross section attributes base on updated ids.
     cross_section_ids = cross_section_locations_updated["id"]
-    for id in cross_section_ids:
-        # update banklevel
+    for section_id in cross_section_ids:
         bank_level = cross_section_locations_updated.loc[
-            cross_section_locations_updated["id"] == id, "bank_level"
+            cross_section_locations_updated["id"] == section_id, "bank_level"
         ].values.tolist()[0]
-        cross_section_locations.loc[cross_section_locations["id"] == id, "bank_level"] = bank_level
+        cross_section_locations.loc[cross_section_locations["id"] == section_id, "bank_level"] = bank_level
 
-        # update cross section table.
         cross_section_table = cross_section_locations_updated.loc[
-            cross_section_locations_updated["id"] == id, "cross_section_table"
+            cross_section_locations_updated["id"] == section_id, "cross_section_table"
         ].values.tolist()[0]
-        cross_section_locations.loc[cross_section_locations["id"] == id, "cross_section_table"] = cross_section_table
+        cross_section_locations.loc[cross_section_locations["id"] == section_id, "cross_section_table"] = (
+            cross_section_table
+        )
 
-        # update reference level
         reference_level = cross_section_locations_updated.loc[
-            cross_section_locations_updated["id"] == id, "reference_level"
+            cross_section_locations_updated["id"] == section_id, "reference_level"
         ].values.tolist()[0]
-        cross_section_locations.loc[cross_section_locations["id"] == id, "reference_level"] = reference_level
+        cross_section_locations.loc[cross_section_locations["id"] == section_id, "reference_level"] = reference_level
 
     cross_section_locations.to_file(model_path, layer="cross_section_location", driver="GPKG")
 

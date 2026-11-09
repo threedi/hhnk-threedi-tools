@@ -1,18 +1,17 @@
 """Build and apply DEM-derived cross-sections for drainage ditches.
 
-Run this file as a script to sample the DEM across cross-sections placed along the configured greppel
-lines. The workflow joins those profiles to nearby channels, calculates reference and bank levels, builds
-cross-section tables, and updates the model's orifice, connection-node, and cross-section-location layers.
-Profiles that cannot produce a section table are written to ``invalid_profiles.gpkg``; sampled profiles
-and per-profile plots are also exported for review.
+Run this file with a project folder, greppel GeoPackage, and DEM path to sample cross-sections along
+greppel lines. The workflow joins profiles to nearby channels, calculates reference and bank levels,
+builds cross-section tables, and updates the model's orifice, connection-node, and cross-section-location
+layers. Invalid profiles and intermediate profile samples are saved under the project's source-data
+folder. Model layers are overwritten. Plot generation is optional; pass ``--plot-profiles`` to save
+profile plots alongside the intermediate data.
 
-Before running, edit the model folder, greppel GeoPackage, DEM path, and profile-graph output path in the
-``__main__`` block for the target project. The DAMO input must provide ``HydroObject`` and ``Waterdeel``
-layers, and the model GeoPackage must contain the channel, cross-section-location, orifice, and
-connection-node layers. Adjust ``width``, ``space``, ``space_points_along_lines``, and
-``buffer_waterdeel`` there to control section width, DEM sample spacing, ditch spacing, and water-area
-buffering. Outputs overwrite the corresponding model layers. The final plot-export code is currently
-outside the main guard, so this module is intended to be run as a script rather than imported.
+The project folder must follow the ``Folders`` layout, with DAMO ``HydroObject`` and ``Waterdeel`` layers
+and a model GeoPackage containing the required channel, cross-section-location, orifice, and
+connection-node layers. Profile width, DEM sample spacing, greppel spacing, and water-area buffer are
+configured near the start of ``main``. Raster values equal to 10 are intentionally excluded as invalid,
+and the search helper uses the project's fixed 0.5-unit raster resolution.
 """
 
 # %%
@@ -27,7 +26,7 @@ import numpy as np
 import pandas as pd
 import rasterio
 from shapely import line_interpolate_point
-from shapely.geometry import LineString, Point
+from shapely.geometry import LineString, MultiPoint, Point
 from shapely.geometry.base import BaseGeometry
 from shapely.ops import nearest_points
 from xarray import DataArray
@@ -87,7 +86,7 @@ def nearest_intersect_exclude(
     elif boundary_geom is not None:
         if boundary_geom.intersects(line_geom):
             intersections = boundary_geom.intersection(line_geom)
-            if intersections.geom_type == "MultiPoint":
+            if isinstance(intersections, MultiPoint):
                 for p in intersections.geoms:
                     dist = p.distance(exclude_point)
                     if dist > 0.01:
@@ -99,7 +98,7 @@ def nearest_intersect_exclude(
                         dist = p.distance(exclude_point)
                         if dist == nearest_dist:  # kan ook met .index?
                             intersection = p
-            elif intersections.geom_type == "Point":
+            elif isinstance(intersections, Point):
                 intersection = intersections
                 nearest_dist = intersections.distance(point_geom)
 
@@ -172,7 +171,7 @@ def get_nearest_non_nodata(
     parameter, the implementation resets it to 0.5 before sampling, so a caller-supplied value currently
     has no effect. Larger tolerances can require many repeated raster selections.
     """
-    dist = 0
+    dist = 0.0
     pixelsize = 0.5
     x = point_gdf.x
     y = point_gdf.y
@@ -280,9 +279,9 @@ def points_along_lines(
     ``distance``, and point geometry. When the input has a ``point_id`` column, copy it as ``profile_id``.
     The output GeoDataFrame retains the input CRS. Empty inputs produce an empty GeoDataFrame.
     """
-    points = []
+    points: list[dict[str, Any]] = []
 
-    for idx, line in lines.iterrows():
+    for _, line in lines.iterrows():
         length = line.geometry.length
 
         # create a single point at the midpoint of the line if the line is shorter than the space
@@ -348,7 +347,7 @@ def draw_perpendicular_lines(
         line = greppels.loc[greppels["CODE"] == code, "geometry"].iloc[0]
         # print(code)
         # print(group)
-        for index, point in group.iterrows():
+        for _, point in group.iterrows():
             p1 = point["geometry"]
             distance = point["distance"]
 
@@ -417,15 +416,18 @@ def sample_elevation_per_profile_point(
 
     profile_points_gdf = profile_points_gdf.loc[profile_points_gdf.geometry.intersects(waterdeel_buffer)].copy()
 
+    waterdeel_buffer_gdf = gpd.GeoSeries([waterdeel_buffer], crs=waterdeel_gdf.crs)
     profile_lines = gpd.clip(
         profile_lines,
-        waterdeel_buffer,
+        waterdeel_buffer_gdf,
         keep_geom_type=True,
     )
 
     profile_lines = profile_lines.loc[profile_lines["point_id"].isin(profile_points_gdf["profile_id"])].copy()
 
     for point in profile_points_gdf.geometry:
+        if not isinstance(point, Point):
+            raise TypeError("Profile sample geometries must be Points")
         coords.append((point.x, point.y))
 
     with rasterio.open(dem_path) as dem:
@@ -469,7 +471,7 @@ def plot_profile(gpkg_path: Path, code: Any, output_path: Path) -> None:
 
     fig, ax = plt.subplots(figsize=(10, 5))
 
-    for profile_id, profile in greppel_profiles.groupby("profile_id"):
+    for _, profile in greppel_profiles.groupby("profile_id"):
         profile = profile.sort_values("distance")
 
         ax.plot(
@@ -983,7 +985,10 @@ if __name__ == "__main__":
     # fucntions.
     # draw profile lines and points along greppels
     points_gdf = points_along_lines(
-        lines=greppels_gdf, space=space_points_along_lines, code_column="CODE", include_endpoints=False
+        lines=greppels_gdf,
+        space=space_points_along_lines,
+        code_column="CODE",
+        include_endpoints=False,
     )
 
     # Sample profile points using dem
@@ -1011,7 +1016,6 @@ if __name__ == "__main__":
     profile_points_folder.mkdir(exist_ok=True)
     profile_points_path = profile_points_folder / "profile_points.gpkg"
     invalid_profiles_path = profile_points_folder / "invalid_profiles.gpkg"
-
     invalid_profiles_gdf.to_file(invalid_profiles_path, driver="GPKG")
     profile_points_with_heights.to_file(profile_points_path, driver="GPKG")
 
