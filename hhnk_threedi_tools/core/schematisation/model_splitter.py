@@ -259,20 +259,29 @@ or do not use this run in the modelsplitter.
         max_infiltration_volume_file, interception_file ]
         """
 
-        schema_new = getattr(self.folder.model, f"schema_{name}")
+        # schema_new = getattr(self.folder.model, f"schema_{name}")
         row = self.settings_df.loc[name]
 
         upload.threedi.set_api_key(api_key)
 
+        # raster_names = {
+        #     "dem_file": schema_new.rasters.dem.path_if_exists,
+        #     "frict_coef_file": schema_new.rasters.friction.path_if_exists,
+        #     "infiltration_rate_file": schema_new.rasters.infiltration.path_if_exists,
+        #     "max_infiltration_volume_file": schema_new.rasters.storage.path_if_exists,
+        #     "initial_waterlevel_file": schema_new.rasters.initial_wlvl_2d.path_if_exists,
+        # }
+
         raster_names = {
-            "dem_file": schema_new.rasters.dem.path_if_exists,
-            "frict_coef_file": schema_new.rasters.friction.path_if_exists,
-            "infiltration_rate_file": schema_new.rasters.infiltration.path_if_exists,
-            "max_infiltration_volume_file": schema_new.rasters.storage.path_if_exists,
-            "initial_waterlevel_file": schema_new.rasters.initial_wlvl_2d.path_if_exists,
+            "dem_file": r"\\corp.hhnk.nl\data\Hydrologen_data\Data\02.modellen\bergen_noord_variant_3_JA\02_schematisation\1d2d_ghg\rasters\dem_bergen_noord.tif",
+            "frict_coef_file": r"\\corp.hhnk.nl\data\Hydrologen_data\Data\02.modellen\bergen_noord_variant_3_JA\02_schematisation\1d2d_ghg\rasters\friction_bergen_noord.tif",
+            "infiltration_rate_file": r"\\corp.hhnk.nl\data\Hydrologen_data\Data\02.modellen\bergen_noord_variant_3_JA\02_schematisation\1d2d_ghg\rasters\infiltration_bergen_noord.tif",
+            "max_infiltration_capacity_file": r"\\corp.hhnk.nl\data\Hydrologen_data\Data\02.modellen\bergen_noord_variant_3_JA\02_schematisation\1d2d_ghg\rasters\storage_ghg_bergen_noord.tif",
+            "initial_waterlevel_file": None,
         }
 
-        sqlite_path = schema_new.database.base
+        # sqlite_path = schema_new.database.base
+        sqlite_path  = r"\\corp.hhnk.nl\data\Hydrologen_data\Data\02.modellen\bergen_noord_variant_3_JA\02_schematisation\1d2d_ghg\bergen_noord_variant_3.sqlite"
         schematisation_name = row["schematisation_name"]
         tags = [schematisation_name, self.folder.name]
         # organisation_uuid="48dac75bef8a42ebbb52e8f89bbdb9f2"
@@ -322,20 +331,24 @@ or do not use this run in the modelsplitter.
 if __name__ == "__main__":
     from hhnk_threedi_tools.core.folders import Folders
 
-    path = r"E:\02.modellen\wormer_leggertool"
+    path = r"H:\02.modellen\bergen_noord_variant_3_JA"
 
     folder = Folders(path)
-    name = "0d1d_test"
+    name = "1d2d_ghg"
 
     self = ModelSchematisations(folder=folder, modelsettings_path=folder.model.settings.path)
-    self.create_schematisation(name=name)
+    # self.create_schematisation(name=name)
     # response = self.create_local_sqlite_revision(commit_message=str(" (local split revision)"))
-    # self.upload_schematisation(
-    #     organisation_uuid="48dac75bef8a42ebbb52e8f89bbdb9f2",
-    #     name=name,
-    #     commit_message="testtest",
-    #     api_key="",
-    # )
+    self.upload_schematisation(
+        organisation_uuid="48dac75bef8a42ebbb52e8f89bbdb9f2",
+        name=name,
+        commit_message="testtest",
+        api_key=api_keys["threedi"],
+    )
+# %%
 
+
+api_keys_path = rf"{os.getenv('APPDATA')}\3Di\QGIS3\profiles\default\python\plugins\hhnk_threedi_plugin\api_key.txt"
+api_keys = hrt.read_api_file(api_keys_path)
 
 # %%
