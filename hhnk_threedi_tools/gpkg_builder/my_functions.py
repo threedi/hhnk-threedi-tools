@@ -17,7 +17,13 @@ from hhnk_threedi_tools import Folders
 
 
 def nearest_intersect(boundary_geom: Any, line_geom: Any, point_geom: Any) -> tuple[Any | None, float | None]:
-    """Find the closest intersection between a line and a boundary segment relative to a target point. The function tests whether the boundary and line overlap; when they do, it uses the nearest point on the intersection geometry to the provided point and measures that distance. If there is no intersection, both outputs are returned as None. This helper is useful during profile analysis, especially when choosing a valid reference point while avoiding mismatches across clipped or partial line features."""
+    """
+    Find the closest intersection between a line and a boundary segment relative to a target point. The function
+      tests whether the boundary and line overlap; when they do, it uses the nearest point on the intersection
+      geometry to the provided point and measures that distance. If there is no intersection, both outputs are
+      returned as None. This helper is useful during profile analysis, especially when choosing a valid reference
+      point while avoiding mismatches across clipped or partial line features.
+    """
 
     if boundary_geom.intersects(line_geom):
         intersection = nearest_points(point_geom, boundary_geom.intersection(line_geom))[1]
@@ -35,7 +41,14 @@ def nearest_intersect_exclude(
     point_geom: Any,
     exclude_point: Any,
 ) -> tuple[Any | None, float | None]:
-    """Find the closest valid intersection between a boundary and a line while excluding a known point from the result set. The function first checks whether the exclusion target is present; if so, it filters out nearby intersection candidates that fall too close to that excluded point. It then selects the nearest remaining option and returns both the geometry and its distance to the supplied reference point. This is useful when a profile crosses a boundary at multiple locations and a single point has to be rejected to keep geometry consistent during alignment."""
+    """
+    Find the closest valid intersection between a boundary and a line while excluding a known point from the
+    result set. The function first checks whether the exclusion target is present; if so, it filters out nearby
+    intersection candidates that fall too close to that excluded point. It then selects the nearest remaining
+    option and returns both the geometry and its distance to the supplied reference point. This is useful when a
+    profile crosses a boundary at multiple locations and a single point has to be rejected to keep geometry
+    consistent during alignment.
+    """
     intersection = None
     nearest_dist = None
     valid_points = []
@@ -72,7 +85,14 @@ def perpendicular_lines(
     distance: float,
     side: str,
 ) -> LineString:
-    """Construct a perpendicular segment from a base point using a direction vector derived from the line between two coordinates. The function computes the local angle, offsets the endpoint by the requested distance, and chooses a left or right orientation based on the provided side argument. This helper is used to build profile cross-section lines around a channel axis while preserving geometric orientation. The result is a Shapely LineString that begins at the reference point and ends at the offset endpoint, making it easy to transform later into a full profile geometry."""
+    """
+    Construct a perpendicular segment from a base point using a direction vector derived from the line between
+    two coordinates. The function computes the local angle, offsets the endpoint by the requested distance, and
+    chooses a left or right orientation based on the provided side argument. This helper is used to build profile
+    cross-section lines around a channel axis while preserving geometric orientation. The result is a Shapely
+    LineString that begins at the reference point and ends at the offset endpoint, making it easy to transform
+    later into a full profile geometry.
+    """
 
     dx = p2[0] - p1[0]
     dy = p2[1] - p1[1]
@@ -99,7 +119,14 @@ def get_nearest_non_nodata(
     pixelsize: float = 0.5,
     mode: str = "min",
 ) -> float:
-    """Find the nearest valid raster value near a point while stepping outward until a non-NA value is found or tolerance is reached. The function starts by sampling the exact coordinate and then expands a search square outward in fixed pixel increments. It supports several aggregation modes, including minimum, maximum, median, and mean, which makes it useful for filling small gaps in raster information. The method is intentionally simple for local interpolation and is most effective in small tolerances where the search space stays compact and computational overhead remains low."""
+    """
+    Find the nearest valid raster value near a point while stepping outward until a non-NA value is found or
+    tolerance is reached. The function starts by sampling the exact coordinate and then expands a search square
+    outward in fixed pixel increments. It supports several aggregation modes, including minimum, maximum, median,
+    and mean, which makes it useful for filling small gaps in raster information. The method is intentionally
+    simple for local interpolation and is most effective in small tolerances where the search space stays compact
+    and computational overhead remains low.
+    """
     dist = 0
     pixelsize = 0.5
     x = point_gdf.x
@@ -1034,8 +1061,12 @@ if __name__ == "__main__":
         cross_section_locations,
     )
 # %%
+codes = profile_points_with_heights["code"].unique().tolist()
 
-# # %%
+for code in codes:
+    save_path = profile_points_folder / f"{code}.png"
+    plot_profile(gpkg_path=profile_points_path, code=code, output_path=save_path)
+# %%
 # profile_points_with_heights.to_file(
 #     r"H:\02.modellen\grootslag_leggertool\cross_section_points_with_heights.gpkg",
 #     driver="GPKG",
@@ -1059,10 +1090,3 @@ if __name__ == "__main__":
 #     r"H:\02.modellen\grootslag_leggertool\cross_section_updated.gpkg",
 #     driver="GPKG",
 # )
-codes = profile_points_with_heights["code"].unique().tolist()
-
-for code in codes:
-    save_path = profile_points_folder / f"{code}.png"
-    plot_profile(gpkg_path=profile_points_path, code=code, output_path=save_path)
-
-# %%
