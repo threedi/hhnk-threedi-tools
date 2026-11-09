@@ -1005,7 +1005,7 @@ if __name__ == "__main__":
         profile_lines_gdf=profile_lines_gdf,
         profile_points_gdf=profile_points_gdf,
     )
-    
+
     # save invalid profiles
     profile_points_folder = Path(folder.source_data.path / "profile_data")
     profile_points_folder.mkdir(exist_ok=True)
@@ -1035,7 +1035,7 @@ if __name__ == "__main__":
         model_path,
     )
 # %%
-#Plot to check profiles.
+# Plot to check profiles.
 codes = profile_points_with_heights["code"].unique().tolist()
 
 for code in codes:
