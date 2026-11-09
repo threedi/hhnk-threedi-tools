@@ -1,8 +1,16 @@
+# %%
+import os
+
+import numpy as np
+import pandas as pd
+
+from hhnk_threedi_tools.breaches.breaches import Breaches
+
+
 def create_breach_graph(
     scenarioname,
     time_sec,
     model_name,
-    model_revision,
     breach_id,
     breach_depth,
     breach_wlev_upstream,
@@ -11,6 +19,7 @@ def create_breach_graph(
     breach_u,
     breach_width,
     fig_path_name,
+    initial_breedte,
 ):
     """
     Create and save a PNG summarising breach time series.
@@ -85,22 +94,15 @@ def create_breach_graph(
         steps = np.arange(0, time_h[-1], 1)
     # Set the titles and strings of the grph
     textstr = (
-        "(Model: "
-        + model_name
-        +
-        #' #' + str(model_revision) +
-        " Breach: "
-        + str(breach_id[0])
-        + " Bresdiepte: "
-        + str(np.round(breach_depth[-1], 1))
-        + "m"
+        f"Model: {model_name} | Breach ID: {str(breach_id[0])}\n"
+        f" Bresdiepte: {(np.round(breach_depth[-1], 1))}m | Initial Breedte: {initial_breedte}"
         # + ' Starttijd simulatie: ' + str(start_time)  +')'
     )
     textstr
     # Plot the raw time series
     fig = plt.figure(figsize=(9, 9))
-    fig.suptitle(scenarioname, fontsize=20)
-    fig.text(0.5, 0.925, textstr, fontsize=13, ha="center")
+    fig.suptitle(scenarioname, fontsize=16, fontweight="bold")
+    fig.text(0.5, 0.92, textstr, fontsize=10, ha="center", multialignment="center")
     gs = gridspec.GridSpec(4, 1, figure=fig)
 
     # Plot the time_h vs data of Breach wlev_upstream and add the lable. First argument = time, second argument = Data, Third Argument = lable
@@ -210,3 +212,46 @@ def create_breach_graph(
     plt.clf()
     plt.close("all")
     fig = []
+
+
+# %%
+if __name__ == "__main__":
+    base_folder = r"H:\03.resultaten\RWS_Test\results_output"
+    schematitation_name = os.listdir(base_folder)
+    for schema in schematitation_name:
+        schema_path = os.path.join(base_folder, schema)
+        scenarios = os.listdir(schema_path)
+        for scenario in scenarios:
+            scenario_path = os.path.join(schema_path, scenario)
+            breach = Breaches(scenario_path)
+            breach_data_gdf = pd.read_csv(breach.csv.breach_data, sep=";", decimal=",")
+            scenarioname = breach_data_gdf.name[0]
+            model_name = schema
+            breach_id = breach_data_gdf.breach_id
+            # timestamps = breach_data_gdf.timestamps.tolist()
+            time_sec = breach_data_gdf.time_sec.tolist()
+            breach_width = breach_data_gdf.breach_width.tolist()
+            breach_depth = breach_data_gdf.breach_depth.tolist()
+            breach_q = breach_data_gdf.breach_q.tolist()
+            breach_u = breach_data_gdf.breach_u.tolist()
+            breach_wlev_upstream = breach_data_gdf.breach_wlev_upstream.tolist()
+            breach_wlev_downstream = breach_data_gdf.breach_wlev_downstream.tolist()
+            jpeg_name = breach.name + ".png"
+            fig_path_name = os.path.join(breach.jpeg.path / jpeg_name)
+            initial_breedte = 10
+            create_breach_graph(
+                scenarioname,
+                np.array(time_sec),
+                model_name,
+                breach_id,
+                breach_depth,
+                breach_wlev_upstream,
+                breach_wlev_downstream,
+                breach_q,
+                breach_u,
+                breach_width,
+                fig_path_name,
+                initial_breedte,
+            )
+
+# %%

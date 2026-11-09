@@ -53,7 +53,7 @@ def start_ipo_norm_breach_simulation(
 
     # organisation_name = 'BWN HHNK'
 
-    sim_duration = 4  # days
+    sim_duration = 30  # days
     breach_duration = 2  # days
     start_datetime = datetime.datetime(2000, 1, 1, 0, 0)
     output_timestep = 900  # s
@@ -335,7 +335,7 @@ if __name__ == "__main__":
     modeller_initial = "_JA"
 
     # Define a simulation name prefix for all simulation
-    simulation_name = "IPO_OPEN_SBLN"
+    simulation_name = "IPO_SBHZ_EQ_1314"
 
     # Use organisation_name 'BWN HHNK' for standard simulation. Use the other one for very specific cases
     organisation_name = "BWN HHNK"
