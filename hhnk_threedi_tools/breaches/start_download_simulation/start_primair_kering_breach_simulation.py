@@ -134,11 +134,6 @@ def set_initial_waterlevels(
     if initial_1d is None:
         raise ValueError(f"No initial water level 1D found for model {model_id}.")
 
-    # Get initial water level 2D raster from model
-    model_rasters = api_client.threedimodels_rasters_list(model_id, type="initial_waterlevel_file").results
-
-    initial_2d = model_rasters[0] if model_rasters else None
-
     # Remove inherited 1D file
     current_1d = api_client.simulations_initial1d_water_level_file_list(simulation_pk=simulation_id).results
 
@@ -400,8 +395,9 @@ def start_simulation_breaches(
             schematitation_name=project.model_folder.name,
             schematisation_id=model.schematisation_id,
             revision_number=model.revision_number,
-            threedimodel_id=model.id,
+            model_id=model.id,
             scenario_id_rana=simulation.id,
+            initial_width=initial_width,
         )
 
         print(f"Simulation registered: {simulation.id}")
