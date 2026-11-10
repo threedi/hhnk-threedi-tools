@@ -4,21 +4,22 @@ import time
 from pathlib import Path
 from typing import Any
 
-import find_upstream_links_to_breach_short as fulb_short
 import fiona
 import geopandas as gpd
 import hhnk_research_tools as hrt
-from project_config import ProjectConfig
-from register_simulation_data import SimulationRegistry
-from simulation_settings import (
+from threedi_api_client.api import ThreediApi
+from threedi_api_client.versions import V3Api
+
+from hhnk_threedi_tools.breaches.start_download_simulation import find_upstream_links_to_breach_short as fulb_short
+from hhnk_threedi_tools.breaches.start_download_simulation.project_config import ProjectConfig
+from hhnk_threedi_tools.breaches.start_download_simulation.register_simulation_data import SimulationRegistry
+from hhnk_threedi_tools.breaches.start_download_simulation.simulation_settings import (
     AGGREGATION_SETTINGS,
     NUMERICAL_SETTINGS,
     PHYSICAL_SETTINGS,
     START_DATETIME,
     TIME_STEP_SETTINGS,
 )
-from threedi_api_client.api import ThreediApi
-from threedi_api_client.versions import V3Api
 
 
 class ModelFolder(hrt.Folder):
@@ -53,7 +54,7 @@ def prepare_simulations(
     model_folder = ModelFolder(project.model_folder)
 
     # Get latest 3Di model
-    model = api_client.threedimodels_list(name=model_folder.name).results[0]
+    model = api_client.threedimodels_list(name__icontains=model_folder.name).results[0]
 
     print(f"Model: {model.name}")
     print(f"Model ID: {model.id}, Revision: {model.revision_number}")
@@ -82,7 +83,7 @@ def prepare_simulations(
         breach_row = breach_gdf.loc[breach_gdf["id"] == breach.connected_pnt_id].iloc[0]
 
         scenario_name = breach_row["display_name"]
-        material = str(breach_row["material"]).strip().lower()
+        material = str(breach_row["levee_material"]).strip().lower()
 
         # Determine initial breach width
         if project.kering_type == "primary" and material == "sand":
@@ -121,10 +122,13 @@ def set_initial_waterlevels(
     model_waterlevels = api_client.threedimodels_initial_waterlevels_list(threedimodel_pk=model_id).results
 
     initial_1d = None
+    initial_2d = None
 
     for waterlevel in model_waterlevels:
         if waterlevel.dimension == "one_d":
             initial_1d = waterlevel
+        if waterlevel.dimension == "two_d":
+            initial_2d = waterlevel
             break
 
     if initial_1d is None:
@@ -411,7 +415,7 @@ if __name__ == "__main__":
         model_folder=r"H:\02.modellen\ROR PRI - dijktrajecten 13-8 en 13-9 - Stroom_NO",
         organisation_name="BWN HHNK",
         filter_id=[100048],
-        kering_type="primary",
+        kering_type="primaire",  # "regionale"
         simulation_duration=20,  # days
         closure_method="none",
     )
@@ -441,3 +445,5 @@ if __name__ == "__main__":
         project=project,
         wait_time=3600,
     )
+
+# %%
