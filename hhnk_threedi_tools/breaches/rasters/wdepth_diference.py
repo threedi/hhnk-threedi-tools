@@ -13,8 +13,8 @@ base_folder = Path(r"H:\02.modellen")
 raster_name = "wdepth_corr_idw.tif"
 
 rainfall_scenarios = {
-    "piek": ["piek_ghg_T10", "piek_ghg_T100", "piek_ghg_T1000"],
-    # "blok": ["blok_ghg_T10", "blok_ghg_T100", "blok_ghg_T1000"],
+    # "piek": ["piek_ghg_T10", "piek_ghg_T100", "piek_ghg_T1000"],
+    "blok": ["blok_ghg_T10", "blok_ghg_T100", "blok_ghg_T1000"],
 }
 
 
@@ -40,15 +40,15 @@ def raster_difference(reference_path, variant_path, output_path):
 
 huidig_folder = Folders(base_folder / "bergen_noord_huidig_situatie_JA")
 
-for variant in [2, 3]:
+for variant in [3]:
     folder = Folders(base_folder / f"bergen_noord_variant_{variant}_JA")
 
     for rainfall_type, rainfall_names in rainfall_scenarios.items():
         # Variant batch uses "block", current situation uses "blok".
         variant_type = "block" if rainfall_type == "blok" else "piek"
-        batch = f"variant_{variant}_results_{variant_type}_new_dem"
+        batch = f"variant_{variant}_results_{variant_type}_new_dem_v2"
 
-        variant_downloads = Path(folder.threedi_results.batch[batch].downloads.path)
+        variant_downloads = Path(folder.threedi_results.batch[batch].output.path)
 
         huidig_outputs = (
             Path(huidig_folder.threedi_results.batch[f"huidig_{rainfall_type}"].path) / "02_output_rasters"
