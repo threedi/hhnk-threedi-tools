@@ -453,27 +453,29 @@ class GridToWaterDepth:
 
 # %%
 if __name__ == "__main__":
-    from hhnk_threedi_tools import Folders
     import os
+
     import geopandas as gpd
+
+    from hhnk_threedi_tools import Folders
+
     OVERWRITE = False
 
     folder_path = r"H:\02.modellen\bergen_noord_variant_3_JA"
     folder = Folders(folder_path)
-    
+
     outut_folder = folder.threedi_results.batch["variant_3_results_piek_new_dem_v2"].output.path
     scenarios = os.listdir(outut_folder)
-    
+
     for scenario in scenarios:
-        if scenario == 'temp':
+        if scenario == "temp":
             continue
         grid_gdf_path = outut_folder / scenario / "grid_wlvl_corr.gpkg"
         grid_gdf = gpd.read_file(grid_gdf_path, driver="GPKG")
-   
 
         chunksize = 1024  # adjust based on available memory; None for no chunking (may cause MemoryError)
         calculator_kwargs = {
-            "dem_path": folder.model.path / '00_basis'/ 'rasters' / 'dem_bergen_noord.tif',
+            "dem_path": folder.model.path / "00_basis" / "rasters" / "dem_bergen_noord.tif",
             "grid_gdf": grid_gdf,
             "wlvl_column": "wlvl_corr_max",
             "interpolator_type": "idw",  # change to "linear"  to use original Delaunay otherwise use "idw"
@@ -481,15 +483,18 @@ if __name__ == "__main__":
 
         # Init calculator
         with GridToWaterLevel(**calculator_kwargs) as self:
-            self.run(output_file=outut_folder / scenario / ("wlvl_corr_idw.tif"), chunksize=chunksize, overwrite=OVERWRITE)
+            self.run(
+                output_file=outut_folder / scenario / ("wlvl_corr_idw.tif"), chunksize=chunksize, overwrite=OVERWRITE
+            )
 
         with GridToWaterDepth(
-            dem_path=folder.model.path / '00_basis'/ 'rasters' / 'dem_bergen_noord.tif',
+            dem_path=folder.model.path / "00_basis" / "rasters" / "dem_bergen_noord.tif",
             wlvl_path=outut_folder / scenario / ("wlvl_corr_idw.tif"),
         ) as raster_calc:
             wdepth_raster = raster_calc.run(
-                output_file=outut_folder/ scenario / "wdepth_corr_idw.tif",
-                overwrite=True,)
+                output_file=outut_folder / scenario / "wdepth_corr_idw.tif",
+                overwrite=True,
+            )
         print("Done.")
 
 # %%
