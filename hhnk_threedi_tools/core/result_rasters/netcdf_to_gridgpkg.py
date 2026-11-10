@@ -483,17 +483,37 @@ class NetcdfToGPKG:
 
 # %%
 if __name__ == "__main__":
+    import os
+
     from hhnk_threedi_tools import Folders
 
-    folder_path = r"E:\02.modellen\HKC23010_Eijerland_WP"
+    folder_path = r"H:\02.modellen\bergen_noord_variant_3_JA"
     folder = Folders(folder_path)
 
-    threedi_result = folder.threedi_results.batch["bwn_gxg"].downloads.piek_ghg_T10
+    threedi_result_folder = folder.threedi_results.batch["variant_3_results_piek_new_dem_v2"].downloads
+    outut_folder = folder.threedi_results.batch["variant_3_results_piek_new_dem_v2"].output.path
+    scenarios = os.listdir(threedi_result_folder.path)
 
-    output_file = None
-    wlvl_correction = False
-    overwrite = True
-    self = NetcdfToGPKG(threedi_result=threedi_result.netcdf, use_aggregate=True)
-    timesteps_seconds = ["max"]
-    self.run(wlvl_correction=wlvl_correction)
+    for scenario in scenarios:
+        if scenario.endswith(".csv"):
+            continue
+        threedi_result = hrt.ThreediResult(threedi_result_folder.path / scenario)
+        output_file = outut_folder / scenario / "grid_wlvl_corr.gpkg"
+        wlvl_correction = True
+        overwrite = True
+        timesteps_seconds = ["max"]
+
+        self = NetcdfToGPKG(
+            threedi_result=threedi_result,
+            use_aggregate=False,
+            waterdeel_path=folder.source_data.damo.path,
+            waterdeel_layer="Waterdeel",
+            panden_path=folder.source_data.panden.path,
+            panden_layer="panden",
+        )
+
+        self.run(
+            output_file=output_file,
+            wlvl_correction=wlvl_correction,
+        )
 # %%
