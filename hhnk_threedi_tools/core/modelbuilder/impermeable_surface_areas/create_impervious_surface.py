@@ -695,16 +695,19 @@ def run(model_path_gpkg, datacheker_path, polder_polygon_path, hdb_path, sure_up
 # %%
 #
 if __name__ == "__main__":
+    from hhnk_threedi_tools import Folders
     hdb_path = r"H:\01.basisgegevens\00.HDB\Hydro_database.gpkg"
-    folder = Path(r"H:\personen\jacosta\update_3di_model_test\Zijpe_West_2026_MR")
-    source_data = folder / "01_source_data"
-    damo_path = source_data / "DAMO.gpkg"
-    datacheker_path = source_data / "datachecker_output.gpkg"
-    polder_polygon_path = source_data / "polder_polygon.shp"
-    model_path_gpkg = folder / "02_schematisation" / "00_basis" / "bwn_zijpe-west.gpkg"
-    impervious_out_polygon_gpkg = source_data / "impervious_pol_review.gpkg"
-    impervious_out_line_gpkg = source_data / "impervious_line_review.gpkg"
-    sure_update = True
+    models_path = Path(r'\\corp.hhnk.nl\data\Hydrologen_data\Data\personen\rderonde')
+    models = ['bwn_katvoed_maatregel', 'bwn_katvoed_maatregel_met_woonwijk - OUD', 'bwn_katvoed_referentie']
+    for model in models: 
+        folder = (Folders(models_path / model))
+        damo_path = folder.source_data.damo.path
+        datacheker_path = folder.source_data.datachecker.path
+        polder_polygon_path = folder.source_data.polder_polygon.path
+        model_path_gpkg = folder.model.schema_base.find_ext('gpkg')[0]
+        impervious_out_polygon_gpkg = folder.source_data.path / "impervious_pol_review.gpkg"
+        impervious_out_line_gpkg = folder.source_data.path / "impervious_line_review.gpkg"
+        sure_update = True
 
-    run(model_path_gpkg, datacheker_path, polder_polygon_path, hdb_path, sure_update)
+        run(model_path_gpkg, datacheker_path, polder_polygon_path, hdb_path, sure_update)
 # %%
