@@ -289,24 +289,34 @@ def configure_closure(
             if link_type in ["v2_added_c", "v2_breach", ""]:
                 continue
 
-            event = {
-                "offset": project.closure_time_seconds,
-                "duration": closure_duration,
-                "value": [0.0, 0.0],
-                "type": "set_discharge_coefficients",
-                "structure_type": link_type,
-            }
-
             if link_type == "v2_channel":
-                event["grid_id"] = int(upstream_data["upstream_links"][i])
+                event = {
+                    "offset": project.closure_time_seconds,
+                    "duration": closure_duration,
+                    "value": [0.0, 0.0],
+                    "type": "set_discharge_coefficients",
+                    "grid_id": int(upstream_data["upstream_links"][i]),
+                    "structure_type": link_type,
+                }
+
             else:
-                event["structure_id"] = int(upstream_data["spatialite_ids"][i])
+                event = {
+                    "offset": project.closure_time_seconds,
+                    "duration": closure_duration,
+                    "value": [0.0, 0.0],
+                    "type": "set_discharge_coefficients",
+                    "structure_id": int(upstream_data["upstream_links"][i]),
+                    "structure_type": link_type,
+                }
 
-            api_client.simulations_events_structure_control_timed_create(simulation_id, data=event)
+            api_client.simulations_events_structure_control_timed_create(
+                simulation_id,
+                data=event,
+            )
 
-            time.sleep(2)
+            time.sleep(5)
 
-    print(f"Closure configured: {simulation_id}")
+            print(f"Closure configured: {simulation_id}")
 
 
 def start_simulation_breaches(
@@ -384,7 +394,6 @@ def start_simulation_breaches(
 
         # Configure regional closure events
         configure_closure(api_client, project, simulation.id, breach)
-
         # Wait for available queue capacity
         while True:
             queue_length = api_client.statuses_list(
@@ -426,10 +435,10 @@ if __name__ == "__main__":
         organisation_name="BWN HHNK",
         filter_id=[48],
         kering_type="regionale",  # "regionale" of "primaire"
-        simulation_duration=10,  # days
+        simulation_duration=0.2,  # days
         closure_method="upstream",  # none of upstream
-        closure_time=24,  # None, time in hours
-        testresult_folder=r"H:\02.modellen\RegionalFloodModel - deelmodel Schermer Laag Zuid\Test_Open_IPO_SBLZ_V1",
+        closure_time=4,  # None, time in hours
+        testresult_folder=r"H:\02.modellen\RegionalFloodModel - deelmodel Schermer Laag Zuid\test_ipo_sblz_class",
     )
 
     # API authentication
