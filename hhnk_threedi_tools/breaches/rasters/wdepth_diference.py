@@ -39,7 +39,7 @@ def raster_difference(reference_path, variant_path, output_path):
 
 
 huidig_folder = Folders(base_folder / "bergen_noord_huidig_situatie_JA")
-#%%
+# %%
 for variant in [3]:
     folder = Folders(base_folder / f"bergen_noord_variant_{variant}_JA")
 
