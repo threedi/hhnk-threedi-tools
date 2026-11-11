@@ -316,7 +316,7 @@ def configure_closure(
 
             time.sleep(5)
 
-            print(f"Closure configured: {simulation_id}")
+    print(f"Closure configured: {simulation_id}")
 
 
 def start_simulation_breaches(
@@ -436,8 +436,9 @@ if __name__ == "__main__":
         filter_id=[48],
         kering_type="regionale",  # "regionale" of "primaire"
         simulation_duration=0.2,  # days
-        closure_method="upstream",  # none of upstream
+        closure_method="compartmentalization",  # none of upstream of compartmentalization
         closure_time=4,  # None, time in hours
+        structures_info={406: "v2_orifice", 407: "v2_orifice", 404: "v2_orifice"},  # structures_info = {406: "v2_orifice", 407: "v2_orifice", 404: "v2_orifice"}
         testresult_folder=r"H:\02.modellen\RegionalFloodModel - deelmodel Schermer Laag Zuid\test_ipo_sblz_class",
     )
 
