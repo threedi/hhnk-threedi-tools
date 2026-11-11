@@ -28,7 +28,19 @@ class ModelFolder(hrt.Folder):
     def __init__(self, base: str | Path) -> None:
         super().__init__(str(base))
 
-        self.add_file("schema", rf"work in progress/schematisation/{self.name}.gpkg")
+        schema_path = self.find_schema_path()
+        self.add_file("schema", str(schema_path.relative_to(Path(self.base))))
+
+    def find_schema_path(self) -> Path:
+        schematisation_folder = Path(self.base) / "work in progress" / "schematisation"
+        schema_files = list(schematisation_folder.glob("*.gpkg"))
+
+        if not schema_files:
+            raise FileNotFoundError(f"No .gpkg file found in {schematisation_folder}.")
+        if len(schema_files) > 1:
+            raise ValueError(f"More than one .gpkg file found in {schematisation_folder}.")
+
+        return schema_files[0]
 
 
 def prepare_simulations(
@@ -256,11 +268,13 @@ def configure_closure(
 
     elif project.closure_method == "upstream":
         # Find upstream links connected to the breach
-        upstream = fulb_short.find_upstream_links_to_breach(project.testresult_folder, breach.connected_pnt_id)
+
+        upstream = fulb_short.find_upstream_links_to_breach(project.testresult_folder, [breach.connected_pnt_id])
 
         upstream_data = None
 
         for data in upstream["data"]:
+            print(data)
             if data["breach_id"] == breach.connected_pnt_id:
                 upstream_data = data
                 break
@@ -408,12 +422,14 @@ if __name__ == "__main__":
     # Project configuration
     project = ProjectConfig(
         project_folder=r"H:\03.resultaten\ROR_PRI_Stroom_NO",
-        model_folder=r"H:\02.modellen\ROR PRI - dijktrajecten 13-8 en 13-9 - Stroom_NO",
+        model_folder=r"H:\02.modellen\RegionalFloodModel - deelmodel Schermer Laag Zuid",
         organisation_name="BWN HHNK",
-        filter_id=[100048],
-        kering_type="primaire",  # "regionale"
-        simulation_duration=20,  # days
-        closure_method="none",
+        filter_id=[48],
+        kering_type="regionale",  # "regionale" of "primaire"
+        simulation_duration=10,  # days
+        closure_method="upstream",  # none of upstream
+        closure_time=24,  # None, time in hours
+        testresult_folder=r"H:\02.modellen\RegionalFloodModel - deelmodel Schermer Laag Zuid\Test_Open_IPO_SBLZ_V1",
     )
 
     # API authentication
