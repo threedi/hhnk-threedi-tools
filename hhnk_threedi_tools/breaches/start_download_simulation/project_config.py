@@ -11,7 +11,7 @@ requests to the external 3Di API.
 The module is intended for setup files and operational scripts that need a
 consistent configuration object for yearly or project-specific runs.
 The example at the bottom shows a typical regionale breach setup with
-cmp enabled.
+compartmentalization enabled.
 """
 
 # %%
@@ -84,7 +84,7 @@ class ProjectConfig:
             raise ValueError(f"Invalid kering type: {self.kering_type}")
 
         # Validate closure method
-        if self.closure_method not in ["none", "cmp", "upstream"]:
+        if self.closure_method not in ["none", "compartmentalization", "upstream"]:
             raise ValueError(f"Invalid closure method: {self.closure_method}")
 
         # Closure only applies to regionale keringen
@@ -102,12 +102,12 @@ class ProjectConfig:
             raise ValueError("Closure time is not needed when closure_method is none.")
 
         # compartimetering settings
-        if self.closure_method == "cmp":
+        if self.closure_method == "compartmentalization":
             if not self.structures_info:
-                raise ValueError("cmp requires structures_info.")
+                raise ValueError("compartmentalization requires structures_info.")
 
         elif self.structures_info:
-            raise ValueError("structures_info is only used for cmp.")
+            raise ValueError("structures_info is only used for compartmentalization.")
 
         # Upstream closure settings
         if self.closure_method == "upstream":
@@ -139,8 +139,8 @@ if __name__ == "__main__":
     # days
     simulation_duration = 20
 
-    # options: cmp, None, upstream
-    closure_method = "cmp"
+    # options: compartmentalization, None, upstream
+    closure_method = "compartmentalization"
 
     # hours
     closure_time = 12
@@ -159,7 +159,7 @@ if __name__ == "__main__":
         filter_id=[100048, 100021],
         kering_type="regionale",
         simulation_duration=20,
-        closure_method="cmp",
+        closure_method="compartmentalization",
         closure_time=12,
         structures_info={
             632: "v2_weir",
