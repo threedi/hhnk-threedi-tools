@@ -438,7 +438,11 @@ if __name__ == "__main__":
         simulation_duration=0.2,  # days
         closure_method="compartmentalization",  # none of upstream of compartmentalization
         closure_time=4,  # None, time in hours
-        structures_info={406: "v2_orifice", 407: "v2_orifice", 404: "v2_orifice"},  # structures_info = {406: "v2_orifice", 407: "v2_orifice", 404: "v2_orifice"}
+        structures_info={
+            406: "v2_orifice",
+            407: "v2_orifice",
+            404: "v2_orifice",
+        },  # structures_info = {406: "v2_orifice", 407: "v2_orifice", 404: "v2_orifice"}
         testresult_folder=r"H:\02.modellen\RegionalFloodModel - deelmodel Schermer Laag Zuid\test_ipo_sblz_class",
     )
 
