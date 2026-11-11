@@ -45,4 +45,4 @@ class SimulationRegistry:
         # Save Excel
         df.to_excel(self.excel_path, index=False)
 
-        print(f"Simulation {scenario_name} ({scenario_id_rana}) saved.")
+        print(f"Simulation {scenario_name} registered in excel file with scenario_id_rana: ({scenario_id_rana})")

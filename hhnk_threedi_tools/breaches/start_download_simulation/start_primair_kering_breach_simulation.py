@@ -157,7 +157,7 @@ def set_initial_waterlevels(
         simulation_pk=simulation_id, data={"initial_waterlevel": initial_1d.id}
     )
 
-    print(f"Initial water level 1D: {initial_1d.id}")
+    print(f"Initial water level 1D initialized. ID: {initial_1d.id}")
 
     # Remove inherited 2D raster
     current_2d = api_client.simulations_initial2d_water_level_raster_list(simulation_pk=simulation_id).results
@@ -175,7 +175,7 @@ def set_initial_waterlevels(
             },
         )
 
-        print(f"Initial water level 2D: {initial_2d.id}")
+        print(f"Initial water level 2D initialized. ID: {initial_2d.id}")
 
     else:
         print("No initial water level 2D available.")
@@ -223,7 +223,7 @@ def apply_simulation_settings(
 
         time.sleep(2)
 
-    print(f"Simulation settings configured: {simulation_id}")
+    print(f"Simulation settings configured for simulation id: {simulation_id}")
 
 
 def configure_closure(
@@ -315,8 +315,13 @@ def configure_closure(
             )
 
             time.sleep(5)
+    controls = api_client.simulations_events_structure_control_timed_list(simulation_pk=simulation_id)
+    for control in controls.results:
+        structure_type = control.structure_type
+        structure_id = control.structure_id
+        type_control = control.type
 
-    print(f"Closure configured: {simulation_id}")
+        print(f"Closure configured. Structure_type {structure_type}, ID: {structure_id}, type: {type_control}")
 
 
 def start_simulation_breaches(
@@ -357,7 +362,7 @@ def start_simulation_breaches(
         scenario_name = item["scenario_name"]
         initial_width = item["initial_width"]
 
-        print(f"\nPreparing simulation: {scenario_name}")
+        print(f"\nPreparing simulation for scenario name: {scenario_name}")
 
         # Create simulation from template
         simulation = api_client.simulations_from_template(
@@ -410,7 +415,7 @@ def start_simulation_breaches(
         # Queue simulation
         api_client.simulations_actions_create(simulation.id, data={"name": "queue"})
 
-        print(f"Simulation queued: {scenario_name} ({simulation.id})")
+        print(f"\nSimulation queued with scenario name: {scenario_name}")
 
         # Register simulation after queue request succeeds
         registry.add_simulation(
@@ -422,8 +427,6 @@ def start_simulation_breaches(
             scenario_id_rana=simulation.id,
             initial_width=initial_width,
         )
-
-        print(f"Simulation registered: {simulation.id}")
 
 
 # %%
