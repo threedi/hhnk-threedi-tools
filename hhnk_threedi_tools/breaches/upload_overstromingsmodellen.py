@@ -115,7 +115,7 @@ def upload_rasters(sqlite_path):
     raster_dir = sqlite_path.parent / "rasters"
 
     for raster in rasters:
-        if raster.extendswith(".aux.xml"):
+        if raster.endswith(".aux.xml"):
             os.remove(raster)
             print(f"file: {raster} deleted.")
         if "dem" in raster.lower():
@@ -132,7 +132,7 @@ def upload_rasters(sqlite_path):
 
 # %%
 sqlite_path = Path(
-    r"H:\02.modellen\RegionalFloodModel - deelmodel Schermer Laag Zuid\work in progress\schematisation\laag_zuid_isolated.sqlite"
+    r"H:\02.modellen\ROR PRI - dijktrajecten 13-8 en 13-9 - Stroom_NO\work in progress\schematisation\ROR PRI - dijktrajecten 13-8 en 13-9 - Stroom_NO.gpkg"
 )
 
 COMMIT_MESSAGE = "Update names to be use in the simulation"
@@ -159,7 +159,7 @@ organisation_uuid = uploader.org_uuid
 raster_names = upload_rasters(sqlite_path)
 
 upload.upload_and_process(
-    schematisation_name="RegionalFloodModel - deelmodel Schermer Laag Zuid",
+    schematisation_name=sqlite_path.stem,
     organisation_uuid=organisation_uuid,
     sqlite_path=sqlite_path,
     raster_paths=raster_names,
